@@ -1,8 +1,29 @@
 # aegis-api-standard
 
-`aegis-api-standard` é a implementação API-first padrão do Aegis SCF-Based Assessment Lifecycle. O repositório concentra backend reutilizável, contratos, schemas, workflows, workers, assessment engine, SCF data layer, Knowledge Base, artefatos de assessment, agent runtime, segurança, observabilidade e suites de teste/eval.
+`aegis-api-standard` é a implementação API-first padrão do Aegis SCF-Based Assessment Lifecycle e do **Aegis SCF Agentic Assessment Model**. O repositório concentra backend reutilizável, contratos, schemas, workflows, workers, assessment engine, SCF data layer, Knowledge Base, artefatos de assessment, agent runtime, segurança, observabilidade e suites de teste/eval.
 
 O frontend é consumidor da API. Lógica crítica de assessment, tenant isolation, approval gates e guardrails deve permanecer em `packages/*`, `workers/*`, `apps/api-gateway` e contratos compartilhados.
+
+## Aegis SCF Agentic Assessment Model
+
+O Aegis SCF Agentic Assessment Model é um modelo de IA agêntica para conduzir assessments baseados no Secure Controls Framework, no qual agentes especializados colaboram sob orquestração controlada para ingerir documentos, construir KB, mapear frameworks, gerar SoA, avaliar evidências, produzir Gap Analysis, medir maturidade, gerar POA&M e preparar relatórios, sempre com rastreabilidade, validação de schema, controle de escopo e aprovação humana.
+
+Comportamento agentic alvo:
+
+1. Recebe assessment novo.
+2. Verifica documentos disponíveis.
+3. Aciona ingestão.
+4. Consulta SCF estruturado.
+5. Aguarda escolha de framework.
+6. Propõe SoA.
+7. Aguarda aprovação.
+8. Executa Evidence Analysis.
+9. Gera Gap Analysis.
+10. Aguarda aprovação.
+11. Mede maturidade.
+12. Gera POA&M.
+13. Gera relatório.
+14. Fecha assessment.
 
 ## Status do Projeto
 
@@ -11,6 +32,19 @@ Status: MVP Release Candidate para staging controlado com dados sintéticos.
 Não use dados reais de clientes no MVP. Não configure secrets reais em arquivos versionados. Production deploy permanece manual e protegido.
 
 Checklist principal: `docs/releases/mvp-release-candidate-checklist.md`.
+
+## Contexto e Colaboração
+
+O GitHub é a fonte única de verdade para código, decisões, contexto de desenvolvimento, prompts, regras de IA e histórico relevante.
+
+Pontos principais:
+
+- `CONTEXT.md`: ponto central de contexto do projeto.
+- `DEVELOPMENT.md`: fluxo de desenvolvimento colaborativo.
+- `DECISIONS.md`: índice de decisões e ADRs.
+- `docs/context/`: contexto resumido de produto, arquitetura, glossário, convenções e pendências.
+- `tasks/branch-context/TEMPLATE.md`: template para preservar contexto por branch.
+- `.cursor/rules/`: regras persistentes para agentes no Cursor.
 
 ## Arquitetura Resumida
 
@@ -48,7 +82,11 @@ aegis-api-standard/
 │   ├── architecture/
 │   ├── api/
 │   ├── agents/
+│   ├── context/
 │   └── decisions/
+├── adr/
+├── prompts/
+├── tasks/
 └── evals/
     ├── fixtures/
     └── golden-outputs/
@@ -122,15 +160,28 @@ pnpm test:ci
 - `docs/architecture/poam-workflow.md`
 - `docs/architecture/reporting-export-workflow.md`
 - `docs/architecture/agent-runtime-tool-contracts.md`
+- `docs/architecture/aegis-agentic-ai-operating-model.md`
+- `docs/architecture/orchestrator-agent.md`
+- `docs/architecture/specialist-agents.md`
+- `docs/architecture/tool-registry-and-permissions.md`
+- `docs/architecture/human-in-the-loop-governance.md`
+- `docs/architecture/agent-memory-context.md`
+- `docs/architecture/agent-evaluation-safety.md`
+- `docs/architecture/multi-agent-collaboration.md`
+- `docs/architecture/agentic-runtime-deployment.md`
+- `docs/architecture/production-hardening.md`
+- `docs/architecture/external-integration-model.md`
 - `docs/architecture/workflow-orchestration.md`
 - `docs/architecture/cloudflare-infrastructure.md`
 - `docs/operations/workflows.md`
 - `docs/operations/deployment.md`
 - `docs/operations/secrets-and-env.md`
 - `docs/operations/testing-runbook.md`
+- `docs/testing/api-first-mvp-acceptance-scenario.md`
 - `docs/operations/security-operations.md`
 - `docs/operations/staging-deployment-checklist.md`
 - `docs/operations/production-readiness-checklist.md`
+- `docs/operations/production-go-live-checklist.md`
 - `docs/architecture/assessment-lifecycle.md`
 - `docs/architecture/backlog.md`
 - `docs/architecture/security-auth-rbac.md`
@@ -142,8 +193,18 @@ pnpm test:ci
 - `docs/security/mvp-security-review.md`
 - `docs/api/openapi.yaml`
 - `docs/api/openapi.md`
+- `docs/api/public-api-guidelines.md`
+- `docs/context/produto.md`
+- `docs/context/arquitetura.md`
+- `docs/context/glossario.md`
+- `docs/context/convencoes.md`
+- `docs/context/pendencias.md`
 - `docs/agents/aegis-agents.md`
 - `docs/decisions/0001-platform-boundaries.md`
+- `adr/0001-estrutura-base-do-projeto.md`
+- `CONTEXT.md`
+- `DEVELOPMENT.md`
+- `DECISIONS.md`
 - `AGENTS.md`
 
 ## Regras de Dados

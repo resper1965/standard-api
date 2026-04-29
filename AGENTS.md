@@ -6,8 +6,10 @@
 - Repositório: `aegis-api-standard`.
 - Núcleo reutilizável: `Aegis Assessment Engine`.
 - Método funcional: `Aegis SCF-Based Assessment Lifecycle`.
+- Modelo agêntico: `Aegis SCF Agentic Assessment Model`.
 - Arquitetura: `API-first / SaaS-ready / Cloudflare-oriented`.
 - Aegis é uma plataforma SaaS API-first para executar assessments de segurança, conformidade e maturidade com base no Secure Controls Framework, SCF.
+- O Aegis SCF Agentic Assessment Model é um modelo de IA agêntica para conduzir assessments baseados no SCF, no qual agentes especializados colaboram sob orquestração controlada, sempre com rastreabilidade, validação de schema, controle de escopo e aprovação humana.
 - O lifecycle cobre ingestão de documentos, criação de KB, análise SCF preliminar, seleção de framework, escopo/SoA, Gap Analysis, Maturity Assessment e POA&M.
 - O frontend é consumidor da API. O backend, contratos, schemas, workflows, workers e pacotes reutilizáveis são o centro do sistema.
 
@@ -73,6 +75,7 @@ aegis-api-standard/
 - PRs devem explicar impacto arquitetural, riscos, validação executada e impacto em multi-tenancy.
 - AI commits MUST include `Co-Authored-By: (the agent model's name and attribution byline)`.
 - Antes de adotar nova dependência, justificar impacto, manutenção, segurança e aderência à stack existente.
+- O GitHub é a fonte única de verdade para código, decisões, contexto, prompts e regras de IA; contexto relevante deve ser persistido em `CONTEXT.md`, `docs/context/`, `adr/`, `prompts/` ou `tasks/`.
 
 ## 6. Cloudflare Architecture Guidelines
 
@@ -215,6 +218,7 @@ aegis-api-standard/
 - Approval gates respeitados.
 - Sem lógica crítica no frontend.
 - Documentação atualizada para decisões, APIs, lifecycle, dados ou arquitetura alterados.
+- Contexto relevante preservado no repositório ou PR marcado com justificativa explícita `[no-context-change]`.
 
 ## 17. Forbidden Actions
 

@@ -1,0 +1,13 @@
+---
+description: Obriga preservação de contexto relevante no repositório
+alwaysApply: true
+---
+
+# Contexto Obrigatório
+
+- Antes de alterar o projeto, leia o contexto aplicável: `CONTEXT.md`, `AGENTS.md`, `README.md`, `DEVELOPMENT.md` e docs específicas da área tocada.
+- O GitHub é a fonte única de verdade para código, decisões, contexto, prompts, regras de IA e histórico relevante.
+- Atualize documentação quando houver decisão, mudança arquitetural, prompt, regra, limitação, risco, pendência ou aprendizado relevante.
+- Não considere a tarefa concluída se contexto relevante ficou apenas em chat, terminal, memória local ou IDE.
+- Se não houver mudança de contexto, registre isso no resumo e, em PR, use `[no-context-change]` quando apropriado.
+- O resumo final deve listar arquivos alterados, contexto atualizado, decisões tomadas, validações executadas e pendências.
