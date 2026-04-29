@@ -1,0 +1,13 @@
+{
+  "name": "@aegis/web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler pages dev public",
+    "deploy": "wrangler pages deploy public --project-name aegis-api-standard-web"
+  },
+  "devDependencies": {
+    "wrangler": "latest"
+  }
+}

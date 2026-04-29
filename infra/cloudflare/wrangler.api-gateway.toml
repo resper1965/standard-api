@@ -1,0 +1,155 @@
+name = "aegis-api-standard-api-gateway"
+main = "../../apps/api-gateway/src/index.ts"
+compatibility_date = "2026-04-28"
+
+[vars]
+AEGIS_ENV = "development"
+LOG_LEVEL = "info"
+AI_GATEWAY_NAME = "aegis-dev"
+AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/aegis-dev"
+
+[[r2_buckets]]
+binding = "AEGIS_DOCUMENTS_BUCKET"
+bucket_name = "aegis-documents-dev"
+
+[[r2_buckets]]
+binding = "AEGIS_REPORTS_BUCKET"
+bucket_name = "aegis-reports-dev"
+
+[[r2_buckets]]
+binding = "AEGIS_EXPORTS_BUCKET"
+bucket_name = "aegis-exports-dev"
+
+[[queues.producers]]
+binding = "DOCUMENT_INGESTION_QUEUE"
+queue = "aegis-document-ingestion-dev"
+
+[[queues.producers]]
+binding = "KB_EMBEDDING_QUEUE"
+queue = "aegis-kb-embedding-dev"
+
+[[queues.producers]]
+binding = "REPORT_EXPORT_QUEUE"
+queue = "aegis-report-export-dev"
+
+[[queues.producers]]
+binding = "AGENT_TASK_QUEUE"
+queue = "aegis-agent-task-dev"
+
+[[kv_namespaces]]
+binding = "AEGIS_CONFIG_KV"
+id = "replace-with-dev-config-kv-id"
+
+[[kv_namespaces]]
+binding = "AEGIS_FEATURE_FLAGS_KV"
+id = "replace-with-dev-feature-flags-kv-id"
+
+[[kv_namespaces]]
+binding = "AEGIS_CACHE_KV"
+id = "replace-with-dev-cache-kv-id"
+
+[[workflows]]
+binding = "ASSESSMENT_WORKFLOW"
+name = "aegis-assessment-lifecycle-dev"
+class_name = "AssessmentLifecycleWorkflow"
+script_name = "aegis-api-standard-workflows"
+
+[env.staging]
+name = "aegis-api-standard-api-gateway-staging"
+vars = { AEGIS_ENV = "staging", LOG_LEVEL = "info", AI_GATEWAY_NAME = "aegis-staging", AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/aegis-staging" }
+
+[[env.staging.r2_buckets]]
+binding = "AEGIS_DOCUMENTS_BUCKET"
+bucket_name = "aegis-documents-staging"
+
+[[env.staging.r2_buckets]]
+binding = "AEGIS_REPORTS_BUCKET"
+bucket_name = "aegis-reports-staging"
+
+[[env.staging.r2_buckets]]
+binding = "AEGIS_EXPORTS_BUCKET"
+bucket_name = "aegis-exports-staging"
+
+[[env.staging.queues.producers]]
+binding = "DOCUMENT_INGESTION_QUEUE"
+queue = "aegis-document-ingestion-staging"
+
+[[env.staging.queues.producers]]
+binding = "KB_EMBEDDING_QUEUE"
+queue = "aegis-kb-embedding-staging"
+
+[[env.staging.queues.producers]]
+binding = "REPORT_EXPORT_QUEUE"
+queue = "aegis-report-export-staging"
+
+[[env.staging.queues.producers]]
+binding = "AGENT_TASK_QUEUE"
+queue = "aegis-agent-task-staging"
+
+[[env.staging.kv_namespaces]]
+binding = "AEGIS_CONFIG_KV"
+id = "replace-with-staging-config-kv-id"
+
+[[env.staging.kv_namespaces]]
+binding = "AEGIS_FEATURE_FLAGS_KV"
+id = "replace-with-staging-feature-flags-kv-id"
+
+[[env.staging.kv_namespaces]]
+binding = "AEGIS_CACHE_KV"
+id = "replace-with-staging-cache-kv-id"
+
+[[env.staging.workflows]]
+binding = "ASSESSMENT_WORKFLOW"
+name = "aegis-assessment-lifecycle-staging"
+class_name = "AssessmentLifecycleWorkflow"
+script_name = "aegis-api-standard-workflows-staging"
+
+[env.production]
+name = "aegis-api-standard-api-gateway-production"
+vars = { AEGIS_ENV = "production", LOG_LEVEL = "warn", AI_GATEWAY_NAME = "aegis-prod", AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/aegis-prod" }
+
+[[env.production.r2_buckets]]
+binding = "AEGIS_DOCUMENTS_BUCKET"
+bucket_name = "aegis-documents-prod"
+
+[[env.production.r2_buckets]]
+binding = "AEGIS_REPORTS_BUCKET"
+bucket_name = "aegis-reports-prod"
+
+[[env.production.r2_buckets]]
+binding = "AEGIS_EXPORTS_BUCKET"
+bucket_name = "aegis-exports-prod"
+
+[[env.production.queues.producers]]
+binding = "DOCUMENT_INGESTION_QUEUE"
+queue = "aegis-document-ingestion-prod"
+
+[[env.production.queues.producers]]
+binding = "KB_EMBEDDING_QUEUE"
+queue = "aegis-kb-embedding-prod"
+
+[[env.production.queues.producers]]
+binding = "REPORT_EXPORT_QUEUE"
+queue = "aegis-report-export-prod"
+
+[[env.production.queues.producers]]
+binding = "AGENT_TASK_QUEUE"
+queue = "aegis-agent-task-prod"
+
+[[env.production.kv_namespaces]]
+binding = "AEGIS_CONFIG_KV"
+id = "replace-with-production-config-kv-id"
+
+[[env.production.kv_namespaces]]
+binding = "AEGIS_FEATURE_FLAGS_KV"
+id = "replace-with-production-feature-flags-kv-id"
+
+[[env.production.kv_namespaces]]
+binding = "AEGIS_CACHE_KV"
+id = "replace-with-production-cache-kv-id"
+
+[[env.production.workflows]]
+binding = "ASSESSMENT_WORKFLOW"
+name = "aegis-assessment-lifecycle-prod"
+class_name = "AssessmentLifecycleWorkflow"
+script_name = "aegis-api-standard-workflows-production"

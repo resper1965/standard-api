@@ -1,0 +1,1 @@
+ALTER TABLE "soa_versions" ADD CONSTRAINT "soa_versions_created_by_agent_run_id_agent_runs_id_fk" FOREIGN KEY ("created_by_agent_run_id") REFERENCES "public"."agent_runs"("id") ON DELETE no action ON UPDATE no action;

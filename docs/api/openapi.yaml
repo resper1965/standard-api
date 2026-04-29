@@ -1,0 +1,201 @@
+openapi: 3.1.0
+info:
+  title: Aegis API Standard
+  version: 0.1.0
+  description: API-first contracts for the Aegis SCF-Based Assessment Lifecycle.
+servers:
+  - url: https://api.example.com
+    description: Placeholder production API
+  - url: http://localhost:8787
+    description: Local Wrangler API
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        "200":
+          description: Service health
+  /api/v1/assessments:
+    post:
+      summary: Create an assessment
+      operationId: createAssessment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAssessmentRequest"
+      responses:
+        "202":
+          description: Assessment accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Assessment"
+    get:
+      summary: List assessments for the authenticated tenant
+      operationId: listAssessments
+      responses:
+        "200":
+          description: Assessment list
+  /api/v1/assessments/{assessmentId}:
+    get:
+      summary: Get assessment state and metadata
+      operationId: getAssessment
+      parameters:
+        - $ref: "#/components/parameters/AssessmentId"
+      responses:
+        "200":
+          description: Assessment detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Assessment"
+  /api/v1/assessments/{assessmentId}/documents:
+    post:
+      summary: Register a document upload
+      operationId: registerDocumentUpload
+      parameters:
+        - $ref: "#/components/parameters/AssessmentId"
+      responses:
+        "202":
+          description: Document registered for ingestion
+  /api/v1/assessments/{assessmentId}/framework:
+    put:
+      summary: Select the SCF-supported framework for the assessment
+      operationId: selectFramework
+      parameters:
+        - $ref: "#/components/parameters/AssessmentId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SelectFrameworkRequest"
+      responses:
+        "202":
+          description: Framework selected
+  /api/v1/assessments/{assessmentId}/approvals:
+    post:
+      summary: Approve or reject a human approval gate
+      operationId: submitApprovalDecision
+      parameters:
+        - $ref: "#/components/parameters/AssessmentId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApprovalDecisionRequest"
+      responses:
+        "202":
+          description: Approval decision accepted
+  /api/v1/assessments/{assessmentId}/findings:
+    get:
+      summary: List traceable findings
+      operationId: listFindings
+      parameters:
+        - $ref: "#/components/parameters/AssessmentId"
+      responses:
+        "200":
+          description: Findings list
+components:
+  parameters:
+    AssessmentId:
+      name: assessmentId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  schemas:
+    CreateAssessmentRequest:
+      type: object
+      required:
+        - tenant_id
+        - name
+        - scf_version
+      properties:
+        tenant_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        scf_version:
+          type: string
+    SelectFrameworkRequest:
+      type: object
+      required:
+        - framework_id
+      properties:
+        framework_id:
+          type: string
+    ApprovalDecisionRequest:
+      type: object
+      required:
+        - gate
+        - decision
+      properties:
+        gate:
+          type: string
+          enum:
+            - soa
+            - gap_analysis
+            - maturity_assessment
+            - poam
+        decision:
+          type: string
+          enum:
+            - approved
+            - rejected
+        comment:
+          type: string
+    Assessment:
+      type: object
+      required:
+        - assessment_id
+        - tenant_id
+        - state
+        - scf_version
+      properties:
+        assessment_id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+          format: uuid
+        state:
+          $ref: "#/components/schemas/AssessmentLifecycleState"
+        scf_version:
+          type: string
+        framework_id:
+          type: string
+    AssessmentLifecycleState:
+      type: string
+      enum:
+        - draft
+        - documents_uploaded
+        - documents_ingested
+        - scf_pre_analysis_ready
+        - framework_selected
+        - scope_drafted
+        - soa_drafted
+        - soa_under_review
+        - soa_approved
+        - soa_ingested
+        - evidence_analysis_ready
+        - gap_analysis_drafted
+        - gap_analysis_under_review
+        - gap_analysis_approved
+        - maturity_assessed
+        - maturity_under_review
+        - maturity_approved
+        - poam_drafted
+        - poam_under_review
+        - poam_approved
+        - report_generated
+        - closed
+        - archived
+        - cancelled
+        - failed
+        - blocked

@@ -1,0 +1,7 @@
+[
+  { "requirement_code": "SYNTH-1.1", "control_code": "GOV-001", "mapping_type": "official" },
+  { "requirement_code": "SYNTH-1.2", "control_code": "IAC-001", "mapping_type": "official" },
+  { "requirement_code": "SYNTH-1.3", "control_code": "VPM-001", "mapping_type": "official" },
+  { "requirement_code": "SYNTH-1.4", "control_code": "BCR-001", "mapping_type": "official" },
+  { "requirement_code": "SYNTH-1.5", "control_code": "TPR-001", "mapping_type": "official" }
+]

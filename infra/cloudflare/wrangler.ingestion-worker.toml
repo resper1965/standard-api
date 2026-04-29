@@ -1,0 +1,59 @@
+name = "aegis-api-standard-ingestion"
+main = "../../workers/ingestion/src/index.ts"
+compatibility_date = "2026-04-28"
+
+[vars]
+AEGIS_ENV = "development"
+LOG_LEVEL = "info"
+AI_GATEWAY_NAME = "aegis-dev"
+AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/aegis-dev"
+
+[[queues.consumers]]
+queue = "aegis-document-ingestion-dev"
+max_batch_size = 10
+max_batch_timeout = 30
+dead_letter_queue = "aegis-dead-letter-dev"
+
+[[r2_buckets]]
+binding = "AEGIS_DOCUMENTS_BUCKET"
+bucket_name = "aegis-documents-dev"
+
+[[vectorize]]
+binding = "AEGIS_KB_INDEX"
+index_name = "aegis-kb-dev"
+
+[env.staging]
+name = "aegis-api-standard-ingestion-staging"
+vars = { AEGIS_ENV = "staging", LOG_LEVEL = "info", AI_GATEWAY_NAME = "aegis-staging", AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/aegis-staging" }
+
+[[env.staging.queues.consumers]]
+queue = "aegis-document-ingestion-staging"
+max_batch_size = 10
+max_batch_timeout = 30
+dead_letter_queue = "aegis-dead-letter-staging"
+
+[[env.staging.r2_buckets]]
+binding = "AEGIS_DOCUMENTS_BUCKET"
+bucket_name = "aegis-documents-staging"
+
+[[env.staging.vectorize]]
+binding = "AEGIS_KB_INDEX"
+index_name = "aegis-kb-staging"
+
+[env.production]
+name = "aegis-api-standard-ingestion-production"
+vars = { AEGIS_ENV = "production", LOG_LEVEL = "warn", AI_GATEWAY_NAME = "aegis-prod", AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/aegis-prod" }
+
+[[env.production.queues.consumers]]
+queue = "aegis-document-ingestion-prod"
+max_batch_size = 10
+max_batch_timeout = 30
+dead_letter_queue = "aegis-dead-letter-prod"
+
+[[env.production.r2_buckets]]
+binding = "AEGIS_DOCUMENTS_BUCKET"
+bucket_name = "aegis-documents-prod"
+
+[[env.production.vectorize]]
+binding = "AEGIS_KB_INDEX"
+index_name = "aegis-kb-prod"

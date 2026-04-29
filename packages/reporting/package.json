@@ -1,0 +1,24 @@
+{
+  "name": "@aegis/reporting",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "tsx tests/run-tests.ts"
+  },
+  "dependencies": {
+    "@aegis/assessment-engine": "workspace:*",
+    "@aegis/gap-analysis": "workspace:*",
+    "@aegis/poam": "workspace:*",
+    "@aegis/scf-core": "workspace:*",
+    "@aegis/schemas": "workspace:*",
+    "@aegis/soa": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "^4.21.0",
+    "typescript": "latest"
+  }
+}

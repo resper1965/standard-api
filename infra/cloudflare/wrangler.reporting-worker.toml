@@ -1,0 +1,59 @@
+name = "aegis-api-standard-reporting-worker"
+main = "../../workers/queues/src/index.ts"
+compatibility_date = "2026-04-28"
+
+[vars]
+AEGIS_ENV = "development"
+LOG_LEVEL = "info"
+AI_GATEWAY_NAME = "aegis-dev"
+AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/aegis-dev"
+
+[[queues.consumers]]
+queue = "aegis-report-export-dev"
+max_batch_size = 5
+max_batch_timeout = 30
+dead_letter_queue = "aegis-dead-letter-dev"
+
+[[r2_buckets]]
+binding = "AEGIS_REPORTS_BUCKET"
+bucket_name = "aegis-reports-dev"
+
+[[r2_buckets]]
+binding = "AEGIS_EXPORTS_BUCKET"
+bucket_name = "aegis-exports-dev"
+
+[env.staging]
+name = "aegis-api-standard-reporting-worker-staging"
+vars = { AEGIS_ENV = "staging", LOG_LEVEL = "info", AI_GATEWAY_NAME = "aegis-staging", AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/aegis-staging" }
+
+[[env.staging.queues.consumers]]
+queue = "aegis-report-export-staging"
+max_batch_size = 5
+max_batch_timeout = 30
+dead_letter_queue = "aegis-dead-letter-staging"
+
+[[env.staging.r2_buckets]]
+binding = "AEGIS_REPORTS_BUCKET"
+bucket_name = "aegis-reports-staging"
+
+[[env.staging.r2_buckets]]
+binding = "AEGIS_EXPORTS_BUCKET"
+bucket_name = "aegis-exports-staging"
+
+[env.production]
+name = "aegis-api-standard-reporting-worker-production"
+vars = { AEGIS_ENV = "production", LOG_LEVEL = "warn", AI_GATEWAY_NAME = "aegis-prod", AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/aegis-prod" }
+
+[[env.production.queues.consumers]]
+queue = "aegis-report-export-prod"
+max_batch_size = 5
+max_batch_timeout = 30
+dead_letter_queue = "aegis-dead-letter-prod"
+
+[[env.production.r2_buckets]]
+binding = "AEGIS_REPORTS_BUCKET"
+bucket_name = "aegis-reports-prod"
+
+[[env.production.r2_buckets]]
+binding = "AEGIS_EXPORTS_BUCKET"
+bucket_name = "aegis-exports-prod"

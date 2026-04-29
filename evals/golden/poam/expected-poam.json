@@ -1,0 +1,26 @@
+{
+  "assessment_id": "30000000-0000-4000-8000-000000000001",
+  "status": "draft",
+  "items": [
+    {
+      "related_gap_finding_id": "gap_synth_iac_001",
+      "control_code": "IAC-001",
+      "action_type": "validation_required"
+    },
+    {
+      "related_gap_finding_id": "gap_synth_vpm_001",
+      "control_code": "VPM-001",
+      "action_type": "evidence_collection"
+    },
+    {
+      "related_gap_finding_id": "gap_synth_bcr_001",
+      "control_code": "BCR-001",
+      "action_type": "monitoring_improvement"
+    },
+    {
+      "related_gap_finding_id": "gap_synth_tpr_001",
+      "control_code": "TPR-001",
+      "action_type": "policy_update"
+    }
+  ]
+}

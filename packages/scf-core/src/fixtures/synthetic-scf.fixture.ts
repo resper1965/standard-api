@@ -1,0 +1,201 @@
+import {
+  SYNTHETIC_FRAMEWORK_ID,
+  SYNTHETIC_GOV_001_CONTROL_ID,
+  SYNTHETIC_GOV_002_CONTROL_ID,
+  SYNTHETIC_GOV_DOMAIN_ID,
+  SYNTHETIC_IAC_001_CONTROL_ID,
+  SYNTHETIC_IAC_002_CONTROL_ID,
+  SYNTHETIC_IAC_DOMAIN_ID,
+  SYNTHETIC_IMPORT_RUN_ID,
+  SYNTHETIC_MAPPING_1_ID,
+  SYNTHETIC_MAPPING_2_ID,
+  SYNTHETIC_REQ_1_1_ID,
+  SYNTHETIC_REQ_1_2_ID,
+  SYNTHETIC_SCF_VERSION_ID,
+  SYNTHETIC_SCF_VERSION_LABEL,
+  SYNTHETIC_SOURCE_HASH
+} from "../constants";
+import type { ScfDataset } from "../types";
+
+export const createSyntheticScfFixture = (): ScfDataset => ({
+  versions: [
+    {
+      id: SYNTHETIC_SCF_VERSION_ID,
+      version_label: SYNTHETIC_SCF_VERSION_LABEL,
+      release_date: "2026-01-01",
+      source_hash: SYNTHETIC_SOURCE_HASH,
+      import_status: "succeeded",
+      imported_at: "2026-01-01T00:00:00.000Z",
+      imported_by: "synthetic-seed",
+      notes: "Synthetic/test SCF fixture. Not an official SCF dataset.",
+      is_synthetic: true
+    }
+  ],
+  domains: [
+    {
+      id: SYNTHETIC_GOV_DOMAIN_ID,
+      scf_version_id: SYNTHETIC_SCF_VERSION_ID,
+      domain_code: "GOV",
+      domain_name: "Governance",
+      description: "Synthetic governance domain for tests.",
+      sort_order: 1,
+      is_synthetic: true
+    },
+    {
+      id: SYNTHETIC_IAC_DOMAIN_ID,
+      scf_version_id: SYNTHETIC_SCF_VERSION_ID,
+      domain_code: "IAC",
+      domain_name: "Identity and Access Control",
+      description: "Synthetic identity and access domain for tests.",
+      sort_order: 2,
+      is_synthetic: true
+    }
+  ],
+  controls: [
+    {
+      id: SYNTHETIC_GOV_001_CONTROL_ID,
+      scf_version_id: SYNTHETIC_SCF_VERSION_ID,
+      scf_domain_id: SYNTHETIC_GOV_DOMAIN_ID,
+      control_code: "GOV-001",
+      control_title: "Synthetic governance policy",
+      control_description: "Synthetic/test control. Not official SCF content.",
+      status: "active",
+      is_synthetic: true
+    },
+    {
+      id: SYNTHETIC_GOV_002_CONTROL_ID,
+      scf_version_id: SYNTHETIC_SCF_VERSION_ID,
+      scf_domain_id: SYNTHETIC_GOV_DOMAIN_ID,
+      control_code: "GOV-002",
+      control_title: "Synthetic governance review",
+      control_description: "Synthetic/test control. Not official SCF content.",
+      status: "active",
+      is_synthetic: true
+    },
+    {
+      id: SYNTHETIC_IAC_001_CONTROL_ID,
+      scf_version_id: SYNTHETIC_SCF_VERSION_ID,
+      scf_domain_id: SYNTHETIC_IAC_DOMAIN_ID,
+      control_code: "IAC-001",
+      control_title: "Synthetic access authorization",
+      control_description: "Synthetic/test control. Not official SCF content.",
+      status: "active",
+      is_synthetic: true
+    },
+    {
+      id: SYNTHETIC_IAC_002_CONTROL_ID,
+      scf_version_id: SYNTHETIC_SCF_VERSION_ID,
+      scf_domain_id: SYNTHETIC_IAC_DOMAIN_ID,
+      control_code: "IAC-002",
+      control_title: "Synthetic access review",
+      control_description: "Synthetic/test control. Not official SCF content.",
+      status: "active",
+      is_synthetic: true
+    }
+  ],
+  frameworks: [
+    {
+      id: SYNTHETIC_FRAMEWORK_ID,
+      framework_code: "SYNTH-STD-1",
+      framework_name: "Synthetic Standard 1",
+      framework_version: "1.0",
+      publisher: "Aegis synthetic fixtures",
+      category: "test",
+      source_reference: "synthetic/test fixture",
+      status: "active",
+      is_synthetic: true
+    }
+  ],
+  requirements: [
+    {
+      id: SYNTHETIC_REQ_1_1_ID,
+      scf_framework_id: SYNTHETIC_FRAMEWORK_ID,
+      requirement_code: "SYNTH-1.1",
+      requirement_title: "Synthetic governance requirement",
+      requirement_text: "Synthetic/test requirement mapped to GOV-001.",
+      sort_order: 1,
+      status: "active",
+      is_synthetic: true
+    },
+    {
+      id: SYNTHETIC_REQ_1_2_ID,
+      scf_framework_id: SYNTHETIC_FRAMEWORK_ID,
+      requirement_code: "SYNTH-1.2",
+      requirement_title: "Synthetic access requirement",
+      requirement_text: "Synthetic/test requirement mapped to IAC-001.",
+      sort_order: 2,
+      status: "active",
+      is_synthetic: true
+    }
+  ],
+  mappings: [
+    {
+      id: SYNTHETIC_MAPPING_1_ID,
+      scf_version_id: SYNTHETIC_SCF_VERSION_ID,
+      scf_framework_id: SYNTHETIC_FRAMEWORK_ID,
+      scf_framework_requirement_id: SYNTHETIC_REQ_1_1_ID,
+      scf_control_id: SYNTHETIC_GOV_001_CONTROL_ID,
+      relationship_type: "related",
+      relationship_strength: "source-defined",
+      mapping_source: "synthetic/test fixture",
+      is_official: true,
+      status: "active",
+      is_synthetic: true
+    },
+    {
+      id: SYNTHETIC_MAPPING_2_ID,
+      scf_version_id: SYNTHETIC_SCF_VERSION_ID,
+      scf_framework_id: SYNTHETIC_FRAMEWORK_ID,
+      scf_framework_requirement_id: SYNTHETIC_REQ_1_2_ID,
+      scf_control_id: SYNTHETIC_IAC_001_CONTROL_ID,
+      relationship_type: "related",
+      relationship_strength: "source-defined",
+      mapping_source: "synthetic/test fixture",
+      is_official: true,
+      status: "active",
+      is_synthetic: true
+    }
+  ],
+  strmRelationships: [
+    {
+      id: "20000000-0000-4000-8000-000000000701",
+      relationship_type: "equal",
+      label: "Equal",
+      description: "Synthetic STRM reference row.",
+      directionality: "bidirectional",
+      default_strength_range: "exact"
+    },
+    {
+      id: "20000000-0000-4000-8000-000000000702",
+      relationship_type: "related",
+      label: "Related",
+      description: "Synthetic STRM reference row.",
+      directionality: "bidirectional",
+      default_strength_range: "source-defined"
+    }
+  ],
+  importRuns: [
+    {
+      id: SYNTHETIC_IMPORT_RUN_ID,
+      scf_version_id: SYNTHETIC_SCF_VERSION_ID,
+      source_type: "synthetic_fixture",
+      source_filename: "synthetic-scf.fixture.ts",
+      source_hash: SYNTHETIC_SOURCE_HASH,
+      status: "succeeded",
+      started_at: "2026-01-01T00:00:00.000Z",
+      completed_at: "2026-01-01T00:00:00.000Z",
+      import_statistics: {
+        versions: 1,
+        domains: 2,
+        controls: 4,
+        frameworks: 1,
+        requirements: 2,
+        mappings: 2,
+        strm_relationships: 2,
+        warnings: 0,
+        synthetic_records: 14
+      },
+      trace_id: "synthetic-trace"
+    }
+  ]
+});

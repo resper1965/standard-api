@@ -1,0 +1,43 @@
+name = "aegis-api-standard-api-gateway"
+main = "src/index.ts"
+compatibility_date = "2026-04-28"
+
+[vars]
+AEGIS_ENV = "development"
+LOG_LEVEL = "info"
+AI_GATEWAY_NAME = "aegis-dev"
+AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/aegis-dev"
+
+[[r2_buckets]]
+binding = "AEGIS_DOCUMENTS_BUCKET"
+bucket_name = "aegis-documents-dev"
+
+[[r2_buckets]]
+binding = "AEGIS_REPORTS_BUCKET"
+bucket_name = "aegis-reports-dev"
+
+[[r2_buckets]]
+binding = "AEGIS_EXPORTS_BUCKET"
+bucket_name = "aegis-exports-dev"
+
+[[queues.producers]]
+binding = "DOCUMENT_INGESTION_QUEUE"
+queue = "aegis-document-ingestion-dev"
+
+[[queues.producers]]
+binding = "KB_EMBEDDING_QUEUE"
+queue = "aegis-kb-embedding-dev"
+
+[[queues.producers]]
+binding = "REPORT_EXPORT_QUEUE"
+queue = "aegis-report-export-dev"
+
+[[kv_namespaces]]
+binding = "AEGIS_CACHE"
+id = "replace-with-dev-kv-namespace-id"
+
+[[workflows]]
+binding = "ASSESSMENT_WORKFLOW"
+name = "aegis-assessment-lifecycle-dev"
+class_name = "AssessmentLifecycleWorkflow"
+script_name = "aegis-api-standard-workflows"

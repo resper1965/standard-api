@@ -1,0 +1,37 @@
+name = "aegis-api-standard-queues"
+main = "src/index.ts"
+compatibility_date = "2026-04-28"
+
+[vars]
+AEGIS_ENV = "development"
+LOG_LEVEL = "info"
+AI_GATEWAY_NAME = "aegis-dev"
+AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/aegis-dev"
+
+[[queues.consumers]]
+queue = "aegis-kb-embedding-dev"
+max_batch_size = 10
+max_batch_timeout = 30
+dead_letter_queue = "aegis-dead-letter-dev"
+
+[[queues.consumers]]
+queue = "aegis-report-export-dev"
+max_batch_size = 5
+max_batch_timeout = 30
+dead_letter_queue = "aegis-dead-letter-dev"
+
+[[r2_buckets]]
+binding = "AEGIS_DOCUMENTS_BUCKET"
+bucket_name = "aegis-documents-dev"
+
+[[r2_buckets]]
+binding = "AEGIS_REPORTS_BUCKET"
+bucket_name = "aegis-reports-dev"
+
+[[r2_buckets]]
+binding = "AEGIS_EXPORTS_BUCKET"
+bucket_name = "aegis-exports-dev"
+
+[[vectorize]]
+binding = "AEGIS_KB_INDEX"
+index_name = "aegis-kb-dev"
