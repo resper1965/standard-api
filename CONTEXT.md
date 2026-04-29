@@ -26,12 +26,32 @@ O `aegis-api-standard` é a implementação API-first padrão do Aegis SCF-Based
 - `adr/`: decisões arquiteturais no formato ADR.
 - `prompts/`: prompts, templates e orientações reutilizáveis.
 - `tasks/`: contexto de branches, dev log e registros de trabalho.
+- `docs/superpowers/specs/`: specs de design aprovadas para mudanças guiadas por Superpowers.
+- `docs/superpowers/plans/`: planos de implementação gerados a partir de specs aprovadas.
 
 ## Fonte Única de Verdade
 
 O GitHub é a fonte única de verdade para código, documentação, contexto, prompts, decisões, regras de IA e histórico relevante do projeto.
 
 Contexto importante não deve ficar apenas em chat, terminal local, memória de IDE, notas privadas ou histórico de agente. Se uma decisão, limitação, prompt, regra, aprendizado ou pendência afeta o projeto, ela deve ser persistida no repositório.
+
+## Superpowers no Processo
+
+O Superpowers é o SDLC operacional para tarefas relevantes, mas não substitui as regras do Aegis.
+
+Precedência:
+
+```text
+AGENTS.md + CONTEXT.md + regras Aegis
+>
+Superpowers
+>
+comportamento padrão do agente
+```
+
+Se uma skill pedir algo que altere ou conflite com arquitetura, stack, segurança, tenant isolation, approval gates, local oficial de contexto, versionamento ou fluxo Git, o agente deve pedir consentimento antes de continuar.
+
+Designs aprovados devem ficar em `docs/superpowers/specs/`. Planos de implementação devem ficar em `docs/superpowers/plans/` quando aplicável.
 
 ## Obrigação de Persistir Contexto
 
