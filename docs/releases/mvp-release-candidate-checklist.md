@@ -1,5 +1,7 @@
 # MVP Release Candidate Checklist
 
+> [!WARNING]
+> **[SUPERSEDED]** Os blockers e pendências remanescentes neste Release Candidate migraram e foram consolidados para execução no `docs/releases/roadmap-to-production.md`. Este arquivo é mantido exclusivamente pelo seu valor de Snapshot Histórico Sintético.
 ## Status Geral
 
 Status: release candidate para staging controlado com dados sintéticos.
