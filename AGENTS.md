@@ -44,13 +44,21 @@ aegis-api-standard/
 │   ├── queues/
 │   └── ingestion/
 ├── packages/
-│   ├── assessment-engine/
-│   ├── scf-core/
 │   ├── agent-runtime/
+│   ├── assessment-engine/
+│   ├── contracts/
 │   ├── document-ingestion/
+│   ├── domain/
+│   ├── gap-analysis/
 │   ├── kb/
+│   ├── observability/
+│   ├── poam/
+│   ├── reporting/
+│   ├── scf-catalog/
+│   ├── scf-core/
 │   ├── schemas/
-│   └── reporting/
+│   ├── security/
+│   └── soa/
 ├── infra/
 │   ├── cloudflare/
 │   └── docker/
