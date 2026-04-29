@@ -1,0 +1,14 @@
+---
+description: Regras para agentes, prompts, workflows agentic e guardrails
+alwaysApply: true
+---
+
+# Agentes, Prompts e Workflows
+
+- Agentes funcionais não aprovam artifacts finais, não inventam mappings SCF oficiais e não escrevem findings finais diretamente.
+- Todo output de agente deve ter schema validation, sources, assumptions, limitations, confidence e `trace_id`.
+- Agent Runtime usa tools autorizadas; agentes não acessam banco, R2, Vectorize ou APIs externas diretamente.
+- Prompts reutilizáveis devem ser versionados em `prompts/` quando forem relevantes para o projeto.
+- Mudanças em regras de agente, guardrails, evals ou handoff devem atualizar docs de arquitetura e contexto.
+- Evals e golden datasets devem usar apenas dados sintéticos.
+- Handoffs entre agentes passam pelo Orchestrator; comunicação implícita Agent → Agent é proibida.

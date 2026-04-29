@@ -14,6 +14,7 @@ Este repositório é a implementação API-first padrão do Aegis. Toda lógica 
 - Produto: `Aegis`
 - Núcleo: `Aegis Assessment Engine`
 - Método: `Aegis SCF-Based Assessment Lifecycle`
+- Modelo agêntico: `Aegis SCF Agentic Assessment Model`
 - Arquitetura: `API-first / SaaS-ready / Cloudflare-oriented`
 - Purpose: The `aegis-api-standard` repository contains the API-first standard implementation of the Aegis SCF-Based Assessment Lifecycle. It defines the reusable backend, schemas, workflows, workers, assessment engine, SCF data layer, KB integration and agent runtime rules used by the Aegis platform and future consumers.
 
@@ -112,7 +113,26 @@ O contrato inicial está em `docs/api/openapi.yaml`. A primeira versão prioriza
 
 ## Agentes do Aegis
 
-Nesta fase não há código de agente LLM. Os agentes são papéis arquiteturais a serem implementados depois:
+O **Aegis SCF Agentic Assessment Model** é o modelo de IA agêntica do produto: agentes especializados colaboram sob orquestração controlada para ingerir documentos, construir KB, mapear frameworks, gerar SoA, avaliar evidências, produzir Gap Analysis, medir maturidade, gerar POA&M e preparar relatórios, sempre com rastreabilidade, validação de schema, controle de escopo e aprovação humana.
+
+Comportamento agentic alvo:
+
+1. Recebe assessment novo.
+2. Verifica documentos disponíveis.
+3. Aciona ingestão.
+4. Consulta SCF estruturado.
+5. Aguarda escolha de framework.
+6. Propõe SoA.
+7. Aguarda aprovação.
+8. Executa Evidence Analysis.
+9. Gera Gap Analysis.
+10. Aguarda aprovação.
+11. Mede maturidade.
+12. Gera POA&M.
+13. Gera relatório.
+14. Fecha assessment.
+
+Nesta fase, os agentes são papéis arquiteturais e contratos de runtime governados por schemas, workflows e approval gates:
 
 - **Document Ingestion Agent**: extrai texto e metadados de documentos enviados.
 - **Evidence Normalization Agent**: normaliza evidências e preserva origem/rastreabilidade.
