@@ -23,6 +23,8 @@
     "@aegis/schemas": "workspace:*",
     "@aegis/soa": "workspace:*",
     "@aegis/workflows": "workspace:*",
+    "@neondatabase/serverless": "^0.9.3",
+    "drizzle-orm": "^0.45.2",
     "zod": "^4.3.6"
   },
   "devDependencies": {

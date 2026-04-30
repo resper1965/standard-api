@@ -1,4 +1,5 @@
 export * from "./adapters";
+export * from "./r2-adapter";
 export * from "./chunker";
 export * from "./consumer";
 export * from "./extractors";

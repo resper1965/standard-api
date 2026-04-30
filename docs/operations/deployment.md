@@ -57,15 +57,30 @@ wrangler deploy -c infra/cloudflare/wrangler.reporting-worker.toml -e staging
 
 Production usa `deploy-production.yml`, trigger manual e environment protection `production`.
 
+Antes do primeiro deploy, provisione os recursos Cloudflare:
+
+```bash
+# 1. Provisionar Queues, R2 Buckets, KV Namespaces e injetar IDs no wrangler.api-gateway.toml
+node scripts/provision-cloudflare.mjs production
+
+# 2. Criar o índice Vectorize (somente na primeira execução)
+npx wrangler vectorize create aegis-kb-prod --dimensions=1536 --metric=cosine
+
+# 3. Criar a Dead Letter Queue (somente na primeira execução)
+npx wrangler queues create aegis-dead-letter-prod
+
+# 4. Injetar secrets nos Workers
+node scripts/put-secrets.mjs
+
+# 5. Executar migração do banco (Neon)
+cd packages/schemas && npx tsx migrate.ts
+
+# 6. Deploy completo
+pnpm cf:deploy:production
+```
+
 Checklist de prontidão: `docs/operations/production-readiness-checklist.md`.
 
-Antes do deploy:
-
-- CI verde.
-- Secrets configurados.
-- Recursos production criados.
-- Access/Zero Trust definido para superfícies internas/admin.
-- Smoke tests planejados.
 
 ## Rollback Básico
 

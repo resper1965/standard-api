@@ -9,3 +9,8 @@ dist/
 !.env.example
 coverage/
 *.log
+db_url.txt
+deploy_final.txt
+migrate_error.log
+migrate_final.txt
+migrate_log.txt

@@ -17,7 +17,7 @@ const configs = [
 ];
 
 for (const config of configs) {
-  const result = spawnSync("pnpm", ["exec", "wrangler", "deploy", "-c", config, "-e", environment], {
+  const result = spawnSync("npx", ["--yes", "wrangler", "deploy", "-c", config, "-e", environment], {
     stdio: "inherit",
     shell: process.platform === "win32"
   });

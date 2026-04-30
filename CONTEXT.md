@@ -35,9 +35,14 @@ O GitHub é a fonte única de verdade para código, documentação, contexto, pr
 
 Contexto importante não deve ficar apenas em chat, terminal local, memória de IDE, notas privadas ou histórico de agente. Se uma decisão, limitação, prompt, regra, aprendizado ou pendência afeta o projeto, ela deve ser persistida no repositório.
 
-## Superpowers no Processo
+## Superpowers e Google Antigravity no Processo
 
 O Superpowers é o SDLC operacional para tarefas relevantes, mas não substitui as regras do Aegis.
+
+Ao utilizar o **Google Antigravity**, o processo de planejamento nativo do agente (Planning Mode) atua como camada extra de garantia:
+1. **Contexto Ativo**: O agente deve obrigatoriamente validar `CONTEXT.md` e `AGENTS.md` como base fundamental antes de propor tarefas.
+2. **Approval Gate Nativo (Implementation Plan)**: Antes de escrever soluções complexas, o Antigravity gerará um `implementation_plan.md` no painel do usuário. Nenhuma execução complexa ocorre sem o devido *approval*.
+3. **Persistência de Conhecimento**: Walkthroughs e planos conclusivos relevantes gerados pelo agente não devem ficar limitados aos seus arquivos temporários. Se alterarem o contexto do projeto, devem convergir para o SDLC do Superpowers (e.g., `docs/superpowers/plans/` ou `tasks/`).
 
 Precedência:
 

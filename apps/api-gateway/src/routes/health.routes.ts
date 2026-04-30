@@ -5,7 +5,16 @@ export const healthRoutes: RouteDefinition[] = [
   {
     method: "GET",
     path: "/health",
-    handler: ({ traceId }) => json({ ok: true, service: "aegis-api-standard", trace_id: traceId })
+    handler: async ({ traceId, deps }) => {
+      let dbStatus = "unknown";
+      try {
+        await deps.organizations.get("00000000-0000-0000-0000-000000000000", "00000000-0000-0000-0000-000000000000");
+        dbStatus = "connected";
+      } catch (error) {
+        dbStatus = "disconnected";
+      }
+      return json({ ok: true, service: "aegis-api-standard", database: dbStatus, trace_id: traceId });
+    }
   },
   {
     method: "GET",

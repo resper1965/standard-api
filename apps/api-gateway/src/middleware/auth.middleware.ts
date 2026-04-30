@@ -1,5 +1,5 @@
 import { SecurityEventService } from "@aegis/observability";
-import { MockAuthProvider } from "@aegis/security";
+import { JwtAuthProvider } from "@aegis/security";
 import type { Role } from "@aegis/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RequestContext } from "../http";
@@ -38,7 +38,8 @@ export const resolveActorContext = async (context: RequestContext, requireAuth: 
     throw new ApiError("UNAUTHORIZED", "Actor context is required for this operation.", 401);
   }
 
-  const provider = new MockAuthProvider("development");
+  // Cloudflare native edge gateway authentication
+  const provider = new JwtAuthProvider();
   const auth = await provider.authenticate({
     ...(actorId ? { actorId } : {}),
     ...(context.tenantId ? { tenantId: context.tenantId } : {}),

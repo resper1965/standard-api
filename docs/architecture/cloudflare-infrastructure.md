@@ -83,18 +83,41 @@ Nenhum endpoint real ou segredo é hardcoded. Produção deve habilitar controle
 - Endpoints admin devem ficar protegidos por Access/Zero Trust antes de exposição.
 - Tokens Cloudflare e GitHub devem seguir menor privilégio.
 
-## Limitações do MVP
+## Estado de Produção (2026-04-30)
 
-- Terraform é placeholder.
-- Storage R2 real ainda depende de adapters completos nas camadas de runtime.
-- Vectorize real ainda não substitui mocks locais.
-- Workers for Platforms, Cloudflare for SaaS e Access são planejamento, não provisionamento.
-- D1 e Durable Objects não foram configurados por ausência de necessidade atual.
+A infraestrutura de produção foi provisionada e está operacional:
+
+| Recurso | Nome / ID | Status |
+|---|---|---|
+| API Gateway Worker | `aegis-api-standard-api-gateway-production` | ✅ Deployed |
+| Workflow Worker | `aegis-api-standard-workflows-production` | ✅ Deployed |
+| Ingestion Worker | `aegis-api-standard-ingestion-production` | ✅ Deployed |
+| KB Embedding Worker | `aegis-api-standard-kb-worker-production` | ✅ Deployed |
+| Reporting Worker | `aegis-api-standard-reporting-worker-production` | ✅ Deployed |
+| R2 Documents | `aegis-documents-prod` | ✅ Provisionado |
+| R2 Reports | `aegis-reports-prod` | ✅ Provisionado |
+| R2 Exports | `aegis-exports-prod` | ✅ Provisionado |
+| Vectorize KB | `aegis-kb-prod` (1536 dims, cosine) | ✅ Provisionado |
+| Queue Ingestion | `aegis-document-ingestion-prod` | ✅ Provisionado |
+| Queue KB | `aegis-kb-embedding-prod` | ✅ Provisionado |
+| Queue Reports | `aegis-report-export-prod` | ✅ Provisionado |
+| Queue Agent | `aegis-agent-task-prod` | ✅ Provisionado |
+| Queue Dead Letter | `aegis-dead-letter-prod` | ✅ Provisionado |
+| KV Config | `aegis-config-kv-prod` (`e7aba96b342b4060ab3869ca7789832d`) | ✅ Provisionado |
+| KV Feature Flags | `aegis-feature-flags-kv-prod` (`23e073ec707d4803a8957e13a4046810`) | ✅ Provisionado |
+| KV Cache | `aegis-cache-kv-prod` (`55f97abbf9794b0196bdf51e8c1dedec`) | ✅ Provisionado |
+| PostgreSQL | Neon Serverless (`ep-blue-breeze-anyfua57`, us-east-1) | ✅ Migrado |
+
+O secret `DATABASE_URL` está injetado nos worker environments via `wrangler secret put`.
+
+O adaptador `CloudflareR2StorageAdapter` está ativo no API Gateway, lendo o binding `AEGIS_DOCUMENTS_BUCKET` do ambiente Cloudflare.
 
 ## Decisões em Aberto
 
-- Provider e dimensão de embeddings para Vectorize.
-- Estratégia de custom hostnames por tenant.
+- Estratégia de custom hostnames por tenant (Cloudflare for SaaS).
 - Política formal de DLP/log retention no AI Gateway.
-- Adoção de Terraform/Pulumi e backend de state.
+- Adoção de Terraform/Pulumi para IaC do estado de infra provisionada.
 - Separação física ou lógica de buckets por tenant enterprise.
+- Workers for Platforms e Access/Zero Trust para endpoints admin.
+- D1 e Durable Objects: não configurados — sem requisito ativo no MVP.
+- Dimensão de embeddings e modelo para Vectorize (configurado em 1536/cosine para compatibilidade com OpenAI text-embedding-3-small/large).
