@@ -1,5 +1,9 @@
 import type { AccessDecision, Permission, PolicyInput } from "@aegis/schemas";
 
+/**
+ * @deprecated Use `@aegis/auth` permissions (Better Auth Access Control) instead.
+ * This engine will be removed in v0.3.0.
+ */
 export class PolicyEngine {
   authorize(input: PolicyInput): AccessDecision {
     if (!input.auth) {

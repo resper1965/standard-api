@@ -1,5 +1,9 @@
 import type { AuthContext, Role } from "@aegis/schemas";
 
+/**
+ * @deprecated Use `@aegis/auth` (Better Auth) instead.
+ * This interface will be removed in v0.3.0.
+ */
 export type AuthenticateInput = {
   actorId?: string;
   tenantId?: string;
@@ -11,6 +15,10 @@ export type AuthenticateInput = {
   apiKey?: string;
 };
 
+/**
+ * @deprecated Use `@aegis/auth` (Better Auth) instead.
+ * This interface will be removed in v0.3.0.
+ */
 export type AuthProvider = {
   authenticate(input: AuthenticateInput): Promise<AuthContext | null>;
 };

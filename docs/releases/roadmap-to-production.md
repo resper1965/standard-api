@@ -6,9 +6,9 @@
 *Foco primário antes da abertura orgânica do tráfego*
 
 - [ ] **Estratégia Final de Storage Físico:** Provisionar efetivamente os adaptadores R2 para a guarda real e persistente das `evidências` de tenant. O MVP roda com filesystem in-memory mock.
-- [ ] **Estratégia de PostgreSQL Gerenciado:** Avaliar provedores parceiros do Cloudflare ou soluções Neon/Hyperdrive para acréscimo do banco relacional de produção com pools no Edge.
+- [x] **Estratégia de PostgreSQL Gerenciado:** ~~Avaliar provedores parceiros~~ → Neon PostgreSQL com drizzle-orm, 8 tabelas Better Auth + domain tables migradas.
 - [ ] **Cloudflare Assíncrono Real:** Provisionar filas reais (Queues), Vectorize Workspaces separados por Tenant/Subdomain e aplicar o Workflow durável via nuvem em vez do simulador dev.
-- [ ] **Provedor de Auth (Staging/Production):** Mudar os MockAuthProviders locais para JWT, Cloudflare Access ou provedor B2B (Clerk/Auth0) validando Tenants e Orgs.
+- [x] **Provedor de Auth (Staging/Production):** ~~Mudar os MockAuthProviders locais~~ → Better Auth integrado com session cookies, Google OAuth, API keys e organization-based tenancy.
 
 ## Trilha 2: Core Funcional & Assessments (Aegis Lifecycle)
 *Adições mandatórias que faltam no produto-base SaaS*

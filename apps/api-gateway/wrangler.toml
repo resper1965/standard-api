@@ -46,4 +46,7 @@ name = "aegis-assessment-lifecycle-dev"
 class_name = "AssessmentLifecycleWorkflow"
 script_name = "aegis-api-standard-workflows"
 
-
+# ─── Production environment ────────────────────────────────────
+[env.production]
+vars = { AEGIS_ENV = "production", BETTER_AUTH_URL = "https://aegis-api.bekaa.eu" }
+routes = [{ pattern = "aegis-api.bekaa.eu", custom_domain = true }]

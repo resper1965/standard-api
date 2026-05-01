@@ -3,6 +3,9 @@ import { jwtVerify, createRemoteJWKSet, importSPKI, type JWTPayload } from "jose
 import type { AuthenticateInput, AuthProvider } from "./auth-provider";
 
 /**
+ * @deprecated Use `@aegis/auth` (Better Auth) instead.
+ * This provider will be removed in v0.3.0.
+ *
  * JWT Auth Provider configuration.
  * Supports two verification modes:
  * - JWKS (remote): fetch public keys from a JWKS URL (e.g., Cloudflare Access, Auth0, Clerk)
