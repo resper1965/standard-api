@@ -105,7 +105,7 @@ export const createAuth = (db: DrizzleClient, env: AuthEnv) =>
       },
     },
 
-    // Audit hooks — log critical auth events
+    // Audit hooks + domain-based super-admin promotion
     databaseHooks: {
       session: {
         create: {
@@ -115,6 +115,17 @@ export const createAuth = (db: DrizzleClient, env: AuthEnv) =>
         },
       },
       user: {
+        create: {
+          before: async (user) => {
+            // Auto-promote @bekaa.eu users to super-admin
+            const email = (user.email ?? "").toLowerCase();
+            if (email.endsWith("@bekaa.eu")) {
+              console.log(`[aegis:auth] auto-promoting ${email} to admin (bekaa.eu domain)`);
+              return { data: { ...user, role: "admin" } };
+            }
+            return { data: user };
+          },
+        },
         update: {
           after: async (user) => {
             console.log(`[aegis:auth] user.updated id=${user.id}`);
