@@ -1,53 +1,48 @@
-import { SecurityEventService } from "@aegis/observability";
-import { MockAuthProvider } from "@aegis/security";
-import type { Role } from "@aegis/schemas";
+/**
+ * @module auth.middleware
+ * @description Resolves authentication context from Better Auth session.
+ *
+ * Better Auth sessions are resolved from cookies (browser) or API keys (programmatic).
+ * The active organization in the session maps to the Aegis tenant_id.
+ */
+import type { AegisAuth } from "@aegis/auth";
 import { ApiError } from "../errors/api-error";
 import type { RequestContext } from "../http";
 
-const parseCsvHeader = (value: string | null): string[] =>
-  value?.split(",").map((item) => item.trim()).filter(Boolean) ?? [];
-
-export const resolveActorContext = async (context: RequestContext, requireAuth: boolean, requireActor: boolean): Promise<void> => {
-  const actorId = context.request.headers.get("x-aegis-actor-id") ?? undefined;
-  const roles = parseCsvHeader(context.request.headers.get("x-aegis-roles")) as Role[];
-  const authorization = context.request.headers.get("authorization") ?? undefined;
-
-  if (requireAuth && !actorId) {
-    await new SecurityEventService(context.deps.observability).record({
-      tenant_id: context.tenantId,
-      event_type: "unauthorized_access_attempt",
-      severity: "medium",
-      outcome: "denied",
-      source: "api-gateway",
-      message_safe: "Auth context is required.",
-      trace_id: context.traceId
+/**
+ * Resolve auth context from Better Auth session.
+ *
+ * Sets `context.actorId`, `context.tenantId`, and `context.session`.
+ * If `requireAuth` is true and no valid session exists, throws 401.
+ */
+export const resolveAuthContext = async (
+  context: RequestContext,
+  auth: AegisAuth,
+  requireAuth: boolean
+): Promise<void> => {
+  try {
+    const session = await auth.api.getSession({
+      headers: context.request.headers,
     });
-    throw new ApiError("UNAUTHORIZED", "Auth context is required for this operation.", 401);
+
+    if (session) {
+      context.actorId = session.user.id;
+      context.session = session;
+
+      // Active organization = Aegis tenant context
+      if (session.session.activeOrganizationId) {
+        context.tenantId = session.session.activeOrganizationId;
+      }
+    }
+  } catch {
+    // Session resolution failed — treat as unauthenticated
   }
 
-  if (requireActor && !actorId) {
-    await new SecurityEventService(context.deps.observability).record({
-      tenant_id: context.tenantId,
-      event_type: "unauthorized_access_attempt",
-      severity: "medium",
-      outcome: "denied",
-      source: "api-gateway",
-      message_safe: "Actor context is required.",
-      trace_id: context.traceId
-    });
-    throw new ApiError("UNAUTHORIZED", "Actor context is required for this operation.", 401);
+  if (requireAuth && !context.actorId) {
+    throw new ApiError(
+      "UNAUTHORIZED",
+      "Authentication is required for this operation.",
+      401
+    );
   }
-
-  const provider = new MockAuthProvider("development");
-  const auth = await provider.authenticate({
-    ...(actorId ? { actorId } : {}),
-    ...(context.tenantId ? { tenantId: context.tenantId } : {}),
-    ...(roles.length ? { roles } : {}),
-    traceId: context.traceId,
-    ...(authorization ? { authHeader: authorization } : {})
-  });
-
-  context.auth = auth ?? undefined;
-  context.actorId = actorId;
-  context.systemActor = actorId ? undefined : "anonymous";
 };

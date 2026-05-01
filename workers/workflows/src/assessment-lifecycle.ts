@@ -1,4 +1,5 @@
 import { AssessmentLifecycleWorkflowInputSchema, type AssessmentLifecycleWorkflowState } from "@aegis/schemas";
+import { WorkflowEntrypoint, WorkflowEvent, WorkflowStep } from "cloudflare:workers";
 
 export type WorkflowCheckpoint = {
   assessment_id: string;

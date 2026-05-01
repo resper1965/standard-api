@@ -1,6 +1,6 @@
 export * from "./auth/api-key-auth-provider.placeholder";
 export * from "./auth/auth-provider";
-export * from "./auth/jwt-auth-provider.placeholder";
+export * from "./auth/jwt-auth-provider";
 export * from "./auth/mock-auth-provider";
 export * from "./constants";
 export * from "./errors";

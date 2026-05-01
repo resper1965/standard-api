@@ -10,15 +10,15 @@ AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT
 
 [[r2_buckets]]
 binding = "AEGIS_DOCUMENTS_BUCKET"
-bucket_name = "aegis-documents-dev"
+bucket_name = "aegis-documents-prod"
 
 [[r2_buckets]]
 binding = "AEGIS_REPORTS_BUCKET"
-bucket_name = "aegis-reports-dev"
+bucket_name = "aegis-reports-prod"
 
 [[r2_buckets]]
 binding = "AEGIS_EXPORTS_BUCKET"
-bucket_name = "aegis-exports-dev"
+bucket_name = "aegis-exports-prod"
 
 [[queues.producers]]
 binding = "DOCUMENT_INGESTION_QUEUE"
@@ -38,15 +38,15 @@ queue = "aegis-agent-task-dev"
 
 [[kv_namespaces]]
 binding = "AEGIS_CONFIG_KV"
-id = "replace-with-dev-config-kv-id"
+id = "e7aba96b342b4060ab3869ca7789832d"
 
 [[kv_namespaces]]
 binding = "AEGIS_FEATURE_FLAGS_KV"
-id = "replace-with-dev-feature-flags-kv-id"
+id = "23e073ec707d4803a8957e13a4046810"
 
 [[kv_namespaces]]
 binding = "AEGIS_CACHE_KV"
-id = "replace-with-dev-cache-kv-id"
+id = "55f97abbf9794b0196bdf51e8c1dedec"
 
 [[workflows]]
 binding = "ASSESSMENT_WORKFLOW"
@@ -56,7 +56,12 @@ script_name = "aegis-api-standard-workflows"
 
 [env.staging]
 name = "aegis-api-standard-api-gateway-staging"
-vars = { AEGIS_ENV = "staging", LOG_LEVEL = "info", AI_GATEWAY_NAME = "aegis-staging", AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/aegis-staging" }
+
+[env.staging.vars]
+AEGIS_ENV = "staging"
+LOG_LEVEL = "info"
+AI_GATEWAY_NAME = "aegis-staging"
+AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/aegis-staging"
 
 [[env.staging.r2_buckets]]
 binding = "AEGIS_DOCUMENTS_BUCKET"
@@ -106,7 +111,12 @@ script_name = "aegis-api-standard-workflows-staging"
 
 [env.production]
 name = "aegis-api-standard-api-gateway-production"
-vars = { AEGIS_ENV = "production", LOG_LEVEL = "warn", AI_GATEWAY_NAME = "aegis-prod", AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/aegis-prod" }
+
+[env.production.vars]
+AEGIS_ENV = "production"
+LOG_LEVEL = "warn"
+AI_GATEWAY_NAME = "aegis-prod"
+AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/aegis-prod"
 
 [[env.production.r2_buckets]]
 binding = "AEGIS_DOCUMENTS_BUCKET"
@@ -138,15 +148,15 @@ queue = "aegis-agent-task-prod"
 
 [[env.production.kv_namespaces]]
 binding = "AEGIS_CONFIG_KV"
-id = "replace-with-production-config-kv-id"
+id = "e7aba96b342b4060ab3869ca7789832d"
 
 [[env.production.kv_namespaces]]
 binding = "AEGIS_FEATURE_FLAGS_KV"
-id = "replace-with-production-feature-flags-kv-id"
+id = "23e073ec707d4803a8957e13a4046810"
 
 [[env.production.kv_namespaces]]
 binding = "AEGIS_CACHE_KV"
-id = "replace-with-production-cache-kv-id"
+id = "55f97abbf9794b0196bdf51e8c1dedec"
 
 [[env.production.workflows]]
 binding = "ASSESSMENT_WORKFLOW"

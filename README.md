@@ -67,13 +67,21 @@ aegis-api-standard/
 │   ├── queues/
 │   └── ingestion/
 ├── packages/
-│   ├── assessment-engine/
-│   ├── scf-core/
 │   ├── agent-runtime/
+│   ├── assessment-engine/
+│   ├── contracts/
 │   ├── document-ingestion/
+│   ├── domain/
+│   ├── gap-analysis/
 │   ├── kb/
+│   ├── observability/
+│   ├── poam/
+│   ├── reporting/
+│   ├── scf-catalog/
+│   ├── scf-core/
 │   ├── schemas/
-│   └── reporting/
+│   ├── security/
+│   └── soa/
 ├── infra/
 │   ├── cloudflare/
 │   ├── docker/
@@ -137,8 +145,11 @@ pnpm test:ci
 ## Como Entender os Packages
 
 - `packages/schemas`: contratos compartilhados, Zod schemas e schema Drizzle.
+- `packages/contracts`: interfaces, DTOs e tipagens limpas que atravessam fronteiras.
+- `packages/domain`: regras e entidades de domínio puras desvinculadas de framework.
 - `packages/assessment-engine`: state machine, transitions, approval gates e artifact invariants.
 - `packages/scf-core`: fonte normativa estruturada do SCF e mappings oficiais.
+- `packages/scf-catalog`: estrutura de leitura e queries avançadas para a base de controles SCF.
 - `packages/document-ingestion`: validação, extraction/chunking e jobs de ingestão.
 - `packages/kb`: KB search, embeddings abstraídos e evidência candidata.
 - `packages/soa`, `packages/gap-analysis`, `packages/poam`, `packages/reporting`: artefatos de assessment versionados e aprováveis.

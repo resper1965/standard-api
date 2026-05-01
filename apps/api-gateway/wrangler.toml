@@ -1,12 +1,16 @@
 name = "aegis-api-standard-api-gateway"
 main = "src/index.ts"
 compatibility_date = "2026-04-28"
+compatibility_flags = ["nodejs_compat"]
 
 [vars]
 AEGIS_ENV = "development"
 LOG_LEVEL = "info"
 AI_GATEWAY_NAME = "aegis-dev"
 AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/aegis-dev"
+# Better Auth — SECRET must be set via `wrangler secret put BETTER_AUTH_SECRET` for production
+# For local dev, this placeholder is overridden by .dev.vars
+BETTER_AUTH_URL = "http://localhost:8787"
 
 [[r2_buckets]]
 binding = "AEGIS_DOCUMENTS_BUCKET"
@@ -41,3 +45,5 @@ binding = "ASSESSMENT_WORKFLOW"
 name = "aegis-assessment-lifecycle-dev"
 class_name = "AssessmentLifecycleWorkflow"
 script_name = "aegis-api-standard-workflows"
+
+

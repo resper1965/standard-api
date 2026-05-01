@@ -1,11 +1,13 @@
 import { createMockRepositories } from "./adapters";
+import type { AegisAuth } from "@aegis/auth";
+import type { Env } from "./index";
 import { ApiError } from "./errors/api-error";
 import type { AppDependencies, RouteDefinition } from "./http";
 import { json, type RequestContext } from "./http";
 import { recordAuditPlaceholder } from "./middleware/audit.middleware";
-import { resolveActorContext } from "./middleware/auth.middleware";
+import { resolveAuthContext } from "./middleware/auth.middleware";
 import { errorResponse } from "./middleware/error.middleware";
-import { assertRateLimitPlaceholder } from "./middleware/rate-limit.middleware";
+import { assertRateLimit } from "./middleware/rate-limit.middleware";
 import { recordRequestObservability } from "./middleware/request-observability.middleware";
 import { assertRbac } from "./middleware/rbac.middleware";
 import { resolveTenantContext } from "./middleware/tenant.middleware";
@@ -67,12 +69,18 @@ const matchRoute = (routePath: string, actualPath: string): Record<string, strin
   return params;
 };
 
-export const createApp = (deps: AppDependencies = createMockRepositories()) => ({
+export const createApp = (deps: AppDependencies = createMockRepositories(), env?: Partial<Env>, auth?: AegisAuth) => ({
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
     const traceId = resolveTraceId(request);
 
     try {
+      // ── Better Auth route delegation ─────────────────────────
+      // All /api/auth/* requests are handled by Better Auth directly
+      if (auth && url.pathname.startsWith("/api/auth")) {
+        return auth.handler(request);
+      }
+
       const route = routes.find((candidate) => candidate.method === request.method && matchRoute(candidate.path, url.pathname));
       if (!route) {
         throw new ApiError("NOT_FOUND", "Endpoint not found.", 404);
@@ -81,12 +89,20 @@ export const createApp = (deps: AppDependencies = createMockRepositories()) => (
       const params = matchRoute(route.path, url.pathname)!;
       const context: RequestContext = { request, params, traceId, deps };
       const startedAt = Date.now();
+
+      // ── Auth context resolution ──────────────────────────────
+      // Use Better Auth session if available, fallback to legacy headers
+      const authRequired = route.authRequired ?? (Boolean(route.requireActor) || Boolean(route.permissions?.length));
+      if (auth) {
+        await resolveAuthContext(context, auth, authRequired);
+      }
+
+      // Tenant is now derived from session.activeOrganizationId or legacy header
       const tenantRequired = route.tenantRequired ?? (Boolean(route.protected) && !route.path.startsWith("/api/v1/scf") && !route.path.startsWith("/api/v1/admin/scf"));
       resolveTenantContext(context, tenantRequired);
-      const authRequired = route.authRequired ?? (Boolean(route.requireActor) || Boolean(route.permissions?.length));
-      await resolveActorContext(context, authRequired, Boolean(route.requireActor));
+
       await assertRbac(context, route.permissions);
-      await assertRateLimitPlaceholder(context, route.path);
+      await assertRateLimit(context, route.path, env?.AEGIS_CACHE);
       await recordAuditPlaceholder(context, route.path);
 
       const response = await route.handler(context);

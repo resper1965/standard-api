@@ -1,0 +1,21 @@
+{
+  "name": "@aegis/auth",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@aegis/schemas": "workspace:*",
+    "better-auth": "^1.2.10",
+    "@better-auth/api-key": "^1.2.10",
+    "drizzle-orm": "^0.45.2",
+    "@neondatabase/serverless": "^0.9.3"
+  },
+  "devDependencies": {
+    "typescript": "latest"
+  }
+}

@@ -8,7 +8,7 @@ O Aegis é API-first, SaaS-ready, multi-tenant e Cloudflare-oriented. O backend,
 
 - API Gateway: endpoints versionados, auth, RBAC, tenant guard e validação.
 - Assessment Engine: state machine, transitions, approval gates e invariantes.
-- Packages: schemas, SCF core, KB, SoA, Gap, POA&M, Reporting, Security, Observability e Agent Runtime.
+- Packages: schemas, domain, contracts, SCF core, SCF catalog, KB, SoA, Gap, POA&M, Reporting, Security, Observability e Agent Runtime.
 - Workers/Workflows/Queues: execução assíncrona e lifecycle durável.
 - Data Layer futuro: PostgreSQL transacional, R2 para artifacts, Vectorize para KB auxiliar.
 
