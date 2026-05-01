@@ -9,7 +9,9 @@
     "typecheck": "tsc --noEmit",
     "test": "tsx src/validation-smoke.ts",
     "db:generate": "drizzle-kit generate --config drizzle.config.ts",
-    "db:migrate": "drizzle-kit migrate --config drizzle.config.ts"
+    "db:migrate": "drizzle-kit migrate --config drizzle.config.ts",
+    "db:seed": "node --env-file=../../.env --import tsx src/seed.ts",
+    "db:lifecycle-proof": "node --env-file=../../.env --import tsx src/lifecycle-proof.ts"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.2",

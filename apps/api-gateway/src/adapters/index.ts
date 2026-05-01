@@ -13,7 +13,7 @@ import type { Env } from "../index";
 import type { DbClient } from "./db";
 import { createAssessmentRepository, createDrizzleAssessmentRepository } from "./assessment.repository";
 import { createArtifactRepository } from "./artifact.repository";
-import { createAuditRepository } from "./audit.repository";
+import { createAuditRepository, createDrizzleAuditRepository } from "./audit.repository";
 import { createApprovalRepository, createDrizzleApprovalRepository } from "./approval.repository";
 import { createLifecycleEventRepository, createDrizzleLifecycleEventRepository } from "./lifecycle.repository";
 import { createOrganizationRepository, createDrizzleOrganizationRepository } from "./organization.repository";
@@ -68,7 +68,7 @@ export const createDrizzleRepositories = (db: DbClient, env?: Env): AppDependenc
     approvals: createDrizzleApprovalRepository(db),
     artifacts: createArtifactRepository(), // Still mock until Phase 5
     lifecycleEvents: createDrizzleLifecycleEventRepository(db),
-    audit: createAuditRepository(), // Still mock until Phase 5
+    audit: createDrizzleAuditRepository(db),
     documentIngestion,
     kb,
     scf,

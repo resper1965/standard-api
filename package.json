@@ -29,11 +29,11 @@
     "cf:dev": "pnpm dev:api",
     "cf:deploy:staging": "node scripts/deploy-cloudflare.mjs staging",
     "cf:deploy:production": "node scripts/deploy-cloudflare.mjs production",
-    "db:seed": "echo \"Seeds sintéticos são aplicados pelo Docker Compose local\"",
+    "db:seed": "pnpm --filter @aegis/schemas db:seed",
     "db:studio": "echo \"db:studio ainda não configurado\""
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "latest",
+    "@cloudflare/workers-types": "^4.20260426.1",
     "tsx": "latest",
     "typescript": "latest",
     "wrangler": "latest"

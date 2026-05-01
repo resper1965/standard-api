@@ -43,6 +43,7 @@ export const apiErrorCodes = [
   "EXPORT_JOB_FAILED",
   "APPROVAL_EVENT_REQUIRED",
   "ACTOR_REQUIRED",
+  "RATE_LIMIT_EXCEEDED",
   "NOT_IMPLEMENTED",
   "INTERNAL_ERROR"
 ] as const;

@@ -124,8 +124,11 @@ export type RequestContext = {
   organizationId?: string | undefined;
   actorId?: string | undefined;
   systemActor?: string | undefined;
+  /** @deprecated Use `session` instead — legacy auth context */
   auth?: AuthContext | undefined;
   securityTenant?: SecurityTenantContext | undefined;
+  /** Better Auth session (user + session data) */
+  session?: { user: { id: string; email: string; name: string; role?: string | null | undefined; [key: string]: unknown }; session: { id: string; activeOrganizationId?: string | null | undefined; [key: string]: unknown } } | null;
   deps: AppDependencies;
 };
 

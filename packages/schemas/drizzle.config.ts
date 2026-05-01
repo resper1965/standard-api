@@ -5,7 +5,7 @@ config({ path: ".env" });
 
 
 export default defineConfig({
-  schema: "./src/db/schema.ts",
+  schema: ["./src/db/schema.ts", "./src/db/auth-schema.ts"],
   out: "../../infra/docker/postgres/migrations",
   dialect: "postgresql",
   dbCredentials: {

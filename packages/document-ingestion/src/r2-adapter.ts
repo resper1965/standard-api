@@ -1,10 +1,34 @@
 import type { StorageAdapter, StoredObject } from "./types";
 
+/**
+ * Minimal interface matching what we use from Cloudflare R2Bucket.
+ * This avoids a hard dependency on @cloudflare/workers-types in packages consumed by non-worker packages.
+ */
+interface R2BucketLike {
+  put(
+    key: string,
+    value: ArrayBuffer,
+    options?: { httpMetadata?: { contentType?: string }; customMetadata?: Record<string, string> }
+  ): Promise<unknown>;
+  get(key: string): Promise<{
+    key: string;
+    arrayBuffer(): Promise<ArrayBuffer>;
+    httpMetadata?: { contentType?: string };
+    customMetadata?: Record<string, string>;
+  } | null>;
+  delete(key: string): Promise<void>;
+}
+
 export class CloudflareR2StorageAdapter implements StorageAdapter {
-  constructor(private readonly bucket: R2Bucket) {}
+  constructor(private readonly bucket: R2BucketLike) {}
 
   async putObject(object: StoredObject): Promise<void> {
-    await this.bucket.put(object.key, object.bytes.buffer, {
+    // Uint8Array.buffer is ArrayBufferLike; slice() returns a proper ArrayBuffer
+    const buffer = object.bytes.buffer.slice(
+      object.bytes.byteOffset,
+      object.bytes.byteOffset + object.bytes.byteLength
+    ) as ArrayBuffer;
+    await this.bucket.put(object.key, buffer, {
       httpMetadata: { contentType: object.contentType },
       customMetadata: {
         contentHash: object.contentHash,
@@ -22,7 +46,7 @@ export class CloudflareR2StorageAdapter implements StorageAdapter {
       key: r2Object.key,
       bytes: new Uint8Array(arrayBuffer),
       contentType: r2Object.httpMetadata?.contentType ?? "application/octet-stream",
-      contentHash: r2Object.customMetadata?.contentHash ?? "",
+      contentHash: r2Object.customMetadata?.["contentHash"] ?? "",
       metadata: r2Object.customMetadata ?? {}
     };
   }

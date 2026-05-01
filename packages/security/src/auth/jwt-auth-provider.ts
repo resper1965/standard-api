@@ -1,11 +1,30 @@
 import type { AuthContext, Role } from "@aegis/schemas";
+import { jwtVerify, createRemoteJWKSet, importSPKI, type JWTPayload } from "jose";
 import type { AuthenticateInput, AuthProvider } from "./auth-provider";
 
+/**
+ * JWT Auth Provider configuration.
+ * Supports two verification modes:
+ * - JWKS (remote): fetch public keys from a JWKS URL (e.g., Cloudflare Access, Auth0, Clerk)
+ * - Symmetric (HS256): secret string for simpler setups
+ */
+export type JwtAuthConfig =
+  | { mode: "jwks"; jwksUrl: string }
+  | { mode: "secret"; secret: string }
+  | { mode: "decode-only" }; // Non-production fallback: decode without signature verification
+
+const AegisClaimsSymbol = Symbol("aegis-claims");
+
+interface AegisClaims extends JWTPayload {
+  tenant_id?: string;
+  organization_ids?: string[];
+  roles?: Role[];
+  permissions?: string[];
+}
+
 export class JwtAuthProvider implements AuthProvider {
-  /**
-   * Authenticate validates a Bearer token received from Cloudflare Access or generic JWT.
-   * In a real edge environment, this would securely verify JWKS signatures using 'jose' or 'cloudflare-worker-jwt'.
-   */
+  constructor(private readonly config: JwtAuthConfig = { mode: "decode-only" }) {}
+
   async authenticate(input: AuthenticateInput): Promise<AuthContext | null> {
     if (!input.authHeader || !input.authHeader.startsWith("Bearer ")) {
       return null;
@@ -13,37 +32,73 @@ export class JwtAuthProvider implements AuthProvider {
 
     const token = input.authHeader.split(" ")[1];
     if (!token) return null;
-    
-    try {
-      // Decode JWT Payload safely (Edge compatible Base64 parse)
-      const payloadBase64 = token.split(".")[1];
-      if (!payloadBase64) return null;
-      
-      const payloadString = atob(payloadBase64);
-      const payload = JSON.parse(payloadString);
-      
-      const actorId = payload.sub || input.actorId || "service-actor";
-      const tenantId = payload.tenant_id || input.tenantId;
-      const roles = (payload.roles || input.roles || []) as Role[];
-      
-      if (!tenantId) {
-        return null; // Strict multi-tenancy: Deny tokens without tenant scope
-      }
 
-      return {
-        actor_id: actorId,
-        actor_type: "user",
-        ...(tenantId ? { tenant_id: tenantId } : {}),
-        roles,
-        permissions: payload.permissions || [],
-        organization_ids: payload.organization_ids || input.organizationIds || [],
-        auth_method: "jwt",
-        issued_at: new Date().toISOString(),
-        trace_id: input.traceId || ""
-      };
-    } catch (e) {
-      // Malformed or invalid JWT triggers rejection
+    let payload: AegisClaims;
+
+    try {
+      payload = await this.verify(token);
+    } catch {
       return null;
     }
+
+    const actorId = payload.sub || input.actorId || "service-actor";
+    const tenantId = payload.tenant_id || input.tenantId;
+    const roles = (payload.roles || input.roles || []) as Role[];
+
+    if (!tenantId) {
+      // Strict multi-tenancy: deny tokens without tenant scope
+      return null;
+    }
+
+    return {
+      actor_id: actorId,
+      actor_type: "user",
+      tenant_id: tenantId,
+      roles,
+      permissions: (payload.permissions as AuthContext["permissions"]) || [],
+      organization_ids: payload.organization_ids || input.organizationIds || [],
+      auth_method: "jwt",
+      issued_at: new Date().toISOString(),
+      trace_id: input.traceId || ""
+    };
+  }
+
+  private async verify(token: string): Promise<AegisClaims> {
+    if (this.config.mode === "decode-only") {
+      // Non-production fallback: base64 decode only, no signature check
+      const payloadBase64 = token.split(".")[1];
+      if (!payloadBase64) throw new Error("malformed_token");
+      return JSON.parse(atob(payloadBase64)) as AegisClaims;
+    }
+
+    if (this.config.mode === "secret") {
+      const secret = new TextEncoder().encode(this.config.secret);
+      const { payload } = await jwtVerify(token, secret, {
+        algorithms: ["HS256"]
+      });
+      return payload as AegisClaims;
+    }
+
+    // JWKS mode: fetch public keys remotely (works in Cloudflare Edge via Web Crypto)
+    const JWKS = createRemoteJWKSet(new URL(this.config.jwksUrl));
+    const { payload } = await jwtVerify(token, JWKS);
+    return payload as AegisClaims;
   }
 }
+
+/**
+ * Factory: build the correct JwtAuthConfig from Cloudflare Env bindings.
+ * Priority: JWKS_URL > JWT_SECRET > decode-only (dev/test fallback).
+ */
+export const buildJwtConfig = (env: {
+  JWT_JWKS_URL?: string;
+  JWT_SECRET?: string;
+}): JwtAuthConfig => {
+  if (env.JWT_JWKS_URL) {
+    return { mode: "jwks", jwksUrl: env.JWT_JWKS_URL };
+  }
+  if (env.JWT_SECRET) {
+    return { mode: "secret", secret: env.JWT_SECRET };
+  }
+  return { mode: "decode-only" };
+};
