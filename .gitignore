@@ -3,14 +3,21 @@ dist/
 .wrangler/
 .agents/
 .claude/
+
+# Secrets & env
 .dev.vars
 .env
 .env.*
 !.env.example
+
+# Dev artifacts
 coverage/
 *.log
 db_url.txt
-deploy_final.txt
-migrate_error.log
-migrate_final.txt
-migrate_log.txt
+deploy_*.txt
+migrate_*.txt
+migrate_*.log
+errors.txt
+old_schema.ts
+.neon
+
