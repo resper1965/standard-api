@@ -11,6 +11,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { admin } from "better-auth/plugins/admin";
 import { organization } from "better-auth/plugins/organization";
 import { apiKey } from "@better-auth/api-key";
+import { baUser, baSession, baAccount, baVerification, baOrganization, baMember, baInvitation, baApikey } from "@aegis/schemas";
 import type { DrizzleClient } from "./types";
 
 export type AuthEnv = {
@@ -29,7 +30,19 @@ export type AuthEnv = {
  */
 export const createAuth = (db: DrizzleClient, env: AuthEnv) =>
   betterAuth({
-    database: drizzleAdapter(db, { provider: "pg" }),
+    database: drizzleAdapter(db, {
+      provider: "pg",
+      schema: {
+        user: baUser,
+        session: baSession,
+        account: baAccount,
+        verification: baVerification,
+        organization: baOrganization,
+        member: baMember,
+        invitation: baInvitation,
+        apikey: baApikey,
+      },
+    }),
 
     basePath: "/api/auth",
     secret: env.BETTER_AUTH_SECRET,
