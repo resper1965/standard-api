@@ -78,7 +78,17 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
       // ── Better Auth route delegation ─────────────────────────
       // All /api/auth/* requests are handled by Better Auth directly
       if (auth && url.pathname.startsWith("/api/auth")) {
-        return auth.handler(request);
+        try {
+          return await auth.handler(request);
+        } catch (authError: unknown) {
+          const msg = authError instanceof Error ? authError.message : String(authError);
+          const stack = authError instanceof Error ? authError.stack : undefined;
+          console.error(`[aegis:auth] handler error: ${msg}`, stack);
+          return new Response(JSON.stringify({ error: msg, stack: env?.AEGIS_ENV !== "production" ? stack : undefined }), {
+            status: 500,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
       }
 
       const route = routes.find((candidate) => candidate.method === request.method && matchRoute(candidate.path, url.pathname));

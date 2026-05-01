@@ -62,7 +62,7 @@ export const createAuth = (db: DrizzleClient, env: AuthEnv) =>
       enabled: true,
       window: 10,
       max: 100,
-      storage: "database",
+      storage: "memory", // memory is per-isolate; use "database" when rateLimit table is added
       customRules: {
         "/api/auth/sign-in/email": { window: 60, max: 5 },
         "/api/auth/sign-up/email": { window: 60, max: 3 },

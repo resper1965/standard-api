@@ -13,7 +13,7 @@ export interface Env {
   JWT_JWKS_URL?: string;
   JWT_SECRET?: string;
   AEGIS_ENV?: string;
-  ASSESSMENT_WORKFLOW: Workflow;
+  ASSESSMENT_WORKFLOW?: Workflow;
   AEGIS_DOCUMENTS_BUCKET: R2Bucket;
   AEGIS_REPORTS_BUCKET?: R2Bucket;
   AEGIS_EXPORTS_BUCKET?: R2Bucket;
