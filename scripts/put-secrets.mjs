@@ -1,21 +1,46 @@
 import { spawnSync } from "node:child_process";
 
-const secrets = {
-    "DATABASE_URL": "REDACTED_DATABASE_URL"
-};
+/**
+ * Push secrets to Cloudflare Workers.
+ * 
+ * Usage:
+ *   Ensure secrets are set as environment variables, then run:
+ *   node scripts/put-secrets.mjs
+ * 
+ * Required env vars: DATABASE_URL, BETTER_AUTH_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
+ */
 
-const workers = [
-    "infra/cloudflare/wrangler.api-gateway.toml",
-    "infra/cloudflare/wrangler.workflows.toml"
+const secretKeys = [
+  "DATABASE_URL",
+  "BETTER_AUTH_SECRET",
+  "GOOGLE_CLIENT_ID",
+  "GOOGLE_CLIENT_SECRET",
 ];
 
+const workers = [
+  "aegis-api-standard-api-gateway",
+];
+
+let ok = 0;
+let skipped = 0;
+
 for (const worker of workers) {
-    for (const [key, value] of Object.entries(secrets)) {
-        console.log(`Setting ${key} secret for ${worker}...`);
-        spawnSync("npx", ["wrangler", "secret", "put", key, "--env", "production", "-c", worker], {
-            input: value,
-            stdio: ["pipe", "inherit", "inherit"],
-            shell: true
-        });
+  for (const key of secretKeys) {
+    const value = process.env[key];
+    if (!value) {
+      console.warn(`⚠ Skipping ${key} — not set in environment`);
+      skipped++;
+      continue;
     }
+    console.log(`Setting ${key} for worker "${worker}"...`);
+    const result = spawnSync("npx", ["wrangler", "secret", "put", key, "--name", worker], {
+      input: value,
+      stdio: ["pipe", "inherit", "inherit"],
+      shell: true,
+    });
+    if (result.status === 0) ok++;
+    else console.error(`✗ Failed to set ${key}`);
+  }
 }
+
+console.log(`\nDone: ${ok} set, ${skipped} skipped.`);
