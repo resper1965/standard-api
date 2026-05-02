@@ -12,6 +12,13 @@ export const approvalsRoutes: RouteDefinition[] = [
     requireActor: true,
     handler: async ({ request, deps, params, tenantId, actorId, traceId, auth }) => {
       const body = await parseJson(request, CreateApprovalRequestSchema);
+      const assessmentId = routeParam(params, "assessmentId");
+
+      // Validate target_type / target_id consistency first (400 before 403)
+      if (body.target_type === "assessment_state" && body.target_id !== assessmentId) {
+        throw new ApiError("VALIDATION_ERROR", "Assessment state approvals must target the assessment id.", 400);
+      }
+
       const permissionByGate = {
         soa: "soa:approve",
         gap_analysis: "gap:approve",
@@ -23,7 +30,7 @@ export const approvalsRoutes: RouteDefinition[] = [
       if (!auth?.permissions.includes(requiredPermission)) {
         throw new ApiError("FORBIDDEN", "Approval requires explicit approve permission.", 403, [{ required_permission: requiredPermission }]);
       }
-      const assessmentId = routeParam(params, "assessmentId");
+
       const assessment = await deps.assessments.get(assessmentId, tenantId!);
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
       if (body.target_type === "artifact_version") {
@@ -31,9 +38,6 @@ export const approvalsRoutes: RouteDefinition[] = [
         if (!artifact || artifact.assessmentId !== assessmentId || artifact.tenantId !== tenantId) {
           throw new ApiError("NOT_FOUND", "Approval target not found.", 404);
         }
-      }
-      if (body.target_type === "assessment_state" && body.target_id !== assessmentId) {
-        throw new ApiError("VALIDATION_ERROR", "Assessment state approvals must target the assessment id.", 400);
       }
 
       const approval = await deps.approvals.create({
