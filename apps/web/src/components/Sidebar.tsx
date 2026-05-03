@@ -8,8 +8,8 @@ const userLinks = [
   { to: "/documents", icon: "📄", label: "Documents" },
   { to: "/gap-analysis", icon: "🔍", label: "Gap Analysis" },
   { to: "/reports", icon: "📈", label: "Reports" },
+  { to: "/scf", icon: "🔒", label: "SCF Catalog" },
 ];
-
 const adminLinks = [
   { to: "/admin/tenants", icon: "🏢", label: "Organizations" },
   { to: "/admin/users", icon: "👥", label: "Users" },

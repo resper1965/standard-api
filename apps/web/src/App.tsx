@@ -11,6 +11,7 @@ import { DocumentsPage } from "./pages/Documents";
 import { GapAnalysisPage } from "./pages/GapAnalysis";
 import { ReportsPage } from "./pages/Reports";
 import { SettingsPage } from "./pages/Settings";
+import { ScfCatalogPage } from "./pages/ScfCatalog";
 
 import { AdminOrganizations } from "./pages/admin/Organizations";
 import { AdminUsers } from "./pages/admin/Users";
@@ -35,6 +36,7 @@ export function App() {
             <Route path="/gap-analysis" element={<GapAnalysisPage />} />
             <Route path="/reports" element={<ReportsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/scf" element={<ScfCatalogPage />} />
 
             {/* Admin-only routes */}
             <Route element={<AdminRoute />}>
