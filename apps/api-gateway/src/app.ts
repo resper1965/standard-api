@@ -1,3 +1,4 @@
+import { MockAuthProvider } from "@aegis/security";
 import { createMockRepositories } from "./adapters";
 import type { AegisAuth } from "@aegis/auth";
 import type { Env } from "./index";
@@ -139,6 +140,24 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
       const authRequired = route.authRequired ?? (Boolean(route.requireActor) || Boolean(route.permissions?.length));
       if (auth) {
         await resolveAuthContext(context, auth, authRequired);
+      } else {
+        // Legacy header fallback (dev/test mode without Better Auth)
+        const legacyActor = request.headers.get("x-aegis-actor-id") ?? undefined;
+        if (legacyActor) {
+          context.actorId = legacyActor;
+          // Resolve auth context via MockAuthProvider to respect role-based permissions
+          const mockAuth = new MockAuthProvider("development");
+          const authCtx = await mockAuth.authenticate({
+            actorId: legacyActor,
+            tenantId: context.tenantId,
+            authHeader: request.headers.get("authorization") ?? undefined,
+            traceId
+          });
+          if (authCtx) context.auth = authCtx;
+        }
+        if (authRequired && !context.actorId) {
+          throw new ApiError("UNAUTHORIZED", "Authentication is required for this operation.", 401);
+        }
       }
 
       // Tenant is now derived from session.activeOrganizationId or legacy header
