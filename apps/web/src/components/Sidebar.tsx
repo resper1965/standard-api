@@ -16,6 +16,7 @@ const adminLinks = [
   { to: "/admin/license-keys", icon: "🔑", label: "License Keys" },
   { to: "/admin/audit", icon: "📜", label: "Audit Logs" },
   { to: "/admin/system", icon: "🩺", label: "System Health" },
+  { to: "/admin/scf", icon: "📦", label: "SCF Import" },
 ];
 
 export function Sidebar() {

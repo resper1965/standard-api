@@ -18,6 +18,7 @@ import { AdminUsers } from "./pages/admin/Users";
 import { AdminLicenses } from "./pages/admin/Licenses";
 import { AdminAuditLogs } from "./pages/admin/AuditLogs";
 import { AdminSystemHealth } from "./pages/admin/SystemHealth";
+import { AdminScfImport } from "./pages/admin/ScfImport";
 
 export function App() {
   return (
@@ -45,6 +46,7 @@ export function App() {
               <Route path="/admin/license-keys" element={<AdminLicenses />} />
               <Route path="/admin/audit" element={<AdminAuditLogs />} />
               <Route path="/admin/system" element={<AdminSystemHealth />} />
+              <Route path="/admin/scf" element={<AdminScfImport />} />
             </Route>
           </Route>
         </Route>
