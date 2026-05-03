@@ -59,8 +59,11 @@ export function ReportsPage() {
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "32px" }}>
-        <h1 style={{ margin: 0 }}>Reports</h1>
+      <div className="page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <h1 className="page-title">Reports</h1>
+          <p className="page-subtitle">Generate and download assessment reports</p>
+        </div>
         {assessmentId && (
           <button className="btn btn-primary" onClick={generateReport} disabled={generating || loading}>
             {generating ? "Generating..." : "Generate New Report"}
@@ -74,7 +77,7 @@ export function ReportsPage() {
         </div>
       ) : (
         <div className="card">
-          {error && <div style={{ color: "#ef4444", marginBottom: "16px" }}>{error}</div>}
+          {error && <div style={{ color: "var(--danger)", marginBottom: "16px" }}>{error}</div>}
           
           <h2>Generated Reports</h2>
           {loading ? (
@@ -83,31 +86,31 @@ export function ReportsPage() {
             <p style={{ color: "var(--text-muted)" }}>No reports have been generated yet.</p>
           ) : (
             <div style={{ overflowX: "auto" }}>
-              <table className="table">
+              <table className="data-table">
                 <thead>
                   <tr>
-                    <th style={{ textAlign: "left", padding: "12px", borderBottom: "1px solid var(--border)" }}>Type</th>
-                    <th style={{ textAlign: "left", padding: "12px", borderBottom: "1px solid var(--border)" }}>Status</th>
-                    <th style={{ textAlign: "left", padding: "12px", borderBottom: "1px solid var(--border)" }}>Date</th>
-                    <th style={{ textAlign: "right", padding: "12px", borderBottom: "1px solid var(--border)" }}>Actions</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th style={{ textAlign: "right" }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {reports.map((r, i) => (
-                    <tr key={r.report_version_id || i} className="table-row">
-                      <td style={{ padding: "12px", borderBottom: "1px solid var(--border)", textTransform: "capitalize" }}>
+                    <tr key={r.report_version_id || i}>
+                      <td style={{ textTransform: "capitalize" }}>
                         {r.report_type.replace(/_/g, " ")}
                       </td>
-                      <td style={{ padding: "12px", borderBottom: "1px solid var(--border)" }}>
+                      <td>
                         <span className={`badge ${r.status === "approved" || r.status === "final" ? "badge-success" : "badge-warning"}`}>
                           {r.status}
                         </span>
                       </td>
-                      <td style={{ padding: "12px", borderBottom: "1px solid var(--border)" }}>
+                      <td>
                         {new Date(r.created_at).toLocaleDateString()}
                       </td>
-                      <td style={{ padding: "12px", borderBottom: "1px solid var(--border)", textAlign: "right" }}>
-                        <button className="btn" onClick={() => alert("Download not implemented in MVP viewer yet")}>
+                      <td style={{ textAlign: "right" }}>
+                        <button className="btn btn-ghost" onClick={() => alert("Download not implemented in MVP viewer yet")}>
                           Download
                         </button>
                       </td>

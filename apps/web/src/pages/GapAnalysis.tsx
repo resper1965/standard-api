@@ -37,9 +37,10 @@ export function GapAnalysisPage() {
   }, [assessmentId]);
 
   return (
-    <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "32px" }}>
-        <h1 style={{ margin: 0 }}>Gap Analysis</h1>
+    <>
+      <div className="page-header">
+        <h1 className="page-title">Gap Analysis</h1>
+        <p className="page-subtitle">Identify control gaps and compliance shortfalls</p>
       </div>
 
       {!assessmentId ? (
@@ -56,6 +57,6 @@ export function GapAnalysisPage() {
           )}
         </div>
       )}
-    </div>
+    </>
   );
 }

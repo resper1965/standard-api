@@ -86,7 +86,7 @@ export function DocumentsPage() {
       )}
 
       {error && (
-        <div className="card" style={{ marginBottom: "24px", color: "#ef4444", border: "1px solid #ef4444" }}>
+        <div className="card" style={{ marginBottom: "24px", color: "var(--danger)", border: "1px solid var(--danger)" }}>
           {error}
         </div>
       )}
@@ -106,24 +106,24 @@ export function DocumentsPage() {
           <p style={{ color: "var(--text-muted)" }}>No documents found.</p>
         ) : (
           <div style={{ overflowX: "auto" }}>
-            <table className="table">
+            <table className="data-table">
               <thead>
                 <tr>
-                  <th style={{ textAlign: "left", padding: "12px", borderBottom: "1px solid var(--border)" }}>Title</th>
-                  <th style={{ textAlign: "left", padding: "12px", borderBottom: "1px solid var(--border)" }}>Status</th>
-                  <th style={{ textAlign: "left", padding: "12px", borderBottom: "1px solid var(--border)" }}>Date</th>
+                  <th>Title</th>
+                  <th>Status</th>
+                  <th>Date</th>
                 </tr>
               </thead>
               <tbody>
                 {documents.map(doc => (
-                  <tr key={doc.id} className="table-row">
-                    <td style={{ padding: "12px", borderBottom: "1px solid var(--border)" }}>{doc.title}</td>
-                    <td style={{ padding: "12px", borderBottom: "1px solid var(--border)" }}>
+                  <tr key={doc.id}>
+                    <td>{doc.title}</td>
+                    <td>
                       <span className={`badge ${doc.status === "processed" || doc.status === "ingested" ? "badge-success" : "badge-warning"}`}>
                         {doc.status.replace(/_/g, " ")}
                       </span>
                     </td>
-                    <td style={{ padding: "12px", borderBottom: "1px solid var(--border)" }}>
+                    <td>
                       {new Date(doc.uploaded_at || Date.now()).toLocaleDateString()}
                     </td>
                   </tr>
