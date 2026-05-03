@@ -38,8 +38,11 @@ export function AdminUsers() {
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "32px" }}>
-        <h1 style={{ margin: 0 }}>User Administration</h1>
+      <div className="page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <h1 className="page-title">User Administration</h1>
+          <p className="page-subtitle">Manage users, roles, and access control</p>
+        </div>
         <button className="btn btn-primary" onClick={() => alert("Invite flow not implemented")}>Invite User</button>
       </div>
 
@@ -50,7 +53,7 @@ export function AdminUsers() {
           <p>Loading...</p>
         ) : (
           <div style={{ overflowX: "auto" }}>
-            <table className="table">
+            <table className="data-table">
               <thead>
                 <tr>
                   <th style={{ textAlign: "left", padding: "12px", borderBottom: "1px solid var(--border)" }}>Name</th>

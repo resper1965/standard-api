@@ -40,8 +40,11 @@ export function AdminAuditLogs() {
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "32px" }}>
-        <h1 style={{ margin: 0 }}>Audit Logs</h1>
+      <div className="page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <h1 className="page-title">Audit Logs</h1>
+          <p className="page-subtitle">Track all system events and user actions</p>
+        </div>
         <button className="btn" onClick={fetchLogs}>Refresh</button>
       </div>
 
@@ -52,7 +55,7 @@ export function AdminAuditLogs() {
           <p>Loading...</p>
         ) : (
           <div style={{ overflowX: "auto" }}>
-            <table className="table">
+            <table className="data-table">
               <thead>
                 <tr>
                   <th style={{ textAlign: "left", padding: "12px", borderBottom: "1px solid var(--border)" }}>Timestamp</th>

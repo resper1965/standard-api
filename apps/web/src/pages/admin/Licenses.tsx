@@ -59,8 +59,11 @@ export function AdminLicenses() {
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "32px" }}>
-        <h1 style={{ margin: 0 }}>License Key Management</h1>
+      <div className="page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <h1 className="page-title">License Keys</h1>
+          <p className="page-subtitle">Generate and manage API access keys</p>
+        </div>
         <button className="btn btn-primary" onClick={() => { setShowModal(true); setGeneratedKey(null); }}>Generate API Key</button>
       </div>
 
@@ -71,7 +74,7 @@ export function AdminLicenses() {
           <p>Loading...</p>
         ) : (
           <div style={{ overflowX: "auto" }}>
-            <table className="table">
+            <table className="data-table">
               <thead>
                 <tr>
                   <th style={{ textAlign: "left", padding: "12px", borderBottom: "1px solid var(--border)" }}>Name</th>

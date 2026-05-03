@@ -47,9 +47,12 @@ export function AdminSystemHealth() {
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "32px" }}>
-        <h1 style={{ margin: 0 }}>System Health</h1>
-        <button className="btn" onClick={fetchHealth} disabled={loading}>{loading ? "Checking..." : "Refresh Status"}</button>
+      <div className="page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <h1 className="page-title">System Health</h1>
+          <p className="page-subtitle">Monitor infrastructure and service status</p>
+        </div>
+        <button className="btn" onClick={fetchHealth} disabled={loading}>{loading ? "Checking…" : "Refresh Status"}</button>
       </div>
 
       <div className="card">
@@ -77,7 +80,7 @@ export function AdminSystemHealth() {
 
             <h3>Core Services</h3>
             <div style={{ overflowX: "auto" }}>
-              <table className="table">
+              <table className="data-table">
                 <thead>
                   <tr>
                     <th style={{ textAlign: "left", padding: "12px", borderBottom: "1px solid var(--border)" }}>Service Indicator</th>

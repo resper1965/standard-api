@@ -65,8 +65,11 @@ export function AdminOrganizations() {
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "32px" }}>
-        <h1 style={{ margin: 0 }}>Organizations (Tenants)</h1>
+      <div className="page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <h1 className="page-title">Organizations</h1>
+          <p className="page-subtitle">Manage tenant organizations and access</p>
+        </div>
         <button className="btn btn-primary" onClick={() => setShowModal(true)}>Create Organization</button>
       </div>
 
@@ -77,7 +80,7 @@ export function AdminOrganizations() {
           <p>Loading...</p>
         ) : (
           <div style={{ overflowX: "auto" }}>
-            <table className="table">
+            <table className="data-table">
               <thead>
                 <tr>
                   <th style={{ textAlign: "left", padding: "12px", borderBottom: "1px solid var(--border)" }}>Name</th>
