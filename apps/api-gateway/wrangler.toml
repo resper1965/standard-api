@@ -50,5 +50,29 @@ queue = "aegis-report-export-dev"
 
 # ─── Production environment ────────────────────────────────────
 [env.production]
-vars = { AEGIS_ENV = "production", BETTER_AUTH_URL = "https://aegis-api.bekaa.eu" }
+vars = { AEGIS_ENV = "production", BETTER_AUTH_URL = "https://aegis-api.bekaa.eu", LOG_LEVEL = "info", AI_GATEWAY_NAME = "aegis-prod", AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/aegis-prod" }
 routes = [{ pattern = "aegis-api.bekaa.eu", custom_domain = true }]
+
+[[env.production.r2_buckets]]
+binding = "AEGIS_DOCUMENTS_BUCKET"
+bucket_name = "aegis-documents-dev"
+
+[[env.production.r2_buckets]]
+binding = "AEGIS_REPORTS_BUCKET"
+bucket_name = "aegis-reports-dev"
+
+[[env.production.r2_buckets]]
+binding = "AEGIS_EXPORTS_BUCKET"
+bucket_name = "aegis-exports-dev"
+
+[[env.production.queues.producers]]
+binding = "DOCUMENT_INGESTION_QUEUE"
+queue = "aegis-document-ingestion-dev"
+
+[[env.production.queues.producers]]
+binding = "KB_EMBEDDING_QUEUE"
+queue = "aegis-kb-embedding-dev"
+
+[[env.production.queues.producers]]
+binding = "REPORT_EXPORT_QUEUE"
+queue = "aegis-report-export-dev"

@@ -20,7 +20,9 @@ export function LoginPage() {
   const handleGoogle = () => {
     signIn.social({
       provider: "google",
-      callbackURL: "/dashboard",
+      callbackURL: import.meta.env.PROD
+        ? "https://apiaegis.bekaa.eu/dashboard"
+        : "/dashboard",
     });
   };
 

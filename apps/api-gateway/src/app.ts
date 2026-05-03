@@ -74,20 +74,54 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
     const url = new URL(request.url);
     const traceId = resolveTraceId(request);
 
+    // ── CORS ────────────────────────────────────────────────
+    const allowedOrigins = [
+      "https://apiaegis.bekaa.eu",
+      "https://aegis-web-m99.pages.dev",
+      "https://aegis-api.bekaa.eu",
+      "http://localhost:5173",
+    ];
+    const origin = request.headers.get("Origin") ?? "";
+    const corsOrigin = allowedOrigins.includes(origin) ? origin : "";
+    const corsHeaders: Record<string, string> = corsOrigin
+      ? {
+          "Access-Control-Allow-Origin": corsOrigin,
+          "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Trace-Id, X-Tenant-Id",
+          "Access-Control-Allow-Credentials": "true",
+          "Access-Control-Max-Age": "86400",
+        }
+      : {};
+
+    // Handle CORS preflight
+    if (request.method === "OPTIONS") {
+      return new Response(null, { status: 204, headers: corsHeaders });
+    }
+
+    // Helper to attach CORS headers to any response
+    const withCors = (res: Response): Response => {
+      if (!corsOrigin) return res;
+      const newRes = new Response(res.body, res);
+      for (const [k, v] of Object.entries(corsHeaders)) {
+        newRes.headers.set(k, v);
+      }
+      return newRes;
+    };
+
     try {
       // ── Better Auth route delegation ─────────────────────────
       // All /api/auth/* requests are handled by Better Auth directly
       if (auth && url.pathname.startsWith("/api/auth")) {
         try {
-          return await auth.handler(request);
+          return withCors(await auth.handler(request));
         } catch (authError: unknown) {
           const msg = authError instanceof Error ? authError.message : String(authError);
           const stack = authError instanceof Error ? authError.stack : undefined;
           console.error(`[aegis:auth] handler error: ${msg}`, stack);
-          return new Response(JSON.stringify({ error: msg, stack: env?.AEGIS_ENV !== "production" ? stack : undefined }), {
+          return withCors(new Response(JSON.stringify({ error: msg, stack: env?.AEGIS_ENV !== "production" ? stack : undefined }), {
             status: 500,
             headers: { "Content-Type": "application/json" },
-          });
+          }));
         }
       }
 
@@ -117,9 +151,9 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
 
       const response = await route.handler(context);
       await recordRequestObservability(context, route.path, response, startedAt);
-      return response;
+      return withCors(response);
     } catch (error) {
-      return errorResponse(error, traceId);
+      return withCors(errorResponse(error, traceId));
     }
   }
 });

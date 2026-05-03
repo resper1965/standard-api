@@ -1,5 +1,5 @@
 const API_BASE = import.meta.env.PROD
-  ? "https://aegis-api-standard-api-gateway.ness.workers.dev"
+  ? "https://aegis-api.bekaa.eu"
   : "";
 
 export async function api<T = unknown>(path: string, options: RequestInit = {}): Promise<T> {
@@ -21,12 +21,16 @@ export async function api<T = unknown>(path: string, options: RequestInit = {}):
 }
 
 export class ApiError extends Error {
+  status: number;
+  body: unknown;
   constructor(
-    public status: number,
+    status: number,
     message: string,
-    public body: unknown,
+    body: unknown,
   ) {
     super(message);
     this.name = "ApiError";
+    this.status = status;
+    this.body = body;
   }
 }

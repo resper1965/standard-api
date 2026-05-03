@@ -7,16 +7,21 @@
   "answer_mode": "chat",
   "doc_level": "completo",
   "output_folder": "_reversa_sdd",
-  "phase": null,
-  "completed": [],
-  "pending": [
+  "phase": "interpretacao",
+  "completed": [
     "reconhecimento",
     "escavacao",
-    "interpretacao",
+    "interpretacao"
+  ],
+  "pending": [
     "geracao",
     "revisao"
   ],
-  "checkpoints": {},
+  "checkpoints": {
+    "reconhecimento": "2026-05-02T12:35:00Z",
+    "escavacao": "2026-05-02T12:35:00Z",
+    "interpretacao": "2026-05-02T12:36:00Z"
+  },
   "engines": [
     "claude-code",
     "codex",
@@ -39,37 +44,7 @@
     "reversa-reconstructor"
   ],
   "created_files": [
-    ".claude\\skills\\reversa",
-    ".agents\\skills\\reversa",
-    ".claude\\skills\\reversa-scout",
-    ".agents\\skills\\reversa-scout",
-    ".claude\\skills\\reversa-archaeologist",
-    ".agents\\skills\\reversa-archaeologist",
-    ".claude\\skills\\reversa-detective",
-    ".agents\\skills\\reversa-detective",
-    ".claude\\skills\\reversa-architect",
-    ".agents\\skills\\reversa-architect",
-    ".claude\\skills\\reversa-writer",
-    ".agents\\skills\\reversa-writer",
-    ".claude\\skills\\reversa-reviewer",
-    ".agents\\skills\\reversa-reviewer",
-    ".claude\\skills\\reversa-visor",
-    ".agents\\skills\\reversa-visor",
-    ".claude\\skills\\reversa-data-master",
-    ".agents\\skills\\reversa-data-master",
-    ".claude\\skills\\reversa-design-system",
-    ".agents\\skills\\reversa-design-system",
-    ".claude\\skills\\reversa-agents-help",
-    ".agents\\skills\\reversa-agents-help",
-    ".claude\\skills\\reversa-reconstructor",
-    ".agents\\skills\\reversa-reconstructor",
-    "CLAUDE.md",
-    ".cursorrules",
-    ".reversa\\state.json",
-    ".reversa\\config.toml",
-    ".reversa\\config.user.toml",
-    ".reversa\\plan.md",
-    ".reversa\\version",
-    ".reversa\\_config\\manifest.yaml"
+    "_reversa_sdd/01-reconhecimento.md",
+    "_reversa_sdd/03-arquitetura-c4.md"
   ]
 }

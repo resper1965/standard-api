@@ -1,29 +1,30 @@
 # Plano de Exploração — aegis-api
 
 > Criado pelo Reversa em 2026-05-01
+> Atualizado em 2026-05-02 por Antigravity
 > Marque cada tarefa com ✅ quando concluída.
-> Você pode editar este plano antes de iniciar: adicione, remova ou reordene tarefas conforme necessário.
 
 ---
 
 ## Fase 1: Reconhecimento 🔍
 
-- [ ] **Scout** — Mapeamento de estrutura de pastas e tecnologias
-- [ ] **Scout** — Análise de dependências e gerenciadores de pacotes
-- [ ] **Scout** — Identificação de entry points, CI/CD e configurações
+- [x] **Scout** — Mapeamento de estrutura de pastas e tecnologias
+- [x] **Scout** — Análise de dependências e gerenciadores de pacotes
+- [x] **Scout** — Identificação de entry points, CI/CD e configurações
 
 ## Fase 2: Escavação 🏗️
 
-> O Reversa preenche esta seção com os módulos reais após o Scout concluir o reconhecimento.
-
-- [ ] **Arqueólogo** — Análise dos módulos identificados pelo Scout
+- [x] **Arqueólogo** — Análise dos 19 módulos do workspace (packages, apps, workers)
 
 ## Fase 3: Interpretação 🧠
 
+- [x] **Arquiteto** — Diagramas C4 (Contexto, Containers, Componentes)
+- [x] **Arquiteto** — Diagrama de dependências entre packages
+- [x] **Arquiteto** — State Machine do Assessment Lifecycle
+- [x] **Arquiteto** — Identity & RBAC Model (Better Auth mapping)
 - [ ] **Detetive** — Arqueologia Git e ADRs retroativos
 - [ ] **Detetive** — Regras de negócio implícitas e máquinas de estado
 - [ ] **Detetive** — Matriz de permissões (RBAC/ACL)
-- [ ] **Arquiteto** — Diagramas C4 (Contexto, Containers, Componentes)
 - [ ] **Arquiteto** — ERD completo e integrações externas
 - [ ] **Arquiteto** — Spec Impact Matrix
 

@@ -48,6 +48,13 @@ export const createAuth = (db: DrizzleClient, env: AuthEnv) =>
     secret: env.BETTER_AUTH_SECRET,
     baseURL: env.BETTER_AUTH_URL,
 
+    trustedOrigins: [
+      "https://apiaegis.bekaa.eu",
+      "https://aegis-web-m99.pages.dev",
+      "https://aegis-api.bekaa.eu",
+      "http://localhost:5173",
+    ],
+
     emailAndPassword: {
       enabled: true,
       requireEmailVerification: false, // enable after email service is set up

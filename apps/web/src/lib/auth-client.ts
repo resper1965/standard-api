@@ -2,7 +2,7 @@ import { createAuthClient } from "better-auth/react";
 
 export const authClient = createAuthClient({
   baseURL: import.meta.env.PROD
-    ? "https://aegis-api-standard-api-gateway.ness.workers.dev"
+    ? "https://aegis-api.bekaa.eu"
     : "",           // dev proxy handles /api → localhost:8787
 });
 

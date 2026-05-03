@@ -1,9 +1,22 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { LoginPage } from "./pages/Login";
 import { DashboardPage } from "./pages/Dashboard";
-import { PlaceholderPage } from "./pages/Placeholder";
+
 import { AppLayout } from "./components/AppLayout";
 import { ProtectedRoute, AdminRoute } from "./components/RouteGuards";
+
+import { AssessmentsPage } from "./pages/Assessments";
+import { AssessmentDetail } from "./pages/AssessmentDetail";
+import { DocumentsPage } from "./pages/Documents";
+import { GapAnalysisPage } from "./pages/GapAnalysis";
+import { ReportsPage } from "./pages/Reports";
+import { SettingsPage } from "./pages/Settings";
+
+import { AdminOrganizations } from "./pages/admin/Organizations";
+import { AdminUsers } from "./pages/admin/Users";
+import { AdminLicenses } from "./pages/admin/Licenses";
+import { AdminAuditLogs } from "./pages/admin/AuditLogs";
+import { AdminSystemHealth } from "./pages/admin/SystemHealth";
 
 export function App() {
   return (
@@ -16,109 +29,20 @@ export function App() {
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
             <Route path="/dashboard" element={<DashboardPage />} />
-            <Route
-              path="/assessments"
-              element={
-                <PlaceholderPage
-                  title="Assessments"
-                  icon="📋"
-                  description="Manage your security assessments"
-                />
-              }
-            />
-            <Route
-              path="/documents"
-              element={
-                <PlaceholderPage
-                  title="Documents"
-                  icon="📄"
-                  description="Upload and manage evidence documents"
-                />
-              }
-            />
-            <Route
-              path="/gap-analysis"
-              element={
-                <PlaceholderPage
-                  title="Gap Analysis"
-                  icon="🔍"
-                  description="View gaps by control and framework"
-                />
-              }
-            />
-            <Route
-              path="/reports"
-              element={
-                <PlaceholderPage
-                  title="Reports"
-                  icon="📈"
-                  description="Generate and download assessment reports"
-                />
-              }
-            />
-            <Route
-              path="/settings"
-              element={
-                <PlaceholderPage
-                  title="Settings"
-                  icon="⚙️"
-                  description="Manage your profile and preferences"
-                />
-              }
-            />
+            <Route path="/assessments" element={<AssessmentsPage />} />
+            <Route path="/assessments/:id" element={<AssessmentDetail />} />
+            <Route path="/documents" element={<DocumentsPage />} />
+            <Route path="/gap-analysis" element={<GapAnalysisPage />} />
+            <Route path="/reports" element={<ReportsPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
 
             {/* Admin-only routes */}
             <Route element={<AdminRoute />}>
-              <Route
-                path="/admin/tenants"
-                element={
-                  <PlaceholderPage
-                    title="Organizations"
-                    icon="🏢"
-                    description="Manage tenant organizations"
-                  />
-                }
-              />
-              <Route
-                path="/admin/users"
-                element={
-                  <PlaceholderPage
-                    title="User Administration"
-                    icon="👥"
-                    description="Manage users, roles, and access"
-                  />
-                }
-              />
-              <Route
-                path="/admin/license-keys"
-                element={
-                  <PlaceholderPage
-                    title="License Keys"
-                    icon="🔑"
-                    description="Generate and manage API license keys"
-                  />
-                }
-              />
-              <Route
-                path="/admin/audit"
-                element={
-                  <PlaceholderPage
-                    title="Audit Logs"
-                    icon="📜"
-                    description="View system audit trail"
-                  />
-                }
-              />
-              <Route
-                path="/admin/system"
-                element={
-                  <PlaceholderPage
-                    title="System Health"
-                    icon="🩺"
-                    description="Monitor workers, queues, and database"
-                  />
-                }
-              />
+              <Route path="/admin/tenants" element={<AdminOrganizations />} />
+              <Route path="/admin/users" element={<AdminUsers />} />
+              <Route path="/admin/license-keys" element={<AdminLicenses />} />
+              <Route path="/admin/audit" element={<AdminAuditLogs />} />
+              <Route path="/admin/system" element={<AdminSystemHealth />} />
             </Route>
           </Route>
         </Route>

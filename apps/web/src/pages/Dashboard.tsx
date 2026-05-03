@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSession } from "../lib/auth-client";
 import { Link } from "react-router-dom";
+import { api } from "../lib/api";
 
 interface AssessmentSummary {
   id: string;
@@ -16,12 +17,8 @@ export function DashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/v1/assessments", {
-      credentials: "include",
-      headers: { "x-aegis-tenant-id": "default" },
-    })
-      .then((r) => (r.ok ? r.json() : { data: [] }))
-      .then((d) => setAssessments((d as { data: AssessmentSummary[] }).data ?? []))
+    api<{ data: AssessmentSummary[] }>("/api/v1/assessments")
+      .then((d) => setAssessments(d.data ?? []))
       .catch(() => setAssessments([]))
       .finally(() => setLoading(false));
   }, []);

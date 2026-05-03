@@ -1,7 +1,11 @@
+/* ── Login Page · Apple HIG Edition ───────────────────────── */
+
 .login-container {
   width: 100%;
-  max-width: 420px;
+  max-width: 400px;
   padding: var(--space-10);
+  position: relative;
+  z-index: 1;
 }
 
 .login-header {
@@ -10,15 +14,17 @@
 }
 
 .login-shield {
-  font-size: 3rem;
+  font-size: 3.5rem;
   display: block;
-  margin-bottom: var(--space-3);
+  margin-bottom: var(--space-4);
+  filter: drop-shadow(0 4px 12px rgba(10, 132, 255, 0.2));
 }
 
 .login-title {
   font-size: var(--text-3xl);
   font-weight: var(--weight-bold);
-  background: linear-gradient(135deg, var(--accent), var(--admin));
+  letter-spacing: -0.04em;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--admin) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -26,8 +32,9 @@
 }
 
 .login-subtitle {
-  color: var(--text-muted);
+  color: var(--text-secondary);
   font-size: var(--text-sm);
+  letter-spacing: -0.01em;
 }
 
 .login-error {
@@ -37,12 +44,13 @@
   border-radius: var(--radius);
   font-size: var(--text-sm);
   margin-bottom: var(--space-4);
-  border: 1px solid rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(255, 69, 58, 0.15);
+  animation: slideUp 200ms var(--ease-spring);
 }
 
 .login-toggle {
   text-align: center;
-  margin-top: var(--space-6);
+  margin-top: var(--space-8);
   color: var(--text-muted);
   font-size: var(--text-sm);
 }
@@ -51,6 +59,7 @@
   color: var(--accent);
   font-weight: var(--weight-medium);
   font-size: var(--text-sm);
+  transition: color var(--transition-fast);
 }
 .login-toggle-btn:hover {
   color: var(--accent-hover);
