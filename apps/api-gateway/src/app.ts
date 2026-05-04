@@ -28,6 +28,7 @@ import { poamRoutes } from "./routes/poam.routes";
 import { reportingRoutes } from "./routes/reporting.routes";
 import { scfRoutes } from "./routes/scf.routes";
 import { soaRoutes } from "./routes/soa.routes";
+import { emailRoutes } from "./routes/email.routes";
 import { tenantsRoutes } from "./routes/tenants.routes";
 import { workflowRoutes } from "./routes/workflow.routes";
 
@@ -48,7 +49,8 @@ const routes: RouteDefinition[] = [
   ...approvalsRoutes,
   ...artifactsRoutes,
   ...scfRoutes,
-  ...soaRoutes
+  ...soaRoutes,
+  ...emailRoutes
 ];
 
 const matchRoute = (routePath: string, actualPath: string): Record<string, string> | null => {

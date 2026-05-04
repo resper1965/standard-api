@@ -36,6 +36,11 @@ queue = "aegis-kb-embedding-dev"
 binding = "REPORT_EXPORT_QUEUE"
 queue = "aegis-report-export-dev"
 
+# ─── Email Service (send transactional emails) ─────────────────
+[[send_email]]
+name = "EMAIL"
+remote = true
+
 # TODO: Uncomment when KV namespace is provisioned
 # [[kv_namespaces]]
 # binding = "AEGIS_CACHE"
@@ -76,3 +81,7 @@ queue = "aegis-kb-embedding-dev"
 [[env.production.queues.producers]]
 binding = "REPORT_EXPORT_QUEUE"
 queue = "aegis-report-export-dev"
+
+[[env.production.send_email]]
+name = "EMAIL"
+allowed_sender_addresses = ["noreply@bekaa.eu"]

@@ -1,5 +1,5 @@
 {
-  "name": "@aegis/scf-core",
+  "name": "@aegis/email",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -8,11 +8,6 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "tsx tests/run-tests.ts"
-  },
-  "dependencies": {
-    "@aegis/schemas": "workspace:*",
-    "drizzle-orm": "^0.45.2",
-    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "tsx": "^4.21.0",

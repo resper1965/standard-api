@@ -21,3 +21,7 @@ errors.txt
 old_schema.ts
 .neon
 
+# Official SCF data files (download locally, never commit)
+evals/fixtures/*.xlsx
+evals/fixtures/*.xls
+

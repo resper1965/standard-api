@@ -18,6 +18,7 @@ import type { ScfCoreServices } from "@aegis/scf-core";
 import type { AuthContext, Permission, SecurityTenantContext } from "@aegis/security";
 import type { SoaDependencies } from "@aegis/soa";
 import type { WorkflowDependencies } from "@aegis/workflows";
+import type { SendEmail } from "@aegis/email";
 import { ApiError } from "./errors/api-error";
 
 export type TenantRecord = {
@@ -114,6 +115,8 @@ export type AppDependencies = {
   agentRuntime: AgentRuntimeDependencies;
   workflows: WorkflowDependencies;
   observability: ObservabilityDependencies;
+  /** Cloudflare Email Service binding (optional — unavailable in tests) */
+  email?: SendEmail;
 };
 
 export type RequestContext = {

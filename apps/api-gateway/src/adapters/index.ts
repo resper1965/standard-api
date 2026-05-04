@@ -5,7 +5,7 @@ import { createInMemoryKbDependencies } from "@aegis/kb";
 import { createInMemoryObservabilityDependencies } from "@aegis/observability";
 import { createInMemoryPoamDependencies } from "@aegis/poam";
 import { createInMemoryReportingDependencies } from "@aegis/reporting";
-import { createInMemoryScfCore } from "@aegis/scf-core";
+import { createInMemoryScfCore, createScfCoreFromRepository, createDrizzleScfRepository } from "@aegis/scf-core";
 import { createInMemorySoaDependencies } from "@aegis/soa";
 import { createInMemoryWorkflowDependencies } from "@aegis/workflows";
 import type { AppDependencies } from "../http";
@@ -56,7 +56,7 @@ export const createDrizzleRepositories = (db: DbClient, env?: Env): AppDependenc
     } : {}
   );
   const kb = createInMemoryKbDependencies(documentIngestion);
-  const scf = createInMemoryScfCore();
+  const scf = createScfCoreFromRepository(createDrizzleScfRepository(db as never));
   const soa = createInMemorySoaDependencies({ scf, kb });
   const gapAnalysis = createInMemoryGapAnalysisDependencies({ scf, kb, soa });
   const poam = createInMemoryPoamDependencies({ gapAnalysis, scf });

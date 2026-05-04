@@ -225,6 +225,7 @@ export const scfImportRuns = pgTable("scf_import_runs", {
   completedAt: timestamp("completed_at", { withTimezone: true }),
   errorSummarySafe: text("error_summary_safe"),
   importStatistics: jsonb("import_statistics").$type<Record<string, unknown>>().default({}).notNull(),
+  importedBy: text("imported_by"),
   traceId: text("trace_id").notNull(),
   ...timestamps()
 }, (table) => [
@@ -239,6 +240,8 @@ export const scfDomains = pgTable("scf_domains", {
   domainCode: text("domain_code").notNull(),
   name: text("name").notNull(),
   description: text("description"),
+  sortOrder: integer("sort_order").default(0).notNull(),
+  isSynthetic: boolean("is_synthetic").default(false).notNull(),
   ...timestamps()
 }, (table) => [
   index("scf_domains_version_idx").on(table.scfVersionId),
@@ -252,6 +255,15 @@ export const scfControls = pgTable("scf_controls", {
   controlCode: text("control_code").notNull(),
   title: text("title").notNull(),
   description: text("description"),
+  controlQuestion: text("control_question"),
+  controlIntent: text("control_intent"),
+  implementationGuidance: text("implementation_guidance"),
+  expectedEvidence: text("expected_evidence"),
+  controlWeight: numeric("control_weight", { precision: 6, scale: 3 }),
+  maturityCriteriaRef: text("maturity_criteria_ref"),
+  sortOrder: integer("sort_order").default(0).notNull(),
+  status: text("status").default("active").notNull(),
+  isSynthetic: boolean("is_synthetic").default(false).notNull(),
   ...timestamps()
 }, (table) => [
   index("scf_controls_version_domain_idx").on(table.scfVersionId, table.scfDomainId),
@@ -263,8 +275,13 @@ export const scfFrameworks = pgTable("scf_frameworks", {
   scfVersionId: uuid("scf_version_id").notNull().references(() => scfVersions.id),
   frameworkId: text("framework_id").notNull(),
   name: text("name").notNull(),
-  versionLabel: text("version_label").notNull(),
+  versionLabel: text("version_label"),
   publisher: text("publisher"),
+  jurisdiction: text("jurisdiction"),
+  category: text("category"),
+  sourceReference: text("source_reference"),
+  status: text("status").default("active").notNull(),
+  isSynthetic: boolean("is_synthetic").default(false).notNull(),
   ...timestamps()
 }, (table) => [
   index("scf_frameworks_version_idx").on(table.scfVersionId),
@@ -278,6 +295,11 @@ export const scfFrameworkRequirements = pgTable("scf_framework_requirements", {
   requirementCode: text("requirement_code").notNull(),
   title: text("title").notNull(),
   description: text("description"),
+  requirementText: text("requirement_text"),
+  parentRequirementId: uuid("parent_requirement_id"),
+  sortOrder: integer("sort_order").default(0).notNull(),
+  status: text("status").default("active").notNull(),
+  isSynthetic: boolean("is_synthetic").default(false).notNull(),
   ...timestamps()
 }, (table) => [
   index("scf_requirements_framework_idx").on(table.scfFrameworkId),
@@ -290,9 +312,12 @@ export const scfMappings = pgTable("scf_mappings", {
   scfFrameworkRequirementId: uuid("scf_framework_requirement_id").notNull().references(() => scfFrameworkRequirements.id),
   scfControlId: uuid("scf_control_id").notNull().references(() => scfControls.id),
   relationshipType: text("relationship_type").notNull(),
-  relationshipStrength: text("relationship_strength").notNull(),
+  relationshipStrength: text("relationship_strength"),
   mappingRationale: text("mapping_rationale"),
   mappingSource: mappingSourceEnum("mapping_source").default("official_scf").notNull(),
+  isOfficial: boolean("is_official").default(true).notNull(),
+  status: text("status").default("active").notNull(),
+  isSynthetic: boolean("is_synthetic").default(false).notNull(),
   ...timestamps()
 }, (table) => [
   index("scf_mappings_version_idx").on(table.scfVersionId),

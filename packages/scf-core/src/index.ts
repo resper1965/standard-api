@@ -6,6 +6,7 @@ export * from "./importers/oscal-importer.placeholder";
 export * from "./importers/scf-importer";
 export * from "./importers/xlsx-importer";
 export * from "./repositories/scf.repository";
+export { createDrizzleScfRepository } from "./repositories/drizzle-scf.repository";
 export * from "./schemas";
 export * from "./services/scf-control.service";
 export * from "./services/scf-domain.service";

@@ -14,6 +14,7 @@
     "@aegis/assessment-engine": "workspace:*",
     "@aegis/auth": "workspace:*",
     "@aegis/document-ingestion": "workspace:*",
+    "@aegis/email": "workspace:*",
     "@aegis/gap-analysis": "workspace:*",
     "@aegis/kb": "workspace:*",
     "@aegis/observability": "workspace:*",

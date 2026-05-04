@@ -233,5 +233,99 @@ export const scfRoutes: RouteDefinition[] = [
       const result = await deps.scf.imports.dryRunImport(source);
       return json({ import_run_id: routeParam(params, "importRunId"), ...result, trace_id: traceId });
     }
+  },
+  {
+    method: "POST",
+    path: "/api/v1/admin/scf/import-xlsx",
+    protected: true,
+    requireActor: true,
+    permissions: ["scf:import"],
+    handler: async ({ deps, request, traceId }) => {
+      const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+
+      const formData = await request.formData().catch(() => {
+        throw new ApiError("VALIDATION_ERROR", "Request must be multipart/form-data with a file field.", 400);
+      });
+
+      const file = formData.get("file");
+      if (!file || !(file instanceof File)) {
+        throw new ApiError("VALIDATION_ERROR", "Missing required 'file' field in multipart upload.", 400);
+      }
+
+      if (file.size > MAX_FILE_SIZE) {
+        throw new ApiError("VALIDATION_ERROR", `File exceeds maximum size of ${MAX_FILE_SIZE / (1024 * 1024)}MB.`, 400);
+      }
+
+      const validMimeTypes = [
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "application/octet-stream"
+      ];
+      if (file.type && !validMimeTypes.includes(file.type)) {
+        throw new ApiError("VALIDATION_ERROR", `Invalid file type: ${file.type}. Expected XLSX.`, 400);
+      }
+
+      const versionLabel = formData.get("version_label")?.toString() || "SCF (auto-detected)";
+
+      // Convert file to base64 for the importer
+      const arrayBuffer = await file.arrayBuffer();
+      const bytes = new Uint8Array(arrayBuffer);
+      const base64 = btoa(String.fromCharCode(...bytes));
+
+      const source = {
+        source_type: "xlsx" as const,
+        source_filename: file.name,
+        version_label: versionLabel,
+        content: base64
+      };
+
+      const result = await deps.scf.imports.importFromSource(source);
+
+      return json({
+        ...result,
+        source_filename: file.name,
+        file_size_bytes: file.size,
+        trace_id: traceId
+      }, { status: result.import_run.status === "failed" ? 400 : 202 });
+    }
+  },
+  {
+    method: "POST",
+    path: "/api/v1/admin/scf/import-xlsx/dry-run",
+    protected: true,
+    requireActor: true,
+    permissions: ["scf:import"],
+    handler: async ({ deps, request, traceId }) => {
+      const formData = await request.formData().catch(() => {
+        throw new ApiError("VALIDATION_ERROR", "Request must be multipart/form-data with a file field.", 400);
+      });
+
+      const file = formData.get("file");
+      if (!file || !(file instanceof File)) {
+        throw new ApiError("VALIDATION_ERROR", "Missing required 'file' field in multipart upload.", 400);
+      }
+
+      const versionLabel = formData.get("version_label")?.toString() || "SCF (dry-run)";
+
+      const arrayBuffer = await file.arrayBuffer();
+      const bytes = new Uint8Array(arrayBuffer);
+      const base64 = btoa(String.fromCharCode(...bytes));
+
+      const source = {
+        source_type: "xlsx" as const,
+        source_filename: file.name,
+        version_label: versionLabel,
+        content: base64
+      };
+
+      const result = await deps.scf.imports.dryRunImport(source);
+
+      return json({
+        ...result,
+        source_filename: file.name,
+        file_size_bytes: file.size,
+        is_dry_run: true,
+        trace_id: traceId
+      });
+    }
   }
 ];

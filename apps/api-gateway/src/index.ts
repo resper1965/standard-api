@@ -2,6 +2,7 @@ import { createApp } from "./app";
 import { createDrizzleRepositories, createMockRepositories } from "./adapters";
 import { createDb } from "./adapters/db";
 import { createAuth, type AegisAuth } from "@aegis/auth";
+import type { SendEmail } from "@aegis/email";
 import type { AppDependencies } from "./http";
 
 export interface Env {
@@ -23,6 +24,8 @@ export interface Env {
   AEGIS_CACHE?: KVNamespace;
   AEGIS_CONFIG_KV?: KVNamespace;
   AEGIS_FEATURE_FLAGS_KV?: KVNamespace;
+  /** Cloudflare Email Service binding for transactional emails */
+  EMAIL?: SendEmail;
 }
 
 let cachedDeps: AppDependencies | null = null;
@@ -34,7 +37,7 @@ export default {
     if (!cachedApp) {
       if (env.DATABASE_URL) {
         const db = createDb(env.DATABASE_URL);
-        cachedDeps = createDrizzleRepositories(db, env);
+        cachedDeps = { ...createDrizzleRepositories(db, env), email: env.EMAIL };
 
         // Initialize Better Auth with the same Drizzle DB instance
         cachedAuth = createAuth(db, {
