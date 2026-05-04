@@ -5,14 +5,14 @@ import type { AuthContext, Role } from "@aegis/schemas";
  * This interface will be removed in v0.3.0.
  */
 export type AuthenticateInput = {
-  actorId?: string;
-  tenantId?: string;
-  organizationIds?: string[];
-  roles?: Role[];
-  permissions?: AuthContext["permissions"];
+  actorId?: string | undefined;
+  tenantId?: string | undefined;
+  organizationIds?: string[] | undefined;
+  roles?: Role[] | undefined;
+  permissions?: AuthContext["permissions"] | undefined;
   traceId: string;
-  authHeader?: string;
-  apiKey?: string;
+  authHeader?: string | undefined;
+  apiKey?: string | undefined;
 };
 
 /**

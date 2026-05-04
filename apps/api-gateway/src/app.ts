@@ -151,7 +151,7 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
           const mockAuth = new MockAuthProvider("development");
           const authCtx = await mockAuth.authenticate({
             actorId: legacyActor,
-            tenantId: context.tenantId,
+            ...(context.tenantId ? { tenantId: context.tenantId } : {}),
             authHeader: request.headers.get("authorization") ?? undefined,
             traceId
           });

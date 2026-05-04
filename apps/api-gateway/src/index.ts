@@ -28,7 +28,7 @@ export interface Env {
   EMAIL?: SendEmail;
 }
 
-let cachedDeps: AppDependencies | null = null;
+let cachedDeps: AppDependencies | undefined;
 let cachedApp: ReturnType<typeof createApp> | null = null;
 let cachedAuth: AegisAuth | null = null;
 
@@ -37,7 +37,7 @@ export default {
     if (!cachedApp) {
       if (env.DATABASE_URL) {
         const db = createDb(env.DATABASE_URL);
-        cachedDeps = { ...createDrizzleRepositories(db, env), email: env.EMAIL };
+        cachedDeps = { ...createDrizzleRepositories(db, env), ...(env.EMAIL ? { email: env.EMAIL } : {}) };
 
         // Initialize Better Auth with the same Drizzle DB instance
         cachedAuth = createAuth(db, {
