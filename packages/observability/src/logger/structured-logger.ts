@@ -32,6 +32,7 @@ export class StructuredLogger {
       metadata_safe: redactValue(input.metadata ?? {})
     });
     this.entries.push(entry);
+    console.log(JSON.stringify(entry));
     return entry;
   }
 }

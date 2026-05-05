@@ -101,11 +101,19 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
       return new Response(null, { status: 204, headers: corsHeaders });
     }
 
-    // Helper to attach CORS headers to any response
-    const withCors = (res: Response): Response => {
-      if (!corsOrigin) return res;
+    const securityHeaders: Record<string, string> = {
+      ...corsHeaders,
+      "X-Content-Type-Options": "nosniff",
+      "X-Frame-Options": "DENY",
+      "X-XSS-Protection": "1; mode=block",
+      "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+      "Content-Security-Policy": "default-src 'none'; frame-ancestors 'none';",
+    };
+
+    // Helper to attach headers to any response
+    const withSecurityHeaders = (res: Response): Response => {
       const newRes = new Response(res.body, res);
-      for (const [k, v] of Object.entries(corsHeaders)) {
+      for (const [k, v] of Object.entries(securityHeaders)) {
         newRes.headers.set(k, v);
       }
       return newRes;
@@ -116,12 +124,12 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
       // All /api/auth/* requests are handled by Better Auth directly
       if (auth && url.pathname.startsWith("/api/auth")) {
         try {
-          return withCors(await auth.handler(request));
+          return withSecurityHeaders(await auth.handler(request));
         } catch (authError: unknown) {
           const msg = authError instanceof Error ? authError.message : String(authError);
           const stack = authError instanceof Error ? authError.stack : undefined;
           console.error(`[aegis:auth] handler error: ${msg}`, stack);
-          return withCors(new Response(JSON.stringify({ error: msg, stack: env?.AEGIS_ENV !== "production" ? stack : undefined }), {
+          return withSecurityHeaders(new Response(JSON.stringify({ error: msg, stack: env?.AEGIS_ENV !== "production" ? stack : undefined }), {
             status: 500,
             headers: { "Content-Type": "application/json" },
           }));
@@ -172,9 +180,9 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
 
       const response = await route.handler(context);
       await recordRequestObservability(context, route.path, response, startedAt);
-      return withCors(response);
+      return withSecurityHeaders(response);
     } catch (error) {
-      return withCors(errorResponse(error, traceId));
+      return withSecurityHeaders(errorResponse(error, traceId));
     }
   }
 });

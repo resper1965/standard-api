@@ -1,5 +1,5 @@
 import { SecurityEventService } from "@aegis/observability";
-import { PolicyEngine } from "@aegis/security";
+import { roleHasPermission, type AegisRole, type AegisResource } from "@aegis/auth";
 import type { Permission } from "@aegis/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RequestContext } from "../http";
@@ -7,21 +7,37 @@ import type { RequestContext } from "../http";
 export const assertRbac = async (context: RequestContext, requiredPermissions: Permission[] = []): Promise<void> => {
   if (requiredPermissions.length === 0) return;
 
-  const decision = new PolicyEngine().authorize({
-    auth: context.auth,
-    tenant: context.securityTenant,
-    required_permissions: requiredPermissions,
-    trace_id: context.traceId
-  });
+  let allowed = true;
+  let reason = "";
+  
+  // If no auth context exists at all, explicitly deny.
+  if (!context.auth && !context.session) {
+    allowed = false;
+    reason = "missing_auth_context";
+  } else {
+    // Legacy support vs Better Auth session
+    const role = (context.session?.user?.role as AegisRole) || "viewer";
+    
+    // Evaluate mapped permissions
+    for (const reqPerm of requiredPermissions) {
+      const [resource, action] = reqPerm.split(":") as [AegisResource, string];
+      if (!roleHasPermission(role, resource, action)) {
+        allowed = false;
+        reason = "permission_missing";
+        break;
+      }
+    }
+  }
 
-  if (!decision.allowed) {
+  if (!allowed) {
     await context.deps.audit.record("security_permission_denied", {
       actor_id: context.actorId,
       tenant_id: context.tenantId,
       trace_id: context.traceId,
-      reason: decision.reason,
+      reason,
       required_permissions: requiredPermissions
     });
+    
     await new SecurityEventService(context.deps.observability).record({
       tenant_id: context.tenantId,
       organization_id: context.securityTenant?.organization_id,
@@ -35,8 +51,8 @@ export const assertRbac = async (context: RequestContext, requiredPermissions: P
       resource_id: context.request.url,
       message_safe: "Permission denied.",
       trace_id: context.traceId,
-      metadata_safe: { reason: decision.reason, required_permissions: requiredPermissions }
+      metadata_safe: { reason, required_permissions: requiredPermissions }
     });
-    throw new ApiError("FORBIDDEN", "Permission denied.", 403, [{ reason: decision.reason, required_permissions: requiredPermissions }]);
+    throw new ApiError("FORBIDDEN", "Permission denied.", 403, [{ reason, required_permissions: requiredPermissions }]);
   }
 };
