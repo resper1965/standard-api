@@ -24,6 +24,8 @@ export interface Env {
   AEGIS_CACHE?: KVNamespace;
   AEGIS_CONFIG_KV?: KVNamespace;
   AEGIS_FEATURE_FLAGS_KV?: KVNamespace;
+  AEGIS_KB_INDEX?: VectorizeIndex;
+  AI?: Ai;
   /** Cloudflare Email Service binding for transactional emails */
   EMAIL?: SendEmail;
 }
