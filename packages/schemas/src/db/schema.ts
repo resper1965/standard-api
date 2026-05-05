@@ -1177,4 +1177,3 @@ export const scfMappingRelations = relations(scfMappings, ({ one, many }) => ({
   control: one(scfControls, { fields: [scfMappings.scfControlId], references: [scfControls.id] }),
   strmRelationships: many(scfStrmRelationships)
 }));
-

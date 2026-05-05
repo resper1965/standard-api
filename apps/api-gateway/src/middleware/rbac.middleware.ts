@@ -16,7 +16,7 @@ export const assertRbac = async (context: RequestContext, requiredPermissions: P
     reason = "missing_auth_context";
   } else {
     // Legacy support vs Better Auth session
-    const role = (context.session?.user?.role as AegisRole) || "viewer";
+    const role = (context.session?.user?.role as AegisRole) || (context.auth?.roles?.[0] as AegisRole) || "viewer";
     
     // Evaluate mapped permissions
     for (const reqPerm of requiredPermissions) {

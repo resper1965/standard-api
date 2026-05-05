@@ -40,9 +40,9 @@ export class MockAuthProvider implements AuthProvider {
   }
 
   private rolesFromHeader(authHeader?: string): Role[] {
-    if (!authHeader?.startsWith("Bearer dev:")) return ["assessment_owner", "approver"];
+    if (!authHeader?.startsWith("Bearer dev:")) return ["owner", "admin"] as any;
     const roleText = authHeader.slice("Bearer dev:".length);
     const roles = roleText.split(",").map((role) => role.trim()).filter(Boolean) as Role[];
-    return roles.length > 0 ? roles : ["assessment_owner"];
+    return roles.length > 0 ? roles : (["owner"] as any);
   }
 }

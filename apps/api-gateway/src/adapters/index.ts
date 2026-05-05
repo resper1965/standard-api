@@ -1,4 +1,4 @@
-import { createInMemoryAgentRuntimeDependencies } from "@aegis/agent-runtime";
+import { createInMemoryAgentRuntimeDependencies, createDrizzleAgentRuntimeDependencies } from "@aegis/agent-runtime";
 import { CloudflareR2StorageAdapter, defaultExtractors } from "@aegis/document-ingestion";
 import type { DocumentIngestionServiceDependencies } from "@aegis/document-ingestion";
 import { createInMemoryKbDependencies, CloudflareVectorizeStore, CloudflareAiEmbeddingProvider, MockEmbeddingProvider, MockVectorStore, DEFAULT_VECTOR_INDEX_NAME, DEFAULT_VECTOR_PROVIDER } from "@aegis/kb";
@@ -130,7 +130,7 @@ export const createDrizzleRepositories = (db: DbClient, env?: Env): AppDependenc
     poam,
     reporting,
     agentRuntime: {
-      ...createInMemoryAgentRuntimeDependencies(),
+      ...createDrizzleAgentRuntimeDependencies(db as never),
       llm:
         env?.AI_GATEWAY_BASE_URL && env?.OPENAI_API_KEY
           ? new CloudflareAiGatewayAdapter({

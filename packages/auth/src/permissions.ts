@@ -11,7 +11,7 @@
  * These are checked via `auth.api.hasPermission()` in middleware.
  */
 export const AEGIS_PERMISSIONS = {
-  assessment: ["read", "create", "update", "delete", "approve"] as const,
+  assessment: ["read", "create", "update", "delete", "approve", "run_workflow", "cancel"] as const,
   document: ["read", "upload", "delete"] as const,
   kb: ["read", "search"] as const,
   soa: ["read", "create", "approve"] as const,
@@ -34,7 +34,7 @@ export type AegisPermission<R extends AegisResource = AegisResource> =
  */
 export const AEGIS_ROLE_PERMISSIONS = {
   owner: {
-    assessment: ["read", "create", "update", "delete", "approve"],
+    assessment: ["read", "create", "update", "delete", "approve", "run_workflow", "cancel"],
     document: ["read", "upload", "delete"],
     kb: ["read", "search"],
     soa: ["read", "create", "approve"],
@@ -47,7 +47,7 @@ export const AEGIS_ROLE_PERMISSIONS = {
     admin: ["manage_users", "manage_orgs", "impersonate"],
   },
   admin: {
-    assessment: ["read", "create", "update", "approve"],
+    assessment: ["read", "create", "update", "approve", "run_workflow", "cancel"],
     document: ["read", "upload", "delete"],
     kb: ["read", "search"],
     soa: ["read", "create", "approve"],
@@ -60,7 +60,7 @@ export const AEGIS_ROLE_PERMISSIONS = {
     admin: ["manage_users", "manage_orgs"],
   },
   member: {
-    assessment: ["read", "create", "update"],
+    assessment: ["read", "create", "update", "run_workflow"],
     document: ["read", "upload"],
     kb: ["read", "search"],
     soa: ["read", "create"],
