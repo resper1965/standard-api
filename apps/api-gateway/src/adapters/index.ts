@@ -8,6 +8,7 @@ import { createInMemoryReportingDependencies } from "@aegis/reporting";
 import { createInMemoryScfCore, createScfCoreFromRepository, createDrizzleScfRepository } from "@aegis/scf-core";
 import { createInMemorySoaDependencies } from "@aegis/soa";
 import { createInMemoryWorkflowDependencies } from "@aegis/workflows";
+import { createDrizzleWorkflowDependencies } from "./workflow.repository";
 import type { AppDependencies } from "../http";
 import type { Env } from "../index";
 import type { DbClient } from "./db";
@@ -99,7 +100,7 @@ export const createDrizzleRepositories = (db: DbClient, env?: Env): AppDependenc
     poam,
     reporting,
     agentRuntime: createInMemoryAgentRuntimeDependencies(), // Phase 6: LLM integration
-    workflows: createInMemoryWorkflowDependencies(),
+    workflows: createDrizzleWorkflowDependencies(db),
     observability: createInMemoryObservabilityDependencies()
   };
 };

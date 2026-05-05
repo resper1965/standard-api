@@ -10,3 +10,6 @@ LOG_LEVEL = "info"
 binding = "ASSESSMENT_WORKFLOW"
 name = "aegis-assessment-lifecycle-dev"
 class_name = "AssessmentLifecycleWorkflow"
+
+# Database configured via secrets:
+# wrangler secret put DATABASE_URL --name aegis-api-standard-workflows
