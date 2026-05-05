@@ -18,6 +18,9 @@ import type { Env } from "../index";
 import type { DbClient } from "./db";
 import { createAssessmentRepository, createDrizzleAssessmentRepository } from "./assessment.repository";
 import { createArtifactRepository } from "./artifact.repository";
+import { createDrizzleArtifactRepository } from "./artifact.drizzle.repository";
+import { createDrizzleAssessmentSnapshotBuilder } from "./assessment-engine.adapter";
+import { createDrizzleMaturityRepositories } from "./maturity.repository";
 import { createAuditRepository, createDrizzleAuditRepository } from "./audit.repository";
 import { createApprovalRepository, createDrizzleApprovalRepository } from "./approval.repository";
 import { createLifecycleEventRepository, createDrizzleLifecycleEventRepository } from "./lifecycle.repository";
@@ -115,7 +118,7 @@ export const createDrizzleRepositories = (db: DbClient, env?: Env): AppDependenc
     organizations: createDrizzleOrganizationRepository(db),
     assessments: createDrizzleAssessmentRepository(db),
     approvals: createDrizzleApprovalRepository(db),
-    artifacts: createArtifactRepository(), // Still mock — artifact versioning is assessment-engine concern
+    artifacts: createDrizzleArtifactRepository(db),
     lifecycleEvents: createDrizzleLifecycleEventRepository(db),
     audit: createDrizzleAuditRepository(db),
     documentIngestion,
