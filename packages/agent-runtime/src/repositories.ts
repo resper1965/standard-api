@@ -37,5 +37,13 @@ export const createInMemoryAgentToolCallRepository = (): AgentToolCallRepository
 
 export const createInMemoryAgentRuntimeDependencies = (): AgentRuntimeDependencies => ({
   runs: createInMemoryAgentRunRepository(),
-  toolCalls: createInMemoryAgentToolCallRepository()
+  toolCalls: createInMemoryAgentToolCallRepository(),
+  llm: {
+    async generate(input) {
+      return {
+        message: { role: "assistant", content: "Mock LLM output" },
+        usage: { prompt_tokens: 10, completion_tokens: 10, total_tokens: 20 }
+      };
+    }
+  }
 });

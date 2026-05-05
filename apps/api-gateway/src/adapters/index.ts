@@ -26,6 +26,7 @@ import { createApprovalRepository, createDrizzleApprovalRepository } from "./app
 import { createLifecycleEventRepository, createDrizzleLifecycleEventRepository } from "./lifecycle.repository";
 import { createOrganizationRepository, createDrizzleOrganizationRepository } from "./organization.repository";
 import { createTenantRepository, createDrizzleTenantRepository } from "./tenant.repository";
+import { CloudflareAiGatewayAdapter } from "./ai-gateway.adapter";
 import { createDrizzleSoaRepositories } from "./soa.repository";
 import { createDrizzleGapAnalysisRepositories } from "./gap-analysis.repository";
 import { createDrizzlePoamRepositories } from "./poam.repository";
@@ -128,7 +129,16 @@ export const createDrizzleRepositories = (db: DbClient, env?: Env): AppDependenc
     gapAnalysis,
     poam,
     reporting,
-    agentRuntime: createInMemoryAgentRuntimeDependencies(), // Phase 6: LLM integration
+    agentRuntime: {
+      ...createInMemoryAgentRuntimeDependencies(),
+      llm:
+        env?.AI_GATEWAY_BASE_URL && env?.OPENAI_API_KEY
+          ? new CloudflareAiGatewayAdapter({
+              baseUrl: env.AI_GATEWAY_BASE_URL,
+              apiKey: env.OPENAI_API_KEY,
+            })
+          : createInMemoryAgentRuntimeDependencies().llm,
+    },
     workflows: createDrizzleWorkflowDependencies(db),
     observability: createInMemoryObservabilityDependencies()
   };

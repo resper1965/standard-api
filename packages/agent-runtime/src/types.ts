@@ -39,7 +39,10 @@ export type AgentToolCallRepository = {
   listByRun(agentRunId: string, tenantId: string): Promise<AgentToolInvocationResponse[]>;
 };
 
+import type { LlmProvider } from "./llm";
+
 export type AgentRuntimeDependencies = {
   runs: AgentRunRepository;
   toolCalls: AgentToolCallRepository;
+  llm: LlmProvider;
 };
