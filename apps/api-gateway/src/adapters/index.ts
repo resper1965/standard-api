@@ -18,6 +18,10 @@ import { createApprovalRepository, createDrizzleApprovalRepository } from "./app
 import { createLifecycleEventRepository, createDrizzleLifecycleEventRepository } from "./lifecycle.repository";
 import { createOrganizationRepository, createDrizzleOrganizationRepository } from "./organization.repository";
 import { createTenantRepository, createDrizzleTenantRepository } from "./tenant.repository";
+import { createDrizzleSoaRepositories } from "./soa.repository";
+import { createDrizzleGapAnalysisRepositories } from "./gap-analysis.repository";
+import { createDrizzlePoamRepositories } from "./poam.repository";
+import { createDrizzleReportRepositories } from "./reporting.repository";
 
 export const createMockRepositories = (): AppDependencies => {
   const documentIngestion = createInMemoryDocumentIngestionDependencies();
@@ -48,6 +52,7 @@ export const createMockRepositories = (): AppDependencies => {
 };
 
 export const createDrizzleRepositories = (db: DbClient, env?: Env): AppDependencies => {
+  // --- Document Ingestion (uses R2 when available) ---
   const documentIngestion = createInMemoryDocumentIngestionDependencies(
     env?.AEGIS_DOCUMENTS_BUCKET ? {
       storage: new CloudflareR2StorageAdapter(env.AEGIS_DOCUMENTS_BUCKET),
@@ -55,18 +60,35 @@ export const createDrizzleRepositories = (db: DbClient, env?: Env): AppDependenc
       bucketName: "AEGIS_DOCUMENTS_BUCKET"
     } : {}
   );
+
+  // --- KB (still in-memory vector store, Drizzle repos for metadata will come in Phase 4) ---
   const kb = createInMemoryKbDependencies(documentIngestion);
+
+  // --- SCF Core (fully Drizzle) ---
   const scf = createScfCoreFromRepository(createDrizzleScfRepository(db as never));
-  const soa = createInMemorySoaDependencies({ scf, kb });
-  const gapAnalysis = createInMemoryGapAnalysisDependencies({ scf, kb, soa });
-  const poam = createInMemoryPoamDependencies({ gapAnalysis, scf });
-  
+
+  // --- SoA (Drizzle repositories) ---
+  const soaRepositories = createDrizzleSoaRepositories(db);
+  const soa = { repositories: soaRepositories, scf, kb };
+
+  // --- Gap Analysis (Drizzle repositories) ---
+  const gapRepositories = createDrizzleGapAnalysisRepositories(db);
+  const gapAnalysis = { repositories: gapRepositories, soa, kb, scf };
+
+  // --- POA&M (Drizzle repositories) ---
+  const poamRepositories = createDrizzlePoamRepositories(db);
+  const poam = { repositories: poamRepositories, gapAnalysis, scf };
+
+  // --- Reporting (Drizzle repositories) ---
+  const reportRepositories = createDrizzleReportRepositories(db);
+  const reporting = { repositories: reportRepositories, soa, gapAnalysis, poam, scf };
+
   return {
     tenants: createDrizzleTenantRepository(db),
     organizations: createDrizzleOrganizationRepository(db),
     assessments: createDrizzleAssessmentRepository(db),
     approvals: createDrizzleApprovalRepository(db),
-    artifacts: createArtifactRepository(), // Still mock until Phase 5
+    artifacts: createArtifactRepository(), // Still mock — artifact versioning is assessment-engine concern
     lifecycleEvents: createDrizzleLifecycleEventRepository(db),
     audit: createDrizzleAuditRepository(db),
     documentIngestion,
@@ -75,8 +97,8 @@ export const createDrizzleRepositories = (db: DbClient, env?: Env): AppDependenc
     soa,
     gapAnalysis,
     poam,
-    reporting: createInMemoryReportingDependencies({ soa, gapAnalysis, poam, scf }),
-    agentRuntime: createInMemoryAgentRuntimeDependencies(),
+    reporting,
+    agentRuntime: createInMemoryAgentRuntimeDependencies(), // Phase 6: LLM integration
     workflows: createInMemoryWorkflowDependencies(),
     observability: createInMemoryObservabilityDependencies()
   };
