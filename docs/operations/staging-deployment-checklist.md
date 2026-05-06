@@ -34,9 +34,9 @@ Não versionar secrets em `.env.example`, docs, logs ou fixtures.
 - Workflows:
   - `ASSESSMENT_WORKFLOW`
 - KV opcional:
-  - `AEGIS_CONFIG_KV`
-  - `AEGIS_FEATURE_FLAGS_KV`
-  - `AEGIS_CACHE_KV`
+  - `STANDARD_CONFIG_KV`
+  - `STANDARD_FEATURE_FLAGS_KV`
+  - `STANDARD_CACHE_KV`
 
 ## Banco Staging
 
@@ -48,9 +48,9 @@ Não versionar secrets em `.env.example`, docs, logs ou fixtures.
 
 ## Buckets Staging
 
-- `aegis-documents-staging`
-- `aegis-reports-staging`
-- `aegis-exports-staging`
+- `standard-documents-staging`
+- `standard-reports-staging`
+- `standard-exports-staging`
 
 Regras:
 
@@ -60,17 +60,17 @@ Regras:
 
 ## Vectorize Staging
 
-- índice sugerido: `aegis-kb-staging`.
+- índice sugerido: `standard-kb-staging`.
 - usar apenas embeddings de fixtures sintéticas ou dados mascarados.
 - metadados devem carregar tenant e assessment.
 - Vectorize não pode ser usado como fonte normativa SCF.
 
 ## Queues Staging
 
-- `aegis-document-ingestion-staging`
-- `aegis-kb-embedding-staging`
-- `aegis-report-export-staging`
-- `aegis-dead-letter-staging`
+- `standard-document-ingestion-staging`
+- `standard-kb-embedding-staging`
+- `standard-report-export-staging`
+- `standard-dead-letter-staging`
 
 Critérios:
 
@@ -131,3 +131,4 @@ pnpm cf:deploy:staging
 - Approval gates não burláveis.
 - Dados sintéticos processados ponta a ponta.
 - Production permanece isolado e sem deploy automático.
+

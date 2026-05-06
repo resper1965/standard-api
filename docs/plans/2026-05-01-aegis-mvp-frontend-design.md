@@ -1,10 +1,10 @@
-# Aegis MVP — Corporate Dashboard Design
+# Standard MVP — Corporate Dashboard Design
 
 > **Validated:** 2026-05-01 via brainstorming
 
 ## Overview
 
-Dashboard corporativo dark-mode para o Aegis com duas áreas baseadas em role:
+Dashboard corporativo dark-mode para o Standard com duas áreas baseadas em role:
 - **Usuário** — Dashboard, Assessments, Documents, Gap Analysis, Reports
 - **Super-Admin (@bekaa.eu)** — Tudo acima + Tenant Management, License Keys, User Admin, Audit Logs, System Health
 
@@ -55,3 +55,4 @@ Login → Google OAuth or Email/Password
 - Vanilla CSS (design tokens)
 - Better Auth client SDK
 - Deployed on Cloudflare Pages
+

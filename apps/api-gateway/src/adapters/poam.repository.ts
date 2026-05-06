@@ -4,9 +4,9 @@
  * Uses $inferSelect for type-safe row mapping.
  */
 import { eq, and } from "drizzle-orm";
-import { poamVersions, poamItems, poamMilestones, poamDependencies } from "@aegis/schemas";
-import type { PoamVersionResponse, PoamItemResponse, PoamMilestoneResponse, PoamDependencyResponse } from "@aegis/schemas";
-import type { PoamVersionRepository, PoamItemRepository, PoamMilestoneRepository, PoamDependencyRepository, PoamRepositories } from "@aegis/poam";
+import { poamVersions, poamItems, poamMilestones, poamDependencies } from "@standard/schemas";
+import type { PoamVersionResponse, PoamItemResponse, PoamMilestoneResponse, PoamDependencyResponse } from "@standard/schemas";
+import type { PoamVersionRepository, PoamItemRepository, PoamMilestoneRepository, PoamDependencyRepository, PoamRepositories } from "@standard/poam";
 import type { DbClient } from "./db";
 
 export const createDrizzlePoamVersionRepository = (db: DbClient): PoamVersionRepository => ({
@@ -317,3 +317,4 @@ const mapPoamDependencyRow = (row: PoamDependencyRow): PoamDependencyResponse =>
   description: row.description,
   created_at: row.createdAt.toISOString(),
 });
+

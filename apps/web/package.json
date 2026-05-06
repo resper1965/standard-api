@@ -1,5 +1,5 @@
 {
-  "name": "@aegis/web",
+  "name": "@standard/web",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -13,7 +13,8 @@
     "better-auth": "^1.2.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
-    "react-router-dom": "^7.6.0"
+    "react-router-dom": "^7.6.0",
+    "recharts": "^3.8.1"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -31,3 +32,4 @@
     "vite": "^8.0.10"
   }
 }
+

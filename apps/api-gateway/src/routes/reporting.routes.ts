@@ -1,5 +1,5 @@
-import { executeTransition, getAllowedNextStates } from "@aegis/assessment-engine";
-import { AuditEventService, MetricsService } from "@aegis/observability";
+import { executeTransition, getAllowedNextStates } from "@standard/assessment-engine";
+import { AuditEventService, MetricsService } from "@standard/observability";
 import {
   ApproveReportRequestSchema,
   CreateReportDraftRequestSchema,
@@ -16,7 +16,7 @@ import {
   ReportValidationService,
   ReportingWorkflowError,
   SubmitReportReviewRequestSchema
-} from "@aegis/reporting";
+} from "@standard/reporting";
 import { ApiError } from "../errors/api-error";
 import type { ApiErrorCode } from "../errors/error-codes";
 import type { AppDependencies, AssessmentRecord, RouteDefinition } from "../http";
@@ -290,3 +290,4 @@ export const reportingRoutes: RouteDefinition[] = [
     }
   }
 ];
+

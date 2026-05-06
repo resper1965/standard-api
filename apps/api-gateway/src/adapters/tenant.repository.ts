@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { tenants } from "@aegis/schemas";
+import { tenants } from "@standard/schemas";
 import type { TenantRecord, TenantRepositoryAdapter } from "../http";
 import type { DbClient } from "./db";
 import { newId } from "../http";
@@ -62,3 +62,4 @@ export const createDrizzleTenantRepository = (db: DbClient): TenantRepositoryAda
     }
   };
 };
+

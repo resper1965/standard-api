@@ -22,7 +22,7 @@ EXCEPTION WHEN duplicate_object THEN null;
 END $$;
 
 ALTER TABLE report_versions
-  ADD COLUMN IF NOT EXISTS title text NOT NULL DEFAULT 'Aegis Assessment Report',
+  ADD COLUMN IF NOT EXISTS title text NOT NULL DEFAULT 'Standard Assessment Report',
   ADD COLUMN IF NOT EXISTS source_scope_id uuid REFERENCES assessment_scope(id),
   ADD COLUMN IF NOT EXISTS source_soa_version_id uuid REFERENCES soa_versions(id),
   ADD COLUMN IF NOT EXISTS source_gap_analysis_version_id uuid REFERENCES gap_analysis_versions(id),
@@ -76,3 +76,4 @@ CREATE INDEX IF NOT EXISTS export_jobs_report_idx
 
 CREATE INDEX IF NOT EXISTS export_jobs_status_idx
   ON export_jobs(status);
+

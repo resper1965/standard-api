@@ -1,4 +1,4 @@
-import type { ReportVersionResponse } from "@aegis/schemas";
+import type { ReportVersionResponse } from "@standard/schemas";
 import { assertActor, assertContext, ReportingWorkflowError } from "../errors";
 import type { ReportMetadataPatch, ReportingContext, ReportingDependencies } from "../types";
 import { ReportValidationService } from "./report-validation.service";
@@ -38,3 +38,4 @@ export class ReportReviewService {
     return report;
   }
 }
+

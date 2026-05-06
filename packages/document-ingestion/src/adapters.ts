@@ -9,7 +9,7 @@ import type {
   StoredObject,
   VectorReferenceRepository
 } from "./types";
-import type { DocumentIngestionJobMessage, DocumentJobResponse, DocumentResponse, VectorReferenceResponse } from "@aegis/schemas";
+import type { DocumentIngestionJobMessage, DocumentJobResponse, DocumentResponse, VectorReferenceResponse } from "@standard/schemas";
 
 export class InMemoryStorageAdapter implements StorageAdapter {
   private readonly objects = new Map<string, StoredObject>();
@@ -116,3 +116,4 @@ export const createInMemoryIngestionRepositories = () => ({
   vectorReferences: new InMemoryVectorReferenceRepository(),
   audit: new InMemoryAuditSink()
 });
+

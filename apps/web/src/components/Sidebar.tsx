@@ -16,7 +16,6 @@ const adminLinks = [
   { to: "/admin/license-keys", icon: "🔑", label: "License Keys" },
   { to: "/admin/audit", icon: "📜", label: "Audit Logs" },
   { to: "/admin/system", icon: "🩺", label: "System Health" },
-  { to: "/admin/scf", icon: "📦", label: "SCF Import" },
 ];
 
 export function Sidebar() {
@@ -33,7 +32,7 @@ export function Sidebar() {
     <aside className="sidebar">
       <div className="sidebar-logo">
         <span className="sidebar-shield">🛡️</span>
-        <h1>Aegis</h1>
+        <h1>Standard</h1>
       </div>
 
       <nav className="sidebar-nav">
@@ -92,3 +91,4 @@ export function Sidebar() {
     </aside>
   );
 }
+

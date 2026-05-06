@@ -8,8 +8,8 @@ test("POST /transitions bloqueia transição inválida", async () => {
     next_state: "framework_selected",
     reason: "tentativa sem prerequisitos"
   }, {
-    "x-aegis-tenant-id": created.tenantId,
-    "x-aegis-actor-id": ids.actorId
+    "x-standard-tenant-id": created.tenantId,
+    "x-standard-actor-id": ids.actorId
   });
 
   expect(response.status).toBe(409);
@@ -23,8 +23,8 @@ test("POST /transitions permite transição válida usando assessment-engine", a
     next_state: "documents_uploaded",
     reason: "documento sintético registrado"
   }, {
-    "x-aegis-tenant-id": created.tenantId,
-    "x-aegis-actor-id": ids.actorId
+    "x-standard-tenant-id": created.tenantId,
+    "x-standard-actor-id": ids.actorId
   });
 
   expect(response.status).toBe(200);
@@ -32,3 +32,4 @@ test("POST /transitions permite transição válida usando assessment-engine", a
   expect(body.next_state).toBe("documents_uploaded");
   expect(body.event.trace_id).toBe("trace-test-0001");
 });
+

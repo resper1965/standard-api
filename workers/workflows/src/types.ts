@@ -5,7 +5,7 @@ import type {
   AssessmentState,
   TransitionContext,
   TransitionResult
-} from "@aegis/assessment-engine";
+} from "@standard/assessment-engine";
 import type {
   AssessmentLifecycleWorkflowInput,
   AssessmentLifecycleWorkflowState,
@@ -14,7 +14,7 @@ import type {
   WorkflowRunResponse,
   WorkflowRunStatus,
   WorkflowSignalRequest
-} from "@aegis/schemas";
+} from "@standard/schemas";
 
 export type WorkflowAuditEventType =
   | "lifecycle_workflow_started"
@@ -104,3 +104,4 @@ export type WorkflowSafeErrorCode =
   | "WORKFLOW_RESUME_NOT_ALLOWED"
   | "WORKFLOW_BLOCKED"
   | "WORKFLOW_FAILED";
+

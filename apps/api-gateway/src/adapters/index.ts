@@ -1,15 +1,15 @@
-import { createInMemoryAgentRuntimeDependencies, createDrizzleAgentRuntimeDependencies } from "@aegis/agent-runtime";
-import { CloudflareR2StorageAdapter, defaultExtractors } from "@aegis/document-ingestion";
-import type { DocumentIngestionServiceDependencies } from "@aegis/document-ingestion";
-import { createInMemoryKbDependencies, CloudflareVectorizeStore, CloudflareAiEmbeddingProvider, MockEmbeddingProvider, MockVectorStore, DEFAULT_VECTOR_INDEX_NAME, DEFAULT_VECTOR_PROVIDER } from "@aegis/kb";
-import { createInMemoryGapAnalysisDependencies } from "@aegis/gap-analysis";
-import { createInMemoryObservabilityDependencies } from "@aegis/observability";
-import { createInMemoryPoamDependencies } from "@aegis/poam";
-import { createInMemoryReportingDependencies } from "@aegis/reporting";
-import { createInMemoryScfCore, createScfCoreFromRepository, createDrizzleScfRepository } from "@aegis/scf-core";
-import { createInMemorySoaDependencies } from "@aegis/soa";
-import { createInMemoryWorkflowDependencies } from "@aegis/workflows";
-import { createInMemoryDocumentIngestionDependencies } from "@aegis/document-ingestion";
+import { createInMemoryAgentRuntimeDependencies, createDrizzleAgentRuntimeDependencies } from "@standard/agent-runtime";
+import { CloudflareR2StorageAdapter, getDefaultExtractors } from "@standard/document-ingestion";
+import type { DocumentIngestionServiceDependencies } from "@standard/document-ingestion";
+import { createInMemoryKbDependencies, CloudflareVectorizeStore, CloudflareAiEmbeddingProvider, MockEmbeddingProvider, MockVectorStore, DEFAULT_VECTOR_INDEX_NAME, DEFAULT_VECTOR_PROVIDER } from "@standard/kb";
+import { createInMemoryGapAnalysisDependencies } from "@standard/gap-analysis";
+import { createInMemoryObservabilityDependencies } from "@standard/observability";
+import { createInMemoryPoamDependencies } from "@standard/poam";
+import { createInMemoryReportingDependencies } from "@standard/reporting";
+import { createInMemoryScfCore, createScfCoreFromRepository, createDrizzleScfRepository } from "@standard/scf-core";
+import { createInMemorySoaDependencies } from "@standard/soa";
+import { createInMemoryWorkflowDependencies } from "@standard/workflows";
+import { createInMemoryDocumentIngestionDependencies } from "@standard/document-ingestion";
 import { createDrizzleWorkflowDependencies } from "./workflow.repository";
 import { createDrizzleIngestionRepositories } from "./document-ingestion.repository";
 import { createDrizzleKbRepositories } from "./kb.repository";
@@ -31,6 +31,7 @@ import { createDrizzleSoaRepositories } from "./soa.repository";
 import { createDrizzleGapAnalysisRepositories } from "./gap-analysis.repository";
 import { createDrizzlePoamRepositories } from "./poam.repository";
 import { createDrizzleReportRepositories } from "./reporting.repository";
+import { createMockApiKeysRepository, createDrizzleApiKeysRepository } from "./api-keys.repository";
 
 export const createMockRepositories = (): AppDependencies => {
   const documentIngestion = createInMemoryDocumentIngestionDependencies();
@@ -42,6 +43,7 @@ export const createMockRepositories = (): AppDependencies => {
   return {
     tenants: createTenantRepository(),
     organizations: createOrganizationRepository(),
+    apiKeys: createMockApiKeysRepository(),
     assessments: createAssessmentRepository(),
     approvals: createApprovalRepository(),
     artifacts: createArtifactRepository(),
@@ -63,17 +65,17 @@ export const createMockRepositories = (): AppDependencies => {
 export const createDrizzleRepositories = (db: DbClient, env?: Env): AppDependencies => {
   // --- Document Ingestion (Drizzle repos + R2 storage) ---
   const ingestionRepositories = createDrizzleIngestionRepositories(db);
-  const storage = env?.AEGIS_DOCUMENTS_BUCKET
-    ? new CloudflareR2StorageAdapter(env.AEGIS_DOCUMENTS_BUCKET)
+  const storage = env?.STANDARD_DOCUMENTS_BUCKET
+    ? new CloudflareR2StorageAdapter(env.STANDARD_DOCUMENTS_BUCKET)
     : undefined;
   const documentIngestion: DocumentIngestionServiceDependencies = {
     storage: storage ?? { putObject: async () => {}, getObject: async () => null },
     queue: { enqueue: async () => {} },
     repositories: ingestionRepositories,
-    bucketName: "AEGIS_DOCUMENTS_BUCKET",
+    bucketName: "STANDARD_DOCUMENTS_BUCKET",
     storageProvider: storage ? "cloudflare_r2" : "memory",
     vectorIndexName: DEFAULT_VECTOR_INDEX_NAME,
-    extractors: defaultExtractors,
+    extractors: getDefaultExtractors(env as any),
     chunking: { max_tokens_estimate: 800, overlap_tokens_estimate: 80, strategy: "by_tokens_estimate", preserve_headings: true, preserve_pages: true },
   };
 
@@ -82,8 +84,8 @@ export const createDrizzleRepositories = (db: DbClient, env?: Env): AppDependenc
   const embeddingProvider = env?.AI
     ? new CloudflareAiEmbeddingProvider(env.AI as never)
     : new MockEmbeddingProvider();
-  const vectorStore = env?.AEGIS_KB_INDEX
-    ? new CloudflareVectorizeStore(env.AEGIS_KB_INDEX as never, DEFAULT_VECTOR_INDEX_NAME)
+  const vectorStore = env?.STANDARD_KB_INDEX
+    ? new CloudflareVectorizeStore(env.STANDARD_KB_INDEX as never, DEFAULT_VECTOR_INDEX_NAME)
     : new MockVectorStore(DEFAULT_VECTOR_INDEX_NAME);
   const kb = {
     documentIngestion,
@@ -117,6 +119,7 @@ export const createDrizzleRepositories = (db: DbClient, env?: Env): AppDependenc
   return {
     tenants: createDrizzleTenantRepository(db),
     organizations: createDrizzleOrganizationRepository(db),
+    apiKeys: createDrizzleApiKeysRepository(db),
     assessments: createDrizzleAssessmentRepository(db),
     approvals: createDrizzleApprovalRepository(db),
     artifacts: createDrizzleArtifactRepository(db),
@@ -143,3 +146,4 @@ export const createDrizzleRepositories = (db: DbClient, env?: Env): AppDependenc
     observability: createInMemoryObservabilityDependencies()
   };
 };
+

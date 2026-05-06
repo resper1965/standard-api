@@ -5,7 +5,7 @@ Substituir as fundações em "Mock" elaboradas no MVP (MockAuthProvider) para in
 
 ## Escopo (Fase 4: Infra Cloudflare)
 ### 1. Implementação JWT Auth Provider (`packages/security`)
-O Aegis atualmente resolve contexto de tráfego usando o pacote nativo `packages/security` invocando `MockAuthProvider`. Como o Cloudflare atua no edge, usaremos a interface padrão exportada para injetar o `JwtAuthProvider`.
+O Standard atualmente resolve contexto de tráfego usando o pacote nativo `packages/security` invocando `MockAuthProvider`. Como o Cloudflare atua no edge, usaremos a interface padrão exportada para injetar o `JwtAuthProvider`.
 - **Validação:** Parsing de bearer token nativo.
 - **Isolamento de Tenants:** O Token validado retornará o `tenant_id` atestado na fonte da autoridade da infraestrutura em conformidade ao `AuthContext`.
 
@@ -21,3 +21,4 @@ O `schema.ts` do Drizzle já lista rigorosa governança com +1100 linhas engloba
 
 ## Validação
 Essa arquitetura atende primariamente ao Roadmap Master do projeto, deslocando a maturidade base para o quadrante *Production-Ready*. Os testes unitários passarão a consumir o driver real via injeção por proxy de testes.
+

@@ -1,7 +1,7 @@
 # Reversa — Fase 3: Arquitetura C4
 
 > Gerado em 2026-05-02 por Antigravity
-> Projeto: aegis-api-standard v0.1.0
+> Projeto: standard-api-standard v0.1.0
 
 ---
 
@@ -13,8 +13,8 @@ graph TB
     Admin["👤 Super Admin"]
     ExtClient["🤖 Cliente Programático (API Key)"]
 
-    subgraph "Aegis Platform"
-        Dashboard["🖥️ Aegis Dashboard<br/>React SPA (Cloudflare Pages)"]
+    subgraph "Standard Platform"
+        Dashboard["🖥️ Standard Dashboard<br/>React SPA (Cloudflare Pages)"]
         APIGateway["⚡ API Gateway<br/>Cloudflare Worker"]
     end
 
@@ -37,11 +37,11 @@ graph TB
 ```mermaid
 graph TB
     subgraph "Frontend"
-        Web["🖥️ apps/web<br/>React 19 + Vite 8<br/>Cloudflare Pages<br/>aegis-web-m99.pages.dev"]
+        Web["🖥️ apps/web<br/>React 19 + Vite 8<br/>Cloudflare Pages<br/>standard-web-m99.pages.dev"]
     end
 
     subgraph "API Layer"
-        GW["⚡ apps/api-gateway<br/>Cloudflare Worker<br/>aegis-api.bekaa.eu"]
+        GW["⚡ apps/api-gateway<br/>Cloudflare Worker<br/>standard-api.bekaa.eu"]
     end
 
     subgraph "Background Workers"
@@ -52,15 +52,15 @@ graph TB
 
     subgraph "Data Stores"
         DB[("🐘 Neon PostgreSQL<br/>Tenants, Assessments,<br/>Findings, Approvals")]
-        R2Docs["📦 R2: aegis-documents<br/>Documentos originais"]
-        R2Reports["📦 R2: aegis-reports<br/>Relatórios gerados"]
-        R2Exports["📦 R2: aegis-exports<br/>Exports"]
+        R2Docs["📦 R2: standard-documents<br/>Documentos originais"]
+        R2Reports["📦 R2: standard-reports<br/>Relatórios gerados"]
+        R2Exports["📦 R2: standard-exports<br/>Exports"]
     end
 
     subgraph "Queues"
-        Q1["📬 aegis-document-ingestion"]
-        Q2["📬 aegis-kb-embedding"]
-        Q3["📬 aegis-report-export"]
+        Q1["📬 standard-document-ingestion"]
+        Q2["📬 standard-kb-embedding"]
+        Q3["📬 standard-report-export"]
     end
 
     Web -->|"/api/*" proxy| GW
@@ -106,16 +106,16 @@ graph TB
         end
 
         subgraph "Domain Packages"
-            AE["@aegis/assessment-engine"]
-            DI["@aegis/document-ingestion"]
-            GA["@aegis/gap-analysis"]
-            SOA["@aegis/soa"]
-            POAM["@aegis/poam"]
-            REP["@aegis/reporting"]
-            KB["@aegis/kb"]
-            SCF["@aegis/scf-core"]
-            AR["@aegis/agent-runtime"]
-            OBS["@aegis/observability"]
+            AE["@standard/assessment-engine"]
+            DI["@standard/document-ingestion"]
+            GA["@standard/gap-analysis"]
+            SOA["@standard/soa"]
+            POAM["@standard/poam"]
+            REP["@standard/reporting"]
+            KB["@standard/kb"]
+            SCF["@standard/scf-core"]
+            AR["@standard/agent-runtime"]
+            OBS["@standard/observability"]
         end
     end
 
@@ -140,45 +140,45 @@ graph TB
 
 ```mermaid
 graph BT
-    schemas["@aegis/schemas<br/>Drizzle + Zod"]
+    schemas["@standard/schemas<br/>Drizzle + Zod"]
 
-    scf["@aegis/scf-core"] --> schemas
-    auth["@aegis/auth"] --> schemas
-    obs["@aegis/observability"] --> schemas
-    ar["@aegis/agent-runtime"] --> schemas
-    ae["@aegis/assessment-engine"] --> schemas
-    di["@aegis/document-ingestion"] --> schemas
-    sec["@aegis/security"] --> schemas
+    scf["@standard/scf-core"] --> schemas
+    auth["@standard/auth"] --> schemas
+    obs["@standard/observability"] --> schemas
+    ar["@standard/agent-runtime"] --> schemas
+    ae["@standard/assessment-engine"] --> schemas
+    di["@standard/document-ingestion"] --> schemas
+    sec["@standard/security"] --> schemas
     sec --> di
 
-    kb["@aegis/kb"] --> schemas
+    kb["@standard/kb"] --> schemas
     kb --> di
 
-    soa["@aegis/soa"] --> schemas
+    soa["@standard/soa"] --> schemas
     soa --> ae
     soa --> scf
     soa --> kb
 
-    ga["@aegis/gap-analysis"] --> schemas
+    ga["@standard/gap-analysis"] --> schemas
     ga --> ae
     ga --> scf
     ga --> kb
     ga --> soa
 
-    poam["@aegis/poam"] --> schemas
+    poam["@standard/poam"] --> schemas
     poam --> ae
     poam --> scf
     poam --> ga
     poam --> soa
 
-    rep["@aegis/reporting"] --> schemas
+    rep["@standard/reporting"] --> schemas
     rep --> ae
     rep --> scf
     rep --> ga
     rep --> poam
     rep --> soa
 
-    gw["@aegis/api-gateway"] --> ae
+    gw["@standard/api-gateway"] --> ae
     gw --> di
     gw --> ga
     gw --> soa
@@ -238,9 +238,10 @@ graph LR
         U --> AK["API Key"]
     end
 
-    subgraph "Aegis Domain Mapping"
+    subgraph "Standard Domain Mapping"
         O -.->|"= tenant_id"| T["Tenant Context"]
         U -.->|"= actorId"| AC["Actor Context"]
         S -.->|"activeOrganizationId"| T
     end
 ```
+

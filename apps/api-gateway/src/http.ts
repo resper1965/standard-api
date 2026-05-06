@@ -1,6 +1,6 @@
 import type { z } from "zod";
-import type { AgentRuntimeDependencies } from "@aegis/agent-runtime";
-import type { ObservabilityDependencies } from "@aegis/observability";
+import type { AgentRuntimeDependencies } from "@standard/agent-runtime";
+import type { ObservabilityDependencies } from "@standard/observability";
 import type {
   ArtifactVersion,
   ArtifactType,
@@ -8,17 +8,17 @@ import type {
   AssessmentSnapshot,
   ApprovalEvent,
   ApprovalGate
-} from "@aegis/assessment-engine";
-import type { DocumentIngestionServiceDependencies } from "@aegis/document-ingestion";
-import type { GapAnalysisDependencies } from "@aegis/gap-analysis";
-import type { KbServiceDependencies } from "@aegis/kb";
-import type { PoamDependencies } from "@aegis/poam";
-import type { ReportingDependencies } from "@aegis/reporting";
-import type { ScfCoreServices } from "@aegis/scf-core";
-import type { AuthContext, Permission, SecurityTenantContext } from "@aegis/security";
-import type { SoaDependencies } from "@aegis/soa";
-import type { WorkflowDependencies } from "@aegis/workflows";
-import type { SendEmail } from "@aegis/email";
+} from "@standard/assessment-engine";
+import type { DocumentIngestionServiceDependencies } from "@standard/document-ingestion";
+import type { GapAnalysisDependencies } from "@standard/gap-analysis";
+import type { KbServiceDependencies } from "@standard/kb";
+import type { PoamDependencies } from "@standard/poam";
+import type { ReportingDependencies } from "@standard/reporting";
+import type { ScfCoreServices } from "@standard/scf-core";
+import type { AuthContext, Permission, SecurityTenantContext } from "@standard/security";
+import type { SoaDependencies } from "@standard/soa";
+import type { WorkflowDependencies } from "@standard/workflows";
+import type { SendEmail } from "@standard/email";
 import { ApiError } from "./errors/api-error";
 
 export type TenantRecord = {
@@ -59,7 +59,29 @@ export type AssessmentRepositoryAdapter = {
   create(input: Omit<AssessmentRecord, "snapshot"> & { documentCount: number }): Promise<AssessmentRecord>;
   get(assessmentId: string, tenantId: string): Promise<AssessmentRecord | null>;
   listByOrganization(organizationId: string, tenantId: string): Promise<AssessmentRecord[]>;
+  listAll(tenantId: string): Promise<AssessmentRecord[]>;
   save(record: AssessmentRecord): Promise<void>;
+};
+
+export type ApiKeyRecord = {
+  id: string;
+  tenantId: string;
+  organizationId: string;
+  name: string;
+  keyHash: string;
+  maskedKey: string;
+  expiresAt: Date | null;
+  lastUsedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type ApiKeysRepositoryAdapter = {
+  create(input: any): Promise<ApiKeyRecord>;
+  verifyKey(keyHash: string): Promise<ApiKeyRecord | null>;
+  markUsed(id: string): Promise<void>;
+  revokeKey(id: string, organizationId: string): Promise<boolean>;
+  listByOrganization(organizationId: string): Promise<ApiKeyRecord[]>;
 };
 
 export type TenantRepositoryAdapter = {
@@ -100,6 +122,7 @@ export type AuditRepositoryAdapter = {
 export type AppDependencies = {
   tenants: TenantRepositoryAdapter;
   organizations: OrganizationRepositoryAdapter;
+  apiKeys: ApiKeysRepositoryAdapter;
   assessments: AssessmentRepositoryAdapter;
   approvals: ApprovalRepositoryAdapter;
   artifacts: ArtifactRepositoryAdapter;
@@ -181,3 +204,4 @@ export const routeParam = (params: Record<string, string>, name: string): string
 };
 
 export const newId = (): string => crypto.randomUUID();
+

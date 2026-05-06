@@ -1,53 +1,53 @@
 /**
- * @module @aegis/email - Send
+ * @module @standard/email - Send
  *
  * Typed wrapper around the Cloudflare Email Service binding.
  * Abstracts the CF binding so the rest of the platform uses
- * `sendAegisEmail(binding, payload, options)` without knowing CF details.
+ * `sendStandardEmail(binding, payload, options)` without knowing CF details.
  */
 
 import { renderEmail } from "./templates";
 import type {
   SendEmail,
-  AegisEmailPayload,
-  AegisEmailOptions,
-  AegisEmailResult,
+  StandardEmailPayload,
+  StandardEmailOptions,
+  StandardEmailResult,
   CloudflareEmailErrorCode,
 } from "./types";
-import { AegisEmailError } from "./types";
+import { StandardEmailError } from "./types";
 
 /**
- * Send a typed Aegis transactional email via the Cloudflare Email Service binding.
+ * Send a typed Standard transactional email via the Cloudflare Email Service binding.
  *
  * @param binding - The `env.EMAIL` SendEmail binding from Cloudflare Workers
  * @param payload - Discriminated union payload (type determines template)
  * @param options - Sender domain and optional overrides
  * @returns Result with messageId and metadata
- * @throws AegisEmailError with Cloudflare error code on failure
+ * @throws StandardEmailError with Cloudflare error code on failure
  *
  * @example
  * ```ts
- * const result = await sendAegisEmail(env.EMAIL, {
+ * const result = await sendStandardEmail(env.EMAIL, {
  *   type: "welcome",
  *   to: "user@example.com",
  *   firstName: "Alice",
- *   dashboardUrl: "https://apiaegis.bekaa.eu/dashboard"
+ *   dashboardUrl: "https://apistandard.bekaa.eu/dashboard"
  * }, { domain: "bekaa.eu" });
  *
  * console.log(result.messageId); // "msg_abc123..."
  * ```
  */
-export async function sendAegisEmail(
+export async function sendStandardEmail(
   binding: SendEmail,
-  payload: AegisEmailPayload,
-  options: AegisEmailOptions
-): Promise<AegisEmailResult> {
+  payload: StandardEmailPayload,
+  options: StandardEmailOptions
+): Promise<StandardEmailResult> {
   // 1. Render the template
   const rendered = renderEmail(payload);
 
   // 2. Build sender address
   const fromEmail = options.from ?? `noreply@${options.domain}`;
-  const fromName = options.fromName ?? "Aegis Platform";
+  const fromName = options.fromName ?? "Standard Platform";
 
   // 3. Send via Cloudflare binding
   try {
@@ -71,7 +71,7 @@ export async function sendAegisEmail(
     const code = extractErrorCode(error);
     const message = error instanceof Error ? error.message : String(error);
 
-    throw new AegisEmailError(
+    throw new StandardEmailError(
       code,
       `Failed to send ${payload.type} email to ${payload.to}: ${message}`,
       payload.type,
@@ -126,3 +126,4 @@ export function describeEmailError(code: CloudflareEmailErrorCode | "UNKNOWN"): 
       return "An unexpected error occurred while sending the email.";
   }
 }
+

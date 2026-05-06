@@ -1,5 +1,5 @@
-import { getExtension, sanitizeFilename, sha256Hex } from "@aegis/document-ingestion";
-import type { FileSecurityPolicy, FileValidationSecurityResult } from "@aegis/schemas";
+import { getExtension, sanitizeFilename, sha256Hex } from "@standard/document-ingestion";
+import type { FileSecurityPolicy, FileValidationSecurityResult } from "@standard/schemas";
 import { DEFAULT_FILE_SECURITY_POLICY } from "../constants";
 
 export type SecurityFileDescriptor = {
@@ -32,3 +32,4 @@ export class FileSecurityService {
     };
   }
 }
+

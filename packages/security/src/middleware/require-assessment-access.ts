@@ -1,4 +1,4 @@
-import type { SecurityTenantContext } from "@aegis/schemas";
+import type { SecurityTenantContext } from "@standard/schemas";
 import { TenantGuard } from "../tenancy/tenant-guard";
 
 export const requireAssessmentAccess = (
@@ -8,3 +8,4 @@ export const requireAssessmentAccess = (
   const decision = new TenantGuard().validateAssessmentAccess(assessment, tenant);
   if (!decision.allowed) throw new Error(decision.reason ?? "assessment_mismatch");
 };
+

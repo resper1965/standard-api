@@ -1,6 +1,6 @@
-import { KbIndexRequestSchema, KbReindexDocumentRequestSchema, KbSearchRequestSchema } from "@aegis/schemas";
-import { KbIndexingService, KbReprocessService, KbSearchService, processKbEmbeddingJob } from "@aegis/kb";
-import { CostTrackingService, MetricsService } from "@aegis/observability";
+import { KbIndexRequestSchema, KbReindexDocumentRequestSchema, KbSearchRequestSchema } from "@standard/schemas";
+import { KbIndexingService, KbReprocessService, KbSearchService, processKbEmbeddingJob } from "@standard/kb";
+import { CostTrackingService, MetricsService } from "@standard/observability";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";
 import { json, parseJson, routeParam } from "../http";
@@ -203,3 +203,4 @@ export const kbRoutes: RouteDefinition[] = [
     }
   }
 ];
+

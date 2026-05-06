@@ -36,7 +36,7 @@ export const createTestClient = () => {
 
   const createTenantOrg = async () => {
     const tenantResult = await send("/api/v1/tenants", "POST", { slug: "tenant-test", name: "Tenant Test" }, {
-      "x-aegis-actor-id": ids.actorId
+      "x-standard-actor-id": ids.actorId
     });
     const tenantId = tenantResult.body.tenant_id as string;
     const orgResult = await send("/api/v1/organizations", "POST", {
@@ -44,8 +44,8 @@ export const createTestClient = () => {
       slug: "org-test",
       name: "Org Test"
     }, {
-      "x-aegis-tenant-id": tenantId,
-      "x-aegis-actor-id": ids.actorId
+      "x-standard-tenant-id": tenantId,
+      "x-standard-actor-id": ids.actorId
     });
 
     return {
@@ -62,8 +62,8 @@ export const createTestClient = () => {
       scf_version_id: ids.scfVersionId,
       document_count: documentCount
     }, {
-      "x-aegis-tenant-id": tenantId,
-      "x-aegis-actor-id": ids.actorId
+      "x-standard-tenant-id": tenantId,
+      "x-standard-actor-id": ids.actorId
     });
 
     return {
@@ -81,3 +81,4 @@ export const createTestClient = () => {
 
   return { send, sendMultipart, createTenantOrg, createAssessment };
 };
+

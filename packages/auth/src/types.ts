@@ -1,5 +1,5 @@
 /**
- * Shared types for @aegis/auth.
+ * Shared types for @standard/auth.
  */
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import type { NeonHttpDatabase } from "drizzle-orm/neon-http";
@@ -10,3 +10,4 @@ import type { NeonHttpDatabase } from "drizzle-orm/neon-http";
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type DrizzleClient = PostgresJsDatabase<any> | NeonHttpDatabase<any> | Record<string, unknown>;
+

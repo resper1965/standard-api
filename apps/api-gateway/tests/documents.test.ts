@@ -14,7 +14,7 @@ test("validação rejeita arquivo sem tenant context", async () => {
   const client = createTestClient();
   const created = await client.createAssessment();
   const { response, body } = await client.sendMultipart(`/api/v1/assessments/${created.assessmentId}/documents`, uploadForm(), {
-    "x-aegis-actor-id": ids.actorId
+    "x-standard-actor-id": ids.actorId
   });
   expect(response.status).toBe(400);
   expect(body.error.code).toBe("TENANT_CONTEXT_REQUIRED");
@@ -24,8 +24,8 @@ test("upload rejeita tipo não permitido", async () => {
   const client = createTestClient();
   const created = await client.createAssessment();
   const { response, body } = await client.sendMultipart(`/api/v1/assessments/${created.assessmentId}/documents`, uploadForm("bad.exe", "application/x-msdownload"), {
-    "x-aegis-tenant-id": created.tenantId,
-    "x-aegis-actor-id": ids.actorId
+    "x-standard-tenant-id": created.tenantId,
+    "x-standard-actor-id": ids.actorId
   });
   expect(response.status).toBe(415);
   expect(body.error.code).toBe("UNSUPPORTED_MEDIA_TYPE");
@@ -35,8 +35,8 @@ test("upload TXT cria documento e job de extração", async () => {
   const client = createTestClient();
   const created = await client.createAssessment();
   const { response, body } = await client.sendMultipart(`/api/v1/assessments/${created.assessmentId}/documents`, uploadForm("../Evidence File!!.txt"), {
-    "x-aegis-tenant-id": created.tenantId,
-    "x-aegis-actor-id": ids.actorId
+    "x-standard-tenant-id": created.tenantId,
+    "x-standard-actor-id": ids.actorId
   });
   expect(response.status).toBe(202);
   expect(body.document.tenant_id).toBe(created.tenantId);
@@ -48,17 +48,17 @@ test("consumer endpoint processa job e expõe chunks", async () => {
   const client = createTestClient();
   const created = await client.createAssessment();
   const uploaded = await client.sendMultipart(`/api/v1/assessments/${created.assessmentId}/documents`, uploadForm(), {
-    "x-aegis-tenant-id": created.tenantId,
-    "x-aegis-actor-id": ids.actorId
+    "x-standard-tenant-id": created.tenantId,
+    "x-standard-actor-id": ids.actorId
   });
   const jobId = uploaded.body.job.job_id as string;
   const documentId = uploaded.body.document.document_id as string;
   const processed = await client.send(`/api/v1/ingestion-jobs/${jobId}/process`, "POST", {}, {
-    "x-aegis-tenant-id": created.tenantId,
-    "x-aegis-actor-id": ids.actorId
+    "x-standard-tenant-id": created.tenantId,
+    "x-standard-actor-id": ids.actorId
   });
   const chunks = await client.send(`/api/v1/documents/${documentId}/chunks`, "GET", undefined, {
-    "x-aegis-tenant-id": created.tenantId
+    "x-standard-tenant-id": created.tenantId
   });
   expect(processed.response.status).toBe(200);
   expect(processed.body.status).toBe("succeeded");
@@ -69,23 +69,23 @@ test("reprocess cria novo job sem apagar chunks anteriores", async () => {
   const client = createTestClient();
   const created = await client.createAssessment();
   const uploaded = await client.sendMultipart(`/api/v1/assessments/${created.assessmentId}/documents`, uploadForm(), {
-    "x-aegis-tenant-id": created.tenantId,
-    "x-aegis-actor-id": ids.actorId
+    "x-standard-tenant-id": created.tenantId,
+    "x-standard-actor-id": ids.actorId
   });
   const documentId = uploaded.body.document.document_id as string;
   await client.send(`/api/v1/ingestion-jobs/${uploaded.body.job.job_id}/process`, "POST", {}, {
-    "x-aegis-tenant-id": created.tenantId,
-    "x-aegis-actor-id": ids.actorId
+    "x-standard-tenant-id": created.tenantId,
+    "x-standard-actor-id": ids.actorId
   });
   const before = await client.send(`/api/v1/documents/${documentId}/chunks`, "GET", undefined, {
-    "x-aegis-tenant-id": created.tenantId
+    "x-standard-tenant-id": created.tenantId
   });
   const reprocess = await client.send(`/api/v1/documents/${documentId}/reprocess`, "POST", { reason: "teste" }, {
-    "x-aegis-tenant-id": created.tenantId,
-    "x-aegis-actor-id": ids.actorId
+    "x-standard-tenant-id": created.tenantId,
+    "x-standard-actor-id": ids.actorId
   });
   const after = await client.send(`/api/v1/documents/${documentId}/chunks`, "GET", undefined, {
-    "x-aegis-tenant-id": created.tenantId
+    "x-standard-tenant-id": created.tenantId
   });
   expect(reprocess.response.status).toBe(202);
   expect(before.body.data.length).toBe(after.body.data.length);
@@ -96,11 +96,12 @@ test("listagem não retorna documentos de outro tenant", async () => {
   const first = await client.createAssessment();
   const second = await client.createAssessment();
   await client.sendMultipart(`/api/v1/assessments/${first.assessmentId}/documents`, uploadForm(), {
-    "x-aegis-tenant-id": first.tenantId,
-    "x-aegis-actor-id": ids.actorId
+    "x-standard-tenant-id": first.tenantId,
+    "x-standard-actor-id": ids.actorId
   });
   const list = await client.send(`/api/v1/assessments/${first.assessmentId}/documents`, "GET", undefined, {
-    "x-aegis-tenant-id": second.tenantId
+    "x-standard-tenant-id": second.tenantId
   });
   expect(list.body.data.length).toBe(0);
 });
+

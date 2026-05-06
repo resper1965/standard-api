@@ -1,4 +1,4 @@
-import type { AccessDecision, ToolUsePolicy } from "@aegis/schemas";
+import type { AccessDecision, ToolUsePolicy } from "@standard/schemas";
 
 export class ToolUsePolicyService {
   canUseTool(policy: ToolUsePolicy, toolName: string): AccessDecision {
@@ -16,3 +16,4 @@ export class ToolUsePolicyService {
     };
   }
 }
+

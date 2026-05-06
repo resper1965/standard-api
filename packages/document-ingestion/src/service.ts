@@ -1,4 +1,4 @@
-import type { ChunkingConfig, DocumentIngestionJobMessage, DocumentResponse } from "@aegis/schemas";
+import type { ChunkingConfig, DocumentIngestionJobMessage, DocumentResponse } from "@standard/schemas";
 import { buildStorageKey } from "./filename";
 import { validateFile } from "./validation";
 import type { DocumentIngestionServiceDependencies, FileDescriptor, UploadContext } from "./types";
@@ -128,3 +128,4 @@ export class DocumentIngestionService {
     return this.deps.chunking ?? defaultChunking;
   }
 }
+

@@ -7,8 +7,8 @@ test("POST /api/v1/assessments valida body", async () => {
   const { response, body } = await client.send("/api/v1/assessments", "POST", {
     name: ""
   }, {
-    "x-aegis-tenant-id": tenantId,
-    "x-aegis-actor-id": ids.actorId
+    "x-standard-tenant-id": tenantId,
+    "x-standard-actor-id": ids.actorId
   });
 
   expect(response.status).toBe(400);
@@ -28,10 +28,11 @@ test("GET /api/v1/assessments/:assessmentId/status retorna estado atual", async 
   const client = createTestClient();
   const created = await client.createAssessment();
   const { response, body } = await client.send(`/api/v1/assessments/${created.assessmentId}/status`, "GET", undefined, {
-    "x-aegis-tenant-id": created.tenantId
+    "x-standard-tenant-id": created.tenantId
   });
 
   expect(response.status).toBe(200);
   expect(body.state).toBe("draft");
   expect(body.assessment_id).toBe(created.assessmentId);
 });
+

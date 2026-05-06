@@ -1,4 +1,4 @@
-import { AgentUsageRecordSchema, UsageRecordSchema, type AgentUsageRecord, type UsageRecord } from "@aegis/schemas";
+import { AgentUsageRecordSchema, UsageRecordSchema, type AgentUsageRecord, type UsageRecord } from "@standard/schemas";
 import { assertMetadataSafe } from "../logger/redaction";
 import type { ObservabilityDependencies } from "../repositories";
 import { PricingProviderPlaceholder, type PricingProvider } from "./pricing-provider.placeholder";
@@ -46,3 +46,4 @@ export class CostTrackingService {
     }));
   }
 }
+

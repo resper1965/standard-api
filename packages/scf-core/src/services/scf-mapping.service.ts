@@ -1,4 +1,4 @@
-import type { ScfFrameworkCoverageResponse, ScfMappingResponse } from "@aegis/schemas";
+import type { ScfFrameworkCoverageResponse, ScfMappingResponse } from "@standard/schemas";
 import type { ScfRepository } from "../repositories/scf.repository";
 import type { ScfMapping } from "../types";
 
@@ -48,3 +48,4 @@ export class ScfMappingService {
     );
   }
 }
+

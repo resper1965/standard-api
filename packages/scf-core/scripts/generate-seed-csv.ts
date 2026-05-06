@@ -1,11 +1,22 @@
 /**
+ * @deprecated This script generates INVENTED data ("realistic but not official").
+ * It has been superseded by extract-framework-from-xlsx.ts which extracts
+ * real, authoritative data from the official SCF 2026.1.1 XLSX workbook.
+ *
+ * DO NOT USE for production seeds. Use instead:
+ *   npx tsx extract-framework-from-xlsx.ts <xlsx-path> --all
+ *
+ * Kept for historical reference only. Will be removed in a future cleanup.
+ *
+ * ---
+ * Original description:
  * SCF Realistic Seed Generator
  * 
  * Generates a comprehensive CSV file based on the official SCF 2024.4 structure.
  * Uses only factual domain names and framework references from securecontrolsframework.com.
  * Control descriptions are illustrative/representative, not verbatim SCF content.
  * 
- * This file is NOT the official SCF — it's a realistic seed for the Aegis platform.
+ * This file is NOT the official SCF — it's a realistic seed for the Standard platform.
  * Official SCF data must be obtained from https://securecontrolsframework.com/scf-download/
  */
 
@@ -181,6 +192,8 @@ const FRAMEWORKS: FrameworkDef[] = [
   { code: "CMMC-2", name: "CMMC Level 2", version: "2.0", publisher: "US DoD", category: "regulation" },
   { code: "HIPAA", name: "HIPAA Security Rule", version: "2003", publisher: "HHS", category: "law" },
   { code: "EU-NIS2", name: "EU NIS2 Directive", version: "2022/2555", publisher: "European Parliament", category: "law" },
+  { code: "ISO-42001", name: "ISO/IEC 42001:2023 — AI Management System (AIMS)", version: "2023", publisher: "ISO/IEC", category: "standard" },
+  { code: "QNRCS-2019", name: "Quadro Nacional de Referência para a Cibersegurança", version: "2019", publisher: "CNCS", category: "framework" },
 ];
 
 // ---------- Representative Requirements & Mappings ----------
@@ -243,6 +256,22 @@ const REQUIREMENTS: RequirementDef[] = [
   { code: "RA-3", title: "Risk Assessment", frameworkCode: "NIST-800-53", controlCodes: ["RSK-01", "RSK-02"] },
   { code: "SC-8", title: "Transmission Confidentiality and Integrity", frameworkCode: "NIST-800-53", controlCodes: ["CRY-01", "NET-03"] },
   { code: "SI-2", title: "Flaw Remediation", frameworkCode: "NIST-800-53", controlCodes: ["VPM-01", "VPM-03"] },
+  // ISO 42001 (AIMS) — Annex A representative controls
+  { code: "A.2.2", title: "AI Policy", frameworkCode: "ISO-42001", controlCodes: ["AAT-01", "GOV-01"] },
+  { code: "A.3.2", title: "AI Roles and Responsibilities", frameworkCode: "ISO-42001", controlCodes: ["GOV-04"] },
+  { code: "A.4.4", title: "AI System Inventory", frameworkCode: "ISO-42001", controlCodes: ["AST-01", "AST-02"] },
+  { code: "A.5.2", title: "AI Impact Assessment Process", frameworkCode: "ISO-42001", controlCodes: ["RSK-02", "AAT-02"] },
+  { code: "A.6.2", title: "AI System Life Cycle Management", frameworkCode: "ISO-42001", controlCodes: ["TDA-01"] },
+  { code: "A.7.2", title: "Data for AI — Quality", frameworkCode: "ISO-42001", controlCodes: ["DCH-01"] },
+  { code: "A.8.3", title: "AI Transparency — Decision Explainability", frameworkCode: "ISO-42001", controlCodes: ["AAT-03"] },
+  { code: "A.9.3", title: "AI Human Oversight", frameworkCode: "ISO-42001", controlCodes: ["AAT-01"] },
+  { code: "A.10.2", title: "AI Third-Party Supplier Management", frameworkCode: "ISO-42001", controlCodes: ["TPM-01", "TPM-02"] },
+  // QNRCS 2019 — representative controls
+  { code: "ID.GA-1", title: "Gestão de Ativos", frameworkCode: "QNRCS-2019", controlCodes: ["AST-01"] },
+  { code: "PR.GA-7", title: "Gestão de Identidades", frameworkCode: "QNRCS-2019", controlCodes: ["IAC-01", "IAC-02"] },
+  { code: "DE.AE-1", title: "Deteção de Anomalias e Eventos", frameworkCode: "QNRCS-2019", controlCodes: ["MON-01"] },
+  { code: "RS.AN-1", title: "Análise de Incidentes", frameworkCode: "QNRCS-2019", controlCodes: ["IRO-01", "IRO-02"] },
+  { code: "RC.PL-1", title: "Planeamento da Recuperação", frameworkCode: "QNRCS-2019", controlCodes: ["BCD-01", "BCD-03"] },
 ];
 
 // ---------- Generate CSV ----------
@@ -306,3 +335,4 @@ import { resolve } from "node:path";
 const outPath = resolve(process.cwd(), "evals", "fixtures", "scf-2024.4-seed.csv");
 writeFileSync(outPath, csv, "utf-8");
 console.log(`Done: ${outPath}`);
+

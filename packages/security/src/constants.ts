@@ -1,4 +1,4 @@
-import type { FileSecurityPolicy, Permission, Role } from "@aegis/schemas";
+import type { FileSecurityPolicy, Permission, Role } from "@standard/schemas";
 
 export const ALL_PERMISSIONS = [
   "tenant:read",
@@ -197,3 +197,4 @@ export const DEFAULT_FILE_SECURITY_POLICY: FileSecurityPolicy = {
   require_malware_scan: false,
   quarantine_on_rejection: true
 };
+

@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-O Workflow Orchestration conecta o Aegis SCF-Based Assessment Lifecycle em uma execução rastreável, retomável e compatível com aprovações humanas. A primeira versão cria contratos compartilhados, serviço de orquestração, endpoints de API e testes com mocks para validar o comportamento principal.
+O Workflow Orchestration conecta o Standard SCF-Based Assessment Lifecycle em uma execução rastreável, retomável e compatível com aprovações humanas. A primeira versão cria contratos compartilhados, serviço de orquestração, endpoints de API e testes com mocks para validar o comportamento principal.
 
 ## Papel do Cloudflare Workflows
 
@@ -164,3 +164,4 @@ Cada evento inclui tenant, organization, assessment, workflow run, step quando a
 - Formato de reprocessamento controlado por step.
 - Mapeamento exato entre Cloudflare Workflow instance ID e `workflow_run_id`.
 - Contrato de Queue callback para jobs assíncronos.
+

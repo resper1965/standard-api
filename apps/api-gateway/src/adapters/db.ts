@@ -1,6 +1,6 @@
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
-import * as schema from "@aegis/schemas";
+import * as schema from "@standard/schemas";
 
 /**
  * Initializes the Drizzle Connection specifically for Cloudflare Edge.
@@ -12,3 +12,4 @@ export const createDb = (databaseUrl: string) => {
 };
 
 export type DbClient = ReturnType<typeof createDb>;
+

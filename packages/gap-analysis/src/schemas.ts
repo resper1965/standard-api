@@ -1,1 +1,2 @@
-export * from "@aegis/schemas";
+export * from "@standard/schemas";
+

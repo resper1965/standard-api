@@ -5,8 +5,8 @@ test("golden synthetic lifecycle reaches workflow wait state without real provid
   const client = createTestClient();
   const created = await client.createAssessment(1);
   const headers = {
-    "x-aegis-tenant-id": created.tenantId,
-    "x-aegis-actor-id": ids.actorId
+    "x-standard-tenant-id": created.tenantId,
+    "x-standard-actor-id": ids.actorId
   };
 
   const start = await client.send(`/api/v1/assessments/${created.assessmentId}/workflows/lifecycle/start`, "POST", {
@@ -28,3 +28,4 @@ test("golden synthetic lifecycle reaches workflow wait state without real provid
   expect(signal.body.current_step).toBe("wait_for_soa_approval");
   expect(signal.body.pending_approval_type).toBe("soa");
 });
+

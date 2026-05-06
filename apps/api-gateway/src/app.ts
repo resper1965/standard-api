@@ -1,6 +1,6 @@
-import { MockAuthProvider } from "@aegis/security";
+import { MockAuthProvider } from "@standard/security";
 import { createMockRepositories } from "./adapters";
-import type { AegisAuth } from "@aegis/auth";
+import type { StandardAuth } from "@standard/auth";
 import type { Env } from "./index";
 import { ApiError } from "./errors/api-error";
 import type { AppDependencies, RouteDefinition } from "./http";
@@ -14,6 +14,8 @@ import { assertRbac } from "./middleware/rbac.middleware";
 import { resolveTenantContext } from "./middleware/tenant.middleware";
 import { resolveTraceId } from "./middleware/trace.middleware";
 import { agentRuntimeRoutes } from "./routes/agent-runtime.routes";
+import { agentToolsRoutes } from "./routes/agent-tools.routes";
+import { apiKeysRoutes } from "./routes/api-keys.routes";
 import { approvalsRoutes } from "./routes/approvals.routes";
 import { artifactsRoutes } from "./routes/artifacts.routes";
 import { assessmentsRoutes } from "./routes/assessments.routes";
@@ -36,6 +38,7 @@ const routes: RouteDefinition[] = [
   ...healthRoutes,
   ...tenantsRoutes,
   ...organizationsRoutes,
+  ...apiKeysRoutes,
   ...assessmentsRoutes,
   ...documentsRoutes,
   ...kbRoutes,
@@ -50,7 +53,8 @@ const routes: RouteDefinition[] = [
   ...artifactsRoutes,
   ...scfRoutes,
   ...soaRoutes,
-  ...emailRoutes
+  ...emailRoutes,
+  ...agentToolsRoutes
 ];
 
 const matchRoute = (routePath: string, actualPath: string): Record<string, string> | null => {
@@ -72,16 +76,15 @@ const matchRoute = (routePath: string, actualPath: string): Record<string, strin
   return params;
 };
 
-export const createApp = (deps: AppDependencies = createMockRepositories(), env?: Partial<Env>, auth?: AegisAuth) => ({
+export const createApp = (deps: AppDependencies = createMockRepositories(), env?: Partial<Env>, auth?: StandardAuth) => ({
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
     const traceId = resolveTraceId(request);
 
     // ── CORS ────────────────────────────────────────────────
     const allowedOrigins = [
-      "https://apiaegis.bekaa.eu",
-      "https://aegis-web-m99.pages.dev",
-      "https://aegis-api.bekaa.eu",
+      "https://standard.bekaa.eu",
+      "https://standard-web-m99.pages.dev",
       "http://localhost:5173",
     ];
     const origin = request.headers.get("Origin") ?? "";
@@ -128,8 +131,8 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
         } catch (authError: unknown) {
           const msg = authError instanceof Error ? authError.message : String(authError);
           const stack = authError instanceof Error ? authError.stack : undefined;
-          console.error(`[aegis:auth] handler error: ${msg}`, stack);
-          return withSecurityHeaders(new Response(JSON.stringify({ error: msg, stack: env?.AEGIS_ENV !== "production" ? stack : undefined }), {
+          console.error(`[standard:auth] handler error: ${msg}`, stack);
+          return withSecurityHeaders(new Response(JSON.stringify({ error: msg, stack: env?.STANDARD_ENV !== "production" ? stack : undefined }), {
             status: 500,
             headers: { "Content-Type": "application/json" },
           }));
@@ -147,12 +150,12 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
 
       // ── Auth context resolution ──────────────────────────────
       // Use Better Auth session if available, fallback to legacy headers
-      const authRequired = route.authRequired ?? (Boolean(route.requireActor) || Boolean(route.permissions?.length));
+      const authRequired = route.authRequired ?? (Boolean(route.protected) || Boolean(route.requireActor) || Boolean(route.permissions?.length));
       if (auth) {
         await resolveAuthContext(context, auth, authRequired);
       } else {
         // Legacy header fallback (dev/test mode without Better Auth)
-        const legacyActor = request.headers.get("x-aegis-actor-id") ?? undefined;
+        const legacyActor = request.headers.get("x-standard-actor-id") ?? undefined;
         if (legacyActor) {
           context.actorId = legacyActor;
           // Resolve auth context via MockAuthProvider to respect role-based permissions
@@ -175,7 +178,7 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
       resolveTenantContext(context, tenantRequired);
 
       await assertRbac(context, route.permissions);
-      await assertRateLimit(context, route.path, env?.AEGIS_CACHE);
+      await assertRateLimit(context, route.path, env?.STANDARD_CACHE);
       await recordAuditPlaceholder(context, route.path);
 
       const response = await route.handler(context);
@@ -192,10 +195,12 @@ export const notImplemented = (traceId: string): Response =>
     {
       error: {
         code: "NOT_IMPLEMENTED",
-        message: "Endpoint reserved for future Aegis API contract.",
+        message: "Endpoint reserved for future Standard API contract.",
         details: [],
         trace_id: traceId
       }
     },
     { status: 501 }
   );
+
+

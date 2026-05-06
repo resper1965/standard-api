@@ -1,5 +1,5 @@
 /**
- * Validate an official SCF XLSX workbook against the Aegis parser.
+ * Validate an official SCF XLSX workbook against the Standard parser.
  * 
  * Usage:
  *   npx tsx packages/scf-core/scripts/validate-official-xlsx.ts <path-to-xlsx>
@@ -120,3 +120,4 @@ main().catch(err => {
   console.error("Fatal error:", err);
   process.exit(1);
 });
+

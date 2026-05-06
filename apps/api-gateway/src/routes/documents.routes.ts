@@ -1,5 +1,5 @@
-import { DocumentIngestionService, maxUploadSizeBytes, processDocumentIngestionJob } from "@aegis/document-ingestion";
-import { ReprocessDocumentRequestSchema } from "@aegis/schemas";
+import { DocumentIngestionService, maxUploadSizeBytes, processDocumentIngestionJob } from "@standard/document-ingestion";
+import { ReprocessDocumentRequestSchema } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";
 import { json, newId, parseJson, routeParam } from "../http";
@@ -261,3 +261,4 @@ export const documentsRoutes: RouteDefinition[] = [
     }
   }
 ];
+

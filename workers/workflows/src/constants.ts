@@ -1,6 +1,6 @@
-import type { AssessmentLifecycleStep } from "@aegis/schemas";
+import type { AssessmentLifecycleStep } from "@standard/schemas";
 
-export const SYSTEM_ACTOR = "aegis-workflow-orchestrator";
+export const SYSTEM_ACTOR = "standard-workflow-orchestrator";
 
 export const APPROVAL_STEP_BY_TYPE = {
   soa: "wait_for_soa_approval",
@@ -11,3 +11,4 @@ export const APPROVAL_STEP_BY_TYPE = {
 } as const satisfies Record<string, AssessmentLifecycleStep>;
 
 export const TERMINAL_WORKFLOW_STATUSES = ["completed", "cancelled"] as const;
+

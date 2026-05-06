@@ -58,7 +58,7 @@ export function DocumentsPage() {
       const formData = new FormData();
       formData.append("file", file);
       
-      const API_BASE = import.meta.env.PROD ? "https://aegis-api.bekaa.eu" : "";
+      const API_BASE = import.meta.env.PROD ? "https://api.standard.bekaa.eu" : "";
       await fetch(`${API_BASE}/api/v1/assessments/${assessmentId}/documents/upload`, {
         method: "POST",
         credentials: "include",
@@ -136,3 +136,4 @@ export function DocumentsPage() {
     </div>
   );
 }
+

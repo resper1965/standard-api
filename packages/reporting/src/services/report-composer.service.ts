@@ -1,4 +1,4 @@
-import type { ReportSectionResponse, ReportVersionResponse } from "@aegis/schemas";
+import type { ReportSectionResponse, ReportVersionResponse } from "@standard/schemas";
 import { assertContext, ReportingWorkflowError } from "../errors";
 import type { ReportingContext, ReportingDependencies } from "../types";
 
@@ -37,7 +37,7 @@ export class ReportComposerService {
       ...(await this.composeExecutiveSummary(reportVersionId, context)),
       section(reportVersionId, 3, "assessment_scope", "Assessment Scope", { source_scope_id: report.source_scope_id ?? null }, this.sourcesFor(report)),
       section(reportVersionId, 4, "methodology", "Methodology", {
-        method: "Aegis SCF-Based Assessment Lifecycle",
+        method: "Standard SCF-Based Assessment Lifecycle",
         note: "Report is derived from versioned approved artifacts."
       }),
       section(reportVersionId, 5, "scf_framework_basis", "SCF and Framework Basis", {
@@ -174,3 +174,4 @@ export class ReportComposerService {
     ];
   }
 }
+

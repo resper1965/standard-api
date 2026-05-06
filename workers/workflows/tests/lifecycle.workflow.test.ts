@@ -1,4 +1,4 @@
-import type { ApprovalEvent, AssessmentSnapshot } from "@aegis/assessment-engine";
+import type { ApprovalEvent, AssessmentSnapshot } from "@standard/assessment-engine";
 import { AssessmentLifecycleOrchestrator, createInMemoryWorkflowDependencies, WorkflowOrchestrationError } from "../src";
 import { expect, test } from "./test-kit";
 
@@ -181,3 +181,4 @@ test("aprovações válidas avançam até completed e fecham assessment", async 
   expect(afterReport.status).toBe("completed");
   expect(deps.assessmentEngine.transitions).toContain("closed");
 });
+

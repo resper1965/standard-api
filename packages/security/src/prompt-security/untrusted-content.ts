@@ -1,4 +1,4 @@
-import type { PromptContentTrustLevel } from "@aegis/schemas";
+import type { PromptContentTrustLevel } from "@standard/schemas";
 
 export type WrappedPromptContent = {
   trust_level: PromptContentTrustLevel;
@@ -7,3 +7,4 @@ export type WrappedPromptContent = {
   detected_injection: boolean;
   instructions: string[];
 };
+

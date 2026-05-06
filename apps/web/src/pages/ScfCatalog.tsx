@@ -194,11 +194,11 @@ export function ScfCatalogPage() {
                 </tr>
               ) : (
                 frameworks.map((f) => (
-                  <tr key={f.framework_id}>
+                  <tr key={f.framework_id || (f as any).id}>
                     <td style={{ fontWeight: "var(--weight-semibold)", color: "var(--admin)" }}>
-                      {f.framework_code}
+                      {f.framework_code || (f as any).framework_id}
                     </td>
-                    <td>{f.framework_name}</td>
+                    <td>{f.framework_name || (f as any).name}</td>
                     <td style={{ color: "var(--text-muted)" }}>{f.publisher ?? "—"}</td>
                     <td>
                       <span className="badge badge-success">{f.status}</span>

@@ -6,7 +6,7 @@ import { eq, and } from "drizzle-orm";
 import {
   maturityAssessmentVersions,
   maturityScores,
-} from "@aegis/schemas";
+} from "@standard/schemas";
 import type { DbClient } from "./db";
 
 // ---------- Types ----------
@@ -156,3 +156,4 @@ export const createDrizzleMaturityRepositories = (db: DbClient): MaturityReposit
   versions: createDrizzleMaturityVersionRepository(db),
   scores: createDrizzleMaturityScoreRepository(db),
 });
+

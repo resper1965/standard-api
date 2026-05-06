@@ -4,14 +4,14 @@ import {
   markArtifactUnderReview,
   supersedeApprovedVersions,
   type ArtifactType
-} from "@aegis/assessment-engine";
+} from "@standard/assessment-engine";
 import {
   ApproveArtifactRequestSchema,
   ArtifactTypeSchema,
   CreateArtifactVersionRequestSchema,
   SubmitArtifactReviewRequestSchema,
   SupersedeArtifactRequestSchema
-} from "@aegis/schemas";
+} from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";
 import { json, newId, parseJson, routeParam } from "../http";
@@ -149,3 +149,4 @@ export const artifactsRoutes: RouteDefinition[] = [
     }
   }
 ];
+

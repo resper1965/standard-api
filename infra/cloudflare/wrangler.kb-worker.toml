@@ -1,59 +1,62 @@
-name = "aegis-api-standard-kb-worker"
+name = "standard-kb-worker"
 main = "../../workers/queues/src/index.ts"
 compatibility_date = "2026-04-28"
+compatibility_flags = [ "nodejs_compat" ]
 
 [vars]
-AEGIS_ENV = "development"
+STANDARD_ENV = "development"
 LOG_LEVEL = "info"
-AI_GATEWAY_NAME = "aegis-dev"
-AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/aegis-dev"
+AI_GATEWAY_NAME = "standard-dev"
+AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/standard-dev"
 
 [[queues.consumers]]
-queue = "aegis-kb-embedding-dev"
+queue = "standard-kb-embedding-dev"
 max_batch_size = 10
 max_batch_timeout = 30
-dead_letter_queue = "aegis-dead-letter-dev"
+dead_letter_queue = "standard-dead-letter-dev"
 
 [[r2_buckets]]
-binding = "AEGIS_DOCUMENTS_BUCKET"
-bucket_name = "aegis-documents-dev"
+binding = "STANDARD_DOCUMENTS_BUCKET"
+bucket_name = "standard-documents-dev"
 
 [[vectorize]]
-binding = "AEGIS_KB_INDEX"
-index_name = "aegis-kb-dev"
+binding = "STANDARD_KB_INDEX"
+index_name = "standard-kb-dev"
 
 [env.staging]
-name = "aegis-api-standard-kb-worker-staging"
-vars = { AEGIS_ENV = "staging", LOG_LEVEL = "info", AI_GATEWAY_NAME = "aegis-staging", AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/aegis-staging" }
+name = "standard-kb-worker-staging"
+vars = { STANDARD_ENV = "staging", LOG_LEVEL = "info", AI_GATEWAY_NAME = "standard-staging", AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/standard-staging" }
 
 [[env.staging.queues.consumers]]
-queue = "aegis-kb-embedding-staging"
+queue = "standard-kb-embedding-staging"
 max_batch_size = 10
 max_batch_timeout = 30
-dead_letter_queue = "aegis-dead-letter-staging"
+dead_letter_queue = "standard-dead-letter-staging"
 
 [[env.staging.r2_buckets]]
-binding = "AEGIS_DOCUMENTS_BUCKET"
-bucket_name = "aegis-documents-staging"
+binding = "STANDARD_DOCUMENTS_BUCKET"
+bucket_name = "standard-documents-staging"
 
 [[env.staging.vectorize]]
-binding = "AEGIS_KB_INDEX"
-index_name = "aegis-kb-staging"
+binding = "STANDARD_KB_INDEX"
+index_name = "standard-kb-staging"
 
 [env.production]
-name = "aegis-api-standard-kb-worker-production"
-vars = { AEGIS_ENV = "production", LOG_LEVEL = "warn", AI_GATEWAY_NAME = "aegis-prod", AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/aegis-prod" }
+name = "standard-kb-worker-production"
+vars = { STANDARD_ENV = "production", LOG_LEVEL = "warn", AI_GATEWAY_NAME = "standard-prod", AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/standard-prod" }
 
 [[env.production.queues.consumers]]
-queue = "aegis-kb-embedding-prod"
+queue = "standard-kb-embedding-prod"
 max_batch_size = 10
 max_batch_timeout = 30
-dead_letter_queue = "aegis-dead-letter-prod"
+dead_letter_queue = "standard-dead-letter-prod"
 
 [[env.production.r2_buckets]]
-binding = "AEGIS_DOCUMENTS_BUCKET"
-bucket_name = "aegis-documents-prod"
+binding = "STANDARD_DOCUMENTS_BUCKET"
+bucket_name = "standard-documents-prod"
 
 [[env.production.vectorize]]
-binding = "AEGIS_KB_INDEX"
-index_name = "aegis-kb-prod"
+binding = "STANDARD_KB_INDEX"
+index_name = "standard-kb-prod"
+
+

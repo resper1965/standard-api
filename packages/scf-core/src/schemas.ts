@@ -13,4 +13,5 @@ export {
   ScfStructuredMappingSchema,
   ScfStrmRelationshipSchema,
   ScfVersionSchema
-} from "@aegis/schemas";
+} from "@standard/schemas";
+

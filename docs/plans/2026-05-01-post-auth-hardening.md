@@ -1,4 +1,4 @@
-# Aegis Post-Auth Hardening — Implementation Plan
+# Standard Post-Auth Hardening — Implementation Plan
 
 > **For Antigravity:** REQUIRED WORKFLOW: Use `.agent/workflows/execute-plan.md` to execute this plan in single-flow mode.
 
@@ -92,7 +92,7 @@ const secretKeys = [
 ];
 
 const workers = [
-  "aegis-api-standard-api-gateway",
+  "standard-api-standard-api-gateway",
 ];
 
 for (const worker of workers) {
@@ -124,10 +124,10 @@ Co-Authored-By: Google Antigravity <antigravity@google.com>"
 
 **Step 1: Push cada secret manualmente**
 ```bash
-echo "<DATABASE_URL>" | npx wrangler secret put DATABASE_URL --name aegis-api-standard-api-gateway
-echo "<BETTER_AUTH_SECRET>" | npx wrangler secret put BETTER_AUTH_SECRET --name aegis-api-standard-api-gateway
-echo "<GOOGLE_CLIENT_ID>" | npx wrangler secret put GOOGLE_CLIENT_ID --name aegis-api-standard-api-gateway
-echo "<GOOGLE_CLIENT_SECRET>" | npx wrangler secret put GOOGLE_CLIENT_SECRET --name aegis-api-standard-api-gateway
+echo "<DATABASE_URL>" | npx wrangler secret put DATABASE_URL --name standard-api-standard-api-gateway
+echo "<BETTER_AUTH_SECRET>" | npx wrangler secret put BETTER_AUTH_SECRET --name standard-api-standard-api-gateway
+echo "<GOOGLE_CLIENT_ID>" | npx wrangler secret put GOOGLE_CLIENT_ID --name standard-api-standard-api-gateway
+echo "<GOOGLE_CLIENT_SECRET>" | npx wrangler secret put GOOGLE_CLIENT_SECRET --name standard-api-standard-api-gateway
 ```
 
 > [!IMPORTANT]
@@ -151,7 +151,7 @@ curl https://<deployed-url>/api/auth/ok
 # Expected: {"ok":true}
 
 curl https://<deployed-url>/api/v1/health
-# Expected: {"ok":true,"service":"aegis-api-standard",...}
+# Expected: {"ok":true,"service":"standard-api-standard",...}
 ```
 
 ### Task 3.2: Configurar Google OAuth Redirect URI
@@ -173,7 +173,7 @@ curl https://<deployed-url>/api/v1/health
 ```bash
 curl -X POST https://<deployed-url>/api/auth/sign-up/email \
   -H "Content-Type: application/json" \
-  -d '{"name":"Aegis Admin","email":"admin@bekaa.eu","password":"<strong-password>"}'
+  -d '{"name":"Standard Admin","email":"admin@bekaa.eu","password":"<strong-password>"}'
 ```
 
 **Step 2: Promover a admin via SQL (Neon Console)**
@@ -231,7 +231,7 @@ curl https://<deployed-url>/api/auth/session \
 Exemplo para cada arquivo:
 ```typescript
 /**
- * @deprecated Use `@aegis/auth` (Better Auth) instead.
+ * @deprecated Use `@standard/auth` (Better Auth) instead.
  * This provider will be removed in v0.3.0.
  */
 ```
@@ -239,7 +239,7 @@ Exemplo para cada arquivo:
 **Step 2: Commit**
 ```bash
 git add packages/security/src/auth/ packages/security/src/rbac/
-git commit -m "chore(security): deprecate legacy auth providers in favor of @aegis/auth
+git commit -m "chore(security): deprecate legacy auth providers in favor of @standard/auth
 
 Co-Authored-By: Google Antigravity <antigravity@google.com>"
 ```
@@ -289,3 +289,4 @@ curl https://<deployed-url>/api/v1/health
 # 3. Session check (com cookie autenticado)
 curl https://<deployed-url>/api/auth/session -b cookies.txt
 ```
+

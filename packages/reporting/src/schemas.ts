@@ -19,4 +19,5 @@ export {
   ReportVersionStatusSchema,
   SubmitReportReviewRequestSchema,
   TraceabilityAppendixResponseSchema
-} from "@aegis/schemas";
+} from "@standard/schemas";
+

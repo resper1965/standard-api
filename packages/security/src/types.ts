@@ -16,4 +16,5 @@ export type {
   SecurityTenantContext,
   ServiceAccount,
   ToolUsePolicy
-} from "@aegis/schemas";
+} from "@standard/schemas";
+

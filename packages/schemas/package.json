@@ -1,5 +1,5 @@
 {
-  "name": "@aegis/schemas",
+  "name": "@standard/schemas",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -25,3 +25,4 @@
     "tsx": "^4.21.0"
   }
 }
+

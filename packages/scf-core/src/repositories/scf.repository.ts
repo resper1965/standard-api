@@ -18,6 +18,7 @@ export type ScfRepository = {
   listDomains(versionId: string): Promise<ScfDomain[]>;
   getDomain(id: string): Promise<ScfDomain | null>;
   listControls(versionId: string): Promise<ScfControl[]>;
+  searchControls(query: import("../types").ScfControlSearchQuery): Promise<ScfControl[]>;
   getControl(id: string): Promise<ScfControl | null>;
   getControlByCode(versionId: string, controlCode: string): Promise<ScfControl | null>;
   listFrameworks(): Promise<ScfFramework[]>;
@@ -55,6 +56,26 @@ export const createInMemoryScfRepository = (initial: ScfDataset): ScfRepository 
     listDomains: async (versionId) => [...domains.values()].filter((item) => item.scf_version_id === versionId).sort((a, b) => a.sort_order - b.sort_order),
     getDomain: async (id) => domains.get(id) ?? null,
     listControls: async (versionId) => [...controls.values()].filter((item) => item.scf_version_id === versionId).sort((a, b) => a.control_code.localeCompare(b.control_code)),
+    searchControls: async (query) => {
+      let result = [...controls.values()];
+      if (query.scf_version_id) result = result.filter(c => c.scf_version_id === query.scf_version_id);
+      if (query.control_code) result = result.filter(c => c.control_code.toLowerCase().includes(query.control_code!.toLowerCase()));
+      if (query.domain_code) {
+        const dIds = new Set([...domains.values()].filter(d => (query.scf_version_id ? d.scf_version_id === query.scf_version_id : true) && d.domain_code.toLowerCase() === query.domain_code!.toLowerCase()).map(d => d.id));
+        result = result.filter(c => dIds.has(c.scf_domain_id));
+      }
+      if (query.tags && query.tags.length > 0) {
+        // Mock doesn't load metadata! So we'll skip filtering or filter by an empty array assumption for testing.
+        // Actually, without metadata in memory, tags search will just return 0 items if strictly mock.
+        // For simplicity, we just return empty array if tags are required and the mock has no metadata support.
+        return [];
+      }
+      if (query.q) {
+        const qStr = query.q.toLowerCase();
+        result = result.filter(c => `${c.control_code} ${c.control_title} ${c.control_description ?? ""}`.toLowerCase().includes(qStr));
+      }
+      return result.sort((a, b) => a.control_code.localeCompare(b.control_code));
+    },
     getControl: async (id) => controls.get(id) ?? null,
     getControlByCode: async (versionId, controlCode) =>
       [...controls.values()].find((item) => item.scf_version_id === versionId && item.control_code.toLowerCase() === controlCode.toLowerCase()) ?? null,

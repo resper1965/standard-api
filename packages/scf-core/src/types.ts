@@ -11,7 +11,7 @@ import type {
   ScfMapping,
   ScfStrmRelationship,
   ScfVersion
-} from "@aegis/schemas";
+} from "@standard/schemas";
 
 export type {
   ScfControl,
@@ -49,3 +49,4 @@ export type ScfImportParsedDataset = {
   dataset: ScfDataset;
   warnings: string[];
 };
+

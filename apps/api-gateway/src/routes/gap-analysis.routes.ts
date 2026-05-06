@@ -1,4 +1,4 @@
-import { executeTransition, getAllowedNextStates } from "@aegis/assessment-engine";
+import { executeTransition, getAllowedNextStates } from "@standard/assessment-engine";
 import {
   ApproveGapAnalysisRequestSchema,
   CreateGapAnalysisDraftRequestSchema,
@@ -12,7 +12,7 @@ import {
   RunEvidenceAnalysisRequestSchema,
   SubmitGapAnalysisReviewRequestSchema,
   UpdateGapFindingRequestSchema
-} from "@aegis/gap-analysis";
+} from "@standard/gap-analysis";
 import { ApiError } from "../errors/api-error";
 import type { ApiErrorCode } from "../errors/error-codes";
 import type { AppDependencies, AssessmentRecord, RouteDefinition } from "../http";
@@ -296,3 +296,4 @@ export const gapAnalysisRoutes: RouteDefinition[] = [
     }
   }
 ];
+

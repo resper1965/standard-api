@@ -1,4 +1,4 @@
-# Aegis Production Deployment Guide
+# Standard Production Deployment Guide
 
 > **Last updated:** 2026-05-02
 
@@ -6,8 +6,8 @@
 
 | Component | Platform | URL |
 |---|---|---|
-| Frontend (SPA) | Cloudflare Pages | `https://apiaegis.bekaa.eu` |
-| API Gateway | Cloudflare Worker | `https://aegis-api.bekaa.eu` |
+| Frontend (SPA) | Cloudflare Pages | `https://apistandard.bekaa.eu` |
+| API Gateway | Cloudflare Worker | `https://standard-api.bekaa.eu` |
 | Database | Neon PostgreSQL | Managed external |
 | Auth | Better Auth (SSO via Google) | Embedded in Worker |
 
@@ -15,18 +15,18 @@
 
 ## Cloudflare Projects
 
-### Frontend — `aegis-web`
+### Frontend — `standard-web`
 
 - **Type:** Cloudflare Pages
 - **Build output:** `apps/web/dist`
-- **Custom domain:** `apiaegis.bekaa.eu`
+- **Custom domain:** `apistandard.bekaa.eu`
 - **Framework:** React 19 + Vite (SPA)
 
-### API Gateway — `aegis-api-standard-api-gateway-production`
+### API Gateway — `standard-api-standard-api-gateway-production`
 
 - **Type:** Cloudflare Worker
 - **Config file:** `apps/api-gateway/wrangler.toml` → `[env.production]`
-- **Custom domain:** `aegis-api.bekaa.eu`
+- **Custom domain:** `standard-api.bekaa.eu`
 - **Bindings:** Queues (ingestion, KB embedding, report export), R2 buckets (documents, reports, exports), KV cache
 
 ---
@@ -50,10 +50,10 @@ Set in `wrangler.toml` under `[env.production.vars]`:
 
 | Variable | Value |
 |---|---|
-| `AEGIS_ENV` | `production` |
-| `BETTER_AUTH_URL` | `https://aegis-api.bekaa.eu` |
+| `STANDARD_ENV` | `production` |
+| `BETTER_AUTH_URL` | `https://standard-api.bekaa.eu` |
 | `LOG_LEVEL` | `info` |
-| `AI_GATEWAY_NAME` | `aegis-prod` |
+| `AI_GATEWAY_NAME` | `standard-prod` |
 
 ---
 
@@ -67,7 +67,7 @@ cd apps/web && pnpm build
 
 # 2. Deploy to Cloudflare Pages
 npx wrangler pages deploy apps/web/dist \
-  --project-name aegis-web \
+  --project-name standard-web \
   --branch production \
   --commit-dirty=true
 ```
@@ -95,10 +95,10 @@ pnpm db:migrate
 
 ## Verification Checklist
 
-1. **API Health:** `curl https://aegis-api.bekaa.eu/health`
-   - Expected: `{"ok":true,"service":"aegis-api-standard","database":"connected"}`
+1. **API Health:** `curl https://standard-api.bekaa.eu/health`
+   - Expected: `{"ok":true,"service":"standard-api-standard","database":"connected"}`
 
-2. **Frontend:** Open `https://apiaegis.bekaa.eu`
+2. **Frontend:** Open `https://apistandard.bekaa.eu`
    - Expected: Login page renders with Google SSO button
 
 3. **Auth Flow:** Sign in with Google
@@ -116,11 +116,11 @@ pnpm db:migrate
 
 | Aspect | Development | Production |
 |---|---|---|
-| Worker name | `aegis-api-standard-api-gateway` | `aegis-api-standard-api-gateway-production` |
+| Worker name | `standard-api-standard-api-gateway` | `standard-api-standard-api-gateway-production` |
 | Auth mode | MockAuthProvider (legacy headers) | Better Auth (sessions + RBAC) |
 | Database | Neon dev branch | Neon production branch |
-| `AEGIS_ENV` | `development` | `production` |
-| Custom domain | — | `aegis-api.bekaa.eu` |
+| `STANDARD_ENV` | `development` | `production` |
+| Custom domain | — | `standard-api.bekaa.eu` |
 
 ---
 
@@ -128,7 +128,7 @@ pnpm db:migrate
 
 ### Google OAuth not working
 - Verify `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are set as Worker secrets
-- Check redirect URI in Google Console includes `https://aegis-api.bekaa.eu/api/auth/callback/google`
+- Check redirect URI in Google Console includes `https://standard-api.bekaa.eu/api/auth/callback/google`
 
 ### Database connection failed
 - Check `DATABASE_URL` secret has the pooled connection string
@@ -136,4 +136,5 @@ pnpm db:migrate
 
 ### CORS errors
 - API gateway handles CORS via `withCors()` wrapper
-- Allowed origin: `https://apiaegis.bekaa.eu`
+- Allowed origin: `https://apistandard.bekaa.eu`
+

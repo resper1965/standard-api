@@ -1,4 +1,4 @@
-import { KbSearchService } from "@aegis/kb";
+import { KbSearchService } from "@standard/kb";
 import { assertContext, GapAnalysisWorkflowError } from "../errors";
 import type { EvidenceFindingFilters, EvidenceFindingResponse, EvidenceSourceResponse, GapAnalysisContext, GapAnalysisDependencies, KbSearchResult, SoaItemResponse, SoaVersionResponse } from "../types";
 import { EvidenceClassificationService } from "./evidence-classification.service";
@@ -126,3 +126,4 @@ export class EvidenceAnalysisService {
     }));
   }
 }
+

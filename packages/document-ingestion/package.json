@@ -1,5 +1,5 @@
 {
-  "name": "@aegis/document-ingestion",
+  "name": "@standard/document-ingestion",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -10,7 +10,7 @@
     "test": "tsx tests/run-tests.ts"
   },
   "dependencies": {
-    "@aegis/schemas": "workspace:*",
+    "@standard/schemas": "workspace:*",
     "zod": "^4.3.6"
   },
   "devDependencies": {
@@ -18,3 +18,4 @@
     "tsx": "^4.21.0"
   }
 }
+

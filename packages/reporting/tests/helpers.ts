@@ -1,7 +1,7 @@
-import { GapApprovalService, GapDraftService, GapReviewService } from "@aegis/gap-analysis";
-import { PoamApprovalService, PoamDraftService, PoamReviewService, createInMemoryPoamDependencies } from "@aegis/poam";
-import { SYNTHETIC_FRAMEWORK_ID, SYNTHETIC_SCF_VERSION_ID } from "@aegis/scf-core";
-import { SoaApprovalService, SoaDraftService, SoaReviewService, createInMemorySoaDependencies } from "@aegis/soa";
+import { GapApprovalService, GapDraftService, GapReviewService } from "@standard/gap-analysis";
+import { PoamApprovalService, PoamDraftService, PoamReviewService, createInMemoryPoamDependencies } from "@standard/poam";
+import { SYNTHETIC_FRAMEWORK_ID, SYNTHETIC_SCF_VERSION_ID } from "@standard/scf-core";
+import { SoaApprovalService, SoaDraftService, SoaReviewService, createInMemorySoaDependencies } from "@standard/soa";
 import { createInMemoryGapAnalysisDependencies } from "../../gap-analysis/src/index";
 import { createInMemoryReportingDependencies } from "../src/index";
 
@@ -47,3 +47,4 @@ export const createApprovedSourceFixture = async (withPoam = false) => {
   const reporting = createInMemoryReportingDependencies({ soa, gapAnalysis, poam, scf: soa.scf });
   return { soa, gapAnalysis, poam, reporting, approvedSoa, approvedGap, approvedPoam };
 };
+

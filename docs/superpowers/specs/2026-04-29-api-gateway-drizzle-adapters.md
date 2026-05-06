@@ -1,7 +1,7 @@
 # Spec: API Gateway Drizzle Adapters Integration
 
 ## Resumo
-O `api-gateway` atualmente é inteiramente mockado em suas interações transacionais por intermédio da factory genérica `createMockRepositories()`. Para cumprir o Master Roadmap rumo ao ambiente Cloudflare-native, precisamos substituir esses repositórios pelas execuções em SQL usando o **Drizzle ORM** atrelado ao driver `@neondatabase/serverless` ou Neon HTTP, consumindo as definições exportadas por `@aegis/schemas`.
+O `api-gateway` atualmente é inteiramente mockado em suas interações transacionais por intermédio da factory genérica `createMockRepositories()`. Para cumprir o Master Roadmap rumo ao ambiente Cloudflare-native, precisamos substituir esses repositórios pelas execuções em SQL usando o **Drizzle ORM** atrelado ao driver `@neondatabase/serverless` ou Neon HTTP, consumindo as definições exportadas por `@standard/schemas`.
 
 ## Escopo (Fase 4: Database Runtime)
 ### 1. Injeção de Driver Híbrido (`apps/api-gateway`)
@@ -25,3 +25,4 @@ A função `createMockRepositories()` persistirá até implementarmos todos os p
 
 ## Limitações / Out of Scope
 Pacotes isolados que recebem os repositórios injetados (ex: `soa`, `gapAnalysis`, `scf`) não requerem mudanças estruturais internas neste momento se seus esquemas de mock não violarem as chaves estrangeiras. Apenas a persistência direta do roteamento será comitada.
+

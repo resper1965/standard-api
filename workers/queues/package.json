@@ -1,5 +1,5 @@
 {
-  "name": "@aegis/queues",
+  "name": "@standard/queues",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -9,8 +9,11 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@aegis/kb": "workspace:*",
-    "@aegis/schemas": "workspace:*"
+    "@standard/kb": "workspace:*",
+    "@standard/schemas": "workspace:*",
+    "@standard/document-ingestion": "workspace:*",
+    "@neondatabase/serverless": "^0.9.3",
+    "drizzle-orm": "^0.30.10"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260426.1",
@@ -18,3 +21,4 @@
     "wrangler": "latest"
   }
 }
+

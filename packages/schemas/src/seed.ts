@@ -1,5 +1,5 @@
 /**
- * Aegis Synthetic Seed Script
+ * Standard Synthetic Seed Script
  *
  * Seeds the Neon PostgreSQL database with synthetic staging data
  * derived from evals/fixtures. Uses Drizzle ORM for type-safe inserts.
@@ -68,7 +68,7 @@ async function main() {
     process.exit(1);
   }
 
-  console.log("🌱 Aegis Synthetic Seed — Starting...\n");
+  console.log("🌱 Standard Synthetic Seed — Starting...\n");
 
   const client = postgres(databaseUrl, { ssl: "require" });
   const db = drizzle(client, { schema });
@@ -86,7 +86,7 @@ async function main() {
   console.log("  → Seeding user...");
   await db.insert(schema.users).values({
     id: IDS.user,
-    email: "synth-operator@aegis.test",
+    email: "synth-operator@standard.test",
     displayName: "Synthetic Operator",
     identityProvider: "synthetic",
     identityProviderSubject: "synth-staging-001",
@@ -171,7 +171,7 @@ async function main() {
     frameworkId: "SYNTH-STD-1",
     name: "Synthetic Standard 1",
     versionLabel: "1.0",
-    publisher: "Aegis Synthetic Publisher",
+    publisher: "Standard Synthetic Publisher",
   }).onConflictDoNothing();
 
   // ── 10. SCF Framework Requirements ──
@@ -248,7 +248,7 @@ async function main() {
     },
   });
 
-  console.log("\n✅ Aegis Synthetic Seed — Complete!");
+  console.log("\n✅ Standard Synthetic Seed — Complete!");
   console.log(`   Tenant:       ${IDS.tenant}`);
   console.log(`   Organization: ${IDS.organization}`);
   console.log(`   Assessment:   ${IDS.assessment}`);
@@ -266,3 +266,4 @@ main().catch((err) => {
   console.error("❌ Seed failed:", err);
   process.exit(1);
 });
+

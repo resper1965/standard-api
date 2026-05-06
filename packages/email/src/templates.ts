@@ -1,10 +1,10 @@
 /**
- * @module @aegis/email - Templates
+ * @module @standard/email - Templates
  *
  * Pure functions that render typed payloads into email subject + HTML + text.
  * Templates use inline CSS for maximum email client compatibility.
  *
- * Design: Aegis corporate palette — dark navy (#0f172a), accent blue (#3b82f6),
+ * Design: Standard corporate palette — dark navy (#0f172a), accent blue (#3b82f6),
  * clean typography, minimal layout.
  */
 
@@ -15,7 +15,7 @@ import type {
   StateChangeEmailPayload,
   ReportReadyEmailPayload,
   SecurityAlertEmailPayload,
-  AegisEmailPayload,
+  StandardEmailPayload,
 } from "./types";
 
 /** Rendered email content ready for sending */
@@ -28,7 +28,7 @@ export interface RenderedEmail {
 // ─── Layout Primitives ──────────────────────────────────────────
 
 const BRAND = {
-  name: "Aegis",
+  name: "Standard",
   color: "#3b82f6",
   bgDark: "#0f172a",
   bgLight: "#f8fafc",
@@ -67,7 +67,7 @@ const wrapHtml = (title: string, body: string): string => `<!DOCTYPE html>
           <!-- Footer -->
           <tr>
             <td style="padding:16px 32px;text-align:center;font-size:12px;color:${BRAND.textMuted};border-top:1px solid ${BRAND.border};">
-              Sent by Aegis Platform · This is an automated notification
+              Sent by Standard Platform · This is an automated notification
             </td>
           </tr>
         </table>
@@ -101,13 +101,13 @@ const infoTable = (rows: Array<[string, string]>): string =>
 // ─── Template Renderers ─────────────────────────────────────────
 
 export function renderWelcomeEmail(payload: WelcomeEmailPayload): RenderedEmail {
-  const subject = `Welcome to Aegis, ${payload.firstName}!`;
+  const subject = `Welcome to Standard, ${payload.firstName}!`;
 
   const html = wrapHtml(
     subject,
     [
       heading(`Welcome, ${payload.firstName}! 👋`),
-      paragraph("Your Aegis account is ready. You now have access to the most comprehensive security assessment platform, powered by the Secure Controls Framework."),
+      paragraph("Your Standard account is ready. You now have access to the most comprehensive security assessment platform, powered by the Secure Controls Framework."),
       paragraph("Get started by exploring your dashboard — create your first assessment, upload documents, and let our AI-assisted analysis guide your compliance journey."),
       `<div style="text-align:center;">${btn(payload.dashboardUrl, "Open Dashboard")}</div>`,
       divider(),
@@ -118,26 +118,26 @@ export function renderWelcomeEmail(payload: WelcomeEmailPayload): RenderedEmail 
   const text = [
     `Welcome, ${payload.firstName}!`,
     "",
-    "Your Aegis account is ready. You now have access to the most comprehensive security assessment platform.",
+    "Your Standard account is ready. You now have access to the most comprehensive security assessment platform.",
     "",
     `Open your dashboard: ${payload.dashboardUrl}`,
     "",
     "If you did not create this account, you can safely ignore this email.",
     "",
-    "— Aegis Platform",
+    "— Standard Platform",
   ].join("\n");
 
   return { subject, html, text };
 }
 
 export function renderVerificationEmail(payload: VerificationEmailPayload): RenderedEmail {
-  const subject = "Verify your email — Aegis";
+  const subject = "Verify your email — Standard";
 
   const html = wrapHtml(
     subject,
     [
       heading("Verify Your Email"),
-      paragraph(`Hi ${payload.firstName}, please verify your email address to activate your Aegis account.`),
+      paragraph(`Hi ${payload.firstName}, please verify your email address to activate your Standard account.`),
       `<div style="text-align:center;">${btn(payload.verificationUrl, "Verify Email", BRAND.success)}</div>`,
       divider(),
       muted(`This link expires in ${payload.expiresIn}. If you did not request this, ignore this email.`),
@@ -149,13 +149,13 @@ export function renderVerificationEmail(payload: VerificationEmailPayload): Rend
   const text = [
     `Hi ${payload.firstName},`,
     "",
-    "Please verify your email address to activate your Aegis account.",
+    "Please verify your email address to activate your Standard account.",
     "",
     `Verify: ${payload.verificationUrl}`,
     "",
     `This link expires in ${payload.expiresIn}.`,
     "",
-    "— Aegis Platform",
+    "— Standard Platform",
   ].join("\n");
 
   return { subject, html, text };
@@ -191,7 +191,7 @@ export function renderApprovalRequestEmail(payload: ApprovalRequestEmailPayload)
     "",
     `Review: ${payload.reviewUrl}`,
     "",
-    "— Aegis Platform",
+    "— Standard Platform",
   ].join("\n");
 
   return { subject, html, text };
@@ -224,7 +224,7 @@ export function renderStateChangeEmail(payload: StateChangeEmailPayload): Render
     "",
     `View: ${payload.assessmentUrl}`,
     "",
-    "— Aegis Platform",
+    "— Standard Platform",
   ].join("\n");
 
   return { subject, html, text };
@@ -258,7 +258,7 @@ export function renderReportReadyEmail(payload: ReportReadyEmailPayload): Render
     "",
     `Download: ${payload.downloadUrl}`,
     "",
-    "— Aegis Platform",
+    "— Standard Platform",
   ].join("\n");
 
   return { subject, html, text };
@@ -300,7 +300,7 @@ export function renderSecurityAlertEmail(payload: SecurityAlertEmailPayload): Re
     "",
     `Audit Logs: ${payload.auditUrl}`,
     "",
-    "— Aegis Platform",
+    "— Standard Platform",
   ].filter(Boolean).join("\n");
 
   return { subject, html, text };
@@ -309,7 +309,7 @@ export function renderSecurityAlertEmail(payload: SecurityAlertEmailPayload): Re
 // ─── Template Router ────────────────────────────────────────────
 
 /** Render the correct email template based on payload type */
-export function renderEmail(payload: AegisEmailPayload): RenderedEmail {
+export function renderEmail(payload: StandardEmailPayload): RenderedEmail {
   switch (payload.type) {
     case "welcome":
       return renderWelcomeEmail(payload);
@@ -325,7 +325,8 @@ export function renderEmail(payload: AegisEmailPayload): RenderedEmail {
       return renderSecurityAlertEmail(payload);
     default: {
       const _exhaustive: never = payload;
-      throw new Error(`Unknown email type: ${((_exhaustive) as AegisEmailPayload).type}`);
+      throw new Error(`Unknown email type: ${((_exhaustive) as StandardEmailPayload).type}`);
     }
   }
 }
+

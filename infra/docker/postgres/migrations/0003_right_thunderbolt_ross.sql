@@ -392,7 +392,7 @@ ALTER TABLE "report_artifacts" ADD COLUMN "format" "report_format" DEFAULT 'json
 ALTER TABLE "report_artifacts" ADD COLUMN "storage_bucket" text;--> statement-breakpoint
 ALTER TABLE "report_artifacts" ADD COLUMN "generated_at" timestamp with time zone DEFAULT now() NOT NULL;--> statement-breakpoint
 ALTER TABLE "report_artifacts" ADD COLUMN "metadata" jsonb DEFAULT '{}'::jsonb NOT NULL;--> statement-breakpoint
-ALTER TABLE "report_versions" ADD COLUMN "title" text DEFAULT 'Aegis Assessment Report' NOT NULL;--> statement-breakpoint
+ALTER TABLE "report_versions" ADD COLUMN "title" text DEFAULT 'Standard Assessment Report' NOT NULL;--> statement-breakpoint
 ALTER TABLE "report_versions" ADD COLUMN "source_scope_id" uuid;--> statement-breakpoint
 ALTER TABLE "report_versions" ADD COLUMN "source_soa_version_id" uuid;--> statement-breakpoint
 ALTER TABLE "report_versions" ADD COLUMN "source_gap_analysis_version_id" uuid;--> statement-breakpoint

@@ -1,4 +1,4 @@
-import type { AccessDecision, SecurityTenantContext } from "@aegis/schemas";
+import type { AccessDecision, SecurityTenantContext } from "@standard/schemas";
 
 const decision = (allowed: boolean, reason: AccessDecision["reason"] | undefined, traceId: string): AccessDecision => ({
   allowed,
@@ -38,3 +38,4 @@ export class TenantGuard {
     return decision(true, undefined, tenant.trace_id);
   }
 }
+

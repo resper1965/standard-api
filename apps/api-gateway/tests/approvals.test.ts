@@ -11,8 +11,8 @@ test("POST /approvals valida approval target", async () => {
     decision: "approved",
     reason: "target incorreto"
   }, {
-    "x-aegis-tenant-id": created.tenantId,
-    "x-aegis-actor-id": ids.actorId
+    "x-standard-tenant-id": created.tenantId,
+    "x-standard-actor-id": ids.actorId
   });
 
   expect(response.status).toBe(400);
@@ -23,23 +23,24 @@ test("POST /artifacts/:artifactVersionId/approve bloqueia aprovação sem actor"
   const client = createTestClient();
   const created = await client.createAssessment();
   const artifact = await client.send(`/api/v1/assessments/${created.assessmentId}/artifacts/soa/versions`, "POST", {}, {
-    "x-aegis-tenant-id": created.tenantId,
-    "x-aegis-actor-id": ids.actorId
+    "x-standard-tenant-id": created.tenantId,
+    "x-standard-actor-id": ids.actorId
   });
   const artifactVersionId = artifact.body.artifact_version_id as string;
   await client.send(`/api/v1/artifacts/${artifactVersionId}/submit-review`, "POST", { reason: "review" }, {
-    "x-aegis-tenant-id": created.tenantId,
-    "x-aegis-actor-id": ids.actorId
+    "x-standard-tenant-id": created.tenantId,
+    "x-standard-actor-id": ids.actorId
   });
 
   const { response, body } = await client.send(`/api/v1/artifacts/${artifactVersionId}/approve`, "POST", {
     gate: "soa",
     reason: "sem ator"
   }, {
-    "x-aegis-tenant-id": created.tenantId
+    "x-standard-tenant-id": created.tenantId
   });
 
   expect(response.status).toBe(401);
   expect(body.error.code).toBe("UNAUTHORIZED");
   expect(body.error.trace_id).toBe("trace-test-0001");
 });
+

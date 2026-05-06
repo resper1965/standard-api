@@ -2,7 +2,7 @@
 
 ## 1. Objetivo do Cenário
 
-Validar que a API do Aegis consegue executar o Aegis SCF-Based Assessment Lifecycle ponta a ponta sem frontend, sem LLM real, sem dados reais e sem dependência obrigatória de Cloudflare real.
+Validar que a API do Standard consegue executar o Standard SCF-Based Assessment Lifecycle ponta a ponta sem frontend, sem LLM real, sem dados reais e sem dependência obrigatória de Cloudflare real.
 
 O cenário valida que a API consegue:
 
@@ -43,17 +43,17 @@ Headers mínimos recomendados:
 
 ```text
 Authorization: Bearer synthetic-token
-x-aegis-tenant-id: tenant_synth_a
-x-aegis-organization-id: org_synth_healthtech
-x-aegis-actor-id: assessor_user
-x-aegis-trace-id: trace_acceptance_001
+x-standard-tenant-id: tenant_synth_a
+x-standard-organization-id: org_synth_healthtech
+x-standard-actor-id: assessor_user
+x-standard-trace-id: trace_acceptance_001
 content-type: application/json
 ```
 
 Para aprovações:
 
 ```text
-x-aegis-actor-id: approver_user
+x-standard-actor-id: approver_user
 ```
 
 ## 3. Entidades do Cenário
@@ -504,7 +504,7 @@ Durante o fluxo validar:
 
 ### Acessar Assessment de Outro Tenant
 
-- Request com `x-aegis-tenant-id: tenant_synth_b`.
+- Request com `x-standard-tenant-id: tenant_synth_b`.
 - Endpoint: `GET /api/v1/assessments/asm_synth_001`.
 - Esperado: `403` ou `404` seguro.
 - Validar security event `cross_tenant_access_blocked` ou equivalente.
@@ -542,7 +542,7 @@ Durante o fluxo validar:
 
 ### Executar sem `tenant_id`
 
-- Remover `x-aegis-tenant-id` e tenant do payload.
+- Remover `x-standard-tenant-id` e tenant do payload.
 - Esperado: `400` ou `401/403` seguro.
 - Validar erro com `trace_id`.
 
@@ -699,10 +699,10 @@ Criar assessment:
 ```bash
 curl -X POST "$API_BASE/api/v1/assessments" \
   -H "content-type: application/json" \
-  -H "x-aegis-tenant-id: $TENANT_ID" \
-  -H "x-aegis-organization-id: $ORG_ID" \
-  -H "x-aegis-actor-id: $ASSESSOR" \
-  -H "x-aegis-trace-id: $TRACE_ID" \
+  -H "x-standard-tenant-id: $TENANT_ID" \
+  -H "x-standard-organization-id: $ORG_ID" \
+  -H "x-standard-actor-id: $ASSESSOR" \
+  -H "x-standard-trace-id: $TRACE_ID" \
   -d '{
     "organization_id": "org_synth_healthtech",
     "name": "Synthetic MVP Acceptance Assessment",
@@ -716,10 +716,10 @@ Iniciar workflow:
 ```bash
 curl -X POST "$API_BASE/api/v1/assessments/asm_synth_001/workflows/lifecycle/start" \
   -H "content-type: application/json" \
-  -H "x-aegis-tenant-id: $TENANT_ID" \
-  -H "x-aegis-organization-id: $ORG_ID" \
-  -H "x-aegis-actor-id: $ASSESSOR" \
-  -H "x-aegis-trace-id: $TRACE_ID" \
+  -H "x-standard-tenant-id: $TENANT_ID" \
+  -H "x-standard-organization-id: $ORG_ID" \
+  -H "x-standard-actor-id: $ASSESSOR" \
+  -H "x-standard-trace-id: $TRACE_ID" \
   -d '{ "idempotency_key": "workflow-start-asm-synth-001" }'
 ```
 
@@ -728,10 +728,10 @@ Enviar signal de framework:
 ```bash
 curl -X POST "$API_BASE/api/v1/workflows/workflow_synth_001/signals" \
   -H "content-type: application/json" \
-  -H "x-aegis-tenant-id: $TENANT_ID" \
-  -H "x-aegis-organization-id: $ORG_ID" \
-  -H "x-aegis-actor-id: $ASSESSOR" \
-  -H "x-aegis-trace-id: $TRACE_ID" \
+  -H "x-standard-tenant-id: $TENANT_ID" \
+  -H "x-standard-organization-id: $ORG_ID" \
+  -H "x-standard-actor-id: $ASSESSOR" \
+  -H "x-standard-trace-id: $TRACE_ID" \
   -d '{
     "signal_type": "framework_selected",
     "idempotency_key": "signal-framework-selected-001",
@@ -811,3 +811,4 @@ Definition of done para automação futura:
 - audit/metrics/agent_runs verificados;
 - relatório de execução gerado;
 - falhas críticas bloqueiam release candidate.
+

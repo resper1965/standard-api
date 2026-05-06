@@ -1,4 +1,4 @@
-# Plano de Exploração — aegis-api
+# Plano de Exploração — standard-api
 
 > Criado pelo Reversa em 2026-05-01
 > Atualizado em 2026-05-02 por Antigravity
@@ -51,3 +51,4 @@
 - [ ] **Data Master** — Análise completa do banco de dados
 - [ ] **Design System** — Extração de tokens de design
 - [ ] **Tracer** — Análise dinâmica (requer sistema acessível)
+

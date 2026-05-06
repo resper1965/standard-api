@@ -1,4 +1,4 @@
-import { AuditLogQuerySchema, MetricsQuerySchema, SecurityEventQuerySchema, UsageQuerySchema } from "@aegis/schemas";
+import { AuditLogQuerySchema, MetricsQuerySchema, SecurityEventQuerySchema, UsageQuerySchema } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";
 import { json, routeParam } from "../http";
@@ -135,3 +135,4 @@ export const observabilityRoutes: RouteDefinition[] = [
     }
   }
 ];
+

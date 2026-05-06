@@ -47,7 +47,7 @@ test("filename é sanitizado", () => {
 });
 
 test("content_hash é calculado", async () => {
-  const hash = await sha256Hex(textBytes("aegis"));
+  const hash = await sha256Hex(textBytes("standard"));
   expect(hash.length).toBe(64);
 });
 
@@ -154,3 +154,4 @@ test("erro no extractor marca job como failed com safe error message", async () 
   expect(job!.status).toBe("failed");
   expect(job!.error_message_safe!.length).toBe(240);
 });
+

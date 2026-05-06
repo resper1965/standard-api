@@ -2,11 +2,11 @@
 
 ## Nome do Release
 
-Aegis API Standard MVP Release Candidate 0.1.
+Standard API Standard MVP Release Candidate 0.1.
 
 ## Escopo do MVP
 
-Este release consolida a primeira versão API-first do Aegis SCF-Based Assessment Lifecycle para validação em staging controlado com dados sintéticos.
+Este release consolida a primeira versão API-first do Standard SCF-Based Assessment Lifecycle para validação em staging controlado com dados sintéticos.
 
 O objetivo é permitir avaliação técnica do backend, contratos, packages, workflows, segurança, observabilidade, testes e documentação operacional antes de qualquer uso com dados reais de cliente.
 
@@ -93,3 +93,4 @@ Para production, usar apenas `Deploy Production` com approval manual do environm
 - Validar smoke tests.
 - Priorizar backlog P0/P1 antes de produção.
 - Formalizar auth real, rate limiting, persistence e backup/restore.
+

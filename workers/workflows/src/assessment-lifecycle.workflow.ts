@@ -1,4 +1,4 @@
-import type { ApprovalEvent, AssessmentLifecycleEvent, AssessmentSnapshot, AssessmentState } from "@aegis/assessment-engine";
+import type { ApprovalEvent, AssessmentLifecycleEvent, AssessmentSnapshot, AssessmentState } from "@standard/assessment-engine";
 import type {
   AssessmentLifecycleStep,
   AssessmentLifecycleWorkflowInput,
@@ -8,7 +8,7 @@ import type {
   WorkflowRunResponse,
   WorkflowSignalRequest,
   WorkflowSignalResponse
-} from "@aegis/schemas";
+} from "@standard/schemas";
 import { APPROVAL_STEP_BY_TYPE, SYSTEM_ACTOR } from "./constants";
 import { WorkflowOrchestrationError } from "./errors";
 import type { WorkflowAuditEventType, WorkflowDependencies, WorkflowRunRecord } from "./types";
@@ -512,3 +512,4 @@ export class AssessmentLifecycleOrchestrator {
     });
   }
 }
+

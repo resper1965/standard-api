@@ -203,6 +203,21 @@ export const memberships = pgTable("memberships", {
   uniqueIndex("memberships_org_user_role_uidx").on(table.organizationId, table.userId, table.roleId)
 ]);
 
+export const apiKeys = pgTable("api_keys", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
+  organizationId: uuid("organization_id").notNull().references(() => organizations.id),
+  name: text("name").notNull(),
+  keyHash: text("key_hash").notNull(),
+  maskedKey: text("masked_key").notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }),
+  lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
+  ...timestamps()
+}, (table) => [
+  index("api_keys_org_idx").on(table.organizationId),
+  uniqueIndex("api_keys_hash_uidx").on(table.keyHash)
+]);
+
 export const scfVersions = pgTable("scf_versions", {
   id: uuid("id").defaultRandom().primaryKey(),
   version: text("version").notNull(),
@@ -963,7 +978,7 @@ export const reportVersions = pgTable("report_versions", {
   assessmentId: uuid("assessment_id").notNull().references(() => assessments.id),
   versionNumber: integer("version_number").notNull(),
   reportType: reportTypeEnum("report_type").notNull(),
-  title: text("title").notNull().default("Aegis Assessment Report"),
+  title: text("title").notNull().default("Standard Assessment Report"),
   status: artifactStatusEnum("status").default("draft").notNull(),
   sourceScopeId: uuid("source_scope_id").references(() => assessmentScope.id),
   sourceSoaVersionId: uuid("source_soa_version_id").references(() => soaVersions.id),
@@ -1177,3 +1192,4 @@ export const scfMappingRelations = relations(scfMappings, ({ one, many }) => ({
   control: one(scfControls, { fields: [scfMappings.scfControlId], references: [scfControls.id] }),
   strmRelationships: many(scfStrmRelationships)
 }));
+

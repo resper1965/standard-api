@@ -4,9 +4,9 @@
  * Uses type-cast inserts since Zod response schemas differ from Drizzle column names.
  */
 import { eq, and } from "drizzle-orm";
-import { assessmentScope, soaVersions, soaItems } from "@aegis/schemas";
-import type { ScopeResponse, SoaVersionResponse, SoaItemResponse } from "@aegis/schemas";
-import type { ScopeRepository, SoaVersionRepository, SoaItemRepository, SoaRepositories } from "@aegis/soa";
+import { assessmentScope, soaVersions, soaItems } from "@standard/schemas";
+import type { ScopeResponse, SoaVersionResponse, SoaItemResponse } from "@standard/schemas";
+import type { ScopeRepository, SoaVersionRepository, SoaItemRepository, SoaRepositories } from "@standard/soa";
 import type { DbClient } from "./db";
 
 export const createDrizzleScopeRepository = (db: DbClient): ScopeRepository => ({
@@ -258,3 +258,4 @@ const mapSoaItemRow = (row: SoaItemRow): SoaItemResponse => ({
   created_at: row.createdAt.toISOString(),
   updated_at: row.updatedAt.toISOString(),
 });
+

@@ -1,5 +1,5 @@
 {
-  "name": "@aegis/auth",
+  "name": "@standard/auth",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -9,14 +9,14 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@aegis/schemas": "workspace:*",
     "@better-auth/api-key": "^1.2.10",
     "@neondatabase/serverless": "^0.9.3",
+    "@standard/schemas": "workspace:*",
     "better-auth": "^1.2.10",
     "drizzle-orm": "^0.45.2"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260426.1",
+    "@cloudflare/workers-types": "^4.20260430.1",
     "typescript": "latest"
   }
 }

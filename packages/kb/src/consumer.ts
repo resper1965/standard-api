@@ -1,4 +1,4 @@
-import type { DocumentChunk } from "@aegis/document-ingestion";
+import type { DocumentChunk } from "@standard/document-ingestion";
 import type { KbEmbeddingJobMessage, KbServiceDependencies } from "./types";
 
 const safeError = (error: unknown): string => {
@@ -97,3 +97,4 @@ export const processKbEmbeddingJob = async (message: KbEmbeddingJobMessage, deps
     });
   }
 };
+

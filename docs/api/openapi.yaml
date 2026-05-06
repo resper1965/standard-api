@@ -1,8 +1,8 @@
 openapi: 3.1.0
 info:
-  title: Aegis API Standard
+  title: Standard API Standard
   version: 0.1.0
-  description: API-first contracts for the Aegis SCF-Based Assessment Lifecycle.
+  description: API-first contracts for the Standard SCF-Based Assessment Lifecycle.
 servers:
   - url: https://api.example.com
     description: Placeholder production API
@@ -199,3 +199,4 @@ components:
         - cancelled
         - failed
         - blocked
+

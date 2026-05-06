@@ -2,7 +2,7 @@
 
 ## 1. Introdução
 
-Os **Specialist Agents** são os agentes funcionais do Aegis SCF Agentic Assessment Model. Eles executam análise, classificação, síntese e geração de drafts estruturados dentro do Aegis SCF-Based Assessment Lifecycle.
+Os **Specialist Agents** são os agentes funcionais do Standard SCF Agentic Assessment Model. Eles executam análise, classificação, síntese e geração de drafts estruturados dentro do Standard SCF-Based Assessment Lifecycle.
 
 Eles não controlam o fluxo, não acessam dados livremente e não aprovam artefatos. Cada agente recebe um contexto limitado, usa tools autorizadas pelo runtime, produz output schema-validado e entrega o resultado para o próximo handoff ou para revisão humana.
 
@@ -20,15 +20,15 @@ Todo output de agente deve ser tratável como proposta, evidência candidata ou 
 
 ## 2. Lista Oficial de Agentes
 
-1. Aegis Knowledge Steward
-2. Aegis SCF Control Analyst
-3. Aegis Framework Mapper
-4. Aegis Scope & SoA Architect
-5. Aegis Evidence Analyst
-6. Aegis Gap Analyst
-7. Aegis Maturity Assessor
-8. Aegis POA&M Planner
-9. Aegis Assessment Report Writer
+1. Standard Knowledge Steward
+2. Standard SCF Control Analyst
+3. Standard Framework Mapper
+4. Standard Scope & SoA Architect
+5. Standard Evidence Analyst
+6. Standard Gap Analyst
+7. Standard Maturity Assessor
+8. Standard POA&M Planner
+9. Standard Assessment Report Writer
 
 ## 3. Template Padrão de Especificação
 
@@ -56,11 +56,11 @@ Esse template permite implementar cada agente como módulo isolado, conectar ao 
 
 ## 4. Especificação dos Agentes
 
-### 4.1 Aegis Knowledge Steward
+### 4.1 Standard Knowledge Steward
 
 #### Nome do agente
 
-Aegis Knowledge Steward.
+Standard Knowledge Steward.
 
 #### Missão
 
@@ -189,11 +189,11 @@ Knowledge Steward → SCF Control Analyst e Evidence Analyst com classificaçõe
 - `prompt_injection_resistance_rate`;
 - `overconfidence_rate`.
 
-### 4.2 Aegis SCF Control Analyst
+### 4.2 Standard SCF Control Analyst
 
 #### Nome do agente
 
-Aegis SCF Control Analyst.
+Standard SCF Control Analyst.
 
 #### Missão
 
@@ -313,11 +313,11 @@ SCF Control Analyst → Framework Mapper e Scope & SoA Architect com explicaçõ
 - `hallucination_rate`;
 - `overconfidence_rate`.
 
-### 4.3 Aegis Framework Mapper
+### 4.3 Standard Framework Mapper
 
 #### Nome do agente
 
-Aegis Framework Mapper.
+Standard Framework Mapper.
 
 #### Missão
 
@@ -431,11 +431,11 @@ Framework Mapper → Scope & SoA Architect com mappings oficiais e ausências.
 - `official_mapping_precision_rate`;
 - `overconfidence_rate`.
 
-### 4.4 Aegis Scope & SoA Architect
+### 4.4 Standard Scope & SoA Architect
 
 #### Nome do agente
 
-Aegis Scope & SoA Architect.
+Standard Scope & SoA Architect.
 
 #### Missão
 
@@ -555,11 +555,11 @@ Scope & SoA Architect → Human Approval Gate. Após aprovação, Orchestrator e
 - `approval_bypass_count`;
 - `overconfidence_rate`.
 
-### 4.5 Aegis Evidence Analyst
+### 4.5 Standard Evidence Analyst
 
 #### Nome do agente
 
-Aegis Evidence Analyst.
+Standard Evidence Analyst.
 
 #### Missão
 
@@ -686,11 +686,11 @@ Evidence Analyst → Gap Analyst com classificações, forças, conflitos e `not
 - `source_traceability_rate`;
 - `overconfidence_rate`.
 
-### 4.6 Aegis Gap Analyst
+### 4.6 Standard Gap Analyst
 
 #### Nome do agente
 
-Aegis Gap Analyst.
+Standard Gap Analyst.
 
 #### Missão
 
@@ -816,11 +816,11 @@ Gap Analyst → Human Approval Gate. Após aprovação, Orchestrator aciona Matu
 - `approval_bypass_count`;
 - `overconfidence_rate`.
 
-### 4.7 Aegis Maturity Assessor
+### 4.7 Standard Maturity Assessor
 
 #### Nome do agente
 
-Aegis Maturity Assessor.
+Standard Maturity Assessor.
 
 #### Missão
 
@@ -935,11 +935,11 @@ Maturity Assessor → Human Approval Gate. Após aprovação, Orchestrator liber
 - `confidence_calibration_rate`;
 - `overconfidence_rate`.
 
-### 4.8 Aegis POA&M Planner
+### 4.8 Standard POA&M Planner
 
 #### Nome do agente
 
-Aegis POA&M Planner.
+Standard POA&M Planner.
 
 #### Missão
 
@@ -1060,11 +1060,11 @@ POA&M Planner → Human Approval Gate. Após aprovação, Report Writer usa POA&
 - `acceptance_criteria_completeness_rate`;
 - `generic_poam_action_count`.
 
-### 4.9 Aegis Assessment Report Writer
+### 4.9 Standard Assessment Report Writer
 
 #### Nome do agente
 
-Aegis Assessment Report Writer.
+Standard Assessment Report Writer.
 
 #### Missão
 
@@ -1370,3 +1370,4 @@ Definition of done para implementação futura:
 - agent runs auditáveis;
 - evals sintéticos por agente;
 - testes para failure modes críticos.
+

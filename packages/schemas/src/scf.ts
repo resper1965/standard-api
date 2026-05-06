@@ -196,7 +196,8 @@ export const ScfControlSearchQuerySchema = z.object({
   scf_version_id: UuidSchema.optional(),
   control_code: z.string().optional(),
   domain_code: z.string().optional(),
-  q: z.string().optional()
+  q: z.string().optional(),
+  tags: z.array(z.string()).optional()
 });
 
 export const ScfMappingQuerySchema = z.object({

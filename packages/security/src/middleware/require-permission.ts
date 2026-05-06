@@ -1,4 +1,4 @@
-import type { AuthContext, Permission, SecurityTenantContext } from "@aegis/schemas";
+import type { AuthContext, Permission, SecurityTenantContext } from "@standard/schemas";
 import { PolicyEngine } from "../rbac/policy-engine";
 
 export const requirePermission = (
@@ -10,3 +10,4 @@ export const requirePermission = (
   const decision = new PolicyEngine().authorize({ auth, tenant, required_permissions: permissions, trace_id: traceId });
   if (!decision.allowed) throw new Error(decision.reason ?? "permission_missing");
 };
+

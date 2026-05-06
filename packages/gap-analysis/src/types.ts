@@ -1,5 +1,5 @@
-import type { KbSearchResult, KbServiceDependencies } from "@aegis/kb";
-import type { ScfCoreServices } from "@aegis/scf-core";
+import type { KbSearchResult, KbServiceDependencies } from "@standard/kb";
+import type { ScfCoreServices } from "@standard/scf-core";
 import type {
   AssessmentStatus,
   EvidenceFindingResponse,
@@ -14,8 +14,8 @@ import type {
   SoaItemResponse,
   SoaVersionResponse,
   UpdateGapFindingRequest
-} from "@aegis/schemas";
-import type { SoaDependencies } from "@aegis/soa";
+} from "@standard/schemas";
+import type { SoaDependencies } from "@standard/soa";
 
 export type {
   AssessmentStatus,
@@ -99,3 +99,4 @@ export type EvidenceFindingFilters = {
 export type GapFindingFilters = {
   assessment_status?: AssessmentStatus;
 };
+

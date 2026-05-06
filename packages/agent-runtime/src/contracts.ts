@@ -3,7 +3,7 @@ import {
   AgentRuntimeContextSchema,
   type AgentToolName,
   type FunctionalAgentId
-} from "@aegis/schemas";
+} from "@standard/schemas";
 
 export type FunctionalAgentContract = {
   agent_id: FunctionalAgentId;
@@ -88,7 +88,7 @@ export const AGENT_TOOL_CONTRACTS: AgentToolContract[] = [
 export const FUNCTIONAL_AGENT_CONTRACTS: FunctionalAgentContract[] = [
   {
     agent_id: "knowledge_steward",
-    display_name: "Aegis Knowledge Steward",
+    display_name: "Standard Knowledge Steward",
     responsibility: "Organize KB evidence and metadata without deciding compliance.",
     allowed_tools: ["assessment_state_read", "artifact_version_read", "kb_evidence_search", "validation_result_write"],
     forbidden_actions: ["Decide compliance final", "Create approval events", "Create official SCF mappings"],
@@ -96,7 +96,7 @@ export const FUNCTIONAL_AGENT_CONTRACTS: FunctionalAgentContract[] = [
   },
   {
     agent_id: "scf_control_analyst",
-    display_name: "Aegis SCF Control Analyst",
+    display_name: "Standard SCF Control Analyst",
     responsibility: "Analyze SCF controls and structured control context.",
     allowed_tools: ["assessment_state_read", "scf_control_lookup", "scf_mapping_lookup", "artifact_version_read"],
     forbidden_actions: ["Invent official mappings", "Write final findings"],
@@ -104,7 +104,7 @@ export const FUNCTIONAL_AGENT_CONTRACTS: FunctionalAgentContract[] = [
   },
   {
     agent_id: "framework_mapper",
-    display_name: "Aegis Framework Mapper",
+    display_name: "Standard Framework Mapper",
     responsibility: "Read official mappings and identify missing mapping coverage.",
     allowed_tools: ["assessment_state_read", "scf_control_lookup", "scf_mapping_lookup", "validation_result_write"],
     forbidden_actions: ["Create official mappings", "Invent crosswalks"],
@@ -112,7 +112,7 @@ export const FUNCTIONAL_AGENT_CONTRACTS: FunctionalAgentContract[] = [
   },
   {
     agent_id: "scope_soa_architect",
-    display_name: "Aegis Scope & SoA Architect",
+    display_name: "Standard Scope & SoA Architect",
     responsibility: "Draft scope and SoA artifacts for human review.",
     allowed_tools: ["assessment_state_read", "artifact_version_read", "scf_control_lookup", "scf_mapping_lookup", "artifact_draft_create", "validation_result_write"],
     forbidden_actions: ["Approve SoA", "Bypass SoA review"],
@@ -120,7 +120,7 @@ export const FUNCTIONAL_AGENT_CONTRACTS: FunctionalAgentContract[] = [
   },
   {
     agent_id: "evidence_analyst",
-    display_name: "Aegis Evidence Analyst",
+    display_name: "Standard Evidence Analyst",
     responsibility: "Classify evidence strength and limitations.",
     allowed_tools: ["assessment_state_read", "artifact_version_read", "kb_evidence_search", "validation_result_write"],
     forbidden_actions: ["Treat absence of evidence as absence of implementation", "Write final findings"],
@@ -128,7 +128,7 @@ export const FUNCTIONAL_AGENT_CONTRACTS: FunctionalAgentContract[] = [
   },
   {
     agent_id: "gap_analyst",
-    display_name: "Aegis Gap Analyst",
+    display_name: "Standard Gap Analyst",
     responsibility: "Draft gap findings from approved SoA and evidence analysis.",
     allowed_tools: ["assessment_state_read", "artifact_version_read", "kb_evidence_search", "artifact_draft_create", "validation_result_write"],
     forbidden_actions: ["Approve Gap Analysis", "Write final Gap Analysis without validation"],
@@ -136,7 +136,7 @@ export const FUNCTIONAL_AGENT_CONTRACTS: FunctionalAgentContract[] = [
   },
   {
     agent_id: "maturity_assessor",
-    display_name: "Aegis Maturity Assessor",
+    display_name: "Standard Maturity Assessor",
     responsibility: "Suggest maturity scores with rationale and confidence.",
     allowed_tools: ["assessment_state_read", "artifact_version_read", "kb_evidence_search", "artifact_draft_create", "validation_result_write"],
     forbidden_actions: ["Approve maturity assessment", "Hide limitations"],
@@ -144,7 +144,7 @@ export const FUNCTIONAL_AGENT_CONTRACTS: FunctionalAgentContract[] = [
   },
   {
     agent_id: "poam_planner",
-    display_name: "Aegis POA&M Planner",
+    display_name: "Standard POA&M Planner",
     responsibility: "Draft remediation plans from approved gaps.",
     allowed_tools: ["assessment_state_read", "artifact_version_read", "artifact_draft_create", "validation_result_write"],
     forbidden_actions: ["Approve POA&M", "Publish remediation commitments without review"],
@@ -152,10 +152,11 @@ export const FUNCTIONAL_AGENT_CONTRACTS: FunctionalAgentContract[] = [
   },
   {
     agent_id: "report_writer",
-    display_name: "Aegis Assessment Report Writer",
+    display_name: "Standard Assessment Report Writer",
     responsibility: "Compose reports from approved artifacts without changing findings.",
     allowed_tools: ["assessment_state_read", "artifact_version_read", "artifact_draft_create", "validation_result_write"],
     forbidden_actions: ["Alter approved findings", "Approve reports"],
     requires_human_approval_for: ["Report approval and publication"]
   }
 ];
+

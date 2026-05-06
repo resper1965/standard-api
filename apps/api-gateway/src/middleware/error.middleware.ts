@@ -1,5 +1,5 @@
-import { AssessmentEngineError } from "@aegis/assessment-engine";
-import { sanitizeErrorDetails } from "@aegis/security";
+import { AssessmentEngineError } from "@standard/assessment-engine";
+import { sanitizeErrorDetails } from "@standard/security";
 import { ApiError } from "../errors/api-error";
 import { json } from "../http";
 
@@ -41,3 +41,4 @@ export const errorResponse = (error: unknown, traceId: string): Response => {
     { status: 500 }
   );
 };
+

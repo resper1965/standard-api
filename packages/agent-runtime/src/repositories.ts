@@ -1,4 +1,4 @@
-import type { AgentRunResponse, AgentToolInvocationResponse } from "@aegis/schemas";
+import type { AgentRunResponse, AgentToolInvocationResponse } from "@standard/schemas";
 import type { AgentRunRepository, AgentRuntimeDependencies, AgentToolCallRepository } from "./types";
 
 export const createInMemoryAgentRunRepository = (): AgentRunRepository => {
@@ -47,3 +47,4 @@ export const createInMemoryAgentRuntimeDependencies = (): AgentRuntimeDependenci
     }
   }
 });
+

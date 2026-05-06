@@ -21,7 +21,7 @@ const matchesFilters = (metadata: VectorStoreMetadata, filters: Partial<VectorSt
 export class MockVectorStore implements VectorStore {
   private readonly records = new Map<string, VectorRecord>();
 
-  constructor(private readonly indexName = "aegis-kb-dev") {}
+  constructor(private readonly indexName = "standard-kb-dev") {}
 
   async upsert(records: VectorRecord[]): Promise<VectorUpsertResult> {
     for (const record of records) {
@@ -58,3 +58,4 @@ export class MockVectorStore implements VectorStore {
     };
   }
 }
+

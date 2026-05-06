@@ -1,5 +1,5 @@
-import type { KbServiceDependencies } from "@aegis/kb";
-import type { ScfCoreServices, ScfFrameworkRequirement, ScfMapping } from "@aegis/scf-core";
+import type { KbServiceDependencies } from "@standard/kb";
+import type { ScfCoreServices, ScfFrameworkRequirement, ScfMapping } from "@standard/scf-core";
 import type {
   CreateScopeRequest,
   EvidenceCoverageStatus,
@@ -9,7 +9,7 @@ import type {
   SoaVersionResponse,
   UpdateScopeRequest,
   UpdateSoaItemRequest
-} from "@aegis/schemas";
+} from "@standard/schemas";
 
 export type {
   CreateScopeRequest,
@@ -75,3 +75,4 @@ export type CreateDraftFromRequirementsInput = {
 export type SoaItemFilters = {
   applicability_status?: string;
 };
+

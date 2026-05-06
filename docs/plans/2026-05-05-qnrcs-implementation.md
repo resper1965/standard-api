@@ -2,7 +2,7 @@
 
 > **For Antigravity:** REQUIRED WORKFLOW: Use `.agent/workflows/execute-plan.md` to execute this plan in single-flow mode.
 
-**Goal:** Provide a static seed integration to load the Portuguese National Cybersecurity Framework (QNRCS 2019) into the Drizzle Data Layer for Aegis.
+**Goal:** Provide a static seed integration to load the Portuguese National Cybersecurity Framework (QNRCS 2019) into the Drizzle Data Layer for Standard.
 
 **Architecture:** We will create a declarative SQL seed file to populate the `scf_frameworks`, `scf_framework_requirements`, and `scf_mappings` tables using pure Postgres UUID functions and `WITH` CTEs to bypass manual foreign keys. The JSON metadata in descriptions will ensure LLMs have robust Portuguese RAG context for Evidence validations.
 
@@ -74,3 +74,4 @@ JOIN scf_controls c2 ON c2.control_code = 'IDM-02' AND c2.scf_version_id = r2.sc
 git add infra/docker/postgres/seeds/0003_qnrcs_seed.sql
 git commit -m "feat(scf): add QNRCS 2019 framework seed and initial mappings"
 ```
+

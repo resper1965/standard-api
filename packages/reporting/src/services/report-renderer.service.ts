@@ -1,4 +1,4 @@
-import type { RenderReportResponse } from "@aegis/schemas";
+import type { RenderReportResponse } from "@standard/schemas";
 import { assertActor, assertContext, ReportingWorkflowError } from "../errors";
 import { renderDocxPlaceholder } from "../renderers/docx-renderer.placeholder";
 import { renderJsonArtifact } from "../renderers/json-renderer";
@@ -54,3 +54,4 @@ export class ReportRendererService {
     };
   }
 }
+

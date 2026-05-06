@@ -1,12 +1,12 @@
 # Glossário
 
-## Aegis
+## Standard
 
 Produto para assessments de segurança, conformidade e maturidade baseados no Secure Controls Framework.
 
 ## SCF
 
-Secure Controls Framework. Fonte normativa estruturada usada pelo Aegis.
+Secure Controls Framework. Fonte normativa estruturada usada pelo Standard.
 
 ## Assessment
 
@@ -39,3 +39,4 @@ Ponto obrigatório de aprovação humana para artifacts críticos.
 ## Placeholder
 
 Informação ainda não fechada. Deve ser substituída por decisão documentada quando houver definição.
+

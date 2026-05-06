@@ -1,4 +1,4 @@
-import { CreateApprovalRequestSchema } from "@aegis/schemas";
+import { CreateApprovalRequestSchema } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";
 import { json, newId, parseJson, routeParam } from "../http";
@@ -78,3 +78,4 @@ export const approvalsRoutes: RouteDefinition[] = [
     }
   }
 ];
+

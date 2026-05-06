@@ -1,13 +1,13 @@
-# Aegis SCF Agentic Assessment Model
+# Standard SCF Agentic Assessment Model
 
-O Aegis SCF Agentic Assessment Model é um modelo de IA agêntica para conduzir assessments baseados no Secure Controls Framework, no qual agentes especializados colaboram sob orquestração controlada para ingerir documentos, construir KB, mapear frameworks, gerar SoA, avaliar evidências, produzir Gap Analysis, medir maturidade, gerar POA&M e preparar relatórios, sempre com rastreabilidade, validação de schema, controle de escopo e aprovação humana.
+O Standard SCF Agentic Assessment Model é um modelo de IA agêntica para conduzir assessments baseados no Secure Controls Framework, no qual agentes especializados colaboram sob orquestração controlada para ingerir documentos, construir KB, mapear frameworks, gerar SoA, avaliar evidências, produzir Gap Analysis, medir maturidade, gerar POA&M e preparar relatórios, sempre com rastreabilidade, validação de schema, controle de escopo e aprovação humana.
 
 Nesta fase, o runtime de agentes é contratual e testável com mocks. O modelo agentic é implementado de forma controlada por workflows, Assessment Engine, schemas e approval gates; agentes LLM futuros não terão autoridade para aprovar artefatos finais, alterar estados diretamente ou criar mappings oficiais ausentes.
 
 ## Estrutura Conceitual
 
 ```text
-Aegis SCF Agentic Assessment Model
+Standard SCF Agentic Assessment Model
 ├── Orchestrator / Workflow Layer
 │   └── controla lifecycle, signals, waits e próximos passos permitidos
 ├── Specialist Agents
@@ -75,3 +75,4 @@ Aegis SCF Agentic Assessment Model
 - **Traceability Enforcement Procedure**: rejeitar achados sem contexto completo.
 - **LLM Call Governance Procedure**: toda chamada LLM futura deve passar pelo AI Gateway com metadados de tenant, assessment e agent run.
 - **Tenant Isolation Procedure**: filtrar dados por `tenant_id` em PostgreSQL, R2 keys, Vectorize namespaces e logs.
+

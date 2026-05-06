@@ -1,8 +1,8 @@
-# Aegis MVP — Full Implementation Plan
+# Standard MVP — Full Implementation Plan
 
 > **For Antigravity:** REQUIRED WORKFLOW: Use `.agent/workflows/execute-plan.md` to execute this plan in single-flow mode.
 
-**Goal:** Build the complete Aegis MVP — corporate frontend + remaining backend gaps — in a single execution flow.
+**Goal:** Build the complete Standard MVP — corporate frontend + remaining backend gaps — in a single execution flow.
 
 **Architecture:** Vite+React SPA on Cloudflare Pages consuming the API Gateway on Workers. Auth via Better Auth client SDK. Two role-based areas (user/admin). Backend gaps filled by connecting remaining in-memory repos to Neon/Drizzle and provisioning Cloudflare resources.
 
@@ -139,7 +139,7 @@ export const useSession = () => authClient.useSession();
 - User sections always visible
 - Admin sections visible only when `session.user.role === "admin"`
 - Active route highlighting
-- Aegis shield logo at top
+- Standard shield logo at top
 
 **Step 4:** Create `TopBar`:
 - Search bar
@@ -309,7 +309,7 @@ export const useSession = () => authClient.useSession();
 
 ### Task 16: Custom Domain DNS
 
-**Step 1:** Configure `aegis-api.bekaa.eu` DNS in Cloudflare
+**Step 1:** Configure `standard-api.bekaa.eu` DNS in Cloudflare
 **Step 2:** Deploy with `wrangler deploy --env production`
 **Step 3:** Configure web app Pages deployment with custom domain
 **Step 4:** Commit wrangler config updates
@@ -350,7 +350,7 @@ export const useSession = () => authClient.useSession();
 - Create: `apps/web/wrangler.toml` (Pages config)
 
 **Step 1:** Configure Pages project
-**Step 2:** Build: `pnpm --filter @aegis/web build`
+**Step 2:** Build: `pnpm --filter @standard/web build`
 **Step 3:** Deploy: `npx wrangler pages deploy apps/web/dist`
 **Step 4:** Commit
 
@@ -371,7 +371,7 @@ export const useSession = () => authClient.useSession();
 ### Task 21: Email via Cloudflare Workers
 
 **Step 1:** Configure Cloudflare Email Workers binding
-**Step 2:** Add `sendEmail` function to `@aegis/auth`
+**Step 2:** Add `sendEmail` function to `@standard/auth`
 **Step 3:** Enable email verification and password reset
 **Step 4:** Commit
 
@@ -391,3 +391,4 @@ export const useSession = () => authClient.useSession();
 **Step 1:** Update `docs/releases/roadmap-to-production.md`
 **Step 2:** Create walkthrough with screenshots
 **Step 3:** Final commit and push
+

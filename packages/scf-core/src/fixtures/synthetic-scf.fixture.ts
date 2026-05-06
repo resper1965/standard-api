@@ -99,7 +99,7 @@ export const createSyntheticScfFixture = (): ScfDataset => ({
       framework_code: "SYNTH-STD-1",
       framework_name: "Synthetic Standard 1",
       framework_version: "1.0",
-      publisher: "Aegis synthetic fixtures",
+      publisher: "Standard synthetic fixtures",
       category: "test",
       source_reference: "synthetic/test fixture",
       status: "active",
@@ -199,3 +199,4 @@ export const createSyntheticScfFixture = (): ScfDataset => ({
     }
   ]
 });
+

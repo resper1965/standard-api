@@ -3,7 +3,7 @@ import {
   AgentRunResponseSchema,
   AgentRuntimeContextSchema,
   AgentToolInvocationResponseSchema
-} from "@aegis/schemas";
+} from "@standard/schemas";
 import { AGENT_TOOL_CONTRACTS, FUNCTIONAL_AGENT_CONTRACTS } from "./contracts";
 import { AgentRuntimeError } from "./errors";
 import { AgentGuardrailService } from "./guardrails";
@@ -147,3 +147,4 @@ export class AgentRuntimeService {
     return failed;
   }
 }
+

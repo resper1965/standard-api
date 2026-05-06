@@ -1,18 +1,18 @@
 /**
- * @module @aegis/auth/client
- * @description Auth client for the Aegis web frontend (React).
+ * @module @standard/auth/client
+ * @description Auth client for the Standard web frontend (React).
  *
  * Usage in apps/web:
  * ```ts
- * import { createAegisAuthClient } from "@aegis/auth/client";
- * const authClient = createAegisAuthClient("http://localhost:8787");
+ * import { createStandardAuthClient } from "@standard/auth/client";
+ * const authClient = createStandardAuthClient("http://localhost:8787");
  * const { data } = authClient.useSession();
  * ```
  */
 import { createAuthClient } from "better-auth/react";
 import { organizationClient, adminClient } from "better-auth/client/plugins";
 
-export const createAegisAuthClient = (baseURL: string) =>
+export const createStandardAuthClient = (baseURL: string) =>
   createAuthClient({
     baseURL,
     plugins: [
@@ -21,4 +21,5 @@ export const createAegisAuthClient = (baseURL: string) =>
     ],
   });
 
-export type AegisAuthClient = ReturnType<typeof createAegisAuthClient>;
+export type StandardAuthClient = ReturnType<typeof createStandardAuthClient>;
+

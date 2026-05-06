@@ -26,7 +26,7 @@ const cases = [
     id: assessmentId,
     tenantId,
     organizationId,
-    name: "Synthetic Aegis assessment",
+    name: "Synthetic Standard assessment",
     state: "draft",
     scfVersionId,
     traceId
@@ -64,7 +64,7 @@ const cases = [
     assessmentId,
     kbEntryId: "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
     vectorProvider: "cloudflare_vectorize",
-    vectorIndexName: "aegis-synthetic-index",
+    vectorIndexName: "standard-synthetic-index",
     vectorId: "vec_synthetic_001"
   }),
   ScfMappingSchema.safeParse({
@@ -81,7 +81,7 @@ const cases = [
     tenantId,
     organizationId,
     assessmentId,
-    agentName: "aegis-gap-analyst",
+    agentName: "standard-gap-analyst",
     agentVersion: "0.1.0",
     promptVersion: "synthetic-v1",
     inputHash: "sha256:synthetic-input-hash",
@@ -170,3 +170,4 @@ if (failed.length > 0) {
 }
 
 console.log("Schema validation smoke test passed");
+

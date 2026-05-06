@@ -1,6 +1,6 @@
 import { eq, and } from "drizzle-orm";
-import { assessmentEvents } from "@aegis/schemas";
-import type { AssessmentLifecycleEvent } from "@aegis/assessment-engine";
+import { assessmentEvents } from "@standard/schemas";
+import type { AssessmentLifecycleEvent } from "@standard/assessment-engine";
 import type { LifecycleEventRepositoryAdapter } from "../http";
 import type { DbClient } from "./db";
 
@@ -58,3 +58,4 @@ export const createDrizzleLifecycleEventRepository = (db: DbClient): LifecycleEv
     }
   };
 };
+

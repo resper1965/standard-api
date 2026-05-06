@@ -1,9 +1,9 @@
 export const openApiSpec = {
   openapi: "3.1.0",
   info: {
-    title: "Aegis API Standard",
+    title: "Standard API Standard",
     version: "0.1.0",
-    description: "Initial API-first contracts for the Aegis SCF-Based Assessment Lifecycle."
+    description: "Initial API-first contracts for the Standard SCF-Based Assessment Lifecycle."
   },
   servers: [
     { url: "http://localhost:8787", description: "Local Wrangler API" },
@@ -46,3 +46,4 @@ export const openApiSpec = {
     "/api/v1/scf/versions": { get: { summary: "List SCF versions placeholder" } }
   }
 } as const;
+

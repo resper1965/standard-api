@@ -1,4 +1,4 @@
-import type { ReportVersionResponse } from "@aegis/schemas";
+import type { ReportVersionResponse } from "@standard/schemas";
 import { assertActor, assertContext, ReportingWorkflowError } from "../errors";
 import type { CreateReportDraftOptions, ReportType, ReportingContext, ReportingDependencies } from "../types";
 import { resolveReportSources } from "./source-resolution";
@@ -21,7 +21,7 @@ export class ReportDraftService {
       version_number: versionNumber,
       status: "draft",
       report_type: reportType,
-      title: options.title ?? "Synthetic Aegis Assessment Report",
+      title: options.title ?? "Synthetic Standard Assessment Report",
       ...(sources.sourceSoa?.source_scope_id ? { source_scope_id: sources.sourceSoa.source_scope_id } : {}),
       ...(sources.sourceSoa ? { source_soa_version_id: sources.sourceSoa.soa_version_id } : {}),
       ...(sources.sourceGap ? { source_gap_analysis_version_id: sources.sourceGap.gap_analysis_version_id } : {}),
@@ -64,3 +64,4 @@ export class ReportDraftService {
     return this.deps.repositories.versions.listByAssessment(assessmentId, context.tenantId);
   }
 }
+

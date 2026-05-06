@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-O Knowledge Base Service é a camada de recuperação de evidências documentais do Aegis. Ele conecta chunks gerados pelo pipeline de ingestão a embeddings e referências vetoriais, permitindo busca semântica e híbrida por assessment.
+O Knowledge Base Service é a camada de recuperação de evidências documentais do Standard. Ele conecta chunks gerados pelo pipeline de ingestão a embeddings e referências vetoriais, permitindo busca semântica e híbrida por assessment.
 
 A KB retorna evidências candidatas. Ela ajuda futuros agentes e serviços a encontrar material relevante, mas não decide conformidade, maturidade, escopo, SoA ou mapping oficial.
 
@@ -10,7 +10,7 @@ A KB retorna evidências candidatas. Ela ajuda futuros agentes e serviços a enc
 
 - SCF estruturado: fonte normativa versionada para controles, frameworks, requirements, mappings e STRM.
 - KB: evidências do cliente derivadas de documentos e operações do assessment.
-- RAG: padrão de recuperação e composição de contexto; no Aegis ele deve sempre declarar fonte, limitação e nível de confiança.
+- RAG: padrão de recuperação e composição de contexto; no Standard ele deve sempre declarar fonte, limitação e nível de confiança.
 
 Vector search não é fonte normativa. Um resultado vetorial alto significa apenas que um chunk parece semanticamente relacionado à consulta.
 
@@ -81,7 +81,7 @@ Em produção, o `wrangler.toml` deve declarar o binding Vectorize, por exemplo:
 ```toml
 [[vectorize]]
 binding = "KNOWLEDGE_BASE_INDEX"
-index_name = "aegis-kb"
+index_name = "standard-kb"
 ```
 
 ## Integração Com Document Ingestion
@@ -172,3 +172,4 @@ Eventos auditáveis previstos:
 - Definir política de reembedding por mudança de `text_hash` e versão de modelo.
 - Implementar adapters PostgreSQL para jobs, search logs e vector references.
 - Definir avaliação de qualidade de recuperação separada dos agentes LLM.
+

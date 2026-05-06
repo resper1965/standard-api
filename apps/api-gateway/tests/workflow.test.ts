@@ -9,7 +9,7 @@ test("workflow start exige tenant context", async () => {
     requested_by: ids.actorId,
     idempotency_key: "workflow-start-api-0001"
   }, {
-    "x-aegis-actor-id": ids.actorId
+    "x-standard-actor-id": ids.actorId
   });
 
   expect(result.response.status).toBe(400);
@@ -19,8 +19,8 @@ test("workflow start cria execução e bloqueia duplicado ativo", async () => {
   const client = createTestClient();
   const created = await client.createAssessment(1);
   const headers = {
-    "x-aegis-tenant-id": created.tenantId,
-    "x-aegis-actor-id": ids.actorId
+    "x-standard-tenant-id": created.tenantId,
+    "x-standard-actor-id": ids.actorId
   };
 
   const start = await client.send(`/api/v1/assessments/${created.assessmentId}/workflows/lifecycle/start`, "POST", {
@@ -44,8 +44,8 @@ test("workflow signal framework-selected avança para wait de SoA e approval inv
   const client = createTestClient();
   const created = await client.createAssessment(1);
   const headers = {
-    "x-aegis-tenant-id": created.tenantId,
-    "x-aegis-actor-id": ids.actorId
+    "x-standard-tenant-id": created.tenantId,
+    "x-standard-actor-id": ids.actorId
   };
 
   const start = await client.send(`/api/v1/assessments/${created.assessmentId}/workflows/lifecycle/start`, "POST", {
@@ -81,8 +81,8 @@ test("workflow aceita approval_event válido e permite cancelamento", async () =
   const client = createTestClient();
   const created = await client.createAssessment(1);
   const headers = {
-    "x-aegis-tenant-id": created.tenantId,
-    "x-aegis-actor-id": ids.actorId
+    "x-standard-tenant-id": created.tenantId,
+    "x-standard-actor-id": ids.actorId
   };
 
   const start = await client.send(`/api/v1/assessments/${created.assessmentId}/workflows/lifecycle/start`, "POST", {
@@ -126,3 +126,4 @@ test("workflow aceita approval_event válido e permite cancelamento", async () =
   expect(cancel.response.status).toBe(200);
   expect(cancel.body.status).toBe("cancelled");
 });
+

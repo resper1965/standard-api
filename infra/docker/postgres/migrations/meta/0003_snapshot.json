@@ -7017,7 +7017,7 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "default": "'Aegis Assessment Report'"
+          "default": "'Standard Assessment Report'"
         },
         "status": {
           "name": "status",

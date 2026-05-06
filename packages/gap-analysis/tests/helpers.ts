@@ -1,6 +1,6 @@
-import { KbIndexingService, processKbEmbeddingJob } from "@aegis/kb";
-import { SYNTHETIC_FRAMEWORK_ID, SYNTHETIC_SCF_VERSION_ID } from "@aegis/scf-core";
-import { SoaApprovalService, SoaDraftService, SoaReviewService, createInMemorySoaDependencies } from "@aegis/soa";
+import { KbIndexingService, processKbEmbeddingJob } from "@standard/kb";
+import { SYNTHETIC_FRAMEWORK_ID, SYNTHETIC_SCF_VERSION_ID } from "@standard/scf-core";
+import { SoaApprovalService, SoaDraftService, SoaReviewService, createInMemorySoaDependencies } from "@standard/soa";
 import { createInMemoryGapAnalysisDependencies } from "../src/index";
 import { createKbFixture, ids as kbIds } from "../../kb/tests/helpers";
 
@@ -54,3 +54,4 @@ export const createApprovedSoaFixture = async (withKbEvidence = false) => {
   const gap = createInMemoryGapAnalysisDependencies({ kb, soa });
   return { kb, soa, gap, approvedSoa: approved };
 };
+

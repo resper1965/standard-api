@@ -23,7 +23,7 @@ const context = {
   actor_id: actorId
 };
 
-test("registry exposes the functional Aegis agents with least-privilege tools", () => {
+test("registry exposes the functional Standard agents with least-privilege tools", () => {
   expect(FUNCTIONAL_AGENT_CONTRACTS.length).toBe(9);
   const knowledgeSteward = FUNCTIONAL_AGENT_CONTRACTS.find((agent) => agent.agent_id === "knowledge_steward");
   expect(knowledgeSteward).toBeDefined();
@@ -157,3 +157,4 @@ test("completed agent output must declare assumptions, limitations, sources and 
   expect(completed.output_hash?.startsWith("sha256:")).toBe(true);
   expect(completed.confidence_score).toBe(0.74);
 });
+

@@ -52,7 +52,7 @@ Não atualizar para mascarar regressão.
 ## Investigar Falha de Tenant Isolation
 
 1. Identifique tenant do request, body e recurso.
-2. Verifique `x-aegis-tenant-id`.
+2. Verifique `x-standard-tenant-id`.
 3. Verifique filtros de repository/service.
 4. Procure security events `tenant_context_mismatch` ou `cross_tenant_access_blocked`.
 5. Adicione teste negativo antes de corrigir.
@@ -97,3 +97,4 @@ Cloudflare real e LLM real ficam fora do CI principal. Use somente com fixtures 
 - Golden outputs revisados.
 - Runbook atualizado.
 - Testes opcionais Cloudflare executados em staging quando aplicável.
+

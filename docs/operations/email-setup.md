@@ -1,4 +1,4 @@
-# Cloudflare Email Service — Aegis Setup Guide
+# Cloudflare Email Service — Standard Setup Guide
 
 > **Service Status:** Beta  
 > **Domain:** `bekaa.eu`  
@@ -80,7 +80,7 @@ npx wrangler deploy --env production
 Send a test email via the API:
 
 ```bash
-curl -X POST https://aegis-api.bekaa.eu/api/v1/email/test \
+curl -X POST https://standard-api.bekaa.eu/api/v1/email/test \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <your-session-token>" \
   -d '{
@@ -181,3 +181,4 @@ Expected response:
 ### `E_RECIPIENT_SUPPRESSED`
 - Recipient has bounced or complained previously
 - Review suppression list in Dashboard
+

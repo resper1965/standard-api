@@ -1,4 +1,4 @@
-import { CreateOrganizationRequestSchema } from "@aegis/schemas";
+import { CreateOrganizationRequestSchema } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";
 import { json, parseJson, routeParam } from "../http";
@@ -40,3 +40,4 @@ export const organizationsRoutes: RouteDefinition[] = [
     }
   }
 ];
+

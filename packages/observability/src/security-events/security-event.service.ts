@@ -1,4 +1,4 @@
-import { SecurityEventRecordSchema, type AuditOutcome, type SecurityEventRecord, type SecurityEventType, type SecuritySeverity } from "@aegis/schemas";
+import { SecurityEventRecordSchema, type AuditOutcome, type SecurityEventRecord, type SecurityEventType, type SecuritySeverity } from "@standard/schemas";
 import { assertMetadataSafe } from "../logger/redaction";
 import type { ObservabilityDependencies } from "../repositories";
 
@@ -33,3 +33,4 @@ export class SecurityEventService {
     }));
   }
 }
+

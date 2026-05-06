@@ -1,4 +1,4 @@
-import type { DocumentIngestionJobMessage, VectorReferenceResponse } from "@aegis/schemas";
+import type { DocumentIngestionJobMessage, VectorReferenceResponse } from "@standard/schemas";
 import { chunkExtractedDocument } from "./chunker";
 import { getExtension } from "./filename";
 import type { DocumentIngestionServiceDependencies } from "./types";
@@ -77,6 +77,21 @@ export const processDocumentIngestionJob = async (
       created_at: nowFactory()
     }));
     await deps.repositories.vectorReferences.saveVectorReferences(references);
+    
+    // Dispatch embedding jobs for each chunk
+    for (const chunk of chunks) {
+      await deps.queue.enqueueKbEmbeddingJob({
+        job_id: idFactory(),
+        tenant_id: message.tenant_id,
+        organization_id: message.organization_id,
+        assessment_id: message.assessment_id,
+        document_id: message.document_id,
+        chunk_id: chunk.chunk_id,
+        vector_reference_id: references.find(r => r.chunk_id === chunk.chunk_id)!.vector_reference_id,
+        job_type: "kb_embedding"
+      });
+    }
+
     await deps.repositories.documents.updateDocument({ ...document, status: "queued_for_embedding" });
     await deps.repositories.jobs.updateJob({ ...job, status: "succeeded", attempt_count: job.attempt_count + 1, started_at: now, completed_at: nowFactory() });
     await deps.repositories.audit.record("document_chunking_completed", {
@@ -112,3 +127,4 @@ export const processDocumentIngestionJob = async (
     });
   }
 };
+

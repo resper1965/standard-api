@@ -1,5 +1,5 @@
-import type { DocumentChunk } from "@aegis/document-ingestion";
-import type { DocumentResponse } from "@aegis/schemas";
+import type { DocumentChunk } from "@standard/document-ingestion";
+import type { DocumentResponse } from "@standard/schemas";
 import { CANDIDATE_EVIDENCE_WARNING, DEFAULT_SNIPPET_LENGTH, MAX_TOP_K } from "../constants";
 import { sha256Hex } from "../hash";
 import type { KbRequestContext, KbSearchRequest, KbSearchResponse, KbSearchResult, KbServiceDependencies, VectorSearchResult } from "../types";
@@ -121,3 +121,4 @@ export class KbSearchService {
     return true;
   }
 }
+

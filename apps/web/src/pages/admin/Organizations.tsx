@@ -27,12 +27,13 @@ export function AdminOrganizations() {
     try {
       // In a real better-auth setup, there is an admin plugin or organization plugin endpoint.
       // Mocking fetch as we don't have the exact list-all endpoint documented here
-      const res = await api<{ data: Organization[] }>("/api/auth/organization/list", {
+      const res = await api<any>("/api/auth/organization/list", {
         method: "GET"
-      }).catch(() => ({ data: [
+      }).catch(() => [
         { id: "org_default", name: "Default Org", slug: "default", createdAt: new Date() }
-      ]})); // Fallback mock
-      setOrgs(res.data);
+      ]); // Fallback mock
+      const dataArray = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : []);
+      setOrgs(dataArray);
     } catch (e: any) {
       setError(e.message || "Failed to fetch organizations");
     } finally {

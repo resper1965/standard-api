@@ -1,5 +1,5 @@
 {
-  "name": "@aegis/kb",
+  "name": "@standard/kb",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -10,11 +10,12 @@
     "test": "tsx tests/run-tests.ts"
   },
   "dependencies": {
-    "@aegis/document-ingestion": "workspace:*",
-    "@aegis/schemas": "workspace:*"
+    "@standard/document-ingestion": "workspace:*",
+    "@standard/schemas": "workspace:*"
   },
   "devDependencies": {
     "tsx": "^4.21.0",
     "typescript": "latest"
   }
 }
+

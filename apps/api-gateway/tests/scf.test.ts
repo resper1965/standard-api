@@ -1,4 +1,4 @@
-import { SYNTHETIC_FRAMEWORK_ID, SYNTHETIC_GOV_001_CONTROL_ID, SYNTHETIC_REQ_1_1_ID, SYNTHETIC_SCF_VERSION_ID } from "@aegis/scf-core";
+import { SYNTHETIC_FRAMEWORK_ID, SYNTHETIC_GOV_001_CONTROL_ID, SYNTHETIC_REQ_1_1_ID, SYNTHETIC_SCF_VERSION_ID } from "@standard/scf-core";
 import { createTestClient, ids } from "./helpers";
 import { expect, test } from "./test-kit";
 
@@ -50,8 +50,9 @@ test("SCF admin import endpoint requires actor and records failed run safely", a
     "/api/v1/admin/scf/import-runs",
     "POST",
     { source_type: "csv", content: "record_type\ncontrol" },
-    { "x-aegis-actor-id": ids.actorId, authorization: "Bearer dev:platform_admin" }
+    { "x-standard-actor-id": ids.actorId, authorization: "Bearer dev:platform_admin" }
   );
   expect(failed.response.status).toBe(400);
   expect(failed.body.import_run.status).toBe("failed");
 });
+

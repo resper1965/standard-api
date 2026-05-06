@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 import postgres from "postgres";
 import { drizzle } from "drizzle-orm/postgres-js";
 import * as schema from "./packages/schemas/src/db/schema";
-import { AegisScfRepository } from "./packages/scf-core/src/db/repository";
+import { StandardScfRepository } from "./packages/scf-core/src/db/repository";
 import { ScfImportService } from "./packages/scf-core/src/services/import-service";
 
 async function run() {
@@ -28,7 +28,7 @@ async function run() {
     publishEvent: async () => { },
   };
 
-  const repo = new AegisScfRepository(ctx);
+  const repo = new StandardScfRepository(ctx);
   const importer = new ScfImportService(ctx, repo);
 
   const csvPath = resolve(process.cwd(), "evals", "fixtures", "scf-2024.4-seed.csv");
@@ -57,3 +57,4 @@ async function run() {
 }
 
 run().catch(console.error);
+

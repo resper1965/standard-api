@@ -13,7 +13,7 @@
 ### Task 1: Construir `roadmap-to-production.md`
 
 **Files:**
-- Create: `c:/Users/resper/OneDrive/Área de Trabalho/aegis-api/docs/releases/roadmap-to-production.md`
+- Create: `c:/Users/resper/OneDrive/Área de Trabalho/standard-api/docs/releases/roadmap-to-production.md`
 
 - [ ] **Step 1: Sintetizar as pendências sob categorização**
 Usar `write_to_file` para criar o roadmap épico agrupando Auth, DB, Maturity, Rate Limiting, e Governança num documento só seguindo o formato listado na Spec `2026-04-29-roadmap-master-design.md`.
@@ -21,9 +21,9 @@ Usar `write_to_file` para criar o roadmap épico agrupando Auth, DB, Maturity, R
 ### Task 2: Modificações de Controle em Arquivos Base
 
 **Files:**
-- Modify: `c:/Users/resper/OneDrive/Área de Trabalho/aegis-api/docs/releases/mvp-release-candidate-checklist.md`
-- Delete: `c:/Users/resper/OneDrive/Área de Trabalho/aegis-api/docs/architecture/backlog.md`
-- Delete: `c:/Users/resper/OneDrive/Área de Trabalho/aegis-api/docs/context/pendencias.md`
+- Modify: `c:/Users/resper/OneDrive/Área de Trabalho/standard-api/docs/releases/mvp-release-candidate-checklist.md`
+- Delete: `c:/Users/resper/OneDrive/Área de Trabalho/standard-api/docs/architecture/backlog.md`
+- Delete: `c:/Users/resper/OneDrive/Área de Trabalho/standard-api/docs/context/pendencias.md`
 
 - [ ] **Step 1: Inserir tag deprecated no Release Candidate Checklist**
 Utilizar `replace_file_content` para inserir aviso no topo informando que as pendências agora rodam pelo Roadmap Master.
@@ -36,3 +36,4 @@ git add docs/superpowers/
 git add docs/releases/
 git commit -m "docs(roadmap): consolidar backlog de mvp e pendencias legadas em roadmap global unificado de producao"
 ```
+

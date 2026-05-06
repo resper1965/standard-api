@@ -1,18 +1,22 @@
 /**
- * @module aegis-queues
+ * @module standard-queues
  * @description Cloudflare Queues worker for asynchronous job processing.
  * Routes messages from multiple queues to appropriate consumers.
  * Supports: kb-embedding, report-export, document-ingestion.
  */
 import { processKbEmbeddingQueueMessage } from "./kb-embedding.consumer";
+import { processAgentRunQueueMessage } from "./agent-run.consumer";
 
 export interface Env {
-  AEGIS_DOCUMENTS_BUCKET: R2Bucket;
-  AEGIS_REPORTS_BUCKET?: R2Bucket;
-  AEGIS_EXPORTS_BUCKET?: R2Bucket;
-  AEGIS_KB_INDEX: VectorizeIndex;
+  STANDARD_DOCUMENTS_BUCKET: R2Bucket;
+  STANDARD_REPORTS_BUCKET?: R2Bucket;
+  STANDARD_EXPORTS_BUCKET?: R2Bucket;
+  STANDARD_KB_INDEX: VectorizeIndex;
   DATABASE_URL?: string;
-  AEGIS_ENV?: string;
+  STANDARD_ENV?: string;
+  AI: any;
+  OPENAI_API_KEY?: string;
+  AI_GATEWAY_BASE_URL?: string;
 }
 
 type QueueMessageBody = {
@@ -29,7 +33,11 @@ export default {
 
         switch (queueType) {
           case "kb_embedding":
-            await processKbEmbeddingQueueMessage(message.body);
+            await processKbEmbeddingQueueMessage(message.body, env);
+            break;
+
+          case "agent_run":
+            await processAgentRunQueueMessage(message.body, env);
             break;
 
           case "report_export":
@@ -56,9 +64,9 @@ export default {
 
   async fetch(): Promise<Response> {
     return Response.json({
-      service: "aegis-queues",
+      service: "standard-queues",
       version: "1.0.0",
-      queues: ["aegis-kb-embedding", "aegis-report-export"],
+      queues: ["standard-kb-embedding", "standard-report-export", "standard-agent-run"],
       status: "operational"
     });
   }
@@ -71,5 +79,7 @@ function detectQueueType(queueName: string, body: QueueMessageBody): string {
   if (queueName.includes("kb-embedding") || body?.job_type === "kb_embedding") return "kb_embedding";
   if (queueName.includes("report-export") || body?.job_type === "report_export") return "report_export";
   if (queueName.includes("document-ingestion") || body?.job_type === "document_ingestion") return "document_ingestion";
+  if (queueName.includes("agent-run") || body?.job_type === "agent_run") return "agent_run";
   return "unknown";
 }
+

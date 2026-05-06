@@ -6,7 +6,7 @@ Aceita inicialmente.
 
 ## Contexto
 
-O Aegis precisa ser API-first, reutilizável e capaz de executar um lifecycle durável de assessment. A UI não deve conter a lógica central. O SCF estruturado deve permanecer como fonte normativa, enquanto busca vetorial e LLMs funcionam como apoio.
+O Standard precisa ser API-first, reutilizável e capaz de executar um lifecycle durável de assessment. A UI não deve conter a lógica central. O SCF estruturado deve permanecer como fonte normativa, enquanto busca vetorial e LLMs funcionam como apoio.
 
 ## Decisão
 
@@ -27,3 +27,4 @@ O Aegis precisa ser API-first, reutilizável e capaz de executar um lifecycle du
 - Estados e aprovações humanas ficam rastreáveis.
 - A solução depende de boa disciplina de idempotência em Workflows e Queues.
 - Dados normativos do SCF exigem versionamento formal.
+

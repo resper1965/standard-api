@@ -2,9 +2,9 @@
 
 ## 1. Definição
 
-O **Agent Evaluation & Safety Framework** é o conjunto de mecanismos que garantem que os agentes do Aegis produzam outputs corretos, respeitem guardrails, não introduzam riscos e não degradem ao longo do tempo.
+O **Agent Evaluation & Safety Framework** é o conjunto de mecanismos que garantem que os agentes do Standard produzam outputs corretos, respeitem guardrails, não introduzam riscos e não degradem ao longo do tempo.
 
-Ele existe para validar comportamento agentic antes de produção, durante mudanças de prompt/modelo/schema e ao longo da evolução do Aegis SCF Agentic Assessment Model.
+Ele existe para validar comportamento agentic antes de produção, durante mudanças de prompt/modelo/schema e ao longo da evolução do Standard SCF Agentic Assessment Model.
 
 Objetivos:
 
@@ -726,3 +726,4 @@ Definition of done para implementação futura:
 - human review sampling;
 - alertas de degradação;
 - política formal para atualização de golden outputs.
+

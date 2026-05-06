@@ -1,5 +1,5 @@
 import { eq, and } from "drizzle-orm";
-import { organizations } from "@aegis/schemas";
+import { organizations } from "@standard/schemas";
 import type { OrganizationRecord, OrganizationRepositoryAdapter } from "../http";
 import type { DbClient } from "./db";
 import { newId } from "../http";
@@ -67,3 +67,4 @@ export const createDrizzleOrganizationRepository = (db: DbClient): OrganizationR
     }
   };
 };
+

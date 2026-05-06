@@ -2,7 +2,7 @@
 
 ## Escopo da Revisão
 
-Esta revisão cobre o MVP do `aegis-api-standard` para staging controlado com dados sintéticos. O foco é validar guardrails mínimos antes de deploy interno: autenticação, autorização, tenant isolation, approval gates, upload security, prompt injection defenses, secure logging, auditability, CI e proteção de deploy.
+Esta revisão cobre o MVP do `standard-api-standard` para staging controlado com dados sintéticos. O foco é validar guardrails mínimos antes de deploy interno: autenticação, autorização, tenant isolation, approval gates, upload security, prompt injection defenses, secure logging, auditability, CI e proteção de deploy.
 
 Fora do escopo:
 
@@ -120,3 +120,4 @@ Ameaças principais:
 ## Conclusão
 
 O MVP é aceitável para staging controlado com dados sintéticos, desde que o ambiente esteja protegido e sem exposição pública ampla. Não é production-ready para dados reais de cliente. Qualquer tentativa de uso com dados reais deve ser classificada como No-Go até auth real, persistência auditável, rate limiting, backup/restore e controles operacionais estarem concluídos.
+

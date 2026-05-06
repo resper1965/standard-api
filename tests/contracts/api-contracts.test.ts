@@ -19,9 +19,10 @@ test("audit endpoint is versioned and protected by audit:read", async () => {
   const client = createTestClient();
   const created = await client.createAssessment(1);
   const denied = await client.send(`/api/v1/assessments/${created.assessmentId}/audit-logs`, "GET", undefined, {
-    "x-aegis-tenant-id": created.tenantId,
-    "x-aegis-actor-id": ids.actorId,
+    "x-standard-tenant-id": created.tenantId,
+    "x-standard-actor-id": ids.actorId,
     authorization: "Bearer dev:assessor"
   });
   expect(denied.response.status).toBe(403);
 });
+

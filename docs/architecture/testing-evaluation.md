@@ -2,7 +2,7 @@
 
 ## Estratégia Geral
 
-O Aegis usa testes automatizados, evals determinísticos e golden datasets sintéticos para validar o lifecycle sem dados reais, sem LLM real e sem recursos Cloudflare reais no caminho padrão.
+O Standard usa testes automatizados, evals determinísticos e golden datasets sintéticos para validar o lifecycle sem dados reais, sem LLM real e sem recursos Cloudflare reais no caminho padrão.
 
 ## Pirâmide de Testes
 
@@ -186,3 +186,4 @@ Testes devem falhar se:
 - Persistência histórica de métricas de eval.
 - Política de aprovação para atualizar golden outputs.
 - Test matrix por ambiente Cloudflare.
+

@@ -1,18 +1,18 @@
 /**
- * @module @aegis/email
+ * @module @standard/email
  *
- * Aegis transactional email package.
+ * Standard transactional email package.
  * Uses Cloudflare Email Service Workers binding for native email sending.
  *
  * Usage:
  * ```ts
- * import { sendAegisEmail } from "@aegis/email";
+ * import { sendStandardEmail } from "@standard/email";
  *
- * const result = await sendAegisEmail(env.EMAIL, {
+ * const result = await sendStandardEmail(env.EMAIL, {
  *   type: "welcome",
  *   to: "user@example.com",
  *   firstName: "Alice",
- *   dashboardUrl: "https://apiaegis.bekaa.eu/dashboard"
+ *   dashboardUrl: "https://apistandard.bekaa.eu/dashboard"
  * }, { domain: "bekaa.eu" });
  * ```
  */
@@ -24,20 +24,20 @@ export type {
   EmailAttachment,
   EmailSendResult,
   CloudflareEmailErrorCode,
-  AegisEmailType,
-  AegisEmailBase,
+  StandardEmailType,
+  StandardEmailBase,
   WelcomeEmailPayload,
   VerificationEmailPayload,
   ApprovalRequestEmailPayload,
   StateChangeEmailPayload,
   ReportReadyEmailPayload,
   SecurityAlertEmailPayload,
-  AegisEmailPayload,
-  AegisEmailResult,
-  AegisEmailOptions,
+  StandardEmailPayload,
+  StandardEmailResult,
+  StandardEmailOptions,
 } from "./types";
 
-export { AegisEmailError } from "./types";
+export { StandardEmailError } from "./types";
 
 // Templates
 export {
@@ -53,4 +53,5 @@ export {
 export type { RenderedEmail } from "./templates";
 
 // Send
-export { sendAegisEmail, describeEmailError } from "./send";
+export { sendStandardEmail, describeEmailError } from "./send";
+

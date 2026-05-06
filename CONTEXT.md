@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-O `aegis-api-standard` é a implementação API-first padrão do Aegis SCF-Based Assessment Lifecycle. O repositório concentra backend reutilizável, contratos, schemas, workflows, workers, assessment engine, SCF data layer, Knowledge Base, agent runtime, segurança, observabilidade, testes e documentação operacional.
+O `standard-api-standard` é a implementação API-first padrão do Standard SCF-Based Assessment Lifecycle. O repositório concentra backend reutilizável, contratos, schemas, workflows, workers, assessment engine, SCF data layer, Knowledge Base, agent runtime, segurança, observabilidade, testes e documentação operacional.
 
 ## Princípios de Desenvolvimento
 
@@ -37,7 +37,7 @@ Contexto importante não deve ficar apenas em chat, terminal local, memória de 
 
 ## Superpowers e Google Antigravity no Processo
 
-O Superpowers é o SDLC operacional para tarefas relevantes, mas não substitui as regras do Aegis.
+O Superpowers é o SDLC operacional para tarefas relevantes, mas não substitui as regras do Standard.
 
 Ao utilizar o **Google Antigravity**, o processo de planejamento nativo do agente (Planning Mode) atua como camada extra de garantia:
 1. **Contexto Ativo**: O agente deve obrigatoriamente validar `CONTEXT.md` e `AGENTS.md` como base fundamental antes de propor tarefas.
@@ -47,7 +47,7 @@ Ao utilizar o **Google Antigravity**, o processo de planejamento nativo do agent
 Precedência:
 
 ```text
-AGENTS.md + CONTEXT.md + regras Aegis
+AGENTS.md + CONTEXT.md + regras Standard
 >
 Superpowers
 >
@@ -72,3 +72,4 @@ Toda alteração relevante deve considerar atualização de contexto. Exemplos:
 - risco aceito.
 
 Se não houver mudança de contexto, o PR deve explicar isso explicitamente usando o marcador `[no-context-change]`.
+

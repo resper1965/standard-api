@@ -64,10 +64,10 @@ Antes do primeiro deploy, provisione os recursos Cloudflare:
 node scripts/provision-cloudflare.mjs production
 
 # 2. Criar o índice Vectorize (somente na primeira execução)
-npx wrangler vectorize create aegis-kb-prod --dimensions=1536 --metric=cosine
+npx wrangler vectorize create standard-kb-prod --dimensions=1536 --metric=cosine
 
 # 3. Criar a Dead Letter Queue (somente na primeira execução)
-npx wrangler queues create aegis-dead-letter-prod
+npx wrangler queues create standard-dead-letter-prod
 
 # 4. Injetar secrets nos Workers
 node scripts/put-secrets.mjs
@@ -109,3 +109,4 @@ Checklist de prontidão: `docs/operations/production-readiness-checklist.md`.
 - Queue acumulando backlog: verifique consumer, DLQ e retries.
 - R2 403: revisar permissões do token e nome do bucket por ambiente.
 - Vectorize indisponível: voltar para adapters/mock locais apenas em local/dev, nunca mascarar falha de production.
+

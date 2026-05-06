@@ -13,12 +13,13 @@ export const healthRoutes: RouteDefinition[] = [
       } catch (error) {
         dbStatus = "disconnected";
       }
-      return json({ ok: true, service: "aegis-api-standard", database: dbStatus, trace_id: traceId });
+      return json({ ok: true, service: "standard-api-standard", database: dbStatus, trace_id: traceId });
     }
   },
   {
     method: "GET",
     path: "/api/v1/health",
-    handler: ({ traceId }) => json({ ok: true, service: "aegis-api-standard", trace_id: traceId })
+    handler: ({ traceId }) => json({ ok: true, service: "standard-api-standard", trace_id: traceId })
   }
 ];
+

@@ -17,22 +17,11 @@ export class ScfControlService {
   }
 
   async searchControls(query: ScfControlSearchQuery): Promise<ScfControl[]> {
-    const versionId = query.scf_version_id ?? (await this.repository.getLatestVersion())?.id;
-    if (!versionId) return [];
-
-    let controls = await this.repository.listControls(versionId);
-    if (query.control_code) {
-      controls = controls.filter((control) => control.control_code.toLowerCase().includes(query.control_code!.toLowerCase()));
+    if (!query.scf_version_id) {
+      query.scf_version_id = (await this.repository.getLatestVersion())?.id;
     }
-    if (query.domain_code) {
-      const domains = await this.repository.listDomains(versionId);
-      const domainIds = new Set(domains.filter((domain) => domain.domain_code.toLowerCase() === query.domain_code!.toLowerCase()).map((domain) => domain.id));
-      controls = controls.filter((control) => domainIds.has(control.scf_domain_id));
-    }
-    if (query.q) {
-      const q = query.q.toLowerCase();
-      controls = controls.filter((control) => `${control.control_code} ${control.control_title} ${control.control_description ?? ""}`.toLowerCase().includes(q));
-    }
-    return controls;
+    if (!query.scf_version_id) return [];
+    
+    return this.repository.searchControls(query);
   }
 }

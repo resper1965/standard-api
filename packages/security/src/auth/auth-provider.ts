@@ -1,7 +1,7 @@
-import type { AuthContext, Role } from "@aegis/schemas";
+import type { AuthContext, Role } from "@standard/schemas";
 
 /**
- * @deprecated Use `@aegis/auth` (Better Auth) instead.
+ * @deprecated Use `@standard/auth` (Better Auth) instead.
  * This interface will be removed in v0.3.0.
  */
 export type AuthenticateInput = {
@@ -16,9 +16,10 @@ export type AuthenticateInput = {
 };
 
 /**
- * @deprecated Use `@aegis/auth` (Better Auth) instead.
+ * @deprecated Use `@standard/auth` (Better Auth) instead.
  * This interface will be removed in v0.3.0.
  */
 export type AuthProvider = {
   authenticate(input: AuthenticateInput): Promise<AuthContext | null>;
 };
+

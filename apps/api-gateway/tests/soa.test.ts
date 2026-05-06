@@ -1,4 +1,4 @@
-import { SYNTHETIC_FRAMEWORK_ID, SYNTHETIC_SCF_VERSION_ID } from "@aegis/scf-core";
+import { SYNTHETIC_FRAMEWORK_ID, SYNTHETIC_SCF_VERSION_ID } from "@standard/scf-core";
 import { createTestClient, ids } from "./helpers";
 import { expect, test } from "./test-kit";
 
@@ -12,8 +12,8 @@ const createScope = async () => {
     assumptions: ["Synthetic only"],
     exclusions: []
   }, {
-    "x-aegis-tenant-id": created.tenantId,
-    "x-aegis-actor-id": ids.actorId
+    "x-standard-tenant-id": created.tenantId,
+    "x-standard-actor-id": ids.actorId
   });
   return { client, created, scopeId: scope.body.scope_id as string };
 };
@@ -25,8 +25,8 @@ const createSoaDraft = async () => {
     scf_version_id: SYNTHETIC_SCF_VERSION_ID,
     source_scope_id: setup.scopeId
   }, {
-    "x-aegis-tenant-id": setup.created.tenantId,
-    "x-aegis-actor-id": ids.actorId
+    "x-standard-tenant-id": setup.created.tenantId,
+    "x-standard-actor-id": ids.actorId
   });
   return { ...setup, soaVersionId: draft.body.soa_version_id as string };
 };
@@ -34,7 +34,7 @@ const createSoaDraft = async () => {
 test("POST scope cria escopo draft multi-tenant", async () => {
   const { client, created } = await createScope();
   const scopes = await client.send(`/api/v1/assessments/${created.assessmentId}/scope`, "GET", undefined, {
-    "x-aegis-tenant-id": created.tenantId
+    "x-standard-tenant-id": created.tenantId
   });
   expect(scopes.response.status).toBe(200);
   expect(scopes.body.data.length).toBe(1);
@@ -44,7 +44,7 @@ test("POST scope cria escopo draft multi-tenant", async () => {
 test("POST soa draft cria itens com mapping SCF oficial", async () => {
   const { client, created, soaVersionId } = await createSoaDraft();
   const items = await client.send(`/api/v1/soa/${soaVersionId}/items`, "GET", undefined, {
-    "x-aegis-tenant-id": created.tenantId
+    "x-standard-tenant-id": created.tenantId
   });
   expect(items.response.status).toBe(200);
   expect(items.body.data.length).toBe(2);
@@ -55,13 +55,13 @@ test("POST soa draft cria itens com mapping SCF oficial", async () => {
 test("PATCH SoA item bloqueia not_applicable sem justificativa", async () => {
   const { client, created, soaVersionId } = await createSoaDraft();
   const items = await client.send(`/api/v1/soa/${soaVersionId}/items`, "GET", undefined, {
-    "x-aegis-tenant-id": created.tenantId
+    "x-standard-tenant-id": created.tenantId
   });
   const patched = await client.send(`/api/v1/soa/items/${items.body.data[0].soa_item_id}`, "PATCH", {
     applicability_status: "not_applicable"
   }, {
-    "x-aegis-tenant-id": created.tenantId,
-    "x-aegis-actor-id": ids.actorId
+    "x-standard-tenant-id": created.tenantId,
+    "x-standard-actor-id": ids.actorId
   });
   expect(patched.response.status).toBe(400);
   expect(patched.body.error.code).toBe("NON_APPLICABILITY_RATIONALE_REQUIRED");
@@ -70,8 +70,8 @@ test("PATCH SoA item bloqueia not_applicable sem justificativa", async () => {
 test("Approve SoA exige approval_event humano e bloqueia alteração posterior", async () => {
   const { client, created, soaVersionId } = await createSoaDraft();
   await client.send(`/api/v1/soa/${soaVersionId}/submit-review`, "POST", {}, {
-    "x-aegis-tenant-id": created.tenantId,
-    "x-aegis-actor-id": ids.actorId
+    "x-standard-tenant-id": created.tenantId,
+    "x-standard-actor-id": ids.actorId
   });
   const approval = await client.send(`/api/v1/assessments/${created.assessmentId}/approvals`, "POST", {
     gate: "soa",
@@ -80,27 +80,28 @@ test("Approve SoA exige approval_event humano e bloqueia alteração posterior",
     decision: "approved",
     reason: "Synthetic human approval"
   }, {
-    "x-aegis-tenant-id": created.tenantId,
-    "x-aegis-actor-id": ids.actorId
+    "x-standard-tenant-id": created.tenantId,
+    "x-standard-actor-id": ids.actorId
   });
   const approved = await client.send(`/api/v1/soa/${soaVersionId}/approve`, "POST", {
     approval_event_id: approval.body.approval_id
   }, {
-    "x-aegis-tenant-id": created.tenantId,
-    "x-aegis-actor-id": ids.actorId
+    "x-standard-tenant-id": created.tenantId,
+    "x-standard-actor-id": ids.actorId
   });
   expect(approved.response.status).toBe(200);
   expect(approved.body.status).toBe("approved");
 
   const items = await client.send(`/api/v1/soa/${soaVersionId}/items`, "GET", undefined, {
-    "x-aegis-tenant-id": created.tenantId
+    "x-standard-tenant-id": created.tenantId
   });
   const patched = await client.send(`/api/v1/soa/items/${items.body.data[0].soa_item_id}`, "PATCH", {
     applicability_status: "applicable"
   }, {
-    "x-aegis-tenant-id": created.tenantId,
-    "x-aegis-actor-id": ids.actorId
+    "x-standard-tenant-id": created.tenantId,
+    "x-standard-actor-id": ids.actorId
   });
   expect(patched.response.status).toBe(400);
   expect(patched.body.error.code).toBe("SOA_VERSION_IMMUTABLE");
 });
+

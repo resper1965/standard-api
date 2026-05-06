@@ -11,12 +11,12 @@ import {
   documentExtractionJobs,
   vectorReferences,
   auditLogs,
-} from "@aegis/schemas";
+} from "@standard/schemas";
 import type {
   DocumentResponse,
   DocumentJobResponse,
   VectorReferenceResponse
-} from "@aegis/schemas";
+} from "@standard/schemas";
 import type {
   DocumentRecordRepository,
   DocumentJobRepository,
@@ -25,7 +25,7 @@ import type {
   AuditSink,
   DocumentChunk,
   IngestionRepositories
-} from "@aegis/document-ingestion";
+} from "@standard/document-ingestion";
 import type { DbClient } from "./db";
 
 // ---------- Documents ----------
@@ -85,7 +85,7 @@ const mapDocumentRow = (row: DocumentRow): DocumentResponse => ({
   original_filename: row.originalFilename,
   normalized_filename: row.originalFilename.toLowerCase().replace(/[^a-z0-9._-]/g, "_"),
   storage_provider: row.storageProvider,
-  storage_bucket: "AEGIS_DOCUMENTS_BUCKET",
+  storage_bucket: "STANDARD_DOCUMENTS_BUCKET",
   storage_key: row.storageKey,
   content_hash: row.contentHash,
   mime_type: row.mimeType,
@@ -269,3 +269,4 @@ export const createDrizzleIngestionRepositories = (db: DbClient): IngestionRepos
   vectorReferences: createDrizzleIngestionVectorRefRepository(db),
   audit: createDrizzleIngestionAuditSink(db),
 });
+

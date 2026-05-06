@@ -1,12 +1,12 @@
-# aegis-api-standard
+# standard-api-standard
 
-`aegis-api-standard` é a implementação API-first padrão do Aegis SCF-Based Assessment Lifecycle e do **Aegis SCF Agentic Assessment Model**. O repositório concentra backend reutilizável, contratos, schemas, workflows, workers, assessment engine, SCF data layer, Knowledge Base, artefatos de assessment, agent runtime, segurança, observabilidade e suites de teste/eval.
+`standard-api-standard` é a implementação API-first padrão do Standard SCF-Based Assessment Lifecycle e do **Standard SCF Agentic Assessment Model**. O repositório concentra backend reutilizável, contratos, schemas, workflows, workers, assessment engine, SCF data layer, Knowledge Base, artefatos de assessment, agent runtime, segurança, observabilidade e suites de teste/eval.
 
 O frontend é consumidor da API. Lógica crítica de assessment, tenant isolation, approval gates e guardrails deve permanecer em `packages/*`, `workers/*`, `apps/api-gateway` e contratos compartilhados.
 
-## Aegis SCF Agentic Assessment Model
+## Standard SCF Agentic Assessment Model
 
-O Aegis SCF Agentic Assessment Model é um modelo de IA agêntica para conduzir assessments baseados no Secure Controls Framework, no qual agentes especializados colaboram sob orquestração controlada para ingerir documentos, construir KB, mapear frameworks, gerar SoA, avaliar evidências, produzir Gap Analysis, medir maturidade, gerar POA&M e preparar relatórios, sempre com rastreabilidade, validação de schema, controle de escopo e aprovação humana.
+O Standard SCF Agentic Assessment Model é um modelo de IA agêntica para conduzir assessments baseados no Secure Controls Framework, no qual agentes especializados colaboram sob orquestração controlada para ingerir documentos, construir KB, mapear frameworks, gerar SoA, avaliar evidências, produzir Gap Analysis, medir maturidade, gerar POA&M e preparar relatórios, sempre com rastreabilidade, validação de schema, controle de escopo e aprovação humana.
 
 Comportamento agentic alvo:
 
@@ -27,8 +27,7 @@ Comportamento agentic alvo:
 
 ## Status do Projeto
 
-Status: MVP Release Candidate para staging controlado com dados sintéticos.
-
+Status: Release Candidate do MVP Enterprise-Grade Finalizado (Backend Drizzle/PostgreSQL, Orquestração de Filas e LLM testado e maduro em Cloudflare + Pipeline E2E). Próximo passo: Integração Front-end Real e Plena Configuração Cloudflare Staging/Produção.
 Não use dados reais de clientes no MVP. Não configure secrets reais em arquivos versionados. Production deploy permanece manual e protegido.
 
 Checklist principal: `docs/releases/mvp-release-candidate-checklist.md`.
@@ -48,16 +47,15 @@ Pontos principais:
 
 ## Arquitetura Resumida
 
-- API Gateway: expõe endpoints versionados `/api/v1`, aplica auth/RBAC/tenant guard, valida contratos e integra services.
-- Packages: concentram regras reutilizáveis de domínio, schemas, SCF, KB, SoA, Gap, POA&M, Reporting, Security, Observability e Agent Runtime.
-- Workers: ingestion, queues e workflows para processamento assíncrono e lifecycle durável.
-- Cloudflare-oriented: Workers, Workflows, Queues, R2, Vectorize, AI Gateway e KV são o alvo de deployment, mantendo caminho local testável com mocks/adapters.
-- PostgreSQL externo/gerenciado: fonte transacional crítica futura para tenants, assessments, approvals, artifacts, audit logs e estado persistente.
-
+- API Gateway: expõe endpoints versionados `/api/v1`, aplica Better Auth / RBAC granular, validação estrutural Zod e gerencia integrações de keys de parceiros.
+- Packages: concentram regras fundamentais de domínio, schemas unificados, ciclo SCF normativo, Knowledge Base vectorizada, SoA, Gap, POA&M, Security, Audit Logs e Runtime do LLM Agent.
+- Workers: workers autônomos de ingestão de documentos para R2, filas (Queues) para rate-limits ou webhooks, e a rede resiliente do Cloudflare Workflows para lifecycles complexos.
+- Cloudflare-oriented: Workers, Workflows, Queues, R2, Vectorize (para o bge-base-en), e AI Gateway (anti prompt-injection + rastreio LLM) com persistência atômica no banco externo.
+- PostgreSQL externo/gerenciado: Única fonte crítica da verdade transacional utilizando Drizzle ORM para todos os artefatos gerados, aprovações de humanos, audit logs, execuções do agente e tenancies.
 ## Estrutura do Repositório
 
 ```text
-aegis-api-standard/
+standard-api-standard/
 ├── AGENTS.md
 ├── apps/
 │   ├── web/
@@ -171,7 +169,7 @@ pnpm test:ci
 - `docs/architecture/poam-workflow.md`
 - `docs/architecture/reporting-export-workflow.md`
 - `docs/architecture/agent-runtime-tool-contracts.md`
-- `docs/architecture/aegis-agentic-ai-operating-model.md`
+- `docs/architecture/standard-agentic-ai-operating-model.md`
 - `docs/architecture/orchestrator-agent.md`
 - `docs/architecture/specialist-agents.md`
 - `docs/architecture/tool-registry-and-permissions.md`
@@ -210,7 +208,7 @@ pnpm test:ci
 - `docs/context/glossario.md`
 - `docs/context/convencoes.md`
 - `docs/context/pendencias.md`
-- `docs/agents/aegis-agents.md`
+- `docs/agents/standard-agents.md`
 - `docs/decisions/0001-platform-boundaries.md`
 - `adr/0001-estrutura-base-do-projeto.md`
 - `CONTEXT.md`
@@ -224,3 +222,4 @@ pnpm test:ci
 - Não versionar dados reais, dumps, documentos de cliente, tokens, chaves ou credenciais.
 - KB é fonte de evidências candidatas; SCF estruturado continua fonte normativa.
 - Agentes não aprovam artefatos finais e não inventam mappings oficiais.
+
