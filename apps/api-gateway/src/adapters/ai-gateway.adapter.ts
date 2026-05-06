@@ -9,7 +9,7 @@ import type {
   LlmGenerateOutput,
   LlmMessage,
   LlmTool,
-} from "@aegis/agent-runtime";
+} from "@standard/agent-runtime";
 
 export type AiGatewayConfig = {
   baseUrl: string; // e.g. https://gateway.ai.cloudflare.com/v1/{account_id}/{gateway}/openai
@@ -71,3 +71,4 @@ type OpenAICompletionResponse = {
     total_tokens: number;
   };
 };
+

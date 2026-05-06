@@ -1,8 +1,8 @@
 import { createApp } from "./app";
 import { createDrizzleRepositories, createMockRepositories } from "./adapters";
 import { createDb } from "./adapters/db";
-import { createAuth, type AegisAuth } from "@aegis/auth";
-import type { SendEmail } from "@aegis/email";
+import { createAuth, type StandardAuth } from "@standard/auth";
+import type { SendEmail } from "@standard/email";
 import type { AppDependencies } from "./http";
 
 export interface Env {
@@ -13,28 +13,29 @@ export interface Env {
   GOOGLE_CLIENT_SECRET?: string;
   JWT_JWKS_URL?: string;
   JWT_SECRET?: string;
-  AEGIS_ENV?: string;
+  STANDARD_ENV?: string;
   OPENAI_API_KEY?: string;
   AI_GATEWAY_BASE_URL?: string;
   ASSESSMENT_WORKFLOW?: Workflow;
-  AEGIS_DOCUMENTS_BUCKET: R2Bucket;
-  AEGIS_REPORTS_BUCKET?: R2Bucket;
-  AEGIS_EXPORTS_BUCKET?: R2Bucket;
+  STANDARD_DOCUMENTS_BUCKET: R2Bucket;
+  STANDARD_REPORTS_BUCKET?: R2Bucket;
+  STANDARD_EXPORTS_BUCKET?: R2Bucket;
   DOCUMENT_INGESTION_QUEUE?: Queue;
-  KB_EMBEDDING_QUEUE?: Queue;
-  REPORT_EXPORT_QUEUE?: Queue;
-  AEGIS_CACHE?: KVNamespace;
-  AEGIS_CONFIG_KV?: KVNamespace;
-  AEGIS_FEATURE_FLAGS_KV?: KVNamespace;
-  AEGIS_KB_INDEX?: VectorizeIndex;
+  KB_EMBEDDING_QUEUE: Queue;
+  REPORT_EXPORT_QUEUE: Queue;
+  AGENT_RUN_QUEUE: Queue;
+  EMAIL: Fetcher;
+  STANDARD_CACHE?: KVNamespace;
+  STANDARD_CONFIG_KV?: KVNamespace;
+  STANDARD_FEATURE_FLAGS_KV?: KVNamespace;
+  STANDARD_KB_INDEX?: VectorizeIndex;
   AI?: Ai;
   /** Cloudflare Email Service binding for transactional emails */
-  EMAIL?: SendEmail;
 }
 
 let cachedDeps: AppDependencies | undefined;
 let cachedApp: ReturnType<typeof createApp> | null = null;
-let cachedAuth: AegisAuth | null = null;
+let cachedAuth: StandardAuth | null = null;
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
@@ -47,7 +48,7 @@ export default {
         cachedAuth = createAuth(db, {
           BETTER_AUTH_SECRET: env.BETTER_AUTH_SECRET,
           BETTER_AUTH_URL: env.BETTER_AUTH_URL ?? new URL(request.url).origin,
-          AEGIS_ENV: env.AEGIS_ENV,
+          STANDARD_ENV: env.STANDARD_ENV,
           GOOGLE_CLIENT_ID: env.GOOGLE_CLIENT_ID,
           GOOGLE_CLIENT_SECRET: env.GOOGLE_CLIENT_SECRET,
           waitUntil: (p) => ctx.waitUntil(p),
@@ -60,3 +61,4 @@ export default {
     return cachedApp.fetch(request);
   }
 };
+

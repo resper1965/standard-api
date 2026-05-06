@@ -1,5 +1,5 @@
 const API_BASE = import.meta.env.PROD
-  ? "https://aegis-api.bekaa.eu"
+  ? "https://api.standard.bekaa.eu"
   : "";
 
 export async function api<T = unknown>(path: string, options: RequestInit = {}): Promise<T> {
@@ -34,3 +34,4 @@ export class ApiError extends Error {
     this.body = body;
   }
 }
+

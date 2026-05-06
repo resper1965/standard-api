@@ -2,9 +2,9 @@
 
 ## Objetivo
 
-O Agent Runtime formaliza os agentes funcionais do **Aegis SCF Agentic Assessment Model**, seus contratos de tools, guardrails, rastreabilidade e integração com o Assessment Engine. A primeira versão é um runtime local/in-memory testável; ela não chama LLM real, não executa tools externas e não grava achados finais.
+O Agent Runtime formaliza os agentes funcionais do **Standard SCF Agentic Assessment Model**, seus contratos de tools, guardrails, rastreabilidade e integração com o Assessment Engine. A primeira versão é um runtime local/in-memory testável; ela não chama LLM real, não executa tools externas e não grava achados finais.
 
-O Aegis SCF Agentic Assessment Model é um modelo de IA agêntica para conduzir assessments baseados no Secure Controls Framework, no qual agentes especializados colaboram sob orquestração controlada para ingerir documentos, construir KB, mapear frameworks, gerar SoA, avaliar evidências, produzir Gap Analysis, medir maturidade, gerar POA&M e preparar relatórios, sempre com rastreabilidade, validação de schema, controle de escopo e aprovação humana.
+O Standard SCF Agentic Assessment Model é um modelo de IA agêntica para conduzir assessments baseados no Secure Controls Framework, no qual agentes especializados colaboram sob orquestração controlada para ingerir documentos, construir KB, mapear frameworks, gerar SoA, avaliar evidências, produzir Gap Analysis, medir maturidade, gerar POA&M e preparar relatórios, sempre com rastreabilidade, validação de schema, controle de escopo e aprovação humana.
 
 ## Comportamento Agentic
 
@@ -113,3 +113,4 @@ Endpoints MVP:
 - Estratégia de execução assíncrona via Cloudflare Queues.
 - Política de retenção para prompts, hashes e outputs.
 - Adapters PostgreSQL para `agent_runs`, `agent_decisions` e `agent_tool_calls`.
+

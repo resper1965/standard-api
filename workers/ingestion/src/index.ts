@@ -1,22 +1,29 @@
 /**
- * @module aegis-ingestion
+ * @module standard-ingestion
  * @description Cloudflare Worker for document ingestion pipeline.
  * Handles: document extraction, chunking, KB entry creation.
- * Consumes from aegis-document-ingestion queue.
+ * Consumes from standard-document-ingestion queue.
  */
 import {
-  createInMemoryDocumentIngestionDependencies,
+  createDrizzleDocumentIngestionDependencies,
   processDocumentIngestionJob,
   type StorageAdapter,
   type StoredObject
-} from "@aegis/document-ingestion";
-import { DocumentIngestionJobMessageSchema, type DocumentIngestionJobMessage } from "@aegis/schemas";
+} from "@standard/document-ingestion";
+import { DocumentIngestionJobMessageSchema, type DocumentIngestionJobMessage } from "@standard/schemas";
+import { neon } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-http";
+import * as schema from "@standard/schemas";
 
 export interface Env {
-  AEGIS_DOCUMENTS_BUCKET: R2Bucket;
-  AEGIS_KB_INDEX: VectorizeIndex;
+  STANDARD_DOCUMENTS_BUCKET: R2Bucket;
+  STANDARD_KB_INDEX: VectorizeIndex;
   DATABASE_URL?: string;
-  AEGIS_ENV?: string;
+  STANDARD_ENV?: string;
+  AZURE_DOCUMENT_INTELLIGENCE_KEY?: string;
+  AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT?: string;
+  OPENSOURCE_OCR_ENDPOINT?: string;
+  STANDARD_KB_EMBEDDING_QUEUE: Queue<any>;
 }
 
 class R2StorageAdapter implements StorageAdapter {
@@ -46,7 +53,7 @@ class R2StorageAdapter implements StorageAdapter {
 export default {
   async fetch(): Promise<Response> {
     return Response.json({
-      service: "aegis-ingestion",
+      service: "standard-ingestion",
       version: "1.0.0",
       capabilities: ["document_extraction", "chunking", "kb_entry_creation"],
       status: "operational"
@@ -54,10 +61,28 @@ export default {
   },
 
   async queue(batch: MessageBatch<DocumentIngestionJobMessage>, env: Env): Promise<void> {
-    const deps = createInMemoryDocumentIngestionDependencies({
-      storage: new R2StorageAdapter(env.AEGIS_DOCUMENTS_BUCKET),
+    if (!env.DATABASE_URL) throw new Error("DATABASE_URL must be defined");
+    
+    // Azure Document Intelligence envs read by Extractor Factory if present in process.env or passed in context
+    const sql = neon(env.DATABASE_URL);
+    const db = drizzle(sql, { schema: schema as any });
+
+    const deps = createDrizzleDocumentIngestionDependencies(db, {
+      storage: new R2StorageAdapter(env.STANDARD_DOCUMENTS_BUCKET),
       storageProvider: "cloudflare_r2",
-      bucketName: "AEGIS_DOCUMENTS_BUCKET"
+      bucketName: "STANDARD_DOCUMENTS_BUCKET",
+      queue: {
+        enqueue: async (message) => {
+          console.warn("Enqueueing back to DocumentIngestion is not supported");
+        },
+        enqueueKbEmbeddingJob: async (message) => {
+          await env.STANDARD_KB_EMBEDDING_QUEUE.send(message);
+        }
+      }
+    }, {
+      AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT: env.AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT || "",
+      AZURE_DOCUMENT_INTELLIGENCE_KEY: env.AZURE_DOCUMENT_INTELLIGENCE_KEY || "",
+      OPENSOURCE_OCR_ENDPOINT: env.OPENSOURCE_OCR_ENDPOINT || ""
     });
 
     for (const message of batch.messages) {
@@ -79,3 +104,4 @@ export default {
     }
   }
 };
+

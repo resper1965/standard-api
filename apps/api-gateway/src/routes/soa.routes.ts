@@ -1,4 +1,4 @@
-import { executeTransition, getAllowedNextStates } from "@aegis/assessment-engine";
+import { executeTransition, getAllowedNextStates } from "@standard/assessment-engine";
 import {
   ApproveSoaRequestSchema,
   CreateScopeRequestSchema,
@@ -13,7 +13,7 @@ import {
   SubmitSoaReviewRequestSchema,
   UpdateScopeRequestSchema,
   UpdateSoaItemRequestSchema
-} from "@aegis/soa";
+} from "@standard/soa";
 import { ApiError } from "../errors/api-error";
 import type { ApiErrorCode } from "../errors/error-codes";
 import type { AppDependencies, AssessmentRecord, RouteDefinition } from "../http";
@@ -341,3 +341,4 @@ export const soaRoutes: RouteDefinition[] = [
     }
   }
 ];
+

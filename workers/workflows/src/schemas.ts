@@ -13,4 +13,5 @@ export {
   WorkflowSignalResponseSchema,
   WorkflowSignalTypeSchema,
   WorkflowStepResultSchema
-} from "@aegis/schemas";
+} from "@standard/schemas";
+

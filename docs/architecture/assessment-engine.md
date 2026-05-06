@@ -1,8 +1,8 @@
-# Aegis Assessment Engine
+# Standard Assessment Engine
 
 ## Objetivo
 
-O `Aegis Assessment Engine` é o pacote reutilizável que controla o lifecycle do assessment no `aegis-api-standard`. Ele define estados, transições permitidas, gates de aprovação humana, regras de versionamento de artefatos e eventos de rastreabilidade operacional.
+O `Standard Assessment Engine` é o pacote reutilizável que controla o lifecycle do assessment no `standard-api-standard`. Ele define estados, transições permitidas, gates de aprovação humana, regras de versionamento de artefatos e eventos de rastreabilidade operacional.
 
 O pacote vive em `packages/assessment-engine` e foi desenhado como lógica pura. Ele não acessa Cloudflare, PostgreSQL, R2, Vectorize, LLMs ou frontend diretamente.
 
@@ -171,7 +171,7 @@ Os testes ficam em `packages/assessment-engine/tests` e cobrem:
 Comando:
 
 ```bash
-pnpm --filter @aegis/assessment-engine test
+pnpm --filter @standard/assessment-engine test
 ```
 
 ## Decisões em Aberto
@@ -181,3 +181,4 @@ pnpm --filter @aegis/assessment-engine test
 - Definir se as regras de pré-requisito serão alimentadas por projections dedicadas do banco ou snapshots compostos pela API.
 - Definir granularidade futura de RBAC/ABAC; hoje há contexto e interfaces, mas não política concreta.
 - Definir se a imutabilidade também será reforçada por triggers no PostgreSQL além da service layer.
+

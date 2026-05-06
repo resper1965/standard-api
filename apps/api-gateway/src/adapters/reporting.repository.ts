@@ -4,9 +4,9 @@
  * Uses $inferSelect for type-safe row mapping.
  */
 import { eq, and } from "drizzle-orm";
-import { reportVersions, reportArtifacts, exportJobs } from "@aegis/schemas";
-import type { ReportVersionResponse, ReportArtifactResponse, ExportJobResponse } from "@aegis/schemas";
-import type { ReportVersionRepository, ReportArtifactRepository, ExportJobRepository, ReportRepositories } from "@aegis/reporting";
+import { reportVersions, reportArtifacts, exportJobs } from "@standard/schemas";
+import type { ReportVersionResponse, ReportArtifactResponse, ExportJobResponse } from "@standard/schemas";
+import type { ReportVersionRepository, ReportArtifactRepository, ExportJobRepository, ReportRepositories } from "@standard/reporting";
 import type { DbClient } from "./db";
 
 export const createDrizzleReportVersionRepository = (db: DbClient): ReportVersionRepository => ({
@@ -211,3 +211,4 @@ const mapExportJobRow = (row: ExportJobRow): ExportJobResponse => ({
   trace_id: row.traceId,
   metadata: row.metadata ?? {},
 });
+

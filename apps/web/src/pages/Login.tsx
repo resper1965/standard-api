@@ -21,7 +21,7 @@ export function LoginPage() {
     signIn.social({
       provider: "google",
       callbackURL: import.meta.env.PROD
-        ? "https://apiaegis.bekaa.eu/dashboard"
+        ? "https://standard.bekaa.eu/dashboard"
         : "/dashboard",
     });
   };
@@ -59,7 +59,7 @@ export function LoginPage() {
       <div className="login-container animate-slide-up">
         <div className="login-header">
           <span className="login-shield">🛡️</span>
-          <h1 className="login-title">Aegis</h1>
+          <h1 className="login-title">Standard</h1>
           <p className="login-subtitle">
             Security & Compliance Assessment Platform
           </p>
@@ -187,3 +187,5 @@ export function LoginPage() {
     </div>
   );
 }
+
+

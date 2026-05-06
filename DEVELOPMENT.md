@@ -56,12 +56,12 @@ Todo PR deve explicar:
 
 ## Superpowers SDLC
 
-O processo de desenvolvimento do Aegis usa o Superpowers como gate estrito para tarefas relevantes, sem substituir as regras do repositório.
+O processo de desenvolvimento do Standard usa o Superpowers como gate estrito para tarefas relevantes, sem substituir as regras do repositório.
 
 Precedência obrigatória:
 
 ```text
-AGENTS.md + CONTEXT.md + regras Aegis
+AGENTS.md + CONTEXT.md + regras Standard
 >
 Superpowers
 >
@@ -135,3 +135,4 @@ Locais recomendados:
 - Contexto relevante persistido no repositório.
 - `tasks/branch-context/` atualizado quando a branch exigir contexto próprio.
 - PR descreve decisões, riscos, validação e arquivos de contexto alterados.
+

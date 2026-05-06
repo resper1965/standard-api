@@ -27,10 +27,11 @@ export function AdminLicenses() {
       // Mock fetch
       const res = await api<{ data: LicenseKey[] }>("/api/auth/admin/list-licenses", {
         method: "GET"
-      }).catch(() => ({ data: [
-        { id: "1", name: "Production API Key", keyPrefix: "aegis_prod_****", createdAt: new Date(), status: "active" as const }
-      ]})); 
-      setLicenses(res.data);
+      }).catch(() => [
+        { id: "1", name: "Production API Key", keyPrefix: "standard_prod_****", createdAt: new Date(), status: "active" as const }
+      ]); 
+      const dataArray = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : []);
+      setLicenses(dataArray);
     } catch (e: any) {
       setError(e.message || "Failed to fetch licenses");
     } finally {
@@ -48,7 +49,7 @@ export function AdminLicenses() {
     try {
       // Mock generate
       await new Promise(r => setTimeout(r, 1000));
-      setGeneratedKey("aegis_prod_8f99a3b2c1d4e5f6g7h8i9j0");
+      setGeneratedKey("standard_prod_8f99a3b2c1d4e5f6g7h8i9j0");
       await fetchLicenses();
     } catch (e: any) {
       alert("Error: " + e.message);
@@ -142,3 +143,4 @@ export function AdminLicenses() {
     </div>
   );
 }
+

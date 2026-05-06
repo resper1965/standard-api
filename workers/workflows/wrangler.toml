@@ -1,15 +1,17 @@
-name = "aegis-api-standard-workflows"
+name = "standard-workflows"
 main = "src/assessment-lifecycle.ts"
 compatibility_date = "2026-04-28"
 
 [vars]
-AEGIS_ENV = "development"
+STANDARD_ENV = "development"
 LOG_LEVEL = "info"
 
 [[workflows]]
 binding = "ASSESSMENT_WORKFLOW"
-name = "aegis-assessment-lifecycle-dev"
+name = "standard-assessment-lifecycle-dev"
 class_name = "AssessmentLifecycleWorkflow"
 
 # Database configured via secrets:
-# wrangler secret put DATABASE_URL --name aegis-api-standard-workflows
+# wrangler secret put DATABASE_URL --name standard-workflows
+
+

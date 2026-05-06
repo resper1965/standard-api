@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-O SoA Workflow cria, mantém, revisa, aprova e versiona a Statement of Applicability de um assessment. No Aegis, a SoA é o artefato governante que define quais requisitos/controles entram no assessment antes de Gap Analysis, Maturity Assessment ou POA&M.
+O SoA Workflow cria, mantém, revisa, aprova e versiona a Statement of Applicability de um assessment. No Standard, a SoA é o artefato governante que define quais requisitos/controles entram no assessment antes de Gap Analysis, Maturity Assessment ou POA&M.
 
 ## Artefato Governante
 
@@ -99,3 +99,4 @@ O SoA Workflow consome `ScfFrameworkService` e `ScfMappingService`. Apenas mappi
 - Definir adapter PostgreSQL transacional com bloqueio forte de imutabilidade.
 - Definir formato documental da SoA reingerida no KB.
 - Definir se `mark-ingested` será chamado por workflow, queue ou worker dedicado.
+

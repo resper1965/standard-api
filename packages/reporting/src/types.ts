@@ -1,6 +1,6 @@
-import type { GapAnalysisDependencies } from "@aegis/gap-analysis";
-import type { PoamDependencies } from "@aegis/poam";
-import type { ScfCoreServices } from "@aegis/scf-core";
+import type { GapAnalysisDependencies } from "@standard/gap-analysis";
+import type { PoamDependencies } from "@standard/poam";
+import type { ScfCoreServices } from "@standard/scf-core";
 import type {
   CreateReportDraftRequest,
   ExportJobResponse,
@@ -14,8 +14,8 @@ import type {
   ReportValidationResponse,
   ReportVersionResponse,
   RenderReportResponse
-} from "@aegis/schemas";
-import type { SoaDependencies } from "@aegis/soa";
+} from "@standard/schemas";
+import type { SoaDependencies } from "@standard/soa";
 
 export type {
   CreateReportDraftRequest,
@@ -100,3 +100,4 @@ export type RenderedReportArtifact = {
   mime_type: string;
   content: string;
 };
+

@@ -1,7 +1,7 @@
 /**
  * SCF XLSX Importer
  *
- * Parses the official SCF Excel workbook (multi-tab) into the Aegis
+ * Parses the official SCF Excel workbook (multi-tab) into the Standard
  * ScfDataset format. Handles:
  * - Main controls tab → ScfDomain[] + ScfControl[]
  * - Crosswalk tabs → ScfFramework[] + ScfFrameworkRequirement[] + ScfMapping[]
@@ -422,3 +422,4 @@ export const createXlsxScfImporter = (): ScfImporter => ({
     };
   },
 });
+

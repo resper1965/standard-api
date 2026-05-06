@@ -1,5 +1,5 @@
 {
-  "name": "@aegis/security",
+  "name": "@standard/security",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -10,8 +10,8 @@
     "test": "tsx tests/run-tests.ts"
   },
   "dependencies": {
-    "@aegis/document-ingestion": "workspace:*",
-    "@aegis/schemas": "workspace:*",
+    "@standard/document-ingestion": "workspace:*",
+    "@standard/schemas": "workspace:*",
     "jose": "^6.2.3",
     "zod": "^4.3.6"
   },
@@ -21,3 +21,4 @@
     "typescript": "latest"
   }
 }
+

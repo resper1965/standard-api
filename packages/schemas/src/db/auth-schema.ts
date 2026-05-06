@@ -31,6 +31,8 @@ export const baUser = pgTable("user", {
   banned: boolean("banned").default(false),
   banReason: text("ban_reason"),
   banExpires: timestamp("ban_expires"),
+  // Custom Standard fields
+  metadata: text("metadata"), // Captured full raw JSON profiles
 });
 
 export const baSession = pgTable("session", {
@@ -141,3 +143,4 @@ export const baApikey = pgTable("apikey", {
 }, (table) => [
   index("ba_apikey_user_idx").on(table.userId),
 ]);
+

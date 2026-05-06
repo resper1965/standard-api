@@ -14,4 +14,5 @@ export {
   KbSearchResultSchema,
   KbVectorReferenceResponseSchema,
   VectorStoreMetadataSchema
-} from "@aegis/schemas";
+} from "@standard/schemas";
+

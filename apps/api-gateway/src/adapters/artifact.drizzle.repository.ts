@@ -11,8 +11,8 @@ import {
   maturityAssessmentVersions,
   poamVersions,
   reportVersions,
-} from "@aegis/schemas";
-import type { ArtifactVersion, ArtifactType } from "@aegis/assessment-engine";
+} from "@standard/schemas";
+import type { ArtifactVersion, ArtifactType } from "@standard/assessment-engine";
 import type { ArtifactRepositoryAdapter } from "../http";
 import type { DbClient } from "./db";
 
@@ -116,3 +116,4 @@ export const createDrizzleArtifactRepository = (db: DbClient): ArtifactRepositor
     return rows.map(r => mapRowToVersion(r as unknown as GenericVersionRow, artifactType));
   },
 });
+

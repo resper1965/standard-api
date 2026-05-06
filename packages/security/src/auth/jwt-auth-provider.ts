@@ -1,9 +1,9 @@
-import type { AuthContext, Role } from "@aegis/schemas";
+import type { AuthContext, Role } from "@standard/schemas";
 import { jwtVerify, createRemoteJWKSet, importSPKI, type JWTPayload } from "jose";
 import type { AuthenticateInput, AuthProvider } from "./auth-provider";
 
 /**
- * @deprecated Use `@aegis/auth` (Better Auth) instead.
+ * @deprecated Use `@standard/auth` (Better Auth) instead.
  * This provider will be removed in v0.3.0.
  *
  * JWT Auth Provider configuration.
@@ -16,9 +16,9 @@ export type JwtAuthConfig =
   | { mode: "secret"; secret: string }
   | { mode: "decode-only" }; // Non-production fallback: decode without signature verification
 
-const AegisClaimsSymbol = Symbol("aegis-claims");
+const StandardClaimsSymbol = Symbol("standard-claims");
 
-interface AegisClaims extends JWTPayload {
+interface StandardClaims extends JWTPayload {
   tenant_id?: string;
   organization_ids?: string[];
   roles?: Role[];
@@ -36,7 +36,7 @@ export class JwtAuthProvider implements AuthProvider {
     const token = input.authHeader.split(" ")[1];
     if (!token) return null;
 
-    let payload: AegisClaims;
+    let payload: StandardClaims;
 
     try {
       payload = await this.verify(token);
@@ -66,12 +66,12 @@ export class JwtAuthProvider implements AuthProvider {
     };
   }
 
-  private async verify(token: string): Promise<AegisClaims> {
+  private async verify(token: string): Promise<StandardClaims> {
     if (this.config.mode === "decode-only") {
       // Non-production fallback: base64 decode only, no signature check
       const payloadBase64 = token.split(".")[1];
       if (!payloadBase64) throw new Error("malformed_token");
-      return JSON.parse(atob(payloadBase64)) as AegisClaims;
+      return JSON.parse(atob(payloadBase64)) as StandardClaims;
     }
 
     if (this.config.mode === "secret") {
@@ -79,13 +79,13 @@ export class JwtAuthProvider implements AuthProvider {
       const { payload } = await jwtVerify(token, secret, {
         algorithms: ["HS256"]
       });
-      return payload as AegisClaims;
+      return payload as StandardClaims;
     }
 
     // JWKS mode: fetch public keys remotely (works in Cloudflare Edge via Web Crypto)
     const JWKS = createRemoteJWKSet(new URL(this.config.jwksUrl));
     const { payload } = await jwtVerify(token, JWKS);
-    return payload as AegisClaims;
+    return payload as StandardClaims;
   }
 }
 
@@ -105,3 +105,4 @@ export const buildJwtConfig = (env: {
   }
   return { mode: "decode-only" };
 };
+

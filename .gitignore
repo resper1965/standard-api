@@ -25,6 +25,8 @@ old_schema.ts
 evals/fixtures/*.xlsx
 evals/fixtures/*.xls
 
+# Generated SCF seed files (regenerate from XLSX with extract-framework-from-xlsx.ts)
+infra/docker/postgres/seeds/0010_scf_official_frameworks_seed.sql
 
 .worktrees/
 worktrees/

@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-A camada de segurança inicial do Aegis cria contratos reutilizáveis para autenticação, tenant context, RBAC, upload security, prompt security e auditabilidade segura. A implementação fica em `packages/security` e é integrada ao `apps/api-gateway`.
+A camada de segurança inicial do Standard cria contratos reutilizáveis para autenticação, tenant context, RBAC, upload security, prompt security e auditabilidade segura. A implementação fica em `packages/security` e é integrada ao `apps/api-gateway`.
 
 ## Modelo de Autenticação
 
@@ -29,13 +29,13 @@ Auth methods modelados:
 - `service_token`
 - `mock_dev`
 
-No MVP, `MockAuthProvider` é usado apenas para desenvolvimento/testes. Ele é explicitamente bloqueado em `production`.
+No MVP, integramos o provedor definitivo usando o **Better Auth Plugin**, que assume JWT, Auth Session, Database Persistence (Drizzle) e a hierarquia oficial do sistema, além da gestão madura via o plugin API Keys.
 
 ## Tenant Resolution
 
 `TenantResolver` resolve o tenant por:
 
-- header interno `x-aegis-tenant-id`;
+- header interno `x-standard-tenant-id`;
 - route param `tenantId`;
 - placeholders futuros para JWT, API key e hostname.
 
@@ -52,16 +52,10 @@ Regra: `tenant_id` vindo do body nunca é suficiente isoladamente. Divergência 
 
 Roles iniciais:
 
-- `platform_admin`
-- `tenant_admin`
-- `organization_admin`
-- `assessment_owner`
-- `assessor`
-- `reviewer`
-- `approver`
-- `auditor_readonly`
-- `integration_service`
-- `support_readonly`
+- `owner`
+- `admin`
+- `member`
+- `auditor`
 - `system`
 
 As permissões iniciais cobrem tenant, organization, assessment, documents, KB, SCF, SoA, Gap, Maturity, POA&M, Reports, Agents e Admin.
@@ -161,19 +155,11 @@ Eventos preparados:
 
 Não logar documento completo, chunks completos, prompt completo, tokens, secrets, API keys ou output sensível integral.
 
-## Limitações do MVP
+## Maturidade do MVP Enterprise-Grade
 
-- Auth real JWT/API key/Cloudflare Access ainda é placeholder.
-- Memberships reais e assignment-based approvals ainda não existem.
-- RBAC está route-level e service-level parcial.
-- Rate limiting é audit placeholder, não enforcement.
-- Security events persistem no audit adapter in-memory local.
-- Malware scan é placeholder.
+- **Auth real (Session e DB Persistence):** Utiliza Better Auth (`@better-auth/api-key` encapsulados no PostgreSQL pelo Schema Drizzle).
+- **Membership context:** Better Auth provê multi-tenant assignment e organizações associadas nas claims.
+- **RBAC Ativo:** Funcionalidades seguras integradas via `rbac.middleware.ts` para checar `context.auth.roles`.
+- **API Keys / Revogações:** Plugin nativo que interage com as tabelas na DB garantindo segurança transacional.
+- Toda lógica in-memory simulada foi deprecada na fase Enterprise-Grade e desativada nas rotas de produção operando na porta 3000 do Gateway.
 
-## Decisões em Aberto
-
-- IdP oficial e formato de JWT claims.
-- Modelo de membership/assignment por assessment.
-- Política de acesso de `platform_admin` a conteúdo de cliente.
-- Store e rotação de API keys/service tokens.
-- Rate limiting definitivo via Cloudflare WAF/Rules ou Durable Objects.

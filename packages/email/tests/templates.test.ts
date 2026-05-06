@@ -1,5 +1,5 @@
 /**
- * Unit tests for @aegis/email template renderers.
+ * Unit tests for @standard/email template renderers.
  * Validates: non-empty subjects, HTML contains payload data, text fallback exists.
  */
 
@@ -28,14 +28,14 @@ const welcomePayload: WelcomeEmailPayload = {
   type: "welcome",
   to: "alice@example.com",
   firstName: "Alice",
-  dashboardUrl: "https://apiaegis.bekaa.eu/dashboard",
+  dashboardUrl: "https://apistandard.bekaa.eu/dashboard",
 };
 
 const verificationPayload: VerificationEmailPayload = {
   type: "verification",
   to: "bob@example.com",
   firstName: "Bob",
-  verificationUrl: "https://apiaegis.bekaa.eu/verify?token=abc123",
+  verificationUrl: "https://apistandard.bekaa.eu/verify?token=abc123",
   expiresIn: "1 hour",
 };
 
@@ -45,7 +45,7 @@ const approvalPayload: ApprovalRequestEmailPayload = {
   artifactName: "Statement of Applicability v1",
   assessmentName: "ISO 27001 Assessment",
   organizationName: "Acme Corp",
-  reviewUrl: "https://apiaegis.bekaa.eu/assessments/123/soa",
+  reviewUrl: "https://apistandard.bekaa.eu/assessments/123/soa",
   submittedBy: "admin@acme.com",
 };
 
@@ -56,7 +56,7 @@ const stateChangePayload: StateChangeEmailPayload = {
   organizationName: "Beta Inc",
   previousState: "soa_drafted",
   newState: "soa_under_review",
-  assessmentUrl: "https://apiaegis.bekaa.eu/assessments/456",
+  assessmentUrl: "https://apistandard.bekaa.eu/assessments/456",
 };
 
 const reportReadyPayload: ReportReadyEmailPayload = {
@@ -65,7 +65,7 @@ const reportReadyPayload: ReportReadyEmailPayload = {
   assessmentName: "PCI DSS Assessment",
   organizationName: "Gamma LLC",
   reportType: "Gap Analysis Report",
-  downloadUrl: "https://apiaegis.bekaa.eu/reports/789/download",
+  downloadUrl: "https://apistandard.bekaa.eu/reports/789/download",
 };
 
 const securityAlertPayload: SecurityAlertEmailPayload = {
@@ -75,7 +75,7 @@ const securityAlertPayload: SecurityAlertEmailPayload = {
   description: "Multiple failed login attempts from a single IP.",
   timestamp: "2026-05-04T10:00:00Z",
   ipAddress: "192.168.1.100",
-  auditUrl: "https://apiaegis.bekaa.eu/admin/audit",
+  auditUrl: "https://apistandard.bekaa.eu/admin/audit",
 };
 
 // ─── Tests ──────────────────────────────────────────────────────
@@ -143,7 +143,7 @@ test("renderEmail: correctly routes all 6 types", () => {
   for (const payload of payloads) {
     const result = renderEmail(payload);
     expect(result.subject).toBeTruthy();
-    expect(result.html).toContain("Aegis");
+    expect(result.html).toContain("Standard");
     expect(result.text).toBeTruthy();
   }
 });
@@ -164,3 +164,4 @@ test("all templates include HTML doctype and plain text fallback", () => {
     expect(result.text.length).toBeGreaterThan(10);
   }
 });
+

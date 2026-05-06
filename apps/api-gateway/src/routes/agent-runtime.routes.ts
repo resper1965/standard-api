@@ -3,13 +3,13 @@ import {
   AgentRuntimeService,
   AGENT_TOOL_CONTRACTS,
   FUNCTIONAL_AGENT_CONTRACTS
-} from "@aegis/agent-runtime";
-import { AuditEventService, CostTrackingService, MetricsService, SecurityEventService } from "@aegis/observability";
+} from "@standard/agent-runtime";
+import { AuditEventService, CostTrackingService, MetricsService, SecurityEventService } from "@standard/observability";
 import {
   CompleteAgentRunRequestSchema,
   InvokeAgentToolRequestSchema,
   StartAgentRunRequestSchema
-} from "@aegis/schemas";
+} from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { ApiErrorCode } from "../errors/error-codes";
 import type { AppDependencies, AssessmentRecord, RouteDefinition } from "../http";
@@ -71,6 +71,16 @@ export const agentRuntimeRoutes: RouteDefinition[] = [
           input: body.input,
           context: contextFor(assessment, traceId, body.framework_id, body.scf_version_id, actorId!)
         });
+
+        if (deps.AGENT_RUN_QUEUE) {
+          await deps.AGENT_RUN_QUEUE.send({
+            queue_type: "agent_run",
+            agent_run_id: run.agent_run_id,
+            tenant_id: run.tenant_id,
+            assessment_id: run.assessment_id
+          });
+        }
+
         await new AuditEventService(deps.observability).record({
           tenant_id: assessment.tenant_id,
           organization_id: assessment.organization_id,
@@ -236,3 +246,4 @@ export const agentRuntimeRoutes: RouteDefinition[] = [
     }
   }
 ];
+

@@ -19,10 +19,10 @@ const run = (cmd) => {
 
 // 1. Queues
 const queues = [
-  `aegis-document-ingestion-${suffix}`,
-  `aegis-kb-embedding-${suffix}`,
-  `aegis-report-export-${suffix}`,
-  `aegis-agent-task-${suffix}`
+  `standard-document-ingestion-${suffix}`,
+  `standard-kb-embedding-${suffix}`,
+  `standard-report-export-${suffix}`,
+  `standard-agent-task-${suffix}`
 ];
 for (const q of queues) {
   run(`npx wrangler queues create ${q} || echo "Queue already exists"`);
@@ -30,9 +30,9 @@ for (const q of queues) {
 
 // 2. Buckets
 const buckets = [
-  `aegis-documents-${suffix}`,
-  `aegis-reports-${suffix}`,
-  `aegis-exports-${suffix}`
+  `standard-documents-${suffix}`,
+  `standard-reports-${suffix}`,
+  `standard-exports-${suffix}`
 ];
 for (const b of buckets) {
   run(`npx wrangler r2 bucket create ${b} || echo "Bucket already exists"`);
@@ -40,9 +40,9 @@ for (const b of buckets) {
 
 // 3. KV Namespaces
 const kvs = [
-  { name: `aegis-config-kv-${suffix}`, placeholderId: `replace-with-${environment}-config-kv-id` },
-  { name: `aegis-feature-flags-kv-${suffix}`, placeholderId: `replace-with-${environment}-feature-flags-kv-id` },
-  { name: `aegis-cache-kv-${suffix}`, placeholderId: `replace-with-${environment}-cache-kv-id` }
+  { name: `standard-config-kv-${suffix}`, placeholderId: `replace-with-${environment}-config-kv-id` },
+  { name: `standard-feature-flags-kv-${suffix}`, placeholderId: `replace-with-${environment}-feature-flags-kv-id` },
+  { name: `standard-cache-kv-${suffix}`, placeholderId: `replace-with-${environment}-cache-kv-id` }
 ];
 
 const tomlFile = path.join(process.cwd(), "infra/cloudflare/wrangler.api-gateway.toml");
@@ -58,7 +58,7 @@ const jsonStr = listOut.substring(listOut.indexOf('['), listOut.lastIndexOf(']')
 const namespaces = jsonStr ? JSON.parse(jsonStr) : [];
 
 for (const kv of kvs) {
-  // Title for wrangler default is something like 'aegis-api-standard-api-gateway-aegis-config-kv-prod'
+  // Title for wrangler default is something like 'standard-api-standard-api-gateway-standard-config-kv-prod'
   // But we can match by checking if the title contains our requested KV name
   const exact = namespaces.find(n => n.title.includes(kv.name.replace(/-/g, '_')) || n.title.includes(kv.name));
   
@@ -74,3 +74,4 @@ fs.writeFileSync(tomlFile, tomlContent, "utf8");
 console.log(`Atualização finalizada no arquivo: ${tomlFile}`);
 console.log("");
 console.log("Subida limpa executada com sucesso!");
+

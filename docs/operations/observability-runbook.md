@@ -34,7 +34,7 @@
 ## Investigar Cross-Tenant Access
 
 1. Procure security events `tenant_context_mismatch` ou `cross_tenant_access_blocked`.
-2. Compare `x-aegis-tenant-id`, route params e tenant do recurso.
+2. Compare `x-standard-tenant-id`, route params e tenant do recurso.
 3. Audite actor, role, auth method e trace.
 4. Se envolver API key, verificar escopo da key.
 
@@ -108,3 +108,4 @@ Use hashes, IDs, counts, status, safe summaries e `trace_id`.
 - PricingProvider configurado por ambiente.
 - Budgets/thresholds por tenant definidos.
 - Dashboards e alertas revisados para baixo ruído.
+

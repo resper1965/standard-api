@@ -10,7 +10,7 @@ import {
   scfStrmRelationships,
   scfImportRuns,
   scfControlMetadata
-} from "@aegis/schemas";
+} from "@standard/schemas";
 import type { ScfRepository } from "./scf.repository";
 import type { ScfDataset, ScfVersion, ScfDomain, ScfControl, ScfFramework, ScfFrameworkRequirement, ScfMapping, ScfStrmRelationship, ScfImportRun } from "../types";
 
@@ -163,6 +163,39 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
       .where(eq(scfControls.scfVersionId, versionId))
       .orderBy(asc(scfControls.controlCode));
     return rows.map(mapControl);
+  },
+
+  searchControls: async (query) => {
+    const conditions = [];
+    if (query.scf_version_id) {
+      conditions.push(eq(scfControls.scfVersionId, query.scf_version_id));
+    }
+    if (query.control_code) {
+      conditions.push(ilike(scfControls.controlCode, `%${query.control_code}%`));
+    }
+
+    let dbQuery = db.select({ control: scfControls }).from(scfControls) as any;
+
+    if (query.domain_code) {
+      dbQuery = dbQuery.innerJoin(scfDomains, eq(scfControls.scfDomainId, scfDomains.id));
+      conditions.push(ilike(scfDomains.domainCode, query.domain_code));
+    }
+
+    if (query.q) {
+      conditions.push(or(
+        ilike(scfControls.controlCode, `%${query.q}%`),
+        ilike(scfControls.title, `%${query.q}%`),
+        ilike(scfControls.description, `%${query.q}%`)
+      ));
+    }
+
+    if (query.tags && query.tags.length > 0) {
+      dbQuery = dbQuery.innerJoin(scfControlMetadata, eq(scfControls.id, scfControlMetadata.scfControlId));
+      conditions.push(sql`${scfControlMetadata.threatTags} @> ${JSON.stringify(query.tags)}::jsonb`);
+    }
+
+    const rows = await dbQuery.where(and(...conditions)).orderBy(asc(scfControls.controlCode));
+    return rows.map((r: any) => mapControl(r.control));
   },
 
   getControl: async (id) => {
@@ -468,3 +501,4 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
     }
   }
 });
+

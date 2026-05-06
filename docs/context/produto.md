@@ -2,19 +2,19 @@
 
 ## Nome
 
-Aegis.
+Standard.
 
 ## Repositório
 
-`aegis-api-standard`.
+`standard-api-standard`.
 
 ## Descrição
 
-Implementação API-first do Aegis SCF-Based Assessment Lifecycle. O projeto funciona como motor backend reutilizável para assessments de segurança, conformidade e maturidade baseados no Secure Controls Framework.
+Implementação API-first do Standard SCF-Based Assessment Lifecycle. O projeto funciona como motor backend reutilizável para assessments de segurança, conformidade e maturidade baseados no Secure Controls Framework.
 
 ## Estado Atual
 
-MVP release candidate para staging controlado com dados sintéticos.
+Release Candidate Enterprise-Grade MVP operacional em PostgreSQL (Drizzle) e orquestração madura no Cloudflare (Workflows/Queues), plenamente hardenido (Segurança, RBAC Better Auth, Rate Limiter e Tracing).
 
 ## Público/Consumidores
 
@@ -26,6 +26,6 @@ MVP release candidate para staging controlado com dados sintéticos.
 ## Informação Ainda Pendente
 
 - Modelo comercial final.
-- Auth provider final.
-- Roadmap público de integrações.
-- Política final de retenção por plano/tenant.
+- Roadmap público de integrações externas completas e relatórios customizáveis (ex. conectores específicos).
+- Política final automática de retenção por plano/tenant de artefatos R2.
+

@@ -15,8 +15,8 @@ import {
   poamVersions,
   reportVersions,
   approvalEvents,
-} from "@aegis/schemas";
-import type { AssessmentSnapshot } from "@aegis/assessment-engine";
+} from "@standard/schemas";
+import type { AssessmentSnapshot } from "@standard/assessment-engine";
 import type { DbClient } from "./db";
 
 export type AssessmentSnapshotBuilder = {
@@ -145,3 +145,4 @@ const stateOrder = [
   "closed",
   "archived",
 ] as const;
+

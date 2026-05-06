@@ -1,40 +1,44 @@
-name = "aegis-api-standard-api-gateway"
+name = "standard-api-gateway"
 main = "src/index.ts"
 compatibility_date = "2026-04-28"
 compatibility_flags = ["nodejs_compat"]
 
 [vars]
-AEGIS_ENV = "development"
+STANDARD_ENV = "development"
 LOG_LEVEL = "info"
-AI_GATEWAY_NAME = "aegis-dev"
-AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/aegis-dev"
+AI_GATEWAY_NAME = "standard-dev"
+AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/standard-dev"
 # Better Auth — SECRET must be set via `wrangler secret put BETTER_AUTH_SECRET` for production
 # For local dev, this placeholder is overridden by .dev.vars
-BETTER_AUTH_URL = "https://aegis-api-standard-api-gateway.ness.workers.dev"
+BETTER_AUTH_URL = "https://standard-api-gateway.ness.workers.dev"
 
 [[r2_buckets]]
-binding = "AEGIS_DOCUMENTS_BUCKET"
-bucket_name = "aegis-documents-dev"
+binding = "STANDARD_DOCUMENTS_BUCKET"
+bucket_name = "standard-documents-dev"
 
 [[r2_buckets]]
-binding = "AEGIS_REPORTS_BUCKET"
-bucket_name = "aegis-reports-dev"
+binding = "STANDARD_REPORTS_BUCKET"
+bucket_name = "standard-reports-dev"
 
 [[r2_buckets]]
-binding = "AEGIS_EXPORTS_BUCKET"
-bucket_name = "aegis-exports-dev"
+binding = "STANDARD_EXPORTS_BUCKET"
+bucket_name = "standard-exports-dev"
 
 [[queues.producers]]
 binding = "DOCUMENT_INGESTION_QUEUE"
-queue = "aegis-document-ingestion-dev"
+queue = "standard-document-ingestion-dev"
 
 [[queues.producers]]
 binding = "KB_EMBEDDING_QUEUE"
-queue = "aegis-kb-embedding-dev"
+queue = "standard-kb-embedding-dev"
 
 [[queues.producers]]
 binding = "REPORT_EXPORT_QUEUE"
-queue = "aegis-report-export-dev"
+queue = "standard-report-export-dev"
+
+[[queues.producers]]
+binding = "AGENT_RUN_QUEUE"
+queue = "standard-agent-run-dev"
 
 # ─── Email Service (send transactional emails) ─────────────────
 [[send_email]]
@@ -43,45 +47,52 @@ remote = true
 
 # TODO: Uncomment when KV namespace is provisioned
 # [[kv_namespaces]]
-# binding = "AEGIS_CACHE"
+# binding = "STANDARD_CACHE"
 # id = "replace-with-dev-kv-namespace-id"
 
 # TODO: Uncomment when workflows worker is deployed
 # [[workflows]]
 # binding = "ASSESSMENT_WORKFLOW"
-# name = "aegis-assessment-lifecycle-dev"
+# name = "standard-assessment-lifecycle-dev"
 # class_name = "AssessmentLifecycleWorkflow"
-# script_name = "aegis-api-standard-workflows"
+# script_name = "standard-workflows"
 
 # ─── Production environment ────────────────────────────────────
 [env.production]
-vars = { AEGIS_ENV = "production", BETTER_AUTH_URL = "https://aegis-api.bekaa.eu", LOG_LEVEL = "info", AI_GATEWAY_NAME = "aegis-prod", AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/aegis-prod" }
-routes = [{ pattern = "aegis-api.bekaa.eu", custom_domain = true }]
+vars = { STANDARD_ENV = "production", BETTER_AUTH_URL = "https://api.standard.bekaa.eu", LOG_LEVEL = "info", AI_GATEWAY_NAME = "standard-prod", AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/standard-prod" }
+routes = [{ pattern = "api.standard.bekaa.eu", custom_domain = true }]
 
 [[env.production.r2_buckets]]
-binding = "AEGIS_DOCUMENTS_BUCKET"
-bucket_name = "aegis-documents-dev"
+binding = "STANDARD_DOCUMENTS_BUCKET"
+bucket_name = "standard-documents-dev"
 
 [[env.production.r2_buckets]]
-binding = "AEGIS_REPORTS_BUCKET"
-bucket_name = "aegis-reports-dev"
+binding = "STANDARD_REPORTS_BUCKET"
+bucket_name = "standard-reports-dev"
 
 [[env.production.r2_buckets]]
-binding = "AEGIS_EXPORTS_BUCKET"
-bucket_name = "aegis-exports-dev"
+binding = "STANDARD_EXPORTS_BUCKET"
+bucket_name = "standard-exports-dev"
 
 [[env.production.queues.producers]]
 binding = "DOCUMENT_INGESTION_QUEUE"
-queue = "aegis-document-ingestion-dev"
+queue = "standard-document-ingestion-dev"
 
 [[env.production.queues.producers]]
 binding = "KB_EMBEDDING_QUEUE"
-queue = "aegis-kb-embedding-dev"
+queue = "standard-kb-embedding-dev"
 
 [[env.production.queues.producers]]
 binding = "REPORT_EXPORT_QUEUE"
-queue = "aegis-report-export-dev"
+queue = "standard-report-export-dev"
+
+[[env.production.queues.producers]]
+binding = "AGENT_RUN_QUEUE"
+queue = "standard-agent-run-dev"
 
 [[env.production.send_email]]
 name = "EMAIL"
 allowed_sender_addresses = ["noreply@bekaa.eu"]
+
+
+

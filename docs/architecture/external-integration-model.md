@@ -2,7 +2,7 @@
 
 ## 1. Objetivo
 
-Este documento define o modelo de integrações externas do `aegis-api-standard`, preparando o Aegis para operar como API SaaS integrada a plataformas de GRC, automação, ticketing, colaboração, armazenamento documental e ferramentas de segurança.
+Este documento define o modelo de integrações externas do `standard-api-standard`, preparando o Standard para operar como API SaaS integrada a plataformas de GRC, automação, ticketing, colaboração, armazenamento documental e ferramentas de segurança.
 
 Não implementa conectores. Define contratos, fronteiras, segurança, eventos e governança.
 
@@ -197,7 +197,7 @@ Controles:
 
 ## 6. Outbound Integration Model
 
-O Aegis pode:
+O Standard pode:
 
 - enviar eventos;
 - criar tickets;
@@ -211,7 +211,7 @@ O Aegis pode:
 Fluxo típico:
 
 ```text
-Aegis Event
+Standard Event
   ↓
 Connector Policy
   ↓
@@ -279,11 +279,11 @@ WebhookEvent
 Headers sugeridos:
 
 ```text
-X-Aegis-Event-Id
-X-Aegis-Event-Type
-X-Aegis-Timestamp
-X-Aegis-Signature
-X-Aegis-Trace-Id
+X-Standard-Event-Id
+X-Standard-Event-Type
+X-Standard-Timestamp
+X-Standard-Signature
+X-Standard-Trace-Id
 ```
 
 Assinatura:
@@ -378,7 +378,7 @@ Campos:
 - `name`: nome único do conector.
 - `type`: source, destination ou bidirectional.
 - `auth_method`: API key, OAuth/OIDC, webhook secret, service token.
-- `permissions`: escopos internos do Aegis e externos.
+- `permissions`: escopos internos do Standard e externos.
 - `supported_events`: eventos que o conector emite/recebe.
 - `supported_actions`: ações permitidas.
 - `tenant_scope`: tenant/org/assessment autorizado.
@@ -576,3 +576,4 @@ Este modelo permite:
 - controlar retenção e exports;
 - preparar roadmap de conectores;
 - evitar implementação insegura de integrações ad hoc.
+

@@ -49,7 +49,7 @@ VALUES (
 ON CONFLICT DO NOTHING;
 
 INSERT INTO scf_frameworks (id, scf_version_id, framework_id, name, version_label, publisher)
-VALUES ('00000000-0000-4000-8000-000000000901', '00000000-0000-4000-8000-000000000601', 'SYN-FW', 'Synthetic Framework', '0.1', 'Aegis synthetic fixtures')
+VALUES ('00000000-0000-4000-8000-000000000901', '00000000-0000-4000-8000-000000000601', 'SYN-FW', 'Synthetic Framework', '0.1', 'Standard synthetic fixtures')
 ON CONFLICT DO NOTHING;
 
 INSERT INTO scf_framework_requirements (id, scf_version_id, scf_framework_id, requirement_code, title, description)
@@ -122,11 +122,11 @@ VALUES ('00000000-0000-4000-8000-000000002001', '00000000-0000-4000-8000-0000000
 ON CONFLICT DO NOTHING;
 
 INSERT INTO vector_references (id, tenant_id, organization_id, assessment_id, kb_entry_id, vector_provider, vector_index_name, vector_id, metadata)
-VALUES ('00000000-0000-4000-8000-000000002101', '00000000-0000-4000-8000-000000000201', '00000000-0000-4000-8000-000000000401', '00000000-0000-4000-8000-000000001401', '00000000-0000-4000-8000-000000002001', 'cloudflare_vectorize', 'aegis-synthetic-index', 'vec_synthetic_001', '{"synthetic":true}'::jsonb)
+VALUES ('00000000-0000-4000-8000-000000002101', '00000000-0000-4000-8000-000000000201', '00000000-0000-4000-8000-000000000401', '00000000-0000-4000-8000-000000001401', '00000000-0000-4000-8000-000000002001', 'cloudflare_vectorize', 'standard-synthetic-index', 'vec_synthetic_001', '{"synthetic":true}'::jsonb)
 ON CONFLICT DO NOTHING;
 
 INSERT INTO agent_runs (id, tenant_id, organization_id, assessment_id, agent_name, agent_version, model_provider, model_name, prompt_version, input_hash, output_hash, confidence_score, status, completed_at, trace_id)
-VALUES ('00000000-0000-4000-8000-000000002201', '00000000-0000-4000-8000-000000000201', '00000000-0000-4000-8000-000000000401', '00000000-0000-4000-8000-000000001401', 'aegis-gap-analyst', '0.1.0', 'synthetic', 'synthetic-model', 'synthetic-v1', 'sha256:synthetic-input-hash', 'sha256:synthetic-output-hash', 0.8200, 'completed', now(), 'trace-synthetic-0001')
+VALUES ('00000000-0000-4000-8000-000000002201', '00000000-0000-4000-8000-000000000201', '00000000-0000-4000-8000-000000000401', '00000000-0000-4000-8000-000000001401', 'standard-gap-analyst', '0.1.0', 'synthetic', 'synthetic-model', 'synthetic-v1', 'sha256:synthetic-input-hash', 'sha256:synthetic-output-hash', 0.8200, 'completed', now(), 'trace-synthetic-0001')
 ON CONFLICT DO NOTHING;
 
 INSERT INTO agent_decisions (id, tenant_id, organization_id, assessment_id, agent_run_id, decision_type, decision_summary, assumptions, limitations, sources, confidence_score, trace_id)
@@ -190,3 +190,4 @@ ON CONFLICT DO NOTHING;
 INSERT INTO audit_logs (id, actor_id, tenant_id, organization_id, action, resource_type, resource_id, trace_id, metadata)
 VALUES ('00000000-0000-4000-8000-000000003701', '00000000-0000-4000-8000-000000000301', '00000000-0000-4000-8000-000000000201', '00000000-0000-4000-8000-000000000401', 'synthetic.seed.loaded', 'assessment', '00000000-0000-4000-8000-000000001401', 'trace-synthetic-0001', '{"synthetic":true,"sensitive_content":false}'::jsonb)
 ON CONFLICT DO NOTHING;
+

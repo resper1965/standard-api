@@ -2,7 +2,7 @@
 
 ## Visão Geral
 
-O `aegis-api-standard` é Cloudflare-oriented, mas o core continua API-first e testável localmente. Cloudflare hospeda a borda, filas, storage de artefatos, índice vetorial auxiliar e governança de chamadas AI. PostgreSQL externo/gerenciado permanece a fonte transacional crítica.
+O `standard-api-standard` é Cloudflare-oriented, mas o core continua API-first e testável localmente. Cloudflare hospeda a borda, filas, storage de artefatos, índice vetorial auxiliar e governança de chamadas AI. PostgreSQL externo/gerenciado permanece a fonte transacional crítica.
 
 ## Produtos Cloudflare
 
@@ -42,9 +42,9 @@ O `aegis-api-standard` é Cloudflare-oriented, mas o core continua API-first e t
 
 Buckets por ambiente:
 
-- `aegis-documents-*`
-- `aegis-reports-*`
-- `aegis-exports-*`
+- `standard-documents-*`
+- `standard-reports-*`
+- `standard-exports-*`
 
 R2 keys devem preservar `tenant_id`, `organization_id` e `assessment_id` no prefixo lógico. Buckets production nunca são usados por dev/staging.
 
@@ -52,9 +52,9 @@ R2 keys devem preservar `tenant_id`, `organization_id` e `assessment_id` no pref
 
 Índices:
 
-- `aegis-kb-dev`
-- `aegis-kb-staging`
-- `aegis-kb-prod`
+- `standard-kb-dev`
+- `standard-kb-staging`
+- `standard-kb-prod`
 
 Namespaces/metadados devem separar tenant e assessment. Vectorize só recupera evidências; SCF estruturado continua fonte normativa.
 
@@ -89,28 +89,28 @@ A infraestrutura de produção foi provisionada e está operacional:
 
 | Recurso | Nome / ID | Status |
 |---|---|---|
-| API Gateway Worker | `aegis-api-standard-api-gateway-production` | ✅ Deployed |
-| Workflow Worker | `aegis-api-standard-workflows-production` | ✅ Deployed |
-| Ingestion Worker | `aegis-api-standard-ingestion-production` | ✅ Deployed |
-| KB Embedding Worker | `aegis-api-standard-kb-worker-production` | ✅ Deployed |
-| Reporting Worker | `aegis-api-standard-reporting-worker-production` | ✅ Deployed |
-| R2 Documents | `aegis-documents-prod` | ✅ Provisionado |
-| R2 Reports | `aegis-reports-prod` | ✅ Provisionado |
-| R2 Exports | `aegis-exports-prod` | ✅ Provisionado |
-| Vectorize KB | `aegis-kb-prod` (1536 dims, cosine) | ✅ Provisionado |
-| Queue Ingestion | `aegis-document-ingestion-prod` | ✅ Provisionado |
-| Queue KB | `aegis-kb-embedding-prod` | ✅ Provisionado |
-| Queue Reports | `aegis-report-export-prod` | ✅ Provisionado |
-| Queue Agent | `aegis-agent-task-prod` | ✅ Provisionado |
-| Queue Dead Letter | `aegis-dead-letter-prod` | ✅ Provisionado |
-| KV Config | `aegis-config-kv-prod` (`e7aba96b342b4060ab3869ca7789832d`) | ✅ Provisionado |
-| KV Feature Flags | `aegis-feature-flags-kv-prod` (`23e073ec707d4803a8957e13a4046810`) | ✅ Provisionado |
-| KV Cache | `aegis-cache-kv-prod` (`55f97abbf9794b0196bdf51e8c1dedec`) | ✅ Provisionado |
+| API Gateway Worker | `standard-api-standard-api-gateway-production` | ✅ Deployed |
+| Workflow Worker | `standard-api-standard-workflows-production` | ✅ Deployed |
+| Ingestion Worker | `standard-api-standard-ingestion-production` | ✅ Deployed |
+| KB Embedding Worker | `standard-api-standard-kb-worker-production` | ✅ Deployed |
+| Reporting Worker | `standard-api-standard-reporting-worker-production` | ✅ Deployed |
+| R2 Documents | `standard-documents-prod` | ✅ Provisionado |
+| R2 Reports | `standard-reports-prod` | ✅ Provisionado |
+| R2 Exports | `standard-exports-prod` | ✅ Provisionado |
+| Vectorize KB | `standard-kb-prod` (1536 dims, cosine) | ✅ Provisionado |
+| Queue Ingestion | `standard-document-ingestion-prod` | ✅ Provisionado |
+| Queue KB | `standard-kb-embedding-prod` | ✅ Provisionado |
+| Queue Reports | `standard-report-export-prod` | ✅ Provisionado |
+| Queue Agent | `standard-agent-task-prod` | ✅ Provisionado |
+| Queue Dead Letter | `standard-dead-letter-prod` | ✅ Provisionado |
+| KV Config | `standard-config-kv-prod` (`e7aba96b342b4060ab3869ca7789832d`) | ✅ Provisionado |
+| KV Feature Flags | `standard-feature-flags-kv-prod` (`23e073ec707d4803a8957e13a4046810`) | ✅ Provisionado |
+| KV Cache | `standard-cache-kv-prod` (`55f97abbf9794b0196bdf51e8c1dedec`) | ✅ Provisionado |
 | PostgreSQL | Neon Serverless (`ep-blue-breeze-anyfua57`, us-east-1) | ✅ Migrado |
 
 O secret `DATABASE_URL` está injetado nos worker environments via `wrangler secret put`.
 
-O adaptador `CloudflareR2StorageAdapter` está ativo no API Gateway, lendo o binding `AEGIS_DOCUMENTS_BUCKET` do ambiente Cloudflare.
+O adaptador `CloudflareR2StorageAdapter` está ativo no API Gateway, lendo o binding `STANDARD_DOCUMENTS_BUCKET` do ambiente Cloudflare.
 
 ## Decisões em Aberto
 
@@ -121,3 +121,4 @@ O adaptador `CloudflareR2StorageAdapter` está ativo no API Gateway, lendo o bin
 - Workers for Platforms e Access/Zero Trust para endpoints admin.
 - D1 e Durable Objects: não configurados — sem requisito ativo no MVP.
 - Dimensão de embeddings e modelo para Vectorize (configurado em 1536/cosine para compatibilidade com OpenAI text-embedding-3-small/large).
+

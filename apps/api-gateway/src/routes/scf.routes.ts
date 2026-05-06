@@ -1,4 +1,4 @@
-import { ScfImportSourceSchema, type ScfControl, type ScfFramework, type ScfFrameworkRequirement, type ScfVersion } from "@aegis/schemas";
+import { ScfImportSourceSchema, type ScfControl, type ScfFramework, type ScfFrameworkRequirement, type ScfVersion } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";
 import { json, parseJson, routeParam } from "../http";
@@ -103,7 +103,8 @@ export const scfRoutes: RouteDefinition[] = [
         scf_version_id: scfVersionId,
         ...(url.searchParams.get("control_code") ? { control_code: url.searchParams.get("control_code")! } : {}),
         ...(url.searchParams.get("domain_code") ? { domain_code: url.searchParams.get("domain_code")! } : {}),
-        ...(url.searchParams.get("q") ? { q: url.searchParams.get("q")! } : {})
+        ...(url.searchParams.get("q") ? { q: url.searchParams.get("q")! } : {}),
+        ...(url.searchParams.get("tags") ? { tags: url.searchParams.get("tags")!.split(",").map(t => t.trim()).filter(Boolean) } : {})
       });
       return json({ data: controls.map(controlResponse), scf_version_id: scfVersionId, trace_id: traceId });
     }
@@ -329,3 +330,4 @@ export const scfRoutes: RouteDefinition[] = [
     }
   }
 ];
+

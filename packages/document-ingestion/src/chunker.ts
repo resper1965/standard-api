@@ -1,4 +1,4 @@
-import type { ChunkingConfig, ExtractedDocument } from "@aegis/schemas";
+import type { ChunkingConfig, ExtractedDocument } from "@standard/schemas";
 import { sha256Hex } from "./hash";
 import type { DocumentChunk } from "./types";
 
@@ -82,3 +82,4 @@ export const chunkExtractedDocument = async (input: {
 
   return chunks;
 };
+

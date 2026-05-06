@@ -1,4 +1,4 @@
-import { AuditEventSchema, type AuditEvent, type AuditEventAction, type AuditOutcome } from "@aegis/schemas";
+import { AuditEventSchema, type AuditEvent, type AuditEventAction, type AuditOutcome } from "@standard/schemas";
 import { assertMetadataSafe } from "../logger/redaction";
 import type { ObservabilityDependencies } from "../repositories";
 
@@ -32,3 +32,4 @@ export class AuditEventService {
     }));
   }
 }
+

@@ -6,7 +6,7 @@ Aceita.
 
 ## Contexto
 
-O `aegis-api-standard` envolve código, contratos de API, schemas, workflows, documentação de arquitetura, regras de agentes, prompts, decisões, testes, evals e runbooks operacionais.
+O `standard-api-standard` envolve código, contratos de API, schemas, workflows, documentação de arquitetura, regras de agentes, prompts, decisões, testes, evals e runbooks operacionais.
 
 O desenvolvimento colaborativo com agentes de IA e humanos pode perder contexto se decisões e aprendizados ficarem apenas em chats, IDEs, terminais ou memórias locais.
 
@@ -54,3 +54,4 @@ Custos:
 - `DECISIONS.md`
 - `.cursor/rules/00-contexto-obrigatorio.mdc`
 - `docs/context/`
+

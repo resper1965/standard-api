@@ -2,23 +2,23 @@
 
 ## Objetivo
 
-Formalizar o uso do Superpowers como processo de desenvolvimento do `aegis-api-standard`, sem comprometer as regras já definidas em `AGENTS.md`, `CONTEXT.md`, `.cursor/rules/`, arquitetura API-first, tenant isolation, approval gates e governança de segurança.
+Formalizar o uso do Superpowers como processo de desenvolvimento do `standard-api-standard`, sem comprometer as regras já definidas em `AGENTS.md`, `CONTEXT.md`, `.cursor/rules/`, arquitetura API-first, tenant isolation, approval gates e governança de segurança.
 
 ## Decisão de Precedência
 
-O Superpowers orienta o processo, mas não substitui o modelo operacional do Aegis.
+O Superpowers orienta o processo, mas não substitui o modelo operacional do Standard.
 
 Ordem obrigatória:
 
 ```text
-AGENTS.md + CONTEXT.md + regras Aegis
+AGENTS.md + CONTEXT.md + regras Standard
 >
 Superpowers
 >
 comportamento padrão do agente
 ```
 
-Se uma skill do Superpowers pedir algo que conflite com as regras do Aegis, o agente deve parar e pedir consentimento antes de continuar.
+Se uma skill do Superpowers pedir algo que conflite com as regras do Standard, o agente deve parar e pedir consentimento antes de continuar.
 
 ## Escopo
 
@@ -73,7 +73,7 @@ Gate de entrada. Deve ser considerado antes de responder ou agir quando houver c
 
 Usar para transformar ideias, mudanças de processo, arquitetura ou escopo em design aprovado antes de implementar.
 
-No Aegis, brainstorming não autoriza alteração de stack, arquitetura ou governança sem consentimento explícito.
+No Standard, brainstorming não autoriza alteração de stack, arquitetura ou governança sem consentimento explícito.
 
 ### `writing-plans`
 
@@ -119,7 +119,7 @@ Obrigatório antes de afirmar que algo está pronto. Exige evidência recente de
 
 Usar para fechamento de branch, resumo, opções de PR/merge/push e pendências.
 
-## Limites do Aegis
+## Limites do Standard
 
 O Superpowers não pode:
 
@@ -181,7 +181,7 @@ Para mudanças de código ou contratos, aplicar validações do `AGENTS.md`, inc
 ## Riscos
 
 - Fricção excessiva em tarefas pequenas.
-- Conflito entre instruções de skill e regras do Aegis.
+- Conflito entre instruções de skill e regras do Standard.
 - Versionamento de skills externas sem revisão.
 - Planos excessivamente detalhados para mudanças documentais simples.
 
@@ -191,3 +191,4 @@ Mitigação:
 - usar consentimento para conflitos;
 - ajustar rigor ao risco da tarefa;
 - preservar contexto no GitHub.
+

@@ -4,7 +4,7 @@
 
 Local/test:
 
-- usar `x-aegis-actor-id`;
+- usar `x-standard-actor-id`;
 - opcionalmente `Authorization: Bearer dev:<role>`;
 - `mock_dev` é placeholder explícito.
 
@@ -32,7 +32,7 @@ Nunca versionar:
 
 Checklist:
 
-- toda rota de cliente recebe `x-aegis-tenant-id`;
+- toda rota de cliente recebe `x-standard-tenant-id`;
 - `tenant_id` do body não diverge do tenant context;
 - assessment carregado pertence ao tenant;
 - storage keys preservam tenant/organization/assessment;
@@ -121,3 +121,4 @@ Processo futuro esperado:
 - Secrets em secret manager/bindings.
 - Testes cross-tenant passando.
 - Nenhum endpoint crítico sem permission.
+

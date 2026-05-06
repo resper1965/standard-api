@@ -1,7 +1,7 @@
 # Reversa — Fase 1: Reconhecimento (Scout)
 
 > Gerado em 2026-05-02 por Antigravity
-> Projeto: aegis-api-standard v0.1.0
+> Projeto: standard-api-standard v0.1.0
 
 ---
 
@@ -9,7 +9,7 @@
 
 | Campo | Valor |
 |---|---|
-| Nome | `aegis-api-standard` |
+| Nome | `standard-api-standard` |
 | Tipo | Monorepo PNPM (workspace) |
 | Linguagem | TypeScript (strict, ES2022) |
 | Runtime | Cloudflare Workers + Vite/React |
@@ -23,7 +23,7 @@
 ## 2. Estrutura de Diretórios (Top Level)
 
 ```
-aegis-api-standard/
+standard-api-standard/
 ├── apps/
 │   ├── api-gateway/       # Cloudflare Worker — API principal
 │   └── web/               # React SPA (Cloudflare Pages)
@@ -65,24 +65,24 @@ aegis-api-standard/
 
 | Módulo | Package Name | Dependências Internas |
 |---|---|---|
-| `packages/schemas` | `@aegis/schemas` | — (raiz) |
-| `packages/scf-core` | `@aegis/scf-core` | schemas |
-| `packages/auth` | `@aegis/auth` | schemas |
-| `packages/observability` | `@aegis/observability` | schemas |
-| `packages/agent-runtime` | `@aegis/agent-runtime` | schemas |
-| `packages/assessment-engine` | `@aegis/assessment-engine` | schemas |
-| `packages/document-ingestion` | `@aegis/document-ingestion` | schemas |
-| `packages/security` | `@aegis/security` | schemas, document-ingestion |
-| `packages/kb` | `@aegis/kb` | schemas, document-ingestion |
-| `packages/soa` | `@aegis/soa` | schemas, assessment-engine, scf-core, kb |
-| `packages/gap-analysis` | `@aegis/gap-analysis` | schemas, assessment-engine, scf-core, kb, soa |
-| `packages/poam` | `@aegis/poam` | schemas, assessment-engine, scf-core, gap-analysis, soa |
-| `packages/reporting` | `@aegis/reporting` | schemas, assessment-engine, scf-core, gap-analysis, poam, soa |
-| `apps/api-gateway` | `@aegis/api-gateway` | **todos os packages** (hub central) |
-| `apps/web` | `@aegis/web` | better-auth, react, react-dom, react-router-dom |
-| `workers/workflows` | `@aegis/workflows` | schemas, assessment-engine |
-| `workers/queues` | `@aegis/queues` | schemas, kb |
-| `workers/ingestion` | `@aegis/ingestion-worker` | schemas, document-ingestion, kb |
+| `packages/schemas` | `@standard/schemas` | — (raiz) |
+| `packages/scf-core` | `@standard/scf-core` | schemas |
+| `packages/auth` | `@standard/auth` | schemas |
+| `packages/observability` | `@standard/observability` | schemas |
+| `packages/agent-runtime` | `@standard/agent-runtime` | schemas |
+| `packages/assessment-engine` | `@standard/assessment-engine` | schemas |
+| `packages/document-ingestion` | `@standard/document-ingestion` | schemas |
+| `packages/security` | `@standard/security` | schemas, document-ingestion |
+| `packages/kb` | `@standard/kb` | schemas, document-ingestion |
+| `packages/soa` | `@standard/soa` | schemas, assessment-engine, scf-core, kb |
+| `packages/gap-analysis` | `@standard/gap-analysis` | schemas, assessment-engine, scf-core, kb, soa |
+| `packages/poam` | `@standard/poam` | schemas, assessment-engine, scf-core, gap-analysis, soa |
+| `packages/reporting` | `@standard/reporting` | schemas, assessment-engine, scf-core, gap-analysis, poam, soa |
+| `apps/api-gateway` | `@standard/api-gateway` | **todos os packages** (hub central) |
+| `apps/web` | `@standard/web` | better-auth, react, react-dom, react-router-dom |
+| `workers/workflows` | `@standard/workflows` | schemas, assessment-engine |
+| `workers/queues` | `@standard/queues` | schemas, kb |
+| `workers/ingestion` | `@standard/ingestion-worker` | schemas, document-ingestion, kb |
 
 ## 4. Entry Points
 
@@ -129,9 +129,9 @@ aegis-api-standard/
 
 | Recurso | Binding | Tipo |
 |---|---|---|
-| `AEGIS_DOCUMENTS_BUCKET` | R2 | Storage de documentos |
-| `AEGIS_REPORTS_BUCKET` | R2 | Storage de relatórios |
-| `AEGIS_EXPORTS_BUCKET` | R2 | Storage de exports |
+| `STANDARD_DOCUMENTS_BUCKET` | R2 | Storage de documentos |
+| `STANDARD_REPORTS_BUCKET` | R2 | Storage de relatórios |
+| `STANDARD_EXPORTS_BUCKET` | R2 | Storage de exports |
 | `DOCUMENT_INGESTION_QUEUE` | Queue | Fila de ingestão |
 | `KB_EMBEDDING_QUEUE` | Queue | Fila de embeddings |
 | `REPORT_EXPORT_QUEUE` | Queue | Fila de export de relatórios |
@@ -142,6 +142,7 @@ aegis-api-standard/
 
 | Componente | URL |
 |---|---|
-| API Gateway | `https://aegis-api.bekaa.eu` (custom domain) |
-| API Gateway (Cloudflare) | `https://aegis-api-standard-api-gateway.ness.workers.dev` |
-| Frontend Dashboard | `https://aegis-web-m99.pages.dev` (recém-deployado) |
+| API Gateway | `https://standard-api.bekaa.eu` (custom domain) |
+| API Gateway (Cloudflare) | `https://standard-api-standard-api-gateway.ness.workers.dev` |
+| Frontend Dashboard | `https://standard-web-m99.pages.dev` (recém-deployado) |
+

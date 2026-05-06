@@ -2,9 +2,9 @@
 
 ## 1. Definição
 
-**Multi-Agent Collaboration** no Aegis é o modelo estruturado de interação entre agentes especialistas, onde cada agente opera com contexto controlado, produz outputs estruturados e transfere responsabilidade ao próximo agente através de um protocolo formal de handoff.
+**Multi-Agent Collaboration** no Standard é o modelo estruturado de interação entre agentes especialistas, onde cada agente opera com contexto controlado, produz outputs estruturados e transfere responsabilidade ao próximo agente através de um protocolo formal de handoff.
 
-O objetivo não é criar uma rede autônoma de agentes conversando livremente. O objetivo é permitir colaboração controlada, auditável e consistente dentro do Aegis SCF Agentic Assessment Model.
+O objetivo não é criar uma rede autônoma de agentes conversando livremente. O objetivo é permitir colaboração controlada, auditável e consistente dentro do Standard SCF Agentic Assessment Model.
 
 Definição operacional:
 
@@ -744,7 +744,7 @@ Este documento define:
 - como contexto é transferido sem vazamento;
 - como versionamento preserva auditoria;
 - como retries e loops são controlados;
-- como o Aegis evolui para multi-agent real sem abrir mão de segurança.
+- como o Standard evolui para multi-agent real sem abrir mão de segurança.
 
 Definition of done para implementação futura:
 
@@ -759,3 +759,4 @@ Definition of done para implementação futura:
 - integração com Orchestrator;
 - integração com Agent Runtime;
 - documentação operacional para revisão humana.
+

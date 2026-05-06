@@ -1,13 +1,11 @@
 # Modelo de Dados Transacional
 
-Este documento descreve a primeira versão do modelo transacional do `aegis-api-standard`. O PostgreSQL externo/gerenciado é a fonte crítica para tenants, organizações, assessments, estado, aprovações, achados, versionamento, rastreabilidade e auditoria. R2 armazena objetos; Vectorize armazena vetores; o PostgreSQL guarda metadados, IDs relacionais e ponteiros.
-
+Este documento descreve o modelo transacional consolidado para o Enterprise-Grade MVP do `standard-api-standard`. O PostgreSQL externo/gerenciado via Drizzle ORM é a fonte crítica e central para tenants, organizações, gestão unificada de Auth/RBAC, assessments, estado, aprovações, achados, versionamento, rastreabilidade e auditoria interativa dos agentes. R2 armazena objetos binários brutos; Vectorize armazena embeddings vetoriais de LLM; o PostgreSQL guarda metadados estruturados, chaves simétricas e logs transacionais.
 ## Visão Geral
 
 O modelo foi organizado em domínios:
 
-- Tenancy: `tenants`, `organizations`, `users`, `roles`, `memberships`.
-- Assessment: `assessments`, `assessment_frameworks`, `assessment_events`, `approval_events`.
+- Tenancy e Auth: O sistema adota rigorosamente a arquitetura estendida do Better Auth. `user`, `session`, `account`, `verification`, `organization`, `member`, `invitation`, `jwks` e `apikey` consolidam identidades, cross-tenancy, sessões web e tokens M2M.- Assessment: `assessments`, `assessment_frameworks`, `assessment_events`, `approval_events`.
 - Documentos e KB: `documents`, `document_versions`, `document_chunks`, `document_extraction_jobs`, `kb_entries`, `vector_references`.
 - SCF estruturado: `scf_versions`, `scf_domains`, `scf_controls`, `scf_frameworks`, `scf_framework_requirements`, `scf_mappings`, `scf_strm_relationships`, `scf_control_metadata`.
 - Escopo e SoA: `assessment_scope`, `soa_versions`, `soa_items`.
@@ -140,8 +138,7 @@ Vetores não são armazenados no PostgreSQL. `vector_references` guarda apenas `
 
 `agent_runs` registra metadados de execução: agente, versão, provider/modelo, prompt version, hashes de input/output, confiança, status, timestamps e `trace_id`. `agent_decisions` registra decisões, premissas, limitações, fontes e confiança. `agent_tool_calls` registra uso de tools com escopo de tenant/assessment, risco, hashes de input/output, status e `trace_id`.
 
-Esta versão cria estruturas de rastreabilidade para agentes, mas não implementa agentes LLM, prompts, chamadas a modelos ou persistência de conteúdo sensível.
-
+A rastreabilidade dos outputs dos LLMs já está ativamente capturada pela abstração `Repositories` da API Gateway e armazenada fielmente. Eventos de Agentes estão persistindo suas assinaturas de confiança.
 ## Decisões de Modelagem
 
 - Drizzle ORM foi adotado por ser TypeScript-first, explícito e adequado ao monorepo.
@@ -163,3 +160,4 @@ Esta versão cria estruturas de rastreabilidade para agentes, mas não implement
 - Definir política de retenção e particionamento para `audit_logs`, `assessment_events` e `agent_runs`.
 - Definir se `traceability_links` deve evoluir para tabelas de junção específicas conforme padrões de consulta reais.
 - Definir pipeline real de importação SCF sem inventar mappings.
+

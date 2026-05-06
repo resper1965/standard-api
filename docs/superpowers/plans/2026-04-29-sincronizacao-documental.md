@@ -13,7 +13,7 @@
 ### Task 1: Atualizar o README.md
 
 **Files:**
-- Modify: `c:/Users/resper/OneDrive/Área de Trabalho/aegis-api/README.md`
+- Modify: `c:/Users/resper/OneDrive/Área de Trabalho/standard-api/README.md`
 
 - [ ] **Step 1: Substituir a arvore ASCII incompleta.**
 Substituir o bloco código de "Estrutura do Repositório" atual da documentação pela listagem verdadeira de pastas de pacotes e removendo diretórios ghosts.
@@ -24,8 +24,8 @@ Acrescentar sentenças explicativas baseadas no setup real para `contracts`, `do
 ### Task 2: Cimentar sincronização ao Contexto e Agentes
 
 **Files:**
-- Modify: `c:/Users/resper/OneDrive/Área de Trabalho/aegis-api/docs/context/arquitetura.md`
-- Modify: `c:/Users/resper/OneDrive/Área de Trabalho/aegis-api/AGENTS.md`
+- Modify: `c:/Users/resper/OneDrive/Área de Trabalho/standard-api/docs/context/arquitetura.md`
+- Modify: `c:/Users/resper/OneDrive/Área de Trabalho/standard-api/AGENTS.md`
 
 - [ ] **Step 1: Modificar `arquitetura.md`**
 Alinhar as diretrizes compactas mencionando as separações puras da arquitetura na listagem de domínios.
@@ -42,3 +42,4 @@ git add docs/context/arquitetura.md
 git add AGENTS.md
 git commit -m "docs: sincronizar as arvores arquiteturais, mapeando pacotes novos ocultos e purificando arvores"
 ```
+

@@ -1,7 +1,7 @@
-import { createInMemoryGapAnalysisDependencies } from "@aegis/gap-analysis";
-import { createInMemoryPoamDependencies } from "@aegis/poam";
-import { createInMemoryScfCore } from "@aegis/scf-core";
-import { createInMemorySoaDependencies } from "@aegis/soa";
+import { createInMemoryGapAnalysisDependencies } from "@standard/gap-analysis";
+import { createInMemoryPoamDependencies } from "@standard/poam";
+import { createInMemoryScfCore } from "@standard/scf-core";
+import { createInMemorySoaDependencies } from "@standard/soa";
 import { createInMemoryReportRepositories } from "./repositories/report.repositories";
 import type { ReportingDependencies } from "./types";
 
@@ -21,3 +21,4 @@ export const createInMemoryReportingDependencies = (overrides: Partial<Omit<Repo
     ...(overrides.maturity ? { maturity: overrides.maturity } : {})
   };
 };
+

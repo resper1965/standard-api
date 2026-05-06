@@ -3,9 +3,9 @@ import { ApiError } from "../errors/api-error";
 
 /**
  * Rate limiter configuration per route category.
- * Uses Cloudflare KV (AEGIS_CACHE) as the backing store for rate limit counters.
+ * Uses Cloudflare KV (STANDARD_CACHE) as the backing store for rate limit counters.
  *
- * If AEGIS_CACHE is not bound (local/mock mode), rate limiting is a no-op.
+ * If STANDARD_CACHE is not bound (local/mock mode), rate limiting is a no-op.
  *
  * Strategy: Fixed-window counting per (tenant + actor + route category).
  * Window: 60 seconds.
@@ -134,3 +134,4 @@ export const assertRateLimitPlaceholder = async (context: RequestContext, route:
     });
   }
 };
+

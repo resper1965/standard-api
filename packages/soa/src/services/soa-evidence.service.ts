@@ -1,4 +1,4 @@
-import { CANDIDATE_EVIDENCE_WARNING, KbSearchService } from "@aegis/kb";
+import { CANDIDATE_EVIDENCE_WARNING, KbSearchService } from "@standard/kb";
 import { assertContext, SoaWorkflowError } from "../errors";
 import type { EvidenceCoverageStatus, SoaDependencies, SoaItemResponse, SoaWorkflowContext } from "../types";
 
@@ -66,3 +66,4 @@ export class SoaEvidenceService {
     return updated;
   }
 }
+

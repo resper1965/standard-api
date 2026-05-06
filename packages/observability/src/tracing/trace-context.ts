@@ -1,4 +1,4 @@
-import { ObservabilityTraceContextSchema, type ObservabilityTraceContext } from "@aegis/schemas";
+import { ObservabilityTraceContextSchema, type ObservabilityTraceContext } from "@standard/schemas";
 import { createTraceId } from "./trace-id";
 
 export type TraceContextInput = Partial<Omit<ObservabilityTraceContext, "trace_id" | "started_at">> & {
@@ -12,3 +12,4 @@ export const createTraceContext = (input: TraceContextInput = {}): Observability
     trace_id: input.trace_id ?? createTraceId(),
     started_at: input.started_at ?? new Date().toISOString()
   });
+

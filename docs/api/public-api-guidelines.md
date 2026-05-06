@@ -2,7 +2,7 @@
 
 ## 1. Objetivo
 
-Este documento define as regras para exposição da API pública/partner do `aegis-api-standard`.
+Este documento define as regras para exposição da API pública/partner do `standard-api-standard`.
 
 A API pública deve permitir integrações externas sem comprometer tenant isolation, approval gates, auditabilidade, compatibilidade ou segurança operacional.
 
@@ -48,7 +48,7 @@ Headers sugeridos:
 
 ```text
 Authorization: Bearer <token>
-X-Aegis-Api-Key: <api-key>
+X-Standard-Api-Key: <api-key>
 ```
 
 Não enviar ambos sem regra explícita de precedência.
@@ -260,7 +260,7 @@ Headers sugeridos:
 
 ```text
 X-Request-Id
-X-Aegis-Trace-Id
+X-Standard-Trace-Id
 Idempotency-Key
 ```
 
@@ -338,11 +338,11 @@ Eventos iniciais:
 Headers:
 
 ```text
-X-Aegis-Event-Id
-X-Aegis-Event-Type
-X-Aegis-Timestamp
-X-Aegis-Signature
-X-Aegis-Trace-Id
+X-Standard-Event-Id
+X-Standard-Event-Type
+X-Standard-Timestamp
+X-Standard-Signature
+X-Standard-Trace-Id
 ```
 
 ## 16. Public API Documentation
@@ -475,3 +475,4 @@ Estas diretrizes garantem:
 - tenant isolation;
 - approval gates preservados;
 - base para documentação pública e SDKs futuros.
+

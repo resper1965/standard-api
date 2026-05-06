@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 
 export function CreateAssessmentModal({ onClose, onCreated }: { onClose: () => void, onCreated: () => void }) {
   const [name, setName] = useState("");
-  const [scfVersionId, setScfVersionId] = useState("scf_2024_1");
+  const [scfVersionId, setScfVersionId] = useState("2026.1.1");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -56,8 +56,8 @@ export function CreateAssessmentModal({ onClose, onCreated }: { onClose: () => v
               onChange={e => setScfVersionId(e.target.value)}
               style={{ width: "100%", padding: "10px", borderRadius: "6px", border: "1px solid var(--border)", background: "var(--bg)", color: "white" }}
             >
-              <option value="scf_2024_1">SCF 2024.1</option>
-              <option value="scf_2023_2">SCF 2023.2</option>
+              <option value="2026.1.1">SCF 2026.1.1 (Standard)</option>
+              <option value="scf_2024_1">SCF 2024.1 (Legacy)</option>
             </select>
           </div>
           <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "16px" }}>

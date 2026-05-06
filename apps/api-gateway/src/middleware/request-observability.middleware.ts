@@ -1,4 +1,4 @@
-import { MetricsService, StructuredLogger } from "@aegis/observability";
+import { MetricsService, StructuredLogger } from "@standard/observability";
 import type { RequestContext } from "../http";
 
 const logger = new StructuredLogger();
@@ -59,3 +59,4 @@ export const recordRequestObservability = async (
     metadata: { route, method: context.request.method, status: response.status, duration_ms: durationMs }
   });
 };
+

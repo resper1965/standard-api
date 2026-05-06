@@ -1,6 +1,6 @@
 import { eq, and } from "drizzle-orm";
-import { approvalEvents } from "@aegis/schemas";
-import type { ApprovalEvent, ApprovalGate } from "@aegis/assessment-engine";
+import { approvalEvents } from "@standard/schemas";
+import type { ApprovalEvent, ApprovalGate } from "@standard/assessment-engine";
 import type { ApprovalRecord, ApprovalRepositoryAdapter } from "../http";
 import type { DbClient } from "./db";
 
@@ -127,3 +127,4 @@ export const createDrizzleApprovalRepository = (db: DbClient): ApprovalRepositor
     }
   };
 };
+

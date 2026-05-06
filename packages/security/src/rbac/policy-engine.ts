@@ -1,7 +1,7 @@
-import type { AccessDecision, Permission, PolicyInput } from "@aegis/schemas";
+import type { AccessDecision, Permission, PolicyInput } from "@standard/schemas";
 
 /**
- * @deprecated Use `@aegis/auth` permissions (Better Auth Access Control) instead.
+ * @deprecated Use `@standard/auth` permissions (Better Auth Access Control) instead.
  * This engine will be removed in v0.3.0.
  */
 export class PolicyEngine {
@@ -40,3 +40,4 @@ export class PolicyEngine {
     };
   }
 }
+

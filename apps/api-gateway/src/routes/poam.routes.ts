@@ -1,4 +1,4 @@
-import { executeTransition, getAllowedNextStates } from "@aegis/assessment-engine";
+import { executeTransition, getAllowedNextStates } from "@standard/assessment-engine";
 import {
   ApprovePoamRequestSchema,
   CreatePoamDraftRequestSchema,
@@ -13,7 +13,7 @@ import {
   SubmitPoamReviewRequestSchema,
   UpdatePoamItemRequestSchema,
   UpdatePoamMilestoneRequestSchema
-} from "@aegis/poam";
+} from "@standard/poam";
 import { ApiError } from "../errors/api-error";
 import type { ApiErrorCode } from "../errors/error-codes";
 import type { AppDependencies, AssessmentRecord, RouteDefinition } from "../http";
@@ -336,3 +336,4 @@ export const poamRoutes: RouteDefinition[] = [
     }
   }
 ];
+

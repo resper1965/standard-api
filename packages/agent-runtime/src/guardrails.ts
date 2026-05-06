@@ -1,4 +1,4 @@
-import type { AgentOutput, AgentRuntimeContext } from "@aegis/schemas";
+import type { AgentOutput, AgentRuntimeContext } from "@standard/schemas";
 import { AgentRuntimeError } from "./errors";
 
 export class AgentGuardrailService {
@@ -31,3 +31,4 @@ export class AgentGuardrailService {
     }
   }
 }
+

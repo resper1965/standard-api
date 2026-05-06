@@ -10,7 +10,7 @@ test("rota crítica sem auth retorna UNAUTHORIZED", async () => {
     top_k: 3,
     search_type: "semantic"
   }, {
-    "x-aegis-tenant-id": created.tenantId
+    "x-standard-tenant-id": created.tenantId
   });
 
   expect(result.response.status).toBe(401);
@@ -26,8 +26,8 @@ test("usuário sem kb:search não busca KB", async () => {
     top_k: 3,
     search_type: "semantic"
   }, {
-    "x-aegis-tenant-id": created.tenantId,
-    "x-aegis-actor-id": ids.actorId,
+    "x-standard-tenant-id": created.tenantId,
+    "x-standard-actor-id": ids.actorId,
     authorization: "Bearer dev:auditor_readonly"
   });
 
@@ -48,8 +48,8 @@ test("usuário sem agent:run não executa agente", async () => {
     scf_version_id: ids.scfVersionId,
     input: { task: "synthetic" }
   }, {
-    "x-aegis-tenant-id": created.tenantId,
-    "x-aegis-actor-id": ids.actorId,
+    "x-standard-tenant-id": created.tenantId,
+    "x-standard-actor-id": ids.actorId,
     authorization: "Bearer dev:auditor_readonly"
   });
 
@@ -64,7 +64,7 @@ test("admin SCF import bloqueia usuário não admin", async () => {
     version_label: "synthetic-2026",
     data: ""
   }, {
-    "x-aegis-actor-id": ids.actorId,
+    "x-standard-actor-id": ids.actorId,
     authorization: "Bearer dev:assessor"
   });
 
@@ -81,10 +81,11 @@ test("approval sem permissão específica é bloqueado", async () => {
     target_id: created.assessmentId,
     reason: "Synthetic approval."
   }, {
-    "x-aegis-tenant-id": created.tenantId,
-    "x-aegis-actor-id": ids.actorId,
+    "x-standard-tenant-id": created.tenantId,
+    "x-standard-actor-id": ids.actorId,
     authorization: "Bearer dev:assessor"
   });
 
   expect(result.response.status).toBe(403);
 });
+

@@ -1,8 +1,8 @@
-# Aegis Synthetic Evals
+# Standard Synthetic Evals
 
 ## Objetivo
 
-Este diretório contém datasets sintéticos, golden outputs e runners determinísticos para validar o Aegis SCF-Based Assessment Lifecycle sem dados reais de clientes, LLM real ou recursos Cloudflare reais.
+Este diretório contém datasets sintéticos, golden outputs e runners determinísticos para validar o Standard SCF-Based Assessment Lifecycle sem dados reais de clientes, LLM real ou recursos Cloudflare reais.
 
 ## Como os Datasets Foram Criados
 
@@ -39,3 +39,4 @@ pnpm test:synthetic-e2e
 ## Atualização de Golden Outputs
 
 Atualize golden outputs apenas quando a mudança funcional for intencional e documentada. Compare estrutura, status e rastreabilidade, não timestamps ou texto gerado por LLM.
+

@@ -4,7 +4,7 @@
 
 **Agent Memory** é o conjunto de dados estruturados e não estruturados que os agentes utilizam para tomar decisões, gerar outputs e manter continuidade ao longo do lifecycle do assessment.
 
-No Aegis, memória é suporte operacional. Ela não é autoridade normativa, não substitui estado oficial e não pode burlar tenant isolation.
+No Standard, memória é suporte operacional. Ela não é autoridade normativa, não substitui estado oficial e não pode burlar tenant isolation.
 
 Separações obrigatórias:
 
@@ -661,3 +661,4 @@ Definition of done para implementação futura:
 - context limits configuráveis;
 - prompt injection defense ativa;
 - testes de leakage e cross-tenant passando.
+

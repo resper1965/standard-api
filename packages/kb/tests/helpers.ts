@@ -1,4 +1,4 @@
-import { createInMemoryDocumentIngestionDependencies } from "@aegis/document-ingestion";
+import { createInMemoryDocumentIngestionDependencies } from "@standard/document-ingestion";
 import { createInMemoryKbDependencies } from "../src";
 
 export const ids = {
@@ -50,3 +50,4 @@ export const createKbFixture = async () => {
   ]);
   return createInMemoryKbDependencies(documentIngestion);
 };
+

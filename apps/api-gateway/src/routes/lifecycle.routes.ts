@@ -1,5 +1,5 @@
-import { executeTransition, getAllowedNextStates, type ApprovalGate } from "@aegis/assessment-engine";
-import { TransitionRequestSchema } from "@aegis/schemas";
+import { executeTransition, getAllowedNextStates, type ApprovalGate } from "@standard/assessment-engine";
+import { TransitionRequestSchema } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";
 import { json, parseJson, routeParam } from "../http";
@@ -83,3 +83,4 @@ export const lifecycleRoutes: RouteDefinition[] = [
     }
   }
 ];
+

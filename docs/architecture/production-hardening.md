@@ -2,7 +2,7 @@
 
 ## 1. Objetivo
 
-Este documento define o modelo de hardening de produção do `aegis-api-standard` para operar como API SaaS multi-tenant, Cloudflare-oriented e integrável por sistemas externos.
+Este documento define o modelo de hardening de produção do `standard-api-standard` para operar como API SaaS multi-tenant, Cloudflare-oriented e integrável por sistemas externos.
 
 Produção só é aceitável quando segurança, isolamento, observabilidade, continuidade operacional, governança de custo e controles de abuso estiverem ativos e testados.
 
@@ -436,3 +436,4 @@ Este documento orienta:
 - responder a incidentes;
 - preparar go-live;
 - sustentar integrações externas futuras.
+

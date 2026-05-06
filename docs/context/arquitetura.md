@@ -2,16 +2,14 @@
 
 ## Resumo
 
-O Aegis é API-first, SaaS-ready, multi-tenant e Cloudflare-oriented. O backend, contracts, packages, workflows, workers e agent runtime são o centro do sistema.
+O Standard é API-first, SaaS-ready, multi-tenant e Cloudflare-oriented. O backend, contracts, packages, workflows, workers e agent runtime são o centro do sistema.
 
 ## Camadas Principais
 
 - API Gateway: endpoints versionados, auth, RBAC, tenant guard e validação.
 - Assessment Engine: state machine, transitions, approval gates e invariantes.
 - Packages: schemas, domain, contracts, SCF core, SCF catalog, KB, SoA, Gap, POA&M, Reporting, Security, Observability e Agent Runtime.
-- Workers/Workflows/Queues: execução assíncrona e lifecycle durável.
-- Data Layer futuro: PostgreSQL transacional, R2 para artifacts, Vectorize para KB auxiliar.
-
+- Data Layer: Dependência fixa em PostgreSQL transacional (via Drizzle ORM) para Lifecycle artifacts, Better Auth, persistência de Orquestração, Logs de Auditoria e Estado de Agent Runs. O armazenamento de docs usa R2, e KB apoia-se em Vectorize.
 ## Princípios
 
 - SCF estruturado é fonte normativa.
@@ -27,3 +25,4 @@ O Aegis é API-first, SaaS-ready, multi-tenant e Cloudflare-oriented. O backend,
 - `docs/architecture/production-hardening.md`
 - `docs/architecture/external-integration-model.md`
 - `docs/architecture/workflow-orchestration.md`
+

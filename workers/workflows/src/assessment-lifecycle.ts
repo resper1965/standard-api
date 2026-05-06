@@ -1,4 +1,4 @@
-import { AssessmentLifecycleWorkflowInputSchema, type AssessmentLifecycleWorkflowState } from "@aegis/schemas";
+import { AssessmentLifecycleWorkflowInputSchema, type AssessmentLifecycleWorkflowState } from "@standard/schemas";
 import { WorkflowEntrypoint, WorkflowEvent, WorkflowStep } from "cloudflare:workers";
 
 export type WorkflowCheckpoint = {
@@ -36,8 +36,9 @@ export interface Env {}
 export default {
   async fetch(): Promise<Response> {
     return Response.json({
-      service: "aegis-assessment-lifecycle",
+      service: "standard-assessment-lifecycle",
       message: "Workflow Worker reservado para orquestracao duravel."
     });
   }
 };
+

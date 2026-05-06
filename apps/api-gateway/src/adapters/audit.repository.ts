@@ -1,4 +1,4 @@
-import { auditLogs } from "@aegis/schemas";
+import { auditLogs } from "@standard/schemas";
 import type { AuditRepositoryAdapter } from "../http";
 import type { DbClient } from "./db";
 
@@ -65,3 +65,4 @@ export const createDrizzleAuditRepository = (db: DbClient): AuditRepositoryAdapt
     }
   };
 };
+

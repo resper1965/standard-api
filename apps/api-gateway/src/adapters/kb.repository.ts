@@ -8,18 +8,18 @@ import {
   kbEmbeddingJobs,
   vectorReferences,
   kbSearchLogs,
-} from "@aegis/schemas";
+} from "@standard/schemas";
 import type {
   KbEmbeddingJobResponse,
   KbVectorReferenceResponse,
   KbSearchType
-} from "@aegis/schemas";
+} from "@standard/schemas";
 import type {
   KbEmbeddingJobRepository,
   KbVectorReferenceRepository,
   KbSearchLogRepository,
   KbRepositories,
-} from "@aegis/kb";
+} from "@standard/kb";
 import type { DbClient } from "./db";
 
 // ---------- Embedding Jobs ----------
@@ -239,3 +239,4 @@ export const createDrizzleKbRepositories = (db: DbClient): KbRepositories => ({
   vectorReferences: createDrizzleKbVectorReferenceRepository(db),
   searchLogs: createDrizzleKbSearchLogRepository(db),
 });
+

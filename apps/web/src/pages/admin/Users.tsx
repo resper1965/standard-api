@@ -21,10 +21,11 @@ export function AdminUsers() {
       // Mock fetch as we don't have the exact API endpoint docs right now
       const res = await api<{ data: User[] }>("/api/auth/admin/list-users", {
         method: "GET"
-      }).catch(() => ({ data: [
+      }).catch(() => [
         { id: "1", name: "Admin User", email: "admin@bekaa.eu", role: "admin", createdAt: new Date(), banned: false }
-      ]})); // Fallback mock
-      setUsers(res.data);
+      ]); // Fallback mock
+      const dataArray = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : []);
+      setUsers(dataArray);
     } catch (e: any) {
       setError(e.message || "Failed to fetch users");
     } finally {

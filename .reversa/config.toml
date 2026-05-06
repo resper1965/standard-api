@@ -2,7 +2,7 @@
 # Este arquivo é gerenciado pelo instalador. Para customizações, edite config.user.toml
 
 [project]
-name = "aegis-api"
+name = "standard-api"
 version = "1.0.0"
 
 [user]
@@ -41,3 +41,4 @@ installed = [
 [analysis]
 answer_mode = "chat"
 doc_level = "completo"
+

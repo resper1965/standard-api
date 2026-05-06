@@ -1,4 +1,4 @@
-import { CreateTenantRequestSchema, UpdateTenantRequestSchema } from "@aegis/schemas";
+import { CreateTenantRequestSchema, UpdateTenantRequestSchema } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";
 import { json, parseJson, routeParam } from "../http";
@@ -41,3 +41,4 @@ export const tenantsRoutes: RouteDefinition[] = [
     }
   }
 ];
+

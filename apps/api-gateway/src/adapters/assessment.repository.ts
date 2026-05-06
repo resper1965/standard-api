@@ -1,8 +1,8 @@
 import { eq, and } from "drizzle-orm";
-import { assessments } from "@aegis/schemas";
+import { assessments } from "@standard/schemas";
 import type { AssessmentRecord, AssessmentRepositoryAdapter } from "../http";
 import type { DbClient } from "./db";
-import type { AssessmentSnapshot } from "@aegis/assessment-engine";
+import type { AssessmentSnapshot } from "@standard/assessment-engine";
 
 const buildDefaultSnapshot = (id: string, tenantId: string, organizationId: string, documentCount: number): AssessmentSnapshot => ({
   id,
@@ -47,6 +47,11 @@ export const createAssessmentRepository = (): AssessmentRepositoryAdapter => {
     async listByOrganization(organizationId, tenantId) {
       return [...records.values()].filter(
         (record) => record.organization_id === organizationId && record.tenant_id === tenantId
+      );
+    },
+    async listAll(tenantId) {
+      return [...records.values()].filter(
+        (record) => record.tenant_id === tenantId
       );
     },
     async save(record) {
@@ -123,6 +128,20 @@ export const createDrizzleAssessmentRepository = (db: DbClient): AssessmentRepos
         snapshot: buildDefaultSnapshot(found.id, found.tenantId, found.organizationId, 0)
       }));
     },
+    async listAll(tenantId) {
+      const results = await db.select().from(assessments)
+        .where(eq(assessments.tenantId, tenantId));
+        
+      return results.map(found => ({
+        assessment_id: found.id,
+        tenant_id: found.tenantId,
+        organization_id: found.organizationId,
+        name: found.name,
+        scf_version_id: found.scfVersionId,
+        trace_id: found.traceId,
+        snapshot: buildDefaultSnapshot(found.id, found.tenantId, found.organizationId, 0)
+      }));
+    },
     async save(record) {
       await db.update(assessments)
         .set({
@@ -134,3 +153,4 @@ export const createDrizzleAssessmentRepository = (db: DbClient): AssessmentRepos
     }
   };
 };
+

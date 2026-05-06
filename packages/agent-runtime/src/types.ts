@@ -5,7 +5,7 @@ import type {
   AgentToolInvocationResponse,
   AgentToolName,
   FunctionalAgentId
-} from "@aegis/schemas";
+} from "@standard/schemas";
 
 export type StartAgentRunInput = {
   agent_id: FunctionalAgentId;
@@ -39,10 +39,11 @@ export type AgentToolCallRepository = {
   listByRun(agentRunId: string, tenantId: string): Promise<AgentToolInvocationResponse[]>;
 };
 
-import type { LlmProvider } from "./llm";
+import type { LanguageModelV1 } from "ai";
 
 export type AgentRuntimeDependencies = {
   runs: AgentRunRepository;
   toolCalls: AgentToolCallRepository;
-  llm: LlmProvider;
+  llm: LanguageModelV1;
 };
+

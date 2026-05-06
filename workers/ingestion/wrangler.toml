@@ -1,23 +1,29 @@
-name = "aegis-api-standard-ingestion"
+name = "standard-ingestion"
 main = "src/index.ts"
 compatibility_date = "2026-04-28"
 
 [vars]
-AEGIS_ENV = "development"
+STANDARD_ENV = "development"
 LOG_LEVEL = "info"
-AI_GATEWAY_NAME = "aegis-dev"
-AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/aegis-dev"
+AI_GATEWAY_NAME = "standard-dev"
+AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/standard-dev"
 
 [[queues.consumers]]
-queue = "aegis-document-ingestion-dev"
+queue = "standard-document-ingestion-dev"
 max_batch_size = 10
 max_batch_timeout = 30
-dead_letter_queue = "aegis-dead-letter-dev"
+dead_letter_queue = "standard-dead-letter-dev"
 
 [[r2_buckets]]
-binding = "AEGIS_DOCUMENTS_BUCKET"
-bucket_name = "aegis-documents-dev"
+binding = "STANDARD_DOCUMENTS_BUCKET"
+bucket_name = "standard-documents-dev"
 
 [[vectorize]]
-binding = "AEGIS_KB_INDEX"
-index_name = "aegis-kb-dev"
+binding = "STANDARD_KB_INDEX"
+index_name = "standard-kb-dev"
+
+[[queues.producers]]
+binding = "STANDARD_KB_EMBEDDING_QUEUE"
+queue = "standard-kb-embedding-dev"
+
+

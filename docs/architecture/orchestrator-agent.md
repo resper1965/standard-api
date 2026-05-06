@@ -2,7 +2,7 @@
 
 ## 1. Definição do Orchestrator Agent
 
-O **Orchestrator Agent** é a camada de coordenação lógica do Aegis SCF Agentic Assessment Model. Ele interpreta o estado atual de um assessment, decide o próximo passo operacional permitido e prepara a chamada para o Agent Runtime ou a espera por intervenção humana.
+O **Orchestrator Agent** é a camada de coordenação lógica do Standard SCF Agentic Assessment Model. Ele interpreta o estado atual de um assessment, decide o próximo passo operacional permitido e prepara a chamada para o Agent Runtime ou a espera por intervenção humana.
 
 Definição operacional:
 
@@ -175,25 +175,25 @@ Esta tabela define a core logic determinística do MVP. Os nomes de estado devem
 | Estado | Pré-condições | Ação | Agente | Resultado esperado |
 | --- | --- | --- | --- | --- |
 | `draft` | Assessment criado com tenant/organization válidos | `block` ou aguardar documentos | Nenhum | Solicitar upload/documentos |
-| `documents_uploaded` | Documentos associados ao assessment | `invoke_agent` para `run_ingestion` | Aegis Knowledge Steward | Ingestion/KB preparation draft |
-| `documents_ingested` | Ingestion concluída sem erro crítico | `invoke_agent` para `index_kb` | Aegis Knowledge Steward | KB indexing decision/context |
-| `kb_ready` ou `documents_ingested` com KB indexada | KB index disponível | `invoke_agent` para `scf_pre_analysis` | Aegis SCF Control Analyst | SCF pre-analysis draft |
+| `documents_uploaded` | Documentos associados ao assessment | `invoke_agent` para `run_ingestion` | Standard Knowledge Steward | Ingestion/KB preparation draft |
+| `documents_ingested` | Ingestion concluída sem erro crítico | `invoke_agent` para `index_kb` | Standard Knowledge Steward | KB indexing decision/context |
+| `kb_ready` ou `documents_ingested` com KB indexada | KB index disponível | `invoke_agent` para `scf_pre_analysis` | Standard SCF Control Analyst | SCF pre-analysis draft |
 | `scf_pre_analysis_ready` | Pre-analysis válido | `wait_for_approval` ou wait for framework selection | Nenhum | Framework selection pendente |
-| `framework_selected` | `framework_id` e `scf_version` válidos | `invoke_agent` para `generate_soa` | Aegis Scope & SoA Architect | SoA draft |
-| `scope_drafted` | Scope draft validado | `invoke_agent` para `generate_soa` | Aegis Scope & SoA Architect | SoA draft |
+| `framework_selected` | `framework_id` e `scf_version` válidos | `invoke_agent` para `generate_soa` | Standard Scope & SoA Architect | SoA draft |
+| `scope_drafted` | Scope draft validado | `invoke_agent` para `generate_soa` | Standard Scope & SoA Architect | SoA draft |
 | `soa_drafted` | SoA draft schema-validado | `wait_for_approval` | Nenhum | SoA approval required |
 | `soa_under_review` | Review em aberto | `wait_for_approval` | Nenhum | Aguardar humano |
-| `soa_approved` | Approval event humano válido | `invoke_agent` para `run_evidence_analysis` | Aegis Evidence Analyst | Evidence Analysis draft |
-| `evidence_analysis_ready` | Evidence Analysis validada | `invoke_agent` para `create_gap_analysis` | Aegis Gap Analyst | Gap Analysis draft |
+| `soa_approved` | Approval event humano válido | `invoke_agent` para `run_evidence_analysis` | Standard Evidence Analyst | Evidence Analysis draft |
+| `evidence_analysis_ready` | Evidence Analysis validada | `invoke_agent` para `create_gap_analysis` | Standard Gap Analyst | Gap Analysis draft |
 | `gap_analysis_drafted` | Gap draft schema-validado | `wait_for_approval` | Nenhum | Gap approval required |
 | `gap_analysis_under_review` | Review em aberto | `wait_for_approval` | Nenhum | Aguardar humano |
-| `gap_analysis_approved` | Approval event humano válido | `invoke_agent` para `run_maturity` | Aegis Maturity Assessor | Maturity draft |
+| `gap_analysis_approved` | Approval event humano válido | `invoke_agent` para `run_maturity` | Standard Maturity Assessor | Maturity draft |
 | `maturity_assessed` | Maturity draft schema-validado | `wait_for_approval` | Nenhum | Maturity approval required |
 | `maturity_under_review` | Review em aberto | `wait_for_approval` | Nenhum | Aguardar humano |
-| `maturity_approved` | Approval event humano válido | `invoke_agent` para `generate_poam` | Aegis POA&M Planner | POA&M draft |
+| `maturity_approved` | Approval event humano válido | `invoke_agent` para `generate_poam` | Standard POA&M Planner | POA&M draft |
 | `poam_drafted` | POA&M draft schema-validado | `wait_for_approval` | Nenhum | POA&M approval required |
 | `poam_under_review` | Review em aberto | `wait_for_approval` | Nenhum | Aguardar humano |
-| `poam_approved` | Approval event humano válido | `invoke_agent` para `generate_report` | Aegis Assessment Report Writer | Report draft/export |
+| `poam_approved` | Approval event humano válido | `invoke_agent` para `generate_report` | Standard Assessment Report Writer | Report draft/export |
 | `report_generated` | Report draft/export validado | `wait_for_approval` | Nenhum | Report acceptance required |
 | `report_approved` | Human acceptance válida | `finish` para `close_assessment` | Nenhum | Workflow pode fechar assessment via Assessment Engine |
 | `closed` | Assessment encerrado | `finish` | Nenhum | Sem ação |
@@ -598,7 +598,7 @@ Esta especificação deve permitir:
 - integração com Agent Runtime;
 - validação por testes unitários, contract tests e evals;
 - evolução futura controlada para Orchestrator híbrido;
-- manutenção dos guardrails centrais do Aegis SCF Agentic Assessment Model.
+- manutenção dos guardrails centrais do Standard SCF Agentic Assessment Model.
 
 Definition of done para implementação futura:
 
@@ -612,3 +612,4 @@ Definition of done para implementação futura:
 - integração com workflow sem substituir Workflow;
 - integração com Assessment Engine sem redefinir estados;
 - Agent Runtime chamado apenas por contrato validado.
+

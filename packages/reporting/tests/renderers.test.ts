@@ -15,7 +15,7 @@ test("Markdown renderer gera relatório com seções mínimas", async () => {
   const draft = await new ReportDraftService(reporting).createReportDraft(context.assessmentId, "full_assessment_report", {}, context);
   const rendered = await new ReportRendererService(reporting).renderMarkdown(draft.report_version_id, context);
   expect(rendered.format).toBe("markdown");
-  expect(rendered.content).toContain("# Synthetic Aegis Assessment Report");
+  expect(rendered.content).toContain("# Synthetic Standard Assessment Report");
   expect(rendered.content).toContain("## Traceability Appendix");
 });
 
@@ -27,3 +27,4 @@ test("storage gera storage_key segura e content_hash", async () => {
   expect(artifact.content_hash.length).toBe(64);
   expect(artifact.storage_key).toContain(`/assessments/${context.assessmentId}/reports/${draft.report_version_id}/`);
 });
+

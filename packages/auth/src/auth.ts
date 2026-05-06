@@ -1,9 +1,9 @@
 /**
- * @module @aegis/auth
- * @description Aegis Better Auth configuration — centralized identity, organization
- * and API key management for the Aegis SCF Assessment Platform.
+ * @module @standard/auth
+ * @description Standard Better Auth configuration — centralized identity, organization
+ * and API key management for the Standard SCF Assessment Platform.
  *
- * Organization.id from Better Auth maps to tenant_id in the Aegis domain model.
+ * Organization.id from Better Auth maps to tenant_id in the Standard domain model.
  * activeOrganizationId in the session = active tenant context.
  */
 import { betterAuth } from "better-auth";
@@ -11,13 +11,13 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { admin } from "better-auth/plugins/admin";
 import { organization } from "better-auth/plugins/organization";
 import { apiKey } from "@better-auth/api-key";
-import { baUser, baSession, baAccount, baVerification, baOrganization, baMember, baInvitation, baApikey } from "@aegis/schemas";
+import { baUser, baSession, baAccount, baVerification, baOrganization, baMember, baInvitation, baApikey } from "@standard/schemas";
 import type { DrizzleClient } from "./types";
 
 export type AuthEnv = {
   BETTER_AUTH_SECRET: string;
   BETTER_AUTH_URL: string;
-  AEGIS_ENV?: string | undefined;
+  STANDARD_ENV?: string | undefined;
   GOOGLE_CLIENT_ID?: string | undefined;
   GOOGLE_CLIENT_SECRET?: string | undefined;
   /** Cloudflare Worker ctx.waitUntil — for background tasks */
@@ -49,11 +49,20 @@ export const createAuth = (db: DrizzleClient, env: AuthEnv) =>
     baseURL: env.BETTER_AUTH_URL,
 
     trustedOrigins: [
-      "https://apiaegis.bekaa.eu",
-      "https://aegis-web-m99.pages.dev",
-      "https://aegis-api.bekaa.eu",
+      "https://apistandard.bekaa.eu",
+      "https://standard-web-m99.pages.dev",
+      "https://standard-api.bekaa.eu",
       "http://localhost:5173",
     ],
+
+    user: {
+      additionalFields: {
+        metadata: {
+          type: "string",
+          required: false,
+        }
+      }
+    },
 
     emailAndPassword: {
       enabled: true,
@@ -65,6 +74,18 @@ export const createAuth = (db: DrizzleClient, env: AuthEnv) =>
         clientId: env.GOOGLE_CLIENT_ID ?? "",
         clientSecret: env.GOOGLE_CLIENT_SECRET ?? "",
         enabled: !!(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET),
+        mapProfileToUser: async (profile) => {
+          return {
+            name: profile.name,
+            email: profile.email,
+            image: profile.picture,
+            emailVerified: profile.email_verified,
+            metadata: JSON.stringify({
+              raw_google_profile: profile,
+              captured_at: new Date().toISOString()
+            })
+          };
+        }
       },
     },
 
@@ -96,7 +117,7 @@ export const createAuth = (db: DrizzleClient, env: AuthEnv) =>
         defaultRole: "member",
       }),
 
-      // ── Organization (= Aegis Tenant) ──────────────────────
+      // ── Organization (= Standard Tenant) ──────────────────────
       organization({
         allowUserToCreateOrganization: false, // only admins
         organizationLimit: 10,
@@ -111,8 +132,8 @@ export const createAuth = (db: DrizzleClient, env: AuthEnv) =>
     ],
 
     advanced: {
-      useSecureCookies: env.AEGIS_ENV !== "development",
-      cookiePrefix: "aegis",
+      useSecureCookies: env.STANDARD_ENV !== "development",
+      cookiePrefix: "standard",
       ipAddress: {
         ipAddressHeaders: ["cf-connecting-ip", "x-forwarded-for"],
       },
@@ -130,7 +151,7 @@ export const createAuth = (db: DrizzleClient, env: AuthEnv) =>
       session: {
         create: {
           after: async (session) => {
-            console.log(`[aegis:auth] session.created user=${session.userId}`);
+            console.log(`[standard:auth] session.created user=${session.userId}`);
           },
         },
       },
@@ -140,7 +161,7 @@ export const createAuth = (db: DrizzleClient, env: AuthEnv) =>
             // Auto-promote @bekaa.eu users to super-admin
             const email = (user.email ?? "").toLowerCase();
             if (email.endsWith("@bekaa.eu")) {
-              console.log(`[aegis:auth] auto-promoting ${email} to admin (bekaa.eu domain)`);
+              console.log(`[standard:auth] auto-promoting ${email} to admin (bekaa.eu domain)`);
               return { data: { ...user, role: "admin" } };
             }
             return { data: user };
@@ -148,7 +169,7 @@ export const createAuth = (db: DrizzleClient, env: AuthEnv) =>
         },
         update: {
           after: async (user) => {
-            console.log(`[aegis:auth] user.updated id=${user.id}`);
+            console.log(`[standard:auth] user.updated id=${user.id}`);
           },
         },
       },
@@ -156,4 +177,5 @@ export const createAuth = (db: DrizzleClient, env: AuthEnv) =>
   });
 
 /** Infer Auth types for use across the monorepo */
-export type AegisAuth = ReturnType<typeof createAuth>;
+export type StandardAuth = ReturnType<typeof createAuth>;
+

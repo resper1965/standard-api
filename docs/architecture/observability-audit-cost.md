@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-A camada `packages/observability` cria a primeira base de logs estruturados, trace context, audit trail, security events, métricas operacionais e registros de uso/custo do Aegis. O desenho é multi-tenant, API-first e sem dependência obrigatória de vendor.
+A camada `packages/observability` cria a primeira base de logs estruturados, trace context, audit trail, security events, métricas operacionais e registros de uso/custo do Standard. O desenho é multi-tenant, API-first e sem dependência obrigatória de vendor.
 
 ## Logs Estruturados
 
@@ -187,3 +187,4 @@ Regras:
 - Sampling de logs/trace em produção.
 - Modelo de budgets/thresholds por tenant.
 - Integração final com AI Gateway usage e billing.
+

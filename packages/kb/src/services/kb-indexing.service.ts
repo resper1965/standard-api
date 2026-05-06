@@ -1,5 +1,5 @@
-import type { DocumentChunk } from "@aegis/document-ingestion";
-import type { DocumentResponse } from "@aegis/schemas";
+import type { DocumentChunk } from "@standard/document-ingestion";
+import type { DocumentResponse } from "@standard/schemas";
 import type { KbIndexRequest, KbIndexResponse, KbRequestContext, KbServiceDependencies } from "../types";
 import { KbReferenceService } from "./kb-reference.service";
 
@@ -109,3 +109,4 @@ export class KbIndexingService {
     return { queuedJobId: job.job_id, vectorReferenceId: queuedReference.vector_reference_id };
   }
 }
+

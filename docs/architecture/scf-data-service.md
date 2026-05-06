@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-O SCF Data Service é a camada normativa estruturada do Aegis para versões, domínios, controles, frameworks, requirements, mappings e relações STRM do Secure Controls Framework.
+O SCF Data Service é a camada normativa estruturada do Standard para versões, domínios, controles, frameworks, requirements, mappings e relações STRM do Secure Controls Framework.
 
 O pacote principal é `packages/scf-core`. Ele expõe schemas, fixture sintética, importadores extensíveis, repositórios e serviços de consulta reutilizáveis pelo API Gateway, workflows e futuros agentes funcionais.
 
@@ -89,3 +89,4 @@ Domínios pertencem a uma versão SCF. Controles pertencem simultaneamente a uma
 - Modelo final de tabela STRM separado por mapping ou catálogo de relações.
 - Geração automática de OpenAPI a partir de Zod.
 - Adapters PostgreSQL para `packages/scf-core`.
+

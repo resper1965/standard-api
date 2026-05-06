@@ -2,7 +2,7 @@
 
 ## Objetivo da API
 
-A API versionada do `aegis-api-standard` expõe os comandos e consultas iniciais do Aegis SCF-Based Assessment Lifecycle. Ela serve web app, integrações, automações e consumidores futuros sem acoplar regra crítica ao frontend.
+A API versionada do `standard-api-standard` expõe os comandos e consultas iniciais do Standard SCF-Based Assessment Lifecycle. Ela serve web app, integrações, automações e consumidores futuros sem acoplar regra crítica ao frontend.
 
 ## API-First
 
@@ -18,11 +18,11 @@ Os endpoints de lifecycle chamam `packages/assessment-engine` para validar e exe
 
 ## Multi-Tenancy
 
-Rotas protegidas exigem `tenant_id` resolvido por placeholder via `x-aegis-tenant-id` ou path `:tenantId`. Quando os dois aparecem, a API rejeita divergência. `assessment_id` é sempre validado contra `tenant_id` e `organization_id` nos mocks.
+Rotas protegidas exigem `tenant_id` resolvido por placeholder via `x-standard-tenant-id` ou path `:tenantId`. Quando os dois aparecem, a API rejeita divergência. `assessment_id` é sempre validado contra `tenant_id` e `organization_id` nos mocks.
 
 ## Approvals
 
-`POST /api/v1/assessments/:assessmentId/approvals` cria approval events formais com `actor_id` obrigatório via `x-aegis-actor-id`. Transições que exigem approval recebem `approval_event_id` e delegam a validação final ao Assessment Engine.
+`POST /api/v1/assessments/:assessmentId/approvals` cria approval events formais com `actor_id` obrigatório via `x-standard-actor-id`. Transições que exigem approval recebem `approval_event_id` e delegam a validação final ao Assessment Engine.
 
 ## Artifact Versions
 
@@ -49,3 +49,4 @@ Toda request recebe ou reutiliza `x-trace-id`. Erros, responses críticas, lifec
 - Definir granularidade de RBAC para approvals, transitions e artifacts.
 - Substituir mocks por repositories PostgreSQL com transações.
 - Gerar OpenAPI completo a partir de Zod ou manter documentação manual nesta fase.
+

@@ -1,5 +1,5 @@
-import { createInMemoryKbDependencies } from "@aegis/kb";
-import { createInMemorySoaDependencies } from "@aegis/soa";
+import { createInMemoryKbDependencies } from "@standard/kb";
+import { createInMemorySoaDependencies } from "@standard/soa";
 import { createInMemoryGapAnalysisRepositories } from "./repositories/gap-analysis.repositories";
 import type { GapAnalysisDependencies } from "./types";
 
@@ -15,3 +15,4 @@ export const createInMemoryGapAnalysisDependencies = (overrides: Partial<Omit<Ga
     ...(overrides.scf ? { scf: overrides.scf } : {})
   };
 };
+

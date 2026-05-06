@@ -1,4 +1,4 @@
-import type { AgentUsageRecord, AuditEvent, OperationalMetric, SecurityEventRecord, UsageRecord } from "@aegis/schemas";
+import type { AgentUsageRecord, AuditEvent, OperationalMetric, SecurityEventRecord, UsageRecord } from "@standard/schemas";
 
 export type ObservabilityRepository<T extends { id: string; created_at?: string | undefined; trace_id: string }> = {
   create(record: T): Promise<T>;
@@ -44,3 +44,4 @@ export const createInMemoryObservabilityDependencies = (): ObservabilityDependen
   usage: createInMemoryRepository<UsageRecord>(),
   agentUsage: createInMemoryRepository<AgentUsageRecord>()
 });
+

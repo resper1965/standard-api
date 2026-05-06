@@ -1,4 +1,4 @@
-import type { ReportSectionResponse } from "@aegis/schemas";
+import type { ReportSectionResponse } from "@standard/schemas";
 import type { RenderedReportArtifact } from "../types";
 
 const formatContent = (content: Record<string, unknown>): string =>
@@ -16,3 +16,4 @@ export const renderMarkdownArtifact = (title: string, reportVersionId: string, s
     ...sections.map((section) => [`## ${section.title}`, "", formatContent(section.content), ""].join("\n"))
   ].join("\n")
 });
+

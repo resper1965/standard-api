@@ -5,7 +5,7 @@ import type {
   DocumentResponse,
   ExtractedDocument,
   VectorReferenceResponse
-} from "@aegis/schemas";
+} from "@standard/schemas";
 
 export type FileDescriptor = {
   originalFilename: string;
@@ -48,6 +48,7 @@ export type StorageAdapter = {
 
 export type QueueAdapter = {
   enqueue(message: DocumentIngestionJobMessage): Promise<void>;
+  enqueueKbEmbeddingJob(message: any): Promise<void>; // using any temporarily to avoid circular deps
 };
 
 export type DocumentRecordRepository = {
@@ -117,3 +118,4 @@ export type DocumentIngestionServiceDependencies = {
   extractors: DocumentTextExtractor[];
   chunking: ChunkingConfig;
 };
+

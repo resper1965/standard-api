@@ -5,7 +5,7 @@
 | Variável | Uso | Local | Cloudflare | GitHub Actions |
 | --- | --- | --- | --- | --- |
 | `NODE_ENV` | Runtime Node | `.env` local | var não secreta | env |
-| `AEGIS_ENV` | Ambiente lógico | `.env` local | `[vars]` | env |
+| `STANDARD_ENV` | Ambiente lógico | `.env` local | `[vars]` | env |
 | `LOG_LEVEL` | Verbosidade de logs | `.env` local | `[vars]` | env |
 | `DATABASE_URL` | PostgreSQL transacional | `.env` local | secret | secret |
 | `CLOUDFLARE_ACCOUNT_ID` | Deploy/API Cloudflare | placeholder | secret quando necessário | secret |
@@ -66,3 +66,4 @@ Use environments `staging` e `production`; production deve exigir aprovação ma
 ## Separação por Ambiente
 
 Cada ambiente deve ter recursos próprios. Dev/staging nunca usam bucket, fila, Vectorize ou PostgreSQL production.
+

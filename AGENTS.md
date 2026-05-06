@@ -2,20 +2,20 @@
 
 ## 1. Product Overview
 
-- Produto: `Aegis`.
-- Repositório: `aegis-api-standard`.
-- Núcleo reutilizável: `Aegis Assessment Engine`.
-- Método funcional: `Aegis SCF-Based Assessment Lifecycle`.
-- Modelo agêntico: `Aegis SCF Agentic Assessment Model`.
+- Produto: `Standard`.
+- Repositório: `standard-api-standard`.
+- Núcleo reutilizável: `Standard Assessment Engine`.
+- Método funcional: `Standard SCF-Based Assessment Lifecycle`.
+- Modelo agêntico: `Standard SCF Agentic Assessment Model`.
 - Arquitetura: `API-first / SaaS-ready / Cloudflare-oriented`.
-- Aegis é uma plataforma SaaS API-first para executar assessments de segurança, conformidade e maturidade com base no Secure Controls Framework, SCF.
-- O Aegis SCF Agentic Assessment Model é um modelo de IA agêntica para conduzir assessments baseados no SCF, no qual agentes especializados colaboram sob orquestração controlada, sempre com rastreabilidade, validação de schema, controle de escopo e aprovação humana.
+- Standard é uma plataforma SaaS API-first para executar assessments de segurança, conformidade e maturidade com base no Secure Controls Framework, SCF.
+- O Standard SCF Agentic Assessment Model é um modelo de IA agêntica para conduzir assessments baseados no SCF, no qual agentes especializados colaboram sob orquestração controlada, sempre com rastreabilidade, validação de schema, controle de escopo e aprovação humana.
 - O lifecycle cobre ingestão de documentos, criação de KB, análise SCF preliminar, seleção de framework, escopo/SoA, Gap Analysis, Maturity Assessment e POA&M.
 - O frontend é consumidor da API. O backend, contratos, schemas, workflows, workers e pacotes reutilizáveis são o centro do sistema.
 
 ## 2. Repository Purpose
 
-- `aegis-api-standard` contém a implementação API-first padrão do Aegis SCF-Based Assessment Lifecycle.
+- `standard-api-standard` contém a implementação API-first padrão do Standard SCF-Based Assessment Lifecycle.
 - Este repositório deve definir backend reutilizável, contratos de API, schemas, workflows, workers, assessment engine, SCF data layer, KB integration e agent runtime rules.
 - Web app, integrações futuras, automações internas e outros consumidores devem usar a API e os contratos deste repositório.
 - Codex, Cursor, Claude Code e Google Antigravity são agentes de coding assistido; não são runtime operacional da plataforma.
@@ -34,7 +34,7 @@
 ## 4. Repository Structure
 
 ```text
-aegis-api-standard/
+standard-api-standard/
 ├── AGENTS.md
 ├── apps/
 │   ├── web/
@@ -133,7 +133,7 @@ aegis-api-standard/
 
 ## 10. Agent Runtime Rules
 
-- Agentes funcionais: Aegis Knowledge Steward, Aegis SCF Control Analyst, Aegis Framework Mapper, Aegis Scope & SoA Architect, Aegis Evidence Analyst, Aegis Gap Analyst, Aegis Maturity Assessor, Aegis POA&M Planner, Aegis Assessment Report Writer.
+- Agentes funcionais: Standard Knowledge Steward, Standard SCF Control Analyst, Standard Framework Mapper, Standard Scope & SoA Architect, Standard Evidence Analyst, Standard Gap Analyst, Standard Maturity Assessor, Standard POA&M Planner, Standard Assessment Report Writer.
 - Knowledge Steward pode organizar KB e evidências; não decide compliance final.
 - SCF Control Analyst pode analisar controles; não cria mappings oficiais ausentes.
 - Framework Mapper pode consultar mappings SCF; não inventa crosswalks.
@@ -266,3 +266,4 @@ Quando o usuário digitar `reversa` sozinho em uma mensagem:
 
 Nunca apague, modifique ou sobrescreva arquivos pré-existentes do projeto legado.
 O Reversa escreve **apenas** em `.reversa/` e `_reversa_sdd/`.
+

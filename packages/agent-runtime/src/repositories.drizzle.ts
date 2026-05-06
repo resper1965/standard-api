@@ -1,5 +1,5 @@
-import type { AgentRunResponse, AgentToolInvocationResponse } from "@aegis/schemas";
-import { agentRuns, agentToolCalls } from "@aegis/schemas";
+import type { AgentRunResponse, AgentToolInvocationResponse } from "@standard/schemas";
+import { agentRuns, agentToolCalls } from "@standard/schemas";
 import { eq, and } from "drizzle-orm";
 import type { AgentRunRepository, AgentToolCallRepository, AgentRuntimeDependencies } from "./types";
 
@@ -115,3 +115,4 @@ export const createDrizzleAgentRuntimeDependencies = (db: AnyDrizzleClient): Omi
   runs: createDrizzleAgentRunRepository(db),
   toolCalls: createDrizzleAgentToolCallRepository(db)
 });
+

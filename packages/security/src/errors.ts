@@ -1,4 +1,4 @@
-import type { AccessDeniedReason } from "@aegis/schemas";
+import type { AccessDeniedReason } from "@standard/schemas";
 
 export class SecurityPolicyError extends Error {
   constructor(
@@ -9,3 +9,4 @@ export class SecurityPolicyError extends Error {
     super(`${reason}: ${message}`);
   }
 }
+

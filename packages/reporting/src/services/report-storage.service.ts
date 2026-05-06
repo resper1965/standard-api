@@ -1,4 +1,4 @@
-import type { ReportArtifactResponse, RenderReportResponse } from "@aegis/schemas";
+import type { ReportArtifactResponse, RenderReportResponse } from "@standard/schemas";
 import { assertActor, assertContext, ReportingWorkflowError } from "../errors";
 import type { ReportingContext, ReportingDependencies } from "../types";
 
@@ -36,7 +36,7 @@ export class ReportStorageService {
       artifact_type: artifact.artifact_type,
       format: artifact.format,
       storage_provider: "r2_compatible_mock",
-      storage_bucket: "aegis-reporting-local",
+      storage_bucket: "standard-reporting-local",
       storage_key: storageKey,
       content_hash: await sha256Hex(artifact.content),
       file_size: new TextEncoder().encode(artifact.content).byteLength,
@@ -63,6 +63,7 @@ export class ReportStorageService {
 
   async generateDownloadUrl(artifactId: string, context: ReportingContext): Promise<string> {
     const artifact = await this.getArtifact(artifactId, context);
-    return `aegis-r2://download/${artifact.report_artifact_id}?tenant_id=${context.tenantId}&assessment_id=${context.assessmentId}&expires_in=900`;
+    return `standard-r2://download/${artifact.report_artifact_id}?tenant_id=${context.tenantId}&assessment_id=${context.assessmentId}&expires_in=900`;
   }
 }
+

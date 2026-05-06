@@ -1,16 +1,16 @@
 /**
- * @module @aegis/auth/permissions
- * @description Aegis Access Control definitions.
+ * @module @standard/auth/permissions
+ * @description Standard Access Control definitions.
  *
- * Maps Aegis domain resources to granular permissions.
+ * Maps Standard domain resources to granular permissions.
  * Used by Better Auth's organization plugin for RBAC enforcement.
  */
 
 /**
- * Aegis permission resources and their allowed operations.
+ * Standard permission resources and their allowed operations.
  * These are checked via `auth.api.hasPermission()` in middleware.
  */
-export const AEGIS_PERMISSIONS = {
+export const STANDARD_PERMISSIONS = {
   assessment: ["read", "create", "update", "delete", "approve", "run_workflow", "cancel"] as const,
   document: ["read", "upload", "delete"] as const,
   kb: ["read", "search"] as const,
@@ -24,15 +24,15 @@ export const AEGIS_PERMISSIONS = {
   admin: ["manage_users", "manage_orgs", "impersonate"] as const,
 } as const;
 
-export type AegisResource = keyof typeof AEGIS_PERMISSIONS;
-export type AegisPermission<R extends AegisResource = AegisResource> =
-  `${R}:${(typeof AEGIS_PERMISSIONS)[R][number]}`;
+export type StandardResource = keyof typeof STANDARD_PERMISSIONS;
+export type StandardPermission<R extends StandardResource = StandardResource> =
+  `${R}:${(typeof STANDARD_PERMISSIONS)[R][number]}`;
 
 /**
- * Role-permission mapping for the Aegis platform.
+ * Role-permission mapping for the Standard platform.
  * Better Auth uses these to enforce access control via organization plugin.
  */
-export const AEGIS_ROLE_PERMISSIONS = {
+export const STANDARD_ROLE_PERMISSIONS = {
   owner: {
     assessment: ["read", "create", "update", "delete", "approve", "run_workflow", "cancel"],
     document: ["read", "upload", "delete"],
@@ -85,19 +85,20 @@ export const AEGIS_ROLE_PERMISSIONS = {
   },
 } as const;
 
-export type AegisRole = keyof typeof AEGIS_ROLE_PERMISSIONS;
+export type StandardRole = keyof typeof STANDARD_ROLE_PERMISSIONS;
 
 /**
  * Check if a role has a specific permission.
  */
 export const roleHasPermission = (
-  role: AegisRole,
-  resource: AegisResource,
+  role: StandardRole,
+  resource: StandardResource,
   action: string
 ): boolean => {
-  const perms = AEGIS_ROLE_PERMISSIONS[role];
+  const perms = STANDARD_ROLE_PERMISSIONS[role];
   if (!perms) return false;
   const resourcePerms = perms[resource as keyof typeof perms] as readonly string[] | undefined;
   if (!resourcePerms) return false;
   return resourcePerms.includes(action);
 };
+

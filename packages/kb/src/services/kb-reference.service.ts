@@ -1,4 +1,4 @@
-import type { DocumentChunk } from "@aegis/document-ingestion";
+import type { DocumentChunk } from "@standard/document-ingestion";
 import type { KbServiceDependencies, KbVectorReferenceResponse } from "../types";
 
 export class KbReferenceService {
@@ -29,3 +29,4 @@ export class KbReferenceService {
     return reference;
   }
 }
+

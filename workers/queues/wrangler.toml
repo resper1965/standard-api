@@ -1,37 +1,48 @@
-name = "aegis-api-standard-queues"
+name = "standard-queues"
 main = "src/index.ts"
 compatibility_date = "2026-04-28"
 
 [vars]
-AEGIS_ENV = "development"
+STANDARD_ENV = "development"
 LOG_LEVEL = "info"
-AI_GATEWAY_NAME = "aegis-dev"
-AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/aegis-dev"
+AI_GATEWAY_NAME = "standard-dev"
+AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/standard-dev"
 
 [[queues.consumers]]
-queue = "aegis-kb-embedding-dev"
+queue = "standard-kb-embedding-dev"
 max_batch_size = 10
 max_batch_timeout = 30
-dead_letter_queue = "aegis-dead-letter-dev"
+dead_letter_queue = "standard-dead-letter-dev"
 
 [[queues.consumers]]
-queue = "aegis-report-export-dev"
+queue = "standard-report-export-dev"
 max_batch_size = 5
 max_batch_timeout = 30
-dead_letter_queue = "aegis-dead-letter-dev"
+dead_letter_queue = "standard-dead-letter-dev"
+
+[[queues.consumers]]
+queue = "standard-agent-run-dev"
+max_batch_size = 5
+max_batch_timeout = 60
+dead_letter_queue = "standard-dead-letter-dev"
 
 [[r2_buckets]]
-binding = "AEGIS_DOCUMENTS_BUCKET"
-bucket_name = "aegis-documents-dev"
+binding = "STANDARD_DOCUMENTS_BUCKET"
+bucket_name = "standard-documents-dev"
 
 [[r2_buckets]]
-binding = "AEGIS_REPORTS_BUCKET"
-bucket_name = "aegis-reports-dev"
+binding = "STANDARD_REPORTS_BUCKET"
+bucket_name = "standard-reports-dev"
 
 [[r2_buckets]]
-binding = "AEGIS_EXPORTS_BUCKET"
-bucket_name = "aegis-exports-dev"
+binding = "STANDARD_EXPORTS_BUCKET"
+bucket_name = "standard-exports-dev"
 
 [[vectorize]]
-binding = "AEGIS_KB_INDEX"
-index_name = "aegis-kb-dev"
+binding = "STANDARD_KB_INDEX"
+index_name = "standard-kb-dev"
+
+[ai]
+binding = "AI"
+
+

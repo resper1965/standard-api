@@ -1,6 +1,6 @@
 # Prompts
 
-Este diretório armazena prompts, templates e orientações reutilizáveis relevantes para o desenvolvimento do Aegis.
+Este diretório armazena prompts, templates e orientações reutilizáveis relevantes para o desenvolvimento do Standard.
 
 ## Objetivo
 
@@ -40,3 +40,4 @@ Garantir que prompts importantes não fiquem apenas em conversas locais e possam
 
 ## Histórico de Mudanças
 ```
+

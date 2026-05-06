@@ -1,30 +1,33 @@
-name = "aegis-api-standard-workflows"
+name = "standard-workflows"
 main = "../../workers/workflows/src/assessment-lifecycle.ts"
 compatibility_date = "2026-04-28"
+compatibility_flags = [ "nodejs_compat" ]
 
 [vars]
-AEGIS_ENV = "development"
+STANDARD_ENV = "development"
 LOG_LEVEL = "info"
 
 [[workflows]]
 binding = "ASSESSMENT_WORKFLOW"
-name = "aegis-assessment-lifecycle-dev"
+name = "standard-assessment-lifecycle-dev"
 class_name = "AssessmentLifecycleWorkflow"
 
 [env.staging]
-name = "aegis-api-standard-workflows-staging"
-vars = { AEGIS_ENV = "staging", LOG_LEVEL = "info" }
+name = "standard-workflows-staging"
+vars = { STANDARD_ENV = "staging", LOG_LEVEL = "info" }
 
 [[env.staging.workflows]]
 binding = "ASSESSMENT_WORKFLOW"
-name = "aegis-assessment-lifecycle-staging"
+name = "standard-assessment-lifecycle-staging"
 class_name = "AssessmentLifecycleWorkflow"
 
 [env.production]
-name = "aegis-api-standard-workflows-production"
-vars = { AEGIS_ENV = "production", LOG_LEVEL = "warn" }
+name = "standard-workflows-production"
+vars = { STANDARD_ENV = "production", LOG_LEVEL = "warn" }
 
 [[env.production.workflows]]
 binding = "ASSESSMENT_WORKFLOW"
-name = "aegis-assessment-lifecycle-prod"
+name = "standard-assessment-lifecycle-prod"
 class_name = "AssessmentLifecycleWorkflow"
+
+

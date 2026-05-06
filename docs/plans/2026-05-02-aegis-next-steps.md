@@ -1,4 +1,4 @@
-# Aegis Next Steps Implementation Plan
+# Standard Next Steps Implementation Plan
 
 > **For Antigravity:** REQUIRED WORKFLOW: Use `.agent/workflows/execute-plan.md` to execute this plan in single-flow mode.
 
@@ -392,7 +392,7 @@ Sidebar: `{ to: "/admin/scf", icon: "📦", label: "SCF Import" }`
 1. Delete test user `claudio@bekaa.eu` from Neon DB via SQL
 2. Rotate Neon PostgreSQL password
 3. Update `DATABASE_URL` secret in Cloudflare Worker: `npx wrangler secret put DATABASE_URL --env production`
-4. Verify production health: `curl https://aegis-api.bekaa.eu/api/v1/health`
+4. Verify production health: `curl https://standard-api.bekaa.eu/api/v1/health`
 
 ---
 
@@ -404,7 +404,7 @@ Run: `cd apps/web && pnpm build`
 
 **Step 2: Deploy frontend**
 
-Run: `npx wrangler pages deploy apps/web/dist --project-name aegis-web --branch production --commit-dirty=true`
+Run: `npx wrangler pages deploy apps/web/dist --project-name standard-web --branch production --commit-dirty=true`
 
 **Step 3: Deploy API gateway (if routes changed)**
 
@@ -412,7 +412,7 @@ Run: `npx wrangler deploy --env production` from `apps/api-gateway/`
 
 **Step 4: Verify end-to-end**
 
-1. Open `https://apiaegis.bekaa.eu`
+1. Open `https://apistandard.bekaa.eu`
 2. Login with Google
 3. Navigate to Dashboard → SCF Catalog → Admin pages
 4. Confirm all API calls resolve correctly
@@ -435,8 +435,8 @@ git push origin main
 - Create/Update: `docs/architecture/production-deployment.md`
 
 Document:
-- Custom domains: `apiaegis.bekaa.eu` (frontend), `aegis-api.bekaa.eu` (API)
-- Cloudflare Projects: `aegis-web` (Pages), `aegis-api-standard-api-gateway` (Worker)
+- Custom domains: `apistandard.bekaa.eu` (frontend), `standard-api.bekaa.eu` (API)
+- Cloudflare Projects: `standard-web` (Pages), `standard-api-standard-api-gateway` (Worker)
 - Secrets required: `DATABASE_URL`, `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
 - Deploy commands
 - Environment separation (dev vs production in wrangler.toml)
@@ -456,3 +456,4 @@ Document:
 | **D — Hardening** | 2 tasks (credentials + deploy) | ~10 min |
 | **E — Documentation** | 1 task (production deployment doc) | ~10 min |
 | **Total** | **10 tasks** | **~70 min** |
+

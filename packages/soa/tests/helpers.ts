@@ -1,5 +1,5 @@
-import { createInMemoryKbDependencies } from "@aegis/kb";
-import { createInMemoryScfCore, SYNTHETIC_FRAMEWORK_ID, SYNTHETIC_SCF_VERSION_ID } from "@aegis/scf-core";
+import { createInMemoryKbDependencies } from "@standard/kb";
+import { createInMemoryScfCore, SYNTHETIC_FRAMEWORK_ID, SYNTHETIC_SCF_VERSION_ID } from "@standard/scf-core";
 import { createInMemorySoaDependencies } from "../src/index";
 
 export const ids = {
@@ -26,3 +26,4 @@ export const createSoaFixture = () =>
     scf: createInMemoryScfCore(),
     kb: createInMemoryKbDependencies()
   });
+

@@ -1,8 +1,8 @@
 {
-  "name": "aegis-api-standard",
+  "name": "standard-api-standard",
   "private": true,
   "version": "0.1.0",
-  "description": "API-first standard implementation of the Aegis SCF-Based Assessment Lifecycle.",
+  "description": "API-first standard implementation of the Standard SCF-Based Assessment Lifecycle.",
   "type": "module",
   "packageManager": "pnpm@9.0.0",
   "scripts": {
@@ -12,24 +12,24 @@
     "typecheck": "pnpm -r --if-present typecheck",
     "test": "pnpm -r --if-present test",
     "test:unit": "pnpm -r --if-present --filter \"./packages/*\" --filter \"./workers/*\" test",
-    "test:integration": "pnpm --filter @aegis/api-gateway test && pnpm --filter @aegis/workflows test",
+    "test:integration": "pnpm --filter @standard/api-gateway test && pnpm --filter @standard/workflows test",
     "test:contracts": "tsx tests/contracts/run-tests.ts",
-    "test:security": "pnpm --filter @aegis/security test && pnpm --filter @aegis/api-gateway test",
+    "test:security": "pnpm --filter @standard/security test && pnpm --filter @standard/api-gateway test",
     "test:evaluations": "tsx evals/run-evals.ts",
     "test:regression": "tsx evals/regression/run-regression.ts",
     "test:synthetic-e2e": "tsx tests/e2e-synthetic/run-tests.ts",
     "test:ci": "pnpm lint && pnpm typecheck && pnpm test:unit && pnpm test:contracts && pnpm test:security && pnpm test:regression && pnpm test:evaluations && pnpm test:synthetic-e2e && pnpm build",
-    "db:generate": "pnpm --filter @aegis/schemas db:generate",
-    "db:migrate": "pnpm --filter @aegis/schemas db:migrate",
-    "dev:api": "pnpm --filter @aegis/api-gateway dev",
-    "dev:workflows": "pnpm --filter @aegis/workflows dev",
-    "dev:queues": "pnpm --filter @aegis/queues dev",
-    "dev:ingestion": "pnpm --filter @aegis/ingestion-worker dev",
-    "dev:web": "pnpm --filter @aegis/web dev",
+    "db:generate": "pnpm --filter @standard/schemas db:generate",
+    "db:migrate": "pnpm --filter @standard/schemas db:migrate",
+    "dev:api": "pnpm --filter @standard/api-gateway dev",
+    "dev:workflows": "pnpm --filter @standard/workflows dev",
+    "dev:queues": "pnpm --filter @standard/queues dev",
+    "dev:ingestion": "pnpm --filter @standard/ingestion-worker dev",
+    "dev:web": "pnpm --filter @standard/web dev",
     "cf:dev": "pnpm dev:api",
     "cf:deploy:staging": "node scripts/deploy-cloudflare.mjs staging",
     "cf:deploy:production": "node scripts/deploy-cloudflare.mjs production",
-    "db:seed": "pnpm --filter @aegis/schemas db:seed",
+    "db:seed": "pnpm --filter @standard/schemas db:seed",
     "db:studio": "echo \"db:studio ainda não configurado\""
   },
   "devDependencies": {
@@ -37,5 +37,9 @@
     "tsx": "latest",
     "typescript": "latest",
     "wrangler": "latest"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2"
   }
 }
+

@@ -31,4 +31,5 @@ export type {
   StructuredLogEntry,
   UsageQuery,
   UsageRecord
-} from "@aegis/schemas";
+} from "@standard/schemas";
+

@@ -4,10 +4,10 @@
  * Replaces in-memory workflow persistence with real PostgreSQL storage.
  */
 import { eq, and, notInArray } from "drizzle-orm";
-import { workflowRuns, workflowAuditEvents } from "@aegis/schemas";
-import type { AssessmentLifecycleWorkflowState } from "@aegis/schemas";
-import type { WorkflowRepository, WorkflowAuditAdapter, WorkflowAuditEvent, WorkflowRunRecord, WorkflowDependencies, AssessmentEngineAdapter } from "@aegis/workflows";
-import { executeTransition } from "@aegis/assessment-engine";
+import { workflowRuns, workflowAuditEvents } from "@standard/schemas";
+import type { AssessmentLifecycleWorkflowState } from "@standard/schemas";
+import type { WorkflowRepository, WorkflowAuditAdapter, WorkflowAuditEvent, WorkflowRunRecord, WorkflowDependencies, AssessmentEngineAdapter } from "@standard/workflows";
+import { executeTransition } from "@standard/assessment-engine";
 import type { DbClient } from "./db";
 
 export const createDrizzleWorkflowRepository = (db: DbClient): WorkflowRepository => ({
@@ -110,3 +110,4 @@ const mapWorkflowRow = (row: WorkflowRunRow): WorkflowRunRecord => ({
   created_at: row.createdAt.toISOString(),
   updated_at: row.updatedAt.toISOString(),
 });
+

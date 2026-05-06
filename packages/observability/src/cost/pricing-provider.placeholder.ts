@@ -1,4 +1,4 @@
-import type { CostEstimate } from "@aegis/schemas";
+import type { CostEstimate } from "@standard/schemas";
 
 export type PricingLookupInput = {
   service_name: string;
@@ -18,3 +18,4 @@ export class PricingProviderPlaceholder implements PricingProvider {
     return null;
   }
 }
+

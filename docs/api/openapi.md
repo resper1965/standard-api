@@ -1,4 +1,4 @@
-# Aegis API Contracts
+# Standard API Contracts
 
 Base funcional: `/api/v1`. `GET /health` também existe fora de versão para health checks de plataforma.
 
@@ -333,7 +333,7 @@ Response:
     "original_filename": "evidence.txt",
     "normalized_filename": "evidence.txt",
     "storage_provider": "mock_r2",
-    "storage_bucket": "aegis-documents-dev",
+    "storage_bucket": "standard-documents-dev",
     "storage_key": "tenants/.../documents/.../evidence.txt",
     "content_hash": "sha256",
     "mime_type": "text/plain",
@@ -446,7 +446,7 @@ Response:
 
 ## SCF Data Service
 
-Os endpoints SCF consultam a base normativa estruturada global. Eles não exigem `tenant_id`, porque SCF oficial não é dado de cliente. Endpoints admin exigem `x-aegis-actor-id` no placeholder atual.
+Os endpoints SCF consultam a base normativa estruturada global. Eles não exigem `tenant_id`, porque SCF oficial não é dado de cliente. Endpoints admin exigem `x-standard-actor-id` no placeholder atual.
 
 `GET /api/v1/scf/versions/latest`:
 
@@ -723,7 +723,7 @@ Validações obrigatórias:
 
 `POST /api/v1/gap-analysis/:gapAnalysisVersionId/submit-review` valida findings e muda status para `under_review`.
 
-`POST /api/v1/gap-analysis/:gapAnalysisVersionId/approve` exige `approval_event_id` humano do gate `gap_analysis` e `x-aegis-actor-id`:
+`POST /api/v1/gap-analysis/:gapAnalysisVersionId/approve` exige `approval_event_id` humano do gate `gap_analysis` e `x-standard-actor-id`:
 
 ```json
 {
@@ -824,7 +824,7 @@ Validações obrigatórias:
 
 `POST /api/v1/poam/:poamVersionId/submit-review` valida itens e muda status para `under_review`.
 
-`POST /api/v1/poam/:poamVersionId/approve` exige `approval_event_id` humano do gate `poam` e `x-aegis-actor-id`:
+`POST /api/v1/poam/:poamVersionId/approve` exige `approval_event_id` humano do gate `poam` e `x-standard-actor-id`:
 
 ```json
 {
@@ -863,7 +863,7 @@ Criar draft:
 ```json
 {
   "report_type": "full_assessment_report",
-  "title": "Synthetic Aegis Assessment Report"
+  "title": "Synthetic Standard Assessment Report"
 }
 ```
 
@@ -878,7 +878,7 @@ Resposta sintética:
   "version_number": 1,
   "status": "draft",
   "report_type": "full_assessment_report",
-  "title": "Synthetic Aegis Assessment Report",
+  "title": "Synthetic Standard Assessment Report",
   "source_soa_version_id": "uuid",
   "source_gap_analysis_version_id": "uuid",
   "source_poam_version_id": "uuid",
@@ -915,7 +915,7 @@ Resposta:
     "artifact_type": "report",
     "format": "markdown",
     "mime_type": "text/markdown",
-    "content": "# Synthetic Aegis Assessment Report\n...",
+    "content": "# Synthetic Standard Assessment Report\n...",
     "trace_id": "trace-id"
   },
   "artifact": {
@@ -923,7 +923,7 @@ Resposta:
     "artifact_type": "report",
     "format": "markdown",
     "storage_provider": "r2_compatible_mock",
-    "storage_bucket": "aegis-reporting-local",
+    "storage_bucket": "standard-reporting-local",
     "storage_key": "tenants/{tenant}/organizations/{org}/assessments/{assessment}/reports/{report}/report.markdown",
     "content_hash": "64-char-sha256",
     "file_size": 1234,
@@ -937,7 +937,7 @@ Regras:
 - `full_assessment_report` exige SoA e Gap Analysis aprovados.
 - Maturity e POA&M ausentes são permitidos no MVP apenas com limitação registrada.
 - Relatórios aprovados são imutáveis.
-- Aprovação exige `approval_event_id` do gate `report` e `x-aegis-actor-id`.
+- Aprovação exige `approval_event_id` do gate `report` e `x-standard-actor-id`.
 - Artifacts registram `content_hash` e storage key tenant-scoped.
 - Evidências aparecem como índice/referência segura, não como documento completo.
 - DOCX/PDF retornam placeholder documentado até existir renderer server-side.
@@ -1064,8 +1064,8 @@ Regras:
 
 Headers de desenvolvimento/teste:
 
-- `x-aegis-tenant-id`: tenant context para dados de cliente.
-- `x-aegis-actor-id`: actor context.
+- `x-standard-tenant-id`: tenant context para dados de cliente.
+- `x-standard-actor-id`: actor context.
 - `Authorization: Bearer dev:<role>`: placeholder local para role específica.
 
 `mock_dev` é placeholder e deve ser bloqueado em produção.
@@ -1201,3 +1201,4 @@ Todos os endpoints funcionais começam em `/api/v1`. Novas versões devem ser ad
 ## Ainda Não Implementado
 
 SCF usa fixture sintética marcada como `is_synthetic` no gateway local. KB usa embeddings e vector store mock no ambiente local. SoA, Gap Analysis, POA&M, Reporting e Workflow Orchestration usam repositórios in-memory no gateway local. A classificação inicial de evidência, a priorização inicial do POA&M e a composição inicial de reports são conservadoras e heurísticas. O pacote `packages/maturity` ainda não está implementado; POA&M, Reporting e Workflow Orchestration modelam o gate de maturidade, mas a lógica especializada futura deverá viver em `packages/maturity`. Auth, RBAC, tenancy por hostname/JWT/API key, persistência PostgreSQL real para SCF/KB/SoA/Gap/POA&M/Reporting/Workflow, signed upload URL, importador XLSX/OSCAL oficial, PDF/DOCX extraction/rendering real, Cloudflare Vectorize real, Workers AI real, AI Gateway, rate limiting, Cloudflare Workflow execution persistida e audit log persistente ainda estão pendentes.
+

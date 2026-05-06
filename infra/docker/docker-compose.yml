@@ -1,11 +1,11 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: aegis-postgres
+    container_name: standard-postgres
     environment:
-      POSTGRES_DB: aegis
-      POSTGRES_USER: aegis
-      POSTGRES_PASSWORD: aegis_dev_password
+      POSTGRES_DB: standard
+      POSTGRES_USER: standard
+      POSTGRES_PASSWORD: standard_dev_password
     ports:
       - "5432:5432"
     volumes:
@@ -23,10 +23,11 @@ services:
       - ./postgres/seeds/0001_synthetic_seed.sql:/docker-entrypoint-initdb.d/011-synthetic-seed.sql:ro
       - ./postgres/seeds/0002_synthetic_scf_seed.sql:/docker-entrypoint-initdb.d/012-synthetic-scf-seed.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U aegis -d aegis"]
+      test: ["CMD-SHELL", "pg_isready -U standard -d standard"]
       interval: 10s
       timeout: 5s
       retries: 5
 
 volumes:
   postgres-data:
+

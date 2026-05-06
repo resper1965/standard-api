@@ -1,4 +1,4 @@
-import type { DocumentChunk, DocumentIngestionServiceDependencies } from "@aegis/document-ingestion";
+import type { DocumentChunk, DocumentIngestionServiceDependencies } from "@standard/document-ingestion";
 import type {
   KbEmbeddingJobMessage,
   KbEmbeddingJobResponse,
@@ -11,7 +11,7 @@ import type {
   KbSearchType,
   KbVectorReferenceResponse,
   VectorStoreMetadata
-} from "@aegis/schemas";
+} from "@standard/schemas";
 
 export type {
   KbEmbeddingJobMessage,
@@ -148,3 +148,4 @@ export type ChunkWithDocument = {
   chunk: DocumentChunk;
   document: Awaited<ReturnType<DocumentIngestionServiceDependencies["repositories"]["documents"]["getDocument"]>> & {};
 };
+

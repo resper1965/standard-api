@@ -1,7 +1,7 @@
 /**
- * @module @aegis/email - Types
+ * @module @standard/email - Types
  *
- * Cloudflare Email Service binding types + Aegis email domain types.
+ * Cloudflare Email Service binding types + Standard email domain types.
  * Ref: https://developers.cloudflare.com/email-service/api/send-emails/workers-api/
  */
 
@@ -75,10 +75,10 @@ export type CloudflareEmailErrorCode =
   | "E_HEADERS_TOO_LARGE"
   | "E_HEADERS_TOO_MANY";
 
-// ─── Aegis Email Domain Types ───────────────────────────────────
+// ─── Standard Email Domain Types ───────────────────────────────────
 
-/** All supported Aegis transactional email types */
-export type AegisEmailType =
+/** All supported Standard transactional email types */
+export type StandardEmailType =
   | "welcome"
   | "verification"
   | "approval_request"
@@ -87,7 +87,7 @@ export type AegisEmailType =
   | "security_alert";
 
 /** Base fields shared by all email payloads */
-export interface AegisEmailBase {
+export interface StandardEmailBase {
   /** Recipient email address */
   to: string;
   /** Recipient display name (optional) */
@@ -95,7 +95,7 @@ export interface AegisEmailBase {
 }
 
 /** Welcome email after sign-up */
-export interface WelcomeEmailPayload extends AegisEmailBase {
+export interface WelcomeEmailPayload extends StandardEmailBase {
   type: "welcome";
   /** User's first name for personalization */
   firstName: string;
@@ -104,7 +104,7 @@ export interface WelcomeEmailPayload extends AegisEmailBase {
 }
 
 /** Email verification with secure token */
-export interface VerificationEmailPayload extends AegisEmailBase {
+export interface VerificationEmailPayload extends StandardEmailBase {
   type: "verification";
   firstName: string;
   /** Full verification URL with token embedded */
@@ -114,7 +114,7 @@ export interface VerificationEmailPayload extends AegisEmailBase {
 }
 
 /** Approval request notification */
-export interface ApprovalRequestEmailPayload extends AegisEmailBase {
+export interface ApprovalRequestEmailPayload extends StandardEmailBase {
   type: "approval_request";
   /** What needs approval (e.g. "Statement of Applicability") */
   artifactName: string;
@@ -129,7 +129,7 @@ export interface ApprovalRequestEmailPayload extends AegisEmailBase {
 }
 
 /** Assessment state change notification */
-export interface StateChangeEmailPayload extends AegisEmailBase {
+export interface StateChangeEmailPayload extends StandardEmailBase {
   type: "state_change";
   assessmentName: string;
   organizationName: string;
@@ -142,7 +142,7 @@ export interface StateChangeEmailPayload extends AegisEmailBase {
 }
 
 /** Report ready for download */
-export interface ReportReadyEmailPayload extends AegisEmailBase {
+export interface ReportReadyEmailPayload extends StandardEmailBase {
   type: "report_ready";
   assessmentName: string;
   organizationName: string;
@@ -153,7 +153,7 @@ export interface ReportReadyEmailPayload extends AegisEmailBase {
 }
 
 /** Security alert for critical actions */
-export interface SecurityAlertEmailPayload extends AegisEmailBase {
+export interface SecurityAlertEmailPayload extends StandardEmailBase {
   type: "security_alert";
   /** Alert title (e.g. "Unauthorized Access Attempt") */
   alertTitle: string;
@@ -167,8 +167,8 @@ export interface SecurityAlertEmailPayload extends AegisEmailBase {
   auditUrl: string;
 }
 
-/** Discriminated union of all Aegis email payloads */
-export type AegisEmailPayload =
+/** Discriminated union of all Standard email payloads */
+export type StandardEmailPayload =
   | WelcomeEmailPayload
   | VerificationEmailPayload
   | ApprovalRequestEmailPayload
@@ -176,39 +176,40 @@ export type AegisEmailPayload =
   | ReportReadyEmailPayload
   | SecurityAlertEmailPayload;
 
-/** Result returned by sendAegisEmail */
-export interface AegisEmailResult {
+/** Result returned by sendStandardEmail */
+export interface StandardEmailResult {
   /** Whether the email was accepted for delivery */
   success: boolean;
   /** Cloudflare-assigned message ID */
   messageId: string;
   /** Which email type was sent */
-  type: AegisEmailType;
+  type: StandardEmailType;
   /** Recipient address */
   to: string;
   /** ISO timestamp of when the email was sent */
   sentAt: string;
 }
 
-/** Options for sendAegisEmail */
-export interface AegisEmailOptions {
+/** Options for sendStandardEmail */
+export interface StandardEmailOptions {
   /** Sender email address override (default: noreply@{domain}) */
   from?: string;
-  /** Sender display name (default: "Aegis Platform") */
+  /** Sender display name (default: "Standard Platform") */
   fromName?: string;
   /** Domain for the sender address (required) */
   domain: string;
 }
 
 /** Email send error with Cloudflare error code */
-export class AegisEmailError extends Error {
+export class StandardEmailError extends Error {
   constructor(
     public readonly code: CloudflareEmailErrorCode | "UNKNOWN",
     message: string,
-    public readonly type: AegisEmailType,
+    public readonly type: StandardEmailType,
     public readonly to: string
   ) {
     super(message);
-    this.name = "AegisEmailError";
+    this.name = "StandardEmailError";
   }
 }
+

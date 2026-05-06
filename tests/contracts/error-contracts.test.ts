@@ -6,8 +6,8 @@ test("public API error contains trace_id and not stack trace", async () => {
   const response = await app.fetch(new Request("https://api.test/api/v1/assessments/missing/status", {
     headers: {
       "x-trace-id": "trace-error-contract-0001",
-      "x-aegis-tenant-id": "10000000-0000-4000-8000-000000000001",
-      "x-aegis-actor-id": "44444444-4444-4444-8444-444444444444"
+      "x-standard-tenant-id": "10000000-0000-4000-8000-000000000001",
+      "x-standard-actor-id": "44444444-4444-4444-8444-444444444444"
     }
   }));
   const body = await response.json() as any;
@@ -15,3 +15,4 @@ test("public API error contains trace_id and not stack trace", async () => {
   expect(body.error.trace_id).toBe("trace-error-contract-0001");
   expect(JSON.stringify(body).includes("stack")).toBe(false);
 });
+

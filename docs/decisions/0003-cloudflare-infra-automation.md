@@ -33,11 +33,11 @@ Recursos adicionais (Vectorize, Dead Letter Queues) exigem comandos separados do
 
 | Recurso | Comando | Sufixo |
 |---|---|---|
-| Queue | `wrangler queues create aegis-<name>-prod` | `-prod` |
-| R2 Bucket | `wrangler r2 bucket create aegis-<name>-prod` | `-prod` |
-| KV Namespace | `wrangler kv namespace create aegis-<name>-kv-prod` | `-prod` |
-| Vectorize Index | `wrangler vectorize create aegis-kb-prod --dimensions=1536 --metric=cosine` | `-prod` |
-| Dead Letter Queue | `wrangler queues create aegis-dead-letter-prod` | `-prod` |
+| Queue | `wrangler queues create standard-<name>-prod` | `-prod` |
+| R2 Bucket | `wrangler r2 bucket create standard-<name>-prod` | `-prod` |
+| KV Namespace | `wrangler kv namespace create standard-<name>-kv-prod` | `-prod` |
+| Vectorize Index | `wrangler vectorize create standard-kb-prod --dimensions=1536 --metric=cosine` | `-prod` |
+| Dead Letter Queue | `wrangler queues create standard-dead-letter-prod` | `-prod` |
 
 ## Consequências
 
@@ -52,3 +52,4 @@ Recursos adicionais (Vectorize, Dead Letter Queues) exigem comandos separados do
 - **Terraform**: descartado no MVP por overhead de configuração e ausência de backend de state definido. Candidato para fase seguinte.
 - **Pulumi**: descartado pelos mesmos motivos.
 - **CI/CD Pipeline**: desejado na fase seguinte; dependente de secrets Cloudflare no repositório GitHub.
+

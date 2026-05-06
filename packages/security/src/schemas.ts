@@ -16,4 +16,5 @@ export {
   SecurityTenantContextSchema,
   ServiceAccountSchema,
   ToolUsePolicySchema
-} from "@aegis/schemas";
+} from "@standard/schemas";
+

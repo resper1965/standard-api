@@ -2,26 +2,26 @@
 
 ## Objetivo
 
-O `aegis-api-standard` será um monorepo TypeScript para uma plataforma SaaS API-first que executa assessments baseados no Secure Controls Framework. A aplicação web é apenas consumidora da API; a lógica do ciclo de assessment pertence ao **Aegis Assessment Engine**.
+O `standard-api-standard` será um monorepo TypeScript para uma plataforma SaaS API-first que executa assessments baseados no Secure Controls Framework. A aplicação web é apenas consumidora da API; a lógica do ciclo de assessment pertence ao **Standard Assessment Engine**.
 
-Este repositório é a implementação API-first padrão do Aegis. Toda lógica reutilizável do assessment deve viver em serviços, pacotes e contratos de API, não no frontend.
+Este repositório é a implementação API-first padrão do Standard. Toda lógica reutilizável do assessment deve viver em serviços, pacotes e contratos de API, não no frontend.
 
 ## Identidade Canônica
 
-- Repository name: `aegis-api-standard`
-- Product name: `Aegis`
-- Projeto: `aegis-api-standard`
-- Produto: `Aegis`
-- Núcleo: `Aegis Assessment Engine`
-- Método: `Aegis SCF-Based Assessment Lifecycle`
-- Modelo agêntico: `Aegis SCF Agentic Assessment Model`
+- Repository name: `standard-api-standard`
+- Product name: `Standard`
+- Projeto: `standard-api-standard`
+- Produto: `Standard`
+- Núcleo: `Standard Assessment Engine`
+- Método: `Standard SCF-Based Assessment Lifecycle`
+- Modelo agêntico: `Standard SCF Agentic Assessment Model`
 - Arquitetura: `API-first / SaaS-ready / Cloudflare-oriented`
-- Purpose: The `aegis-api-standard` repository contains the API-first standard implementation of the Aegis SCF-Based Assessment Lifecycle. It defines the reusable backend, schemas, workflows, workers, assessment engine, SCF data layer, KB integration and agent runtime rules used by the Aegis platform and future consumers.
+- Purpose: The `standard-api-standard` repository contains the API-first standard implementation of the Standard SCF-Based Assessment Lifecycle. It defines the reusable backend, schemas, workflows, workers, assessment engine, SCF data layer, KB integration and agent runtime rules used by the Standard platform and future consumers.
 
 ## Estrutura de Diretórios
 
 ```text
-aegis-api-standard/
+standard-api-standard/
 ├── AGENTS.md
 ├── apps/
 │   ├── web/
@@ -55,7 +55,7 @@ aegis-api-standard/
 
 - `apps/web`: frontend em Cloudflare Pages. Deve consumir contratos públicos da API e nunca duplicar lógica do assessment engine.
 - `apps/api-gateway`: API gateway/BFF em Cloudflare Workers. Recebe chamadas HTTP, autentica, valida autorização, grava comandos transacionais e dispara workflows/queues. Não executa análise pesada.
-- `workers/workflows`: orquestração durável do Aegis SCF-Based Assessment Lifecycle. Controla estados, retries, checkpoints e esperas por aprovação humana.
+- `workers/workflows`: orquestração durável do Standard SCF-Based Assessment Lifecycle. Controla estados, retries, checkpoints e esperas por aprovação humana.
 - `workers/queues`: processamento assíncrono via Cloudflare Queues. Responsável por jobs longos, retries e DLQ.
 - `workers/ingestion`: worker dedicado para ingestão, extração, chunking e vetorização.
 - `packages/assessment-engine`: entidades, invariantes e regras centrais independentes de Cloudflare, banco ou UI.
@@ -99,7 +99,7 @@ Ausência de evidência deve ser registrada como `not_evidenced`, nunca como aus
 
 ## Estados do Lifecycle
 
-Os estados canônicos estão em `docs/architecture/assessment-lifecycle.md` e no pacote `@aegis/schemas`.
+Os estados canônicos estão em `docs/architecture/assessment-lifecycle.md` e no pacote `@standard/schemas`.
 
 ## Contratos de API
 
@@ -111,9 +111,9 @@ O contrato inicial está em `docs/api/openapi.yaml`. A primeira versão prioriza
 - aprovação humana de SoA, Gap Analysis, Maturity Assessment e POA&M;
 - consulta de achados, evidências e estado.
 
-## Agentes do Aegis
+## Agentes do Standard
 
-O **Aegis SCF Agentic Assessment Model** é o modelo de IA agêntica do produto: agentes especializados colaboram sob orquestração controlada para ingerir documentos, construir KB, mapear frameworks, gerar SoA, avaliar evidências, produzir Gap Analysis, medir maturidade, gerar POA&M e preparar relatórios, sempre com rastreabilidade, validação de schema, controle de escopo e aprovação humana.
+O **Standard SCF Agentic Assessment Model** é o modelo de IA agêntica do produto: agentes especializados colaboram sob orquestração controlada para ingerir documentos, construir KB, mapear frameworks, gerar SoA, avaliar evidências, produzir Gap Analysis, medir maturidade, gerar POA&M e preparar relatórios, sempre com rastreabilidade, validação de schema, controle de escopo e aprovação humana.
 
 Comportamento agentic alvo:
 
@@ -177,3 +177,4 @@ Nesta fase, os agentes são papéis arquiteturais e contratos de runtime governa
 - Estratégia de criptografia por tenant para objetos sensíveis em R2.
 - Modelo de maturidade inicial por framework.
 - Critérios de confidence e calibração humana.
+

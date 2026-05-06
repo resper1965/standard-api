@@ -8,13 +8,13 @@
 
 ## Contexto
 
-O Aegis requer um banco PostgreSQL transacional externo como fonte de verdade para tenants, assessments, approvals, findings, audit logs e estado persistente. A arquitetura Cloudflare-oriented exige que o banco seja acessível a Workers via URL segura, sem infraestrutura gerenciada pelo time de desenvolvimento.
+O Standard requer um banco PostgreSQL transacional externo como fonte de verdade para tenants, assessments, approvals, findings, audit logs e estado persistente. A arquitetura Cloudflare-oriented exige que o banco seja acessível a Workers via URL segura, sem infraestrutura gerenciada pelo time de desenvolvimento.
 
 ## Decisão
 
 Adotar o **Neon Serverless Postgres** como banco de dados de produção gerenciado.
 
-- **Projeto:** `aegis-prod`
+- **Projeto:** `standard-prod`
 - **Endpoint:** `ep-blue-breeze-anyfua57.c-6.us-east-1.aws.neon.tech`
 - **Região:** us-east-1 (AWS)
 - **Versão PostgreSQL:** 17
@@ -46,3 +46,4 @@ A string de conexão (`DATABASE_URL`) é injetada como secret nos Workers via `w
 - **Cloudflare D1**: descartado por não suportar PKs sequenciais, JOINs complexos, transações ACID completas e escala enterprise necessária para compliance.
 - **Supabase Postgres**: descartado pela complexidade de auth/API camada adicional desnecessária.
 - **RDS Aurora Serverless**: descartado pelo custo de operação e latência adicional fora do ecossistema escolhido.
+

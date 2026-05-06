@@ -1,6 +1,6 @@
 # Cloudflare Infrastructure
 
-Esta pasta contém a primeira base de configuração Cloudflare do `aegis-api-standard`.
+Esta pasta contém a primeira base de configuração Cloudflare do `standard-api-standard`.
 
 Arquivos principais:
 
@@ -14,3 +14,4 @@ Arquivos principais:
 - `bindings.md`: matriz de bindings e responsabilidade.
 
 Nenhum arquivo deve conter account IDs, tokens, chaves de API ou secrets reais. Use `wrangler secret put` e GitHub Secrets conforme documentado em `docs/operations/secrets-and-env.md`.
+

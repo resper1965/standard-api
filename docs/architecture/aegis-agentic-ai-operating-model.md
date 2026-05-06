@@ -1,8 +1,8 @@
-# Aegis SCF Agentic Assessment Model
+# Standard SCF Agentic Assessment Model
 
 ## 1. Executive Summary
 
-O **Aegis SCF Agentic Assessment Model** é um modelo de IA agêntica para conduzir assessments de segurança, conformidade e maturidade com base no Secure Controls Framework. Agentes especializados colaboram sob orquestração controlada para ingerir documentos, construir KB, mapear frameworks, gerar SoA, avaliar evidências, produzir Gap Analysis, medir maturidade, gerar POA&M e preparar relatórios, sempre com rastreabilidade, validação de schema, controle de escopo e aprovação humana.
+O **Standard SCF Agentic Assessment Model** é um modelo de IA agêntica para conduzir assessments de segurança, conformidade e maturidade com base no Secure Controls Framework. Agentes especializados colaboram sob orquestração controlada para ingerir documentos, construir KB, mapear frameworks, gerar SoA, avaliar evidências, produzir Gap Analysis, medir maturidade, gerar POA&M e preparar relatórios, sempre com rastreabilidade, validação de schema, controle de escopo e aprovação humana.
 
 Ele é agentic AI porque executa um processo multi-etapa com agentes especializados, handoffs, tools, memória operacional, avaliação de outputs e governança humana. Não é apenas um chatbot: o modelo não depende de conversa livre para decidir compliance. Ele opera dentro de workflows, contratos de API, schemas, state machine, tools autorizadas e approval gates.
 
@@ -17,7 +17,7 @@ A relação central é:
 
 ## 2. Core Operating Principle
 
-O Aegis é **workflow-first, agent-assisted**.
+O Standard é **workflow-first, agent-assisted**.
 
 - Workflow controla o processo.
 - Assessment Engine controla estados, transições e gates.
@@ -31,7 +31,7 @@ Essa separação impede que agentes LLM assumam autoridade normativa, alterem es
 ## 3. Agentic Architecture
 
 ```text
-Aegis SCF Agentic Assessment Model
+Standard SCF Agentic Assessment Model
 ├── Orchestrator Layer
 ├── Specialist Agents
 ├── Tool Layer
@@ -123,7 +123,7 @@ Quando bloqueia:
 
 Todos os agentes devem respeitar `tenant_id`, `organization_id`, `assessment_id`, `trace_id`, `scf_version` e `framework_id` quando aplicável. Todo output deve conter `confidence_score`, `assumptions`, `limitations`, `sources` e `requires_user_validation`.
 
-### Aegis Knowledge Steward
+### Standard Knowledge Steward
 
 - Missão: organizar documentos, chunks, metadados, KB e evidências recuperáveis.
 - Entradas: documentos ingeridos, hashes, metadata, tenant/assessment context.
@@ -137,7 +137,7 @@ Todos os agentes devem respeitar `tenant_id`, `organization_id`, `assessment_id`
 - Riscos: vazamento de conteúdo sensível; indexação cross-tenant; prompt injection em documentos.
 - Guardrails: não logar conteúdo integral; preservar hashes; marcar conteúdo recuperado como untrusted evidence.
 
-### Aegis SCF Control Analyst
+### Standard SCF Control Analyst
 
 - Missão: analisar controles SCF estruturados e preparar contexto de controle.
 - Entradas: `scf_version`, controls, domains, framework candidate, assessment context.
@@ -151,7 +151,7 @@ Todos os agentes devem respeitar `tenant_id`, `organization_id`, `assessment_id`
 - Riscos: inferir relação normativa inexistente.
 - Guardrails: mapping oficial só quando presente no SCF structured database.
 
-### Aegis Framework Mapper
+### Standard Framework Mapper
 
 - Missão: consultar mappings oficiais entre framework selecionado e controles SCF.
 - Entradas: `framework_id`, `scf_version`, requirements, mappings oficiais.
@@ -165,7 +165,7 @@ Todos os agentes devem respeitar `tenant_id`, `organization_id`, `assessment_id`
 - Riscos: hallucinated mapping count acima de zero.
 - Guardrails: bloquear output que declare official mapping sem source SCF estruturada.
 
-### Aegis Scope & SoA Architect
+### Standard Scope & SoA Architect
 
 - Missão: propor escopo e Statement of Applicability com base no framework, SCF mappings e contexto do assessment.
 - Entradas: framework selection, official mappings, scope constraints, evidence context.
@@ -179,7 +179,7 @@ Todos os agentes devem respeitar `tenant_id`, `organization_id`, `assessment_id`
 - Riscos: escopo amplo demais, not_applicable sem justificativa, mapping ausente tratado como oficial.
 - Guardrails: SoA final exige approval_event humano.
 
-### Aegis Evidence Analyst
+### Standard Evidence Analyst
 
 - Missão: avaliar evidências candidatas contra requisitos e controles em escopo.
 - Entradas: SoA aprovada, KB results, document/chunk references, control requirements.
@@ -193,7 +193,7 @@ Todos os agentes devem respeitar `tenant_id`, `organization_id`, `assessment_id`
 - Riscos: evidência fraca tratada como forte; prompt injection em chunks.
 - Guardrails: sources por document/chunk; untrusted KB content; confidence obrigatório.
 
-### Aegis Gap Analyst
+### Standard Gap Analyst
 
 - Missão: gerar Gap Analysis draft a partir de SoA aprovada e Evidence Analysis.
 - Entradas: SoA approved, evidence findings, SCF controls, framework requirements.
@@ -207,7 +207,7 @@ Todos os agentes devem respeitar `tenant_id`, `organization_id`, `assessment_id`
 - Riscos: gap superestimado/subestimado, status sem fonte.
 - Guardrails: Gap final exige schema validation e approval_event humano.
 
-### Aegis Maturity Assessor
+### Standard Maturity Assessor
 
 - Missão: sugerir maturity score conservador com base em evidência aprovada e gaps.
 - Entradas: Gap Analysis approved, evidence strength, implementation context, limitations.
@@ -221,7 +221,7 @@ Todos os agentes devem respeitar `tenant_id`, `organization_id`, `assessment_id`
 - Riscos: high maturity without evidence.
 - Guardrails: score alto exige source operacional forte e limitations explícitas.
 
-### Aegis POA&M Planner
+### Standard POA&M Planner
 
 - Missão: propor plano de ação e milestones para gaps aprovados.
 - Entradas: Gap Analysis approved, maturity context, severity, priority, expected evidence.
@@ -235,7 +235,7 @@ Todos os agentes devem respeitar `tenant_id`, `organization_id`, `assessment_id`
 - Riscos: generic POA&M action, prioridade sem rationale.
 - Guardrails: todo item deve referenciar gap/control/requirement e acceptance criteria.
 
-### Aegis Assessment Report Writer
+### Standard Assessment Report Writer
 
 - Missão: preparar relatórios a partir de fontes aprovadas e rastreáveis.
 - Entradas: SoA approved, Gap approved, Maturity approved, POA&M approved, evidence index.
@@ -308,11 +308,11 @@ Exemplo conceitual:
 
 ```json
 {
-  "tenant_id": "tenant_synth_aegis",
+  "tenant_id": "tenant_synth_standard",
   "organization_id": "org_synth_healthtech",
   "assessment_id": "assessment_synth_001",
-  "source_agent": "aegis_evidence_analyst",
-  "target_agent": "aegis_gap_analyst",
+  "source_agent": "standard_evidence_analyst",
+  "target_agent": "standard_gap_analyst",
   "task_type": "create_gap_analysis_draft",
   "input_artifacts": ["soa_version_001", "evidence_analysis_001"],
   "output_schema": "GapAnalysisDraftSchema",
@@ -606,7 +606,7 @@ Tools
 
 ### Decisions
 
-- The operating model is named **Aegis SCF Agentic Assessment Model**.
+- The operating model is named **Standard SCF Agentic Assessment Model**.
 - The system is workflow-first and agent-assisted.
 - Assessment Engine remains authority for state transitions and approval gates.
 - SCF structured data is normative.
@@ -626,3 +626,4 @@ Tools
 - Retention policy for prompts, hashes, agent outputs and audit trail.
 - Whether maturity remains part of Assessment Engine or becomes `packages/maturity`.
 - How to represent human reviewer assignments and conflicts of interest.
+

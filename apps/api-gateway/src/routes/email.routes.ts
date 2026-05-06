@@ -9,8 +9,8 @@
 import type { RouteDefinition } from "../http";
 import { json, parseJson } from "../http";
 import { ApiError } from "../errors/api-error";
-import { sendAegisEmail, describeEmailError, AegisEmailError } from "@aegis/email";
-import type { AegisEmailType, AegisEmailPayload } from "@aegis/email";
+import { sendStandardEmail, describeEmailError, StandardEmailError } from "@standard/email";
+import type { StandardEmailType, StandardEmailPayload } from "@standard/email";
 import { z } from "zod";
 
 const EMAIL_DOMAIN = "bekaa.eu";
@@ -28,8 +28,8 @@ const testEmailSchema = z.object({
 });
 
 /** Build a sample payload for testing based on email type */
-function buildTestPayload(to: string, type: AegisEmailType): AegisEmailPayload {
-  const baseUrl = "https://apiaegis.bekaa.eu";
+function buildTestPayload(to: string, type: StandardEmailType): StandardEmailPayload {
+  const baseUrl = "https://apistandard.bekaa.eu";
 
   switch (type) {
     case "welcome":
@@ -53,7 +53,7 @@ function buildTestPayload(to: string, type: AegisEmailType): AegisEmailPayload {
         to,
         artifactName: "Statement of Applicability v1",
         assessmentName: "ISO 27001 Assessment (Test)",
-        organizationName: "Aegis Test Organization",
+        organizationName: "Standard Test Organization",
         reviewUrl: `${baseUrl}/assessments/test/soa`,
         submittedBy: "admin@bekaa.eu",
       };
@@ -62,7 +62,7 @@ function buildTestPayload(to: string, type: AegisEmailType): AegisEmailPayload {
         type: "state_change",
         to,
         assessmentName: "ISO 27001 Assessment (Test)",
-        organizationName: "Aegis Test Organization",
+        organizationName: "Standard Test Organization",
         previousState: "soa_drafted",
         newState: "soa_under_review",
         assessmentUrl: `${baseUrl}/assessments/test`,
@@ -72,7 +72,7 @@ function buildTestPayload(to: string, type: AegisEmailType): AegisEmailPayload {
         type: "report_ready",
         to,
         assessmentName: "ISO 27001 Assessment (Test)",
-        organizationName: "Aegis Test Organization",
+        organizationName: "Standard Test Organization",
         reportType: "Gap Analysis Report",
         downloadUrl: `${baseUrl}/reports/test/download`,
       };
@@ -115,7 +115,7 @@ export const emailRoutes: RouteDefinition[] = [
       const payload = buildTestPayload(to, type);
 
       try {
-        const result = await sendAegisEmail(ctx.deps.email, payload, {
+        const result = await sendStandardEmail(ctx.deps.email, payload, {
           domain: EMAIL_DOMAIN,
         });
 
@@ -130,7 +130,7 @@ export const emailRoutes: RouteDefinition[] = [
           trace_id: ctx.traceId,
         });
       } catch (error) {
-        if (error instanceof AegisEmailError) {
+        if (error instanceof StandardEmailError) {
           throw new ApiError(
             "EMAIL_SEND_FAILED",
             `${describeEmailError(error.code)} (${error.code})`,
@@ -144,3 +144,4 @@ export const emailRoutes: RouteDefinition[] = [
     },
   },
 ];
+

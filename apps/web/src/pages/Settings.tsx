@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { authClient } from "../lib/auth-client";
 import type { FormEvent } from "react";
+import { ApiKeysManager } from "../components/ApiKeysManager";
+import { AnalyticsDashboard } from "../components/AnalyticsDashboard";
 
 export function SettingsPage() {
   const { data: session } = authClient.useSession();
@@ -9,9 +11,13 @@ export function SettingsPage() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [sessions, setSessions] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState<"profile" | "api">("profile");
   
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error", text: string } | null>(null);
+
+  // API Keys state for ApiKeysManager
+  const [apiKeys, setApiKeys] = useState<any[]>([]);
 
   useEffect(() => {
     if (session?.user?.name) {
@@ -21,7 +27,25 @@ export function SettingsPage() {
     authClient.listSessions().then(res => {
       if (res.data) setSessions(res.data);
     });
+
+    if ((session?.session as any)?.activeOrganizationId) {
+      fetchApiKeys();
+    }
   }, [session]);
+
+  const fetchApiKeys = async () => {
+    const orgId = (session?.session as any)?.activeOrganizationId;
+    if (!orgId) return;
+    try {
+      const res = await fetch(`/api/v1/organizations/${orgId}/api-keys`);
+      if (res.ok) {
+        const json = await res.json();
+        setApiKeys(json.data || []);
+      }
+    } catch (err) {
+      console.error("Failed to load API keys", err);
+    }
+  };
 
   const handleUpdateProfile = async (e: FormEvent) => {
     e.preventDefault();
@@ -67,7 +91,20 @@ export function SettingsPage() {
 
   return (
     <div style={{ maxWidth: "800px", margin: "0 auto" }}>
-      <h1 style={{ marginBottom: "32px" }}>Settings</h1>
+      <h1 style={{ marginBottom: "24px" }}>Settings</h1>
+
+      <div style={{ display: "flex", gap: "16px", marginBottom: "24px", borderBottom: "1px solid var(--border)" }}>
+        <button 
+          onClick={() => setActiveTab("profile")}
+          style={{ padding: "8px 16px", background: "none", border: "none", color: activeTab === "profile" ? "var(--accent)" : "var(--text-muted)", borderBottom: activeTab === "profile" ? "2px solid var(--accent)" : "2px solid transparent", cursor: "pointer", fontWeight: "bold" }}>
+          Profile
+        </button>
+        <button 
+          onClick={() => setActiveTab("api")}
+          style={{ padding: "8px 16px", background: "none", border: "none", color: activeTab === "api" ? "var(--accent)" : "var(--text-muted)", borderBottom: activeTab === "api" ? "2px solid var(--accent)" : "2px solid transparent", cursor: "pointer", fontWeight: "bold" }}>
+          API & Developers
+        </button>
+      </div>
 
       {message && (
         <div style={{ 
@@ -82,85 +119,102 @@ export function SettingsPage() {
         </div>
       )}
 
-      <div className="card" style={{ marginBottom: "24px" }}>
-        <h2>Profile</h2>
-        <form onSubmit={handleUpdateProfile} style={{ display: "flex", flexDirection: "column", gap: "16px", maxWidth: "400px" }}>
-          <div>
-            <label style={{ display: "block", marginBottom: "8px" }}>Name</label>
-            <input 
-              type="text" 
-              value={name} 
-              onChange={e => setName(e.target.value)}
-              className="input"
-              style={{ width: "100%", padding: "10px", borderRadius: "6px", border: "1px solid var(--border)", background: "var(--bg)", color: "white" }}
-            />
-          </div>
-          <div>
-            <label style={{ display: "block", marginBottom: "8px" }}>Email</label>
-            <input 
-              type="email" 
-              value={session?.user?.email || ""} 
-              disabled
-              style={{ width: "100%", padding: "10px", borderRadius: "6px", border: "1px solid var(--border)", background: "rgba(255,255,255,0.05)", color: "var(--text-muted)", cursor: "not-allowed" }}
-            />
-          </div>
-          <button type="submit" className="btn btn-primary" disabled={loading} style={{ alignSelf: "flex-start" }}>
-            Update Profile
-          </button>
-        </form>
-      </div>
-
-      <div className="card" style={{ marginBottom: "24px" }}>
-        <h2>Security</h2>
-        <form onSubmit={handleChangePassword} style={{ display: "flex", flexDirection: "column", gap: "16px", maxWidth: "400px" }}>
-          <div>
-            <label style={{ display: "block", marginBottom: "8px" }}>Current Password</label>
-            <input 
-              type="password" 
-              required
-              value={currentPassword} 
-              onChange={e => setCurrentPassword(e.target.value)}
-              style={{ width: "100%", padding: "10px", borderRadius: "6px", border: "1px solid var(--border)", background: "var(--bg)", color: "white" }}
-            />
-          </div>
-          <div>
-            <label style={{ display: "block", marginBottom: "8px" }}>New Password</label>
-            <input 
-              type="password" 
-              required
-              value={newPassword} 
-              onChange={e => setNewPassword(e.target.value)}
-              style={{ width: "100%", padding: "10px", borderRadius: "6px", border: "1px solid var(--border)", background: "var(--bg)", color: "white" }}
-            />
-          </div>
-          <button type="submit" className="btn" disabled={loading} style={{ alignSelf: "flex-start" }}>
-            Change Password
-          </button>
-        </form>
-      </div>
-
-      <div className="card">
-        <h2>Active Sessions</h2>
-        {sessions.length === 0 ? (
-          <p style={{ color: "var(--text-muted)" }}>Loading sessions...</p>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-            {sessions.map((s, i) => (
-              <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px", border: "1px solid var(--border)", borderRadius: "6px" }}>
-                <div>
-                  <p style={{ margin: "0 0 4px 0", fontWeight: "bold" }}>{s.userAgent || "Unknown Device"}</p>
-                  <p style={{ margin: 0, fontSize: "0.875rem", color: "var(--text-muted)" }}>
-                    {new Date(s.createdAt).toLocaleString()} {session?.session?.id === s.id && <span style={{ color: "var(--accent)" }}>(Current)</span>}
-                  </p>
-                </div>
-                {session?.session?.id !== s.id && (
-                  <button className="btn btn-danger" onClick={() => handleRevokeSession(s.token)}>Revoke</button>
-                )}
+      {activeTab === "profile" && (
+        <>
+          <div className="card" style={{ marginBottom: "24px" }}>
+            <h2>Profile</h2>
+            <form onSubmit={handleUpdateProfile} style={{ display: "flex", flexDirection: "column", gap: "16px", maxWidth: "400px" }}>
+              <div>
+                <label style={{ display: "block", marginBottom: "8px" }}>Name</label>
+                <input 
+                  type="text" 
+                  value={name} 
+                  onChange={e => setName(e.target.value)}
+                  className="input"
+                  style={{ width: "100%", padding: "10px", borderRadius: "6px", border: "1px solid var(--border)", background: "var(--bg)", color: "white" }}
+                />
               </div>
-            ))}
+              <div>
+                <label style={{ display: "block", marginBottom: "8px" }}>Email</label>
+                <input 
+                  type="email" 
+                  value={session?.user?.email || ""} 
+                  disabled
+                  style={{ width: "100%", padding: "10px", borderRadius: "6px", border: "1px solid var(--border)", background: "rgba(255,255,255,0.05)", color: "var(--text-muted)", cursor: "not-allowed" }}
+                />
+              </div>
+              <button type="submit" className="btn btn-primary" disabled={loading} style={{ alignSelf: "flex-start" }}>
+                Update Profile
+              </button>
+            </form>
           </div>
-        )}
-      </div>
+
+          <div className="card" style={{ marginBottom: "24px" }}>
+            <h2>Security</h2>
+            <form onSubmit={handleChangePassword} style={{ display: "flex", flexDirection: "column", gap: "16px", maxWidth: "400px" }}>
+              <div>
+                <label style={{ display: "block", marginBottom: "8px" }}>Current Password</label>
+                <input 
+                  type="password" 
+                  required
+                  value={currentPassword} 
+                  onChange={e => setCurrentPassword(e.target.value)}
+                  style={{ width: "100%", padding: "10px", borderRadius: "6px", border: "1px solid var(--border)", background: "var(--bg)", color: "white" }}
+                />
+              </div>
+              <div>
+                <label style={{ display: "block", marginBottom: "8px" }}>New Password</label>
+                <input 
+                  type="password" 
+                  required
+                  value={newPassword} 
+                  onChange={e => setNewPassword(e.target.value)}
+                  style={{ width: "100%", padding: "10px", borderRadius: "6px", border: "1px solid var(--border)", background: "var(--bg)", color: "white" }}
+                />
+              </div>
+              <button type="submit" className="btn" disabled={loading} style={{ alignSelf: "flex-start" }}>
+                Change Password
+              </button>
+            </form>
+          </div>
+
+          <div className="card">
+            <h2>Active Sessions</h2>
+            {sessions.length === 0 ? (
+              <p style={{ color: "var(--text-muted)" }}>Loading sessions...</p>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                {sessions.map((s, i) => (
+                  <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px", border: "1px solid var(--border)", borderRadius: "6px" }}>
+                    <div>
+                      <p style={{ margin: "0 0 4px 0", fontWeight: "bold" }}>{s.userAgent || "Unknown Device"}</p>
+                      <p style={{ margin: 0, fontSize: "0.875rem", color: "var(--text-muted)" }}>
+                        {new Date(s.createdAt).toLocaleString()} {session?.session?.id === s.id && <span style={{ color: "var(--accent)" }}>(Current)</span>}
+                      </p>
+                    </div>
+                    {session?.session?.id !== s.id && (
+                      <button className="btn btn-danger" onClick={() => handleRevokeSession(s.token)}>Revoke</button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
+      {activeTab === "api" && (
+        <>
+          <AnalyticsDashboard organizationId={(session?.session as any)?.activeOrganizationId} />
+          <ApiKeysManager 
+            apiKeys={apiKeys} 
+            onKeysChanged={fetchApiKeys} 
+            loading={loading} 
+            setLoading={setLoading} 
+          />
+        </>
+      )}
+
     </div>
   );
 }

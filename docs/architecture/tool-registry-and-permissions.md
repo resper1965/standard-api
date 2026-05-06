@@ -2,7 +2,7 @@
 
 ## 1. Definição de Tool
 
-Uma **Tool** é uma interface controlada que permite a um agente ler dados, consultar serviços, gerar drafts ou interagir com o sistema Aegis por meio de um contrato explícito.
+Uma **Tool** é uma interface controlada que permite a um agente ler dados, consultar serviços, gerar drafts ou interagir com o sistema Standard por meio de um contrato explícito.
 
 Uma Tool permite:
 
@@ -335,15 +335,15 @@ Matriz de permissões:
 
 | Agente | Pode usar | Não pode usar |
 | --- | --- | --- |
-| Aegis Knowledge Steward | `list_document_metadata`, `search_assessment_kb`, `get_chunk_context` | `suggest_gap_finding_draft`, approval tools, `final_write`, `admin`, `external_call` |
-| Aegis SCF Control Analyst | `get_scf_version`, `get_scf_control`, `get_scf_control_by_code`, `list_scf_frameworks` | KB como fonte normativa, mapping write, approval tools, `final_write`, `admin` |
-| Aegis Framework Mapper | `get_scf_version`, `list_scf_frameworks`, `get_scf_framework_requirements`, `get_official_scf_mappings` | criar mapping, KB normative tools, approval tools, `final_write`, `admin` |
-| Aegis Scope & SoA Architect | `get_scf_version`, `get_scf_framework_requirements`, `get_scf_control`, `get_official_scf_mappings`, `list_soa_items`, `suggest_soa_item_update_draft` | `approve_soa`, Gap final tools, `final_write`, `admin` |
-| Aegis Evidence Analyst | `get_approved_soa`, `list_soa_items`, `search_assessment_kb`, `get_chunk_context`, `get_evidence_candidates`, `get_scf_control` | qualquer approval, `final_write`, `admin`, raw DB, external calls |
-| Aegis Gap Analyst | `get_approved_soa`, `get_evidence_candidates`, `list_gap_findings`, `suggest_gap_finding_draft`, `get_scf_control`, `get_official_scf_mappings` | `approve_gap`, `suggest_maturity_score_draft`, `final_write`, `admin` |
-| Aegis Maturity Assessor | `get_approved_gap_analysis`, `list_gap_findings`, `get_maturity_context`, `suggest_maturity_score_draft`, `get_scf_control` | `approve_maturity`, POA&M finalization, Report finalization, `final_write`, `admin` |
-| Aegis POA&M Planner | `get_approved_gap_analysis`, `list_gap_findings`, `get_maturity_context`, `get_poam_context`, `suggest_poam_item_draft` | `approve_poam`, Report approval, `final_write`, `admin` |
-| Aegis Assessment Report Writer | `get_report_sources`, `get_approved_soa`, `get_approved_gap_analysis`, `get_maturity_context`, `get_poam_context`, `suggest_report_section_draft` | alterar findings, `approve_report`, `final_write`, `admin`, `external_call` |
+| Standard Knowledge Steward | `list_document_metadata`, `search_assessment_kb`, `get_chunk_context` | `suggest_gap_finding_draft`, approval tools, `final_write`, `admin`, `external_call` |
+| Standard SCF Control Analyst | `get_scf_version`, `get_scf_control`, `get_scf_control_by_code`, `list_scf_frameworks` | KB como fonte normativa, mapping write, approval tools, `final_write`, `admin` |
+| Standard Framework Mapper | `get_scf_version`, `list_scf_frameworks`, `get_scf_framework_requirements`, `get_official_scf_mappings` | criar mapping, KB normative tools, approval tools, `final_write`, `admin` |
+| Standard Scope & SoA Architect | `get_scf_version`, `get_scf_framework_requirements`, `get_scf_control`, `get_official_scf_mappings`, `list_soa_items`, `suggest_soa_item_update_draft` | `approve_soa`, Gap final tools, `final_write`, `admin` |
+| Standard Evidence Analyst | `get_approved_soa`, `list_soa_items`, `search_assessment_kb`, `get_chunk_context`, `get_evidence_candidates`, `get_scf_control` | qualquer approval, `final_write`, `admin`, raw DB, external calls |
+| Standard Gap Analyst | `get_approved_soa`, `get_evidence_candidates`, `list_gap_findings`, `suggest_gap_finding_draft`, `get_scf_control`, `get_official_scf_mappings` | `approve_gap`, `suggest_maturity_score_draft`, `final_write`, `admin` |
+| Standard Maturity Assessor | `get_approved_gap_analysis`, `list_gap_findings`, `get_maturity_context`, `suggest_maturity_score_draft`, `get_scf_control` | `approve_maturity`, POA&M finalization, Report finalization, `final_write`, `admin` |
+| Standard POA&M Planner | `get_approved_gap_analysis`, `list_gap_findings`, `get_maturity_context`, `get_poam_context`, `suggest_poam_item_draft` | `approve_poam`, Report approval, `final_write`, `admin` |
+| Standard Assessment Report Writer | `get_report_sources`, `get_approved_soa`, `get_approved_gap_analysis`, `get_maturity_context`, `get_poam_context`, `suggest_report_section_draft` | alterar findings, `approve_report`, `final_write`, `admin`, `external_call` |
 
 Regra de interpretação:
 
@@ -617,3 +617,4 @@ Definition of done para implementação futura:
 - audit/security events por tool call;
 - tenant isolation validado;
 - documentação operacional atualizada quando tool nova for adicionada.
+

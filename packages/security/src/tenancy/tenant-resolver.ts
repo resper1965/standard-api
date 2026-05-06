@@ -1,4 +1,4 @@
-import type { SecurityTenantContext } from "@aegis/schemas";
+import type { SecurityTenantContext } from "@standard/schemas";
 
 export type ResolveTenantInput = {
   headerTenantId?: string;
@@ -24,3 +24,4 @@ export class TenantResolver {
     };
   }
 }
+

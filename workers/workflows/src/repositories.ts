@@ -1,4 +1,4 @@
-import { executeTransition } from "@aegis/assessment-engine";
+import { executeTransition } from "@standard/assessment-engine";
 import type { AssessmentEngineAdapter, WorkflowAuditAdapter, WorkflowAuditEvent, WorkflowDependencies, WorkflowRepository, WorkflowRunRecord } from "./types";
 
 const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
@@ -62,3 +62,4 @@ export const createInMemoryWorkflowDependencies = (): WorkflowDependencies & {
   audit: createInMemoryWorkflowAuditAdapter(),
   assessmentEngine: createAssessmentEngineAdapter()
 });
+

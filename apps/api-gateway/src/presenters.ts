@@ -1,4 +1,4 @@
-import type { ArtifactVersion, AssessmentLifecycleEvent } from "@aegis/assessment-engine";
+import type { ArtifactVersion, AssessmentLifecycleEvent } from "@standard/assessment-engine";
 import type { ApprovalRecord, AssessmentRecord } from "./http";
 
 export const assessmentResponse = (record: AssessmentRecord) => ({
@@ -56,3 +56,4 @@ export const artifactVersionResponse = (version: ArtifactVersion) => ({
   supersedes_version_id: version.supersedesVersionId,
   trace_id: version.traceId
 });
+

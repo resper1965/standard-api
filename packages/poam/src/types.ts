@@ -1,5 +1,5 @@
-import type { GapAnalysisDependencies, GapFindingResponse } from "@aegis/gap-analysis";
-import type { ScfControl, ScfCoreServices } from "@aegis/scf-core";
+import type { GapAnalysisDependencies, GapFindingResponse } from "@standard/gap-analysis";
+import type { ScfControl, ScfCoreServices } from "@standard/scf-core";
 import type {
   CreatePoamMilestoneRequest,
   PoamActionType,
@@ -16,7 +16,7 @@ import type {
   PoamVersionResponse,
   UpdatePoamItemRequest,
   UpdatePoamMilestoneRequest
-} from "@aegis/schemas";
+} from "@standard/schemas";
 
 export type {
   CreatePoamMilestoneRequest,
@@ -118,3 +118,4 @@ export type CreatePoamDraftOptions = {
   maturity_assessment_version_id?: string;
   include_optional_improvements?: boolean;
 };
+

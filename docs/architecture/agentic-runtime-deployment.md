@@ -2,9 +2,9 @@
 
 ## 1. Definição
 
-O **Agentic Runtime** do Aegis é o conjunto de componentes responsáveis por executar agentes, orquestrar workflows, acessar tools e manter estado, garantindo escalabilidade, isolamento multi-tenant e rastreabilidade.
+O **Agentic Runtime** do Standard é o conjunto de componentes responsáveis por executar agentes, orquestrar workflows, acessar tools e manter estado, garantindo escalabilidade, isolamento multi-tenant e rastreabilidade.
 
-Ele transforma o Aegis SCF Agentic Assessment Model em um modelo operacional Cloudflare-oriented, API-first e SaaS-ready.
+Ele transforma o Standard SCF Agentic Assessment Model em um modelo operacional Cloudflare-oriented, API-first e SaaS-ready.
 
 Responsabilidades principais:
 
@@ -976,3 +976,4 @@ Definition of done para implementação futura:
 - R2/Vectorize adapters reais;
 - staging deployment validado;
 - production readiness checklist aprovado.
+

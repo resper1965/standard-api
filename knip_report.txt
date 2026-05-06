@@ -1,0 +1,104 @@
+Ôùç injected env (1) from .env // tip: Ôîÿ suppress logs { quiet: true }
+Unused files (31)
+tmp_check.ts                                                         
+tmp_check_org.ts                                                     
+tmp_clear_users.ts                                                   
+tmp_db_test.ts                                                       
+tmp_migration.ts                                                     
+tmp_patch.ts                                                         
+tmp_rename.ts                                                        
+tmp_view_data.ts                                                     
+tmp_watch.ts                                                         
+scripts/load-seed.ts                                                 
+scripts/provision-cloudflare.mjs                                     
+scripts/put-secrets.mjs                                              
+skills/systematic-debugging/condition-based-waiting-example.ts       
+skills/writing-skills/render-graphs.js                               
+.agent/skills/systematic-debugging/condition-based-waiting-example.ts
+.agent/skills/writing-skills/render-graphs.js                        
+skills/brainstorming/scripts/helper.js                               
+skills/brainstorming/scripts/server.cjs                              
+apps/api-gateway/src/openapi/spec.ts                                 
+packages/reporting/src/templates/assessment-report.template.ts       
+packages/reporting/src/templates/executive-summary.template.ts       
+packages/reporting/src/templates/gap-analysis-export.template.ts     
+packages/reporting/src/templates/maturity-export.template.ts         
+packages/reporting/src/templates/poam-export.template.ts             
+packages/reporting/src/templates/soa-export.template.ts              
+workers/queues/src/messages/kb-embedding-message.ts                  
+packages/scf-core/scripts/generate-seed-csv.ts                       
+packages/scf-core/scripts/validate-official-xlsx.ts                  
+packages/scf-core/tests/csv-seed-import.test.ts                      
+packages/auth/src/client.ts                                          
+packages/schemas/migrate.ts                                          
+Unused dependencies (10)
+better-auth               apps/api-gateway/package.json:29:6           
+@standard/assessment-engine  packages/reporting/package.json:13:6         
+@standard/assessment-engine  packages/poam/package.json:13:6              
+@standard/assessment-engine  packages/gap-analysis/package.json:13:6      
+@standard/kb                 workers/ingestion/package.json:13:6          
+@standard/assessment-engine  packages/soa/package.json:13:6               
+zod                       packages/security/package.json:16:6          
+zod                       packages/document-ingestion/package.json:14:6
+@standard/schemas            packages/assessment-engine/package.json:13:6 
+zod                       packages/observability/package.json:14:6     
+Unused devDependencies (3)
+@cloudflare/workers-types  packages/security/package.json:19:6          
+@cloudflare/workers-types  packages/document-ingestion/package.json:17:6
+@vitejs/plugin-react       apps/web/package.json:23:6                   
+Unlisted dependencies (2)
+cloudflare   workers/workflows/src/assessment-lifecycle.ts:2:65     
+drizzle-orm  packages/agent-runtime/src/repositories.drizzle.ts:3:25
+Unused exports (35)
+notImplemented                                    apps/api-gateway/src/app.ts:190:14                                   
+jsonRequest                                       apps/api-gateway/tests/helpers.ts:8:14                               
+multipartRequest                                  apps/api-gateway/tests/helpers.ts:19:14                              
+assertRateLimitPlaceholder                        apps/api-gateway/src/middleware/rate-limit.middleware.ts:121:14      
+createDrizzleWorkflowRepository                   apps/api-gateway/src/adapters/workflow.repository.ts:13:14           
+createDrizzleWorkflowAuditAdapter                 apps/api-gateway/src/adapters/workflow.repository.ts:67:14           
+createDrizzleAssessmentEngineAdapter              apps/api-gateway/src/adapters/workflow.repository.ts:84:14           
+createDrizzleDocumentRepository                   apps/api-gateway/src/adapters/document-ingestion.repository.ts:33:14 
+createDrizzleDocumentJobRepository                apps/api-gateway/src/adapters/document-ingestion.repository.ts:106:14
+createDrizzleDocumentChunkRepository              apps/api-gateway/src/adapters/document-ingestion.repository.ts:181:14
+createDrizzleIngestionVectorRefRepository         apps/api-gateway/src/adapters/document-ingestion.repository.ts:228:14
+createDrizzleIngestionAuditSink                   apps/api-gateway/src/adapters/document-ingestion.repository.ts:248:14
+createDrizzleKbEmbeddingJobRepository             apps/api-gateway/src/adapters/kb.repository.ts:27:14                 
+createDrizzleKbVectorReferenceRepository          apps/api-gateway/src/adapters/kb.repository.ts:116:14                
+createDrizzleKbSearchLogRepository                apps/api-gateway/src/adapters/kb.repository.ts:205:14                
+createDrizzleMaturityVersionRepository            apps/api-gateway/src/adapters/maturity.repository.ts:61:14           
+createDrizzleMaturityScoreRepository              apps/api-gateway/src/adapters/maturity.repository.ts:111:14          
+createDrizzleScopeRepository                      apps/api-gateway/src/adapters/soa.repository.ts:12:14                
+createDrizzleSoaVersionRepository                 apps/api-gateway/src/adapters/soa.repository.ts:70:14                
+createDrizzleSoaItemRepository                    apps/api-gateway/src/adapters/soa.repository.ts:114:14               
+createDrizzleEvidenceFindingRepository            apps/api-gateway/src/adapters/gap-analysis.repository.ts:12:14       
+createDrizzleEvidenceSourceRepository             apps/api-gateway/src/adapters/gap-analysis.repository.ts:63:14       
+createDrizzleGapAnalysisVersionRepository         apps/api-gateway/src/adapters/gap-analysis.repository.ts:91:14       
+createDrizzleGapFindingRepository                 apps/api-gateway/src/adapters/gap-analysis.repository.ts:134:14      
+createDrizzlePoamVersionRepository                apps/api-gateway/src/adapters/poam.repository.ts:12:14               
+createDrizzlePoamItemRepository                   apps/api-gateway/src/adapters/poam.repository.ts:56:14               
+createDrizzlePoamMilestoneRepository              apps/api-gateway/src/adapters/poam.repository.ts:125:14              
+createDrizzlePoamDependencyRepository             apps/api-gateway/src/adapters/poam.repository.ts:182:14              
+createDrizzleReportVersionRepository              apps/api-gateway/src/adapters/reporting.repository.ts:12:14          
+createDrizzleReportArtifactRepository             apps/api-gateway/src/adapters/reporting.repository.ts:62:14          
+createDrizzleExportJobRepository                  apps/api-gateway/src/adapters/reporting.repository.ts:94:14          
+ids                                               packages/assessment-engine/tests/fixtures.ts:3:14                    
+findCrosswalkReferenceColumn                      packages/scf-core/src/importers/xlsx-tab-parser.ts:325:14            
+apiErrorCodes                                     apps/api-gateway/src/errors/error-codes.ts:1:14                      
+ApiError                                   class  apps/web/src/lib/api.ts:23:14                                        
+Unused exported types (10)
+EvalResult                 type  evals/agent-evals/eval-kit.ts:15:13                             
+RouteHandler               type  apps/api-gateway/src/http.ts:139:13                             
+AssessmentSnapshotBuilder  type  apps/api-gateway/src/adapters/assessment-engine.adapter.ts:22:13
+MaturityVersionRecord      type  apps/api-gateway/src/adapters/maturity.repository.ts:14:13      
+MaturityScoreRecord        type  apps/api-gateway/src/adapters/maturity.repository.ts:27:13      
+MaturityVersionRepository  type  apps/api-gateway/src/adapters/maturity.repository.ts:42:13      
+MaturityScoreRepository    type  apps/api-gateway/src/adapters/maturity.repository.ts:49:13      
+MaturityRepositories       type  apps/api-gateway/src/adapters/maturity.repository.ts:54:13      
+AiGatewayConfig            type  apps/api-gateway/src/adapters/ai-gateway.adapter.ts:14:13       
+TabClassification          type  packages/scf-core/src/importers/xlsx-tab-parser.ts:18:13        
+Duplicate exports (3)
+WorkflowRunResponseSchema|StartLifecycleWorkflowResponseSchema  packages/schemas/src/workflow-orchestration.ts
+AccessDecisionSchema|PolicyResultSchema                         packages/schemas/src/security.ts              
+UsageQuerySchema|AuditLogQuerySchema|SecurityEventQuerySchema   packages/schemas/src/observability.ts         
+Configuration hints (3)
+

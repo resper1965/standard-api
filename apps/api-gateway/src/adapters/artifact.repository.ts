@@ -1,4 +1,4 @@
-import type { ArtifactVersion } from "@aegis/assessment-engine";
+import type { ArtifactVersion } from "@standard/assessment-engine";
 import type { ArtifactRepositoryAdapter } from "../http";
 
 export const createArtifactRepository = (): ArtifactRepositoryAdapter => {
@@ -30,3 +30,4 @@ export const createArtifactRepository = (): ArtifactRepositoryAdapter => {
     }
   };
 };
+

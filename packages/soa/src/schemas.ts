@@ -18,4 +18,5 @@ export {
   SubmitSoaReviewRequestSchema,
   UpdateScopeRequestSchema,
   UpdateSoaItemRequestSchema
-} from "@aegis/schemas";
+} from "@standard/schemas";
+

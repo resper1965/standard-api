@@ -1,5 +1,5 @@
 {
-  "name": "@aegis/agent-runtime",
+  "name": "@standard/agent-runtime",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -10,10 +10,14 @@
     "test": "tsx tests/run-tests.ts"
   },
   "dependencies": {
-    "@aegis/schemas": "workspace:*",
+    "@standard/schemas": "workspace:*",
+    "@ai-sdk/openai": "3.0.61",
+    "@types/react": "^19.2.14",
+    "ai": "6.0.175",
     "zod": "^4.3.6"
   },
   "devDependencies": {
     "tsx": "^4.21.0"
   }
 }
+

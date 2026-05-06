@@ -1,5 +1,5 @@
 /**
- * Aegis Lifecycle Proof — E2E Validation Script
+ * Standard Lifecycle Proof — E2E Validation Script
  *
  * Simulates the "happy path" of document upload → state transition → audit:
  *   1. Verifies the seeded assessment exists in "draft" state
@@ -41,7 +41,7 @@ async function main() {
   const traceId = `lifecycle-proof-${Date.now()}`;
   const documentId = randomUUID();
 
-  console.log("🔬 Aegis Lifecycle Proof — Starting...");
+  console.log("🔬 Standard Lifecycle Proof — Starting...");
   console.log(`   trace_id: ${traceId}\n`);
 
   const client = postgres(databaseUrl, { ssl: "require" });
@@ -194,3 +194,4 @@ main().catch((err) => {
   console.error("❌ Lifecycle proof failed:", err);
   process.exit(1);
 });
+

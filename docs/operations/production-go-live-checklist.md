@@ -2,7 +2,7 @@
 
 ## 1. Objetivo
 
-Este checklist define os gates operacionais para liberar o `aegis-api-standard` em produção real como API SaaS multi-tenant.
+Este checklist define os gates operacionais para liberar o `standard-api-standard` em produção real como API SaaS multi-tenant.
 
 Ele complementa `docs/operations/production-readiness-checklist.md` e deve ser usado como checklist final de go-live.
 
@@ -341,3 +341,4 @@ Ao concluir este checklist:
 - observability está ativa;
 - tenant isolation está testado;
 - go-live é uma decisão auditável.
+

@@ -1,6 +1,6 @@
-import { SecurityEventService } from "@aegis/observability";
-import { roleHasPermission, type AegisRole, type AegisResource } from "@aegis/auth";
-import type { Permission } from "@aegis/schemas";
+import { SecurityEventService } from "@standard/observability";
+import { roleHasPermission, type StandardRole, type StandardResource } from "@standard/auth";
+import type { Permission } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RequestContext } from "../http";
 
@@ -16,11 +16,11 @@ export const assertRbac = async (context: RequestContext, requiredPermissions: P
     reason = "missing_auth_context";
   } else {
     // Legacy support vs Better Auth session
-    const role = (context.session?.user?.role as AegisRole) || (context.auth?.roles?.[0] as AegisRole) || "viewer";
+    const role = (context.session?.user?.role as StandardRole) || (context.auth?.roles?.[0] as StandardRole) || "viewer";
     
     // Evaluate mapped permissions
     for (const reqPerm of requiredPermissions) {
-      const [resource, action] = reqPerm.split(":") as [AegisResource, string];
+      const [resource, action] = reqPerm.split(":") as [StandardResource, string];
       if (!roleHasPermission(role, resource, action)) {
         allowed = false;
         reason = "permission_missing";
@@ -56,3 +56,4 @@ export const assertRbac = async (context: RequestContext, requiredPermissions: P
     throw new ApiError("FORBIDDEN", "Permission denied.", 403, [{ reason, required_permissions: requiredPermissions }]);
   }
 };
+

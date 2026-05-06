@@ -1,4 +1,4 @@
-import type { AuthContext, Permission, Role } from "@aegis/schemas";
+import type { AuthContext, Permission, Role } from "@standard/schemas";
 import { DEFAULT_ROLE_PERMISSIONS } from "../constants";
 import { SecurityPolicyError } from "../errors";
 import type { AuthenticateInput, AuthProvider } from "./auth-provider";
@@ -8,7 +8,7 @@ export type SecurityRuntimeEnvironment = "development" | "test" | "staging" | "p
 const unique = <T>(items: T[]): T[] => [...new Set(items)];
 
 /**
- * @deprecated Use `@aegis/auth` (Better Auth) instead.
+ * @deprecated Use `@standard/auth` (Better Auth) instead.
  * This provider will be removed in v0.3.0.
  */
 export class MockAuthProvider implements AuthProvider {
@@ -46,3 +46,4 @@ export class MockAuthProvider implements AuthProvider {
     return roles.length > 0 ? roles : (["owner"] as any);
   }
 }
+

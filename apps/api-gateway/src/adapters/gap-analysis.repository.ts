@@ -4,9 +4,9 @@
  * Uses $inferSelect types for row mappers so column names match exactly.
  */
 import { eq, and } from "drizzle-orm";
-import { evidenceFindings, evidenceSources, gapAnalysisVersions, gapFindings } from "@aegis/schemas";
-import type { EvidenceFindingResponse, EvidenceSourceResponse, GapAnalysisVersionResponse, GapFindingResponse } from "@aegis/schemas";
-import type { EvidenceFindingRepository, EvidenceSourceRepository, GapAnalysisVersionRepository, GapFindingRepository, GapAnalysisRepositories } from "@aegis/gap-analysis";
+import { evidenceFindings, evidenceSources, gapAnalysisVersions, gapFindings } from "@standard/schemas";
+import type { EvidenceFindingResponse, EvidenceSourceResponse, GapAnalysisVersionResponse, GapFindingResponse } from "@standard/schemas";
+import type { EvidenceFindingRepository, EvidenceSourceRepository, GapAnalysisVersionRepository, GapFindingRepository, GapAnalysisRepositories } from "@standard/gap-analysis";
 import type { DbClient } from "./db";
 
 export const createDrizzleEvidenceFindingRepository = (db: DbClient): EvidenceFindingRepository => ({
@@ -292,3 +292,4 @@ const mapGapFindingRow = (row: GapFindingRow): GapFindingResponse => ({
   created_at: row.createdAt.toISOString(),
   updated_at: row.updatedAt.toISOString(),
 });
+

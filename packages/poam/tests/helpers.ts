@@ -1,7 +1,7 @@
-import { GapApprovalService, GapDraftService, GapReviewService, type GapAnalysisDependencies } from "@aegis/gap-analysis";
-import { SYNTHETIC_FRAMEWORK_ID, SYNTHETIC_SCF_VERSION_ID } from "@aegis/scf-core";
-import type { GapFindingResponse } from "@aegis/schemas";
-import { SoaApprovalService, SoaDraftService, SoaReviewService, createInMemorySoaDependencies } from "@aegis/soa";
+import { GapApprovalService, GapDraftService, GapReviewService, type GapAnalysisDependencies } from "@standard/gap-analysis";
+import { SYNTHETIC_FRAMEWORK_ID, SYNTHETIC_SCF_VERSION_ID } from "@standard/scf-core";
+import type { GapFindingResponse } from "@standard/schemas";
+import { SoaApprovalService, SoaDraftService, SoaReviewService, createInMemorySoaDependencies } from "@standard/soa";
 import { createInMemoryGapAnalysisDependencies } from "../../gap-analysis/src/index";
 import { createInMemoryPoamDependencies } from "../src/index";
 
@@ -44,3 +44,4 @@ export const updateGapFinding = async (gap: GapAnalysisDependencies, finding: Ga
   await gap.repositories.gapFindings.update(next);
   return next;
 };
+

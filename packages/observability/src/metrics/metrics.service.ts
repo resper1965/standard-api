@@ -1,4 +1,4 @@
-import { OperationalMetricSchema, type MetricType, type OperationalMetric } from "@aegis/schemas";
+import { OperationalMetricSchema, type MetricType, type OperationalMetric } from "@standard/schemas";
 import type { ObservabilityDependencies } from "../repositories";
 
 export type RecordMetricInput = {
@@ -26,3 +26,4 @@ export class MetricsService {
     }));
   }
 }
+

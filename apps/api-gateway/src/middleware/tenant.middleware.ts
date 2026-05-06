@@ -1,11 +1,11 @@
-import { SecurityEventService } from "@aegis/observability";
-import { TenantResolver } from "@aegis/security";
+import { SecurityEventService } from "@standard/observability";
+import { TenantResolver } from "@standard/security";
 import { ApiError } from "../errors/api-error";
 import type { RequestContext } from "../http";
 
 export const resolveTenantContext = (context: RequestContext, protectedRoute: boolean): void => {
   const pathTenantId = context.params.tenantId;
-  const headerTenantId = context.request.headers.get("x-aegis-tenant-id") ?? undefined;
+  const headerTenantId = context.request.headers.get("x-standard-tenant-id") ?? undefined;
   const resolvedTenantId = headerTenantId ?? pathTenantId;
 
   if (protectedRoute && !resolvedTenantId) {
@@ -43,3 +43,4 @@ export const resolveTenantContext = (context: RequestContext, protectedRoute: bo
     traceId: context.traceId
   }) ?? undefined;
 };
+

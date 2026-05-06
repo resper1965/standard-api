@@ -6,7 +6,7 @@ test("Agent Runtime API lista agentes funcionais e contratos de tools", async ()
   const { tenantId } = await client.createTenantOrg();
 
   const result = await client.send("/api/v1/agent-runtime/agents", "GET", undefined, {
-    "x-aegis-tenant-id": tenantId
+    "x-standard-tenant-id": tenantId
   });
 
   expect(result.response.status).toBe(200);
@@ -18,8 +18,8 @@ test("Agent Runtime API cria run rastreável e bloqueia tool não permitida", as
   const client = createTestClient();
   const assessment = await client.createAssessment(1);
   const headers = {
-    "x-aegis-tenant-id": assessment.tenantId,
-    "x-aegis-actor-id": ids.actorId
+    "x-standard-tenant-id": assessment.tenantId,
+    "x-standard-actor-id": ids.actorId
   };
 
   const runResult = await client.send(`/api/v1/assessments/${assessment.assessmentId}/agent-runs`, "POST", {
@@ -57,8 +57,8 @@ test("Agent Runtime API completa run com output schema-validado", async () => {
   const client = createTestClient();
   const assessment = await client.createAssessment(1);
   const headers = {
-    "x-aegis-tenant-id": assessment.tenantId,
-    "x-aegis-actor-id": ids.actorId
+    "x-standard-tenant-id": assessment.tenantId,
+    "x-standard-actor-id": ids.actorId
   };
 
   const runResult = await client.send(`/api/v1/assessments/${assessment.assessmentId}/agent-runs`, "POST", {
@@ -85,3 +85,4 @@ test("Agent Runtime API completa run com output schema-validado", async () => {
   expect(completed.body.status).toBe("completed");
   expect(completed.body.output_hash.startsWith("sha256:")).toBe(true);
 });
+

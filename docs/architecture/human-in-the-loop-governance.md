@@ -2,9 +2,9 @@
 
 ## 1. Definição
 
-**Human-in-the-Loop Governance** no Aegis é o conjunto de mecanismos que garantem que decisões críticas não sejam tomadas automaticamente por agentes, exigindo validação, revisão e aprovação humana antes de se tornarem artefatos oficiais.
+**Human-in-the-Loop Governance** no Standard é o conjunto de mecanismos que garantem que decisões críticas não sejam tomadas automaticamente por agentes, exigindo validação, revisão e aprovação humana antes de se tornarem artefatos oficiais.
 
-Esse modelo existe para tornar o Aegis auditável, controlado, aceitável em ambientes regulados e alinhado a expectativas de governança como ISO, SOC 2, auditorias internas e revisões de risco.
+Esse modelo existe para tornar o Standard auditável, controlado, aceitável em ambientes regulados e alinhado a expectativas de governança como ISO, SOC 2, auditorias internas e revisões de risco.
 
 Princípio central:
 
@@ -713,7 +713,7 @@ Este documento define:
 - como separation of duties é aplicada;
 - como decisões são versionadas e auditadas;
 - como o workflow e Orchestrator aguardam aprovação;
-- como o Aegis impede decisões automáticas críticas.
+- como o Standard impede decisões automáticas críticas.
 
 Definition of done para implementação futura:
 
@@ -728,3 +728,4 @@ Definition of done para implementação futura:
 - Workflow waits integrados;
 - Assessment Engine gates impossíveis de bypassar;
 - agent runtime sem approval capability.
+

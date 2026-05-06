@@ -1,12 +1,12 @@
-import type { ApprovalGate } from "@aegis/assessment-engine";
-import { AuditEventService, MetricsService } from "@aegis/observability";
-import { AssessmentLifecycleOrchestrator, WorkflowOrchestrationError } from "@aegis/workflows";
+import type { ApprovalGate } from "@standard/assessment-engine";
+import { AuditEventService, MetricsService } from "@standard/observability";
+import { AssessmentLifecycleOrchestrator, WorkflowOrchestrationError } from "@standard/workflows";
 import {
   CancelWorkflowRequestSchema,
   ResumeWorkflowRequestSchema,
   StartLifecycleWorkflowRequestSchema,
   WorkflowSignalRequestSchema
-} from "@aegis/schemas";
+} from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { ApiErrorCode } from "../errors/error-codes";
 import type { AppDependencies, AssessmentRecord, RouteDefinition } from "../http";
@@ -200,3 +200,4 @@ export const workflowRoutes: RouteDefinition[] = [
     }
   }
 ];
+

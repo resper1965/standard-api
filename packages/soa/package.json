@@ -1,5 +1,5 @@
 {
-  "name": "@aegis/soa",
+  "name": "@standard/soa",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -10,13 +10,14 @@
     "test": "tsx tests/run-tests.ts"
   },
   "dependencies": {
-    "@aegis/assessment-engine": "workspace:*",
-    "@aegis/kb": "workspace:*",
-    "@aegis/scf-core": "workspace:*",
-    "@aegis/schemas": "workspace:*"
+    "@standard/assessment-engine": "workspace:*",
+    "@standard/kb": "workspace:*",
+    "@standard/scf-core": "workspace:*",
+    "@standard/schemas": "workspace:*"
   },
   "devDependencies": {
     "tsx": "^4.21.0",
     "typescript": "latest"
   }
 }
+

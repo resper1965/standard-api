@@ -1,4 +1,4 @@
-import { CreateAssessmentRequestSchema, UpdateAssessmentRequestSchema } from "@aegis/schemas";
+import { CreateAssessmentRequestSchema, UpdateAssessmentRequestSchema } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";
 import { json, newId, parseJson, routeParam } from "../http";
@@ -36,6 +36,15 @@ export const assessmentsRoutes: RouteDefinition[] = [
       const assessment = await deps.assessments.get(routeParam(params, "assessmentId"), tenantId!);
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
       return json(assessmentResponse(assessment));
+    }
+  },
+  {
+    method: "GET",
+    path: "/api/v1/assessments",
+    protected: true,
+    handler: async ({ deps, tenantId, traceId }) => {
+      const assessments = await deps.assessments.listAll(tenantId!);
+      return json({ data: assessments.map(assessmentResponse), trace_id: traceId });
     }
   },
   {
@@ -97,3 +106,4 @@ export const assessmentsRoutes: RouteDefinition[] = [
     }
   }
 ];
+

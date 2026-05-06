@@ -18,7 +18,7 @@ const secretKeys = [
 ];
 
 const workers = [
-  "aegis-api-standard-api-gateway",
+  "standard-api-standard-api-gateway",
 ];
 
 let ok = 0;
@@ -44,3 +44,4 @@ for (const worker of workers) {
 }
 
 console.log(`\nDone: ${ok} set, ${skipped} skipped.`);
+

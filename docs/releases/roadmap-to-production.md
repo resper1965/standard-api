@@ -1,6 +1,6 @@
 # Master Roadmap to Production
 
-> **Visão Geral:** Este documento consolida todo o "Backlog", "Pendências Locais" e "Gaps do release-candidate" anteriores num épico orientativo direto ao lançamento oficial do Aegis em ambiente Live (Cloudflare SaaS-ready).
+> **Visão Geral:** Este documento consolida todo o "Backlog", "Pendências Locais" e "Gaps do release-candidate" anteriores num épico orientativo direto ao lançamento oficial do Standard em ambiente Live (Cloudflare SaaS-ready).
 
 ## Trilha 1: Infraestrutura Real (Cloudflare & Persistência)
 *Foco primário antes da abertura orgânica do tráfego*
@@ -10,7 +10,7 @@
 - [ ] **Cloudflare Assíncrono Real:** Provisionar filas reais (Queues), Vectorize Workspaces separados por Tenant/Subdomain e aplicar o Workflow durável via nuvem em vez do simulador dev.
 - [x] **Provedor de Auth (Staging/Production):** ~~Mudar os MockAuthProviders locais~~ → Better Auth integrado com session cookies, Google OAuth, API keys e organization-based tenancy.
 
-## Trilha 2: Core Funcional & Assessments (Aegis Lifecycle)
+## Trilha 2: Core Funcional & Assessments (Standard Lifecycle)
 *Adições mandatórias que faltam no produto-base SaaS*
 
 - [ ] **Pacote de Maturidade:** Arquitetar em base de código e validar o pacote `packages/maturity` (Assessment Engine final gate).
@@ -29,4 +29,5 @@
 *Desvincular o pipeline simulado da verdadeira AGI*
 
 - [ ] **Prompts e Governança LLM Live:** Trocar `MockLLMProvider` por integrações reais sob políticas de isolamento de tenant no Prompt Engine.
-- [ ] **Taxa de Segurança / Prompt Injection:** Garantir validação em camadas para impedir injeção direta de prompt no Aegis Knowledge Steward.
+- [ ] **Taxa de Segurança / Prompt Injection:** Garantir validação em camadas para impedir injeção direta de prompt no Standard Knowledge Steward.
+
