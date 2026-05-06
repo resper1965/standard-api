@@ -1,5 +1,7 @@
 # Standard MVP — Full Implementation Plan
 
+> **Status**: `[CONCLUÍDO — PARCIAL]` Fases 1–3 (frontend + admin) executadas. Fases 4–5 (backend gaps + polish) parcialmente executadas. Itens remanescentes migrados para `docs/backlog/backlog.md`.
+
 > **For Antigravity:** REQUIRED WORKFLOW: Use `.agent/workflows/execute-plan.md` to execute this plan in single-flow mode.
 
 **Goal:** Build the complete Standard MVP — corporate frontend + remaining backend gaps — in a single execution flow.

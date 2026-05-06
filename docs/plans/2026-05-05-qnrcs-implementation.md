@@ -1,5 +1,7 @@
 # QNRCS Integration Implementation Plan
 
+> **Status**: `[CONCLUÍDO]` Seed SQL criado e expandido com todos os requisitos QNRCS. Ver `infra/docker/postgres/seeds/0011_pt_qnrcs_derived_seed.sql`.
+
 > **For Antigravity:** REQUIRED WORKFLOW: Use `.agent/workflows/execute-plan.md` to execute this plan in single-flow mode.
 
 **Goal:** Provide a static seed integration to load the Portuguese National Cybersecurity Framework (QNRCS 2019) into the Drizzle Data Layer for Standard.

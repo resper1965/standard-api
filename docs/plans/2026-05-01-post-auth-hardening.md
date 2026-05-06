@@ -1,5 +1,7 @@
 # Standard Post-Auth Hardening — Implementation Plan
 
+> **Status**: `[CONCLUÍDO — PARCIAL]` Fases 1–3 (cleanup, secrets, deploy) executadas. Fase 4 (seed) parcial. Fase 5 (deprecar legado) parcial. Remanescentes em `docs/backlog/backlog.md`.
+
 > **For Antigravity:** REQUIRED WORKFLOW: Use `.agent/workflows/execute-plan.md` to execute this plan in single-flow mode.
 
 **Goal:** Resolver sistematicamente todos os itens pendentes após a integração do Better Auth — cleanup, deploy staging, secrets, frontend auth e deprecação do legado.

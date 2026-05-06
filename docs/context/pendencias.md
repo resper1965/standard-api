@@ -1,5 +1,8 @@
 # Pendências (Backlog & Débitos Técnicos)
 
+> [!WARNING]
+> **[SUPERSEDED]** Este documento foi consolidado em `docs/backlog/backlog.md`. Não adicionar novos itens aqui.
+
 Esta é a lista do que identificamos como os próximos passos operacionais, arquiteturais e de backlog a serem endereçados agora que concluímos o *Enterprise-Grade MVP*.
 
 ## Integrações Externas (Webhooks & Conectores)

@@ -1,5 +1,8 @@
 # Master Roadmap to Production
 
+> [!WARNING]
+> **[SUPERSEDED]** Este documento foi substituído pelo `ROADMAP.md` na raiz do projeto. Não atualizar aqui.
+
 > **Visão Geral:** Este documento consolida todo o "Backlog", "Pendências Locais" e "Gaps do release-candidate" anteriores num épico orientativo direto ao lançamento oficial do Standard em ambiente Live (Cloudflare SaaS-ready).
 
 ## Trilha 1: Infraestrutura Real (Cloudflare & Persistência)

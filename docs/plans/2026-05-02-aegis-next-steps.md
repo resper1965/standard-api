@@ -1,5 +1,7 @@
 # Standard Next Steps Implementation Plan
 
+> **Status**: `[CONCLUÍDO — PARCIAL]` Phase A (SCF browser) e B (admin polish) executadas. Phase C (SCF import) removida. Phase D (hardening) parcial. Phase E (docs) parcial.
+
 > **For Antigravity:** REQUIRED WORKFLOW: Use `.agent/workflows/execute-plan.md` to execute this plan in single-flow mode.
 
 **Goal:** Close the remaining MVP gaps — give the frontend real SCF catalog browsing, polish all admin pages to Apple HIG, add an SCF import UI for admins, and harden the production environment.

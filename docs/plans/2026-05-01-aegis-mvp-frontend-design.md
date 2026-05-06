@@ -1,5 +1,7 @@
 # Standard MVP — Corporate Dashboard Design
 
+> **Status**: `[CONCLUÍDO]` Design implementado. Tokens e layout em uso na web app.
+
 > **Validated:** 2026-05-01 via brainstorming
 
 ## Overview

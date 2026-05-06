@@ -1,5 +1,8 @@
 # Post-MVP Backlog
 
+> [!WARNING]
+> **[SUPERSEDED]** Este documento foi consolidado em `docs/backlog/backlog.md`. Não adicionar novos itens aqui.
+
 ## P0 Critical
 
 - Enterprise auth: implementar provider real JWT/API key/Cloudflare Access e bloquear `mock_dev` fora de local/test.

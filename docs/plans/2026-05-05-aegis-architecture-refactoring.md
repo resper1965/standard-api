@@ -1,5 +1,7 @@
 # Standard Architecture Refactoring Implementation Plan
 
+> **Status**: `[CONCLUÍDO]` Todos os 4 tasks executados (isolamento scf-core, KV cache, ABAC middleware, CQRS queue). Ver `docs/plans/task.md`.
+
 > **For Antigravity:** REQUIRED WORKFLOW: Use `.agent/workflows/execute-plan.md` to execute this plan in single-flow mode.
 
 **Goal:** Refactor Standard API to decouple GRC ABAC from Better Auth, cache sessions at the Edge (KV), prepare CQRS Queues for Assessment Engine, and sever bad package coupling.

@@ -1,5 +1,7 @@
 # Design: Integração do QNRCS 2019 ao Standard API
 
+> **Status**: `[CONCLUÍDO]` Design implementado. Seed em `infra/docker/postgres/seeds/0011_pt_qnrcs_derived_seed.sql`.
+
 *Data:* 2026-05-05
 *Tópico:* Integração Normativa "Quadro Nacional de Referência para a Cibersegurança" (Portugal)
 
