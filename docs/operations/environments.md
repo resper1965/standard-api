@@ -1,12 +1,15 @@
 # Ambientes
 
+## Risco Aceito
+
+> **[RISCO ACEITO — 2026-05-06]** Deploy direto em production sem staging separado. Validação será feita em local + CI. Staging pode ser introduzido depois se necessário.
+
 ## Visão Geral
 
 | Ambiente | Propósito | Dados |
 |----------|-----------|-------|
 | **Local** | Desenvolvimento e testes | Sintéticos (fixtures/seeds) |
-| **Staging** | Validação pré-produção | Sintéticos (nunca dados reais) |
-| **Production** | Operação com clientes reais | Reais (isolados por tenant) |
+| **Production** | Operação real | Reais (isolados por tenant) |
 
 ## Local
 
@@ -28,31 +31,11 @@
 - ✅ Seeds SCF oficial + QNRCS
 - ⚠️ R2, Queues e Vectorize usam simulador Wrangler (não persistente)
 
-## Staging
+## Staging (não utilizado — risco aceito)
 
-### Stack
-- API Gateway: Cloudflare Worker (`standard-api-standard-api-gateway`)
-- Web: Cloudflare Pages (`standard-web`)
-- PostgreSQL: Neon PostgreSQL (database staging separado)
-- Auth: Better Auth com Google OAuth (redirect para domínio staging)
+O deploy staging workflow existe (`.github/workflows/deploy-staging.yml`) mas não será utilizado na fase atual. Validação ocorre em local + CI antes de deploy direto em production.
 
-### Configuração
-- Secrets via `wrangler secret put` ou GitHub Secrets
-- Deploy via `.github/workflows/deploy-staging.yml`
-- Domínio: configurar via Cloudflare
-
-### Status
-- ⚠️ Parcialmente provisionado
-- ⚠️ Resources Cloudflare (R2, Queues, Vectorize) não separados de dev
-- ✅ Deploy workflow existe
-- ⚠️ Smoke tests não executados em staging real
-
-### O que falta
-- [ ] Provisionar R2 bucket staging separado
-- [ ] Provisionar Queues staging separadas
-- [ ] Provisionar Vectorize namespace staging
-- [ ] Configurar domínio staging
-- [ ] Executar smoke tests reais
+Se no futuro staging for necessário, os workflows já estão prontos.
 
 ## Production
 
