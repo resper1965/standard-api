@@ -1,15 +1,12 @@
-import { createAuthClient } from "better-auth/react";
+import { createAuthClient } from "better-auth/react"
+import { organizationClient } from "better-auth/client/plugins"
 
 export const authClient = createAuthClient({
-  baseURL: import.meta.env.PROD
-    ? "https://api.standard.bekaa.eu"
-    : "",           // dev proxy handles /api → localhost:8787
-});
+  baseURL: "/api/v1/auth",
+  plugins: [
+    organizationClient()
+  ]
+})
 
-export const {
-  signIn,
-  signUp,
-  signOut,
-  useSession,
-} = authClient;
-
+export const { useSession, signIn, signOut, signUp } = authClient
+export const { useOrganization, useActiveOrganization } = authClient.organization

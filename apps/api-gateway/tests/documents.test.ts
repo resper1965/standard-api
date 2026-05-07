@@ -58,7 +58,8 @@ test("consumer endpoint processa job e expõe chunks", async () => {
     "x-standard-actor-id": ids.actorId
   });
   const chunks = await client.send(`/api/v1/documents/${documentId}/chunks`, "GET", undefined, {
-    "x-standard-tenant-id": created.tenantId
+    "x-standard-tenant-id": created.tenantId,
+    "x-standard-actor-id": ids.actorId
   });
   expect(processed.response.status).toBe(200);
   expect(processed.body.status).toBe("succeeded");
@@ -78,14 +79,16 @@ test("reprocess cria novo job sem apagar chunks anteriores", async () => {
     "x-standard-actor-id": ids.actorId
   });
   const before = await client.send(`/api/v1/documents/${documentId}/chunks`, "GET", undefined, {
-    "x-standard-tenant-id": created.tenantId
+    "x-standard-tenant-id": created.tenantId,
+    "x-standard-actor-id": ids.actorId
   });
   const reprocess = await client.send(`/api/v1/documents/${documentId}/reprocess`, "POST", { reason: "teste" }, {
     "x-standard-tenant-id": created.tenantId,
     "x-standard-actor-id": ids.actorId
   });
   const after = await client.send(`/api/v1/documents/${documentId}/chunks`, "GET", undefined, {
-    "x-standard-tenant-id": created.tenantId
+    "x-standard-tenant-id": created.tenantId,
+    "x-standard-actor-id": ids.actorId
   });
   expect(reprocess.response.status).toBe(202);
   expect(before.body.data.length).toBe(after.body.data.length);
@@ -100,7 +103,8 @@ test("listagem não retorna documentos de outro tenant", async () => {
     "x-standard-actor-id": ids.actorId
   });
   const list = await client.send(`/api/v1/assessments/${first.assessmentId}/documents`, "GET", undefined, {
-    "x-standard-tenant-id": second.tenantId
+    "x-standard-tenant-id": second.tenantId,
+    "x-standard-actor-id": ids.actorId
   });
   expect(list.body.data.length).toBe(0);
 });

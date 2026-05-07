@@ -1,8 +1,8 @@
 import type { VectorIndexInfo, VectorQueryOptions, VectorRecord, VectorSearchResult, VectorStore, VectorStoreMetadata, VectorUpsertResult } from "../types";
 
 type VectorizeLikeIndex = {
-  upsert(records: Array<{ id: string; values: number[]; metadata: Record<string, unknown> }>): Promise<unknown>;
-  query(vector: number[], options: { topK: number; filter?: Record<string, unknown>; returnMetadata?: boolean }): Promise<{
+  upsert(records: Array<{ id: string; values: number[]; metadata: Record<string, any> }>): Promise<unknown>;
+  query(vector: number[], options: { topK: number; filter?: Record<string, any>; returnMetadata?: boolean }): Promise<{
     matches?: Array<{ id: string; score: number; metadata?: Record<string, unknown> }>;
   }>;
   deleteByIds?(ids: string[]): Promise<unknown>;

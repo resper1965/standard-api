@@ -77,7 +77,8 @@ test("KB vector references por documento respeita tenant", async () => {
     "x-standard-actor-id": ids.actorId
   });
   const refs = await client.send(`/api/v1/documents/${documentId}/kb/vector-references`, "GET", undefined, {
-    "x-standard-tenant-id": created.tenantId
+    "x-standard-tenant-id": created.tenantId,
+    "x-standard-actor-id": ids.actorId
   });
   expect(refs.response.status).toBe(200);
   expect(refs.body.data.length).toBe(1);

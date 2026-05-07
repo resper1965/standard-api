@@ -14,7 +14,7 @@ export class DrizzleKbEmbeddingJobRepository implements KbEmbeddingJobRepository
 
   async saveJob(job: KbEmbeddingJobResponse): Promise<void> {
     await this.db.insert(kbEmbeddingJobs).values({
-      id: job.id,
+      id: job.job_id,
       tenantId: job.tenant_id,
       organizationId: job.organization_id,
       assessmentId: job.assessment_id,
@@ -28,9 +28,7 @@ export class DrizzleKbEmbeddingJobRepository implements KbEmbeddingJobRepository
       completedAt: job.completed_at ? new Date(job.completed_at) : null,
       errorCode: job.error_code,
       errorMessageSafe: job.error_message_safe,
-      traceId: job.trace_id,
-      createdAt: new Date(job.created_at),
-      updatedAt: new Date(job.updated_at)
+      traceId: job.trace_id
     }).onConflictDoUpdate({
       target: kbEmbeddingJobs.id,
       set: {
@@ -39,8 +37,7 @@ export class DrizzleKbEmbeddingJobRepository implements KbEmbeddingJobRepository
         startedAt: job.started_at ? new Date(job.started_at) : null,
         completedAt: job.completed_at ? new Date(job.completed_at) : null,
         errorCode: job.error_code,
-        errorMessageSafe: job.error_message_safe,
-        updatedAt: new Date(job.updated_at)
+        errorMessageSafe: job.error_message_safe
       }
     });
   }
@@ -75,7 +72,7 @@ export class DrizzleKbEmbeddingJobRepository implements KbEmbeddingJobRepository
 
   private mapToJob(row: any): KbEmbeddingJobResponse {
     return {
-      id: row.id,
+      job_id: row.id,
       tenant_id: row.tenantId,
       organization_id: row.organizationId,
       assessment_id: row.assessmentId,
@@ -85,13 +82,14 @@ export class DrizzleKbEmbeddingJobRepository implements KbEmbeddingJobRepository
       status: row.status,
       attempt_count: row.attemptCount,
       queued_at: row.queuedAt.toISOString(),
-      started_at: row.startedAt?.toISOString() ?? null,
-      completed_at: row.completedAt?.toISOString() ?? null,
+      started_at: row.startedAt?.toISOString(),
+      completed_at: row.completedAt?.toISOString(),
       error_code: row.errorCode,
       error_message_safe: row.errorMessageSafe,
       trace_id: row.traceId,
-      created_at: row.createdAt.toISOString(),
-      updated_at: row.updatedAt.toISOString()
+      embedding_model: row.embeddingModel ?? "unknown",
+      vector_index_name: row.vectorIndexName ?? "unknown",
+      metadata: {}
     };
   }
 }
@@ -101,24 +99,21 @@ export class DrizzleKbVectorReferenceRepository implements KbVectorReferenceRepo
 
   async save(reference: KbVectorReferenceResponse): Promise<void> {
     await this.db.insert(vectorReferences).values({
-      id: reference.id,
+      id: reference.vector_reference_id,
       tenantId: reference.tenant_id,
       organizationId: reference.organization_id,
       assessmentId: reference.assessment_id,
-      kbEntryId: reference.kb_entry_id ?? reference.id, // For fallback
+      kbEntryId: reference.chunk_id,
       vectorProvider: reference.vector_provider,
       vectorIndexName: reference.vector_index_name,
       vectorId: reference.vector_id ?? "",
       createdAt: new Date(reference.created_at),
       updatedAt: new Date(reference.updated_at)
-      // FIXME embedding_status and model etc. are actually in the schema for document-ingestion's vector_references but might not be fully overlapping. 
-      // The schemas package might have them separated or they are in metadata.
     }).onConflictDoUpdate({
       target: vectorReferences.id,
       set: {
         vectorId: reference.vector_id ?? "",
         updatedAt: new Date(reference.updated_at)
-        // update embedding rules if metadata allows
       }
     });
   }
@@ -150,21 +145,22 @@ export class DrizzleKbVectorReferenceRepository implements KbVectorReferenceRepo
 
   private mapToReference(row: any): KbVectorReferenceResponse {
     return {
-      id: row.id,
+      vector_reference_id: row.id,
       tenant_id: row.tenantId,
       organization_id: row.organizationId,
       assessment_id: row.assessmentId,
-      kb_entry_id: row.kbEntryId,
+      document_id: row.documentId ?? row.kbEntryId,
+      chunk_id: row.kbEntryId,
       vector_provider: row.vectorProvider,
       vector_index_name: row.vectorIndexName,
       vector_id: row.vectorId,
       created_at: row.createdAt.toISOString(),
       updated_at: row.updatedAt.toISOString(),
-      embedding_status: "embedded", // mapping mock
+      embedding_status: "embedded",
       embedding_model: null,
       embedding_dimensions: null,
       embedded_at: row.updatedAt.toISOString(),
-      last_error_safe: null
+      last_error_safe: undefined
     };
   }
 }

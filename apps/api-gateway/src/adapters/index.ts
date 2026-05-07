@@ -70,7 +70,7 @@ export const createDrizzleRepositories = (db: DbClient, env?: Env): AppDependenc
     : undefined;
   const documentIngestion: DocumentIngestionServiceDependencies = {
     storage: storage ?? { putObject: async () => {}, getObject: async () => null },
-    queue: { enqueue: async () => {} },
+    queue: { enqueue: async () => {}, enqueueKbEmbeddingJob: async () => {} },
     repositories: ingestionRepositories,
     bucketName: "STANDARD_DOCUMENTS_BUCKET",
     storageProvider: storage ? "cloudflare_r2" : "memory",
@@ -134,13 +134,14 @@ export const createDrizzleRepositories = (db: DbClient, env?: Env): AppDependenc
     reporting,
     agentRuntime: {
       ...createDrizzleAgentRuntimeDependencies(db as never),
-      llm:
+      llm: (
         env?.AI_GATEWAY_BASE_URL && env?.OPENAI_API_KEY
           ? new CloudflareAiGatewayAdapter({
               baseUrl: env.AI_GATEWAY_BASE_URL,
               apiKey: env.OPENAI_API_KEY,
             })
-          : createInMemoryAgentRuntimeDependencies().llm,
+          : createInMemoryAgentRuntimeDependencies().llm
+      ) as any,
     },
     workflows: createDrizzleWorkflowDependencies(db),
     observability: createInMemoryObservabilityDependencies()

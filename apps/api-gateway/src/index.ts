@@ -42,7 +42,11 @@ export default {
     if (!cachedApp) {
       if (env.DATABASE_URL) {
         const db = createDb(env.DATABASE_URL);
-        cachedDeps = { ...createDrizzleRepositories(db, env), ...(env.EMAIL ? { email: env.EMAIL } : {}) };
+        cachedDeps = {
+          ...createDrizzleRepositories(db, env),
+          email: (env.EMAIL as unknown as SendEmail) ?? undefined,
+          AGENT_RUN_QUEUE: env.AGENT_RUN_QUEUE ?? undefined
+        };
 
         // Initialize Better Auth with the same Drizzle DB instance
         cachedAuth = createAuth(db, {

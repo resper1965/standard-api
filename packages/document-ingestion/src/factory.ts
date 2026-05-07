@@ -19,7 +19,9 @@ export const createInMemoryDocumentIngestionDependencies = (
     chunking: config.chunking ?? {
       max_tokens_estimate: 120,
       overlap_tokens_estimate: 0,
-      extract_semantic_metadata: false
+      strategy: "by_tokens_estimate" as const,
+      preserve_headings: true,
+      preserve_pages: true
     },
     bucketName: config.bucketName ?? "standard-documents-dev",
     storageProvider: config.storageProvider ?? "mock_r2",
@@ -27,12 +29,12 @@ export const createInMemoryDocumentIngestionDependencies = (
   };
 };
 
-export const createDrizzleDocumentIngestionDependencies = (
+export const createDrizzleDocumentIngestionDependencies = async (
   db: any,
   config: Partial<DocumentIngestionServiceDependencies> = {},
   env?: Record<string, string>
-): DocumentIngestionServiceDependencies => {
-  const { DrizzleDocumentRepository, DrizzleDocumentJobRepository, DrizzleDocumentChunkRepository, DrizzleVectorReferenceRepository } = require("./drizzle-adapters");
+): Promise<DocumentIngestionServiceDependencies> => {
+  const { DrizzleDocumentRepository, DrizzleDocumentJobRepository, DrizzleDocumentChunkRepository, DrizzleVectorReferenceRepository } = await import("./drizzle-adapters");
   
   const drizzleRepositories = {
     documents: new DrizzleDocumentRepository(db),
@@ -50,7 +52,9 @@ export const createDrizzleDocumentIngestionDependencies = (
     chunking: config.chunking ?? {
       max_tokens_estimate: 500,
       overlap_tokens_estimate: 50,
-      extract_semantic_metadata: false
+      strategy: "by_tokens_estimate" as const,
+      preserve_headings: true,
+      preserve_pages: true
     },
     bucketName: config.bucketName ?? "standard-documents-prod",
     storageProvider: config.storageProvider ?? "cloudflare_r2",

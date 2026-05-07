@@ -139,7 +139,9 @@ export type AppDependencies = {
   workflows: WorkflowDependencies;
   observability: ObservabilityDependencies;
   /** Cloudflare Email Service binding (optional — unavailable in tests) */
-  email?: SendEmail;
+  email?: SendEmail | undefined;
+  /** Cloudflare Queue for async agent run processing (optional) */
+  AGENT_RUN_QUEUE?: Queue | undefined;
 };
 
 export type RequestContext = {

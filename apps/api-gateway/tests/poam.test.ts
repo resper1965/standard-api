@@ -75,7 +75,8 @@ test("POA&M API cria draft a partir de Gap Analysis aprovado e pagina itens", as
   expect(draft.body.status).toBe("draft");
 
   const items = await client.send(`/api/v1/poam/${draft.body.poam_version_id}/items?limit=1&offset=0`, "GET", undefined, {
-    "x-standard-tenant-id": created.tenantId
+    "x-standard-tenant-id": created.tenantId,
+    "x-standard-actor-id": ids.actorId
   });
   expect(items.body.pagination.limit).toBe(1);
   expect(items.body.data[0].action_type).toBe("evidence_collection");

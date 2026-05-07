@@ -34,7 +34,8 @@ const createSoaDraft = async () => {
 test("POST scope cria escopo draft multi-tenant", async () => {
   const { client, created } = await createScope();
   const scopes = await client.send(`/api/v1/assessments/${created.assessmentId}/scope`, "GET", undefined, {
-    "x-standard-tenant-id": created.tenantId
+    "x-standard-tenant-id": created.tenantId,
+    "x-standard-actor-id": ids.actorId
   });
   expect(scopes.response.status).toBe(200);
   expect(scopes.body.data.length).toBe(1);
@@ -44,7 +45,8 @@ test("POST scope cria escopo draft multi-tenant", async () => {
 test("POST soa draft cria itens com mapping SCF oficial", async () => {
   const { client, created, soaVersionId } = await createSoaDraft();
   const items = await client.send(`/api/v1/soa/${soaVersionId}/items`, "GET", undefined, {
-    "x-standard-tenant-id": created.tenantId
+    "x-standard-tenant-id": created.tenantId,
+    "x-standard-actor-id": ids.actorId
   });
   expect(items.response.status).toBe(200);
   expect(items.body.data.length).toBe(2);
@@ -55,7 +57,8 @@ test("POST soa draft cria itens com mapping SCF oficial", async () => {
 test("PATCH SoA item bloqueia not_applicable sem justificativa", async () => {
   const { client, created, soaVersionId } = await createSoaDraft();
   const items = await client.send(`/api/v1/soa/${soaVersionId}/items`, "GET", undefined, {
-    "x-standard-tenant-id": created.tenantId
+    "x-standard-tenant-id": created.tenantId,
+    "x-standard-actor-id": ids.actorId
   });
   const patched = await client.send(`/api/v1/soa/items/${items.body.data[0].soa_item_id}`, "PATCH", {
     applicability_status: "not_applicable"
@@ -93,7 +96,8 @@ test("Approve SoA exige approval_event humano e bloqueia alteração posterior",
   expect(approved.body.status).toBe("approved");
 
   const items = await client.send(`/api/v1/soa/${soaVersionId}/items`, "GET", undefined, {
-    "x-standard-tenant-id": created.tenantId
+    "x-standard-tenant-id": created.tenantId,
+    "x-standard-actor-id": ids.actorId
   });
   const patched = await client.send(`/api/v1/soa/items/${items.body.data[0].soa_item_id}`, "PATCH", {
     applicability_status: "applicable"

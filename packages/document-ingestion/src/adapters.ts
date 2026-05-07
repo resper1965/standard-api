@@ -29,6 +29,10 @@ export class InMemoryQueueAdapter implements QueueAdapter {
   async enqueue(message: DocumentIngestionJobMessage): Promise<void> {
     this.messages.push(message);
   }
+
+  async enqueueKbEmbeddingJob(_message: any): Promise<void> {
+    // no-op for in-memory adapter
+  }
 }
 
 export class InMemoryDocumentRepository implements DocumentRecordRepository {

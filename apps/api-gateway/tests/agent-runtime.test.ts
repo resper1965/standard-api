@@ -6,7 +6,8 @@ test("Agent Runtime API lista agentes funcionais e contratos de tools", async ()
   const { tenantId } = await client.createTenantOrg();
 
   const result = await client.send("/api/v1/agent-runtime/agents", "GET", undefined, {
-    "x-standard-tenant-id": tenantId
+    "x-standard-tenant-id": tenantId,
+    "x-standard-actor-id": ids.actorId
   });
 
   expect(result.response.status).toBe(200);

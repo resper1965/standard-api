@@ -55,7 +55,8 @@ test("Evidence Analysis API roda apenas com SoA aprovada e lista findings", asyn
   expect(run.body.findings[0].evidence_status).toBe("not_evidenced");
 
   const listed = await client.send(`/api/v1/assessments/${created.assessmentId}/evidence-findings`, "GET", undefined, {
-    "x-standard-tenant-id": created.tenantId
+    "x-standard-tenant-id": created.tenantId,
+    "x-standard-actor-id": ids.actorId
   });
   expect(listed.body.data.length).toBe(run.body.findings.length);
 });
@@ -78,7 +79,8 @@ test("Gap Analysis API cria draft, pagina findings e exige approval_event humano
   expect(draft.body.status).toBe("draft");
 
   const findings = await client.send(`/api/v1/gap-analysis/${draft.body.gap_analysis_version_id}/findings?limit=1&offset=0`, "GET", undefined, {
-    "x-standard-tenant-id": created.tenantId
+    "x-standard-tenant-id": created.tenantId,
+    "x-standard-actor-id": ids.actorId
   });
   expect(findings.body.pagination.limit).toBe(1);
   expect(findings.body.data[0].assessment_status).toBe("not_evidenced");

@@ -36,7 +36,7 @@ export class DrizzleDocumentRepository implements DocumentRecordRepository {
       .limit(1);
     
     if (results.length === 0) return null;
-    const r = results[0];
+    const r = results[0]!
     
     return {
       document_id: r.id,
@@ -134,7 +134,7 @@ export class DrizzleDocumentJobRepository implements DocumentJobRepository {
       .limit(1);
 
     if (results.length === 0) return null;
-    const r = results[0];
+    const r = results[0]!;
     
     return {
       job_id: r.id,

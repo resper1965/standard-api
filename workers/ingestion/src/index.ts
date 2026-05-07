@@ -67,7 +67,7 @@ export default {
     const sql = neon(env.DATABASE_URL);
     const db = drizzle(sql, { schema: schema as any });
 
-    const deps = createDrizzleDocumentIngestionDependencies(db, {
+    const deps = await createDrizzleDocumentIngestionDependencies(db, {
       storage: new R2StorageAdapter(env.STANDARD_DOCUMENTS_BUCKET),
       storageProvider: "cloudflare_r2",
       bucketName: "STANDARD_DOCUMENTS_BUCKET",

@@ -14,14 +14,22 @@ export const assertRbac = async (context: RequestContext, requiredPermissions: P
   if (!context.auth && !context.session) {
     allowed = false;
     reason = "missing_auth_context";
-  } else {
-    // Legacy support vs Better Auth session
-    const role = (context.session?.user?.role as StandardRole) || (context.auth?.roles?.[0] as StandardRole) || "viewer";
-    
-    // Evaluate mapped permissions
+  } else if (context.session) {
+    // Better Auth session — use role-based permission check
+    const role = (context.session.user?.role as StandardRole) || "viewer";
     for (const reqPerm of requiredPermissions) {
       const [resource, action] = reqPerm.split(":") as [StandardResource, string];
       if (!roleHasPermission(role, resource, action)) {
+        allowed = false;
+        reason = "permission_missing";
+        break;
+      }
+    }
+  } else if (context.auth) {
+    // Legacy MockAuthProvider — check permissions directly from auth context
+    const grantedPermissions = context.auth.permissions ?? [];
+    for (const reqPerm of requiredPermissions) {
+      if (!grantedPermissions.includes(reqPerm)) {
         allowed = false;
         reason = "permission_missing";
         break;

@@ -71,7 +71,7 @@ export class AzurePdfExtractor implements DocumentTextExtractor {
           "Ocp-Apim-Subscription-Key": this.apiKey,
           "Content-Type": "application/pdf"
         },
-        body: input.bytes
+        body: new Blob([input.bytes as unknown as BlobPart])
       });
 
       if (!response.ok) {

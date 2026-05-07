@@ -20,3 +20,4 @@ export * from "./agent-runtime";
 export * from "./workflow-orchestration";
 export * from "./security";
 export * from "./observability";
+export * from "./integration";

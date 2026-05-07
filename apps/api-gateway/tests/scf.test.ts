@@ -4,7 +4,7 @@ import { expect, test } from "./test-kit";
 
 test("SCF control endpoint returns standardized synthetic control", async () => {
   const client = createTestClient();
-  const result = await client.send(`/api/v1/scf/controls/${SYNTHETIC_GOV_001_CONTROL_ID}`);
+  const result = await client.send(`/api/v1/scf/controls/${SYNTHETIC_GOV_001_CONTROL_ID}`, "GET", undefined, { "x-standard-actor-id": ids.actorId });
   expect(result.response.status).toBe(200);
   expect(result.body.control_code).toBe("GOV-001");
   expect(result.body.scf_version_id).toBe(SYNTHETIC_SCF_VERSION_ID);
@@ -13,21 +13,21 @@ test("SCF control endpoint returns standardized synthetic control", async () => 
 
 test("SCF endpoints do not require tenant context for global official data", async () => {
   const client = createTestClient();
-  const result = await client.send("/api/v1/scf/versions/latest");
+  const result = await client.send("/api/v1/scf/versions/latest", "GET", undefined, { "x-standard-actor-id": ids.actorId });
   expect(result.response.status).toBe(200);
   expect(result.body.scf_version_id).toBe(SYNTHETIC_SCF_VERSION_ID);
 });
 
 test("SCF control by code supports versioned lookup", async () => {
   const client = createTestClient();
-  const result = await client.send(`/api/v1/scf/controls/by-code/GOV-001?version=${SYNTHETIC_SCF_VERSION_ID}`);
+  const result = await client.send(`/api/v1/scf/controls/by-code/GOV-001?version=${SYNTHETIC_SCF_VERSION_ID}`, "GET", undefined, { "x-standard-actor-id": ids.actorId });
   expect(result.response.status).toBe(200);
   expect(result.body.control_code).toBe("GOV-001");
 });
 
 test("SCF mappings endpoint returns official relational mapping", async () => {
   const client = createTestClient();
-  const result = await client.send(`/api/v1/scf/requirements/${SYNTHETIC_REQ_1_1_ID}/mappings?scf_version=${SYNTHETIC_SCF_VERSION_ID}`);
+  const result = await client.send(`/api/v1/scf/requirements/${SYNTHETIC_REQ_1_1_ID}/mappings?scf_version=${SYNTHETIC_SCF_VERSION_ID}`, "GET", undefined, { "x-standard-actor-id": ids.actorId });
   expect(result.response.status).toBe(200);
   expect(result.body.data[0].is_official).toBe(true);
   expect(result.body.data[0].control_code).toBe("GOV-001");
@@ -35,7 +35,7 @@ test("SCF mappings endpoint returns official relational mapping", async () => {
 
 test("SCF coverage endpoint returns basic coverage summary", async () => {
   const client = createTestClient();
-  const result = await client.send(`/api/v1/scf/frameworks/${SYNTHETIC_FRAMEWORK_ID}/coverage?scf_version=${SYNTHETIC_SCF_VERSION_ID}`);
+  const result = await client.send(`/api/v1/scf/frameworks/${SYNTHETIC_FRAMEWORK_ID}/coverage?scf_version=${SYNTHETIC_SCF_VERSION_ID}`, "GET", undefined, { "x-standard-actor-id": ids.actorId });
   expect(result.response.status).toBe(200);
   expect(result.body.requirement_count).toBe(2);
   expect(result.body.mapped_requirement_count).toBe(2);

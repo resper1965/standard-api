@@ -33,6 +33,7 @@ import { soaRoutes } from "./routes/soa.routes";
 import { emailRoutes } from "./routes/email.routes";
 import { tenantsRoutes } from "./routes/tenants.routes";
 import { workflowRoutes } from "./routes/workflow.routes";
+import { integrationRoutes } from "./routes/integration.routes";
 
 const routes: RouteDefinition[] = [
   ...healthRoutes,
@@ -54,7 +55,8 @@ const routes: RouteDefinition[] = [
   ...scfRoutes,
   ...soaRoutes,
   ...emailRoutes,
-  ...agentToolsRoutes
+  ...agentToolsRoutes,
+  ...integrationRoutes
 ];
 
 const matchRoute = (routePath: string, actualPath: string): Record<string, string> | null => {

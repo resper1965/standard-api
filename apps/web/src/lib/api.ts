@@ -1,37 +1,36 @@
-const API_BASE = import.meta.env.PROD
-  ? "https://api.standard.bekaa.eu"
-  : "";
+import { authClient } from "./auth-client"
 
-export async function api<T = unknown>(path: string, options: RequestInit = {}): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
+export async function apiClient(endpoint: string, options: RequestInit = {}) {
+  // Better Auth guarda auth localmente/cookies automaticamente.
+  // Puxar active organization synchronous se disponivel no cache para preencher header de tenant (conforme contratos)
+  let tenantIdHeader = "";
+  try {
+    const $activeOrg = authClient.useActiveOrganization.getState();
+    if ($activeOrg.data?.id) {
+       tenantIdHeader = $activeOrg.data.id;
+    }
+  } catch (e) {
+    // silently continue se store não tiver state
+  }
+
+  const headers = new Headers(options.headers || {})
+  
+  headers.set('Content-Type', 'application/json')
+  
+  if (tenantIdHeader) {
+     headers.set('x-standard-tenant-id', tenantIdHeader)
+  }
+
+  const response = await fetch(endpoint, {
     ...options,
-  });
+    headers,
+  })
 
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new ApiError(res.status, (body as Record<string, unknown>).message as string || res.statusText, body);
+  // Basic interceptor handling (401 -> forcerefresh/redirect)
+  if (response.status === 401) {
+    console.warn("API 401 Unauthorized - Re-auth required.")
+    // fallback logic pode ser inserida aqui
   }
 
-  return res.json() as Promise<T>;
+  return response
 }
-
-export class ApiError extends Error {
-  status: number;
-  body: unknown;
-  constructor(
-    status: number,
-    message: string,
-    body: unknown,
-  ) {
-    super(message);
-    this.name = "ApiError";
-    this.status = status;
-    this.body = body;
-  }
-}
-

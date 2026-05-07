@@ -17,7 +17,7 @@ export const processKbEmbeddingQueueMessage = async (messageBody: unknown, env: 
   const sql = neon(env.DATABASE_URL);
   const db = drizzle(sql, { schema: schema as any });
 
-  const documentIngestion = createDrizzleDocumentIngestionDependencies(db, {
+  const documentIngestion = await createDrizzleDocumentIngestionDependencies(db, {
     // We only need database repositories from ingestion mapping chunks/documents
     storage: new InMemoryStorageAdapter(), // Not used for embedding
     storageProvider: "cloudflare_r2",
@@ -28,7 +28,7 @@ export const processKbEmbeddingQueueMessage = async (messageBody: unknown, env: 
   const embeddingProvider = new CloudflareAiEmbeddingProvider(env.AI);
   const kbQueue = new InMemoryKbQueueAdapter(); // Embeddings loop concludes here
 
-  const deps = createDrizzleKbDependencies(
+  const deps = await createDrizzleKbDependencies(
     db, 
     documentIngestion, 
     vectorStore, 

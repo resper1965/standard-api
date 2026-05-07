@@ -21,15 +21,15 @@ export const createInMemoryKbDependencies = (
   ...overrides
 });
 
-export const createDrizzleKbDependencies = (
+export const createDrizzleKbDependencies = async (
   db: any,
   documentIngestion: DocumentIngestionServiceDependencies,
   vectorStore: VectorStore,
   embeddingProvider: EmbeddingProvider,
   queue: KbQueueAdapter,
   overrides: Partial<KbServiceDependencies> = {}
-): KbServiceDependencies => {
-  const { DrizzleKbEmbeddingJobRepository, DrizzleKbVectorReferenceRepository, DrizzleKbSearchLogRepository } = require("./drizzle-adapters");
+): Promise<KbServiceDependencies> => {
+  const { DrizzleKbEmbeddingJobRepository, DrizzleKbVectorReferenceRepository, DrizzleKbSearchLogRepository } = await import("./drizzle-adapters");
   
   return {
     documentIngestion,

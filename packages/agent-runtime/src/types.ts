@@ -39,11 +39,11 @@ export type AgentToolCallRepository = {
   listByRun(agentRunId: string, tenantId: string): Promise<AgentToolInvocationResponse[]>;
 };
 
-import type { LanguageModelV1 } from "ai";
+import type { LanguageModel } from "ai";
 
 export type AgentRuntimeDependencies = {
   runs: AgentRunRepository;
   toolCalls: AgentToolCallRepository;
-  llm: LanguageModelV1;
+  llm: LanguageModel;
 };
 

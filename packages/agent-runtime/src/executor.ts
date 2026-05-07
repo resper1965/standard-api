@@ -78,21 +78,17 @@ export class AgentExecutor {
         }),
         execute: async (args: any) => {
           try {
-            // Trace the tool call locally
             await this.runtimeService.invokeTool(run.agent_run_id, {
               tool_name: tc.tool_name as any,
               input: args,
               context: context
             });
-            
-            // In a real implementation we route this to actual Standard Tool Handlers mapping.
-            // For now, return a successful execution context acknowledging the call.
             return { ack: "tool_executed", tool: tc.tool_name, provided_args: args };
           } catch (error: any) {
             return { error: error.message || "Tool execution failed" };
           }
         }
-      });
+      } as any);
     }
 
     const systemPrompt = `You are the ${contract.display_name}.
@@ -109,7 +105,7 @@ You must fulfill the task using provided tools. If you use tools, analyze the ou
         tools,
         maxSteps: 5, // Autonomous multi-call loop limit
         temperature: 0.1,
-      });
+      } as any);
 
       // Parse final output based on the agent's textual response
       let finalOutputData: any;

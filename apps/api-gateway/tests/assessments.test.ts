@@ -28,7 +28,8 @@ test("GET /api/v1/assessments/:assessmentId/status retorna estado atual", async 
   const client = createTestClient();
   const created = await client.createAssessment();
   const { response, body } = await client.send(`/api/v1/assessments/${created.assessmentId}/status`, "GET", undefined, {
-    "x-standard-tenant-id": created.tenantId
+    "x-standard-tenant-id": created.tenantId,
+    "x-standard-actor-id": ids.actorId
   });
 
   expect(response.status).toBe(200);
