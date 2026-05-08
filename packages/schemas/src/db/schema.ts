@@ -1134,6 +1134,101 @@ export const auditLogs = pgTable("audit_logs", {
   index("audit_logs_created_idx").on(table.createdAt)
 ]);
 
+export const securityEvents = pgTable("security_events", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  tenantId: uuid("tenant_id").references(() => tenants.id),
+  organizationId: uuid("organization_id").references(() => organizations.id),
+  assessmentId: uuid("assessment_id").references(() => assessments.id),
+  actorId: uuid("actor_id").references(() => users.id),
+  eventType: text("event_type").notNull(),
+  severity: text("severity").notNull(),
+  outcome: text("outcome").notNull(),
+  source: text("source").notNull(),
+  resourceType: text("resource_type"),
+  resourceId: text("resource_id"),
+  messageSafe: text("message_safe").notNull(),
+  traceId: text("trace_id").notNull(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  metadataSafe: jsonb("metadata_safe").$type<Record<string, unknown>>().default({}).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
+}, (table) => [
+  index("security_events_tenant_idx").on(table.tenantId),
+  index("security_events_type_idx").on(table.eventType),
+  index("security_events_severity_idx").on(table.severity),
+  index("security_events_trace_idx").on(table.traceId),
+  index("security_events_created_idx").on(table.createdAt)
+]);
+
+export const operationalMetrics = pgTable("operational_metrics", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  tenantId: uuid("tenant_id").references(() => tenants.id),
+  organizationId: uuid("organization_id").references(() => organizations.id),
+  assessmentId: uuid("assessment_id").references(() => assessments.id),
+  metricName: text("metric_name").notNull(),
+  metricType: text("metric_type").notNull(),
+  metricValue: numeric("metric_value", { precision: 18, scale: 6 }).notNull(),
+  unit: text("unit").notNull(),
+  dimensions: jsonb("dimensions").$type<Record<string, string>>().default({}).notNull(),
+  timestamp: timestamp("timestamp", { withTimezone: true }).defaultNow().notNull(),
+  traceId: text("trace_id").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
+}, (table) => [
+  index("operational_metrics_tenant_idx").on(table.tenantId),
+  index("operational_metrics_name_idx").on(table.metricName),
+  index("operational_metrics_trace_idx").on(table.traceId),
+  index("operational_metrics_created_idx").on(table.createdAt)
+]);
+
+export const usageRecords = pgTable("usage_records", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  tenantId: uuid("tenant_id").references(() => tenants.id),
+  organizationId: uuid("organization_id").references(() => organizations.id),
+  assessmentId: uuid("assessment_id").references(() => assessments.id),
+  serviceName: text("service_name").notNull(),
+  operationName: text("operation_name").notNull(),
+  usageQuantity: numeric("usage_quantity", { precision: 18, scale: 6 }).notNull(),
+  usageUnit: text("usage_unit").notNull(),
+  provider: text("provider"),
+  modelName: text("model_name"),
+  resourceId: text("resource_id"),
+  costAmount: numeric("cost_amount", { precision: 18, scale: 8 }),
+  costCurrency: text("cost_currency").default("USD"),
+  currency: text("currency").default("USD").notNull(),
+  traceId: text("trace_id").notNull(),
+  metadataSafe: jsonb("metadata_safe").$type<Record<string, unknown>>().default({}).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
+}, (table) => [
+  index("usage_records_tenant_idx").on(table.tenantId),
+  index("usage_records_service_idx").on(table.serviceName),
+  index("usage_records_trace_idx").on(table.traceId),
+  index("usage_records_created_idx").on(table.createdAt)
+]);
+
+export const agentUsageRecords = pgTable("agent_usage_records", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
+  organizationId: uuid("organization_id").notNull().references(() => organizations.id),
+  assessmentId: uuid("assessment_id").notNull().references(() => assessments.id),
+  agentRunId: uuid("agent_run_id").notNull().references(() => agentRuns.id),
+  modelProvider: text("model_provider").notNull(),
+  modelName: text("model_name").notNull(),
+  promptTokens: integer("prompt_tokens").default(0).notNull(),
+  completionTokens: integer("completion_tokens").default(0).notNull(),
+  totalTokens: integer("total_tokens").default(0).notNull(),
+  embeddingTokens: integer("embedding_tokens").default(0).notNull(),
+  estimatedCost: numeric("estimated_cost", { precision: 18, scale: 8 }),
+  currency: text("currency").default("USD").notNull(),
+  traceId: text("trace_id").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
+}, (table) => [
+  index("agent_usage_records_tenant_idx").on(table.tenantId),
+  index("agent_usage_records_assessment_idx").on(table.assessmentId),
+  index("agent_usage_records_agent_run_idx").on(table.agentRunId),
+  index("agent_usage_records_trace_idx").on(table.traceId),
+  index("agent_usage_records_created_idx").on(table.createdAt)
+]);
+
 export const tenantRelations = relations(tenants, ({ many }) => ({
   organizations: many(organizations),
   assessments: many(assessments)

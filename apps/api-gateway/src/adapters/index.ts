@@ -3,7 +3,7 @@ import { CloudflareR2StorageAdapter, getDefaultExtractors } from "@standard/docu
 import type { DocumentIngestionServiceDependencies } from "@standard/document-ingestion";
 import { createInMemoryKbDependencies, CloudflareVectorizeStore, CloudflareAiEmbeddingProvider, MockEmbeddingProvider, MockVectorStore, DEFAULT_VECTOR_INDEX_NAME, DEFAULT_VECTOR_PROVIDER } from "@standard/kb";
 import { createInMemoryGapAnalysisDependencies } from "@standard/gap-analysis";
-import { createInMemoryObservabilityDependencies } from "@standard/observability";
+import { createInMemoryObservabilityDependencies, createDrizzleObservabilityDependencies } from "@standard/observability";
 import { createInMemoryPoamDependencies } from "@standard/poam";
 import { createInMemoryReportingDependencies } from "@standard/reporting";
 import { createInMemoryScfCore, createScfCoreFromRepository, createDrizzleScfRepository } from "@standard/scf-core";
@@ -144,7 +144,7 @@ export const createDrizzleRepositories = (db: DbClient, env?: Env): AppDependenc
       ) as any,
     },
     workflows: createDrizzleWorkflowDependencies(db),
-    observability: createInMemoryObservabilityDependencies()
+    observability: createDrizzleObservabilityDependencies(db as never)
   };
 };
 

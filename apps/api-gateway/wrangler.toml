@@ -45,10 +45,9 @@ queue = "standard-agent-run-dev"
 name = "EMAIL"
 remote = true
 
-# TODO: Uncomment when KV namespace is provisioned
-# [[kv_namespaces]]
-# binding = "STANDARD_CACHE"
-# id = "replace-with-dev-kv-namespace-id"
+[[kv_namespaces]]
+binding = "STANDARD_CACHE"
+id = "4e027e07e0e5440a8666c3f8ee419333"
 
 # TODO: Uncomment when workflows worker is deployed
 # [[workflows]]
@@ -89,6 +88,10 @@ queue = "standard-report-export-dev"
 [[env.production.queues.producers]]
 binding = "AGENT_RUN_QUEUE"
 queue = "standard-agent-run-dev"
+
+[[env.production.kv_namespaces]]
+binding = "STANDARD_CACHE"
+id = "4e027e07e0e5440a8666c3f8ee419333"
 
 [[env.production.send_email]]
 name = "EMAIL"

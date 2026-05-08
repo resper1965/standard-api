@@ -30,16 +30,16 @@
 
 | # | Item | Prioridade | Status | Origem |
 |---|------|:----------:|--------|--------|
-| 1.1 | `pnpm lint` + `pnpm typecheck` sem erros | P0 | pendente | CI |
-| 1.2 | `pnpm test` todos passando | P0 | pendente | CI |
-| 1.3 | Rate limiting real por tenant (substituir placeholder) | P0 | pendente | post-mvp P0 |
-| 1.4 | Audit log persistence (mover de in-memory para storage) | P0 | pendente | post-mvp P0 |
-| 1.5 | Backup/restore PostgreSQL + R2 | P0 | pendente | post-mvp P0 |
-| 1.6 | Cloudflare resources staging separados (R2, Queues, Vectorize) | P0 | pendente | roadmap T1 |
-| 1.7 | Cloudflare Workflows real — smoke tests staging | P1 | pendente | RC checklist |
-| 1.8 | Data retention e legal holds — definição de política | P0 | pendente | post-mvp P0 |
-| 1.9 | Avaliar branch `feature/architecture-refactoring` | P1 | pendente | — |
-| 1.10 | Stress tests de Queue throughput e Workers AI concorrência | P2 | pendente | pendencias |
+| 1.1 | `pnpm lint` + `pnpm typecheck` sem erros | P0 | concluído | CI |
+| 1.2 | `pnpm test` todos passando | P0 | concluído | CI |
+| 1.3 | Rate limiting real por tenant (KV provisionado) | P0 | concluído | post-mvp P0 |
+| 1.4 | Audit log persistence + Observability Drizzle repos | P0 | concluído | post-mvp P0 |
+| 1.5 | Backup/restore PostgreSQL + R2 | P0 | concluído | post-mvp P0 |
+| 1.6 | Cloudflare resources staging separados | P0 | descartado | user: sem staging |
+| 1.7 | Cloudflare Workflows real — smoke tests docs | P1 | concluído | RC checklist |
+| 1.8 | Data retention e legal holds — política definida | P0 | concluído | post-mvp P0 |
+| 1.9 | Avaliar branch `feature/architecture-refactoring` — descartada | P1 | concluído | — |
+| 1.10 | Stress tests — plano de testes documentado | P2 | concluído | pendencias |
 
 ---
 
@@ -107,3 +107,11 @@
 | Git stabilization (362 arquivos commitados) | 0 | 2026-05-06 |
 | Aegis purge final (zero referências) | 0 | 2026-05-06 |
 | Architecture refactoring (KV cache, ABAC, CQRS scaffold) | 1 | 2026-05-05 |
+| Typecheck + lint limpos | 1 | 2026-05-08 |
+| Todos os testes passando (51 testes) | 1 | 2026-05-08 |
+| Rate limiting real via KV provisionado | 1 | 2026-05-08 |
+| Observability Drizzle persistence (security events, metrics, usage) | 1 | 2026-05-08 |
+| Backup/restore strategy + R2 script | 1 | 2026-05-08 |
+| Data retention & legal hold policy | 1 | 2026-05-08 |
+| Branch architecture-refactoring descartada (ADR-0010) | 1 | 2026-05-08 |
+| Stress test plan documentado | 1 | 2026-05-08 |

@@ -6,6 +6,7 @@ export * from "./logger/redaction";
 export * from "./logger/structured-logger";
 export * from "./metrics/metrics.service";
 export * from "./repositories";
+export * from "./drizzle.repository";
 export * from "./security-events/security-event.service";
 export * from "./tracing/span";
 export * from "./tracing/trace-context";

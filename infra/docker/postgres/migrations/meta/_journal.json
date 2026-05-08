@@ -43,6 +43,13 @@
       "when": 1778080318218,
       "tag": "0005_last_dagger",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1778234530388,
+      "tag": "0006_cooing_senator_kelly",
+      "breakpoints": true
     }
   ]
 }
