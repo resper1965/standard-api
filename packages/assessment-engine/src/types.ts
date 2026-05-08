@@ -2,7 +2,7 @@ import type { AssessmentLifecycleEventType } from "./events";
 import type { AssessmentState } from "./states";
 
 export type ArtifactType = "scope" | "soa" | "gap_analysis" | "maturity_assessment" | "poam" | "report";
-export type ArtifactVersionStatus = "draft" | "under_review" | "approved" | "superseded" | "archived";
+export type ArtifactVersionStatus = "draft" | "under_review" | "approved" | "rejected" | "superseded" | "archived";
 export type ApprovalGate = "soa" | "gap_analysis" | "maturity_assessment" | "poam" | "report";
 export type ApprovalDecision = "approved" | "rejected" | "changes_requested";
 
@@ -95,6 +95,9 @@ export type ArtifactVersion = {
   sourceAgentRunId?: string;
   traceId: string;
   supersedesVersionId?: string;
+  rejectedBy?: string;
+  rejectedAt?: string;
+  rejectionReason?: string;
 };
 
 export type CreateArtifactVersionInput = {
@@ -129,4 +132,14 @@ export type AuditLogRepository = {
 
 export type LifecycleEventRepository = {
   recordLifecycleEvent(event: AssessmentLifecycleEvent): Promise<void>;
+};
+
+export type RejectionEvent = {
+  id: string;
+  gate: ApprovalGate;
+  decision: "rejected" | "changes_requested";
+  rejectedBy: string;
+  rejectedAt: string;
+  reason: string;
+  traceId: string;
 };

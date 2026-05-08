@@ -48,10 +48,10 @@
 | # | Item | Prioridade | Status | Origem |
 |---|------|:----------:|--------|--------|
 | 2.1 | `packages/maturity` — Maturity Assessment package | P0 | pendente | roadmap T2 |
-| 2.2 | Rejection/rework loops no assessment engine | P1 | pendente | engine analysis |
-| 2.3 | Reprocessamento com rastreabilidade (motivo, versão, ator) | P1 | pendente | AGENTS.md §11 |
-| 2.4 | Immutability enforcement em artifacts aprovados | P1 | pendente | engine analysis |
-| 2.5 | LLM provider real via AI Gateway | P1 | pendente | post-mvp P1 |
+| 2.2 | Rejection/rework loops no assessment engine | P1 | concluído | engine analysis |
+| 2.3 | Reprocessamento com rastreabilidade (motivo, versão, ator) | P1 | concluído | AGENTS.md §11 |
+| 2.4 | Immutability enforcement em artifacts aprovados | P1 | concluído | engine analysis |
+| 2.5 | LLM provider real via AI Gateway | P1 | concluído | post-mvp P1 |
 | 2.6 | DOCX/PDF renderer para relatórios | P2 | pendente | roadmap T2 |
 | 2.7 | Anti-malware scanning em uploads | P1 | pendente | roadmap T3 |
 | 2.8 | SCF official importer hardening (XLSX/OSCAL validation) | P1 | pendente | post-mvp P1 |
@@ -115,3 +115,9 @@
 | Data retention & legal hold policy | 1 | 2026-05-08 |
 | Branch architecture-refactoring descartada (ADR-0010) | 1 | 2026-05-08 |
 | Stress test plan documentado | 1 | 2026-05-08 |
+| CI secrets (CLOUDFLARE_API_TOKEN + ACCOUNT_ID) configurados | 1 | 2026-05-08 |
+| Staging deploy desativado (produção-only) | 1 | 2026-05-08 |
+| Rejection/rework loops no lifecycle engine | 2 | 2026-05-08 |
+| Artifact rejection com rastreabilidade completa | 2 | 2026-05-08 |
+| Immutability enforcement (já existente: assertVersionEditable) | 2 | 2026-05-08 |
+| LLM provider via AI Gateway (já existente: CloudflareAiGatewayAdapter) | 2 | 2026-05-08 |
