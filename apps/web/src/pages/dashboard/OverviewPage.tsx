@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Activity, Database, Users, ShieldAlert, Loader2 } from "lucide-react"
-import { useActiveOrganization, useSession } from "@/lib/auth-client"
+import { useSession } from "@/lib/auth-client"
 import { apiClient } from "@/lib/api"
 
+const CACHE_BUST_VERSION = "standard-v2.0.1-production-force";
+console.log(`[Standard SaaS] Initializing UI. Version: ${CACHE_BUST_VERSION}`);
+
 export function OverviewPage() {
-  const { data: org } = useActiveOrganization()
-  const { data: session } = useSession()
+  const { data: session, isPending: sessionLoading } = useSession()
+  const hasActiveOrg = !!session?.session?.activeOrganizationId
 
   const [assessments, setAssessments] = useState<any[]>([])
   const [frameworks, setFrameworks] = useState<any[]>([])
@@ -14,7 +17,7 @@ export function OverviewPage() {
 
   useEffect(() => {
     async function fetchData() {
-      if (!org?.id) return
+      if (!session?.session?.activeOrganizationId) return
       setLoading(true)
       try {
         const [assessmentsRes, frameworksRes] = await Promise.all([
@@ -38,9 +41,9 @@ export function OverviewPage() {
       }
     }
     fetchData()
-  }, [org?.id])
+  }, [session?.session?.activeOrganizationId])
 
-  if (loading) {
+  if (loading || sessionLoading) {
      return (
        <div className="flex w-full h-[50vh] items-center justify-center">
          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -54,7 +57,7 @@ export function OverviewPage() {
         <h2 className="text-3xl font-bold tracking-tight">Overview</h2>
         <p className="text-muted-foreground mt-1 text-sm">
           Welcome back to Standard Platform, {session?.user?.name || "Operator"}. 
-          {org ? ` Active org: ${org.name}` : " (No Active Organization)"}
+          {hasActiveOrg ? ` Using Authorized Organization Context` : " (No Active Organization)"}
         </p>
       </div>
 

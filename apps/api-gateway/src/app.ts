@@ -86,6 +86,7 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
     // ── CORS ────────────────────────────────────────────────
     const allowedOrigins = [
       "https://standard.bekaa.eu",
+      "https://standard-web.pages.dev",
       "https://standard-web-m99.pages.dev",
       "http://localhost:5173",
     ];

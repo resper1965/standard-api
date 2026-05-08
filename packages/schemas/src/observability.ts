@@ -48,7 +48,9 @@ export const AuditEventActionSchema = z.enum([
   "approval_created",
   "approval_denied",
   "export_requested",
-  "export_completed"
+  "export_completed",
+  // Integration-specific actions (M2M)
+  "integration_text_analysis_started"
 ]);
 
 export const SecurityEventTypeSchema = z.enum([

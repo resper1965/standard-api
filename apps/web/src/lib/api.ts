@@ -5,12 +5,12 @@ export async function apiClient(endpoint: string, options: RequestInit = {}) {
   // Puxar active organization synchronous se disponivel no cache para preencher header de tenant (conforme contratos)
   let tenantIdHeader = "";
   try {
-    const $activeOrg = authClient.useActiveOrganization.getState();
-    if ($activeOrg.data?.id) {
-       tenantIdHeader = $activeOrg.data.id;
+    const session = await authClient.getSession();
+    if (session?.data?.session?.activeOrganizationId) {
+        tenantIdHeader = session.data.session.activeOrganizationId;
     }
   } catch (e) {
-    // silently continue se store não tiver state
+    // silently continue
   }
 
   const headers = new Headers(options.headers || {})
@@ -21,7 +21,13 @@ export async function apiClient(endpoint: string, options: RequestInit = {}) {
      headers.set('x-standard-tenant-id', tenantIdHeader)
   }
 
-  const response = await fetch(endpoint, {
+  // Base URL configuration for fetching from Cloudflare worker directly instead of domain root
+  const API_URL = import.meta.env.VITE_API_URL || "https://standard-api-gateway-production.ness.workers.dev"
+  
+  // se endpoint for relativo (comeca com /), anexar a raiz
+  const fetchUrl = endpoint.startsWith('/') ? `${API_URL}${endpoint}` : endpoint;
+
+  const response = await fetch(fetchUrl, {
     ...options,
     headers,
   })

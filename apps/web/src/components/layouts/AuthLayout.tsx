@@ -9,11 +9,10 @@ export function AuthLayout() {
       
       <div className="z-10 w-full max-w-md p-4">
         <div className="mb-8 flex flex-col items-center justify-center space-y-2 text-center">
-          <div className="h-10 w-10 bg-primary/20 flex items-center justify-center rounded-lg border border-primary/50 text-xl font-bold shadow-[0_0_15px_rgba(var(--primary),0.3)]">
-            A
-          </div>
-          <h1 className="text-2xl font-bold tracking-tight">Standard UI</h1>
-          <p className="text-sm text-muted-foreground">Authenticate to access the platform</p>
+          <h1 className="text-3xl font-brand font-medium tracking-tight mt-4">
+            standard<span className="text-[#00ADE8]">.</span>
+          </h1>
+          <p className="text-sm text-muted-foreground mt-2">Authenticate to access the platform</p>
         </div>
         <Outlet />
       </div>

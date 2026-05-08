@@ -30,9 +30,10 @@ export function Sidebar() {
 
   return (
     <aside className="sidebar">
-      <div className="sidebar-logo">
-        <span className="sidebar-shield">🛡️</span>
-        <h1>Standard</h1>
+      <div className="sidebar-logo !pl-4 py-4">
+        <h1 className="text-2xl font-brand font-medium">
+          standard<span className="text-[#00ADE8]">.</span>
+        </h1>
       </div>
 
       <nav className="sidebar-nav">

@@ -4,33 +4,46 @@
 
 @layer base {
   :root {
-    --background: 220 14% 4%;
-    --foreground: 0 0% 100%;
+    /* Backgrounds & Surfaces (Light) */
+    --background: 214 100% 97%; /* #EFF6FF */
+    --foreground: 216 60% 10%; /* #0A1628 */
     
-    --card: 220 14% 6%;
-    --card-foreground: 0 0% 100%;
+    --card: 0 0% 100%; /* #FFFFFF */
+    --card-foreground: 222 47% 11%; /* #0F172A */
     
-    --popover: 220 14% 6%;
-    --popover-foreground: 0 0% 100%;
+    --popover: 212 33% 96%; /* #F0F4F8 */
+    --popover-foreground: 216 60% 10%;
     
-    --primary: 210 100% 50%;
+    /* Brand Accent */
+    --primary: 195 100% 45.5%; /* #00ADE8 */
     --primary-foreground: 0 0% 100%;
     
-    --secondary: 220 14% 12%;
+    --secondary: 195 84% 56%; /* #33BDED */
     --secondary-foreground: 0 0% 100%;
     
-    --muted: 220 14% 16%;
-    --muted-foreground: 220 14% 65%;
+    /* Text */
+    --muted: 214 100% 97%;
+    --muted-foreground: 215 19% 35%; /* #475569 */
     
-    --accent: 190 90% 50%;
+    --accent: 196 100% 36.5%; /* #0088BA (Hover) */
     --accent-foreground: 0 0% 100%;
     
-    --destructive: 0 84% 60%;
+    /* Semantics */
+    --success: 161 94% 30%; /* #059669 */
+    --success-foreground: 0 0% 100%;
+    
+    --warning: 32 95% 44%; /* #D97706 */
+    --warning-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 51%; /* #DC2626 */
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 14% 16%;
-    --input: 220 14% 16%;
-    --ring: 210 100% 50%;
+    --info: 195 100% 45.5%; /* #00ADE8 */
+    --info-foreground: 0 0% 100%;
+
+    --border: 211 31% 88%; /* #D6E0EB */
+    --input: 211 31% 88%;
+    --ring: 195 100% 45.5%;
 
     --radius: 0.5rem;
   }
@@ -43,6 +56,37 @@
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
-    font-family: "Inter", sans-serif;
+    font-family: "Source Sans 3", "Inter", sans-serif;
   }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: "Lexend", sans-serif;
+  }
+
+  .font-brand {
+    font-family: "Montserrat", sans-serif;
+  }
+}
+
+@layer utilities {
+  .hover-lift {
+    @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10;
+  }
+  .glass {
+    @apply bg-white/70 backdrop-blur-[20px] border border-white/20 shadow-sm;
+  }
+  .glow-border {
+    @apply animate-pulse border-2 border-primary/50 shadow-[0_0_15px_rgba(0,173,232,0.3)];
+  }
+  
+  .animate-stagger > * {
+    @apply opacity-0 animate-in fade-in slide-in-from-bottom-4 fill-mode-forwards;
+  }
+  
+  .animate-stagger > *:nth-child(1) { animation-delay: 100ms; }
+  .animate-stagger > *:nth-child(2) { animation-delay: 150ms; }
+  .animate-stagger > *:nth-child(3) { animation-delay: 200ms; }
+  .animate-stagger > *:nth-child(4) { animation-delay: 250ms; }
+  .animate-stagger > *:nth-child(5) { animation-delay: 300ms; }
+  .animate-stagger > *:nth-child(6) { animation-delay: 350ms; }
 }

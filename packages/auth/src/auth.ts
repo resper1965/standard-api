@@ -49,9 +49,9 @@ export const createAuth = (db: DrizzleClient, env: AuthEnv) =>
     baseURL: env.BETTER_AUTH_URL,
 
     trustedOrigins: [
-      "https://apistandard.bekaa.eu",
+      "https://standard.bekaa.eu",
+      "https://standard-web.pages.dev",
       "https://standard-web-m99.pages.dev",
-      "https://standard-api.bekaa.eu",
       "http://localhost:5173",
     ],
 
@@ -132,7 +132,11 @@ export const createAuth = (db: DrizzleClient, env: AuthEnv) =>
     ],
 
     advanced: {
-      useSecureCookies: env.STANDARD_ENV !== "development",
+      useSecureCookies: true,
+      defaultCookieAttributes: {
+        sameSite: "none",
+        secure: true,
+      },
       cookiePrefix: "standard",
       ipAddress: {
         ipAddressHeaders: ["cf-connecting-ip", "x-forwarded-for"],

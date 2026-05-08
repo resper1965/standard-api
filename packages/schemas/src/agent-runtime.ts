@@ -10,7 +10,10 @@ export const FunctionalAgentIdSchema = z.enum([
   "gap_analyst",
   "maturity_assessor",
   "poam_planner",
-  "report_writer"
+  "report_writer",
+  // Integration-specific agent roles (M2M text analysis)
+  "standard-consultative-analyst",
+  "standard-strict-gap-analyst"
 ]);
 
 export const AgentRunStatusSchema = z.enum(["queued", "running", "completed", "failed", "cancelled"]);

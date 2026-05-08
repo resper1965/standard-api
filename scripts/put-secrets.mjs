@@ -18,7 +18,7 @@ const secretKeys = [
 ];
 
 const workers = [
-  "standard-api-standard-api-gateway",
+  "standard-api-gateway",
 ];
 
 let ok = 0;
