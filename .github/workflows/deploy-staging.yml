@@ -1,14 +1,15 @@
-name: Deploy Staging
+name: Deploy Staging (DISABLED)
+
+# Staging environment is not used — all deployments go directly to production.
+# This workflow is kept for reference but will not run automatically.
+# See: docs/operations/environments.md
 
 on:
   workflow_dispatch:
-  workflow_run:
-    workflows:
-      - CI
-    branches:
-      - main
-    types:
-      - completed
+    inputs:
+      confirm:
+        description: 'Type STAGING to confirm (staging is disabled by default)'
+        required: true
 
 permissions:
   contents: read
@@ -16,7 +17,7 @@ permissions:
 jobs:
   deploy:
     name: Deploy Cloudflare staging
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    if: github.event.inputs.confirm == 'STAGING'
     runs-on: ubuntu-latest
     environment:
       name: staging
