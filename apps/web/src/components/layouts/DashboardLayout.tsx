@@ -1,6 +1,6 @@
 import { Outlet, Link, useLocation } from "react-router-dom"
 import { useSession, signOut } from "@/lib/auth-client"
-import { LayoutDashboard, Database, Settings, LogOut, Loader2 } from "lucide-react"
+import { LayoutDashboard, Settings, LogOut, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 export function DashboardLayout() {
@@ -23,7 +23,6 @@ export function DashboardLayout() {
 
   const navItems = [
     { name: "Overview", path: "/dashboard", icon: LayoutDashboard },
-    { name: "Playground", path: "/dashboard/playground", icon: Database },
     { name: "Settings", path: "/dashboard/settings", icon: Settings },
   ]
 
@@ -32,10 +31,9 @@ export function DashboardLayout() {
       {/* Sidebar Navigation */}
       <aside className="w-64 flex-col border-r border-border bg-card shadow-sm hidden md:flex h-screen sticky top-0">
         <div className="flex h-14 items-center border-b border-border px-4">
-          <div className="h-8 w-8 bg-primary/20 flex items-center justify-center rounded border border-primary/50 text-sm font-bold shadow-[0_0_10px_rgba(var(--primary),0.3)] mr-2">
-            A
-          </div>
-          <span className="font-semibold text-lg tracking-tight">Standard UI</span>
+          <span className="text-xl font-brand font-medium">
+            standard<span className="text-[#00ADE8]">.</span>
+          </span>
         </div>
         
         <nav className="flex-1 space-y-1 p-4 overflow-y-auto">
@@ -84,10 +82,9 @@ export function DashboardLayout() {
       <main className="flex-1 flex flex-col min-w-0">
         <header className="flex h-14 items-center justify-between border-b border-border bg-card px-4 md:hidden">
           <div className="flex items-center">
-            <div className="h-8 w-8 bg-primary/20 flex items-center justify-center rounded border border-primary/50 text-sm font-bold shadow-[0_0_10px_rgba(var(--primary),0.3)] mr-2">
-              S
-            </div>
-            <span className="font-semibold">Standard UI</span>
+            <span className="text-lg font-brand font-medium">
+              standard<span className="text-[#00ADE8]">.</span>
+            </span>
           </div>
         </header>
         <div className="flex-1 p-6 overflow-auto">
