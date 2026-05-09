@@ -197,7 +197,14 @@ paths:
     post:
       tags: [Lifecycle]
       summary: Execute assessment lifecycle transition
+      description: |
+        Transition the assessment to the next lifecycle state. The allowed transitions
+        depend on the current state — call GET /available-transitions first.
+        Some transitions require prerequisites (e.g., at least one document uploaded,
+        approved SoA, approval events). Returns 409 if prerequisites are not met.
       operationId: executeTransition
+      x-lifecycle-precondition:
+        description: Depends on next_state — call GET /available-transitions to check
       parameters:
         - $ref: "#/components/parameters/AssessmentId"
       requestBody:
@@ -724,7 +731,13 @@ paths:
     post:
       tags: [Scope & SoA]
       summary: Draft Statement of Applicability
+      description: |
+        Creates a new SoA draft version from the selected framework's SCF mappings.
+        **Pre-condition:** Assessment must be in state `framework_selected` or later.
+        The scope must already be drafted. Returns 409 if prerequisites are not met.
       operationId: draftSoa
+      x-lifecycle-precondition:
+        required_state: framework_selected
       parameters:
         - $ref: "#/components/parameters/AssessmentId"
       responses:
@@ -785,7 +798,12 @@ paths:
     post:
       tags: [Scope & SoA]
       summary: Submit SoA for review
+      description: |
+        **Pre-condition:** SoA version must be in `draft` status.
+        Transitions SoA to `under_review`. Returns 409 if SoA is not in draft.
       operationId: submitSoaReview
+      x-lifecycle-precondition:
+        required_status: draft
       responses:
         "200":
           description: SoA submitted
@@ -794,7 +812,13 @@ paths:
     post:
       tags: [Scope & SoA]
       summary: Approve SoA version
+      description: |
+        **Pre-condition:** SoA version must be in `under_review` status.
+        Requires a human approval decision. Approved SoA versions become immutable.
+        Returns 409 if SoA is not under review.
       operationId: approveSoa
+      x-lifecycle-precondition:
+        required_status: under_review
       responses:
         "200":
           description: SoA approved
@@ -840,7 +864,13 @@ paths:
     post:
       tags: [Gap Analysis]
       summary: Draft gap analysis
+      description: |
+        Creates a new gap analysis draft from the approved SoA and KB evidence.
+        **Pre-condition:** Assessment must have an approved SoA (`soa_approved` state or later).
+        Returns 409 if SoA has not been approved.
       operationId: draftGapAnalysis
+      x-lifecycle-precondition:
+        required_state: soa_approved
       parameters:
         - $ref: "#/components/parameters/AssessmentId"
       responses:
@@ -896,7 +926,12 @@ paths:
     post:
       tags: [Gap Analysis]
       summary: Submit gap analysis for review
+      description: |
+        **Pre-condition:** Gap analysis version must be in `draft` status.
+        Transitions to `under_review`. Returns 409 if not in draft.
       operationId: submitGapAnalysisReview
+      x-lifecycle-precondition:
+        required_status: draft
       responses:
         "200":
           description: Submitted for review
@@ -905,7 +940,13 @@ paths:
     post:
       tags: [Gap Analysis]
       summary: Approve gap analysis version
+      description: |
+        **Pre-condition:** Gap analysis must be in `under_review` status.
+        Requires human approval. Approved versions are immutable.
+        Returns 409 if not under review.
       operationId: approveGapAnalysis
+      x-lifecycle-precondition:
+        required_status: under_review
       responses:
         "200":
           description: Gap analysis approved
@@ -915,7 +956,13 @@ paths:
     post:
       tags: [POA&M]
       summary: Draft POA&M plan
+      description: |
+        Creates a POA&M draft from approved gap analysis findings.
+        **Pre-condition:** Assessment must have an approved gap analysis
+        (`gap_analysis_approved` state or later). Returns 409 if not met.
       operationId: draftPoam
+      x-lifecycle-precondition:
+        required_state: gap_analysis_approved
       parameters:
         - $ref: "#/components/parameters/AssessmentId"
       responses:
@@ -971,7 +1018,12 @@ paths:
     post:
       tags: [POA&M]
       summary: Submit POA&M for review
+      description: |
+        **Pre-condition:** POA&M version must be in `draft` status.
+        Returns 409 if not in draft.
       operationId: submitPoamReview
+      x-lifecycle-precondition:
+        required_status: draft
       responses:
         "200":
           description: Submitted for review
@@ -980,7 +1032,12 @@ paths:
     post:
       tags: [POA&M]
       summary: Approve POA&M version
+      description: |
+        **Pre-condition:** POA&M must be in `under_review` status.
+        Requires human approval. Returns 409 if not under review.
       operationId: approvePoam
+      x-lifecycle-precondition:
+        required_status: under_review
       responses:
         "200":
           description: POA&M approved
@@ -990,7 +1047,13 @@ paths:
     post:
       tags: [Reporting]
       summary: Draft assessment report
+      description: |
+        Creates a report draft from all approved artifacts (SoA, Gap Analysis,
+        Maturity Assessment, POA&M). **Pre-condition:** All four artifact types
+        must be approved (`poam_approved` state or later). Returns 409 if not met.
       operationId: draftReport
+      x-lifecycle-precondition:
+        required_state: poam_approved
       parameters:
         - $ref: "#/components/parameters/AssessmentId"
       responses:
