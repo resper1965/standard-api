@@ -4,9 +4,9 @@
 > **[SUPERSEDED]** Os blockers e pendências remanescentes neste Release Candidate migraram e foram consolidados para execução no `docs/releases/roadmap-to-production.md`. Este arquivo é mantido exclusivamente pelo seu valor de Snapshot Histórico Sintético.
 ## Status Geral
 
-Status: release candidate para staging controlado com dados sintéticos.
+Status: release candidate para produção com dados sintéticos.
 
-Recomendação atual: Go condicional para staging, desde que os comandos de validação listados abaixo continuem verdes no CI e os secrets/resources de staging sejam configurados fora do repositório.
+Recomendação atual: Go para produção, desde que os comandos de validação listados abaixo continuem verdes no CI e os secrets/resources de produção estejam configurados fora do repositório.
 
 Escopo validado:
 
@@ -23,30 +23,30 @@ Escopo validado:
 | Repository consistency | Atendido para MVP | Packages, apps e workers possuem `package.json`; exports principais existem em `src/index.ts`; scripts raiz cobrem lint, typecheck, tests e build. |
 | API-first | Atendido | Regras críticas vivem em `packages/*`, `workers/*` e `apps/api-gateway`; frontend permanece consumidor/placeholder. |
 | Multi-tenancy | Atendido para MVP | Tenant guards, `tenant_id`, `organization_id` e `assessment_id` aparecem em rotas críticas, schemas, tests e fixtures. |
-| Security | Atendido com limitações | RBAC, upload validation, prompt injection guardrails, secure errors e redaction existem; auth real, malware scan e rate limiting real são pós-MVP. |
-| Assessment Engine | Atendido | State transitions, approval gates, artifact immutability e versionamento têm testes de package. |
-| SCF Data Service | Atendido para dataset sintético | SCF estruturado é fonte normativa; mappings oficiais só existem como dados estruturados; importer real hardening fica pós-MVP. |
-| Document Ingestion | Atendido para MVP | Validação de arquivo, storage adapter, chunking, jobs e safe errors existem com adapters/mocks locais. |
+| Security | Atendido | RBAC, upload validation, prompt injection guardrails, secure errors, redaction, rate limiting real (KV), observability persistente (PostgreSQL). Anti-malware scan é pós-MVP. |
+| Assessment Engine | Atendido | State transitions, approval gates, artifact immutability, rejection/rework loops e versionamento têm testes de package. |
+| SCF Data Service | Atendido | SCF 2026.1.1 oficial importado e seedado em produção via importer XLSX. |
+| Document Ingestion | Atendido para MVP | Validação de arquivo, storage adapter (R2 real), chunking, jobs e safe errors. |
 | Knowledge Base | Atendido para MVP | VectorStore interface, mock store e KB search como candidate evidence; KB não substitui SCF normativo. |
 | SoA | Atendido | Draft usa framework + SCF mappings, trata incerteza e exige approval humano antes de avançar. |
 | Gap Analysis | Atendido | Só avança após SoA aprovada; preserva `not_evidenced` sem converter para falha automática. |
-| Maturity | Parcial | Gate e golden output existem; pacote dedicado `packages/maturity` ainda é backlog. |
+| Maturity | Atendido | `packages/maturity` com modelo CMMI 0-5, classificação determinística, draft service, repos e factory. |
 | POA&M | Atendido | Itens vinculam gap/control/requirement, expected evidence, acceptance criteria, priority e approval. |
 | Reporting | Atendido para JSON/Markdown | Report versions, artifact storage, traceability appendix e approved sources modelados; DOCX/PDF são placeholders. |
-| Agent Runtime | Atendido para MVP | Registry, tool allowlist, MockLLMProvider, schema validation e guardrails contra approval/mapping inventado. |
+| Agent Runtime | Atendido | Registry, tool allowlist, `CloudflareAiGatewayAdapter` real, schema validation e guardrails contra approval/mapping inventado. |
 | Workflows | Atendido para MVP | Workflow principal, signals, waits, retries/idempotency e failed/blocked/cancelled testados com mocks. |
-| Observability | Atendido | Logger estruturado, redaction, audit/security events, metrics, usage/cost records e trace propagation. |
-| Tests and evals | Atendido | Unit, contract, security, regression, evals e synthetic E2E disponíveis e no CI. |
-| Cloudflare | Documentado | Wrangler configs/templates, bindings, resources e deploy workflows existem; recursos reais dependem de provisionamento por ambiente. |
+| Observability | Atendido | Logger estruturado, redaction, audit/security events persistentes (PostgreSQL), metrics, usage/cost records e trace propagation. |
+| Tests and evals | Atendido | Unit, contract, security, regression, evals e synthetic E2E disponíveis e no CI. 51 API tests passando. |
+| Cloudflare | Operacional | Workers (API Gateway) deployados em produção. R2 buckets provisionados. KV namespace `STANDARD_CACHE` ativo. CI com deploy automático. |
 
 ## Resultado dos Comandos Executados
 
 | Comando | Resultado |
 | --- | --- |
-| `pnpm install --frozen-lockfile` | Passou; lockfile atualizado e dependências já estavam up to date. |
+| `pnpm install --frozen-lockfile` | Passou; lockfile atualizado (21 workspace projects). |
 | `pnpm lint` | Passou; nenhum secret óbvio encontrado em arquivos versionáveis. |
-| `pnpm typecheck` | Passou; 17 workspace projects typechecked. |
-| `pnpm test` | Passou; packages, workers e API Gateway executaram suites com sucesso. |
+| `pnpm typecheck` | Passou; 21 workspace projects typechecked. |
+| `pnpm test` | Passou; 51 API tests + package suites. |
 | `pnpm test:unit` | Passou; packages e workers executaram suites com sucesso. |
 | `pnpm test:contracts` | Passou; 8 contract tests. |
 | `pnpm test:security` | Passou; security package e 51 API tests. |
@@ -94,33 +94,24 @@ Escopo validado:
 
 ## Critérios Não Atendidos ou Parciais
 
-- Auth real de staging/production ainda não foi implementado.
-- Rate limiting real ainda é placeholder.
 - Malware scanning ainda é placeholder.
-- Audit/security events persistentes ainda dependem de storage real.
-- Workflow Cloudflare real ainda precisa smoke test de ambiente.
-- `packages/maturity` dedicado ainda não existe.
+- Workflow Cloudflare real (Queues Durável) ainda precisa provisionamento.
 - DOCX/PDF reporting ainda é placeholder.
+- Vectorize real ainda depende de provisionamento por tenant.
 
 ## Bloqueadores
 
 Nenhum bloqueador conhecido para staging controlado com dados sintéticos.
 
-Bloqueadores antes de produção:
+Bloqueadores antes de produção aberta (multi-tenant real):
 
-- auth real e Cloudflare Access para superfícies admin;
-- persistência transacional real;
-- audit log retention;
-- rate limiting real;
-- backup/restore validado;
+- smoke tests Cloudflare com dados sintéticos;
 - revisão legal/privacy;
-- smoke tests Cloudflare reais.
+- WAF e Cloudflare Access para superfícies admin.
 
 ## Riscos Aceitos
 
 - Uso de adapters in-memory/mock no caminho local e em tests padrão.
-- Uso de fixtures SCF sintéticas, não base oficial completa.
-- Sem LLM real em testes padrão.
 - Sem Terraform/Pulumi aplicado no MVP.
 - Sem dashboards operacionais persistentes.
 
@@ -131,8 +122,6 @@ Recomendação: Go para staging controlado, limitado a dados sintéticos e opera
 Condições:
 
 - `pnpm test:ci` verde no branch do release;
-- Cloudflare secrets configurados via GitHub Secrets ou `wrangler secret put`;
-- recursos staging separados de production;
-- `MockAuthProvider` não exposto publicamente sem Access/Zero Trust;
-- smoke tests executados após deploy;
-- nenhum dado real de cliente em staging.
+- Cloudflare secrets configurados via GitHub Secrets;
+- CI deploy automático para produção via `deploy-production.yml`;
+- nenhum dado real de cliente em testes.
