@@ -327,6 +327,22 @@ importers:
         specifier: latest
         version: 6.0.3
 
+  packages/maturity:
+    dependencies:
+      '@standard/assessment-engine':
+        specifier: workspace:*
+        version: link:../assessment-engine
+      '@standard/gap-analysis':
+        specifier: workspace:*
+        version: link:../gap-analysis
+      '@standard/schemas':
+        specifier: workspace:*
+        version: link:../schemas
+    devDependencies:
+      typescript:
+        specifier: latest
+        version: 6.0.3
+
   packages/observability:
     dependencies:
       '@standard/schemas':
