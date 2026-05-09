@@ -71,7 +71,9 @@ export const SecurityEventTypeSchema = z.enum([
   "api_key_invalid",
   "api_key_scope_violation",
   "approval_permission_denied",
-  "report_download_denied"
+  "report_download_denied",
+  "security_alert",
+  "malware_detected"
 ]);
 
 export const MetadataSafeSchema = z.record(z.string(), z.unknown()).default({});

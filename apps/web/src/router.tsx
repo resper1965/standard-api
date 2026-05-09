@@ -5,6 +5,15 @@ import { LoginPage } from "./pages/auth/LoginPage"
 import { OverviewPage } from "./pages/dashboard/OverviewPage"
 import { SettingsPage } from "./pages/dashboard/settings/SettingsPage"
 import { authClient } from "./lib/auth-client"
+import { lazy, Suspense } from "react"
+
+// Lazy-load heavy pages
+const Assessments = lazy(() => import("./pages/Assessments").then(m => ({ default: m.AssessmentsPage })))
+const AssessmentDetail = lazy(() => import("./pages/AssessmentDetail").then(m => ({ default: m.AssessmentDetail })))
+const Documents = lazy(() => import("./pages/Documents").then(m => ({ default: m.DocumentsPage })))
+const GapAnalysis = lazy(() => import("./pages/GapAnalysis").then(m => ({ default: m.GapAnalysisPage })))
+const Reports = lazy(() => import("./pages/Reports").then(m => ({ default: m.ReportsPage })))
+const ScfCatalog = lazy(() => import("./pages/ScfCatalog").then(m => ({ default: m.ScfCatalogPage })))
 
 // Simple Guard
 const requireAuth = async () => {
@@ -29,6 +38,16 @@ const LoadingFallback = () => (
     </div>
 );
 
+const PageLoader = () => (
+    <div style={{ display: 'flex', padding: '3rem', alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ color: '#64748b', fontFamily: 'Montserrat, sans-serif', fontSize: '0.875rem' }}>Loading...</p>
+    </div>
+);
+
+const SuspenseWrap = ({ children }: { children: React.ReactNode }) => (
+    <Suspense fallback={<PageLoader />}>{children}</Suspense>
+)
+
 export const router = createBrowserRouter([
     {
         path: "/",
@@ -47,7 +66,12 @@ export const router = createBrowserRouter([
         HydrateFallback: LoadingFallback,
         children: [
             { index: true, element: <OverviewPage /> },
-            { path: "playground", loader: () => redirect("/dashboard/settings") },
+            { path: "assessments", element: <SuspenseWrap><Assessments /></SuspenseWrap> },
+            { path: "assessments/:assessmentId", element: <SuspenseWrap><AssessmentDetail /></SuspenseWrap> },
+            { path: "documents", element: <SuspenseWrap><Documents /></SuspenseWrap> },
+            { path: "gap-analysis", element: <SuspenseWrap><GapAnalysis /></SuspenseWrap> },
+            { path: "reports", element: <SuspenseWrap><Reports /></SuspenseWrap> },
+            { path: "scf-catalog", element: <SuspenseWrap><ScfCatalog /></SuspenseWrap> },
             { path: "settings", element: <SettingsPage /> }
         ]
     },

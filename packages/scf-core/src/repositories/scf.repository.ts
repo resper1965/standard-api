@@ -14,6 +14,7 @@ export type ScfRepository = {
   listVersions(): Promise<ScfVersion[]>;
   getVersion(id: string): Promise<ScfVersion | null>;
   getLatestVersion(): Promise<ScfVersion | null>;
+  findVersionByLabel(label: string): Promise<ScfVersion | null>;
   saveVersion(version: ScfVersion): Promise<void>;
   listDomains(versionId: string): Promise<ScfDomain[]>;
   getDomain(id: string): Promise<ScfDomain | null>;
@@ -50,6 +51,7 @@ export const createInMemoryScfRepository = (initial: ScfDataset): ScfRepository 
     listVersions: async () => [...versions.values()],
     getVersion: async (id) => versions.get(id) ?? null,
     getLatestVersion: async () => [...versions.values()].sort((a, b) => (b.imported_at ?? "").localeCompare(a.imported_at ?? ""))[0] ?? null,
+    findVersionByLabel: async (label) => [...versions.values()].find((v) => v.version_label.toLowerCase() === label.toLowerCase()) ?? null,
     saveVersion: async (version) => {
       versions.set(version.id, version);
     },
