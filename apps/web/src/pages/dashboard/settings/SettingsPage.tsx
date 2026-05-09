@@ -36,10 +36,11 @@ const API_REFERENCE: EndpointGroup[] = [
         response: `{ "assessment_id": "uuid", "state": "draft", "name": "...", "tenant_id": "uuid" }`
       },
       { method: "GET", path: "/assessments", desc: "List all assessments for tenant", response: `{ "data": [{ "assessment_id": "uuid", "name": "...", "state": "draft" }] }` },
-      { method: "GET", path: "/assessments/:id", desc: "Get assessment by ID", response: `{ "assessment_id": "uuid", "name": "...", "state": "draft", "snapshot": {...} }` },
-      { method: "PATCH", path: "/assessments/:id", desc: "Update assessment name", body: `{ "name": "Updated Name" }` },
+      { method: "GET", path: "/assessments/:id", desc: "Get assessment by ID" },
+      { method: "PATCH", path: "/assessments/:id", desc: "Update assessment metadata", body: `{ "name": "Updated Name" }` },
       { method: "GET", path: "/assessments/:id/status", desc: "Get current lifecycle state" },
       { method: "GET", path: "/assessments/:id/timeline", desc: "Get full timeline of lifecycle events" },
+      { method: "GET", path: "/organizations/:orgId/assessments", desc: "List assessments for an organization" },
     ]
   },
   {
@@ -56,39 +57,178 @@ const API_REFERENCE: EndpointGroup[] = [
     ]
   },
   {
+    name: "Approvals",
+    desc: "Human approval decisions for SoA, Gap Analysis, Maturity, POA&M gates",
+    endpoints: [
+      {
+        method: "POST", path: "/assessments/:id/approvals", desc: "Submit approval or rejection decision",
+        body: `{ "gate": "gap_analysis", "decision": "approved", "target_type": "artifact_version", "target_id": "uuid" }`
+      },
+      { method: "GET", path: "/assessments/:id/approvals", desc: "List assessment approvals" },
+      { method: "GET", path: "/approvals/:approvalId", desc: "Get approval by ID" },
+    ]
+  },
+  {
+    name: "Artifacts",
+    desc: "Versioned assessment artifacts (SoA, Gap Analysis, Maturity, etc.)",
+    endpoints: [
+      { method: "POST", path: "/assessments/:id/artifacts/:type/versions", desc: "Create artifact version" },
+      { method: "GET", path: "/assessments/:id/artifacts/:type/versions", desc: "List artifact versions" },
+      { method: "GET", path: "/artifacts/:versionId", desc: "Get artifact version detail" },
+      { method: "POST", path: "/artifacts/:versionId/submit-review", desc: "Submit artifact for review" },
+      { method: "POST", path: "/artifacts/:versionId/approve", desc: "Approve artifact version" },
+      { method: "POST", path: "/artifacts/:versionId/supersede", desc: "Create new version superseding this one" },
+    ]
+  },
+  {
     name: "Documents",
     desc: "Upload and manage assessment evidence documents (stored in R2)",
     endpoints: [
       {
         method: "POST", path: "/assessments/:id/documents", desc: "Upload document (multipart/form-data)",
-        body: `FormData: file=<binary>, description="Security Policy v3"`,
-        response: `{ "document_id": "uuid", "filename": "policy.pdf", "size_bytes": 245760, "status": "uploaded" }`
+        body: `FormData: file=<binary>, description="Security Policy v3"`
       },
       { method: "GET", path: "/assessments/:id/documents", desc: "List all documents for assessment" },
-      { method: "GET", path: "/assessments/:id/documents/:docId", desc: "Get document metadata" },
-      { method: "DELETE", path: "/assessments/:id/documents/:docId", desc: "Delete a document" },
+      { method: "GET", path: "/documents/:docId", desc: "Get document metadata" },
+      { method: "DELETE", path: "/documents/:docId", desc: "Delete a document" },
+      { method: "GET", path: "/documents/:docId/chunks", desc: "List document chunks" },
+      { method: "POST", path: "/documents/:docId/reprocess", desc: "Queue document reprocessing" },
+      { method: "GET", path: "/assessments/:id/ingestion-jobs", desc: "List ingestion jobs" },
     ]
   },
   {
     name: "SCF Catalog",
     desc: "Query the Secure Controls Framework catalog (1,468 controls, 231 frameworks, 15,717 mappings)",
     endpoints: [
-      { method: "GET", path: "/scf/versions", desc: "List SCF versions", response: `{ "data": [{ "scf_version_id": "uuid", "version_label": "SCF 2026.1.1" }] }` },
-      { method: "GET", path: "/scf/domains?scf_version=:id", desc: "List SCF domains (33 security domains)" },
-      { method: "GET", path: "/scf/controls?scf_version=:id", desc: "List controls (paginated, 1,468 total)" },
+      { method: "GET", path: "/scf/versions", desc: "List SCF versions" },
+      { method: "GET", path: "/scf/versions/latest", desc: "Get latest SCF version" },
+      { method: "GET", path: "/scf/versions/:versionId/domains", desc: "List SCF domains (33 security domains)" },
+      { method: "GET", path: "/scf/versions/:versionId/controls", desc: "List controls (paginated, 1,468 total)" },
       { method: "GET", path: "/scf/controls/:controlId", desc: "Get single control detail" },
+      { method: "GET", path: "/scf/controls/by-code/:code", desc: "Get control by SCF code (e.g. GOV-01)" },
       { method: "GET", path: "/scf/frameworks", desc: "List all 231 compliance frameworks" },
-      { method: "GET", path: "/scf/frameworks/:frameworkId/requirements", desc: "List requirements for a framework" },
-      { method: "GET", path: "/scf/mappings?framework=:id", desc: "Get control-to-requirement crosswalk mappings" },
+      { method: "GET", path: "/scf/frameworks/:id", desc: "Get framework detail" },
+      { method: "GET", path: "/scf/frameworks/:id/requirements", desc: "List requirements for a framework" },
+      { method: "GET", path: "/scf/frameworks/:id/coverage", desc: "Get framework SCF control coverage" },
+      { method: "GET", path: "/scf/controls/:id/mappings", desc: "Get crosswalk mappings for a control" },
+      { method: "GET", path: "/scf/requirements/:id/mappings", desc: "Get crosswalk mappings for a requirement" },
     ]
   },
   {
-    name: "Organizations",
-    desc: "Manage tenant organizations",
+    name: "Scope & SoA",
+    desc: "Statement of Applicability and scope management",
     endpoints: [
+      { method: "POST", path: "/assessments/:id/scope", desc: "Create assessment scope" },
+      { method: "GET", path: "/assessments/:id/scope", desc: "Get assessment scope" },
+      { method: "POST", path: "/assessments/:id/soa/draft", desc: "Draft Statement of Applicability" },
+      { method: "GET", path: "/assessments/:id/soa", desc: "List SoA versions" },
+      { method: "GET", path: "/soa/:versionId", desc: "Get SoA version" },
+      { method: "GET", path: "/soa/:versionId/items", desc: "List SoA items (controls in scope)" },
+      { method: "POST", path: "/soa/:versionId/submit-review", desc: "Submit SoA for review" },
+      { method: "POST", path: "/soa/:versionId/approve", desc: "Approve SoA version" },
+      { method: "POST", path: "/soa/:versionId/mark-ingested", desc: "Mark SoA as ingested" },
+      { method: "GET", path: "/soa/:versionId/validation", desc: "Validate SoA completeness" },
+    ]
+  },
+  {
+    name: "Gap Analysis",
+    desc: "Gap analysis findings and lifecycle management",
+    endpoints: [
+      { method: "POST", path: "/assessments/:id/gap-analysis/draft", desc: "Draft gap analysis" },
+      { method: "GET", path: "/assessments/:id/gap-analysis", desc: "List gap analysis versions" },
+      { method: "GET", path: "/gap-analysis/:versionId", desc: "Get gap analysis version" },
+      { method: "GET", path: "/gap-analysis/:versionId/findings", desc: "List gap findings" },
+      { method: "POST", path: "/gap-analysis/:versionId/findings", desc: "Add gap finding" },
+      { method: "POST", path: "/gap-analysis/:versionId/submit-review", desc: "Submit for review" },
+      { method: "POST", path: "/gap-analysis/:versionId/approve", desc: "Approve gap analysis" },
+    ]
+  },
+  {
+    name: "POA&M",
+    desc: "Plan of Action & Milestones lifecycle",
+    endpoints: [
+      { method: "POST", path: "/assessments/:id/poam/draft", desc: "Draft POA&M plan" },
+      { method: "GET", path: "/assessments/:id/poam", desc: "List POA&M versions" },
+      { method: "GET", path: "/poam/:versionId", desc: "Get POA&M version" },
+      { method: "GET", path: "/poam/:versionId/items", desc: "List POA&M items" },
+      { method: "POST", path: "/poam/:versionId/items", desc: "Add POA&M item" },
+      { method: "POST", path: "/poam/:versionId/submit-review", desc: "Submit POA&M for review" },
+      { method: "POST", path: "/poam/:versionId/approve", desc: "Approve POA&M" },
+    ]
+  },
+  {
+    name: "Reporting",
+    desc: "Assessment report generation, review, and export",
+    endpoints: [
+      { method: "POST", path: "/assessments/:id/reports/draft", desc: "Draft assessment report" },
+      { method: "GET", path: "/assessments/:id/reports", desc: "List report versions" },
+      { method: "GET", path: "/reports/:versionId", desc: "Get report version" },
+      { method: "GET", path: "/reports/:versionId/sections", desc: "List report sections" },
+      { method: "POST", path: "/reports/:versionId/submit-review", desc: "Submit report for review" },
+      { method: "POST", path: "/reports/:versionId/approve", desc: "Approve report" },
+      { method: "POST", path: "/reports/:versionId/export", desc: "Export report (PDF/DOCX)" },
+    ]
+  },
+  {
+    name: "Knowledge Base",
+    desc: "Evidence retrieval and semantic search",
+    endpoints: [
+      { method: "POST", path: "/assessments/:id/kb/search", desc: "Semantic search in KB", body: `{ "query": "data retention policy", "limit": 10 }` },
+      { method: "GET", path: "/assessments/:id/kb/chunks", desc: "List indexed KB chunks" },
+    ]
+  },
+  {
+    name: "Workflows",
+    desc: "Durable assessment lifecycle orchestration",
+    endpoints: [
+      { method: "POST", path: "/assessments/:id/workflows/lifecycle/start", desc: "Start lifecycle workflow" },
+      { method: "GET", path: "/assessments/:id/workflows/lifecycle", desc: "Get workflow status" },
+      { method: "GET", path: "/workflows/:runId", desc: "Get workflow run detail" },
+      { method: "POST", path: "/workflows/:runId/cancel", desc: "Cancel a running workflow" },
+      { method: "POST", path: "/workflows/:runId/resume", desc: "Resume a paused workflow" },
+      { method: "POST", path: "/workflows/:runId/signals", desc: "Send signal to workflow (e.g. approval)" },
+    ]
+  },
+  {
+    name: "Agent Runtime",
+    desc: "AI agent execution and monitoring",
+    endpoints: [
+      { method: "POST", path: "/assessments/:id/agent-runs", desc: "Start an agent run" },
+      { method: "GET", path: "/assessments/:id/agent-runs", desc: "List agent runs" },
+      { method: "GET", path: "/agent-runs/:runId", desc: "Get agent run status and output" },
+      { method: "GET", path: "/agent-runs/:runId/tool-calls", desc: "List tool calls for an agent run" },
+    ]
+  },
+  {
+    name: "Integrations",
+    desc: "External system integration (M2M)",
+    endpoints: [
+      {
+        method: "POST", path: "/integrations/assessments/:id/analyze-text", desc: "Analyze raw text against SCF framework",
+        body: `{ "raw_text": "...", "mode": "consultative", "context_focus": ["GDPR"] }`,
+        response: `{ "job": { "agent_run_id": "...", "status": "queued" }, "trace_id": "..." }`
+      },
+    ]
+  },
+  {
+    name: "Organizations & API Keys",
+    desc: "Manage tenant organizations and API key access",
+    endpoints: [
+      { method: "POST", path: "/organizations", desc: "Create organization" },
       { method: "GET", path: "/organizations/:id", desc: "Get organization details" },
-      { method: "POST", path: "/organizations/:id/api-keys", desc: "Generate a new API key", response: `{ "data": { "key": "sk_live_...", "id": "uuid" } }` },
+      { method: "POST", path: "/organizations/:id/api-keys", desc: "Generate a new API key", response: `{ "data": { "key": "standard_live_...", "id": "uuid" } }` },
       { method: "GET", path: "/organizations/:id/api-keys", desc: "List API keys (masked)" },
+      { method: "DELETE", path: "/organizations/:id/api-keys/:keyId", desc: "Revoke API key" },
+    ]
+  },
+  {
+    name: "Observability",
+    desc: "Audit logs, metrics, security events, and usage tracking",
+    endpoints: [
+      { method: "GET", path: "/observability/audit-logs", desc: "Query audit logs" },
+      { method: "GET", path: "/observability/metrics", desc: "Query operational metrics" },
+      { method: "GET", path: "/observability/security-events", desc: "Query security events" },
+      { method: "GET", path: "/observability/usage", desc: "Query LLM token usage records" },
     ]
   },
   {
@@ -219,11 +359,15 @@ Use case: "I just need the SCF data to power my own compliance engine."
 
 You can query SCF data directly without creating assessments:
   GET /api/v1/scf/versions → available SCF versions
-  GET /api/v1/scf/domains?scf_version=<id> → 33 security domains
-  GET /api/v1/scf/controls?scf_version=<id> → 1,468 controls
+  GET /api/v1/scf/versions/latest → latest version
+  GET /api/v1/scf/versions/<version_id>/domains → 33 security domains
+  GET /api/v1/scf/versions/<version_id>/controls → 1,468 controls (paginated)
+  GET /api/v1/scf/controls/by-code/GOV-01 → look up control by code
   GET /api/v1/scf/frameworks → 231 compliance frameworks
   GET /api/v1/scf/frameworks/<id>/requirements → framework-specific requirements
-  GET /api/v1/scf/mappings?framework=<id> → crosswalk mappings
+  GET /api/v1/scf/frameworks/<id>/coverage → control coverage statistics
+  GET /api/v1/scf/controls/<id>/mappings → crosswalk mappings for a control
+  GET /api/v1/scf/requirements/<id>/mappings → crosswalk mappings for a requirement
 
 This is the fastest path — no lifecycle, no documents, just data.
 

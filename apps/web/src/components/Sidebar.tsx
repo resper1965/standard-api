@@ -3,12 +3,13 @@ import { useSession, signOut } from "../lib/auth-client";
 import "./Sidebar.css";
 
 const userLinks = [
-  { to: "/dashboard", icon: "📊", label: "Dashboard" },
-  { to: "/assessments", icon: "📋", label: "Assessments" },
-  { to: "/documents", icon: "📄", label: "Documents" },
-  { to: "/gap-analysis", icon: "🔍", label: "Gap Analysis" },
-  { to: "/reports", icon: "📈", label: "Reports" },
-  { to: "/scf", icon: "🔒", label: "SCF Catalog" },
+  { to: "/dashboard", icon: "📊", label: "Dashboard", end: true },
+  { to: "/dashboard/assessments", icon: "📋", label: "Assessments" },
+  { to: "/dashboard/documents", icon: "📄", label: "Documents" },
+  { to: "/dashboard/gap-analysis", icon: "🔍", label: "Gap Analysis" },
+  { to: "/dashboard/reports", icon: "📈", label: "Reports" },
+  { to: "/dashboard/scf-catalog", icon: "🔒", label: "SCF Catalog" },
+  { to: "/dashboard/settings", icon: "⚙️", label: "Settings" },
 ];
 const adminLinks = [
   { to: "/admin/tenants", icon: "🏢", label: "Organizations" },
@@ -43,6 +44,7 @@ export function Sidebar() {
             <NavLink
               key={link.to}
               to={link.to}
+              end={"end" in link ? (link as any).end : false}
               className={({ isActive }) =>
                 `sidebar-link${isActive ? " active" : ""}`
               }
