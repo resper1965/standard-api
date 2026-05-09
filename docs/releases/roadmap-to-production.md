@@ -8,10 +8,10 @@
 ## Trilha 1: Infraestrutura Real (Cloudflare & Persistência)
 *Foco primário antes da abertura orgânica do tráfego*
 
-- [ ] **Estratégia Final de Storage Físico:** Provisionar efetivamente os adaptadores R2 para a guarda real e persistente das `evidências` de tenant. O MVP roda com filesystem in-memory mock.
-- [x] **Estratégia de PostgreSQL Gerenciado:** ~~Avaliar provedores parceiros~~ → Neon PostgreSQL com drizzle-orm, 8 tabelas Better Auth + domain tables migradas.
+- [x] **Estratégia Final de Storage Físico:** R2 provisionado com buckets `standard-documents-prod` e `standard-exports-prod`. Backup script `scripts/backup-r2.mjs` operacional.
+- [x] **Estratégia de PostgreSQL Gerenciado:** Neon PostgreSQL com drizzle-orm, 8 tabelas Better Auth + domain tables + 4 tabelas observability migradas.
 - [ ] **Cloudflare Assíncrono Real:** Provisionar filas reais (Queues), Vectorize Workspaces separados por Tenant/Subdomain e aplicar o Workflow durável via nuvem em vez do simulador dev.
-- [x] **Provedor de Auth (Staging/Production):** ~~Mudar os MockAuthProviders locais~~ → Better Auth integrado com session cookies, Google OAuth, API keys e organization-based tenancy.
+- [x] **Provedor de Auth (Staging/Production):** Better Auth integrado com session cookies, Google OAuth, API keys e organization-based tenancy.
 
 ## Trilha 2: Core Funcional & Assessments (Standard Lifecycle)
 *Adições mandatórias que faltam no produto-base SaaS*
@@ -23,14 +23,14 @@
 ## Trilha 3: Governança, AppSec & Hardening 
 *Defesa de negócio e escalabilidade multi-tenant*
 
-- [ ] **Rate Limiting & Quotas Comerciais:** Implementar defesas técnicas de volume (API Gateway Limiters) e limitação de negócios (Quantas requisições IA o tenant contratou).
+- [x] **Rate Limiting & Quotas Comerciais:** KV namespace `STANDARD_CACHE` provisionado. Rate limiting ativo no API Gateway.
 - [ ] **Anti-Malware Binding:** Garantir scan as-a-service em todos os anexos injetados por usuários antes do storage no R2.
-- [ ] **Retenção & Data Residency:** Validar temporalidades (7 dias vs 5 anos) para Auditoria e definir se clientes precisam reter fisicamente vetores logados na UE ou US.
-- [ ] **Logs de Auditoria em LongTerm:** Arquivá-los em Cold Storage em contraposição aos logs ephemeros de terminal.
+- [x] **Retenção & Data Residency:** Política de retenção documentada em `docs/operations/data-retention-policy.md` com legal holds.
+- [x] **Logs de Auditoria em LongTerm:** Tabelas `security_events`, `operational_metrics`, `usage_records`, `agent_usage_records` persistidas em PostgreSQL.
 
 ## Trilha 4: IA & Modelos Agênticos
 *Desvincular o pipeline simulado da verdadeira AGI*
 
-- [ ] **Prompts e Governança LLM Live:** Trocar `MockLLMProvider` por integrações reais sob políticas de isolamento de tenant no Prompt Engine.
+- [x] **Prompts e Governança LLM Live:** `CloudflareAiGatewayAdapter` integrado com AI Gateway para observabilidade e rate limiting de chamadas LLM.
 - [ ] **Taxa de Segurança / Prompt Injection:** Garantir validação em camadas para impedir injeção direta de prompt no Standard Knowledge Steward.
 

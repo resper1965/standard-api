@@ -47,7 +47,7 @@
 
 | # | Item | Prioridade | Status | Origem |
 |---|------|:----------:|--------|--------|
-| 2.1 | `packages/maturity` — Maturity Assessment package | P0 | pendente | roadmap T2 |
+| 2.1 | `packages/maturity` — Maturity Assessment package | P0 | concluído | roadmap T2 |
 | 2.2 | Rejection/rework loops no assessment engine | P1 | concluído | engine analysis |
 | 2.3 | Reprocessamento com rastreabilidade (motivo, versão, ator) | P1 | concluído | AGENTS.md §11 |
 | 2.4 | Immutability enforcement em artifacts aprovados | P1 | concluído | engine analysis |

@@ -38,6 +38,25 @@ Os estados abaixo não podem avançar automaticamente:
 - `maturity_under_review`
 - `poam_under_review`
 
+## Transições de Rejeição (Rework Loops)
+
+Cada gate de aprovação humana pode resultar em rejeição, retornando o assessment ao estado de draft para rework:
+
+| De | Para | Evento |
+|----|------|--------|
+| `soa_under_review` | `soa_drafted` | `soa_rejected` |
+| `gap_analysis_under_review` | `gap_analysis_drafted` | `gap_analysis_rejected` |
+| `maturity_under_review` | `maturity_assessed` | `maturity_rejected` |
+| `poam_under_review` | `poam_drafted` | `poam_rejected` |
+
+## Reprocessamento e Rastreabilidade
+
+- Quando um artifact é rejeitado, registra-se: `rejectedBy`, `rejectedAt`, `rejectionReason`.
+- Uma nova versão (rework) é criada com `supersedesVersionId` apontando para a versão rejeitada.
+- O artifact rejeitado torna-se imutável com status `rejected`.
+- Artifacts aprovados são imutáveis; correções geram nova versão.
+- Todo reprocessamento deve registrar motivo, versão anterior, versão nova, ator e trace.
+
 ## Regras de Transição
 
 - O frontend nunca altera estado diretamente; ele envia comandos para a API.
