@@ -32,6 +32,7 @@ import { createDrizzleGapAnalysisRepositories } from "./gap-analysis.repository"
 import { createDrizzlePoamRepositories } from "./poam.repository";
 import { createDrizzleReportRepositories } from "./reporting.repository";
 import { createMockApiKeysRepository, createDrizzleApiKeysRepository } from "./api-keys.repository";
+import { createInMemoryWebhookRepository, createDrizzleWebhookRepository } from "./webhook.repository";
 
 export const createMockRepositories = (): AppDependencies => {
   const documentIngestion = createInMemoryDocumentIngestionDependencies();
@@ -58,7 +59,8 @@ export const createMockRepositories = (): AppDependencies => {
     reporting: createInMemoryReportingDependencies({ soa, gapAnalysis, poam, scf }),
     agentRuntime: createInMemoryAgentRuntimeDependencies(),
     workflows: createInMemoryWorkflowDependencies(),
-    observability: createInMemoryObservabilityDependencies()
+    observability: createInMemoryObservabilityDependencies(),
+    webhooks: createInMemoryWebhookRepository()
   };
 };
 
@@ -144,7 +146,8 @@ export const createDrizzleRepositories = (db: DbClient, env?: Env): AppDependenc
       ) as any,
     },
     workflows: createDrizzleWorkflowDependencies(db),
-    observability: createDrizzleObservabilityDependencies(db as never)
+    observability: createDrizzleObservabilityDependencies(db as never),
+    webhooks: createDrizzleWebhookRepository(db)
   };
 };
 
