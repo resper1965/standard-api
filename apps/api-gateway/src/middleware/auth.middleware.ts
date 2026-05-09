@@ -40,6 +40,9 @@ export const resolveAuthContext = async (
         context.tenantId = apiKeyRecord.tenantId;
         context.organizationId = apiKeyRecord.organizationId;
         
+        // Store scopes for downstream scope enforcement middleware
+        context.m2mScopes = apiKeyRecord.scopes;
+        
         // Asynchronous update of last used time
         context.deps.apiKeys.markUsed(apiKeyRecord.id).catch((e) => {
           console.error("Failed to mark API key used", e);

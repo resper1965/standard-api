@@ -47,6 +47,7 @@ export const apiErrorCodes = [
   "NOT_IMPLEMENTED",
   "EMAIL_SERVICE_UNAVAILABLE",
   "EMAIL_SEND_FAILED",
+  "INSUFFICIENT_SCOPE",
   "INTERNAL_ERROR"
 ] as const;
 

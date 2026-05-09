@@ -11,6 +11,7 @@ import { errorResponse } from "./middleware/error.middleware";
 import { assertRateLimit } from "./middleware/rate-limit.middleware";
 import { recordRequestObservability } from "./middleware/request-observability.middleware";
 import { assertRbac } from "./middleware/rbac.middleware";
+import { assertApiKeyScopes } from "./middleware/scope.middleware";
 import { resolveTenantContext } from "./middleware/tenant.middleware";
 import { resolveTraceId } from "./middleware/trace.middleware";
 import { agentRuntimeRoutes } from "./routes/agent-runtime.routes";
@@ -183,6 +184,7 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
       resolveTenantContext(context, tenantRequired);
 
       await assertRbac(context, route.permissions);
+      assertApiKeyScopes(context, route.path, request.method);
       await assertRateLimit(context, route.path, env?.STANDARD_CACHE);
       await recordAuditPlaceholder(context, route.path);
 

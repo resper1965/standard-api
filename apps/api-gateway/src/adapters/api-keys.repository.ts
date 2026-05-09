@@ -9,6 +9,7 @@ export type ApiKeyRecord = {
   name: string;
   keyHash: string;
   maskedKey: string;
+  scopes: string[];
   expiresAt: Date | null;
   lastUsedAt: Date | null;
   createdAt: Date;
@@ -21,6 +22,7 @@ export type CreateApiKeyInput = {
   name: string;
   keyHash: string;
   maskedKey: string;
+  scopes?: string[];
   expiresAt?: Date;
 };
 
@@ -43,6 +45,7 @@ export const createDrizzleApiKeysRepository = (db: DbClient): ApiKeysRepositoryA
           name: input.name,
           keyHash: input.keyHash,
           maskedKey: input.maskedKey,
+          scopes: input.scopes ?? [],
           expiresAt: input.expiresAt ?? null,
         })
         .returning();
@@ -59,7 +62,6 @@ export const createDrizzleApiKeysRepository = (db: DbClient): ApiKeysRepositoryA
       await db.update(apiKeys).set({ lastUsedAt: new Date() }).where(eq(apiKeys.id, id));
     },
     async revokeKey(id, organizationId) {
-      // Just delete it
       const [deleted] = await db
         .delete(apiKeys)
         .where(and(eq(apiKeys.id, id), eq(apiKeys.organizationId, organizationId)))
@@ -76,7 +78,19 @@ export const createMockApiKeysRepository = (): ApiKeysRepositoryAdapter => {
   const store: Record<string, ApiKeyRecord> = {};
   return {
     async create(input) {
-      const record = { ...input, id: crypto.randomUUID(), createdAt: new Date(), updatedAt: new Date(), lastUsedAt: null, expiresAt: input.expiresAt ?? null };
+      const record: ApiKeyRecord = {
+        id: crypto.randomUUID(),
+        tenantId: input.tenantId,
+        organizationId: input.organizationId,
+        name: input.name,
+        keyHash: input.keyHash,
+        maskedKey: input.maskedKey,
+        scopes: input.scopes ?? [],
+        expiresAt: input.expiresAt ?? null,
+        lastUsedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
       store[record.id] = record;
       return record;
     },
@@ -102,4 +116,5 @@ export const createMockApiKeysRepository = (): ApiKeysRepositoryAdapter => {
     }
   };
 };
+
 

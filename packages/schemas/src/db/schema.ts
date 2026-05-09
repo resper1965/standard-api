@@ -210,6 +210,8 @@ export const apiKeys = pgTable("api_keys", {
   name: text("name").notNull(),
   keyHash: text("key_hash").notNull(),
   maskedKey: text("masked_key").notNull(),
+  /** M2M permission scopes — empty array means wildcard access (backward compatible) */
+  scopes: jsonb("scopes").$type<string[]>().default([]).notNull(),
   expiresAt: timestamp("expires_at", { withTimezone: true }),
   lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
   ...timestamps()

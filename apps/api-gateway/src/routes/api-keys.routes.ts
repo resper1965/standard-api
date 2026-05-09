@@ -32,7 +32,7 @@ export const apiKeysRoutes: RouteDefinition[] = [
           id: k.id,
           name: k.name,
           maskedKey: k.maskedKey,
-          scopes: (k as any).scopes ?? [],
+          scopes: k.scopes,
           lastUsedAt: k.lastUsedAt,
           expiresAt: k.expiresAt,
           createdAt: k.createdAt
@@ -81,7 +81,7 @@ export const apiKeysRoutes: RouteDefinition[] = [
           name: record.name,
           key: fullToken, // Only returned ONCE
           maskedKey: record.maskedKey,
-          scopes: input.scopes ?? [],
+          scopes: record.scopes,
           expiresAt: record.expiresAt,
           createdAt: record.createdAt
         }

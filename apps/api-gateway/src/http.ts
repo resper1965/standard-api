@@ -71,6 +71,7 @@ export type ApiKeyRecord = {
   name: string;
   keyHash: string;
   maskedKey: string;
+  scopes: string[];
   expiresAt: Date | null;
   lastUsedAt: Date | null;
   createdAt: Date;
@@ -155,6 +156,8 @@ export type RequestContext = {
   organizationId?: string | undefined;
   actorId?: string | undefined;
   systemActor?: string | undefined;
+  /** M2M API key scopes — populated by auth middleware for M2M requests */
+  m2mScopes?: string[] | undefined;
   /** @deprecated Use `session` instead — legacy auth context */
   auth?: AuthContext | undefined;
   securityTenant?: SecurityTenantContext | undefined;
