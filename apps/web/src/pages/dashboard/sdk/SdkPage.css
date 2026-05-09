@@ -1,0 +1,151 @@
+.sdk-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+  color: #e2e8f0;
+}
+
+.sdk-header {
+  margin-bottom: 3rem;
+}
+
+.sdk-header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #00ADE8, #60a5fa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.75rem;
+}
+
+.sdk-subtitle {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.sdk-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.sdk-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  background: rgba(0, 173, 232, 0.1);
+  border: 1px solid rgba(0, 173, 232, 0.3);
+  color: #00ADE8;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.sdk-section {
+  margin-bottom: 2.5rem;
+}
+
+.sdk-section h2 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #f1f5f9;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.sdk-note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
+}
+
+/* ── Code Blocks ──────────────────────────────────────── */
+.sdk-code-block {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #0d1117;
+  margin-bottom: 1rem;
+}
+
+.sdk-code-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.sdk-code-lang {
+  font-size: 0.75rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+.sdk-code-copy {
+  font-size: 0.75rem;
+  color: #00ADE8;
+  background: transparent;
+  border: 1px solid rgba(0, 173, 232, 0.3);
+  border-radius: 6px;
+  padding: 0.25rem 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sdk-code-copy:hover {
+  background: rgba(0, 173, 232, 0.1);
+}
+
+.sdk-code-pre {
+  padding: 1rem 1.25rem;
+  overflow-x: auto;
+  margin: 0;
+}
+
+.sdk-code-pre code {
+  font-family: "JetBrains Mono", "Fira Code", "Cascadia Code", monospace;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: #e2e8f0;
+  white-space: pre;
+}
+
+/* ── Resources Grid ──────────────────────────────────── */
+.sdk-resources-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 0.75rem;
+}
+
+.sdk-resource-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: border-color 0.2s ease;
+}
+
+.sdk-resource-card:hover {
+  border-color: rgba(0, 173, 232, 0.3);
+}
+
+.sdk-resource-name {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.82rem;
+  color: #00ADE8;
+}
+
+.sdk-resource-desc {
+  font-size: 0.8rem;
+  color: #94a3b8;
+}

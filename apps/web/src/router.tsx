@@ -14,6 +14,7 @@ const Documents = lazy(() => import("./pages/Documents").then(m => ({ default: m
 const GapAnalysis = lazy(() => import("./pages/GapAnalysis").then(m => ({ default: m.GapAnalysisPage })))
 const Reports = lazy(() => import("./pages/Reports").then(m => ({ default: m.ReportsPage })))
 const ScfCatalog = lazy(() => import("./pages/ScfCatalog").then(m => ({ default: m.ScfCatalogPage })))
+const SdkPage = lazy(() => import("./pages/dashboard/sdk/SdkPage").then(m => ({ default: m.SdkPage })))
 
 // Simple Guard
 const requireAuth = async () => {
@@ -72,6 +73,7 @@ export const router = createBrowserRouter([
             { path: "gap-analysis", element: <SuspenseWrap><GapAnalysis /></SuspenseWrap> },
             { path: "reports", element: <SuspenseWrap><Reports /></SuspenseWrap> },
             { path: "scf-catalog", element: <SuspenseWrap><ScfCatalog /></SuspenseWrap> },
+            { path: "sdk", element: <SuspenseWrap><SdkPage /></SuspenseWrap> },
             { path: "settings", element: <SettingsPage /> }
         ]
     },

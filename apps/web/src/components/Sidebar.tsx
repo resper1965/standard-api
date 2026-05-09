@@ -9,6 +9,7 @@ const userLinks = [
   { to: "/dashboard/gap-analysis", icon: "🔍", label: "Gap Analysis" },
   { to: "/dashboard/reports", icon: "📈", label: "Reports" },
   { to: "/dashboard/scf-catalog", icon: "🔒", label: "SCF Catalog" },
+  { to: "/dashboard/sdk", icon: "🧩", label: "SDK & Docs" },
   { to: "/dashboard/settings", icon: "⚙️", label: "Settings" },
 ];
 const adminLinks = [
