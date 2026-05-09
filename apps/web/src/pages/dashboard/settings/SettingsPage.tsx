@@ -216,9 +216,21 @@ const API_REFERENCE: EndpointGroup[] = [
     endpoints: [
       { method: "POST", path: "/organizations", desc: "Create organization" },
       { method: "GET", path: "/organizations/:id", desc: "Get organization details" },
-      { method: "POST", path: "/organizations/:id/api-keys", desc: "Generate a new API key", response: `{ "data": { "key": "standard_live_...", "id": "uuid" } }` },
-      { method: "GET", path: "/organizations/:id/api-keys", desc: "List API keys (masked)" },
+      { method: "POST", path: "/organizations/:id/api-keys", desc: "Generate API key with optional scopes", body: `{ "name": "My Key", "scopes": ["assessment:read", "scf:read"] }`, response: `{ "data": { "key": "standard_live_...", "scopes": [...] } }` },
+      { method: "GET", path: "/organizations/:id/api-keys", desc: "List API keys (masked, with scopes)" },
       { method: "DELETE", path: "/organizations/:id/api-keys/:keyId", desc: "Revoke API key" },
+    ]
+  },
+  {
+    name: "Webhooks",
+    desc: "Outbound event notifications with HMAC-SHA256 signed payloads",
+    endpoints: [
+      { method: "POST", path: "/organizations/:id/webhooks", desc: "Register webhook endpoint", body: `{ "url": "https://example.com/hooks", "events": ["assessment.created", "gap.approved"] }` },
+      { method: "GET", path: "/organizations/:id/webhooks", desc: "List registered webhooks" },
+      { method: "GET", path: "/webhooks/:id", desc: "Get webhook details" },
+      { method: "PATCH", path: "/webhooks/:id", desc: "Update webhook (URL, events, enabled)" },
+      { method: "DELETE", path: "/webhooks/:id", desc: "Delete webhook endpoint" },
+      { method: "GET", path: "/webhooks/:id/deliveries", desc: "List delivery attempts with status" },
     ]
   },
   {
@@ -387,7 +399,29 @@ This is the fastest path — no lifecycle, no documents, just data.
 - Responses include trace_id for debugging
 - Call GET /assessments/<id>/available-transitions to see allowed next states
 - Absence of evidence does NOT mean absence of implementation — report as "not_evidenced"
-- Standard provides normative data; your application performs inference and analysis`
+- Standard provides normative data; your application performs inference and analysis
+
+## API Key Scopes
+Keys can be created with optional scopes to restrict M2M access:
+  POST /api/v1/organizations/<org_id>/api-keys
+  Body: { "name": "Read-Only Key", "scopes": ["assessment:read", "scf:read", "document:read"] }
+Available scopes: assessment:read, assessment:write, assessment:transition, document:read, document:write, document:delete, scf:read, soa:read, soa:write, gap:read, gap:write, poam:read, poam:write, report:read, report:write, report:export, kb:read, kb:search, agent:read, agent:run, integration:analyze, audit:read, metrics:read, usage:read, workflow:read, workflow:write, workflow:signal, artifact:read, artifact:write, approval:read
+A key with no scopes has wildcard access (backward compatible).
+
+## Webhooks
+Standard sends HMAC-SHA256 signed POST requests to your endpoints for lifecycle events.
+
+### Available events:
+assessment.created, document.ingested, kb.indexed, soa.approved, gap.approved, maturity.approved, poam.approved, report.generated, report.approved, assessment.closed, workflow.failed
+
+### Registering a webhook:
+  POST /api/v1/organizations/<org_id>/webhooks
+  Body: { "url": "https://you.com/webhooks", "events": ["assessment.created", "gap.approved"] }
+  Response: { "data": { "id": "uuid", "signing_secret": "whsec_..." } }  ← shown ONCE
+
+### Verifying webhook signatures:
+  Headers: X-Standard-Signature (HMAC-SHA256 hex of body using signing_secret)
+  Verify: hmac_sha256(signing_secret, raw_body) === X-Standard-Signature`
 
   return prompt
 }

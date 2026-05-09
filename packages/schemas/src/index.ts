@@ -21,3 +21,5 @@ export * from "./workflow-orchestration";
 export * from "./security";
 export * from "./observability";
 export * from "./integration";
+export * from "./webhooks";
+export * from "./api-key-scopes";

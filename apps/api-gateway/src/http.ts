@@ -19,6 +19,7 @@ import type { AuthContext, Permission, SecurityTenantContext } from "@standard/s
 import type { SoaDependencies } from "@standard/soa";
 import type { WorkflowDependencies } from "@standard/workflows";
 import type { SendEmail } from "@standard/email";
+import type { WebhookRepositoryAdapter } from "@standard/schemas";
 import { ApiError } from "./errors/api-error";
 
 export type TenantRecord = {
@@ -142,6 +143,8 @@ export type AppDependencies = {
   email?: SendEmail | undefined;
   /** Cloudflare Queue for async agent run processing (optional) */
   AGENT_RUN_QUEUE?: Queue | undefined;
+  /** Webhook endpoint management (optional — requires storage adapter) */
+  webhooks?: WebhookRepositoryAdapter | undefined;
 };
 
 export type RequestContext = {

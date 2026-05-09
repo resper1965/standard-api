@@ -1,10 +1,13 @@
 import { z } from "zod";
+import { M2mScopesArraySchema } from "@standard/schemas";
 import type { RouteDefinition } from "../http";
 import { json, parseJson } from "../http";
 
 const createApiKeyInput = z.object({
   name: z.string().min(1).max(100),
-  expiresAt: z.string().datetime().optional()
+  expiresAt: z.string().datetime().optional(),
+  /** Optional M2M scopes — empty means wildcard (all access) */
+  scopes: M2mScopesArraySchema.optional()
 });
 
 export const apiKeysRoutes: RouteDefinition[] = [
@@ -29,6 +32,7 @@ export const apiKeysRoutes: RouteDefinition[] = [
           id: k.id,
           name: k.name,
           maskedKey: k.maskedKey,
+          scopes: (k as any).scopes ?? [],
           lastUsedAt: k.lastUsedAt,
           expiresAt: k.expiresAt,
           createdAt: k.createdAt
@@ -67,7 +71,8 @@ export const apiKeysRoutes: RouteDefinition[] = [
         name: input.name,
         keyHash,
         maskedKey,
-        expiresAt: input.expiresAt ? new Date(input.expiresAt) : undefined
+        expiresAt: input.expiresAt ? new Date(input.expiresAt) : undefined,
+        ...(input.scopes ? { scopes: input.scopes } : {})
       });
 
       return json({
@@ -76,6 +81,7 @@ export const apiKeysRoutes: RouteDefinition[] = [
           name: record.name,
           key: fullToken, // Only returned ONCE
           maskedKey: record.maskedKey,
+          scopes: input.scopes ?? [],
           expiresAt: record.expiresAt,
           createdAt: record.createdAt
         }

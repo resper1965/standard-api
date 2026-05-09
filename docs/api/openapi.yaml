@@ -59,7 +59,9 @@ tags:
   - name: Organizations
     description: Tenant organization management
   - name: API Keys
-    description: Programmatic access key management
+    description: Programmatic access key management with optional M2M scopes
+  - name: Webhooks
+    description: Outbound event notifications with HMAC-SHA256 signed payloads
   - name: Observability
     description: Audit logs, metrics, and operational visibility
   - name: Tenants
@@ -1405,6 +1407,104 @@ paths:
       responses:
         "200":
           description: Usage records
+  # ── Webhooks ──────────────────────────────────────────────
+  /api/v1/organizations/{organizationId}/webhooks:
+    post:
+      tags: [Webhooks]
+      summary: Register a webhook endpoint
+      operationId: createWebhookEndpoint
+      parameters:
+        - $ref: "#/components/parameters/OrganizationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [url]
+              properties:
+                url: { type: string, format: uri }
+                events:
+                  type: array
+                  items:
+                    type: string
+                    enum: [assessment.created, document.ingested, kb.indexed, soa.approved, gap.approved, maturity.approved, poam.approved, report.generated, report.approved, assessment.closed, workflow.failed]
+                description: { type: string, maxLength: 500 }
+                enabled: { type: boolean, default: true }
+      responses:
+        "201":
+          description: Webhook endpoint created (signing_secret shown ONCE)
+    get:
+      tags: [Webhooks]
+      summary: List registered webhook endpoints
+      operationId: listWebhookEndpoints
+      parameters:
+        - $ref: "#/components/parameters/OrganizationId"
+      responses:
+        "200":
+          description: List of webhook endpoints
+
+  /api/v1/webhooks/{webhookId}:
+    get:
+      tags: [Webhooks]
+      summary: Get webhook endpoint details
+      operationId: getWebhookEndpoint
+      parameters:
+        - name: webhookId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Webhook endpoint details
+    patch:
+      tags: [Webhooks]
+      summary: Update webhook endpoint
+      operationId: updateWebhookEndpoint
+      parameters:
+        - name: webhookId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                url: { type: string, format: uri }
+                events: { type: array, items: { type: string } }
+                description: { type: string }
+                enabled: { type: boolean }
+      responses:
+        "200":
+          description: Webhook endpoint updated
+    delete:
+      tags: [Webhooks]
+      summary: Delete webhook endpoint
+      operationId: deleteWebhookEndpoint
+      parameters:
+        - name: webhookId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Webhook deleted
+
+  /api/v1/webhooks/{webhookId}/deliveries:
+    get:
+      tags: [Webhooks]
+      summary: List webhook delivery attempts
+      operationId: listWebhookDeliveries
+      parameters:
+        - name: webhookId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: List of delivery attempts with status
 
 components:
   securitySchemes:

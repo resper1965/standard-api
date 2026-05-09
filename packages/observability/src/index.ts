@@ -12,6 +12,7 @@ export * from "./tracing/span";
 export * from "./tracing/trace-context";
 export * from "./alerts/alert.service";
 export * from "./tracing/trace-id";
+export * from "./webhooks/webhook-dispatcher";
 export type {
   AgentUsageRecord,
   AuditEvent,
