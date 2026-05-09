@@ -42,6 +42,56 @@ import {
 
 const newId = (): string => crypto.randomUUID();
 
+// ──── Expected Column Validation ────
+
+/** Minimum expected columns for a valid SCF controls tab */
+const EXPECTED_CONTROLS_COLUMNS = [
+  "scf_control_#",
+  "scf_control",
+  "scf_domain",
+] as const;
+
+/** Additional columns that improve import quality */
+const OPTIONAL_CONTROLS_COLUMNS = [
+  "scf_control_description",
+  "scf_control_question",
+  "scf_control_weighting",
+] as const;
+
+/**
+ * Validate that expected columns are present in the controls tab.
+ * Returns warnings for missing optional columns and errors for missing required columns.
+ */
+const validateExpectedColumns = (headers: string[]): { errors: string[]; warnings: string[] } => {
+  const normalizedHeaders = new Set(headers.map(normalizeHeader));
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
+  // At least one control identifier column must be present
+  const hasControlId = ["scf_control_#", "scf_#", "control_#", "scf_control_identifier", "scf_identifier", "control_code"].some(
+    (col) => normalizedHeaders.has(col)
+  );
+  if (!hasControlId) {
+    errors.push("Missing required column: SCF control identifier (e.g. 'SCF Control #', 'SCF #'). Cannot parse controls.");
+  }
+
+  // At least one control name/title column must be present
+  const hasControlName = ["scf_control", "control_name", "control_title", "scf_control_name"].some(
+    (col) => normalizedHeaders.has(col)
+  );
+  if (!hasControlName) {
+    errors.push("Missing required column: SCF control name/title (e.g. 'SCF Control', 'Control Name'). Cannot parse control titles.");
+  }
+
+  for (const col of OPTIONAL_CONTROLS_COLUMNS) {
+    if (!normalizedHeaders.has(col)) {
+      warnings.push(`Optional column missing: '${col}'. Import will proceed but this data will be empty.`);
+    }
+  }
+
+  return { errors, warnings };
+};
+
 // ──── Version Detection ────
 
 const detectVersionFromFilename = (filename?: string): string | null => {
@@ -268,6 +318,7 @@ export const createXlsxScfImporter = (): ScfImporter => ({
 
       // Check if at least one tab is classified as controls
       let hasControlsTab = false;
+      const allWarnings: string[] = [];
       for (const name of workbook.SheetNames) {
         const sheet = workbook.Sheets[name];
         if (!sheet) continue;
@@ -275,6 +326,17 @@ export const createXlsxScfImporter = (): ScfImporter => ({
         const classification = classifyTab(name, headers);
         if (classification.type === "controls") {
           hasControlsTab = true;
+
+          // Validate expected columns are present
+          const columnValidation = validateExpectedColumns(headers);
+          if (columnValidation.errors.length > 0) {
+            return {
+              valid: false,
+              errors: [`Controls tab "${name}": ${columnValidation.errors.join("; ")}`],
+              warnings: columnValidation.warnings,
+            };
+          }
+          allWarnings.push(...columnValidation.warnings);
           break;
         }
       }
@@ -287,7 +349,7 @@ export const createXlsxScfImporter = (): ScfImporter => ({
         };
       }
 
-      return { valid: true, errors: [], warnings: [] };
+      return { valid: true, errors: [], warnings: allWarnings };
     } catch (err) {
       return {
         valid: false,

@@ -126,6 +126,11 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
     return row ? mapVersion(row) : null;
   },
 
+  findVersionByLabel: async (label) => {
+    const [row] = await db.select().from(scfVersions).where(ilike(scfVersions.version, label)).limit(1);
+    return row ? mapVersion(row) : null;
+  },
+
   saveVersion: async (version) => {
     await db.insert(scfVersions).values({
       id: version.id,

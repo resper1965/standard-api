@@ -5,16 +5,26 @@ import { maturityAssessorEval } from "./agent-evals/maturity-assessor.eval";
 import { poamPlannerEval } from "./agent-evals/poam-planner.eval";
 import { reportWriterEval } from "./agent-evals/report-writer.eval";
 import { soaArchitectEval } from "./agent-evals/soa-architect.eval";
+import { rejectionReworkEval } from "./agent-evals/rejection-rework.eval";
+import { maturityClassificationEval } from "./agent-evals/maturity-classification.eval";
+import { promptInjectionEval } from "./agent-evals/prompt-injection.eval";
+import { crossTenantEval } from "./agent-evals/cross-tenant.eval";
 import type { AgentEvalCase, EvalMetrics } from "./agent-evals/eval-kit";
 
 const evals: AgentEvalCase[] = [
+  // Original 7 agent evals
   frameworkMapperEval,
   soaArchitectEval,
   evidenceAnalystEval,
   gapAnalystEval,
   maturityAssessorEval,
   poamPlannerEval,
-  reportWriterEval
+  reportWriterEval,
+  // Phase 2 advanced evals
+  rejectionReworkEval,
+  maturityClassificationEval,
+  promptInjectionEval,
+  crossTenantEval
 ];
 
 const aggregate = (metrics: EvalMetrics[]): EvalMetrics => {

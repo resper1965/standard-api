@@ -3,6 +3,8 @@ import { safeImportError, sha256Hex } from "../importers/scf-importer";
 import type { ScfRepository } from "../repositories/scf.repository";
 import type { ScfDataset, ScfImportResult, ScfImportSource, ScfImportValidationResult } from "../types";
 
+const MIN_EXPECTED_CONTROLS = 10;
+
 export class ScfImportService {
   constructor(
     private readonly repository: ScfRepository,
@@ -13,6 +15,19 @@ export class ScfImportService {
     const importer = this.getImporter(source.source_type);
     const base = await importer.validate(source);
     if (!base.valid) return base;
+
+    // Check for duplicate version before parsing
+    if (source.version_label) {
+      const existing = await this.repository.findVersionByLabel(source.version_label);
+      if (existing) {
+        return {
+          valid: false,
+          errors: [`SCF version "${source.version_label}" already exists (id: ${existing.id}). Use a different version_label or remove the existing version first.`],
+          warnings: []
+        };
+      }
+    }
+
     const parsed = await importer.parse(source);
     return validateDataset(parsed.dataset, parsed.warnings);
   }
@@ -55,6 +70,29 @@ export class ScfImportService {
   async importFromSource(source: ScfImportSource): Promise<ScfImportResult> {
     const importer = this.getImporter(source.source_type);
     const sourceHash = source.source_hash ?? `sha256:${await sha256Hex(source.content)}`;
+
+    // Guard: duplicate version
+    if (source.version_label) {
+      const existing = await this.repository.findVersionByLabel(source.version_label);
+      if (existing) {
+        return {
+          import_run: {
+            id: crypto.randomUUID(),
+            scf_version_id: existing.id,
+            source_type: source.source_type,
+            source_hash: sourceHash,
+            status: "failed",
+            started_at: new Date().toISOString(),
+            completed_at: new Date().toISOString(),
+            error_summary_safe: `Duplicate: SCF version "${source.version_label}" already exists.`,
+            import_statistics: { versions: 0, domains: 0, controls: 0, frameworks: 0, requirements: 0, mappings: 0, strm_relationships: 0, warnings: 0, synthetic_records: 0 },
+            trace_id: "api-import"
+          },
+          warnings: []
+        };
+      }
+    }
+
     const run = await this.repository.createImportRun({
       id: crypto.randomUUID(),
       source_type: source.source_type,
@@ -125,6 +163,19 @@ export const validateDataset = (dataset: ScfDataset, warnings: string[] = []): S
   const requirementIds = new Set(dataset.requirements.map((requirement) => requirement.id));
 
   if (dataset.versions.length === 0) errors.push("At least one SCF version is required.");
+
+  // Sanity check: catch empty or structurally broken XLSX
+  if (dataset.controls.length < MIN_EXPECTED_CONTROLS) {
+    warnings.push(`Low control count (${dataset.controls.length}). Expected at least ${MIN_EXPECTED_CONTROLS} controls from a valid SCF workbook. Verify the XLSX structure.`);
+  }
+
+  // Audit trail: import statistics summary
+  warnings.push(
+    `Import statistics: ${dataset.versions.length} version(s), ${dataset.domains.length} domain(s), ` +
+    `${dataset.controls.length} control(s), ${dataset.frameworks.length} framework(s), ` +
+    `${dataset.requirements.length} requirement(s), ${dataset.mappings.length} mapping(s), ` +
+    `${dataset.strmRelationships.length} STRM relationship(s).`
+  );
 
   for (const control of dataset.controls) {
     if (!versionIds.has(control.scf_version_id)) errors.push(`Control ${control.control_code} points to an unknown SCF version.`);

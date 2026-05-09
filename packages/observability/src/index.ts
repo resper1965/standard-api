@@ -10,6 +10,7 @@ export * from "./drizzle.repository";
 export * from "./security-events/security-event.service";
 export * from "./tracing/span";
 export * from "./tracing/trace-context";
+export * from "./alerts/alert.service";
 export * from "./tracing/trace-id";
 export type {
   AgentUsageRecord,
