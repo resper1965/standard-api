@@ -99,12 +99,20 @@ export class StandardClient {
     };
 
     try {
-      const response = await this.config.fetch(url, {
+      const requestBody: BodyInit | null = body instanceof FormData
+        ? body
+        : body
+          ? JSON.stringify(body)
+          : null;
+
+      const init: RequestInit = {
         method,
         headers,
-        body: body instanceof FormData ? body : body ? JSON.stringify(body) : undefined,
+        body: requestBody,
         signal: opts?.signal ?? controller.signal,
-      });
+      };
+
+      const response = await this.config.fetch(url, init);
 
       clearTimeout(timeout);
 
