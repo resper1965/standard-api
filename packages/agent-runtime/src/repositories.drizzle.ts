@@ -1,6 +1,6 @@
 import type { AgentRunResponse, AgentToolInvocationResponse } from "@standard/schemas";
 import { agentRuns, agentToolCalls } from "@standard/schemas";
-import { eq, and } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import type { AgentRunRepository, AgentToolCallRepository, AgentRuntimeDependencies } from "./types";
 
 type AnyDrizzleClient = any;
@@ -25,7 +25,7 @@ export const createDrizzleAgentRunRepository = (db: AnyDrizzleClient): AgentRunR
   },
 
   async get(agentRunId: string) {
-    const records = await db.select().from(agentRuns).where(eq(agentRuns.id, agentRunId));
+    const records = await db.select().from(agentRuns).where(sql`${agentRuns.id} = ${agentRunId}`);
     const record = records[0];
     if (!record) return null;
 
@@ -53,11 +53,11 @@ export const createDrizzleAgentRunRepository = (db: AnyDrizzleClient): AgentRunR
       outputHash: run.output_hash,
       confidenceScore: run.confidence_score?.toString(),
       status: run.status
-    }).where(eq(agentRuns.id, run.agent_run_id));
+    }).where(sql`${agentRuns.id} = ${run.agent_run_id}`);
   },
 
   async listByAssessment(assessmentId: string, tenantId: string) {
-    const records = await db.select().from(agentRuns).where(and(eq(agentRuns.assessmentId, assessmentId), eq(agentRuns.tenantId, tenantId)));
+    const records = await db.select().from(agentRuns).where(sql`${agentRuns.assessmentId} = ${assessmentId} AND ${agentRuns.tenantId} = ${tenantId}`);
     return records.map((record: any) => ({
       agent_run_id: record.id,
       tenant_id: record.tenantId,
@@ -96,7 +96,7 @@ export const createDrizzleAgentToolCallRepository = (db: AnyDrizzleClient): Agen
   },
 
   async listByRun(agentRunId: string, tenantId: string) {
-    const records = await db.select().from(agentToolCalls).where(and(eq(agentToolCalls.agentRunId, agentRunId), eq(agentToolCalls.tenantId, tenantId)));
+    const records = await db.select().from(agentToolCalls).where(sql`${agentToolCalls.agentRunId} = ${agentRunId} AND ${agentToolCalls.tenantId} = ${tenantId}`);
     return records.map((record: any) => ({
       tool_call_id: record.id,
       agent_run_id: record.agentRunId,
