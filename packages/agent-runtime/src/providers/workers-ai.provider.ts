@@ -7,9 +7,9 @@
 import { createWorkersAI } from "workers-ai-provider";
 import type { LanguageModel } from "ai";
 
-/** Minimal Cloudflare Workers AI binding interface (env.AI) */
+/** Minimal Cloudflare Workers AI binding interface (env.AI) — accepts any superset */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AiBinding = { run: (model: string, input: any) => Promise<any> };
+type AiBinding = Record<string, any> & { run: (model: string, input: any) => Promise<any> };
 
 export type WorkersAIProviderConfig = {
   /** The Cloudflare Workers AI binding (env.AI) */
@@ -32,7 +32,8 @@ const DEFAULT_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
  * ```
  */
 export function createWorkersAILanguageModel(config: WorkersAIProviderConfig): LanguageModel {
-  const workersAI = createWorkersAI({ binding: config.binding });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const workersAI = createWorkersAI({ binding: config.binding as any });
   return workersAI(config.model ?? DEFAULT_MODEL);
 }
 
