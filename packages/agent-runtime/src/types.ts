@@ -41,9 +41,36 @@ export type AgentToolCallRepository = {
 
 import type { LanguageModel } from "ai";
 
+/**
+ * Registry of real tool implementations that execute domain logic.
+ * Keys are tool names matching AgentToolName.
+ */
+export type ToolRegistry = Record<string, {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  execute: (args: any) => Promise<unknown>;
+}>;
+
+/**
+ * Observability callback for agent run telemetry.
+ * Records token usage, latency, and tool call counts per agent run.
+ */
+export type AgentRunObservability = {
+  record: (data: {
+    agent_run_id: string;
+    model: string;
+    prompt_tokens?: number;
+    completion_tokens?: number;
+    total_latency_ms: number;
+    tool_calls: number;
+    finish_reason?: string;
+  }) => Promise<void>;
+};
+
 export type AgentRuntimeDependencies = {
   runs: AgentRunRepository;
   toolCalls: AgentToolCallRepository;
   llm: LanguageModel;
+  toolRegistry?: ToolRegistry;
+  observability?: AgentRunObservability;
 };
 

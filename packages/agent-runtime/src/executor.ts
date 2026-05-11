@@ -10,7 +10,7 @@ import { AgentRuntimeError } from "./errors";
 import type { AgentRuntimeDependencies, StartAgentRunInput, CompleteAgentRunInput, InvokeAgentToolInput } from "./types";
 import { AGENT_TOOL_CONTRACTS, FUNCTIONAL_AGENT_CONTRACTS, type FunctionalAgentContract } from "./contracts";
 import type { AgentRuntimeService } from "./runtime";
-import { generateText, tool, type CoreTool, type GenerateTextResult } from "ai";
+import { generateText, tool, stepCountIs, type ToolSet, type GenerateTextResult } from "ai";
 import { z } from "zod";
 
 type ToolExecuteArgs = {
@@ -100,14 +100,33 @@ Forbidden Actions: ${contract.forbidden_actions.join(", ")}
 You must fulfill the task using provided tools. If you use tools, analyze the output and synthesize a final finding. Output a final decision strictly as JSON matching your schema. Do NOT wrap it in markdown.`;
 
     try {
+      const startTime = Date.now();
+
       const response = await generateText({
         model: this.deps.llm,
         system: systemPrompt,
         prompt: JSON.stringify(rawInput),
         tools,
-        maxSteps: 5,
+        stopWhen: stepCountIs(5),
         temperature: 0.1,
       });
+
+      const totalLatencyMs = Date.now() - startTime;
+
+      // Emit observability telemetry (best-effort)
+      try {
+        await this.deps.observability?.record({
+          agent_run_id: run.agent_run_id,
+          model: run.model ?? "unknown",
+          ...(response.usage?.inputTokens != null ? { prompt_tokens: response.usage.inputTokens } : {}),
+          ...(response.usage?.outputTokens != null ? { completion_tokens: response.usage.outputTokens } : {}),
+          total_latency_ms: totalLatencyMs,
+          tool_calls: response.toolCalls?.length ?? 0,
+          ...(response.finishReason ? { finish_reason: response.finishReason } : {}),
+        });
+      } catch (obsErr) {
+        console.warn(`[agent-executor] Observability recording failed:`, obsErr);
+      }
 
       const finalOutputData = this.parseAgentResponse(response);
 
@@ -121,7 +140,13 @@ You must fulfill the task using provided tools. If you use tools, analyze the ou
           confidence_score: finalOutputData.confidence_score ?? 0.8,
           writes_final_finding: !!finalOutputData.writes_final_finding,
           creates_official_mapping: !!finalOutputData.creates_official_mapping,
-          metadata: finalOutputData.metadata ?? { steps: response.steps?.length },
+          metadata: {
+            ...(finalOutputData.metadata ?? {}),
+            steps: response.steps?.length,
+            total_latency_ms: totalLatencyMs,
+            prompt_tokens: response.usage?.inputTokens,
+            completion_tokens: response.usage?.outputTokens,
+          },
         },
       };
 
@@ -140,8 +165,8 @@ You must fulfill the task using provided tools. If you use tools, analyze the ou
     contract: FunctionalAgentContract,
     agentRunId: string,
     context: AgentRuntimeContext
-  ): Record<string, CoreTool> {
-    const tools: Record<string, CoreTool> = {};
+  ): ToolSet {
+    const tools: ToolSet = {};
 
     for (const toolName of contract.allowed_tools) {
       const tc = AGENT_TOOL_CONTRACTS.find(t => t.tool_name === toolName);
@@ -149,7 +174,7 @@ You must fulfill the task using provided tools. If you use tools, analyze the ou
 
       tools[tc.tool_name] = tool({
         description: tc.description,
-        parameters: z.object({
+        inputSchema: z.object({
           tenant_id: z.string().describe("UUID of the tenant"),
           organization_id: z.string().describe("UUID of the organization"),
           assessment_id: z.string().describe("UUID of the current assessment"),
@@ -160,18 +185,28 @@ You must fulfill the task using provided tools. If you use tools, analyze the ou
           artifact_type: z.string().optional().describe("Type of artifact to generate"),
           artifact_version_id: z.string().optional(),
         }),
-        execute: async (args: ToolExecuteArgs): Promise<ToolResult> => {
+        outputSchema: z.record(z.string(), z.unknown()),
+        execute: async (args, _options) => {
           try {
             const toolInput: InvokeAgentToolInput = {
               tool_name: tc.tool_name as AgentToolName,
               input: args,
               context,
             };
+            // Record the tool invocation for audit
             await this.runtimeService.invokeTool(agentRunId, toolInput);
-            return { ack: "tool_executed", tool: tc.tool_name, provided_args: args };
+
+            // Dispatch to real tool if registered, otherwise return ack stub
+            const realTool = this.deps.toolRegistry?.[tc.tool_name];
+            if (realTool) {
+              const result = await realTool.execute(args as Record<string, unknown>);
+              return (result ?? { ack: "tool_executed", tool: tc.tool_name }) as Record<string, unknown>;
+            }
+
+            return { ack: "tool_executed", tool: tc.tool_name, provided_args: args } as Record<string, unknown>;
           } catch (error) {
             const message = error instanceof Error ? error.message : "Tool execution failed";
-            return { error: message };
+            return { error: message } as Record<string, unknown>;
           }
         },
       });
@@ -183,7 +218,8 @@ You must fulfill the task using provided tools. If you use tools, analyze the ou
   /**
    * Parse the LLM's textual response into a structured agent output.
    */
-  private parseAgentResponse(response: GenerateTextResult<Record<string, CoreTool>, never>): ParsedAgentOutput {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private parseAgentResponse(response: GenerateTextResult<ToolSet, any>): ParsedAgentOutput {
     try {
       return JSON.parse(response.text.trim()) as ParsedAgentOutput;
     } catch {

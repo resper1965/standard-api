@@ -1,5 +1,6 @@
 import type { AgentRunResponse, AgentToolInvocationResponse } from "@standard/schemas";
-import type { AgentRunRepository, AgentRuntimeDependencies, AgentToolCallRepository } from "./types";
+import type { AgentRunRepository, AgentRuntimeDependencies, AgentToolCallRepository, ToolRegistry } from "./types";
+import { createWorkersAILanguageModel, type WorkersAIProviderConfig } from "./providers/workers-ai.provider";
 
 export const createInMemoryAgentRunRepository = (): AgentRunRepository => {
   const records = new Map<string, AgentRunResponse>();
@@ -55,5 +56,19 @@ export const createInMemoryAgentRuntimeDependencies = (): AgentRuntimeDependenci
       rawCall: { rawPrompt: null, rawSettings: {} }
     })
   } as unknown as AgentRuntimeDependencies["llm"]
+});
+
+/**
+ * Production agent runtime dependencies backed by Cloudflare Workers AI.
+ * Uses the Vercel AI SDK workers-ai-provider for LLM inference.
+ */
+export const createProductionAgentRuntimeDependencies = (
+  config: WorkersAIProviderConfig,
+  toolRegistry?: ToolRegistry
+): AgentRuntimeDependencies => ({
+  runs: createInMemoryAgentRunRepository(), // TODO: Replace with Drizzle repo
+  toolCalls: createInMemoryAgentToolCallRepository(), // TODO: Replace with Drizzle repo
+  llm: createWorkersAILanguageModel(config),
+  ...(toolRegistry ? { toolRegistry } : {}),
 });
 
