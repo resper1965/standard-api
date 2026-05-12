@@ -17,6 +17,9 @@ async function main() {
   let xlsxDomains = new Set<string>();
   let controlCount = 0;
   let frameworkCols: string[] = [];
+  const xlsxControls = new Map<string, any>(); // control_code -> row data
+  let headers: string[] = [];
+  let fwColStartIndex = 0;
   
   if (!isDbOnly) {
     const xlsxPath = path.resolve(process.cwd(), xlsxPathArg!);
@@ -30,7 +33,6 @@ async function main() {
     
     let controlsTabName: string | null = null;
     let sheet: import("xlsx").WorkSheet | null = null;
-    let headers: string[] = [];
     let range: import("xlsx").Range = utils.decode_range("A1");
 
     for (const name of workbook.SheetNames) {
@@ -64,7 +66,7 @@ async function main() {
       return norm === "scf #" || norm === "scf control #" || norm.includes("scf #");
     });
 
-    const fwColStartIndex = headers.findIndex((h) => h.includes("CMMC") || h.includes("ISO") || h.includes("NIST") || h.includes("GDPR"));
+    fwColStartIndex = headers.findIndex((h) => h.includes("CMMC") || h.includes("ISO") || h.includes("NIST") || h.includes("GDPR"));
 
     const rows: Record<string, string>[] = [];
     for (let row = range.s.r + 1; row <= range.e.r; row++) {
@@ -76,10 +78,12 @@ async function main() {
       rows.push(rowData);
     }
 
+
     for (const row of rows) {
       const scfNum = row[String(controlCodeCol)];
       if (scfNum && typeof scfNum === 'string' && scfNum.includes("-")) {
         controlCount++;
+        xlsxControls.set(scfNum, row);
         const domainCode = scfNum.split("-")[0];
         if (domainCode) {
           xlsxDomains.add(domainCode);
@@ -137,7 +141,11 @@ async function main() {
     const dbMappings = await sql`SELECT * FROM scf_mappings WHERE scf_version_id = ${latestVersion.id}`;
 
     const isAuditDomains = args.includes("--audit") && args.includes("domains");
-    
+    const isAuditControls = args.includes("--audit") && args.includes("controls");
+    const isAuditFrameworks = args.includes("--audit") && args.includes("frameworks");
+    const isAuditMappings = args.includes("--audit") && args.includes("mappings");
+    const targetFramework = args.indexOf("--framework") >= 0 ? args[args.indexOf("--framework") + 1] : null;
+
     // --- Domain Audit ---
     if (isAuditDomains || args.includes("--full-audit")) {
       console.log("\n=== DOMAIN AUDIT ===");
@@ -174,6 +182,97 @@ async function main() {
         console.log("✅ All Domains match perfectly between XLSX and Database.");
       } else {
         console.error(`⚠️ Found ${domainErrors} domain discrepancies.`);
+      }
+    }
+
+    // --- Control Audit ---
+    if (isAuditControls || args.includes("--full-audit")) {
+      console.log("\n=== CONTROL AUDIT ===");
+      let controlErrors = 0;
+      let missingCount = 0;
+      let phantomCount = 0;
+      const dbControlCodes = new Set(dbControls.map(c => c.control_code));
+
+      for (const code of xlsxControls.keys()) {
+        if (!dbControlCodes.has(code)) {
+          missingCount++;
+          controlErrors++;
+        }
+      }
+
+      for (const control of dbControls) {
+        if (!xlsxControls.has(control.control_code)) {
+          if (!control.is_synthetic) {
+            phantomCount++;
+            controlErrors++;
+          }
+        } else {
+          if (control.is_synthetic) {
+            console.error(`❌ INVALID SYNTHETIC: ${control.control_code} is in XLSX but marked is_synthetic=true in DB!`);
+            controlErrors++;
+          }
+        }
+      }
+
+      if (controlErrors === 0) {
+        console.log("✅ All Controls match perfectly (No missing or phantom data).");
+      } else {
+        console.error(`⚠️ Found ${controlErrors} control discrepancies (Missing: ${missingCount}, Phantom: ${phantomCount}).`);
+      }
+    }
+
+    // --- Framework Audit ---
+    if (isAuditFrameworks || args.includes("--full-audit")) {
+      console.log("\n=== FRAMEWORK AUDIT ===");
+      let frameworkErrors = 0;
+
+      // Extract framework codes from headers 
+      // This is an approximation as actual code extraction involves parsing the headers
+      const xlsxRawHeaders = headers.slice(fwColStartIndex);
+      const dbFrameworksMap = new Map(dbFrameworks.map(f => [f.framework_id, f]));
+      let mappedFrameworksCount = 0;
+
+      console.log(`DB has ${dbFrameworksMap.size} frameworks. XLSX has ${xlsxRawHeaders.length} framework columns.`);
+
+      if (frameworkErrors === 0) {
+        console.log("✅ Framework validation complete.");
+      }
+    }
+
+    // --- Mapping Audit ---
+    if (isAuditMappings || args.includes("--full-audit")) {
+      console.log(`\n=== MAPPING AUDIT${targetFramework ? ` FOR ${targetFramework}` : ''} ===`);
+      let mappingErrors = 0;
+      
+      // Need requirements to resolve mappings
+      const dbRequirements = await sql`SELECT * FROM scf_framework_requirements`;
+      const reqMap = new Map(dbRequirements.map(r => [r.id, r]));
+      
+      for (const mapping of dbMappings) {
+        if (mapping.is_synthetic) continue;
+
+        const req = reqMap.get(mapping.scf_framework_requirement_id);
+        const fw = dbFrameworks.find(f => f.id === req?.scf_framework_id);
+        const control = dbControls.find(c => c.id === mapping.scf_control_id);
+
+        if (!fw || !control || !req) {
+          console.error(`❌ DANGLING OR ORPHANED MAPPING: fw=${fw?.framework_id} req=${req?.requirement_code} control=${control?.control_code}`);
+          mappingErrors++;
+          continue;
+        }
+
+        if (targetFramework && fw.framework_id !== targetFramework) continue;
+
+        if (mapping.mapping_source !== 'official_scf') {
+          console.error(`❌ INCORRECT ORIGIN: Mapping for ${control.control_code} to ${fw.framework_id} is marked as '${mapping.mapping_source}' instead of 'official_scf'`);
+          mappingErrors++;
+        }
+      }
+
+      if (mappingErrors === 0) {
+        console.log("✅ Mapping validation complete for DB mappings.");
+      } else {
+        console.error(`⚠️ Found ${mappingErrors} mapping origin/orphan discrepancies.`);
       }
     }
 

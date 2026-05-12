@@ -2,7 +2,7 @@
 |---|------|--------|
 | 1 | Audit Script — XLSX Reader | done |
 | 2 | Audit Script — Database Reader | done |
-| 3 | Domain Audit | pending |
+| 3 | Domain Audit | done |
 | 4 | Control Audit | pending |
 | 5 | Framework Audit | pending |
 | 6 | Mapping Audit (Critical) | pending |
