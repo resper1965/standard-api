@@ -25,11 +25,8 @@ export function TenantSubscriptionTab() {
       }
       
       try {
-        const res = await apiClient(`/api/v1/tenants/${orgId}`);
-        if (res.ok) {
-          const data = await res.json();
-          setTenant(data);
-        }
+        const data = await apiClient<TenantData>(`/api/v1/tenants/${orgId}`);
+        setTenant(data);
       } catch (err) {
         console.error("Failed to fetch tenant info", err);
       } finally {

@@ -88,8 +88,13 @@ export const scfRoutes: RouteDefinition[] = [
     protected: true,
     handler: async ({ deps, params, traceId }) => {
       const scfVersionId = routeParam(params, "scfVersionId");
-      const domains = await deps.scf.domains.listDomains(scfVersionId);
-      return json({ data: domains, scf_version_id: scfVersionId, trace_id: traceId });
+      try {
+        const domains = await deps.scf.domains.listDomains(scfVersionId);
+        return json({ data: domains, scf_version_id: scfVersionId, trace_id: traceId });
+      } catch (err: any) {
+        console.error("[scf:domains] FAILED:", err?.message, err?.stack, JSON.stringify({ name: err?.name, code: err?.code }));
+        throw err;
+      }
     }
   },
   {
@@ -99,14 +104,19 @@ export const scfRoutes: RouteDefinition[] = [
     handler: async ({ deps, params, request, traceId }) => {
       const scfVersionId = routeParam(params, "scfVersionId");
       const url = new URL(request.url);
-      const controls = await deps.scf.controls.searchControls({
-        scf_version_id: scfVersionId,
-        ...(url.searchParams.get("control_code") ? { control_code: url.searchParams.get("control_code")! } : {}),
-        ...(url.searchParams.get("domain_code") ? { domain_code: url.searchParams.get("domain_code")! } : {}),
-        ...(url.searchParams.get("q") ? { q: url.searchParams.get("q")! } : {}),
-        ...(url.searchParams.get("tags") ? { tags: url.searchParams.get("tags")!.split(",").map(t => t.trim()).filter(Boolean) } : {})
-      });
-      return json({ data: controls.map(controlResponse), scf_version_id: scfVersionId, trace_id: traceId });
+      try {
+        const controls = await deps.scf.controls.searchControls({
+          scf_version_id: scfVersionId,
+          ...(url.searchParams.get("control_code") ? { control_code: url.searchParams.get("control_code")! } : {}),
+          ...(url.searchParams.get("domain_code") ? { domain_code: url.searchParams.get("domain_code")! } : {}),
+          ...(url.searchParams.get("q") ? { q: url.searchParams.get("q")! } : {}),
+          ...(url.searchParams.get("tags") ? { tags: url.searchParams.get("tags")!.split(",").map(t => t.trim()).filter(Boolean) } : {})
+        });
+        return json({ data: controls.map(controlResponse), scf_version_id: scfVersionId, trace_id: traceId });
+      } catch (err: any) {
+        console.error("[scf:controls] FAILED:", err?.message, err?.stack, JSON.stringify({ name: err?.name, code: err?.code }));
+        throw err;
+      }
     }
   },
   {

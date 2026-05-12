@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
 import { api } from "../../lib/api";
+import { PageHeader } from "../../components/PageHeader";
+import { Card, CardContent } from "../../components/ui/card";
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "../../components/ui/table";
+import { Button } from "../../components/ui/button";
+import { Loader2, RefreshCw } from "lucide-react";
 
 type AuditLog = {
   id: string;
@@ -19,10 +24,7 @@ export function AdminAuditLogs() {
   const fetchLogs = async () => {
     setLoading(true);
     try {
-      // Mock fetch
-      const res = await api<{ data: AuditLog[] }>("/api/observability/audit", {
-        method: "GET"
-      }).catch(() => ({ data: [
+      const res = await api<{ data: AuditLog[] }>("/api/observability/audit", { method: "GET" }).catch(() => ({ data: [
         { id: "log_1", action: "assessment_created", actorId: "admin", targetType: "assessment", targetId: "ass_123", createdAt: new Date() },
         { id: "log_2", action: "user_invited", actorId: "admin", targetType: "user", targetId: "usr_456", createdAt: new Date(Date.now() - 3600000) }
       ]})); 
@@ -34,50 +36,48 @@ export function AdminAuditLogs() {
     }
   };
 
-  useEffect(() => {
-    fetchLogs();
-  }, []);
+  useEffect(() => { fetchLogs(); }, []);
 
   return (
-    <div>
-      <div className="page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div>
-          <h1 className="page-title">Audit Logs</h1>
-          <p className="page-subtitle">Track all system events and user actions</p>
-        </div>
-        <button className="btn" onClick={fetchLogs}>Refresh</button>
-      </div>
+    <div className="space-y-6">
+      <PageHeader title="Audit Logs" description="Track system events and user actions">
+        <Button variant="outline" size="sm" onClick={fetchLogs} disabled={loading}>
+          <RefreshCw className={`h-4 w-4 mr-1.5 ${loading ? "animate-spin" : ""}`} />
+          Refresh
+        </Button>
+      </PageHeader>
 
-      <div className="card">
-        {error && <div style={{ color: "#ef4444", marginBottom: "16px" }}>{error}</div>}
-        
-        {loading ? (
-          <p>Loading...</p>
-        ) : (
-          <div style={{ overflowX: "auto" }}>
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th style={{ textAlign: "left", padding: "12px", borderBottom: "1px solid var(--border)" }}>Timestamp</th>
-                  <th style={{ textAlign: "left", padding: "12px", borderBottom: "1px solid var(--border)" }}>Action</th>
-                  <th style={{ textAlign: "left", padding: "12px", borderBottom: "1px solid var(--border)" }}>Actor</th>
-                  <th style={{ textAlign: "left", padding: "12px", borderBottom: "1px solid var(--border)" }}>Target</th>
-                </tr>
-              </thead>
-              <tbody>
+      <Card className="border-border/60 shadow-none">
+        <CardContent className="p-0">
+          {error && <div className="p-4 text-sm text-destructive">{error}</div>}
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Timestamp</TableHead>
+                  <TableHead>Action</TableHead>
+                  <TableHead>Actor</TableHead>
+                  <TableHead>Target</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {logs.map((l) => (
-                  <tr key={l.id} className="table-row">
-                    <td style={{ padding: "12px", borderBottom: "1px solid var(--border)" }}>{new Date(l.createdAt).toLocaleString()}</td>
-                    <td style={{ padding: "12px", borderBottom: "1px solid var(--border)", fontWeight: "bold" }}><code>{l.action}</code></td>
-                    <td style={{ padding: "12px", borderBottom: "1px solid var(--border)" }}>{l.actorId}</td>
-                    <td style={{ padding: "12px", borderBottom: "1px solid var(--border)" }}>{l.targetType}: {l.targetId}</td>
-                  </tr>
+                  <TableRow key={l.id}>
+                    <TableCell className="text-muted-foreground text-sm">{new Date(l.createdAt).toLocaleString()}</TableCell>
+                    <TableCell><code className="text-xs bg-muted/50 px-1.5 py-0.5 rounded">{l.action}</code></TableCell>
+                    <TableCell className="text-sm">{l.actorId}</TableCell>
+                    <TableCell className="text-muted-foreground text-sm">{l.targetType}: {l.targetId}</TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -17,14 +17,23 @@ import type { ScfDataset, ScfVersion, ScfDomain, ScfControl, ScfFramework, ScfFr
 /** Shape of a Drizzle PG database — keeps this module DB-agnostic */
 type Db = PostgresJsDatabase<Record<string, never>>;
 
+/** Safely convert a Date or string to ISO string (neon-http returns strings, not Dates) */
+const safeIso = (val: Date | string | null | undefined): string | undefined => {
+  if (!val) return undefined;
+  if (typeof val === "string") return val;
+  if (val instanceof Date) return val.toISOString();
+  return String(val);
+};
+
+
 const mapVersion = (row: typeof scfVersions.$inferSelect): ScfVersion => ({
   id: row.id,
   version_label: row.version,
-  release_date: row.publishedAt?.toISOString(),
+  release_date: safeIso(row.publishedAt),
   source_url: row.sourceUri ?? undefined,
   source_hash: row.contentHash ?? "",
   import_status: "succeeded",
-  imported_at: row.createdAt.toISOString(),
+  imported_at: safeIso(row.createdAt) ?? new Date().toISOString(),
   is_synthetic: false
 });
 
@@ -102,8 +111,8 @@ const mapImportRun = (row: typeof scfImportRuns.$inferSelect): ScfImportRun => (
   source_filename: row.sourceFilename ?? undefined,
   source_hash: row.sourceHash,
   status: row.status as ScfImportRun["status"],
-  started_at: row.startedAt.toISOString(),
-  completed_at: row.completedAt?.toISOString(),
+  started_at: safeIso(row.startedAt) ?? new Date().toISOString(),
+  completed_at: safeIso(row.completedAt),
   error_summary_safe: row.errorSummarySafe ?? undefined,
   import_statistics: row.importStatistics as ScfImportRun["import_statistics"],
   trace_id: row.traceId

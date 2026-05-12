@@ -3,6 +3,9 @@ import { api } from "../lib/api";
 import { AssessmentCard } from "../components/AssessmentCard";
 import type { Assessment } from "../components/AssessmentCard";
 import { CreateAssessmentModal } from "../components/CreateAssessmentModal";
+import { PageHeader } from "../components/PageHeader";
+import { Button } from "../components/ui/button";
+import { Plus, Loader2 } from "lucide-react";
 
 export function AssessmentsPage() {
   const [assessments, setAssessments] = useState<Assessment[]>([]);
@@ -13,7 +16,7 @@ export function AssessmentsPage() {
     setLoading(true);
     try {
       const res = await api<{ data: Assessment[] }>("/api/v1/assessments");
-      setAssessments(res.data);
+      setAssessments(res?.data ?? []);
     } catch (e) {
       console.error(e);
     } finally {
@@ -26,28 +29,30 @@ export function AssessmentsPage() {
   }, []);
 
   return (
-    <>
-      <div className="page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div>
-          <h1 className="page-title">Assessments</h1>
-          <p className="page-subtitle">Manage your security and compliance assessments</p>
-        </div>
-        <button className="btn btn-primary" onClick={() => setShowModal(true)}>
-          + New Assessment
-        </button>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Assessments"
+        description="Manage your security and compliance assessments"
+      >
+        <Button size="sm" onClick={() => setShowModal(true)}>
+          <Plus className="h-4 w-4 mr-1.5" />
+          New Assessment
+        </Button>
+      </PageHeader>
 
       {loading ? (
-        <p>Loading assessments...</p>
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
       ) : assessments.length === 0 ? (
-        <div className="card" style={{ textAlign: "center", padding: "48px 24px" }}>
-          <p style={{ color: "var(--text-muted)", marginBottom: "16px" }}>No assessments found.</p>
-          <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+        <div className="flex flex-col items-center justify-center py-20 border border-dashed border-border/60 rounded-lg">
+          <p className="text-muted-foreground mb-4">No assessments found.</p>
+          <Button variant="outline" onClick={() => setShowModal(true)}>
             Start Your First Assessment
-          </button>
+          </Button>
         </div>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "24px" }}>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {assessments.map(assessment => (
             <AssessmentCard key={assessment.assessment_id} assessment={assessment} />
           ))}
@@ -63,6 +68,6 @@ export function AssessmentsPage() {
           }} 
         />
       )}
-    </>
+    </div>
   );
 }

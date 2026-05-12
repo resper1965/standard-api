@@ -2,50 +2,119 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─────────────────────────────────────────────────────────────
+   Standard Design System — Enterprise Grade
+   Unified token layer: light + dark, accessible contrast ratios
+   ───────────────────────────────────────────────────────────── */
+
 @layer base {
   :root {
-    /* Backgrounds & Surfaces (Light) */
-    --background: 214 100% 97%; /* #EFF6FF */
-    --foreground: 216 60% 10%; /* #0A1628 */
-    
-    --card: 0 0% 100%; /* #FFFFFF */
-    --card-foreground: 222 47% 11%; /* #0F172A */
-    
-    --popover: 212 33% 96%; /* #F0F4F8 */
-    --popover-foreground: 216 60% 10%;
-    
-    /* Brand Accent */
-    --primary: 195 100% 45.5%; /* #00ADE8 */
-    --primary-foreground: 0 0% 100%;
-    
-    --secondary: 195 84% 56%; /* #33BDED */
-    --secondary-foreground: 0 0% 100%;
-    
-    /* Text */
-    --muted: 214 100% 97%;
-    --muted-foreground: 215 19% 35%; /* #475569 */
-    
-    --accent: 196 100% 36.5%; /* #0088BA (Hover) */
-    --accent-foreground: 0 0% 100%;
-    
-    /* Semantics */
-    --success: 161 94% 30%; /* #059669 */
-    --success-foreground: 0 0% 100%;
-    
-    --warning: 32 95% 44%; /* #D97706 */
-    --warning-foreground: 0 0% 100%;
+    /* ── Light Mode ──────────────────────────────────────────── */
 
-    --destructive: 0 72% 51%; /* #DC2626 */
+    /* Surfaces */
+    --background:           220 20% 97%;      /* #F4F6F9  — cool neutral background */
+    --foreground:           222 47% 11%;      /* #0F172A  — near-black for readability */
+
+    --card:                 0 0% 100%;        /* #FFFFFF  — pure white cards */
+    --card-foreground:      222 47% 11%;      /* #0F172A */
+
+    --popover:              220 20% 97%;
+    --popover-foreground:   222 47% 11%;
+
+    /* Brand System */
+    --primary:              200 98% 39%;      /* #017AAD  — deeper teal, WCAG AA on white */
+    --primary-foreground:   0 0% 100%;
+
+    --secondary:            220 14% 96%;      /* #F1F3F5  — subtle gray surface */
+    --secondary-foreground: 222 47% 11%;
+
+    /* Muted & Accent */
+    --muted:                220 14% 96%;
+    --muted-foreground:     215 16% 47%;      /* #64748B  — readable gray text */
+
+    --accent:               200 98% 39%;      /* same as primary for consistency */
+    --accent-foreground:    0 0% 100%;
+
+    /* Semantic */
+    --success:              160 84% 29%;      /* #0B8457 */
+    --success-foreground:   0 0% 100%;
+
+    --warning:              38 92% 50%;       /* #F59E0B */
+    --warning-foreground:   0 0% 100%;
+
+    --destructive:          0 72% 51%;        /* #DC2626 */
     --destructive-foreground: 0 0% 100%;
 
-    --info: 195 100% 45.5%; /* #00ADE8 */
-    --info-foreground: 0 0% 100%;
+    --info:                 200 98% 39%;
+    --info-foreground:      0 0% 100%;
 
-    --border: 211 31% 88%; /* #D6E0EB */
-    --input: 211 31% 88%;
-    --ring: 195 100% 45.5%;
+    /* Chrome */
+    --border:               220 13% 91%;      /* #E2E5EA  — soft border */
+    --input:                220 13% 91%;
+    --ring:                 200 98% 39%;
 
-    --radius: 0.5rem;
+    /* Radii */
+    --radius:               0.5rem;
+
+    /* Sidebar */
+    --sidebar-bg:           222 47% 11%;      /* dark sidebar in light mode */
+    --sidebar-fg:           220 14% 96%;
+    --sidebar-muted:        215 16% 47%;
+    --sidebar-border:       220 13% 18%;
+    --sidebar-accent:       200 98% 39%;
+  }
+
+  .dark {
+    /* ── Dark Mode ───────────────────────────────────────────── */
+
+    /* Surfaces */
+    --background:           224 32% 8%;       /* #0C111D  — deep navy-black */
+    --foreground:           210 40% 98%;      /* #F8FAFC */
+
+    --card:                 225 25% 12%;      /* #161B26  — elevated surface */
+    --card-foreground:      210 40% 98%;
+
+    --popover:              225 25% 14%;
+    --popover-foreground:   210 40% 98%;
+
+    /* Brand System */
+    --primary:              199 89% 48%;      /* #0EA5E9  — bright sky-blue */
+    --primary-foreground:   222 47% 11%;
+
+    --secondary:            225 20% 16%;      /* #1E2433  — subtle dark surface */
+    --secondary-foreground: 210 40% 98%;
+
+    /* Muted & Accent */
+    --muted:                225 20% 16%;
+    --muted-foreground:     218 11% 60%;      /* #8B95A5  — readable muted text */
+
+    --accent:               199 89% 48%;
+    --accent-foreground:    222 47% 11%;
+
+    /* Semantic — slightly brighter for dark backgrounds */
+    --success:              160 72% 46%;      /* #22C55E */
+    --success-foreground:   0 0% 100%;
+
+    --warning:              38 92% 50%;       /* #F59E0B */
+    --warning-foreground:   0 0% 100%;
+
+    --destructive:          0 84% 60%;        /* #EF4444 */
+    --destructive-foreground: 0 0% 100%;
+
+    --info:                 199 89% 48%;
+    --info-foreground:      0 0% 100%;
+
+    /* Chrome */
+    --border:               225 15% 18%;      /* #262D3A  — subtle dark border */
+    --input:                225 15% 18%;
+    --ring:                 199 89% 48%;
+
+    /* Sidebar — same tone as card in dark */
+    --sidebar-bg:           225 30% 10%;
+    --sidebar-fg:           210 40% 98%;
+    --sidebar-muted:        218 11% 60%;
+    --sidebar-border:       225 15% 18%;
+    --sidebar-accent:       199 89% 48%;
   }
 }
 
@@ -53,40 +122,64 @@
   * {
     @apply border-border;
   }
+
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     font-feature-settings: "rlig" 1, "calt" 1;
-    font-family: "Source Sans 3", "Inter", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
-  
+
   h1, h2, h3, h4, h5, h6 {
-    font-family: "Lexend", sans-serif;
+    font-family: "Inter", -apple-system, sans-serif;
+    letter-spacing: -0.025em;
   }
 
   .font-brand {
-    font-family: "Montserrat", sans-serif;
+    font-family: "Inter", sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+  }
+
+  /* Smooth transitions when switching themes */
+  *, *::before, *::after {
+    transition-property: background-color, border-color;
+    transition-duration: 150ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Opt-out for explicit transitions (animations, transforms) */
+  [class*="animate-"],
+  [class*="transition-"] {
+    transition-property: all;
   }
 }
 
 @layer utilities {
   .hover-lift {
-    @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10;
+    @apply transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5;
   }
   .glass {
-    @apply bg-white/70 backdrop-blur-[20px] border border-white/20 shadow-sm;
+    @apply bg-card/80 backdrop-blur-xl border border-border/50 shadow-sm;
   }
-  .glow-border {
-    @apply animate-pulse border-2 border-primary/50 shadow-[0_0_15px_rgba(0,173,232,0.3)];
+  .glass-dark {
+    @apply bg-card/60 backdrop-blur-xl border border-border/50;
   }
-  
+
+  /* Enterprise-grade focus ring */
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  }
+
+  /* Stagger animation */
   .animate-stagger > * {
-    @apply opacity-0 animate-in fade-in slide-in-from-bottom-4 fill-mode-forwards;
+    @apply opacity-0 animate-in fade-in slide-in-from-bottom-2 fill-mode-forwards;
   }
-  
-  .animate-stagger > *:nth-child(1) { animation-delay: 100ms; }
-  .animate-stagger > *:nth-child(2) { animation-delay: 150ms; }
-  .animate-stagger > *:nth-child(3) { animation-delay: 200ms; }
-  .animate-stagger > *:nth-child(4) { animation-delay: 250ms; }
-  .animate-stagger > *:nth-child(5) { animation-delay: 300ms; }
-  .animate-stagger > *:nth-child(6) { animation-delay: 350ms; }
+  .animate-stagger > *:nth-child(1) { animation-delay:  50ms; }
+  .animate-stagger > *:nth-child(2) { animation-delay: 100ms; }
+  .animate-stagger > *:nth-child(3) { animation-delay: 150ms; }
+  .animate-stagger > *:nth-child(4) { animation-delay: 200ms; }
+  .animate-stagger > *:nth-child(5) { animation-delay: 250ms; }
+  .animate-stagger > *:nth-child(6) { animation-delay: 300ms; }
 }

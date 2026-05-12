@@ -39,15 +39,15 @@ queue = "standard-agent-task-dev"
 
 [[kv_namespaces]]
 binding = "STANDARD_CONFIG_KV"
-id = "replace-with-staging-config-kv-id"
+id = "1780e8372a814b049d7283bfdd022d55"
 
 [[kv_namespaces]]
 binding = "STANDARD_FEATURE_FLAGS_KV"
-id = "replace-with-staging-feature-flags-kv-id"
+id = "757b7c1c18f744a8ab8b8fcafa84bc9d"
 
 [[kv_namespaces]]
 binding = "STANDARD_CACHE_KV"
-id = "replace-with-staging-cache-kv-id"
+id = "094323d4e27d4b92994c89d412d27f74"
 
 [[workflows]]
 binding = "ASSESSMENT_WORKFLOW"
@@ -94,15 +94,15 @@ queue = "standard-agent-task-staging"
 
 [[env.staging.kv_namespaces]]
 binding = "STANDARD_CONFIG_KV"
-id = "replace-with-staging-config-kv-id"
+id = "1780e8372a814b049d7283bfdd022d55"
 
 [[env.staging.kv_namespaces]]
 binding = "STANDARD_FEATURE_FLAGS_KV"
-id = "replace-with-staging-feature-flags-kv-id"
+id = "757b7c1c18f744a8ab8b8fcafa84bc9d"
 
 [[env.staging.kv_namespaces]]
 binding = "STANDARD_CACHE_KV"
-id = "replace-with-staging-cache-kv-id"
+id = "094323d4e27d4b92994c89d412d27f74"
 
 [[env.staging.workflows]]
 binding = "ASSESSMENT_WORKFLOW"

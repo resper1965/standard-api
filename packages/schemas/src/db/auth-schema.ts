@@ -32,6 +32,8 @@ export const baUser = pgTable("user", {
   banReason: text("ban_reason"),
   banExpires: timestamp("ban_expires"),
   // Custom Standard fields
+  jobTitle: text("job_title"),
+  phone: text("phone"),
   metadata: text("metadata"), // Captured full raw JSON profiles
 });
 
@@ -89,6 +91,17 @@ export const baOrganization = pgTable("organization", {
   logo: text("logo"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   metadata: text("metadata"),
+  // Billing & contact fields for invoicing
+  taxId: text("tax_id"),              // CNPJ / Tax ID
+  billingEmail: text("billing_email"),
+  phone: text("phone"),
+  address: text("address"),
+  city: text("city"),
+  state: text("state"),
+  country: text("country"),
+  postalCode: text("postal_code"),
+  industry: text("industry"),
+  employeeCount: text("employee_count"),
 });
 
 export const baMember = pgTable("member", {

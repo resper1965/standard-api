@@ -35,13 +35,16 @@ export interface Env {
 
 let cachedDeps: AppDependencies | undefined;
 let cachedApp: ReturnType<typeof createApp> | null = null;
+let appInitialized = false;
 let cachedAuth: StandardAuth | null = null;
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     if (!cachedApp) {
-      if (env.DATABASE_URL) {
-        const db = createDb(env.DATABASE_URL);
+      const hasDb = Boolean(env.DATABASE_URL);
+      console.log(`[standard:init] Starting API gateway. DATABASE_URL=${hasDb ? 'SET' : 'MISSING'}, ENV=${env.STANDARD_ENV}`);
+      if (hasDb) {
+        const db = createDb(env.DATABASE_URL!);
         cachedDeps = {
           ...createDrizzleRepositories(db, env),
           email: (env.EMAIL as unknown as SendEmail) ?? undefined,
@@ -57,7 +60,9 @@ export default {
           GOOGLE_CLIENT_SECRET: env.GOOGLE_CLIENT_SECRET,
           waitUntil: (p) => ctx.waitUntil(p),
         });
+        console.log('[standard:init] Drizzle repositories initialized.');
       } else {
+        console.warn('[standard:init] No DATABASE_URL — using MOCK repositories. SCF data will be synthetic.');
         cachedDeps = createMockRepositories();
       }
       cachedApp = createApp(cachedDeps, env, cachedAuth ?? undefined);

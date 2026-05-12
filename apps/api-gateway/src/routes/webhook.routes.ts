@@ -43,7 +43,7 @@ export const webhookRoutes: RouteDefinition[] = [
         organization_id: orgId,
         url: body.url,
         events: body.events,
-        description: body.description,
+        ...(body.description !== undefined ? { description: body.description } : {}),
         signing_secret_hash: secretHash,
         signing_secret_masked: maskedSecret,
       });

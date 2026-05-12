@@ -2,6 +2,10 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { api } from "../lib/api";
 import { FileUpload } from "../components/FileUpload";
+import { PageHeader } from "../components/PageHeader";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "../components/ui/table";
+import { Loader2, AlertTriangle } from "lucide-react";
 
 interface DocumentRecord {
   id: string;
@@ -32,7 +36,7 @@ export function DocumentsPage() {
     setLoading(true);
     try {
       const res = await api<{ data: DocumentRecord[] }>(`/api/v1/assessments/${assessmentId}/documents`);
-      setDocuments(res.data);
+      setDocuments(res?.data ?? []);
     } catch (e: any) {
       setError(e.message || "Failed to fetch documents");
     } finally {
@@ -52,9 +56,6 @@ export function DocumentsPage() {
     setUploading(true);
     setError(null);
     try {
-      // In a real implementation we would get a presigned URL then upload to R2
-      // For MVP we just hit the gateway (if it supports direct upload)
-      // Standard fetch FormData for simple files:
       const formData = new FormData();
       formData.append("file", file);
       
@@ -73,67 +74,79 @@ export function DocumentsPage() {
   };
 
   return (
-    <div>
-      <div className="page-header">
-        <h1 className="page-title">Documents</h1>
-        <p className="page-subtitle">Upload and manage assessment evidence</p>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Documents"
+        description="Upload and manage assessment evidence documents"
+      />
 
       {!assessmentId && (
-        <div className="card" style={{ marginBottom: "24px", color: "var(--warning)" }}>
-          <p>You are viewing all documents. To upload, please navigate to a specific assessment first.</p>
+        <div className="flex items-center gap-3 p-4 rounded-lg bg-warning/10 border border-warning/20 text-sm text-warning">
+          <AlertTriangle className="h-4 w-4 shrink-0" />
+          Navigate to a specific assessment to upload documents.
         </div>
       )}
 
       {error && (
-        <div className="card" style={{ marginBottom: "24px", color: "var(--danger)", border: "1px solid var(--danger)" }}>
+        <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive">
           {error}
         </div>
       )}
 
       {assessmentId && (
-        <div style={{ marginBottom: "32px" }}>
-          <FileUpload onUpload={handleUpload} />
-          {uploading && <p style={{ marginTop: "8px", color: "var(--text-muted)" }}>Uploading...</p>}
-        </div>
+        <Card className="border-border/60 shadow-none">
+          <CardContent className="pt-6">
+            <FileUpload onUpload={handleUpload} />
+            {uploading && <p className="mt-3 text-sm text-muted-foreground">Uploading...</p>}
+          </CardContent>
+        </Card>
       )}
 
-      <div className="card">
-        <h2>Document Library</h2>
-        {loading ? (
-          <p>Loading documents...</p>
-        ) : documents.length === 0 ? (
-          <p style={{ color: "var(--text-muted)" }}>No documents found.</p>
-        ) : (
-          <div style={{ overflowX: "auto" }}>
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Title</th>
-                  <th>Status</th>
-                  <th>Date</th>
-                </tr>
-              </thead>
-              <tbody>
+      <Card className="border-border/60 shadow-none">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Document Library</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : documents.length === 0 ? (
+            <div className="text-sm text-muted-foreground py-12 text-center border border-dashed border-border/60 rounded-lg">
+              No documents found.
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Title</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Date</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {documents.map(doc => (
-                  <tr key={doc.id}>
-                    <td>{doc.title}</td>
-                    <td>
-                      <span className={`badge ${doc.status === "processed" || doc.status === "ingested" ? "badge-success" : "badge-warning"}`}>
+                  <TableRow key={doc.id}>
+                    <TableCell className="font-medium">{doc.title}</TableCell>
+                    <TableCell>
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${
+                        doc.status === "processed" || doc.status === "ingested"
+                          ? "bg-success/10 text-success"
+                          : "bg-warning/10 text-warning"
+                      }`}>
                         {doc.status.replace(/_/g, " ")}
                       </span>
-                    </td>
-                    <td>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-sm">
                       {new Date(doc.uploaded_at || Date.now()).toLocaleDateString()}
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
-

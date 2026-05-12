@@ -8,6 +8,7 @@ import { createInMemoryPoamDependencies } from "@standard/poam";
 import { createInMemoryReportingDependencies } from "@standard/reporting";
 import { createInMemoryScfCore, createScfCoreFromRepository, createDrizzleScfRepository } from "@standard/scf-core";
 import { createInMemorySoaDependencies } from "@standard/soa";
+import { createInMemoryPrivacyDependencies } from "@standard/privacy";
 import { createInMemoryWorkflowDependencies } from "@standard/workflows";
 import { createInMemoryDocumentIngestionDependencies } from "@standard/document-ingestion";
 import { createDrizzleWorkflowDependencies } from "./workflow.repository";
@@ -60,6 +61,7 @@ export const createMockRepositories = (): AppDependencies => {
     agentRuntime: createInMemoryAgentRuntimeDependencies(),
     workflows: createInMemoryWorkflowDependencies(),
     observability: createInMemoryObservabilityDependencies(),
+    privacy: createInMemoryPrivacyDependencies(),
     webhooks: createInMemoryWebhookRepository()
   };
 };
@@ -147,6 +149,7 @@ export const createDrizzleRepositories = (db: DbClient, env?: Env): AppDependenc
     },
     workflows: createDrizzleWorkflowDependencies(db),
     observability: createDrizzleObservabilityDependencies(db as never),
+    privacy: createInMemoryPrivacyDependencies(), // Drizzle adapter in future phase
     webhooks: createDrizzleWebhookRepository(db)
   };
 };

@@ -1328,3 +1328,6 @@ export const webhookDeliveries = pgTable("webhook_deliveries", {
   index("webhook_deliveries_event_id_idx").on(table.eventId),
   index("webhook_deliveries_status_idx").on(table.status)
 ]);
+
+// ─── Privacy Processing Activity ─────────────────────────────────
+export * from "./privacy.schema";

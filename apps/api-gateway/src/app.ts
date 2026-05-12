@@ -36,6 +36,7 @@ import { tenantsRoutes } from "./routes/tenants.routes";
 import { workflowRoutes } from "./routes/workflow.routes";
 import { integrationRoutes } from "./routes/integration.routes";
 import { webhookRoutes } from "./routes/webhook.routes";
+import { privacyRoutes } from "./routes/privacy.routes";
 
 const routes: RouteDefinition[] = [
   ...healthRoutes,
@@ -59,7 +60,8 @@ const routes: RouteDefinition[] = [
   ...emailRoutes,
   ...agentToolsRoutes,
   ...integrationRoutes,
-  ...webhookRoutes
+  ...webhookRoutes,
+  ...privacyRoutes
 ];
 
 const matchRoute = (routePath: string, actualPath: string): Record<string, string> | null => {
@@ -99,7 +101,7 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
       ? {
           "Access-Control-Allow-Origin": corsOrigin,
           "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Trace-Id, X-Tenant-Id",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Trace-Id, X-Tenant-Id, x-standard-tenant-id",
           "Access-Control-Allow-Credentials": "true",
           "Access-Control-Max-Age": "86400",
         }
@@ -189,9 +191,18 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
       await recordAuditPlaceholder(context, route.path);
 
       const response = await route.handler(context);
-      await recordRequestObservability(context, route.path, response, startedAt);
+      try {
+        await recordRequestObservability(context, route.path, response, startedAt);
+      } catch (obsErr) {
+        console.error("[standard:observability] Failed to record metrics:", obsErr instanceof Error ? obsErr.message : obsErr);
+      }
       return withSecurityHeaders(response);
     } catch (error) {
+      if (!(error instanceof ApiError)) {
+        const msg = error instanceof Error ? error.message : String(error);
+        const stack = error instanceof Error ? error.stack : undefined;
+        console.error(`[standard:api] Unhandled error on ${request.method} ${url.pathname}: ${msg}`, stack);
+      }
       return withSecurityHeaders(errorResponse(error, traceId));
     }
   }

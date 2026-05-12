@@ -1,4 +1,4 @@
-import { createBrowserRouter, redirect } from "react-router-dom"
+import { createBrowserRouter, redirect, Navigate } from "react-router-dom"
 import { AuthLayout } from "./components/layouts/AuthLayout"
 import { DashboardLayout } from "./components/layouts/DashboardLayout"
 import { LoginPage } from "./pages/auth/LoginPage"
@@ -15,6 +15,13 @@ const GapAnalysis = lazy(() => import("./pages/GapAnalysis").then(m => ({ defaul
 const Reports = lazy(() => import("./pages/Reports").then(m => ({ default: m.ReportsPage })))
 const ScfCatalog = lazy(() => import("./pages/ScfCatalog").then(m => ({ default: m.ScfCatalogPage })))
 const SdkPage = lazy(() => import("./pages/dashboard/sdk/SdkPage").then(m => ({ default: m.SdkPage })))
+
+// Admin pages
+const AdminOrganizations = lazy(() => import("./pages/admin/Organizations").then(m => ({ default: m.AdminOrganizations })))
+const AdminLicenses = lazy(() => import("./pages/admin/Licenses").then(m => ({ default: m.AdminLicenses })))
+const AdminUsers = lazy(() => import("./pages/admin/Users").then(m => ({ default: m.AdminUsers })))
+const AdminAuditLogs = lazy(() => import("./pages/admin/AuditLogs").then(m => ({ default: m.AdminAuditLogs })))
+const AdminSystemHealth = lazy(() => import("./pages/admin/SystemHealth").then(m => ({ default: m.AdminSystemHealth })))
 
 // Simple Guard
 const requireAuth = async () => {
@@ -56,7 +63,7 @@ export const router = createBrowserRouter([
         loader: requireNoAuth,
         HydrateFallback: LoadingFallback,
         children: [
-            { path: "/", loader: () => redirect("/login") },
+            { index: true, element: <Navigate to="/login" replace /> },
             { path: "login", element: <LoginPage /> }
         ]
     },
@@ -74,7 +81,13 @@ export const router = createBrowserRouter([
             { path: "reports", element: <SuspenseWrap><Reports /></SuspenseWrap> },
             { path: "scf-catalog", element: <SuspenseWrap><ScfCatalog /></SuspenseWrap> },
             { path: "sdk", element: <SuspenseWrap><SdkPage /></SuspenseWrap> },
-            { path: "settings", element: <SettingsPage /> }
+            { path: "settings", element: <SettingsPage /> },
+            // Admin
+            { path: "organizations", element: <SuspenseWrap><AdminOrganizations /></SuspenseWrap> },
+            { path: "licenses", element: <SuspenseWrap><AdminLicenses /></SuspenseWrap> },
+            { path: "users", element: <SuspenseWrap><AdminUsers /></SuspenseWrap> },
+            { path: "audit-logs", element: <SuspenseWrap><AdminAuditLogs /></SuspenseWrap> },
+            { path: "system-health", element: <SuspenseWrap><AdminSystemHealth /></SuspenseWrap> },
         ]
     },
     {
@@ -82,3 +95,4 @@ export const router = createBrowserRouter([
         loader: () => redirect("/dashboard")
     }
 ])
+

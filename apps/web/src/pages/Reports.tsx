@@ -1,9 +1,14 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { api } from "../lib/api";
+import { PageHeader } from "../components/PageHeader";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "../components/ui/table";
+import { Button } from "../components/ui/button";
+import { Loader2, AlertTriangle, FileDown, Plus } from "lucide-react";
 
 interface ReportVersion {
-  id: string; // from report_version_id
+  id: string;
   report_version_id: string;
   report_type: string;
   status: string;
@@ -58,69 +63,85 @@ export function ReportsPage() {
   };
 
   return (
-    <div>
-      <div className="page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div>
-          <h1 className="page-title">Reports</h1>
-          <p className="page-subtitle">Generate and download assessment reports</p>
-        </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Reports"
+        description="Generate and download assessment reports"
+      >
         {assessmentId && (
-          <button className="btn btn-primary" onClick={generateReport} disabled={generating || loading}>
-            {generating ? "Generating..." : "Generate New Report"}
-          </button>
+          <Button size="sm" onClick={generateReport} disabled={generating || loading}>
+            <Plus className="h-4 w-4 mr-1.5" />
+            {generating ? "Generating..." : "Generate Report"}
+          </Button>
         )}
-      </div>
+      </PageHeader>
 
       {!assessmentId ? (
-        <div className="card" style={{ marginBottom: "24px", color: "var(--warning)" }}>
-          <p>Please select an assessment from the Assessments page to view or generate its reports.</p>
+        <div className="flex items-center gap-3 p-4 rounded-lg bg-warning/10 border border-warning/20 text-sm text-warning">
+          <AlertTriangle className="h-4 w-4 shrink-0" />
+          Select an assessment from the Assessments page to view or generate reports.
         </div>
       ) : (
-        <div className="card">
-          {error && <div style={{ color: "var(--danger)", marginBottom: "16px" }}>{error}</div>}
-          
-          <h2>Generated Reports</h2>
-          {loading ? (
-            <p>Loading reports...</p>
-          ) : reports.length === 0 ? (
-            <p style={{ color: "var(--text-muted)" }}>No reports have been generated yet.</p>
-          ) : (
-            <div style={{ overflowX: "auto" }}>
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>Type</th>
-                    <th>Status</th>
-                    <th>Date</th>
-                    <th style={{ textAlign: "right" }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
+        <Card className="border-border/60 shadow-none">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Generated Reports</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {error && (
+              <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive mb-4">
+                {error}
+              </div>
+            )}
+            
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : reports.length === 0 ? (
+              <div className="text-sm text-muted-foreground py-12 text-center border border-dashed border-border/60 rounded-lg">
+                No reports generated yet.
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {reports.map((r, i) => (
-                    <tr key={r.report_version_id || i}>
-                      <td style={{ textTransform: "capitalize" }}>
+                    <TableRow key={r.report_version_id || i}>
+                      <TableCell className="font-medium capitalize">
                         {r.report_type.replace(/_/g, " ")}
-                      </td>
-                      <td>
-                        <span className={`badge ${r.status === "approved" || r.status === "final" ? "badge-success" : "badge-warning"}`}>
+                      </TableCell>
+                      <TableCell>
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${
+                          r.status === "approved" || r.status === "final"
+                            ? "bg-success/10 text-success"
+                            : "bg-warning/10 text-warning"
+                        }`}>
                           {r.status}
                         </span>
-                      </td>
-                      <td>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-sm">
                         {new Date(r.created_at).toLocaleDateString()}
-                      </td>
-                      <td style={{ textAlign: "right" }}>
-                        <button className="btn btn-ghost" onClick={() => alert("Download not implemented in MVP viewer yet")}>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="ghost" size="sm" disabled>
+                          <FileDown className="h-3.5 w-3.5 mr-1.5" />
                           Download
-                        </button>
-                      </td>
-                    </tr>
+                        </Button>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
       )}
     </div>
   );

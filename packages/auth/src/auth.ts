@@ -57,6 +57,15 @@ export const createAuth = (db: DrizzleClient, env: AuthEnv) =>
 
     user: {
       additionalFields: {
+        jobTitle: {
+          type: "string",
+          required: false,
+          fieldName: "job_title",
+        },
+        phone: {
+          type: "string",
+          required: false,
+        },
         metadata: {
           type: "string",
           required: false,

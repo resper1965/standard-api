@@ -254,11 +254,18 @@ export const findControlDescription = (row: ParsedRow): string | null => {
     "control_description",
     "description",
     "secure_controls_framework_(scf)_control_description",
+    "secure_controls_framework_scf_control_description",
   ];
 
   for (const key of candidates) {
     if (row[key] && row[key].trim().length > 0) {
       return row[key].trim();
+    }
+  }
+  // Fallback: search all keys for a key containing "description" that isn't a framework mapping
+  for (const [key, value] of Object.entries(row)) {
+    if (key.includes("control_description") && value && value.trim().length > 20) {
+      return value.trim();
     }
   }
   return null;
@@ -277,6 +284,12 @@ export const findControlQuestion = (row: ParsedRow): string | null => {
   for (const key of candidates) {
     if (row[key] && row[key].trim().length > 0) {
       return row[key].trim();
+    }
+  }
+  // Fallback: search all keys for a key containing "control_question"
+  for (const [key, value] of Object.entries(row)) {
+    if (key.includes("control_question") && value && value.trim().length > 5) {
+      return value.trim();
     }
   }
   return null;
@@ -305,10 +318,17 @@ export const findDomainName = (row: ParsedRow): string | null => {
  * Find control weight from a row.
  */
 export const findControlWeight = (row: ParsedRow): number | undefined => {
-  const candidates = ["scf_control_weighting", "control_weight", "weight", "scf_weighting"];
+  const candidates = ["scf_control_weighting", "control_weight", "weight", "scf_weighting", "relative_control_weighting"];
   for (const key of candidates) {
     if (row[key]) {
       const parsed = Number.parseFloat(row[key]);
+      if (!Number.isNaN(parsed)) return parsed;
+    }
+  }
+  // Fallback: search keys containing "weighting" or "weight"
+  for (const [key, value] of Object.entries(row)) {
+    if ((key.includes("weighting") || key.includes("weight")) && value) {
+      const parsed = Number.parseFloat(value);
       if (!Number.isNaN(parsed)) return parsed;
     }
   }

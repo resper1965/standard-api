@@ -17,6 +17,7 @@ import type { ReportingDependencies } from "@standard/reporting";
 import type { ScfCoreServices } from "@standard/scf-core";
 import type { AuthContext, Permission, SecurityTenantContext } from "@standard/security";
 import type { SoaDependencies } from "@standard/soa";
+import type { PrivacyDependencies } from "@standard/privacy";
 import type { WorkflowDependencies } from "@standard/workflows";
 import type { SendEmail } from "@standard/email";
 import type { WebhookRepositoryAdapter } from "@standard/schemas";
@@ -140,6 +141,7 @@ export type AppDependencies = {
   agentRuntime: AgentRuntimeDependencies;
   workflows: WorkflowDependencies;
   observability: ObservabilityDependencies;
+  privacy: PrivacyDependencies;
   /** Cloudflare Email Service binding (optional — unavailable in tests) */
   email?: SendEmail | undefined;
   /** Cloudflare Queue for async agent run processing (optional) */

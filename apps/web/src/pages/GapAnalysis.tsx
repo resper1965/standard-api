@@ -3,6 +3,9 @@ import { useSearchParams } from "react-router-dom";
 import { api } from "../lib/api";
 import { GapTable } from "../components/GapTable";
 import type { GapFinding } from "../components/GapTable";
+import { PageHeader } from "../components/PageHeader";
+import { Card, CardContent } from "../components/ui/card";
+import { Loader2, AlertTriangle } from "lucide-react";
 
 export function GapAnalysisPage() {
   const [searchParams] = useSearchParams();
@@ -17,7 +20,6 @@ export function GapAnalysisPage() {
     setLoading(true);
     setError(null);
     try {
-      // Get the latest Gap Analysis version
       const versionsRes = await api<{ data: { id: string }[] }>(`/api/v1/assessments/${assessmentId}/gap-analysis`);
       const versions = versionsRes.data || [];
       if (versions.length > 0) {
@@ -37,26 +39,35 @@ export function GapAnalysisPage() {
   }, [assessmentId]);
 
   return (
-    <>
-      <div className="page-header">
-        <h1 className="page-title">Gap Analysis</h1>
-        <p className="page-subtitle">Identify control gaps and compliance shortfalls</p>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Gap Analysis"
+        description="Identify control gaps and compliance shortfalls"
+      />
 
       {!assessmentId ? (
-        <div className="card" style={{ marginBottom: "24px", color: "var(--warning)" }}>
-          <p>Please select an assessment from the Assessments page to view its gap analysis.</p>
+        <div className="flex items-center gap-3 p-4 rounded-lg bg-warning/10 border border-warning/20 text-sm text-warning">
+          <AlertTriangle className="h-4 w-4 shrink-0" />
+          Select an assessment from the Assessments page to view its gap analysis.
         </div>
       ) : (
-        <div className="card">
-          {error && <div style={{ color: "#ef4444", marginBottom: "16px" }}>{error}</div>}
-          {loading ? (
-            <p>Loading gap analysis data...</p>
-          ) : (
-            <GapTable findings={findings} />
-          )}
-        </div>
+        <Card className="border-border/60 shadow-none">
+          <CardContent className="pt-6">
+            {error && (
+              <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive mb-4">
+                {error}
+              </div>
+            )}
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
+              <GapTable findings={findings} />
+            )}
+          </CardContent>
+        </Card>
       )}
-    </>
+    </div>
   );
 }

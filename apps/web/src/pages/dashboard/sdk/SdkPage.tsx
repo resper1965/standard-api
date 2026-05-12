@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useSession } from "../../../lib/auth-client";
+import { PageHeader } from "../../../components/PageHeader";
 import "./SdkPage.css";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8787";
+const API_URL = import.meta.env.VITE_API_URL || "https://standard-api-gateway-production.ness.workers.dev";
 
 function CodeBlock({ code, language = "typescript" }: { code: string; language?: string }) {
   const [copied, setCopied] = useState(false);
@@ -102,14 +103,11 @@ try {
 }`;
 
   return (
-    <div className="sdk-page">
-      <div className="sdk-header">
-        <h1>SDK &amp; Integration Guide</h1>
-        <p className="sdk-subtitle">
-          Use the <strong>@standard/sdk</strong> to integrate compliance intelligence into your application.
-          Zero dependencies. Works everywhere fetch works.
-        </p>
-        <div className="sdk-badges">
+    <div className="space-y-6">
+      <PageHeader title="SDK & Integration Guide" description="Use the @standard/sdk to integrate compliance intelligence into your application" />
+
+      <div className="sdk-page">
+        <div className="sdk-badges" style={{ marginBottom: "1.5rem" }}>
           <span className="sdk-badge">TypeScript</span>
           <span className="sdk-badge">Node.js 18+</span>
           <span className="sdk-badge">Deno</span>
@@ -117,84 +115,84 @@ try {
           <span className="sdk-badge">Cloudflare Workers</span>
           <span className="sdk-badge">Browsers</span>
         </div>
+
+        <section className="sdk-section">
+          <h2>Installation</h2>
+          <CodeBlock code={installSnippet} language="bash" />
+        </section>
+
+        <section className="sdk-section">
+          <h2>Quick Start</h2>
+          <CodeBlock code={quickStart} />
+        </section>
+
+        <section className="sdk-section">
+          <h2>List Assessments</h2>
+          <CodeBlock code={listAssessments} />
+        </section>
+
+        <section className="sdk-section">
+          <h2>Query SCF Catalog</h2>
+          <p className="sdk-note">
+            1,468 controls · 231 frameworks · 32,903 requirements · 15,717 crosswalk mappings
+          </p>
+          <CodeBlock code={scfQuery} />
+        </section>
+
+        <section className="sdk-section">
+          <h2>Upload Documents</h2>
+          <CodeBlock code={uploadDoc} />
+        </section>
+
+        <section className="sdk-section">
+          <h2>Full Lifecycle Flow</h2>
+          <p className="sdk-note">
+            Standard provides the data. Your app does the analysis. Results go back through the lifecycle API.
+          </p>
+          <CodeBlock code={fullFlow} />
+        </section>
+
+        <section className="sdk-section">
+          <h2>Webhooks</h2>
+          <p className="sdk-note">
+            Receive HMAC-SHA256 signed notifications for 11 lifecycle events.
+          </p>
+          <CodeBlock code={webhookSnippet} />
+        </section>
+
+        <section className="sdk-section">
+          <h2>Error Handling</h2>
+          <CodeBlock code={errorHandling} />
+        </section>
+
+        <section className="sdk-section">
+          <h2>Available Resources</h2>
+          <div className="sdk-resources-grid">
+            {[
+              { name: "client.assessments", desc: "Create, list, update assessments" },
+              { name: "client.documents", desc: "Upload, manage, reprocess documents" },
+              { name: "client.scf", desc: "Query controls, frameworks, mappings" },
+              { name: "client.lifecycle", desc: "State transitions and events" },
+              { name: "client.approvals", desc: "Submit approval decisions" },
+              { name: "client.artifacts", desc: "Versioned assessment artifacts" },
+              { name: "client.soa", desc: "Statement of Applicability" },
+              { name: "client.gapAnalysis", desc: "Gap analysis findings" },
+              { name: "client.poam", desc: "Plan of Action & Milestones" },
+              { name: "client.reports", desc: "Generate, review, export reports" },
+              { name: "client.kb", desc: "Semantic search in Knowledge Base" },
+              { name: "client.workflows", desc: "Lifecycle orchestration" },
+              { name: "client.agents", desc: "AI agent execution monitoring" },
+              { name: "client.webhooks", desc: "Webhook endpoint management" },
+              { name: "client.organizations", desc: "Org and API key management" },
+            ].map(r => (
+              <div key={r.name} className="sdk-resource-card">
+                <code className="sdk-resource-name">{r.name}</code>
+                <span className="sdk-resource-desc">{r.desc}</span>
+              </div>
+            ))}
+          </div>
+        </section>
       </div>
-
-      <section className="sdk-section">
-        <h2>Installation</h2>
-        <CodeBlock code={installSnippet} language="bash" />
-      </section>
-
-      <section className="sdk-section">
-        <h2>Quick Start</h2>
-        <CodeBlock code={quickStart} />
-      </section>
-
-      <section className="sdk-section">
-        <h2>List Assessments</h2>
-        <CodeBlock code={listAssessments} />
-      </section>
-
-      <section className="sdk-section">
-        <h2>Query SCF Catalog</h2>
-        <p className="sdk-note">
-          1,468 controls · 231 frameworks · 32,903 requirements · 15,717 crosswalk mappings
-        </p>
-        <CodeBlock code={scfQuery} />
-      </section>
-
-      <section className="sdk-section">
-        <h2>Upload Documents</h2>
-        <CodeBlock code={uploadDoc} />
-      </section>
-
-      <section className="sdk-section">
-        <h2>Full Lifecycle Flow</h2>
-        <p className="sdk-note">
-          Standard provides the data. Your app does the analysis. Results go back through the lifecycle API.
-        </p>
-        <CodeBlock code={fullFlow} />
-      </section>
-
-      <section className="sdk-section">
-        <h2>Webhooks</h2>
-        <p className="sdk-note">
-          Receive HMAC-SHA256 signed notifications for 11 lifecycle events.
-        </p>
-        <CodeBlock code={webhookSnippet} />
-      </section>
-
-      <section className="sdk-section">
-        <h2>Error Handling</h2>
-        <CodeBlock code={errorHandling} />
-      </section>
-
-      <section className="sdk-section">
-        <h2>Available Resources</h2>
-        <div className="sdk-resources-grid">
-          {[
-            { name: "client.assessments", desc: "Create, list, update assessments" },
-            { name: "client.documents", desc: "Upload, manage, reprocess documents" },
-            { name: "client.scf", desc: "Query controls, frameworks, mappings" },
-            { name: "client.lifecycle", desc: "State transitions and events" },
-            { name: "client.approvals", desc: "Submit approval decisions" },
-            { name: "client.artifacts", desc: "Versioned assessment artifacts" },
-            { name: "client.soa", desc: "Statement of Applicability" },
-            { name: "client.gapAnalysis", desc: "Gap analysis findings" },
-            { name: "client.poam", desc: "Plan of Action & Milestones" },
-            { name: "client.reports", desc: "Generate, review, export reports" },
-            { name: "client.kb", desc: "Semantic search in Knowledge Base" },
-            { name: "client.workflows", desc: "Lifecycle orchestration" },
-            { name: "client.agents", desc: "AI agent execution monitoring" },
-            { name: "client.webhooks", desc: "Webhook endpoint management" },
-            { name: "client.organizations", desc: "Org and API key management" },
-          ].map(r => (
-            <div key={r.name} className="sdk-resource-card">
-              <code className="sdk-resource-name">{r.name}</code>
-              <span className="sdk-resource-desc">{r.desc}</span>
-            </div>
-          ))}
-        </div>
-      </section>
     </div>
   );
 }

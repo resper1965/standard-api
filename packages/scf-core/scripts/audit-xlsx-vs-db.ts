@@ -136,6 +136,47 @@ async function main() {
     const dbFrameworks = await sql`SELECT * FROM scf_frameworks`;
     const dbMappings = await sql`SELECT * FROM scf_mappings WHERE scf_version_id = ${latestVersion.id}`;
 
+    const isAuditDomains = args.includes("--audit") && args.includes("domains");
+    
+    // --- Domain Audit ---
+    if (isAuditDomains || args.includes("--full-audit")) {
+      console.log("\n=== DOMAIN AUDIT ===");
+      let domainErrors = 0;
+      
+      const dbDomainCodes = new Set(dbDomains.map(d => d.domain_code));
+      
+      // Check Missing
+      for (const code of xlsxDomains) {
+        if (!dbDomainCodes.has(code)) {
+          console.error(`❌ MISSING DOMAIN: ${code} is in XLSX but not in DB`);
+          domainErrors++;
+        }
+      }
+      
+      // Check Phantom & Synthetic
+      for (const domain of dbDomains) {
+        if (!xlsxDomains.has(domain.domain_code)) {
+          if (!domain.is_synthetic) {
+            console.error(`❌ PHANTOM DOMAIN: ${domain.domain_code} is in DB (is_synthetic=false) but not in XLSX!`);
+            domainErrors++;
+          } else {
+            console.log(`ℹ️ Synthetic Domain found: ${domain.domain_code}`);
+          }
+        } else {
+          if (domain.is_synthetic) {
+            console.error(`❌ INVALID SYNTHETIC: ${domain.domain_code} is in XLSX but marked is_synthetic=true in DB!`);
+            domainErrors++;
+          }
+        }
+      }
+      
+      if (domainErrors === 0) {
+        console.log("✅ All Domains match perfectly between XLSX and Database.");
+      } else {
+        console.error(`⚠️ Found ${domainErrors} domain discrepancies.`);
+      }
+    }
+
     console.log("\n=== DB Summary ===");
     console.log(`Domains found:   ${dbDomains.length}`);
     console.log(`Controls found:  ${dbControls.length}`);

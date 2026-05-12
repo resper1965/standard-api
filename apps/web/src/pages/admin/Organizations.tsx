@@ -1,9 +1,16 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { api } from "../../lib/api";
+import { PageHeader } from "../../components/PageHeader";
+import { Card, CardContent } from "../../components/ui/card";
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "../../components/ui/table";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import { Loader2, Plus } from "lucide-react";
 
 type Organization = {
-  id: string; // From auth backend
+  id: string;
   name: string;
   slug: string;
   logo?: string | null;
@@ -15,8 +22,6 @@ export function AdminOrganizations() {
   const [orgs, setOrgs] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Form states
   const [showModal, setShowModal] = useState(false);
   const [newOrgName, setNewOrgName] = useState("");
   const [newOrgSlug, setNewOrgSlug] = useState("");
@@ -25,13 +30,9 @@ export function AdminOrganizations() {
   const fetchOrgs = async () => {
     setLoading(true);
     try {
-      // In a real better-auth setup, there is an admin plugin or organization plugin endpoint.
-      // Mocking fetch as we don't have the exact list-all endpoint documented here
-      const res = await api<any>("/api/auth/organization/list", {
-        method: "GET"
-      }).catch(() => [
+      const res = await api<any>("/api/auth/organization/list", { method: "GET" }).catch(() => [
         { id: "org_default", name: "Default Org", slug: "default", createdAt: new Date() }
-      ]); // Fallback mock
+      ]);
       const dataArray = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : []);
       setOrgs(dataArray);
     } catch (e: any) {
@@ -41,9 +42,7 @@ export function AdminOrganizations() {
     }
   };
 
-  useEffect(() => {
-    fetchOrgs();
-  }, []);
+  useEffect(() => { fetchOrgs(); }, []);
 
   const handleCreate = async (e: FormEvent) => {
     e.preventDefault();
@@ -65,69 +64,72 @@ export function AdminOrganizations() {
   };
 
   return (
-    <div>
-      <div className="page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div>
-          <h1 className="page-title">Organizations</h1>
-          <p className="page-subtitle">Manage tenant organizations and access</p>
-        </div>
-        <button className="btn btn-primary" onClick={() => setShowModal(true)}>Create Organization</button>
-      </div>
+    <div className="space-y-6">
+      <PageHeader title="Organizations" description="Manage tenant organizations and access">
+        <Button size="sm" onClick={() => setShowModal(true)}>
+          <Plus className="h-4 w-4 mr-1.5" />
+          Create Organization
+        </Button>
+      </PageHeader>
 
-      <div className="card">
-        {error && <div style={{ color: "#ef4444", marginBottom: "16px" }}>{error}</div>}
-        
-        {loading ? (
-          <p>Loading...</p>
-        ) : (
-          <div style={{ overflowX: "auto" }}>
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th style={{ textAlign: "left", padding: "12px", borderBottom: "1px solid var(--border)" }}>Name</th>
-                  <th style={{ textAlign: "left", padding: "12px", borderBottom: "1px solid var(--border)" }}>Slug</th>
-                  <th style={{ textAlign: "left", padding: "12px", borderBottom: "1px solid var(--border)" }}>Created At</th>
-                  <th style={{ textAlign: "right", padding: "12px", borderBottom: "1px solid var(--border)" }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
+      <Card className="border-border/60 shadow-none">
+        <CardContent className="p-0">
+          {error && <div className="p-4 text-sm text-destructive">{error}</div>}
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Slug</TableHead>
+                  <TableHead>Created At</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {orgs.map((o) => (
-                  <tr key={o.id} className="table-row">
-                    <td style={{ padding: "12px", borderBottom: "1px solid var(--border)", fontWeight: "bold" }}>{o.name}</td>
-                    <td style={{ padding: "12px", borderBottom: "1px solid var(--border)" }}>{o.slug}</td>
-                    <td style={{ padding: "12px", borderBottom: "1px solid var(--border)" }}>{new Date(o.createdAt).toLocaleDateString()}</td>
-                    <td style={{ padding: "12px", borderBottom: "1px solid var(--border)", textAlign: "right" }}>
-                      <button className="btn">Edit</button>
-                    </td>
-                  </tr>
+                  <TableRow key={o.id}>
+                    <TableCell className="font-medium">{o.name}</TableCell>
+                    <TableCell className="font-mono text-xs text-muted-foreground">{o.slug}</TableCell>
+                    <TableCell className="text-muted-foreground text-sm">{new Date(o.createdAt).toLocaleDateString()}</TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="ghost" size="sm" disabled>Edit</Button>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
 
+      {/* Create Modal */}
       {showModal && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
-          <div className="card" style={{ width: "100%", maxWidth: "500px" }}>
-            <h2 style={{ marginTop: 0 }}>Create Organization</h2>
-            <form onSubmit={handleCreate} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-              <div>
-                <label style={{ display: "block", marginBottom: "8px" }}>Name</label>
-                <input required type="text" className="input" value={newOrgName} onChange={e => setNewOrgName(e.target.value)} style={{ width: "100%", padding: "10px", borderRadius: "6px", border: "1px solid var(--border)", background: "var(--bg)", color: "white" }} />
-              </div>
-              <div>
-                <label style={{ display: "block", marginBottom: "8px" }}>Slug (unique, url-friendly)</label>
-                <input required type="text" className="input" value={newOrgSlug} onChange={e => setNewOrgSlug(e.target.value)} style={{ width: "100%", padding: "10px", borderRadius: "6px", border: "1px solid var(--border)", background: "var(--bg)", color: "white" }} />
-              </div>
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "16px" }}>
-                <button type="button" className="btn" onClick={() => setShowModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary" disabled={creating}>
-                  {creating ? "Creating..." : "Create"}
-                </button>
-              </div>
-            </form>
-          </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowModal(false)}>
+          <Card className="w-full max-w-md mx-4" onClick={(e) => e.stopPropagation()}>
+            <CardContent className="pt-6 space-y-4">
+              <h3 className="text-lg font-semibold">Create Organization</h3>
+              <form onSubmit={handleCreate} className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Name</Label>
+                  <Input required value={newOrgName} onChange={e => setNewOrgName(e.target.value)} placeholder="Acme Corporation" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Slug</Label>
+                  <Input required value={newOrgSlug} onChange={e => setNewOrgSlug(e.target.value)} placeholder="acme-corp" />
+                </div>
+                <div className="flex justify-end gap-2 pt-2">
+                  <Button type="button" variant="outline" onClick={() => setShowModal(false)}>Cancel</Button>
+                  <Button type="submit" disabled={creating}>
+                    {creating ? "Creating..." : "Create"}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
         </div>
       )}
     </div>

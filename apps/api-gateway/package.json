@@ -19,6 +19,7 @@
     "@standard/kb": "workspace:*",
     "@standard/observability": "workspace:*",
     "@standard/poam": "workspace:*",
+    "@standard/privacy": "workspace:*",
     "@standard/reporting": "workspace:*",
     "@standard/scf-core": "workspace:*",
     "@standard/schemas": "workspace:*",
