@@ -14,6 +14,8 @@ export const DocumentStatusSchema = z.enum([
   "archived"
 ]);
 
+export const MalwareScanStatusSchema = z.enum(["pending", "clean", "infected", "error", "skipped"]);
+
 export const DocumentJobStatusSchema = z.enum(["queued", "running", "succeeded", "failed", "skipped", "cancelled", "retrying"]);
 export const DocumentJobTypeSchema = z.enum(["extract_and_chunk", "reprocess", "prepare_embedding"]);
 export const EmbeddingStatusSchema = z.enum(["pending", "queued", "embedded", "failed", "skipped"]);
@@ -62,6 +64,9 @@ export const DocumentResponseSchema = z.object({
   version_label: z.string().optional(),
   effective_date: z.string().optional(),
   status: DocumentStatusSchema,
+  scan_status: MalwareScanStatusSchema,
+  malware_signature: z.string().nullable().optional(),
+  scanned_at: z.string().nullable().optional(),
   trace_id: z.string()
 });
 
@@ -158,6 +163,7 @@ export const ChunkingConfigSchema = z.object({
   preserve_pages: z.boolean().default(true)
 });
 
+export type MalwareScanStatus = z.infer<typeof MalwareScanStatusSchema>;
 export type DocumentStatus = z.infer<typeof DocumentStatusSchema>;
 export type DocumentJobStatus = z.infer<typeof DocumentJobStatusSchema>;
 export type DocumentJobType = z.infer<typeof DocumentJobTypeSchema>;

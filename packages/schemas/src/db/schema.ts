@@ -146,6 +146,7 @@ export const reportTypeEnum = pgEnum("report_type", ["full_assessment_report", "
 export const reportArtifactTypeEnum = pgEnum("report_artifact_type", ["report", "export", "evidence_index", "audit_package", "appendix", "summary"]);
 export const reportFormatEnum = pgEnum("report_format", ["json", "markdown", "html", "docx", "pdf", "csv", "xlsx", "zip"]);
 export const exportJobStatusEnum = pgEnum("export_job_status", ["queued", "running", "succeeded", "failed", "skipped", "cancelled", "retrying"]);
+export const malwareScanStatusEnum = pgEnum("malware_scan_status", ["pending", "clean", "infected", "error", "skipped"]);
 
 export const tenants = pgTable("tenants", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -222,13 +223,15 @@ export const apiKeys = pgTable("api_keys", {
 
 export const scfVersions = pgTable("scf_versions", {
   id: uuid("id").defaultRandom().primaryKey(),
+  tenantId: uuid("tenant_id").references(() => tenants.id),
+  organizationId: uuid("organization_id").references(() => organizations.id),
   version: text("version").notNull(),
   sourceUri: text("source_uri"),
   contentHash: text("content_hash"),
   publishedAt: timestamp("published_at", { withTimezone: true }),
   ...timestamps()
 }, (table) => [
-  uniqueIndex("scf_versions_version_uidx").on(table.version)
+  uniqueIndex("scf_versions_version_uidx").on(table.tenantId, table.version)
 ]);
 
 export const scfImportRuns = pgTable("scf_import_runs", {
@@ -253,6 +256,8 @@ export const scfImportRuns = pgTable("scf_import_runs", {
 
 export const scfDomains = pgTable("scf_domains", {
   id: uuid("id").defaultRandom().primaryKey(),
+  tenantId: uuid("tenant_id").references(() => tenants.id),
+  organizationId: uuid("organization_id").references(() => organizations.id),
   scfVersionId: uuid("scf_version_id").notNull().references(() => scfVersions.id),
   domainCode: text("domain_code").notNull(),
   name: text("name").notNull(),
@@ -262,11 +267,13 @@ export const scfDomains = pgTable("scf_domains", {
   ...timestamps()
 }, (table) => [
   index("scf_domains_version_idx").on(table.scfVersionId),
-  uniqueIndex("scf_domains_version_code_uidx").on(table.scfVersionId, table.domainCode)
+  uniqueIndex("scf_domains_version_code_uidx").on(table.tenantId, table.scfVersionId, table.domainCode)
 ]);
 
 export const scfControls = pgTable("scf_controls", {
   id: uuid("id").defaultRandom().primaryKey(),
+  tenantId: uuid("tenant_id").references(() => tenants.id),
+  organizationId: uuid("organization_id").references(() => organizations.id),
   scfVersionId: uuid("scf_version_id").notNull().references(() => scfVersions.id),
   scfDomainId: uuid("scf_domain_id").notNull().references(() => scfDomains.id),
   controlCode: text("control_code").notNull(),
@@ -284,11 +291,13 @@ export const scfControls = pgTable("scf_controls", {
   ...timestamps()
 }, (table) => [
   index("scf_controls_version_domain_idx").on(table.scfVersionId, table.scfDomainId),
-  uniqueIndex("scf_controls_version_code_uidx").on(table.scfVersionId, table.controlCode)
+  uniqueIndex("scf_controls_version_code_uidx").on(table.tenantId, table.scfVersionId, table.controlCode)
 ]);
 
 export const scfFrameworks = pgTable("scf_frameworks", {
   id: uuid("id").defaultRandom().primaryKey(),
+  tenantId: uuid("tenant_id").references(() => tenants.id),
+  organizationId: uuid("organization_id").references(() => organizations.id),
   scfVersionId: uuid("scf_version_id").notNull().references(() => scfVersions.id),
   frameworkId: text("framework_id").notNull(),
   name: text("name").notNull(),
@@ -302,11 +311,13 @@ export const scfFrameworks = pgTable("scf_frameworks", {
   ...timestamps()
 }, (table) => [
   index("scf_frameworks_version_idx").on(table.scfVersionId),
-  uniqueIndex("scf_frameworks_version_framework_uidx").on(table.scfVersionId, table.frameworkId)
+  uniqueIndex("scf_frameworks_version_framework_uidx").on(table.tenantId, table.scfVersionId, table.frameworkId)
 ]);
 
 export const scfFrameworkRequirements = pgTable("scf_framework_requirements", {
   id: uuid("id").defaultRandom().primaryKey(),
+  tenantId: uuid("tenant_id").references(() => tenants.id),
+  organizationId: uuid("organization_id").references(() => organizations.id),
   scfVersionId: uuid("scf_version_id").notNull().references(() => scfVersions.id),
   scfFrameworkId: uuid("scf_framework_id").notNull().references(() => scfFrameworks.id),
   requirementCode: text("requirement_code").notNull(),
@@ -320,11 +331,13 @@ export const scfFrameworkRequirements = pgTable("scf_framework_requirements", {
   ...timestamps()
 }, (table) => [
   index("scf_requirements_framework_idx").on(table.scfFrameworkId),
-  uniqueIndex("scf_requirements_framework_code_uidx").on(table.scfFrameworkId, table.requirementCode)
+  uniqueIndex("scf_requirements_framework_code_uidx").on(table.tenantId, table.scfFrameworkId, table.requirementCode)
 ]);
 
 export const scfMappings = pgTable("scf_mappings", {
   id: uuid("id").defaultRandom().primaryKey(),
+  tenantId: uuid("tenant_id").references(() => tenants.id),
+  organizationId: uuid("organization_id").references(() => organizations.id),
   scfVersionId: uuid("scf_version_id").notNull().references(() => scfVersions.id),
   scfFrameworkRequirementId: uuid("scf_framework_requirement_id").notNull().references(() => scfFrameworkRequirements.id),
   scfControlId: uuid("scf_control_id").notNull().references(() => scfControls.id),
@@ -340,11 +353,13 @@ export const scfMappings = pgTable("scf_mappings", {
   index("scf_mappings_version_idx").on(table.scfVersionId),
   index("scf_mappings_requirement_idx").on(table.scfFrameworkRequirementId),
   index("scf_mappings_control_idx").on(table.scfControlId),
-  uniqueIndex("scf_mappings_requirement_control_uidx").on(table.scfFrameworkRequirementId, table.scfControlId)
+  uniqueIndex("scf_mappings_requirement_control_uidx").on(table.tenantId, table.scfFrameworkRequirementId, table.scfControlId)
 ]);
 
 export const scfStrmRelationships = pgTable("scf_strm_relationships", {
   id: uuid("id").defaultRandom().primaryKey(),
+  tenantId: uuid("tenant_id").references(() => tenants.id),
+  organizationId: uuid("organization_id").references(() => organizations.id),
   scfMappingId: uuid("scf_mapping_id").notNull().references(() => scfMappings.id),
   relationshipType: text("relationship_type").notNull(),
   relationshipStrength: text("relationship_strength").notNull(),
@@ -357,6 +372,8 @@ export const scfStrmRelationships = pgTable("scf_strm_relationships", {
 
 export const scfControlMetadata = pgTable("scf_control_metadata", {
   id: uuid("id").defaultRandom().primaryKey(),
+  tenantId: uuid("tenant_id").references(() => tenants.id),
+  organizationId: uuid("organization_id").references(() => organizations.id),
   scfVersionId: uuid("scf_version_id").notNull().references(() => scfVersions.id),
   scfControlId: uuid("scf_control_id").notNull().references(() => scfControls.id),
   riskWeight: numeric("risk_weight", { precision: 6, scale: 3 }),
@@ -364,7 +381,7 @@ export const scfControlMetadata = pgTable("scf_control_metadata", {
   maturityGuidance: jsonb("maturity_guidance").$type<Record<string, unknown>>().default({}).notNull(),
   ...timestamps()
 }, (table) => [
-  uniqueIndex("scf_control_metadata_control_uidx").on(table.scfControlId)
+  uniqueIndex("scf_control_metadata_control_uidx").on(table.tenantId, table.scfControlId)
 ]);
 
 export const assessments = pgTable("assessments", {
@@ -451,9 +468,13 @@ export const documents = pgTable("documents", {
   effectiveDate: date("effective_date"),
   versionLabel: text("version_label"),
   language: text("language").default("und").notNull(),
+  scanStatus: malwareScanStatusEnum("scan_status").default("pending").notNull(),
+  malwareSignature: text("malware_signature"),
+  scannedAt: timestamp("scanned_at", { withTimezone: true }),
   ...timestamps()
 }, (table) => [
   index("documents_tenant_org_assessment_idx").on(table.tenantId, table.organizationId, table.assessmentId),
+  index("documents_scan_status_idx").on(table.scanStatus),
   uniqueIndex("documents_storage_key_uidx").on(table.storageProvider, table.storageKey),
   uniqueIndex("documents_assessment_hash_uidx").on(table.tenantId, table.organizationId, table.assessmentId, table.contentHash)
 ]);
@@ -468,9 +489,13 @@ export const documentVersions = pgTable("document_versions", {
   storageKey: text("storage_key").notNull(),
   contentHash: text("content_hash").notNull(),
   status: artifactStatusEnum("status").default("draft").notNull(),
+  scanStatus: malwareScanStatusEnum("scan_status").default("pending").notNull(),
+  malwareSignature: text("malware_signature"),
+  scannedAt: timestamp("scanned_at", { withTimezone: true }),
   ...timestamps()
 }, (table) => [
   index("document_versions_document_idx").on(table.documentId),
+  index("document_versions_scan_status_idx").on(table.scanStatus),
   uniqueIndex("document_versions_document_number_uidx").on(table.documentId, table.versionNumber)
 ]);
 
