@@ -30,6 +30,60 @@ const { data } = await client.assessments.create({
 });
 ```
 
+### Get assessment summary (server-computed KPIs)
+```typescript
+const { data } = await client.assessments.summary("assessment-uuid");
+console.log(data.compliance_pct);    // 73.5
+console.log(data.critical_findings); // 3
+console.log(data.open_poam_items);   // 47
+```
+
+### Organization dashboard
+```typescript
+const { data } = await client.organizations.dashboard("org-uuid");
+console.log(data.total_assessments);      // 4
+console.log(data.compliance_avg_pct);     // 68.2
+console.log(data.total_open_poams);       // 47
+console.log(data.total_critical_findings); // 3
+console.log(data.assessments_by_state);    // { "draft": 1, "poam_approved": 2, "closed": 1 }
+```
+
+### Audit trail (tenant-wide)
+```typescript
+const { data } = await client.assessments.auditLogs("tenant-uuid", {
+  action: "assessment_created",
+  since: "2026-04-01T00:00:00Z",
+  limit: 50,
+});
+```
+
+### Audit trail (org-level)
+```typescript
+const { data } = await client.organizations.auditLogs("org-uuid", {
+  actor_id: "user-uuid",
+  limit: 100,
+});
+```
+
+### Member management
+```typescript
+// Invite
+await client.organizations.inviteMember("org-uuid", {
+  email: "auditor@kpmg.com",
+  role: "auditor_readonly",
+  display_name: "Maria Souza",
+});
+
+// List
+const { data } = await client.organizations.listMembers("org-uuid");
+
+// Update role
+await client.organizations.updateMemberRole("member-uuid", { role: "admin" });
+
+// Remove
+await client.organizations.removeMember("member-uuid");
+```
+
 ### Query SCF controls
 ```typescript
 // Get all frameworks
@@ -61,6 +115,12 @@ await client.lifecycle.transition("assessment-uuid", {
 const { data } = await client.kb.search("assessment-uuid", "data retention policy", 10);
 ```
 
+### CI/CD compliance gate
+```typescript
+const { data } = await client.assessments.complianceGate("assessment-uuid");
+if (data.status === "fail") process.exit(1);
+```
+
 ### Register a webhook
 ```typescript
 const { data } = await client.webhooks.create("org-uuid", {
@@ -90,13 +150,10 @@ await client.lifecycle.transition(assessment.assessment_id, {
   next_state: "documents_uploaded",
 });
 
-// 5. Get framework requirements for your analysis
-const { data: frameworks } = await client.scf.frameworks.list();
-const lgpd = frameworks.find(f => f.name.includes("LGPD"));
-const { data: requirements } = await client.scf.frameworks.requirements(lgpd.framework_id);
-
-// 6. YOUR APP analyzes against these requirements
-// 7. Store results back through the lifecycle API
+// 5. Draft SoA → Gap Analysis → POA&M
+// 6. Get summary KPIs
+const { data: summary } = await client.assessments.summary(assessment.assessment_id);
+console.log(`Compliance: ${summary.compliance_pct}%`);
 ```
 
 ## Error Handling

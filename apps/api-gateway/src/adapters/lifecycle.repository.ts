@@ -4,6 +4,26 @@ import type { AssessmentLifecycleEvent } from "@standard/assessment-engine";
 import type { LifecycleEventRepositoryAdapter } from "../http";
 import type { DbClient } from "./db";
 
+// ─── Row Mapper ─────────────────────────────────────────────────────
+
+type EventRow = typeof assessmentEvents.$inferSelect;
+
+const mapRowToEvent = (row: EventRow): AssessmentLifecycleEvent => ({
+  tenantId: row.tenantId,
+  organizationId: row.organizationId,
+  assessmentId: row.assessmentId,
+  previousState: row.previousState as AssessmentLifecycleEvent["previousState"],
+  nextState: row.nextState as AssessmentLifecycleEvent["nextState"],
+  eventType: row.eventType as AssessmentLifecycleEvent["eventType"],
+  actorId: row.actorId as string,
+  traceId: row.traceId,
+  timestamp: row.createdAt!.toISOString(),
+  metadata: row.metadata as Record<string, unknown>,
+  reason: "",
+});
+
+// ─── In-Memory (dev/test fallback) ─────────────────────────────────
+
 export const createLifecycleEventRepository = (): LifecycleEventRepositoryAdapter => {
   const records: AssessmentLifecycleEvent[] = [];
 
@@ -13,9 +33,11 @@ export const createLifecycleEventRepository = (): LifecycleEventRepositoryAdapte
     },
     async listByAssessment(assessmentId, tenantId) {
       return records.filter((record) => record.assessmentId === assessmentId && record.tenantId === tenantId);
-    }
+    },
   };
 };
+
+// ─── Drizzle (production) ──────────────────────────────────────────
 
 export const createDrizzleLifecycleEventRepository = (db: DbClient): LifecycleEventRepositoryAdapter => {
   return {
@@ -24,13 +46,13 @@ export const createDrizzleLifecycleEventRepository = (db: DbClient): LifecycleEv
         tenantId: event.tenantId,
         organizationId: event.organizationId,
         assessmentId: event.assessmentId,
-        previousState: event.previousState as any,
-        nextState: event.nextState as any,
+        previousState: event.previousState as EventRow["previousState"],
+        nextState: event.nextState as EventRow["nextState"],
         eventType: event.eventType,
         actorId: event.actorId,
         traceId: event.traceId,
         metadata: event.metadata || {},
-        createdAt: new Date()
+        createdAt: new Date(),
       });
     },
     async listByAssessment(assessmentId, tenantId) {
@@ -41,21 +63,7 @@ export const createDrizzleLifecycleEventRepository = (db: DbClient): LifecycleEv
             eq(assessmentEvents.tenantId, tenantId)
           )
         );
-        
-      return results.map(found => ({
-        tenantId: found.tenantId,
-        organizationId: found.organizationId,
-        assessmentId: found.assessmentId,
-        previousState: found.previousState as any,
-        nextState: found.nextState as any,
-        eventType: found.eventType as any,
-        actorId: found.actorId as string,
-        traceId: found.traceId,
-        timestamp: found.createdAt!.toISOString(),
-        metadata: found.metadata as Record<string, unknown>,
-        reason: ""
-      }));
-    }
+      return results.map(mapRowToEvent);
+    },
   };
 };
-

@@ -21,15 +21,24 @@ export const resolveTenantContext = (context: RequestContext, protectedRoute: bo
   }
 
   if (pathTenantId && headerTenantId && pathTenantId !== headerTenantId) {
-    void new SecurityEventService(context.deps.observability).record({
-      tenant_id: headerTenantId,
-      event_type: "tenant_context_mismatch",
-      severity: "high",
-      outcome: "blocked",
-      source: "api-gateway",
-      message_safe: "Tenant context mismatch.",
-      trace_id: context.traceId
-    });
+    if (context.deps.alerts) {
+      void context.deps.alerts.fireTenantMismatch({
+        tenantId: headerTenantId,
+        expectedTenantId: pathTenantId,
+        traceId: context.traceId,
+        ...(context.actorId ? { actorId: context.actorId } : {})
+      });
+    } else {
+      void new SecurityEventService(context.deps.observability).record({
+        tenant_id: headerTenantId,
+        event_type: "tenant_context_mismatch",
+        severity: "high",
+        outcome: "blocked",
+        source: "api-gateway",
+        message_safe: "Tenant context mismatch.",
+        trace_id: context.traceId
+      });
+    }
     throw new ApiError("FORBIDDEN", "Tenant context mismatch.", 403);
   }
 

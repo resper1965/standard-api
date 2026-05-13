@@ -21,6 +21,7 @@ export const WEBHOOK_EVENT_TYPES = [
   "report.approved",
   "assessment.closed",
   "workflow.failed",
+  "compliance.gate.evaluated",
 ] as const;
 
 export type WebhookEventType = (typeof WEBHOOK_EVENT_TYPES)[number];

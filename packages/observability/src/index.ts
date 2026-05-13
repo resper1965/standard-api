@@ -5,6 +5,7 @@ export * from "./cost/pricing-provider.placeholder";
 export * from "./logger/redaction";
 export * from "./logger/structured-logger";
 export * from "./metrics/metrics.service";
+export * from "./metrics/worker-metrics";
 export * from "./repositories";
 export * from "./drizzle.repository";
 export * from "./security-events/security-event.service";

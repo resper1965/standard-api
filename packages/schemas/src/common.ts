@@ -3,6 +3,8 @@ import { z } from "zod";
 export const UuidSchema = z.string().uuid();
 export const TraceIdSchema = z.string().min(8);
 
+export const SupportedLocaleSchema = z.enum(["pt-BR", "en"]).default("pt-BR");
+
 export const TenantContextSchema = z.object({
   tenantId: UuidSchema
 });
@@ -34,3 +36,4 @@ export type ActorContext = z.infer<typeof ActorContextSchema>;
 export type ApiTraceContext = z.infer<typeof ApiTraceContextSchema>;
 export type PaginationParams = z.infer<typeof PaginationParamsSchema>;
 export type AuditMetadata = z.infer<typeof AuditMetadataSchema>;
+export type SupportedLocale = z.infer<typeof SupportedLocaleSchema>;

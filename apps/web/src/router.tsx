@@ -15,6 +15,7 @@ const GapAnalysis = lazy(() => import("./pages/GapAnalysis").then(m => ({ defaul
 const Reports = lazy(() => import("./pages/Reports").then(m => ({ default: m.ReportsPage })))
 const ScfCatalog = lazy(() => import("./pages/ScfCatalog").then(m => ({ default: m.ScfCatalogPage })))
 const SdkPage = lazy(() => import("./pages/dashboard/sdk/SdkPage").then(m => ({ default: m.SdkPage })))
+const AgentRuns = lazy(() => import("./pages/AgentRuns").then(m => ({ default: m.AgentRunsPage })))
 
 // Admin pages
 const AdminOrganizations = lazy(() => import("./pages/admin/Organizations").then(m => ({ default: m.AdminOrganizations })))
@@ -80,6 +81,7 @@ export const router = createBrowserRouter([
             { path: "gap-analysis", element: <SuspenseWrap><GapAnalysis /></SuspenseWrap> },
             { path: "reports", element: <SuspenseWrap><Reports /></SuspenseWrap> },
             { path: "scf-catalog", element: <SuspenseWrap><ScfCatalog /></SuspenseWrap> },
+            { path: "agent-runs", element: <SuspenseWrap><AgentRuns /></SuspenseWrap> },
             { path: "sdk", element: <SuspenseWrap><SdkPage /></SuspenseWrap> },
             { path: "settings", element: <SettingsPage /> },
             // Admin

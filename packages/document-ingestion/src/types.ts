@@ -41,9 +41,26 @@ export type StoredObject = {
 };
 
 export type StorageAdapter = {
-  putObject(object: StoredObject): Promise<void>;
-  getObject(key: string): Promise<StoredObject | null>;
-  deleteObject?(key: string): Promise<void>;
+  /** 
+   * Stateless environment: We only fetch temporary/presigned URLs provided by the Main App.
+   * We do not persist raw files permanently in our own pipeline.
+   */
+  getObject(keyOrUrl: string): Promise<StoredObject | null>;
+};
+
+export type MalwareScanResult = {
+  clean: boolean;
+  threats: string[];
+  scanDurationMs: number;
+};
+
+export type MalwareScannerAdapter = {
+  scan(input: {
+    bytes: Uint8Array;
+    filename: string;
+    mimeType: string;
+    traceId: string;
+  }): Promise<MalwareScanResult>;
 };
 
 export type QueueAdapter = {
@@ -117,5 +134,6 @@ export type DocumentIngestionServiceDependencies = {
   vectorIndexName: string;
   extractors: DocumentTextExtractor[];
   chunking: ChunkingConfig;
+  malwareScanner?: MalwareScannerAdapter | undefined;
 };
 

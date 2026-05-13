@@ -33,6 +33,14 @@ export type LlmGenerateInput = {
   tools?: LlmTool[];
   temperature?: number;
   max_tokens?: number;
+  response_format?: {
+    type: "json_object" | "json_schema";
+    json_schema?: {
+      name: string;
+      schema: Record<string, unknown>;
+      strict?: boolean;
+    };
+  };
 };
 
 export type LlmGenerateOutput = {

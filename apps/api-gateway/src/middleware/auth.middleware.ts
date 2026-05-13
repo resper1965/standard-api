@@ -67,8 +67,9 @@ export const resolveAuthContext = async (
         context.organizationId = session.session.activeOrganizationId;
       }
     }
-  } catch {
-    // Session resolution failed — treat as unauthenticated
+  } catch (err) {
+    // Session resolution failed — log and treat as unauthenticated
+    console.warn("[standard:auth] Session resolution failed:", err instanceof Error ? err.message : err);
   }
 
   if (requireAuth && !context.actorId) {

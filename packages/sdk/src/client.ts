@@ -18,6 +18,8 @@ import type {
   WorkflowRun, AgentRun, AgentToolCall,
   WebhookEndpoint, WebhookDelivery,
   Organization, ApiKey, ApiKeyCreated,
+  ComplianceGate, ExportJob,
+  AssessmentSummary, OrganizationDashboard, AuditLogEntry, Membership,
 } from "./models";
 
 export type StandardClientConfig = {
@@ -172,6 +174,22 @@ class AssessmentsResource {
   }
   listByOrg(orgId: string, opts?: RequestOptions) {
     return this.client._get<PaginatedResponse<Assessment>>(`/organizations/${orgId}/assessments`, opts);
+  }
+  /** Check the compliance gate status for a given assessment (CI/CD integration) */
+  complianceGate(id: string, opts?: RequestOptions) {
+    return this.client._get<ComplianceGate>(`/assessments/${id}/compliance-gate`, opts);
+  }
+  /** Get server-computed KPIs for an assessment */
+  summary(id: string, opts?: RequestOptions) {
+    return this.client._get<AssessmentSummary>(`/assessments/${id}/summary`, opts);
+  }
+  /** Get audit logs for an assessment */
+  auditLogs(id: string, query?: { action?: string; limit?: number }, opts?: RequestOptions) {
+    const p = new URLSearchParams();
+    if (query?.action) p.set("action", query.action);
+    if (query?.limit) p.set("limit", String(query.limit));
+    const q = p.toString();
+    return this.client._get<PaginatedResponse<AuditLogEntry>>(`/assessments/${id}/audit-logs${q ? `?${q}` : ""}`, opts);
   }
 }
 
@@ -399,6 +417,14 @@ class ReportsResource {
   export(versionId: string, format?: "pdf" | "docx", opts?: RequestOptions) {
     return this.client._post<StandardResponse<ReportExport>>(`/reports/${versionId}/export`, { format }, opts);
   }
+  /** Generate a downloadable audit package (PDF + evidence ZIP) */
+  generateAuditPackage(assessmentId: string, opts?: RequestOptions) {
+    return this.client._post<StandardResponse<ExportJob>>(`/assessments/${assessmentId}/audit-package`, undefined, opts);
+  }
+  /** Download a completed export job */
+  downloadExport(jobId: string, opts?: RequestOptions) {
+    return this.client._get<StandardResponse<ExportJob>>(`/export-jobs/${jobId}/download`, opts);
+  }
 }
 
 class KbResource {
@@ -492,6 +518,37 @@ class OrganizationsResource {
   }
   revokeApiKey(orgId: string, keyId: string, opts?: RequestOptions) {
     return this.client._delete<{ ok: boolean }>(`/organizations/${orgId}/api-keys/${keyId}`, opts);
+  }
+  /** Get server-computed dashboard KPIs for an organization */
+  dashboard(orgId: string, opts?: RequestOptions) {
+    return this.client._get<OrganizationDashboard>(`/organizations/${orgId}/dashboard`, opts);
+  }
+  /** List audit logs for an organization */
+  auditLogs(orgId: string, query?: { action?: string; actor_id?: string; since?: string; until?: string; limit?: number }, opts?: RequestOptions) {
+    const p = new URLSearchParams();
+    if (query?.action) p.set("action", query.action);
+    if (query?.actor_id) p.set("actor_id", query.actor_id);
+    if (query?.since) p.set("since", query.since);
+    if (query?.until) p.set("until", query.until);
+    if (query?.limit) p.set("limit", String(query.limit));
+    const q = p.toString();
+    return this.client._get<PaginatedResponse<AuditLogEntry>>(`/organizations/${orgId}/audit-logs${q ? `?${q}` : ""}`, opts);
+  }
+  /** List members of an organization */
+  listMembers(orgId: string, opts?: RequestOptions) {
+    return this.client._get<PaginatedResponse<Membership>>(`/organizations/${orgId}/members`, opts);
+  }
+  /** Invite a new member to an organization */
+  inviteMember(orgId: string, data: { email: string; role: string; display_name?: string }, opts?: RequestOptions) {
+    return this.client._post<StandardResponse<Membership>>(`/organizations/${orgId}/members`, data, opts);
+  }
+  /** Update a member's role */
+  updateMemberRole(memberId: string, data: { role: string }, opts?: RequestOptions) {
+    return this.client._patch<StandardResponse<Membership>>(`/members/${memberId}`, data, opts);
+  }
+  /** Remove a member */
+  removeMember(memberId: string, opts?: RequestOptions) {
+    return this.client._delete<{ ok: boolean }>(`/members/${memberId}`, opts);
   }
 }
 

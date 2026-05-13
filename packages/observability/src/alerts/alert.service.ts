@@ -175,3 +175,32 @@ export class ConsoleAlertSink implements AlertSink {
     console.warn(`[ALERT] [${alert.rule.severity.toUpperCase()}] ${alert.rule.ruleId}: ${alert.message}`);
   }
 }
+
+/** Webhook-based alert sink for SOC channels (e.g., Slack, PagerDuty, Opsgenie) */
+export class WebhookAlertSink implements AlertSink {
+  constructor(private readonly webhookUrl: string) {}
+
+  async send(alert: AlertEvent): Promise<void> {
+    if (!this.webhookUrl) return;
+
+    try {
+      await fetch(this.webhookUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: `🚨 *[${alert.rule.severity.toUpperCase()}] ${alert.rule.name}* (${alert.rule.ruleId})\n${alert.message}`,
+          alert_details: {
+            rule_id: alert.rule.ruleId,
+            severity: alert.rule.severity,
+            tenant_id: alert.tenantId,
+            organization_id: alert.organizationId,
+            trace_id: alert.traceId,
+            metadata: alert.metadata
+          }
+        })
+      });
+    } catch {
+      // Sink fail must not block or crash the application
+    }
+  }
+}

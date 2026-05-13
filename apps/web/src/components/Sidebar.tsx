@@ -7,6 +7,7 @@ const userLinks = [
   { to: "/dashboard/assessments", icon: "📋", label: "Assessments" },
   { to: "/dashboard/documents", icon: "📄", label: "Documents" },
   { to: "/dashboard/gap-analysis", icon: "🔍", label: "Gap Analysis" },
+  { to: "/dashboard/agent-runs", icon: "🤖", label: "Agent Runs" },
   { to: "/dashboard/reports", icon: "📈", label: "Reports" },
   { to: "/dashboard/scf-catalog", icon: "🔒", label: "SCF Catalog" },
   { to: "/dashboard/sdk", icon: "🧩", label: "SDK & Docs" },

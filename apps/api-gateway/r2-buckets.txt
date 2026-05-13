@@ -1,0 +1,63 @@
+
+ Ôøà´©Å wrangler 4.90.0
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+Listing buckets...
+name:           aegis-documents-dev
+creation_date:  2026-05-01T19:34:48.588Z
+
+name:           aegis-documents-prod
+creation_date:  2026-04-30T13:33:29.763Z
+
+name:           aegis-documents-staging
+creation_date:  2026-05-05T15:31:36.706Z
+
+name:           aegis-exports-dev
+creation_date:  2026-05-01T19:34:53.458Z
+
+name:           aegis-exports-prod
+creation_date:  2026-04-30T13:33:33.736Z
+
+name:           aegis-exports-staging
+creation_date:  2026-05-05T15:31:41.199Z
+
+name:           aegis-reports-dev
+creation_date:  2026-05-01T19:34:51.402Z
+
+name:           aegis-reports-prod
+creation_date:  2026-04-30T13:33:31.889Z
+
+name:           aegis-reports-staging
+creation_date:  2026-05-05T15:31:38.885Z
+
+name:           aesper-law-storage
+creation_date:  2026-04-22T12:29:49.532Z
+
+name:           canal-media
+creation_date:  2026-04-16T11:50:26.177Z
+
+name:           cavan-media
+creation_date:  2026-04-06T18:51:31.853Z
+
+name:           cyber-game-uploads
+creation_date:  2026-04-18T20:32:02.506Z
+
+name:           familyvault-docs
+creation_date:  2026-03-20T00:17:56.645Z
+
+name:           gabios-storage
+creation_date:  2026-04-19T12:42:59.865Z
+
+name:           isms-evidences
+creation_date:  2026-03-09T22:45:39.367Z
+
+name:           ness-os-storage
+creation_date:  2026-03-09T14:51:17.955Z
+
+name:           ness-os-storage-production
+creation_date:  2026-03-09T19:53:58.971Z
+
+name:           ness-os-storage-staging
+creation_date:  2026-03-09T16:44:14.579Z
+
+name:           os-files
+creation_date:  2026-03-30T12:36:21.719Z

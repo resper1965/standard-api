@@ -94,16 +94,22 @@ export class AgentExecutor {
 
     const tools = this.buildTools(contract, run.agent_run_id, context);
 
+    const locale = context.locale ?? "pt-BR";
+    const localeName = locale === "pt-BR" ? "Brazilian Portuguese" : "English";
+
     const systemPrompt = `You are the ${contract.display_name}.
 Responsibility: ${contract.responsibility}
 Forbidden Actions: ${contract.forbidden_actions.join(", ")}
+Output Language: ${localeName} (${locale}). Write ALL findings, summaries, recommendations, and field values in ${localeName}.
 You must fulfill the task using provided tools. If you use tools, analyze the output and synthesize a final finding. Output a final decision strictly as JSON matching your schema. Do NOT wrap it in markdown.`;
 
     try {
       const startTime = Date.now();
 
       const response = await generateText({
-        model: this.deps.llm,
+        // LlmProvider is our custom abstraction; the runtime instance is always
+        // a Vercel AI SDK LanguageModelV1. Cast at the boundary.
+        model: this.deps.llm as any,
         system: systemPrompt,
         prompt: JSON.stringify(rawInput),
         tools,

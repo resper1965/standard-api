@@ -41,21 +41,14 @@ export const createInMemoryAgentRuntimeDependencies = (): AgentRuntimeDependenci
   toolCalls: createInMemoryAgentToolCallRepository(),
   // Mock LLM placeholder — will be replaced with a real provider in production
   llm: {
-    specificationVersion: "v1",
-    provider: "mock",
-    modelId: "mock-model",
-    defaultObjectGenerationMode: "json",
-    doGenerate: async () => ({
-      text: "Mock LLM output",
-      finishReason: "stop" as const,
-      usage: { promptTokens: 10, completionTokens: 10 },
-      rawCall: { rawPrompt: null, rawSettings: {} }
-    }),
-    doStream: async () => ({
-      stream: new ReadableStream(),
-      rawCall: { rawPrompt: null, rawSettings: {} }
+    generate: async (input) => ({
+      message: {
+        role: "assistant",
+        content: input.response_format?.type === "json_schema" ? "{}" : "Mock LLM output",
+      },
+      usage: { prompt_tokens: 10, completion_tokens: 10, total_tokens: 20 }
     })
-  } as unknown as AgentRuntimeDependencies["llm"]
+  } as AgentRuntimeDependencies["llm"]
 });
 
 /**

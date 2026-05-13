@@ -48,6 +48,8 @@ export const apiErrorCodes = [
   "EMAIL_SERVICE_UNAVAILABLE",
   "EMAIL_SEND_FAILED",
   "INSUFFICIENT_SCOPE",
+  "TENANT_MISMATCH",
+  "QUEUE_POISONED",
   "INTERNAL_ERROR"
 ] as const;
 

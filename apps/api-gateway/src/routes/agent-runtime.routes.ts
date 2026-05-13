@@ -8,7 +8,8 @@ import { AuditEventService, CostTrackingService, MetricsService, SecurityEventSe
 import {
   CompleteAgentRunRequestSchema,
   InvokeAgentToolRequestSchema,
-  StartAgentRunRequestSchema
+  StartAgentRunRequestSchema,
+  SupportedLocaleSchema
 } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { ApiErrorCode } from "../errors/error-codes";
@@ -29,14 +30,15 @@ const requireAssessment = async (deps: AppDependencies, assessmentId: string, te
   return assessment;
 };
 
-const contextFor = (assessment: AssessmentRecord, traceId: string, frameworkId: string, scfVersionId: string, actorId?: string) => ({
+const contextFor = (assessment: AssessmentRecord, traceId: string, frameworkId: string, scfVersionId: string, actorId?: string, locale?: string) => ({
   tenant_id: assessment.tenant_id,
   organization_id: assessment.organization_id,
   assessment_id: assessment.assessment_id,
   framework_id: frameworkId,
   scf_version_id: scfVersionId,
   trace_id: traceId,
-  ...(actorId ? { actor_id: actorId } : {})
+  ...(actorId ? { actor_id: actorId } : {}),
+  ...(locale ? { locale: SupportedLocaleSchema.parse(locale) } : {})
 });
 
 const safeTools = () => AGENT_TOOL_CONTRACTS.map((tool) => ({
@@ -58,9 +60,11 @@ export const agentRuntimeRoutes: RouteDefinition[] = [
     protected: true,
     requireActor: true,
     permissions: ["agent:run"],
-    handler: async ({ request, params, deps, tenantId, actorId, traceId }) => {
+    bodySchema: StartAgentRunRequestSchema,
+    handler: async ({ validatedBody, params, deps, tenantId, actorId, traceId, request }) => {
       const assessment = await requireAssessment(deps, routeParam(params, "assessmentId"), tenantId!);
-      const body = await parseJson(request, StartAgentRunRequestSchema);
+      const body = validatedBody as import("@standard/schemas").StartAgentRunRequest;
+      const locale = new URL(request.url).searchParams.get("locale") ?? undefined;
       try {
         const runtime = new AgentRuntimeService(deps.agentRuntime);
         const run = await runtime.startRun({
@@ -69,7 +73,7 @@ export const agentRuntimeRoutes: RouteDefinition[] = [
           prompt_version: body.prompt_version,
           model: body.model,
           input: body.input,
-          context: contextFor(assessment, traceId, body.framework_id, body.scf_version_id, actorId!)
+          context: contextFor(assessment, traceId, body.framework_id, body.scf_version_id, actorId!, locale)
         });
 
         if (deps.AGENT_RUN_QUEUE) {

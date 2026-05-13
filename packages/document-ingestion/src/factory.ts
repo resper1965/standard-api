@@ -5,6 +5,7 @@ import {
   InMemoryAuditSink
 } from "./adapters";
 import { getDefaultExtractors } from "./extractors";
+import { MockMalwareScannerAdapter, HeuristicMalwareScannerAdapter } from "./malware-scanner";
 import type { DocumentIngestionServiceDependencies } from "./types";
 
 export const createInMemoryDocumentIngestionDependencies = (
@@ -25,7 +26,8 @@ export const createInMemoryDocumentIngestionDependencies = (
     },
     bucketName: config.bucketName ?? "standard-documents-dev",
     storageProvider: config.storageProvider ?? "mock_r2",
-    vectorIndexName: config.vectorIndexName ?? "standard-kb-dev"
+    vectorIndexName: config.vectorIndexName ?? "standard-kb-dev",
+    malwareScanner: config.malwareScanner ?? new MockMalwareScannerAdapter(),
   };
 };
 
@@ -58,7 +60,8 @@ export const createDrizzleDocumentIngestionDependencies = async (
     },
     bucketName: config.bucketName ?? "standard-documents-prod",
     storageProvider: config.storageProvider ?? "cloudflare_r2",
-    vectorIndexName: config.vectorIndexName ?? "standard-kb-index"
+    vectorIndexName: config.vectorIndexName ?? "standard-kb-index",
+    malwareScanner: config.malwareScanner ?? new HeuristicMalwareScannerAdapter(),
   };
 };
 

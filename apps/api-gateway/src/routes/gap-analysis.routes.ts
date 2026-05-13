@@ -13,10 +13,24 @@ import {
   SubmitGapAnalysisReviewRequestSchema,
   UpdateGapFindingRequestSchema
 } from "@standard/gap-analysis";
+import { EvidenceEvaluatorUseCase, PoamArchitectUseCase } from "@standard/agent-runtime";
+import { z } from "zod";
 import { ApiError } from "../errors/api-error";
 import type { ApiErrorCode } from "../errors/error-codes";
 import type { AppDependencies, AssessmentRecord, RouteDefinition } from "../http";
 import { json, parseJson, routeParam } from "../http";
+
+/** Schema for POST /api/v1/gap/evaluate-evidence */
+const EvaluateEvidenceRequestSchema = z.object({
+  controlRequirement: z.string().min(5),
+  evidenceDescription: z.string().min(5),
+});
+
+/** Schema for POST /api/v1/poam/architect-remediation */
+const ArchitectRemediationRequestSchema = z.object({
+  evidenceContext: z.any(),
+  systemArchitectureDescription: z.string().min(5),
+});
 
 const toApiError = (error: unknown): never => {
   if (error instanceof GapAnalysisWorkflowError) {
@@ -70,9 +84,10 @@ export const gapAnalysisRoutes: RouteDefinition[] = [
     path: "/api/v1/assessments/:assessmentId/evidence-analysis/run",
     protected: true,
     requireActor: true,
-    handler: async ({ request, deps, params, tenantId, actorId, traceId }) => {
+    bodySchema: RunEvidenceAnalysisRequestSchema,
+    handler: async ({ validatedBody, deps, params, tenantId, actorId, traceId }) => {
       const assessment = await requireAssessment(deps, routeParam(params, "assessmentId"), tenantId!);
-      const body = await parseJson(request, RunEvidenceAnalysisRequestSchema);
+      const body = validatedBody as { soa_version_id: string };
       try {
         const result = await new EvidenceAnalysisService(deps.gapAnalysis).runEvidenceAnalysis(assessment.assessment_id, body.soa_version_id, contextFor(assessment, traceId, actorId!));
         await applyTransitionIfAllowed(deps, assessment, "evidence_analysis_ready", traceId, actorId!);
@@ -201,6 +216,11 @@ export const gapAnalysisRoutes: RouteDefinition[] = [
     handler: async ({ request, deps, params, tenantId, actorId, traceId }) => {
       const finding = await deps.gapAnalysis.repositories.gapFindings.get(routeParam(params, "gapFindingId"), tenantId!);
       if (!finding) throw new ApiError("NOT_FOUND", "Gap finding not found.", 404);
+      // Immutability guard: reject mutations on approved versions
+      const parentVersion = await deps.gapAnalysis.repositories.gapVersions.get(finding.gap_analysis_version_id, tenantId!);
+      if (parentVersion && parentVersion.status === "approved") {
+        throw new ApiError("CONFLICT", "Cannot modify findings in an approved Gap Analysis version. Create a new draft instead.", 409);
+      }
       const assessment = await requireAssessment(deps, finding.assessment_id, tenantId!);
       const body = await parseJson(request, UpdateGapFindingRequestSchema);
       try {
@@ -294,6 +314,66 @@ export const gapAnalysisRoutes: RouteDefinition[] = [
         return toApiError(error);
       }
     }
-  }
+  },
+  {
+    method: "POST",
+    path: "/api/v1/gap/evaluate-evidence",
+    authRequired: true,
+    tenantRequired: true,
+    bodySchema: EvaluateEvidenceRequestSchema,
+    handler: async (ctx) => {
+      try {
+        const body = ctx.validatedBody as { controlRequirement: string; evidenceDescription: string };
+        
+        const llmProvider = ctx.deps.agentRuntime.llm; 
+        if (!llmProvider) {
+          throw new ApiError("INTERNAL_ERROR", "LLM Provider is not configured in dependencies.", 500);
+        }
+
+        const usecase = new EvidenceEvaluatorUseCase(llmProvider);
+        const result = await usecase.evaluate({
+          controlRequirement: body.controlRequirement,
+          evidenceDescription: body.evidenceDescription,
+          tenantId: ctx.tenantId!
+        });
+        
+        await ctx.deps.audit.record("gap.evidence.evaluated", { tenant_id: ctx.tenantId, trace_id: ctx.traceId, compliant: result.is_compliant });
+        return json({ data: result, trace_id: ctx.traceId }, { status: 200 });
+      } catch (e) {
+        if (e instanceof ApiError) throw e;
+        throw new ApiError("INTERNAL_ERROR", "Agent Evidence evaluation failed", 500);
+      }
+    },
+  },
+  {
+    method: "POST",
+    path: "/api/v1/poam/architect-remediation",
+    authRequired: true,
+    tenantRequired: true,
+    bodySchema: ArchitectRemediationRequestSchema,
+    handler: async (ctx) => {
+      try {
+        const body = ctx.validatedBody as { evidenceContext: unknown; systemArchitectureDescription: string };
+        
+        const llmProvider = ctx.deps.agentRuntime.llm; 
+        if (!llmProvider) {
+          throw new ApiError("INTERNAL_ERROR", "LLM Provider is not configured in dependencies.", 500);
+        }
+
+        const usecase = new PoamArchitectUseCase(llmProvider);
+        const result = await usecase.architect({
+          evidenceContext: body.evidenceContext as import("@standard/agent-runtime").EvidenceEvaluationOutput,
+          systemArchitectureDescription: body.systemArchitectureDescription,
+          tenantId: ctx.tenantId!
+        });
+        
+        await ctx.deps.audit.record("poam.architectured", { tenant_id: ctx.tenantId, trace_id: ctx.traceId, priority: result.priority_level });
+        return json({ data: result, trace_id: ctx.traceId }, { status: 200 });
+      } catch (e) {
+        if (e instanceof ApiError) throw e;
+        throw new ApiError("INTERNAL_ERROR", "Agent PoAM Architecture failed", 500);
+      }
+    },
+  },
 ];
 

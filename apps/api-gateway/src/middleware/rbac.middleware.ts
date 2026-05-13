@@ -46,21 +46,34 @@ export const assertRbac = async (context: RequestContext, requiredPermissions: P
       required_permissions: requiredPermissions
     });
     
-    await new SecurityEventService(context.deps.observability).record({
-      tenant_id: context.tenantId,
-      organization_id: context.securityTenant?.organization_id,
-      assessment_id: context.params.assessmentId,
-      actor_id: context.actorId,
-      event_type: requiredPermissions.some((permission) => permission.includes(":approve")) ? "approval_permission_denied" : "forbidden_access_attempt",
-      severity: "medium",
-      outcome: "denied",
-      source: "api-gateway",
-      resource_type: "route",
-      resource_id: context.request.url,
-      message_safe: "Permission denied.",
-      trace_id: context.traceId,
-      metadata_safe: { reason, required_permissions: requiredPermissions }
-    });
+    const isApprovalBypass = requiredPermissions.some((permission) => permission.includes(":approve"));
+
+    if (isApprovalBypass && context.deps.alerts && context.tenantId && context.params.assessmentId) {
+      void context.deps.alerts.fireApprovalBypass({
+        tenantId: context.tenantId,
+        assessmentId: context.params.assessmentId,
+        artifactType: "assessment_state", // Na API o recurso define o artifact type
+        traceId: context.traceId,
+        ...(context.actorId ? { actorId: context.actorId } : {})
+      });
+    } else {
+      await new SecurityEventService(context.deps.observability).record({
+        tenant_id: context.tenantId,
+        organization_id: context.securityTenant?.organization_id,
+        assessment_id: context.params.assessmentId,
+        actor_id: context.actorId,
+        event_type: isApprovalBypass ? "approval_permission_denied" : "forbidden_access_attempt",
+        severity: "medium",
+        outcome: "denied",
+        source: "api-gateway",
+        resource_type: "route",
+        resource_id: context.request.url,
+        message_safe: "Permission denied.",
+        trace_id: context.traceId,
+        metadata_safe: { reason, required_permissions: requiredPermissions }
+      });
+    }
+
     throw new ApiError("FORBIDDEN", "Permission denied.", 403, [{ reason, required_permissions: requiredPermissions }]);
   }
 };

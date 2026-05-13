@@ -64,6 +64,20 @@
       "when": 1778497934983,
       "tag": "0008_volatile_madame_hydra",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1778585938449,
+      "tag": "0009_harsh_warbird",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1778587117083,
+      "tag": "0010_steady_vance_astro",
+      "breakpoints": true
     }
   ]
 }

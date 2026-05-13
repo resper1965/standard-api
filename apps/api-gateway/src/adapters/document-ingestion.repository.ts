@@ -98,6 +98,9 @@ const mapDocumentRow = (row: DocumentRow): DocumentResponse => ({
   version_label: row.versionLabel ?? undefined,
   effective_date: row.effectiveDate ?? undefined,
   status: "uploaded",
+  scan_status: row.scanStatus ?? "pending",
+  malware_signature: null,
+  scanned_at: null,
   trace_id: "",
 });
 

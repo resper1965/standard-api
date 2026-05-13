@@ -442,12 +442,13 @@ ON CONFLICT (scf_framework_id, requirement_code) DO NOTHING;
 
   for (const mapping of fw.mappings) {
     for (const reqCode of mapping.requirementCodes) {
-      sql += `INSERT INTO scf_mappings (scf_version_id, scf_framework_requirement_id, scf_control_id, relationship_type, mapping_source, is_official, status, is_synthetic)
+      sql += `INSERT INTO scf_mappings (scf_version_id, scf_framework_requirement_id, scf_control_id, relationship_type, relationship_strength, mapping_source, is_official, status, is_synthetic)
 SELECT
   r.scf_version_id,
   r.id,
   c.id,
   'related',
+  'unknown',
   'official_scf',
   true,
   'active',

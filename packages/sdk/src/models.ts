@@ -348,3 +348,92 @@ export type ApiKeyCreated = ApiKey & {
   /** Full key — returned only at creation time */
   key: string;
 };
+
+// ── Compliance Gate ──────────────────────────────────────────
+export type ComplianceGate = {
+  gate_id: string;
+  assessment_id: string;
+  framework_id?: string;
+  status: "pass" | "fail" | "pending" | "no_data";
+  critical_findings: number;
+  high_findings: number;
+  total_findings: number;
+  gap_analysis_version_id?: string;
+  findings_summary: string;
+  checked_at: string;
+  trace_id: string;
+};
+
+// ── Export Jobs (Audit Packages) ─────────────────────────────
+export type ExportJob = {
+  id: string;
+  assessment_id: string;
+  status: "queued" | "processing" | "completed" | "failed";
+  format: string;
+  download_url?: string;
+  created_at: string;
+  completed_at?: string;
+};
+
+// ── Dashboard KPIs ──────────────────────────────────────────
+export type AssessmentSummary = {
+  assessment_id: string;
+  name: string;
+  state: string;
+  total_controls: number;
+  implemented_controls: number;
+  compliance_pct: number;
+  total_findings: number;
+  critical_findings: number;
+  high_findings: number;
+  medium_findings: number;
+  low_findings: number;
+  open_poam_items: number;
+  maturity_avg: number | null;
+  last_activity_at: string | null;
+  computed_at: string;
+};
+
+export type OrganizationDashboard = {
+  organization_id: string;
+  organization_name: string;
+  total_assessments: number;
+  assessments_by_state: Record<string, number>;
+  compliance_avg_pct: number;
+  total_open_poams: number;
+  total_critical_findings: number;
+  total_high_findings: number;
+  last_activity_at: string | null;
+  computed_at: string;
+};
+
+// ── Audit Logs ──────────────────────────────────────────────
+export type AuditLogEntry = {
+  id: string;
+  tenant_id: string;
+  organization_id?: string;
+  assessment_id?: string;
+  actor_id?: string;
+  action: string;
+  resource_type: string;
+  resource_id?: string;
+  outcome: string;
+  timestamp: string;
+  trace_id: string;
+};
+
+// ── Memberships ─────────────────────────────────────────────
+export type Membership = {
+  membership_id: string;
+  tenant_id: string;
+  organization_id: string;
+  user_id: string | null;
+  email: string;
+  display_name: string | null;
+  role: string;
+  status: "invited" | "active" | "suspended" | "removed";
+  invited_at: string;
+  accepted_at: string | null;
+  created_at: string;
+  updated_at: string;
+};

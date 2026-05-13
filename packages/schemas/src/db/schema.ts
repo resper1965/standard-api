@@ -140,13 +140,14 @@ export const poamActionTypeEnum = pgEnum("poam_action_type", [
 ]);
 export const poamEffortEstimateEnum = pgEnum("poam_effort_estimate", ["small", "medium", "large", "extra_large", "unknown"]);
 export const poamDependencyTypeEnum = pgEnum("poam_dependency_type", ["blocks", "related_to", "prerequisite", "duplicates", "depends_on_external_party"]);
-export const agentRunStatusEnum = pgEnum("agent_run_status", ["queued", "running", "completed", "failed", "cancelled"]);
+export const agentRunStatusEnum = pgEnum("agent_run_status", ["queued", "running", "completed", "failed", "cancelled", "poisoned_dlq"]);
 export const mappingSourceEnum = pgEnum("mapping_source", ["official_scf", "derived", "consultative"]);
 export const reportTypeEnum = pgEnum("report_type", ["full_assessment_report", "executive_summary", "soa_export", "gap_analysis_report", "maturity_report", "poam_report", "audit_package", "machine_readable_export"]);
 export const reportArtifactTypeEnum = pgEnum("report_artifact_type", ["report", "export", "evidence_index", "audit_package", "appendix", "summary"]);
 export const reportFormatEnum = pgEnum("report_format", ["json", "markdown", "html", "docx", "pdf", "csv", "xlsx", "zip"]);
 export const exportJobStatusEnum = pgEnum("export_job_status", ["queued", "running", "succeeded", "failed", "skipped", "cancelled", "retrying"]);
 export const malwareScanStatusEnum = pgEnum("malware_scan_status", ["pending", "clean", "infected", "error", "skipped"]);
+export const scfIngestionModeEnum = pgEnum("scf_ingestion_mode", ["scf_official_xlsx", "oscal_json", "synthetic", "manual"]);
 
 export const tenants = pgTable("tenants", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -228,6 +229,8 @@ export const scfVersions = pgTable("scf_versions", {
   version: text("version").notNull(),
   sourceUri: text("source_uri"),
   contentHash: text("content_hash"),
+  provenanceHash: text("provenance_hash"),
+  ingestionMode: scfIngestionModeEnum("ingestion_mode").default("scf_official_xlsx").notNull(),
   publishedAt: timestamp("published_at", { withTimezone: true }),
   ...timestamps()
 }, (table) => [

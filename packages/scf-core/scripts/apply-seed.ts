@@ -13,10 +13,14 @@ const match = envContent.match(/DATABASE_URL="([^"]+)"/);
 if (!match) { console.error("❌ No DATABASE_URL found in .env"); process.exit(1); }
 const sql = neon(match[1]);
 
-const seedFile = process.argv[2] || "infra/docker/postgres/seeds/0010_scf_official_frameworks_seed.sql";
+const isDryRun = process.argv.includes("--dry-run");
+const seedFile = process.argv[2] && !process.argv[2].startsWith("--") ? process.argv[2] : "infra/docker/postgres/seeds/0010_scf_official_frameworks_seed.sql";
 const seedPath = resolve(seedFile);
 
 console.log(`📄 Reading seed: ${seedPath}`);
+if (isDryRun) {
+  console.log(`🏜️ [DRY-RUN] Modality enabled. No queries will be sent to Neon.`);
+}
 const seedContent = readFileSync(seedPath, "utf-8");
 
 // Remove comments, BEGIN/COMMIT, clean up
@@ -48,7 +52,9 @@ const startTime = Date.now();
     const batchSql = batch.join(';\n') + ';';
     
     try {
-      await sql(batchSql);
+      if (!isDryRun) {
+        await sql(batchSql);
+      }
       executed += batch.length;
     } catch (e: any) {
       // On batch failure, try smaller sub-batches
@@ -57,13 +63,17 @@ const startTime = Date.now();
         const subBatch = batch.slice(j, j + SUB_BATCH);
         const subSql = subBatch.join(';\n') + ';';
         try {
-          await sql(subSql);
+          if (!isDryRun) {
+            await sql(subSql);
+          }
           executed += subBatch.length;
         } catch (e2: any) {
           // Individual fallback
           for (const stmt of subBatch) {
             try {
-              await sql(stmt + ';');
+              if (!isDryRun) {
+                await sql(stmt + ';');
+              }
               executed++;
             } catch (e3: any) {
               errors++;
@@ -88,22 +98,26 @@ const startTime = Date.now();
   console.log(`   Errors: ${errors}`);
 
   // Verify
-  console.log(`\n📊 Verification:`);
-  const fwCount = await sql`SELECT COUNT(*) as total FROM scf_frameworks WHERE is_synthetic = false`;
-  console.log(`   Frameworks (non-synthetic): ${fwCount[0].total}`);
-  const reqCount = await sql`SELECT COUNT(*) as total FROM scf_framework_requirements WHERE is_synthetic = false`;
-  console.log(`   Requirements (non-synthetic): ${reqCount[0].total}`);
-  const mapCount = await sql`SELECT COUNT(*) as total FROM scf_mappings WHERE is_synthetic = false`;
-  console.log(`   Mappings (non-synthetic): ${mapCount[0].total}`);
+  if (!isDryRun) {
+    console.log(`\n📊 Verification:`);
+    const fwCount = await sql`SELECT COUNT(*) as total FROM scf_frameworks WHERE is_synthetic = false`;
+    console.log(`   Frameworks (non-synthetic): ${fwCount[0].total}`);
+    const reqCount = await sql`SELECT COUNT(*) as total FROM scf_framework_requirements WHERE is_synthetic = false`;
+    console.log(`   Requirements (non-synthetic): ${reqCount[0].total}`);
+    const mapCount = await sql`SELECT COUNT(*) as total FROM scf_mappings WHERE is_synthetic = false`;
+    console.log(`   Mappings (non-synthetic): ${mapCount[0].total}`);
+  }
   
   // Sample LGPD
-  const lgpd = await sql`SELECT f.framework_id, f.name, COUNT(r.id) as req_count 
-    FROM scf_frameworks f 
-    LEFT JOIN scf_framework_requirements r ON r.scf_framework_id = f.id 
-    WHERE f.framework_id = 'BR-LGPD' 
-    GROUP BY f.id`;
-  if (lgpd.length > 0) {
-    console.log(`\n🇧🇷 BR-LGPD: ${lgpd[0].name} — ${lgpd[0].req_count} requirements`);
+  if (!isDryRun) {
+    const lgpd = await sql`SELECT f.framework_id, f.name, COUNT(r.id) as req_count 
+      FROM scf_frameworks f 
+      LEFT JOIN scf_framework_requirements r ON r.scf_framework_id = f.id 
+      WHERE f.framework_id = 'BR-LGPD' 
+      GROUP BY f.id`;
+    if (lgpd.length > 0) {
+      console.log(`\n🇧🇷 BR-LGPD: ${lgpd[0].name} — ${lgpd[0].req_count} requirements`);
+    }
   }
 })().catch(e => {
   console.error(`❌ Fatal error: ${e.message}`);

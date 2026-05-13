@@ -3,7 +3,7 @@ import { CloudflareR2StorageAdapter, getDefaultExtractors } from "@standard/docu
 import type { DocumentIngestionServiceDependencies } from "@standard/document-ingestion";
 import { createInMemoryKbDependencies, CloudflareVectorizeStore, CloudflareAiEmbeddingProvider, MockEmbeddingProvider, MockVectorStore, DEFAULT_VECTOR_INDEX_NAME, DEFAULT_VECTOR_PROVIDER } from "@standard/kb";
 import { createInMemoryGapAnalysisDependencies } from "@standard/gap-analysis";
-import { createInMemoryObservabilityDependencies, createDrizzleObservabilityDependencies } from "@standard/observability";
+import { createInMemoryObservabilityDependencies, createDrizzleObservabilityDependencies, AlertService, SecurityEventService, WebhookAlertSink } from "@standard/observability";
 import { createInMemoryPoamDependencies } from "@standard/poam";
 import { createInMemoryReportingDependencies } from "@standard/reporting";
 import { createInMemoryScfCore, createScfCoreFromRepository, createDrizzleScfRepository } from "@standard/scf-core";
@@ -14,9 +14,18 @@ import { createInMemoryDocumentIngestionDependencies } from "@standard/document-
 import { createDrizzleWorkflowDependencies } from "./workflow.repository";
 import { createDrizzleIngestionRepositories } from "./document-ingestion.repository";
 import { createDrizzleKbRepositories } from "./kb.repository";
+import { createDrizzlePrivacyRepositories } from "./privacy.repository";
 import type { AppDependencies } from "../http";
 import type { Env } from "../index";
 import type { DbClient } from "./db";
+
+/**
+ * Type bridge: NeonHttpDatabase (edge) ↔ PostgresJsDatabase (packages).
+ * Both are structurally compatible at runtime but TypeScript sees them as
+ * different nominal types. This helper replaces 5+ scattered `as never` casts
+ * with a single documented conversion point.
+ */
+const asDb = (db: DbClient) => db as unknown as Parameters<typeof createDrizzleScfRepository>[0];
 import { createAssessmentRepository, createDrizzleAssessmentRepository } from "./assessment.repository";
 import { createArtifactRepository } from "./artifact.repository";
 import { createDrizzleArtifactRepository } from "./artifact.drizzle.repository";
@@ -61,6 +70,7 @@ export const createMockRepositories = (): AppDependencies => {
     agentRuntime: createInMemoryAgentRuntimeDependencies(),
     workflows: createInMemoryWorkflowDependencies(),
     observability: createInMemoryObservabilityDependencies(),
+    alerts: new AlertService(new SecurityEventService(createInMemoryObservabilityDependencies())),
     privacy: createInMemoryPrivacyDependencies(),
     webhooks: createInMemoryWebhookRepository()
   };
@@ -73,23 +83,23 @@ export const createDrizzleRepositories = (db: DbClient, env?: Env): AppDependenc
     ? new CloudflareR2StorageAdapter(env.STANDARD_DOCUMENTS_BUCKET)
     : undefined;
   const documentIngestion: DocumentIngestionServiceDependencies = {
-    storage: storage ?? { putObject: async () => {}, getObject: async () => null },
+    storage: storage ?? { getObject: async () => null },
     queue: { enqueue: async () => {}, enqueueKbEmbeddingJob: async () => {} },
     repositories: ingestionRepositories,
     bucketName: "STANDARD_DOCUMENTS_BUCKET",
     storageProvider: storage ? "cloudflare_r2" : "memory",
     vectorIndexName: DEFAULT_VECTOR_INDEX_NAME,
-    extractors: getDefaultExtractors(env as any),
+    extractors: getDefaultExtractors(env as Record<string, string> | undefined),
     chunking: { max_tokens_estimate: 800, overlap_tokens_estimate: 80, strategy: "by_tokens_estimate", preserve_headings: true, preserve_pages: true },
   };
 
   // --- KB (Drizzle repos + Vectorize + Workers AI when available) ---
   const kbRepositories = createDrizzleKbRepositories(db);
   const embeddingProvider = env?.AI
-    ? new CloudflareAiEmbeddingProvider(env.AI as never)
+    ? new CloudflareAiEmbeddingProvider(env.AI)
     : new MockEmbeddingProvider();
   const vectorStore = env?.STANDARD_KB_INDEX
-    ? new CloudflareVectorizeStore(env.STANDARD_KB_INDEX as never, DEFAULT_VECTOR_INDEX_NAME)
+    ? new CloudflareVectorizeStore(env.STANDARD_KB_INDEX, DEFAULT_VECTOR_INDEX_NAME)
     : new MockVectorStore(DEFAULT_VECTOR_INDEX_NAME);
   const kb = {
     documentIngestion,
@@ -102,7 +112,7 @@ export const createDrizzleRepositories = (db: DbClient, env?: Env): AppDependenc
   };
 
   // --- SCF Core (fully Drizzle) ---
-  const scf = createScfCoreFromRepository(createDrizzleScfRepository(db as never));
+  const scf = createScfCoreFromRepository(createDrizzleScfRepository(asDb(db)));
 
   // --- SoA (Drizzle repositories) ---
   const soaRepositories = createDrizzleSoaRepositories(db);
@@ -119,6 +129,9 @@ export const createDrizzleRepositories = (db: DbClient, env?: Env): AppDependenc
   // --- Reporting (Drizzle repositories) ---
   const reportRepositories = createDrizzleReportRepositories(db);
   const reporting = { repositories: reportRepositories, soa, gapAnalysis, poam, scf };
+
+  // --- Observability (single instance, reused for alerts) ---
+  const observability = createDrizzleObservabilityDependencies(asDb(db));
 
   return {
     tenants: createDrizzleTenantRepository(db),
@@ -137,7 +150,7 @@ export const createDrizzleRepositories = (db: DbClient, env?: Env): AppDependenc
     poam,
     reporting,
     agentRuntime: {
-      ...createDrizzleAgentRuntimeDependencies(db as never),
+      ...createDrizzleAgentRuntimeDependencies(asDb(db)),
       llm: (
         env?.AI_GATEWAY_BASE_URL && env?.OPENAI_API_KEY
           ? new CloudflareAiGatewayAdapter({
@@ -145,11 +158,18 @@ export const createDrizzleRepositories = (db: DbClient, env?: Env): AppDependenc
               apiKey: env.OPENAI_API_KEY,
             })
           : createInMemoryAgentRuntimeDependencies().llm
-      ) as any,
+      ),
     },
     workflows: createDrizzleWorkflowDependencies(db),
-    observability: createDrizzleObservabilityDependencies(db as never),
-    privacy: createInMemoryPrivacyDependencies(), // Drizzle adapter in future phase
+    observability,
+    alerts: (() => {
+      const alerts = new AlertService(new SecurityEventService(observability));
+      if (env?.SOC_WEBHOOK_URL) {
+        alerts.addSink(new WebhookAlertSink(env.SOC_WEBHOOK_URL));
+      }
+      return alerts;
+    })(),
+    privacy: { repositories: createDrizzlePrivacyRepositories(db) },
     webhooks: createDrizzleWebhookRepository(db)
   };
 };

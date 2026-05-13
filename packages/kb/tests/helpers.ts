@@ -31,6 +31,9 @@ export const createKbFixture = async () => {
     document_type: "policy",
     language: "pt-BR",
     status: "chunked",
+    scan_status: "clean",
+    malware_signature: null,
+    scanned_at: null,
     trace_id: "trace-test"
   });
   await documentIngestion.repositories.chunks.saveChunks([

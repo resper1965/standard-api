@@ -219,6 +219,11 @@ export const soaRoutes: RouteDefinition[] = [
     handler: async ({ request, deps, params, tenantId, actorId, traceId }) => {
       const item = await deps.soa.repositories.items.get(routeParam(params, "soaItemId"), tenantId!);
       if (!item) throw new ApiError("NOT_FOUND", "SoA item not found.", 404);
+      // Immutability guard: reject mutations on approved versions
+      const parentVersion = await deps.soa.repositories.versions.get(item.soa_version_id, tenantId!);
+      if (parentVersion && parentVersion.status === "approved") {
+        throw new ApiError("CONFLICT", "Cannot modify items in an approved SoA version. Create a new draft instead.", 409);
+      }
       const assessment = await requireAssessment(deps, item.assessment_id, tenantId!);
       const body = await parseJson(request, UpdateSoaItemRequestSchema);
       try {

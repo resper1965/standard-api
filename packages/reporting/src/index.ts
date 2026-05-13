@@ -3,6 +3,7 @@ export * from "./errors";
 export * from "./factory";
 export * from "./repositories/report.repositories";
 export * from "./schemas";
+export * from "./services/audit-package.service";
 export * from "./services/export-job.service";
 export * from "./services/report-approval.service";
 export * from "./services/report-composer.service";

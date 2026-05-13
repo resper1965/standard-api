@@ -9,6 +9,10 @@ import { rejectionReworkEval } from "./agent-evals/rejection-rework.eval";
 import { maturityClassificationEval } from "./agent-evals/maturity-classification.eval";
 import { promptInjectionEval } from "./agent-evals/prompt-injection.eval";
 import { crossTenantEval } from "./agent-evals/cross-tenant.eval";
+import { incidentTriagerSeverityEval } from "./agent-evals/incident-triager-severity.eval";
+import { evidenceEvaluatorRejectionEval } from "./agent-evals/evidence-evaluator-rejection.eval";
+import { boardTranslatorSanitizationEval } from "./agent-evals/board-translator-sanitization.eval";
+import { vendorRiskFalsePositiveEval } from "./agent-evals/vendor-risk-false-positive.eval";
 import type { AgentEvalCase, EvalMetrics } from "./agent-evals/eval-kit";
 
 const evals: AgentEvalCase[] = [
@@ -24,7 +28,12 @@ const evals: AgentEvalCase[] = [
   rejectionReworkEval,
   maturityClassificationEval,
   promptInjectionEval,
-  crossTenantEval
+  crossTenantEval,
+  // Phase 2.9 behavioral guardrail evals
+  incidentTriagerSeverityEval,
+  evidenceEvaluatorRejectionEval,
+  boardTranslatorSanitizationEval,
+  vendorRiskFalsePositiveEval,
 ];
 
 const aggregate = (metrics: EvalMetrics[]): EvalMetrics => {

@@ -39,8 +39,7 @@ export type AgentToolCallRepository = {
   listByRun(agentRunId: string, tenantId: string): Promise<AgentToolInvocationResponse[]>;
 };
 
-import type { LanguageModel } from "ai";
-
+import type { LlmProvider } from "./llm";
 /**
  * Registry of real tool implementations that execute domain logic.
  * Keys are tool names matching AgentToolName.
@@ -69,7 +68,7 @@ export type AgentRunObservability = {
 export type AgentRuntimeDependencies = {
   runs: AgentRunRepository;
   toolCalls: AgentToolCallRepository;
-  llm: LanguageModel;
+  llm: LlmProvider;
   toolRegistry?: ToolRegistry;
   observability?: AgentRunObservability;
 };

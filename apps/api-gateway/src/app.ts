@@ -4,7 +4,7 @@ import type { StandardAuth } from "@standard/auth";
 import type { Env } from "./index";
 import { ApiError } from "./errors/api-error";
 import type { AppDependencies, RouteDefinition } from "./http";
-import { json, type RequestContext } from "./http";
+import { json, parseJson, type RequestContext } from "./http";
 import { recordAuditPlaceholder } from "./middleware/audit.middleware";
 import { resolveAuthContext } from "./middleware/auth.middleware";
 import { errorResponse } from "./middleware/error.middleware";
@@ -20,11 +20,13 @@ import { apiKeysRoutes } from "./routes/api-keys.routes";
 import { approvalsRoutes } from "./routes/approvals.routes";
 import { artifactsRoutes } from "./routes/artifacts.routes";
 import { assessmentsRoutes } from "./routes/assessments.routes";
+import { dashboardRoutes } from "./routes/dashboard.routes";
 import { documentsRoutes } from "./routes/documents.routes";
 import { gapAnalysisRoutes } from "./routes/gap-analysis.routes";
 import { healthRoutes } from "./routes/health.routes";
 import { kbRoutes } from "./routes/kb.routes";
 import { lifecycleRoutes } from "./routes/lifecycle.routes";
+import { memberRoutes } from "./routes/members.routes";
 import { organizationsRoutes } from "./routes/organizations.routes";
 import { observabilityRoutes } from "./routes/observability.routes";
 import { poamRoutes } from "./routes/poam.routes";
@@ -37,8 +39,12 @@ import { workflowRoutes } from "./routes/workflow.routes";
 import { integrationRoutes } from "./routes/integration.routes";
 import { webhookRoutes } from "./routes/webhook.routes";
 import { privacyRoutes } from "./routes/privacy.routes";
+import { socRoutes } from "./routes/soc.routes";
+import { executiveRoutes } from "./routes/executive.routes";
+import { openapiRoutes } from "./routes/openapi.routes";
 
 const routes: RouteDefinition[] = [
+  ...openapiRoutes,
   ...healthRoutes,
   ...tenantsRoutes,
   ...organizationsRoutes,
@@ -61,7 +67,11 @@ const routes: RouteDefinition[] = [
   ...agentToolsRoutes,
   ...integrationRoutes,
   ...webhookRoutes,
-  ...privacyRoutes
+  ...privacyRoutes,
+  ...socRoutes,
+  ...executiveRoutes,
+  ...dashboardRoutes,
+  ...memberRoutes
 ];
 
 const matchRoute = (routePath: string, actualPath: string): Record<string, string> | null => {
@@ -83,8 +93,39 @@ const matchRoute = (routePath: string, actualPath: string): Record<string, strin
   return params;
 };
 
+/**
+ * Pre-built route index for O(1) bucket lookup instead of O(N) linear scan.
+ * Keyed by "METHOD:/api/v1/SEGMENT" to reduce candidates per lookup.
+ */
+const buildRouteIndex = (allRoutes: RouteDefinition[]): Map<string, RouteDefinition[]> => {
+  const index = new Map<string, RouteDefinition[]>();
+  for (const route of allRoutes) {
+    const segments = route.path.split("/").filter(Boolean);
+    // Use first 3 segments for grouping: "api/v1/assessments" or "api/v1/scf"
+    const prefix = `${route.method}:/${segments.slice(0, 3).join("/")}`;
+    const bucket = index.get(prefix) ?? [];
+    bucket.push(route);
+    index.set(prefix, bucket);
+  }
+  return index;
+};
+
+const routeIndex = buildRouteIndex(routes);
+
+const findRoute = (method: string, pathname: string): RouteDefinition | undefined => {
+  const segments = pathname.split("/").filter(Boolean);
+  const prefix = `${method}:/${segments.slice(0, 3).join("/")}`;
+  const candidates = routeIndex.get(prefix);
+  if (candidates) {
+    const found = candidates.find(r => matchRoute(r.path, pathname));
+    if (found) return found;
+  }
+  // Fallback: scan shorter paths (health, root-level)
+  return routes.find(r => r.method === method && matchRoute(r.path, pathname));
+};
+
 export const createApp = (deps: AppDependencies = createMockRepositories(), env?: Partial<Env>, auth?: StandardAuth) => ({
-  async fetch(request: Request): Promise<Response> {
+  async fetch(request: Request, execCtx?: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
     const traceId = resolveTraceId(request);
 
@@ -112,13 +153,19 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
       return new Response(null, { status: 204, headers: corsHeaders });
     }
 
+    // Relax CSP for docs/llms routes so Scalar UI, fonts, and scripts load correctly
+    const isDocsRoute = url.pathname.startsWith("/docs") || url.pathname.startsWith("/llms");
+    const cspValue = isDocsRoute
+      ? "default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src fonts.gstatic.com; img-src 'self' data:; connect-src 'self';"
+      : "default-src 'none'; frame-ancestors 'none';";
+
     const securityHeaders: Record<string, string> = {
       ...corsHeaders,
       "X-Content-Type-Options": "nosniff",
       "X-Frame-Options": "DENY",
       "X-XSS-Protection": "1; mode=block",
       "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
-      "Content-Security-Policy": "default-src 'none'; frame-ancestors 'none';",
+      "Content-Security-Policy": cspValue,
     };
 
     // Helper to attach headers to any response
@@ -147,7 +194,7 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
         }
       }
 
-      const route = routes.find((candidate) => candidate.method === request.method && matchRoute(candidate.path, url.pathname));
+      const route = findRoute(request.method, url.pathname);
       if (!route) {
         throw new ApiError("NOT_FOUND", "Endpoint not found.", 404);
       }
@@ -161,12 +208,11 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
       const authRequired = route.authRequired ?? (Boolean(route.protected) || Boolean(route.requireActor) || Boolean(route.permissions?.length));
       if (auth) {
         await resolveAuthContext(context, auth, authRequired);
-      } else {
-        // Legacy header fallback (dev/test mode without Better Auth)
+      } else if (env?.STANDARD_ENV !== "production") {
+        // Legacy header fallback — ONLY available in dev/test mode
         const legacyActor = request.headers.get("x-standard-actor-id") ?? undefined;
         if (legacyActor) {
           context.actorId = legacyActor;
-          // Resolve auth context via MockAuthProvider to respect role-based permissions
           const mockAuth = new MockAuthProvider("development");
           const authCtx = await mockAuth.authenticate({
             actorId: legacyActor,
@@ -179,6 +225,11 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
         if (authRequired && !context.actorId) {
           throw new ApiError("UNAUTHORIZED", "Authentication is required for this operation.", 401);
         }
+      } else {
+        // Production without Better Auth = always reject
+        if (authRequired) {
+          throw new ApiError("UNAUTHORIZED", "Authentication provider is not configured.", 401);
+        }
       }
 
       // Tenant is now derived from session.activeOrganizationId or legacy header
@@ -190,11 +241,18 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
       await assertRateLimit(context, route.path, env?.STANDARD_CACHE);
       await recordAuditPlaceholder(context, route.path);
 
+      // ── Declarative body validation ───────────────────────────
+      // When route defines bodySchema, parse + validate before handler
+      if (route.bodySchema && ["POST", "PUT", "PATCH"].includes(request.method)) {
+        context.validatedBody = await parseJson(request, route.bodySchema);
+      }
+
       const response = await route.handler(context);
-      try {
-        await recordRequestObservability(context, route.path, response, startedAt);
-      } catch (obsErr) {
-        console.error("[standard:observability] Failed to record metrics:", obsErr instanceof Error ? obsErr.message : obsErr);
+      // Fire-and-forget observability — never blocks the response
+      const obsPromise = recordRequestObservability(context, route.path, response, startedAt)
+        .catch((obsErr) => console.error("[standard:observability] Failed to record metrics:", obsErr instanceof Error ? obsErr.message : obsErr));
+      if (execCtx) {
+        execCtx.waitUntil(obsPromise);
       }
       return withSecurityHeaders(response);
     } catch (error) {

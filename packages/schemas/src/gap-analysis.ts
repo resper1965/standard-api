@@ -173,3 +173,25 @@ export type GapAnalysisValidationResponse = z.infer<typeof GapAnalysisValidation
 export type SubmitGapAnalysisReviewRequest = z.infer<typeof SubmitGapAnalysisReviewRequestSchema>;
 export type ApproveGapAnalysisRequest = z.infer<typeof ApproveGapAnalysisRequestSchema>;
 export type GapSummaryResponse = z.infer<typeof GapSummaryResponseSchema>;
+
+// ─── Compliance Gate (CI/CD Pipeline Integration) ───────────────────
+
+export const ComplianceGateStatusSchema = z.enum(["pass", "fail", "pending", "no_data"]);
+
+export const ComplianceGateResponseSchema = z.object({
+  gate_id: UuidSchema,
+  assessment_id: UuidSchema,
+  framework_id: UuidSchema.optional(),
+  status: ComplianceGateStatusSchema,
+  critical_findings: z.number().int().nonnegative(),
+  high_findings: z.number().int().nonnegative(),
+  total_findings: z.number().int().nonnegative(),
+  gap_analysis_version_id: UuidSchema.optional(),
+  findings_summary: z.string(),
+  checked_at: z.string(),
+  trace_id: TraceIdSchema
+});
+
+export type ComplianceGateStatus = z.infer<typeof ComplianceGateStatusSchema>;
+export type ComplianceGateResponse = z.infer<typeof ComplianceGateResponseSchema>;
+

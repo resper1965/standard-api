@@ -57,6 +57,9 @@ export class DrizzleDocumentRepository implements DocumentRecordRepository {
       document_type: r.documentType,
       language: r.language,
       status: "uploaded",
+      scan_status: r.scanStatus ?? "pending",
+      malware_signature: null,
+      scanned_at: null,
       trace_id: "unknown"
     };
   }
@@ -85,7 +88,10 @@ export class DrizzleDocumentRepository implements DocumentRecordRepository {
       classification: r.classification,
       document_type: r.documentType,
       language: r.language,
-      status: "uploaded",
+      status: "uploaded" as const,
+      scan_status: r.scanStatus ?? ("pending" as const),
+      malware_signature: null,
+      scanned_at: null,
       trace_id: "unknown"
     }));
   }

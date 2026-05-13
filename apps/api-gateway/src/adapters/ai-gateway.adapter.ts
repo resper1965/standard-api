@@ -17,43 +17,77 @@ export type AiGatewayConfig = {
 };
 
 export class CloudflareAiGatewayAdapter implements LlmProvider {
+  private static readonly TIMEOUT_MS = 15_000;
+  private static readonly RETRYABLE_STATUSES = [502, 503, 429];
+
   constructor(private readonly config: AiGatewayConfig) {}
 
   async generate(input: LlmGenerateInput): Promise<LlmGenerateOutput> {
-    const response = await fetch(`${this.config.baseUrl}/chat/completions`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${this.config.apiKey}`,
-      },
-      body: JSON.stringify({
-        model: input.model,
-        messages: input.messages,
-        tools: input.tools?.length ? input.tools : undefined,
-        temperature: input.temperature ?? 0,
-        max_tokens: input.max_tokens,
-      }),
+    const body = JSON.stringify({
+      model: input.model,
+      messages: input.messages,
+      tools: input.tools?.length ? input.tools : undefined,
+      temperature: input.temperature ?? 0,
+      max_tokens: input.max_tokens,
+      response_format: input.response_format,
     });
 
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`AI Gateway error (${response.status}): ${errText}`);
-    }
-
-    const data = await response.json() as OpenAICompletionResponse;
-    const choice = data.choices[0];
-    if (!choice) {
-      throw new Error("No choices returned from LLM provider");
-    }
-
-    return {
-      message: choice.message,
-      usage: {
-        prompt_tokens: data.usage?.prompt_tokens ?? 0,
-        completion_tokens: data.usage?.completion_tokens ?? 0,
-        total_tokens: data.usage?.total_tokens ?? 0,
-      },
+    const headers = {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${this.config.apiKey}`,
     };
+
+    const url = `${this.config.baseUrl}/chat/completions`;
+
+    // Attempt with timeout + single retry for transient errors
+    let lastError: Error | null = null;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), CloudflareAiGatewayAdapter.TIMEOUT_MS);
+
+      try {
+        const response = await fetch(url, {
+          method: "POST",
+          headers,
+          body,
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          const errText = await response.text();
+          if (attempt === 0 && CloudflareAiGatewayAdapter.RETRYABLE_STATUSES.includes(response.status)) {
+            lastError = new Error(`AI Gateway error (${response.status}): ${errText}`);
+            continue; // Retry once
+          }
+          throw new Error(`AI Gateway error (${response.status}): ${errText}`);
+        }
+
+        const data = await response.json() as OpenAICompletionResponse;
+        const choice = data.choices[0];
+        if (!choice) {
+          throw new Error("No choices returned from LLM provider");
+        }
+
+        return {
+          message: choice.message,
+          usage: {
+            prompt_tokens: data.usage?.prompt_tokens ?? 0,
+            completion_tokens: data.usage?.completion_tokens ?? 0,
+            total_tokens: data.usage?.total_tokens ?? 0,
+          },
+        };
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") {
+          lastError = new Error(`AI Gateway timeout after ${CloudflareAiGatewayAdapter.TIMEOUT_MS}ms`);
+          if (attempt === 0) continue; // Retry once on timeout
+        }
+        throw error;
+      } finally {
+        clearTimeout(timeout);
+      }
+    }
+
+    throw lastError ?? new Error("AI Gateway: all retries exhausted");
   }
 }
 

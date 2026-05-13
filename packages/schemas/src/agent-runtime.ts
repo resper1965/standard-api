@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { TraceIdSchema, UuidSchema } from "./common";
+import { SupportedLocaleSchema, TraceIdSchema, UuidSchema } from "./common";
 
 export const FunctionalAgentIdSchema = z.enum([
   "knowledge_steward",
@@ -37,7 +37,8 @@ export const AgentRuntimeContextSchema = z.object({
   framework_id: UuidSchema,
   scf_version_id: UuidSchema,
   trace_id: TraceIdSchema,
-  actor_id: UuidSchema.optional()
+  actor_id: UuidSchema.optional(),
+  locale: SupportedLocaleSchema.optional()
 });
 
 export const AgentOutputSchema = z.object({

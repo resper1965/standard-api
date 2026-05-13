@@ -36,19 +36,48 @@ export class DocumentIngestionService {
       safeFilename: validation.normalizedFilename
     });
 
-    await this.deps.storage.putObject({
-      key: storageKey,
-      bytes: input.file.bytes,
-      contentType: validation.mimeType,
-      contentHash: validation.contentHash,
-      metadata: {
-        tenant_id: input.context.tenantId,
-        organization_id: input.context.organizationId,
-        assessment_id: input.context.assessmentId,
-        document_id: input.documentId,
-        trace_id: input.context.traceId
+    // ── MALWARE SCAN GATE (blocking) ──────────────────────────
+    // Runs BEFORE persistence. If threats detected, upload is rejected immediately.
+    let scanStatus: "clean" | "pending" | "flagged" = "pending";
+
+    if (this.deps.malwareScanner) {
+      const scanResult = await this.deps.malwareScanner.scan({
+        bytes: input.file.bytes,
+        filename: input.file.originalFilename,
+        mimeType: input.file.mimeType,
+        traceId: input.context.traceId,
+      });
+
+      if (!scanResult.clean) {
+        // Audit the block event BEFORE rejecting
+        await this.deps.repositories.audit.record("document.malware_scan_blocked", {
+          tenant_id: input.context.tenantId,
+          organization_id: input.context.organizationId,
+          assessment_id: input.context.assessmentId,
+          document_id: input.documentId,
+          actor_id: input.context.actorId,
+          trace_id: input.context.traceId,
+          threats: scanResult.threats,
+          scan_duration_ms: scanResult.scanDurationMs,
+          filename: input.file.originalFilename,
+          timestamp: input.context.now,
+        });
+
+        throw new Error(
+          `MALWARE_DETECTED: Upload blocked. ${scanResult.threats.length} threat(s) found: ${scanResult.threats.join("; ")}`
+        );
       }
-    });
+
+      scanStatus = "clean";
+
+      await this.deps.repositories.audit.record("document.malware_scan_clean", {
+        tenant_id: input.context.tenantId,
+        document_id: input.documentId,
+        trace_id: input.context.traceId,
+        scan_duration_ms: scanResult.scanDurationMs,
+        timestamp: input.context.now,
+      });
+    }
 
     const document: DocumentResponse = {
       document_id: input.documentId,
@@ -71,6 +100,7 @@ export class DocumentIngestionService {
       ...(input.metadata?.versionLabel ? { version_label: input.metadata.versionLabel } : {}),
       ...(input.metadata?.effectiveDate ? { effective_date: input.metadata.effectiveDate } : {}),
       status: "queued_for_extraction",
+      scan_status: scanStatus,
       trace_id: input.context.traceId
     };
 

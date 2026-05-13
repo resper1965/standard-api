@@ -24,12 +24,15 @@ export interface Env {
   KB_EMBEDDING_QUEUE: Queue;
   REPORT_EXPORT_QUEUE: Queue;
   AGENT_RUN_QUEUE: Queue;
+  SOC_TRIAGE_QUEUE?: Queue;
   EMAIL: Fetcher;
   STANDARD_CACHE?: KVNamespace;
   STANDARD_CONFIG_KV?: KVNamespace;
   STANDARD_FEATURE_FLAGS_KV?: KVNamespace;
   STANDARD_KB_INDEX?: VectorizeIndex;
   AI?: Ai;
+  /** SOC webhook endpoint for alert delivery */
+  SOC_WEBHOOK_URL?: string;
   /** Cloudflare Email Service binding for transactional emails */
 }
 
@@ -48,7 +51,8 @@ export default {
         cachedDeps = {
           ...createDrizzleRepositories(db, env),
           email: (env.EMAIL as unknown as SendEmail) ?? undefined,
-          AGENT_RUN_QUEUE: env.AGENT_RUN_QUEUE ?? undefined
+          AGENT_RUN_QUEUE: env.AGENT_RUN_QUEUE ?? undefined,
+          SOC_TRIAGE_QUEUE: env.SOC_TRIAGE_QUEUE ?? undefined,
         };
 
         // Initialize Better Auth with the same Drizzle DB instance
@@ -67,7 +71,7 @@ export default {
       }
       cachedApp = createApp(cachedDeps, env, cachedAuth ?? undefined);
     }
-    return cachedApp.fetch(request);
+    return cachedApp.fetch(request, ctx);
   }
 };
 

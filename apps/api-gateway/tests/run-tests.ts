@@ -13,6 +13,8 @@ import "./agent-runtime.test";
 import "./workflow.test";
 import "./api-security.test";
 import "./observability.test";
+import "./auth.test";
+import "./rate-limit.test";
 import { runTests } from "./test-kit";
 
 await runTests();

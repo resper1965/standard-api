@@ -2,6 +2,7 @@ import { executeTransition, getAllowedNextStates } from "@standard/assessment-en
 import { AuditEventService, MetricsService } from "@standard/observability";
 import {
   ApproveReportRequestSchema,
+  AuditPackageService,
   CreateReportDraftRequestSchema,
   ExportJobService,
   ExportRequestSchema,
@@ -288,6 +289,46 @@ export const reportingRoutes: RouteDefinition[] = [
       const rendered = format === "markdown" ? await service.renderMarkdown(report.report_version_id, contextFor(assessment, traceId, actorId!)) : await service.renderJson(report.report_version_id, contextFor(assessment, traceId, actorId!));
       return json(await new ReportStorageService(deps.reporting).storeArtifact(report.report_version_id, rendered, contextFor(assessment, traceId, actorId!)), { status: 201 });
     }
+  },
+  {
+    method: "POST",
+    path: "/api/v1/assessments/:assessmentId/audit-package",
+    protected: true,
+    requireActor: true,
+    handler: async ({ params, deps, tenantId, actorId, traceId, request }) => {
+      const assessment = await requireAssessment(deps, routeParam(params, "assessmentId"), tenantId!);
+      const locale = new URL(request.url).searchParams.get("locale") as import("@standard/schemas").SupportedLocale | null;
+      try {
+        const result = await new AuditPackageService(deps.reporting).generatePackage(
+          assessment.assessment_id,
+          contextFor(assessment, traceId, actorId!),
+          locale ?? undefined
+        );
+        return json(result, { status: 202 });
+      } catch (error) {
+        return toApiError(error);
+      }
+    }
+  },
+  {
+    method: "GET",
+    path: "/api/v1/export-jobs/:exportJobId/download",
+    protected: true,
+    permissions: ["report:download"],
+    handler: async ({ params, deps, tenantId, traceId }) => {
+      const job = await deps.reporting.repositories.exportJobs.get(routeParam(params, "exportJobId"), tenantId!);
+      if (!job) throw new ApiError("EXPORT_JOB_NOT_FOUND", "Export job not found.", 404);
+      if (job.status !== "succeeded") throw new ApiError("EXPORT_JOB_FAILED", `Export job status: ${job.status}. Only succeeded jobs can be downloaded.`, 409);
+      const assessment = await requireAssessment(deps, job.assessment_id, tenantId!);
+      return json({
+        export_job_id: job.export_job_id,
+        status: job.status,
+        report_version_id: job.report_version_id,
+        download_url: job.report_version_id
+          ? await new ReportStorageService(deps.reporting).generateDownloadUrl(job.report_version_id, contextFor(assessment, traceId))
+          : null,
+        trace_id: traceId
+      });
+    }
   }
 ];
-

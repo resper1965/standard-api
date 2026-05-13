@@ -186,6 +186,11 @@ export const poamRoutes: RouteDefinition[] = [
     handler: async ({ request, deps, params, tenantId, actorId, traceId }) => {
       const item = await deps.poam.repositories.items.get(routeParam(params, "poamItemId"), tenantId!);
       if (!item) throw new ApiError("NOT_FOUND", "POA&M item not found.", 404);
+      // Immutability guard: reject mutations on approved versions
+      const parentVersion = await deps.poam.repositories.versions.get(item.poam_version_id, tenantId!);
+      if (parentVersion && parentVersion.status === "approved") {
+        throw new ApiError("CONFLICT", "Cannot modify items in an approved POA&M version. Create a new draft instead.", 409);
+      }
       const assessment = await requireAssessment(deps, item.assessment_id, tenantId!);
       const body = await parseJson(request, UpdatePoamItemRequestSchema);
       try {
@@ -231,6 +236,14 @@ export const poamRoutes: RouteDefinition[] = [
     handler: async ({ request, deps, params, tenantId, actorId, traceId }) => {
       const milestone = await deps.poam.repositories.milestones.get(routeParam(params, "milestoneId"), tenantId!);
       if (!milestone) throw new ApiError("NOT_FOUND", "POA&M milestone not found.", 404);
+      // Immutability guard: reject mutations on approved versions (look up via parent item)
+      const parentItem = await deps.poam.repositories.items.get(milestone.poam_item_id, tenantId!);
+      if (parentItem) {
+        const parentVersion = await deps.poam.repositories.versions.get(parentItem.poam_version_id, tenantId!);
+        if (parentVersion && parentVersion.status === "approved") {
+          throw new ApiError("CONFLICT", "Cannot modify milestones in an approved POA&M version. Create a new draft instead.", 409);
+        }
+      }
       const assessment = await requireAssessment(deps, milestone.assessment_id, tenantId!);
       const body = await parseJson(request, UpdatePoamMilestoneRequestSchema);
       try {

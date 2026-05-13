@@ -40,6 +40,18 @@ queue = "standard-report-export-dev"
 binding = "AGENT_RUN_QUEUE"
 queue = "standard-agent-run-dev"
 
+# ─── SOC Triage Queue (Background AI processing) ───────────
+[[queues.producers]]
+binding = "SOC_TRIAGE_QUEUE"
+queue = "standard-soc-triage-dev"
+
+[[queues.consumers]]
+queue = "standard-soc-triage-dev"
+max_batch_size = 5
+max_concurrency = 2
+max_retries = 3
+dead_letter_queue = "standard-soc-triage-dlq-dev"
+
 # ─── Email Service (send transactional emails) ─────────────────
 [[send_email]]
 name = "EMAIL"
@@ -96,6 +108,17 @@ queue = "standard-report-export-prod"
 [[env.production.queues.producers]]
 binding = "AGENT_RUN_QUEUE"
 queue = "standard-agent-run-prod"
+
+[[env.production.queues.producers]]
+binding = "SOC_TRIAGE_QUEUE"
+queue = "standard-soc-triage-prod"
+
+[[env.production.queues.consumers]]
+queue = "standard-soc-triage-prod"
+max_batch_size = 5
+max_concurrency = 2
+max_retries = 3
+dead_letter_queue = "standard-soc-triage-dlq-prod"
 
 [env.production.ai]
 binding = "AI"

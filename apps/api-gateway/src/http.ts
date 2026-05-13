@@ -141,11 +141,14 @@ export type AppDependencies = {
   agentRuntime: AgentRuntimeDependencies;
   workflows: WorkflowDependencies;
   observability: ObservabilityDependencies;
+  alerts?: import("@standard/observability").AlertService | undefined;
   privacy: PrivacyDependencies;
   /** Cloudflare Email Service binding (optional — unavailable in tests) */
   email?: SendEmail | undefined;
   /** Cloudflare Queue for async agent run processing (optional) */
   AGENT_RUN_QUEUE?: Queue | undefined;
+  /** Cloudflare Queue for SOC incident triage background processing (optional) */
+  SOC_TRIAGE_QUEUE?: Queue | undefined;
   /** Webhook endpoint management (optional — requires storage adapter) */
   webhooks?: WebhookRepositoryAdapter | undefined;
 };
@@ -166,6 +169,8 @@ export type RequestContext = {
   /** Better Auth session (user + session data) */
   session?: { user: { id: string; email: string; name: string; role?: string | null | undefined; [key: string]: unknown }; session: { id: string; activeOrganizationId?: string | null | undefined; [key: string]: unknown } } | null;
   deps: AppDependencies;
+  /** Pre-validated request body (populated when route defines bodySchema) */
+  validatedBody?: unknown;
 };
 
 export type RouteHandler = (context: RequestContext) => Promise<Response> | Response;
@@ -178,6 +183,9 @@ export type RouteDefinition = {
   tenantRequired?: boolean;
   requireActor?: boolean;
   permissions?: Permission[];
+  /** Zod schema for request body validation. When defined, body is parsed
+   *  and validated before the handler runs. Access via `context.validatedBody`. */
+  bodySchema?: z.ZodType;
   handler: RouteHandler;
 };
 

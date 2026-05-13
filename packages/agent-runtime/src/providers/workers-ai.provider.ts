@@ -4,8 +4,7 @@
  * Uses the Vercel AI SDK workers-ai-provider package.
  * Default model: @cf/meta/llama-3.3-70b-instruct-fp8-fast
  */
-import { createWorkersAI } from "workers-ai-provider";
-import type { LanguageModel } from "ai";
+import type { LlmProvider, LlmGenerateInput, LlmGenerateOutput } from "../llm";
 
 /** Minimal Cloudflare Workers AI binding interface (env.AI) — accepts any superset */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -31,10 +30,29 @@ const DEFAULT_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
  * const result = await generateText({ model, prompt: "..." });
  * ```
  */
-export function createWorkersAILanguageModel(config: WorkersAIProviderConfig): LanguageModel {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const workersAI = createWorkersAI({ binding: config.binding as any });
-  return workersAI(config.model ?? DEFAULT_MODEL);
+export function createWorkersAILanguageModel(config: WorkersAIProviderConfig): LlmProvider {
+  return {
+    generate: async (input: LlmGenerateInput): Promise<LlmGenerateOutput> => {
+      const model = input.model ?? config.model ?? DEFAULT_MODEL;
+      const response = await config.binding.run(model, {
+        messages: input.messages,
+        max_tokens: input.max_tokens,
+        temperature: input.temperature
+      });
+
+      return {
+        message: {
+          role: "assistant",
+          content: response.response ?? ""
+        },
+        usage: {
+          prompt_tokens: 0,
+          completion_tokens: 0,
+          total_tokens: 0
+        }
+      };
+    }
+  };
 }
 
 export { DEFAULT_MODEL as WORKERS_AI_DEFAULT_MODEL };
