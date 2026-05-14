@@ -1,0 +1,14 @@
+{
+  "assessment_id": "30000000-0000-4000-8000-000000000001",
+  "report_type": "full_assessment_report",
+  "required_sections": [
+    "Executive Summary",
+    "Assessment Scope",
+    "Limitations and Assumptions",
+    "Evidence Index",
+    "Traceability Appendix"
+  ],
+  "limitations_required": true,
+  "evidence_index_uses_chunk_references": true,
+  "contains_full_document_text": false
+}

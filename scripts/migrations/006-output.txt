@@ -1,0 +1,12 @@
+[006] Creating Identity Bridge...
+  [ok] ALTER TABLE users ADD COLUMN IF NOT EXISTS ba_user_id text
+  [ok] CREATE UNIQUE INDEX IF NOT EXISTS users_ba_user_id_uidx ON users(ba_user_id)
+  [ok] UPDATE users u SET ba_user_id = ba.id FROM "user" ba WHERE ba.email = u.email AND u.ba_use
+
+[006] Done: 3 ok, 0 failed
+
+=== Identity Bridge Verification ===
+   60000000-0000-4000-8000-000000000001 | synth-operator@aegis.test | Synthetic Operator |  | 
+
+ÔÜá Orphaned BA users (no domain match):
+   0VBTG2M7yHxhVRcInxq8FEmD8bak8fg7 | resper@bekaa.eu | Resper

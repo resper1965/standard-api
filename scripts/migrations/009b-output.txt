@@ -1,0 +1,26 @@
+[009b] Fixing 41 frameworks...
+[009b] Done: 41 ok, 0 failed
+[009b] Frameworks without publisher: 0/231
+[009b] Frameworks with very short names (<15 chars): 5/231
+
+[009b] Sample (alphabetical):
+  AICPA-PRIVACY-MANAGEMENT-FRAMEWORK-(PMF) ÔåÆ "AICPA Privacy Management Framework (PMF) (2020)" [AICPA]
+  PR-2015 ÔåÆ "APEC Privacy Framework (2015)" [APEC]
+  US---AK-PIPA ÔåÆ "Alaska Personal Information Protection Act (PIPA) (2009)" [State]
+  AR-REG-132-2018 ÔåÆ "Argentina - Protection of Personal Data (2018)" [Argentina]
+  AU-IOT-CODE-OF-PRACTICE ÔåÆ "Australia - Code of Practice - Securing the Internet of Things for Consumers (2020)" [Australia]
+  AU-ESSENTIAL-8 ÔåÆ "Australia - Essential Eight (2024)" [Australia]
+  AU-ISM-JUNE-2024 ÔåÆ "Australia - Information Security Manual (ISM) (June 2024)" [Australia]
+  APAC-AUSTRALIAN-PRIVACY-PRINCIPLES ÔåÆ "Australia - Privacy Principles (2026)" [Australia]
+  AU-PRUDENTIAL-STANDARD-CPS230 ÔåÆ "Australia - Prudential Standard CPS 230 (2023)" [Australia]
+  AU-PRUDENTIAL-STANDARD-CPS234 ÔåÆ "Australia - Prudential Standard CPS 234 (2019)" [Australia]
+  EMEA-AUSTRIA ÔåÆ "Austria - Federal Act concerning the Protection of Personal Data (2000)" [Austria]
+  AMERICAS-BAHAMAS ÔåÆ "Bahamas - DPA (2003)" [Bahamas]
+  EMEA-BELGIUM ÔåÆ "Belgium - Act of 8 December 1992" [Belgium]
+  BM-BMACCC ÔåÆ "Bermuda - Bermuda Monetary Authority Code of Conduct (2020)" [Bermuda]
+  BR-LGPD ÔåÆ "Brazil - General Data Protection Law (LGPD) (2018)" [Brazil]
+  CE-1.2 ÔåÆ "CERT Resilience Management Model (CERT-RMM) v1.2" [US CERT]
+  CI-CPG-2022 ÔåÆ "CISA Cross-Sector Cybersecurity Performance Goals (CPG) (2.0)" [Federal]
+  DH-SSDAF ÔåÆ "CISA Secure Software Development Attestation Form (SSDAF) (2024)" [Federal]
+  DH-TIC-3.0 ÔåÆ "CISA Trusted Internet Connections 3.0 Security Capabilities Catalog (TIC 3.0)" [Federal]
+  CC-2025 ÔåÆ "California Consumer Privacy Act (CCPA) (2026)" [State]

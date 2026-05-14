@@ -1,0 +1,15 @@
+[008] Reading: C:\Users\resper\OneDrive\├ürea de Trabalho\aegis-api\evals\fixtures\scf-2026.1.1.xlsx
+[008] Tabs: 10
+[008] Controls tab: "SCF 2026.1"
+[008] Parsed: 1468 rows
+[008] Sample "GOV-01": desc=109 chars, q=111 chars, w=10, maturity=yes
+[008] Controls to enrich: 1468
+  [200/1468]
+  [400/1468]
+  [600/1468]
+  [800/1468]
+  [1000/1468]
+  [1200/1468]
+  [1400/1468]
+[008] Done: 1468 ok, 0 failed
+[008] Final stats: {"with_desc":"1468","with_question":"1468","with_weight":"1468","with_maturity":"1468","total":"1468"}

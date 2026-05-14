@@ -1,0 +1,9 @@
+Reading XLSX file: C:\Users\resper\OneDrive\├ürea de Trabalho\aegis-api\assets\Secure Controls Framework (SCF) - 2026.1.1.xlsx
+
+=== XLSX Summary ===
+Sheet name:      SCF 2026.1
+Domains found:   33
+Controls found:  1468
+Frameworks (cols): 355
+
+Done (--xlsx-only).

@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Lint, typecheck, test, build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.0.0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Unit Tests
+        run: pnpm test:unit
+
+      - name: Contract Tests
+        run: pnpm test:contracts
+
+      - name: Security Tests
+        run: pnpm test:security
+
+      - name: Regression Tests
+        run: pnpm test:regression
+
+      - name: Agent Evaluations
+        run: pnpm test:evaluations
+
+      - name: Synthetic E2E Tests
+        run: pnpm test:synthetic-e2e
+
+      - name: Build
+        run: pnpm build

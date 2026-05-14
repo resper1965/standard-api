@@ -1,0 +1,57 @@
+version: 1
+
+labels:
+  - label: "api-gateway"
+    sync: true
+    matcher:
+      files: ["apps/api-gateway/**"]
+
+  - label: "frontend"
+    sync: true
+    matcher:
+      files: ["apps/web/**"]
+
+  - label: "packages"
+    sync: true
+    matcher:
+      files: ["packages/**"]
+
+  - label: "workers"
+    sync: true
+    matcher:
+      files: ["workers/**"]
+
+  - label: "infrastructure"
+    sync: true
+    matcher:
+      files: ["infra/**", ".github/workflows/**", "*.toml"]
+
+  - label: "security"
+    sync: true
+    matcher:
+      files: ["packages/security/**", "SECURITY.md", ".github/workflows/security-scan.yml"]
+
+  - label: "documentation"
+    sync: true
+    matcher:
+      files: ["docs/**", "*.md", "adr/**"]
+
+  - label: "tests"
+    sync: true
+    matcher:
+      files: ["tests/**", "evals/**", "**/*.test.ts"]
+
+  - label: "agent-runtime"
+    sync: true
+    matcher:
+      files: ["packages/agent-runtime/**", "prompts/**"]
+
+  - label: "scf"
+    sync: true
+    matcher:
+      files: ["packages/scf-core/**", "packages/scf-catalog/**"]
+
+  - label: "assessment"
+    sync: true
+    matcher:
+      files: ["packages/assessment-engine/**", "packages/soa/**", "packages/gap-analysis/**", "packages/poam/**"]

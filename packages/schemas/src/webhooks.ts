@@ -1,0 +1,161 @@
+/**
+ * Webhook types and delivery system for Standard Platform.
+ *
+ * Supports 11 lifecycle events as defined in public-api-guidelines.md.
+ * Delivery uses HMAC-SHA256 signatures for verification.
+ *
+ * @module @standard/schemas/webhooks
+ */
+import { z } from "zod";
+
+// ── Event Types ──────────────────────────────────────────────────
+export const WEBHOOK_EVENT_TYPES = [
+  "assessment.created",
+  "document.ingested",
+  "kb.indexed",
+  "soa.approved",
+  "gap.approved",
+  "maturity.approved",
+  "poam.approved",
+  "report.generated",
+  "report.approved",
+  "assessment.closed",
+  "workflow.failed",
+  "compliance.gate.evaluated",
+] as const;
+
+export type WebhookEventType = (typeof WEBHOOK_EVENT_TYPES)[number];
+
+export const WebhookEventTypeSchema = z.enum(WEBHOOK_EVENT_TYPES);
+
+// ── Webhook Registration ──────────────────────────────────────────
+export const CreateWebhookEndpointSchema = z.object({
+  /** URL to deliver webhook events to (must be HTTPS in production) */
+  url: z.string().url(),
+  /** Events to subscribe to (empty = all events) */
+  events: z.array(WebhookEventTypeSchema).default([]),
+  /** Optional description for the developer portal */
+  description: z.string().max(500).optional(),
+  /** Whether the endpoint is active */
+  enabled: z.boolean().default(true),
+});
+
+export type CreateWebhookEndpointInput = z.infer<typeof CreateWebhookEndpointSchema>;
+
+export const UpdateWebhookEndpointSchema = z.object({
+  url: z.string().url().optional(),
+  events: z.array(WebhookEventTypeSchema).optional(),
+  description: z.string().max(500).optional(),
+  enabled: z.boolean().optional(),
+});
+
+export type UpdateWebhookEndpointInput = z.infer<typeof UpdateWebhookEndpointSchema>;
+
+// ── Webhook Endpoint Record ──────────────────────────────────────
+export type WebhookEndpointRecord = {
+  id: string;
+  tenant_id: string;
+  organization_id: string;
+  url: string;
+  events: WebhookEventType[];
+  description: string | null;
+  enabled: boolean;
+  /** HMAC signing secret (shown only at creation) */
+  signing_secret_hash: string;
+  /** Masked version for display */
+  signing_secret_masked: string;
+  created_at: string;
+  updated_at: string;
+};
+
+// ── Webhook Delivery ──────────────────────────────────────────────
+export type WebhookDeliveryPayload = {
+  /** Unique event ID for idempotency */
+  event_id: string;
+  /** Event type */
+  event_type: WebhookEventType;
+  /** ISO 8601 timestamp */
+  timestamp: string;
+  /** Tenant context */
+  tenant_id: string;
+  /** Organization context */
+  organization_id: string;
+  /** Assessment context (when applicable) */
+  assessment_id?: string;
+  /** Event-specific data */
+  data: Record<string, unknown>;
+  /** Request trace ID */
+  trace_id: string;
+};
+
+/**
+ * Headers sent with each webhook delivery, following public-api-guidelines.md:
+ *
+ * X-Standard-Event-Id: unique delivery ID
+ * X-Standard-Event-Type: the event type
+ * X-Standard-Timestamp: ISO timestamp
+ * X-Standard-Signature: HMAC-SHA256 hex digest
+ * X-Standard-Trace-Id: trace correlation
+ */
+export type WebhookDeliveryHeaders = {
+  "X-Standard-Event-Id": string;
+  "X-Standard-Event-Type": string;
+  "X-Standard-Timestamp": string;
+  "X-Standard-Signature": string;
+  "X-Standard-Trace-Id": string;
+  "Content-Type": "application/json";
+};
+
+// ── Delivery Log ──────────────────────────────────────────────────
+export type WebhookDeliveryStatus = "pending" | "delivered" | "failed" | "retrying";
+
+export type WebhookDeliveryLog = {
+  delivery_id: string;
+  endpoint_id: string;
+  event_id: string;
+  event_type: WebhookEventType;
+  status: WebhookDeliveryStatus;
+  http_status: number | null;
+  attempt_count: number;
+  max_attempts: number;
+  last_attempted_at: string | null;
+  next_retry_at: string | null;
+  response_body: string | null;
+  created_at: string;
+};
+
+// ── Webhook Repository Interface ──────────────────────────────────
+export type WebhookRepositoryAdapter = {
+  createEndpoint(input: {
+    tenant_id: string;
+    organization_id: string;
+    url: string;
+    events: WebhookEventType[];
+    description?: string;
+    signing_secret_hash: string;
+    signing_secret_masked: string;
+  }): Promise<WebhookEndpointRecord>;
+
+  getEndpoint(id: string, tenant_id: string): Promise<WebhookEndpointRecord | null>;
+
+  listEndpoints(tenant_id: string, organization_id: string): Promise<WebhookEndpointRecord[]>;
+
+  updateEndpoint(
+    id: string,
+    tenant_id: string,
+    patch: Partial<Pick<WebhookEndpointRecord, "url" | "events" | "description" | "enabled">>
+  ): Promise<WebhookEndpointRecord | null>;
+
+  deleteEndpoint(id: string, tenant_id: string): Promise<boolean>;
+
+  /** Find all endpoints subscribed to a specific event for a tenant */
+  findSubscribers(
+    tenant_id: string,
+    organization_id: string,
+    event_type: WebhookEventType
+  ): Promise<WebhookEndpointRecord[]>;
+
+  logDelivery(log: WebhookDeliveryLog): Promise<void>;
+
+  listDeliveries(endpoint_id: string, limit?: number): Promise<WebhookDeliveryLog[]>;
+};

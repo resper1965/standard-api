@@ -1,0 +1,57 @@
+[002] Creating missing tables...
+  [ok] CREATE TABLE IF NOT EXISTS api_keys ( id uuid PRIMARY KEY DEFAULT gen_random_uui
+  [ok] CREATE INDEX IF NOT EXISTS api_keys_org_idx ON api_keys(organization_id)
+  [ok] CREATE UNIQUE INDEX IF NOT EXISTS api_keys_hash_uidx ON api_keys(key_hash)
+  [ok] CREATE TABLE IF NOT EXISTS kb_embedding_jobs ( id uuid PRIMARY KEY DEFAULT gen_r
+  [ok] CREATE INDEX IF NOT EXISTS kb_embedding_jobs_assessment_idx ON kb_embedding_jobs
+  [ok] CREATE INDEX IF NOT EXISTS kb_embedding_jobs_document_idx ON kb_embedding_jobs(d
+  [ok] CREATE INDEX IF NOT EXISTS kb_embedding_jobs_status_idx ON kb_embedding_jobs(sta
+  [ok] CREATE INDEX IF NOT EXISTS kb_embedding_jobs_trace_idx ON kb_embedding_jobs(trac
+  [ok] CREATE TABLE IF NOT EXISTS kb_search_logs ( id uuid PRIMARY KEY DEFAULT gen_rand
+  [ok] CREATE INDEX IF NOT EXISTS kb_search_logs_assessment_idx ON kb_search_logs(tenan
+  [ok] CREATE INDEX IF NOT EXISTS kb_search_logs_trace_idx ON kb_search_logs(trace_id)
+  [ok] CREATE INDEX IF NOT EXISTS kb_search_logs_query_hash_idx ON kb_search_logs(query
+  [ok] CREATE TABLE IF NOT EXISTS agent_tool_calls ( id uuid PRIMARY KEY DEFAULT gen_ra
+  [ok] CREATE INDEX IF NOT EXISTS agent_tool_calls_run_idx ON agent_tool_calls(agent_ru
+  [ok] CREATE INDEX IF NOT EXISTS agent_tool_calls_assessment_idx ON agent_tool_calls(t
+  [ok] CREATE INDEX IF NOT EXISTS agent_tool_calls_trace_idx ON agent_tool_calls(trace_
+  [ok] CREATE TABLE IF NOT EXISTS poam_milestones ( id uuid PRIMARY KEY DEFAULT gen_ran
+  [ok] CREATE INDEX IF NOT EXISTS poam_milestones_item_idx ON poam_milestones(poam_item
+  [ok] CREATE UNIQUE INDEX IF NOT EXISTS poam_milestones_item_code_uidx ON poam_milesto
+  [ok] CREATE TABLE IF NOT EXISTS poam_dependencies ( id uuid PRIMARY KEY DEFAULT gen_r
+  [ok] CREATE INDEX IF NOT EXISTS poam_dependencies_item_idx ON poam_dependencies(poam_
+  [ok] CREATE INDEX IF NOT EXISTS poam_dependencies_depends_on_idx ON poam_dependencies
+  [ok] CREATE TABLE IF NOT EXISTS export_jobs ( id uuid PRIMARY KEY DEFAULT gen_random_
+  [ok] CREATE INDEX IF NOT EXISTS export_jobs_assessment_idx ON export_jobs(tenant_id, 
+  [ok] CREATE INDEX IF NOT EXISTS export_jobs_report_idx ON export_jobs(report_version_
+  [ok] CREATE INDEX IF NOT EXISTS export_jobs_status_idx ON export_jobs(status)
+  [ok] CREATE TABLE IF NOT EXISTS workflow_runs ( id uuid PRIMARY KEY DEFAULT gen_rando
+  [ok] CREATE INDEX IF NOT EXISTS workflow_runs_assessment_idx ON workflow_runs(tenant_
+  [ok] CREATE INDEX IF NOT EXISTS workflow_runs_status_idx ON workflow_runs(status)
+  [ok] CREATE UNIQUE INDEX IF NOT EXISTS workflow_runs_idempotency_uidx ON workflow_run
+  [ok] CREATE TABLE IF NOT EXISTS workflow_audit_events ( id uuid PRIMARY KEY DEFAULT g
+  [ok] CREATE INDEX IF NOT EXISTS workflow_audit_events_run_idx ON workflow_audit_event
+  [ok] CREATE INDEX IF NOT EXISTS workflow_audit_events_assessment_idx ON workflow_audi
+  [ok] CREATE INDEX IF NOT EXISTS workflow_audit_events_trace_idx ON workflow_audit_eve
+  [ok] CREATE TABLE IF NOT EXISTS webhook_endpoints ( id uuid PRIMARY KEY DEFAULT gen_r
+  [ok] CREATE INDEX IF NOT EXISTS webhook_endpoints_tenant_org_idx ON webhook_endpoints
+  [ok] CREATE INDEX IF NOT EXISTS webhook_endpoints_tenant_idx ON webhook_endpoints(ten
+  [ok] CREATE TABLE IF NOT EXISTS webhook_deliveries ( id uuid PRIMARY KEY DEFAULT gen_
+  [ok] CREATE INDEX IF NOT EXISTS webhook_deliveries_endpoint_idx ON webhook_deliveries
+  [ok] CREATE INDEX IF NOT EXISTS webhook_deliveries_event_id_idx ON webhook_deliveries
+  [ok] CREATE INDEX IF NOT EXISTS webhook_deliveries_status_idx ON webhook_deliveries(s
+
+[002] Done: 41 ok, 0 failed
+
+Total tables: 64
+  api_keys: Ô£ô
+  kb_embedding_jobs: Ô£ô
+  kb_search_logs: Ô£ô
+  agent_tool_calls: Ô£ô
+  poam_milestones: Ô£ô
+  poam_dependencies: Ô£ô
+  export_jobs: Ô£ô
+  workflow_runs: Ô£ô
+  workflow_audit_events: Ô£ô
+  webhook_endpoints: Ô£ô
+  webhook_deliveries: Ô£ô

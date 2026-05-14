@@ -1,0 +1,49 @@
+[001] Fixing enum drift...
+  [ok] ALTER TYPE evidence_strength ADD VALUE IF NOT EXISTS 'not_checked'
+  [ok] ALTER TYPE gap_type ADD VALUE IF NOT EXISTS 'no_gap'
+  [ok] ALTER TYPE gap_type ADD VALUE IF NOT EXISTS 'not_applicable'
+  [ok] ALTER TYPE poam_status ADD VALUE IF NOT EXISTS 'deferred'
+  [ok] ALTER TYPE priority ADD VALUE IF NOT EXISTS 'urgent'
+  [ok] ALTER TYPE severity ADD VALUE IF NOT EXISTS 'informational'
+  [ok] ALTER TYPE storage_provider ADD VALUE IF NOT EXISTS 'r2_compatible_moc
+  [ok] ALTER TYPE approval_gate ADD VALUE IF NOT EXISTS 'report'
+  [ok] DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'evid
+  [ok] DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'poam
+  [ok] DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'poam
+  [ok] DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'poam
+  [ok] DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'repo
+  [ok] DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'repo
+  [ok] DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'repo
+  [ok] DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'expo
+  [ok] DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'work
+  [ok] DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'webh
+
+[001] Done: 18 ok, 0 skipped, 0 failed
+
+=== Enum Verification ===
+agent_run_status: ["queued","running","completed","failed","cancelled"]
+approval_decision: ["approved","rejected","changes_requested"]
+approval_gate: ["soa","gap_analysis","maturity_assessment","poam","report"]
+artifact_status: ["draft","under_review","approved","superseded","archived"]
+assessment_state: ["draft","documents_uploaded","documents_ingested","scf_pre_analysis_ready","framework_selected","scope_drafted","soa_drafted","soa_under_review","soa_approved","soa_ingested","evidence_analysis_ready","gap_analysis_drafted","gap_analysis_under_review","gap_analysis_approved","maturity_assessed","maturity_under_review","maturity_approved","poam_drafted","poam_under_review","poam_approved","report_generated","closed","archived","failed","cancelled","blocked"]
+document_classification: ["public","internal","confidential","restricted"]
+document_type: ["policy","procedure","standard","evidence","soa","report","other"]
+evidence_status: ["candidate","accepted","rejected","insufficient","conflicting","not_evidenced"]
+evidence_strength: ["strong","partial","weak","absent","conflicting","not_checked"]
+export_job_status: ["queued","running","succeeded","failed","skipped","cancelled","retrying"]
+extraction_job_status: ["queued","processing","completed","failed","cancelled"]
+gap_status: ["met","partially_met","not_met","not_evidenced","not_applicable_justified","not_applicable_not_justified","requires_validation"]
+gap_type: ["documentation_gap","implementation_gap","evidence_gap","effectiveness_gap","governance_gap","technical_gap","contractual_gap","monitoring_gap","no_gap","not_applicable"]
+mapping_source: ["official_scf","derived","consultative"]
+poam_action_type: ["policy_update","procedure_creation","technical_implementation","evidence_collection","governance_improvement","monitoring_improvement","training","third_party_action","risk_acceptance","validation_required","other"]
+poam_dependency_type: ["blocks","related_to","prerequisite","duplicates","depends_on_external_party"]
+poam_effort_estimate: ["small","medium","large","extra_large","unknown"]
+poam_status: ["draft","approved","in_progress","blocked","completed","cancelled","deferred"]
+priority: ["low","medium","high","critical","urgent"]
+report_artifact_type: ["report","export","evidence_index","audit_package","appendix","summary"]
+report_format: ["json","markdown","html","docx","pdf","csv","xlsx","zip"]
+report_type: ["full_assessment_report","executive_summary","soa_export","gap_analysis_report","maturity_report","poam_report","audit_package","machine_readable_export"]
+severity: ["low","medium","high","critical","informational"]
+storage_provider: ["r2","external","r2_compatible_mock"]
+webhook_delivery_status: ["pending","delivered","failed","retrying"]
+workflow_run_status: ["pending","running","waiting_for_input","waiting_for_approval","blocked","failed","cancelled","completed"]

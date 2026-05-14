@@ -1,0 +1,35 @@
+[003] Aligning SoA tables...
+  [ok] ALTER TABLE soa_versions ADD COLUMN IF NOT EXISTS source_framework_id uuid REFERENCES scf_
+  [ok] ALTER TABLE soa_versions ADD COLUMN IF NOT EXISTS scf_version_id uuid REFERENCES scf_versi
+  [ok] ALTER TABLE soa_versions ADD COLUMN IF NOT EXISTS source_scope_id uuid REFERENCES assessme
+  [ok] ALTER TABLE soa_versions ADD COLUMN IF NOT EXISTS created_by uuid REFERENCES users(id)
+  [ok] ALTER TABLE soa_versions ADD COLUMN IF NOT EXISTS submitted_for_review_at timestamptz
+  [ok] ALTER TABLE soa_versions ADD COLUMN IF NOT EXISTS approved_by uuid REFERENCES users(id)
+  [ok] ALTER TABLE soa_versions ADD COLUMN IF NOT EXISTS approved_at timestamptz
+  [ok] ALTER TABLE soa_versions ADD COLUMN IF NOT EXISTS superseded_by uuid
+  [ok] ALTER TABLE soa_versions ADD COLUMN IF NOT EXISTS trace_id text
+  [ok] ALTER TABLE soa_versions ADD COLUMN IF NOT EXISTS metadata jsonb NOT NULL DEFAULT '{}'
+  [ok] ALTER TABLE soa_items ADD COLUMN IF NOT EXISTS framework_id uuid REFERENCES scf_frameworks
+  [ok] ALTER TABLE soa_items ADD COLUMN IF NOT EXISTS framework_requirement_id uuid REFERENCES sc
+  [ok] ALTER TABLE soa_items ADD COLUMN IF NOT EXISTS scf_version_id uuid REFERENCES scf_versions
+  [ok] ALTER TABLE soa_items ADD COLUMN IF NOT EXISTS applicability_status text NOT NULL DEFAULT 
+  [ok] ALTER TABLE soa_items ADD COLUMN IF NOT EXISTS implementation_status text NOT NULL DEFAULT
+  [ok] ALTER TABLE soa_items ADD COLUMN IF NOT EXISTS applicability_rationale text
+  [ok] ALTER TABLE soa_items ADD COLUMN IF NOT EXISTS non_applicability_rationale text
+  [ok] ALTER TABLE soa_items ADD COLUMN IF NOT EXISTS scope_rationale text
+  [ok] ALTER TABLE soa_items ADD COLUMN IF NOT EXISTS evidence_summary text
+  [ok] ALTER TABLE soa_items ADD COLUMN IF NOT EXISTS evidence_coverage text NOT NULL DEFAULT 'no
+  [ok] ALTER TABLE soa_items ADD COLUMN IF NOT EXISTS confidence_score numeric(5,4)
+  [ok] ALTER TABLE soa_items ADD COLUMN IF NOT EXISTS requires_user_validation boolean NOT NULL D
+  [ok] ALTER TABLE soa_items ADD COLUMN IF NOT EXISTS validation_notes text
+  [ok] ALTER TABLE soa_items ADD COLUMN IF NOT EXISTS source_mapping_id uuid REFERENCES scf_mappi
+  [ok] ALTER TABLE soa_items ADD COLUMN IF NOT EXISTS mapping_status text NOT NULL DEFAULT 'offic
+  [ok] ALTER TABLE soa_items ADD COLUMN IF NOT EXISTS relationship_type text
+  [ok] ALTER TABLE soa_items ADD COLUMN IF NOT EXISTS relationship_strength text
+  [ok] CREATE INDEX IF NOT EXISTS soa_items_control_idx ON soa_items(scf_control_id)
+
+[003] Done: 28 ok, 0 failed
+
+soa_versions (21 cols): id, tenant_id, organization_id, assessment_id, version_number, status, approval_event_id, created_by_agent_run_id, created_at, updated_at, deleted_at, source_framework_id, scf_version_id, source_scope_id, created_by, submitted_for_review_at, approved_by, approved_at, superseded_by, trace_id, metadata
+
+soa_items (29 cols): id, tenant_id, organization_id, assessment_id, soa_version_id, scf_control_id, scf_framework_requirement_id, applicability, justification, created_at, updated_at, deleted_at, framework_id, framework_requirement_id, scf_version_id, applicability_status, implementation_status, applicability_rationale, non_applicability_rationale, scope_rationale, evidence_summary, evidence_coverage, confidence_score, requires_user_validation, validation_notes, source_mapping_id, mapping_status, relationship_type, relationship_strength

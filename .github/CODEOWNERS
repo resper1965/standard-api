@@ -1,0 +1,39 @@
+# Platform — Core architecture and infrastructure
+* @resper1965
+
+# API Gateway — Routes, middleware, auth
+/apps/api-gateway/ @resper1965
+
+# Frontend — Web application
+/apps/web/ @resper1965
+
+# Domain packages — Business logic
+/packages/assessment-engine/ @resper1965
+/packages/domain/ @resper1965
+/packages/schemas/ @resper1965
+
+# Security-critical
+/packages/security/ @resper1965
+/packages/observability/ @resper1965
+SECURITY.md @resper1965
+
+# SCF & Compliance
+/packages/scf-core/ @resper1965
+/packages/scf-catalog/ @resper1965
+/packages/soa/ @resper1965
+/packages/gap-analysis/ @resper1965
+/packages/poam/ @resper1965
+
+# AI & Agent Runtime
+/packages/agent-runtime/ @resper1965
+/packages/kb/ @resper1965
+
+# Infrastructure
+/infra/ @resper1965
+/.github/workflows/ @resper1965
+/workers/ @resper1965
+
+# Documentation
+/docs/ @resper1965
+README.md @resper1965
+CONTRIBUTING.md @resper1965

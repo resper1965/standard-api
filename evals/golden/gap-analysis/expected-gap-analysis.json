@@ -1,0 +1,10 @@
+{
+  "assessment_id": "30000000-0000-4000-8000-000000000001",
+  "status": "draft",
+  "findings": [
+    { "control_code": "IAC-001", "assessment_status": "requires_validation", "evidence_status": "conflicting" },
+    { "control_code": "VPM-001", "assessment_status": "partially_met", "evidence_status": "candidate" },
+    { "control_code": "BCR-001", "assessment_status": "partially_met", "evidence_status": "candidate" },
+    { "control_code": "TPR-001", "assessment_status": "not_evidenced", "evidence_status": "not_evidenced" }
+  ]
+}
