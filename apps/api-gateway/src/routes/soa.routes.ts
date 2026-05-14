@@ -222,7 +222,7 @@ export const soaRoutes: RouteDefinition[] = [
       // Immutability guard: reject mutations on approved versions
       const parentVersion = await deps.soa.repositories.versions.get(item.soa_version_id, tenantId!);
       if (parentVersion && parentVersion.status === "approved") {
-        throw new ApiError("CONFLICT", "Cannot modify items in an approved SoA version. Create a new draft instead.", 409);
+        throw new ApiError("SOA_VERSION_IMMUTABLE" as any, "Cannot modify items in an approved SoA version. Create a new draft instead.", 409);
       }
       const assessment = await requireAssessment(deps, item.assessment_id, tenantId!);
       const body = await parseJson(request, UpdateSoaItemRequestSchema);
