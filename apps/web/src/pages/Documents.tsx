@@ -2,10 +2,9 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { api } from "../lib/api";
 import { FileUpload } from "../components/FileUpload";
-import { PageHeader } from "../components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "../components/ui/table";
-import { Loader2, AlertTriangle } from "lucide-react";
+import { Loader2, AlertTriangle, Upload } from "lucide-react";
 
 interface DocumentRecord {
   id: string;
@@ -75,11 +74,6 @@ export function DocumentsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Documents"
-        description="Upload and manage assessment evidence documents"
-      />
-
       {!assessmentId && (
         <div className="flex items-center gap-3 p-4 rounded-lg bg-warning/10 border border-warning/20 text-sm text-warning">
           <AlertTriangle className="h-4 w-4 shrink-0" />
@@ -95,16 +89,25 @@ export function DocumentsPage() {
 
       {assessmentId && (
         <Card className="border-border/60 shadow-none">
-          <CardContent className="pt-6">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Upload className="h-4 w-4" />
+              Upload Evidence
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
             <FileUpload onUpload={handleUpload} />
-            {uploading && <p className="mt-3 text-sm text-muted-foreground">Uploading...</p>}
+            {uploading && <p className="mt-3 text-sm text-muted-foreground">Uploading and scanning for malware...</p>}
           </CardContent>
         </Card>
       )}
 
       <Card className="border-border/60 shadow-none">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Document Library</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base">Document Library</CardTitle>
+            <span className="text-xs text-muted-foreground">{documents.length} files</span>
+          </div>
         </CardHeader>
         <CardContent>
           {loading ? (

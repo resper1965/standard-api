@@ -511,10 +511,7 @@ export function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight">Organization Settings</h2>
-        <p className="text-muted-foreground mt-1 text-sm">Manage your tenant, team, API access, and integration documentation.</p>
-      </div>
+      <p className="text-sm text-muted-foreground">Manage your tenant, team, API access, and integration documentation.</p>
 
       <Tabs defaultValue="general" className="w-full">
         <TabsList className="mb-4 bg-muted/50">

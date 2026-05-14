@@ -18,6 +18,7 @@ import { ApiError } from "../errors/api-error";
 import type { ApiErrorCode } from "../errors/error-codes";
 import type { AppDependencies, AssessmentRecord, RouteDefinition } from "../http";
 import { json, parseJson, routeParam } from "../http";
+import { parsePagination, applyPagination } from "../utils/pagination";
 
 const toApiError = (error: unknown): never => {
   if (error instanceof SoaWorkflowError) {
@@ -204,11 +205,10 @@ export const soaRoutes: RouteDefinition[] = [
       const version = await deps.soa.repositories.versions.get(routeParam(params, "soaVersionId"), tenantId!);
       if (!version) throw new ApiError("NOT_FOUND", "SoA version not found.", 404);
       const assessment = await requireAssessment(deps, version.assessment_id, tenantId!);
-      const url = new URL(request.url);
-      const limit = Number(url.searchParams.get("limit") ?? "50");
-      const offset = Number(url.searchParams.get("offset") ?? "0");
+      const page = parsePagination(request);
       const allItems = await new SoaDraftService(deps.soa).listSoaItems(version.soa_version_id, {}, contextFor(assessment, traceId));
-      return json({ data: allItems.slice(offset, offset + limit), pagination: { limit, offset, total: allItems.length }, trace_id: traceId });
+      const result = applyPagination(allItems, page, "soa_item_id");
+      return json({ data: result.data, pagination: result.pagination, trace_id: traceId });
     }
   },
   {

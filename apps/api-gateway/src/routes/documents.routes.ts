@@ -3,6 +3,7 @@ import { ReprocessDocumentRequestSchema } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";
 import { json, newId, parseJson, routeParam } from "../http";
+import { scanForMalware } from "../utils/malware-scanner";
 
 const mapUploadError = (error: unknown): ApiError => {
   const message = error instanceof Error ? error.message : "Document upload failed.";
@@ -70,6 +71,19 @@ export const documentsRoutes: RouteDefinition[] = [
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
 
       const { file, metadata } = await readUploadForm(request);
+
+      // Anti-malware scan before persisting
+      const fileBytes = new Uint8Array(await file.arrayBuffer());
+      const scanResult = await scanForMalware(fileBytes, file.name);
+      if (!scanResult.clean) {
+        throw new ApiError(
+          "MALWARE_DETECTED" as any,
+          `File rejected: malware threat detected (${scanResult.threat}).`,
+          422,
+          [{ threat: scanResult.threat, scanner: scanResult.scanner, scanned_at: scanResult.scanned_at }]
+        );
+      }
+
       const service = new DocumentIngestionService(deps.documentIngestion);
       try {
         const result = await service.uploadDocument({
@@ -78,7 +92,7 @@ export const documentsRoutes: RouteDefinition[] = [
           file: {
             originalFilename: file.name,
             mimeType: file.type,
-            bytes: new Uint8Array(await file.arrayBuffer())
+            bytes: fileBytes
           },
           context: {
             tenantId: assessment.tenant_id,

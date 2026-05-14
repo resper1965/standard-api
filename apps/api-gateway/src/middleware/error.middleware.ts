@@ -30,6 +30,9 @@ export const errorResponse = (error: unknown, traceId: string): Response => {
     );
   }
 
+  // Log the real error for debugging (visible in Cloudflare Worker logs)
+  console.error(`[UNHANDLED_ERROR] trace=${traceId}`, error instanceof Error ? `${error.name}: ${error.message}\n${error.stack}` : String(error));
+
   return json(
     {
       error: {

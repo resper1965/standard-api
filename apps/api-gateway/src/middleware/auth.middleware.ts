@@ -36,7 +36,7 @@ export const resolveAuthContext = async (
 
       const apiKeyRecord = await context.deps.apiKeys.verifyKey(keyHash);
       if (apiKeyRecord) {
-        context.actorId = "m2m-agent";
+        context.actorId = `m2m:${apiKeyRecord.id}`;
         context.tenantId = apiKeyRecord.tenantId;
         context.organizationId = apiKeyRecord.organizationId;
         

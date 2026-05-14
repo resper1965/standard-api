@@ -50,6 +50,11 @@ export default {
             console.log(`[queues] document_ingestion job routed to ingestion worker`);
             break;
 
+          case "soc_triage":
+            console.log(`[queues] soc_triage job received:`, JSON.stringify(body).slice(0, 200));
+            // Phase: SOC triage AI processing will be implemented here
+            break;
+
           default:
             console.warn(`[queues] Unknown queue_type: ${queueType}`, JSON.stringify(body).slice(0, 200));
         }
@@ -66,7 +71,7 @@ export default {
     return Response.json({
       service: "standard-queues",
       version: "1.0.0",
-      queues: ["standard-kb-embedding", "standard-report-export", "standard-agent-run"],
+      queues: ["standard-kb-embedding", "standard-report-export", "standard-agent-run", "standard-soc-triage"],
       status: "operational"
     });
   }
@@ -80,6 +85,7 @@ function detectQueueType(queueName: string, body: QueueMessageBody): string {
   if (queueName.includes("report-export") || body?.job_type === "report_export") return "report_export";
   if (queueName.includes("document-ingestion") || body?.job_type === "document_ingestion") return "document_ingestion";
   if (queueName.includes("agent-run") || body?.job_type === "agent_run") return "agent_run";
+  if (queueName.includes("soc-triage") || body?.job_type === "soc_triage") return "soc_triage";
   return "unknown";
 }
 

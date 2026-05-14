@@ -18,6 +18,7 @@ import { ApiError } from "../errors/api-error";
 import type { ApiErrorCode } from "../errors/error-codes";
 import type { AppDependencies, AssessmentRecord, RouteDefinition } from "../http";
 import { json, parseJson, routeParam } from "../http";
+import { parsePagination, applyPagination } from "../utils/pagination";
 
 const toApiError = (error: unknown): never => {
   if (error instanceof PoamWorkflowError) {
@@ -149,8 +150,7 @@ export const poamRoutes: RouteDefinition[] = [
       const version = await deps.poam.repositories.versions.get(routeParam(params, "poamVersionId"), tenantId!);
       if (!version) throw new ApiError("NOT_FOUND", "POA&M version not found.", 404);
       const url = new URL(request.url);
-      const limit = Number(url.searchParams.get("limit") ?? "50");
-      const offset = Number(url.searchParams.get("offset") ?? "0");
+      const page = parsePagination(request);
       const data = await deps.poam.repositories.items.listByVersion(version.poam_version_id, tenantId!, cleanObject({
         priority: url.searchParams.get("priority") ?? undefined,
         severity: url.searchParams.get("severity") ?? undefined,
@@ -159,7 +159,8 @@ export const poamRoutes: RouteDefinition[] = [
         owner_role: url.searchParams.get("owner_role") ?? undefined,
         requires_validation: url.searchParams.has("requires_validation") ? url.searchParams.get("requires_validation") === "true" : undefined
       }) as never);
-      return json({ data: data.slice(offset, offset + limit), pagination: { limit, offset, total: data.length }, trace_id: traceId });
+      const result = applyPagination(data, page, "poam_item_id");
+      return json({ data: result.data, pagination: result.pagination, trace_id: traceId });
     }
   },
   {

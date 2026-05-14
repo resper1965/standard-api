@@ -19,6 +19,7 @@ import { ApiError } from "../errors/api-error";
 import type { ApiErrorCode } from "../errors/error-codes";
 import type { AppDependencies, AssessmentRecord, RouteDefinition } from "../http";
 import { json, parseJson, routeParam } from "../http";
+import { parsePagination, applyPagination } from "../utils/pagination";
 
 /** Schema for POST /api/v1/gap/evaluate-evidence */
 const EvaluateEvidenceRequestSchema = z.object({
@@ -103,11 +104,10 @@ export const gapAnalysisRoutes: RouteDefinition[] = [
     protected: true,
     handler: async ({ request, deps, params, tenantId, traceId }) => {
       const assessment = await requireAssessment(deps, routeParam(params, "assessmentId"), tenantId!);
-      const url = new URL(request.url);
-      const limit = Number(url.searchParams.get("limit") ?? "50");
-      const offset = Number(url.searchParams.get("offset") ?? "0");
+      const page = parsePagination(request);
       const data = await new EvidenceAnalysisService(deps.gapAnalysis).listEvidenceFindings(assessment.assessment_id, {}, contextFor(assessment, traceId));
-      return json({ data: data.slice(offset, offset + limit), pagination: { limit, offset, total: data.length }, trace_id: traceId });
+      const result = applyPagination(data, page, "evidence_finding_id");
+      return json({ data: result.data, pagination: result.pagination, trace_id: traceId });
     }
   },
   {
@@ -191,11 +191,10 @@ export const gapAnalysisRoutes: RouteDefinition[] = [
       const version = await deps.gapAnalysis.repositories.gapVersions.get(routeParam(params, "gapAnalysisVersionId"), tenantId!);
       if (!version) throw new ApiError("NOT_FOUND", "Gap Analysis version not found.", 404);
       const assessment = await requireAssessment(deps, version.assessment_id, tenantId!);
-      const url = new URL(request.url);
-      const limit = Number(url.searchParams.get("limit") ?? "50");
-      const offset = Number(url.searchParams.get("offset") ?? "0");
+      const page = parsePagination(request);
       const data = await new GapDraftService(deps.gapAnalysis).listGapFindings(version.gap_analysis_version_id, {}, contextFor(assessment, traceId));
-      return json({ data: data.slice(offset, offset + limit), pagination: { limit, offset, total: data.length }, trace_id: traceId });
+      const result = applyPagination(data, page, "gap_finding_id");
+      return json({ data: result.data, pagination: result.pagination, trace_id: traceId });
     }
   },
   {

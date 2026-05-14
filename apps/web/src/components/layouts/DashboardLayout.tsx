@@ -1,10 +1,11 @@
-import { useState, useCallback, useEffect } from "react"
+import { useState, useCallback, useEffect, useMemo } from "react"
 import { Outlet, Link, useLocation } from "react-router-dom"
 import { useSession, signOut } from "@/lib/auth-client"
 import {
   LayoutDashboard, Settings, LogOut, Loader2, FileText, Search,
   BarChart3, Shield, Puzzle, ClipboardList, Menu, X,
-  Building2, Key, Users, ScrollText, HeartPulse, ChevronRight
+  Building2, Key, Users, ScrollText, HeartPulse, ChevronRight,
+  Bell
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -32,6 +33,24 @@ const adminItems: NavItem[] = [
   { name: "Audit Logs", path: "/dashboard/audit-logs", icon: ScrollText },
   { name: "System Health", path: "/dashboard/system-health", icon: HeartPulse },
 ]
+
+/** Maps route paths to page titles for the sticky topbar */
+const routeTitles: Record<string, string> = {
+  "/dashboard": "Overview",
+  "/dashboard/assessments": "Assessments",
+  "/dashboard/documents": "Documents",
+  "/dashboard/gap-analysis": "Gap Analysis",
+  "/dashboard/reports": "Reports",
+  "/dashboard/scf-catalog": "SCF Catalog",
+  "/dashboard/agent-runs": "Agent Runs",
+  "/dashboard/sdk": "SDK & Docs",
+  "/dashboard/settings": "Settings",
+  "/dashboard/organizations": "Organizations",
+  "/dashboard/licenses": "API Keys",
+  "/dashboard/users": "Users",
+  "/dashboard/audit-logs": "Audit Logs",
+  "/dashboard/system-health": "System Health",
+}
 
 function NavLinks({ items, currentPath, onNavigate }: {
   items: NavItem[]
@@ -98,6 +117,14 @@ export function DashboardLayout() {
 
   const userInitial = session.user.name?.charAt(0).toUpperCase() || "?"
   const userRole = (session.user as any).role || "member"
+
+  // Resolve current page title from route map
+  const pageTitle = useMemo(() => {
+    const path = location.pathname
+    return routeTitles[path]
+      ?? Object.entries(routeTitles).find(([p]) => path.startsWith(p + "/"))?.[1]
+      ?? ""
+  }, [location.pathname])
 
   const sidebarContent = (
     <>
@@ -210,10 +237,24 @@ export function DashboardLayout() {
           </div>
         </header>
 
-        <div className="flex-1 p-6 md:p-8 lg:p-10 overflow-auto">
-          <div className="max-w-[1200px] mx-auto">
-            <Outlet />
+        {/* Desktop sticky topbar with page title */}
+        <header className="hidden md:flex h-12 items-center justify-between border-b border-border/50 bg-card/80 backdrop-blur-sm px-8 sticky top-0 z-30">
+          <h1 className="text-[15px] font-semibold tracking-tight text-foreground">
+            {pageTitle}
+          </h1>
+          <div className="flex items-center gap-3">
+            <button className="relative h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors">
+              <Bell className="h-4 w-4" />
+              <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-primary" />
+            </button>
+            <div className="h-7 w-7 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground text-[10px] font-bold cursor-pointer hover:scale-105 transition-transform">
+              {userInitial}
+            </div>
           </div>
+        </header>
+
+        <div className="flex-1 p-6 md:p-8 lg:p-10 overflow-auto">
+          <Outlet />
         </div>
       </main>
     </div>

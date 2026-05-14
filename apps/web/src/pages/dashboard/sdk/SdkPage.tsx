@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useSession } from "../../../lib/auth-client";
-import { PageHeader } from "../../../components/PageHeader";
 import "./SdkPage.css";
 
 const API_URL = import.meta.env.VITE_API_URL || "https://standard-api-gateway-production.ness.workers.dev";
@@ -104,7 +103,7 @@ try {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="SDK & Integration Guide" description="Use the @standard/sdk to integrate compliance intelligence into your application" />
+      <p className="text-sm text-muted-foreground">Use the @standard/sdk to integrate compliance intelligence into your application</p>
 
       <div className="sdk-page">
         <div className="sdk-badges" style={{ marginBottom: "1.5rem" }}>

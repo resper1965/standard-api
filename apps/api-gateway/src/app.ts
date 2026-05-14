@@ -5,7 +5,7 @@ import type { Env } from "./index";
 import { ApiError } from "./errors/api-error";
 import type { AppDependencies, RouteDefinition } from "./http";
 import { json, parseJson, type RequestContext } from "./http";
-import { recordAuditPlaceholder } from "./middleware/audit.middleware";
+import { recordAuditEvent } from "./middleware/audit.middleware";
 import { resolveAuthContext } from "./middleware/auth.middleware";
 import { errorResponse } from "./middleware/error.middleware";
 import { assertRateLimit } from "./middleware/rate-limit.middleware";
@@ -239,7 +239,7 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
       await assertRbac(context, route.permissions);
       assertApiKeyScopes(context, route.path, request.method);
       await assertRateLimit(context, route.path, env?.STANDARD_CACHE);
-      await recordAuditPlaceholder(context, route.path);
+      await recordAuditEvent(context, route.path);
 
       // ── Declarative body validation ───────────────────────────
       // When route defines bodySchema, parse + validate before handler

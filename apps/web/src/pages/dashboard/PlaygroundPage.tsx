@@ -5,12 +5,9 @@ import { UploadCloud, Terminal } from "lucide-react"
 export function PlaygroundPage() {
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight">Playground</h2>
-        <p className="text-muted-foreground mt-1 text-sm">
-          Simulate agent runtimes and massive document ingestion asynchronous pipeline.
-        </p>
-      </div>
+      <p className="text-sm text-muted-foreground">
+        Simulate agent runtimes and massive document ingestion asynchronous pipeline.
+      </p>
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card className="border-accent/40 bg-card/60">

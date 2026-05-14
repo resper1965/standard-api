@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Activity, Database, Users, ShieldAlert, Loader2, ArrowUpRight } from "lucide-react"
 import { useSession } from "@/lib/auth-client"
 import { apiClient } from "@/lib/api"
-import { PageHeader } from "@/components/PageHeader"
 import { Link } from "react-router-dom"
 
 export function OverviewPage() {
@@ -49,10 +48,10 @@ export function OverviewPage() {
 
   return (
     <div className="space-y-8">
-      <PageHeader
-        title="Overview"
-        description={`${greeting}. ${hasActiveOrg ? "Organization context active." : "No active organization — select one in Settings."}`}
-      />
+      {/* Greeting bar */}
+      <p className="text-sm text-muted-foreground">
+        {greeting}. {hasActiveOrg ? "Organization context active." : "No active organization — select one in Settings."}
+      </p>
 
       {/* ── Stat Cards ─────────────────────────────────── */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
