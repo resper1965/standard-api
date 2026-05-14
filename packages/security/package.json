@@ -13,7 +13,7 @@
     "@standard/document-ingestion": "workspace:*",
     "@standard/schemas": "workspace:*",
     "jose": "^6.2.3",
-    "zod": "^4.3.6"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260430.1",
