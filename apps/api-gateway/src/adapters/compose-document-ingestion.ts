@@ -18,7 +18,7 @@ export const composeDrizzleDocumentIngestion = (db: DbClient, env?: Env): Docume
     : undefined;
 
   return {
-    storage: storage ?? { getObject: async () => null },
+    storage: storage ?? { putObject: async () => {}, getObject: async () => null },
     queue: { enqueue: async () => {}, enqueueKbEmbeddingJob: async () => {} },
     repositories: ingestionRepositories,
     bucketName: "STANDARD_DOCUMENTS_BUCKET",
