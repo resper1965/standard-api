@@ -33,7 +33,7 @@
     "db:studio": "echo \"db:studio ainda não configurado\""
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260426.1",
+    "@cloudflare/workers-types": "^4.20260511.1",
     "@types/node": "^25.7.0",
     "tsx": "latest",
     "typescript": "latest",

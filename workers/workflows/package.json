@@ -16,7 +16,7 @@
     "@standard/schemas": "workspace:*"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260426.1",
+    "@cloudflare/workers-types": "^4.20260511.1",
     "tsx": "^4.21.0",
     "typescript": "latest",
     "wrangler": "latest"
