@@ -41,6 +41,8 @@ export type StoredObject = {
 };
 
 export type StorageAdapter = {
+  /** Persist a file object to the storage backend. */
+  putObject(object: StoredObject): Promise<void>;
   /** 
    * Stateless environment: We only fetch temporary/presigned URLs provided by the Main App.
    * We do not persist raw files permanently in our own pipeline.

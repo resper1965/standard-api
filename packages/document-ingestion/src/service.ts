@@ -117,6 +117,13 @@ export class DocumentIngestionService {
       created_at: input.context.now
     };
 
+    await this.deps.storage.putObject({
+      key: storageKey,
+      bytes: input.file.bytes,
+      contentType: validation.mimeType,
+      contentHash: validation.contentHash,
+      metadata: {},
+    });
     await this.deps.repositories.documents.saveDocument(document);
     await this.deps.repositories.jobs.saveJob({
       job_id: input.jobId,
