@@ -1,0 +1,35 @@
+[
+  {
+    "control_code": "IAC-001",
+    "document_id": "doc_synth_access_control",
+    "chunk_id": "chunk_synth_iac_001",
+    "score": 0.72,
+    "retrieval_method": "vector",
+    "candidate_evidence": true,
+    "evidence_status": "candidate",
+    "evidence_strength": "partial",
+    "query_hash": "sha256:synthetic-iac"
+  },
+  {
+    "control_code": "VPM-001",
+    "document_id": "doc_synth_vulnerability",
+    "chunk_id": "chunk_synth_vpm_001",
+    "score": 0.78,
+    "retrieval_method": "vector",
+    "candidate_evidence": true,
+    "evidence_status": "candidate",
+    "evidence_strength": "partial",
+    "query_hash": "sha256:synthetic-vpm"
+  },
+  {
+    "control_code": "IAC-001",
+    "document_id": "doc_synth_conflict",
+    "chunk_id": "chunk_synth_conflict_001",
+    "score": 0.91,
+    "retrieval_method": "vector",
+    "candidate_evidence": true,
+    "evidence_status": "conflicting",
+    "evidence_strength": "conflicting",
+    "query_hash": "sha256:synthetic-conflict"
+  }
+]

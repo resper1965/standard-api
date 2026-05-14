@@ -1,0 +1,94 @@
+{
+  "description": "Golden outputs for edge cases in SCF assessment lifecycle",
+  "test_cases": [
+    {
+      "id": "edge-001",
+      "scenario": "absent_evidence_not_equals_absent_implementation",
+      "description": "When evidence is absent, the gap finding should be 'not_evidenced', NOT 'not_met'. AGENTS.md §9: Nunca converter ausência de evidência em ausência de implementação.",
+      "input": {
+        "control_code": "IAC-05",
+        "evidence_status": "not_evidenced",
+        "evidence_documents": []
+      },
+      "expected_output": {
+        "assessment_status": "not_evidenced",
+        "gap_type": "evidence_gap"
+      },
+      "forbidden_outputs": [
+        { "assessment_status": "not_met" }
+      ]
+    },
+    {
+      "id": "edge-002",
+      "scenario": "not_applicable_control_with_justification",
+      "description": "A control marked as N/A must have a justification. Unjustified N/A must be flagged as 'not_applicable_not_justified'.",
+      "input": {
+        "control_code": "PCI-01",
+        "is_applicable": false,
+        "justification": null
+      },
+      "expected_output": {
+        "assessment_status": "not_applicable_not_justified"
+      },
+      "forbidden_outputs": [
+        { "assessment_status": "not_applicable_justified" }
+      ]
+    },
+    {
+      "id": "edge-003",
+      "scenario": "conflicting_evidence_scores",
+      "description": "When multiple evidence sources conflict (some strong, some weak), the maturity score should be conservative.",
+      "input": {
+        "control_code": "VPM-001",
+        "evidence_sources": [
+          { "source": "policy_doc", "strength": "strong" },
+          { "source": "interview", "strength": "weak" },
+          { "source": "audit_log", "strength": "absent" }
+        ]
+      },
+      "expected_output": {
+        "evidence_strength": "conflicting",
+        "max_maturity_score": 2,
+        "rationale_must_mention": ["conflicting", "conservative"]
+      }
+    },
+    {
+      "id": "edge-004",
+      "scenario": "high_maturity_requires_measurement",
+      "description": "Score >= 4 (Quantitatively Managed) requires hasMeasurement=true. Without measurement, max score is 3. AGENTS.md §10: Maturity Assessor pode sugerir maturidade; não finaliza maturidade sem approval gate.",
+      "input": {
+        "control_code": "GOV-01",
+        "gapStatus": "met",
+        "hasDocumentation": true,
+        "hasProcess": true,
+        "hasMeasurement": false,
+        "hasContinuousImprovement": false,
+        "evidenceStrength": "strong",
+        "evidenceCoverage": 0.95
+      },
+      "expected_output": {
+        "max_maturity_score": 3
+      },
+      "forbidden_outputs": [
+        { "maturity_score": 4 },
+        { "maturity_score": 5 }
+      ]
+    },
+    {
+      "id": "edge-005",
+      "scenario": "rejected_artifact_creates_traceable_rework",
+      "description": "When a gap analysis is rejected, the new reworked version must reference the rejected version via supersedesVersionId.",
+      "input": {
+        "artifact_type": "gap_analysis",
+        "rejection_reason": "Insufficient coverage",
+        "rejected_by": "reviewer-001"
+      },
+      "expected_output": {
+        "new_version_status": "draft",
+        "supersedes_version_id": "previous-version-id",
+        "version_number_incremented": true,
+        "rejection_reason_preserved": true
+      }
+    }
+  ]
+}

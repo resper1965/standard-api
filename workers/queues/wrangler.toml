@@ -1,0 +1,120 @@
+name = "standard-queues"
+main = "src/index.ts"
+compatibility_date = "2026-04-28"
+
+[vars]
+STANDARD_ENV = "development"
+LOG_LEVEL = "info"
+AI_GATEWAY_NAME = "standard-dev"
+AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/standard-dev"
+
+[[queues.consumers]]
+queue = "standard-kb-embedding-dev"
+max_batch_size = 10
+max_batch_timeout = 30
+dead_letter_queue = "standard-dead-letter-dev"
+
+[[queues.consumers]]
+queue = "standard-report-export-dev"
+max_batch_size = 5
+max_batch_timeout = 30
+dead_letter_queue = "standard-dead-letter-dev"
+
+[[queues.consumers]]
+queue = "standard-agent-run-dev"
+max_batch_size = 5
+max_batch_timeout = 60
+dead_letter_queue = "standard-dead-letter-dev"
+
+[[queues.consumers]]
+queue = "standard-document-ingestion-dev"
+max_batch_size = 10
+max_batch_timeout = 30
+dead_letter_queue = "standard-dead-letter-dev"
+
+[[queues.consumers]]
+queue = "standard-soc-triage-dev"
+max_batch_size = 5
+max_batch_timeout = 30
+max_retries = 3
+dead_letter_queue = "standard-dead-letter-dev"
+
+[[r2_buckets]]
+binding = "STANDARD_DOCUMENTS_BUCKET"
+bucket_name = "standard-documents-dev"
+
+[[r2_buckets]]
+binding = "STANDARD_REPORTS_BUCKET"
+bucket_name = "standard-reports-dev"
+
+[[r2_buckets]]
+binding = "STANDARD_EXPORTS_BUCKET"
+bucket_name = "standard-exports-dev"
+
+[[vectorize]]
+binding = "STANDARD_KB_INDEX"
+index_name = "standard-kb-dev"
+
+[ai]
+binding = "AI"
+
+
+# ─── Production environment ────────────────────────────────────
+[env.production]
+name = "standard-queues-production"
+
+[env.production.vars]
+STANDARD_ENV = "production"
+LOG_LEVEL = "info"
+AI_GATEWAY_NAME = "standard-prod"
+AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/standard-prod"
+
+[[env.production.queues.consumers]]
+queue = "standard-kb-embedding-prod"
+max_batch_size = 10
+max_batch_timeout = 30
+dead_letter_queue = "standard-dead-letter-prod"
+
+[[env.production.queues.consumers]]
+queue = "standard-document-ingestion-prod"
+max_batch_size = 10
+max_batch_timeout = 30
+dead_letter_queue = "standard-dead-letter-prod"
+
+[[env.production.queues.consumers]]
+queue = "standard-report-export-prod"
+max_batch_size = 5
+max_batch_timeout = 30
+dead_letter_queue = "standard-dead-letter-prod"
+
+[[env.production.queues.consumers]]
+queue = "standard-agent-run-prod"
+max_batch_size = 5
+max_batch_timeout = 60
+dead_letter_queue = "standard-dead-letter-prod"
+
+[[env.production.queues.consumers]]
+queue = "standard-soc-triage-prod"
+max_batch_size = 5
+max_batch_timeout = 30
+max_retries = 3
+dead_letter_queue = "standard-soc-triage-dlq-prod"
+
+[[env.production.r2_buckets]]
+binding = "STANDARD_DOCUMENTS_BUCKET"
+bucket_name = "standard-documents-prod"
+
+[[env.production.r2_buckets]]
+binding = "STANDARD_REPORTS_BUCKET"
+bucket_name = "standard-reports-prod"
+
+[[env.production.r2_buckets]]
+binding = "STANDARD_EXPORTS_BUCKET"
+bucket_name = "standard-exports-prod"
+
+[[env.production.vectorize]]
+binding = "STANDARD_KB_INDEX"
+index_name = "standard-kb-prod"
+
+[env.production.ai]
+binding = "AI"

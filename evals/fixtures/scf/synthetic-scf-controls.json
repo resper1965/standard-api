@@ -1,0 +1,32 @@
+[
+  {
+    "control_id": "51000000-0000-4000-8000-000000000001",
+    "control_code": "GOV-001",
+    "domain": "GOV",
+    "title": "Governance Policy"
+  },
+  {
+    "control_id": "51000000-0000-4000-8000-000000000002",
+    "control_code": "IAC-001",
+    "domain": "IAC",
+    "title": "Identity and Access Control"
+  },
+  {
+    "control_id": "51000000-0000-4000-8000-000000000003",
+    "control_code": "VPM-001",
+    "domain": "VPM",
+    "title": "Vulnerability and Patch Management"
+  },
+  {
+    "control_id": "51000000-0000-4000-8000-000000000004",
+    "control_code": "BCR-001",
+    "domain": "BCR",
+    "title": "Backup and Recovery"
+  },
+  {
+    "control_id": "51000000-0000-4000-8000-000000000005",
+    "control_code": "TPR-001",
+    "domain": "TPR",
+    "title": "Third Party Risk"
+  }
+]

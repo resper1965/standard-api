@@ -1,0 +1,50 @@
+name: Context Check
+
+on:
+  pull_request:
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  context-check:
+    name: Verify context preservation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check changed context files
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          set -euo pipefail
+
+          combined_text="${PR_TITLE} ${PR_BODY}"
+
+          if [[ "${combined_text}" == *"[no-context-change]"* ]]; then
+            echo "Context check skipped because PR contains [no-context-change]."
+            exit 0
+          fi
+
+          changed_files="$(gh pr diff "${PR_NUMBER}" --name-only)"
+
+          echo "Changed files:"
+          echo "${changed_files}"
+
+          context_pattern='^(CONTEXT\.md|DEVELOPMENT\.md|DECISIONS\.md|docs/|adr/|prompts/|tasks/|\.cursor/)'
+
+          if echo "${changed_files}" | grep -Eq "${context_pattern}"; then
+            echo "Context preservation check passed."
+            exit 0
+          fi
+
+          echo "::error title=Contexto obrigatório não atualizado::Este PR não altera arquivos de contexto. Atualize CONTEXT.md, DEVELOPMENT.md, DECISIONS.md, docs/, adr/, prompts/, tasks/ ou .cursor/ quando houver contexto relevante. Se a mudança realmente não exige contexto, inclua [no-context-change] no título ou descrição do PR com justificativa."
+          exit 1

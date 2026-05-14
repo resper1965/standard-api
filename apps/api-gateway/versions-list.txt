@@ -1,0 +1,122 @@
+
+ Ôøà´©Å wrangler 4.90.0
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+Version ID:  389f15c4-ef87-4668-86c8-3ad931b0f547
+Created:     2026-05-06T17:48:49.921Z
+Author:      ricardo@ness.com.br
+Source:      Upload
+Tag:         -
+Message:     -
+
+Version ID:  19c7b2e5-39b5-40c3-a3ba-799b05409ea3
+Created:     2026-05-06T18:02:12.767Z
+Author:      ricardo@ness.com.br
+Source:      Unknown (version_upload)
+Tag:         -
+Message:     -
+
+Version ID:  5e3b3d83-3d8c-47fa-ada0-c480e9880f6f
+Created:     2026-05-06T18:09:36.038Z
+Author:      ricardo@ness.com.br
+Source:      Unknown (version_upload)
+Tag:         -
+Message:     -
+
+Version ID:  b4911e6b-5a22-436f-a82c-9a9c431c57c0
+Created:     2026-05-06T18:37:14.709Z
+Author:      ricardo@ness.com.br
+Source:      Unknown (version_upload)
+Tag:         -
+Message:     -
+
+Version ID:  f6271768-4f8a-4991-bdc6-d2868afbe5eb
+Created:     2026-05-07T12:32:15.459Z
+Author:      ricardo@ness.com.br
+Source:      Unknown (version_upload)
+Tag:         -
+Message:     -
+
+Version ID:  9394f1e8-9dcd-47db-99f1-6e598ac3e8ec
+Created:     2026-05-07T12:43:11.871Z
+Author:      ricardo@ness.com.br
+Source:      Unknown (version_upload)
+Tag:         -
+Message:     -
+
+Version ID:  0546ae1e-bd4f-47f3-9f0f-0ed845077d05
+Created:     2026-05-07T15:32:14.745Z
+Author:      ricardo@ness.com.br
+Source:      Unknown (version_upload)
+Tag:         -
+Message:     -
+
+Version ID:  d881063f-8c7f-4fbc-90a8-bf41dd987b2f
+Created:     2026-05-07T15:41:02.832Z
+Author:      ricardo@ness.com.br
+Source:      Secret Change
+Tag:         -
+Message:     -
+
+Version ID:  7ec0f51c-5c23-4312-b6c2-5f5fa1d73f94
+Created:     2026-05-07T15:42:25.483Z
+Author:      ricardo@ness.com.br
+Source:      Secret Change
+Tag:         -
+Message:     -
+
+Version ID:  49e673a9-157e-4629-8dc6-6425bb194bb8
+Created:     2026-05-07T15:42:44.021Z
+Author:      ricardo@ness.com.br
+Source:      Secret Change
+Tag:         -
+Message:     -
+
+Version ID:  f0e1a73b-b4fe-4966-a186-5c5d2512770f
+Created:     2026-05-07T16:06:42.030Z
+Author:      ricardo@ness.com.br
+Source:      Unknown (version_upload)
+Tag:         -
+Message:     -
+
+Version ID:  ddfa51f0-1901-49d4-98b7-43da4286bfcb
+Created:     2026-05-07T16:48:25.290Z
+Author:      ricardo@ness.com.br
+Source:      Unknown (version_upload)
+Tag:         -
+Message:     -
+
+Version ID:  3e364bef-c6a4-41aa-b633-28597179d073
+Created:     2026-05-10T22:11:42.009Z
+Author:      ricardo@ness.com.br
+Source:      Secret Change
+Tag:         -
+Message:     -
+
+Version ID:  e89aad58-5202-4f09-b3f9-52049381eadd
+Created:     2026-05-10T22:13:04.579Z
+Author:      ricardo@ness.com.br
+Source:      Secret Change
+Tag:         -
+Message:     -
+
+Version ID:  969f453f-926b-4372-aa6d-bafd2644cacc
+Created:     2026-05-10T22:16:25.396Z
+Author:      ricardo@ness.com.br
+Source:      Unknown (version_upload)
+Tag:         -
+Message:     -
+
+Version ID:  a3a5041a-208b-4a43-a4e5-1ce2af9ba087
+Created:     2026-05-11T11:39:35.910Z
+Author:      ricardo@ness.com.br
+Source:      Unknown (version_upload)
+Tag:         -
+Message:     -
+
+Version ID:  abdb796a-f7ad-49b5-af4b-fcbd2d4f1364
+Created:     2026-05-11T13:13:39.016Z
+Author:      ricardo@ness.com.br
+Source:      Unknown (version_upload)
+Tag:         -
+Message:     -
+

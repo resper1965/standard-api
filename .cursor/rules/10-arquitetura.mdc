@@ -1,0 +1,15 @@
+---
+description: Regras arquiteturais do Standard API-first
+alwaysApply: true
+---
+
+# Arquitetura
+
+- Preserve a arquitetura API-first, SaaS-ready, Cloudflare-oriented e multi-tenant.
+- Lógica crítica do assessment deve ficar em API, packages, workers, workflows ou contratos compartilhados, nunca apenas no frontend.
+- `packages/scf-core` é fonte normativa SCF; KB/Vectorize é evidência candidata, não autoridade normativa.
+- Workflows coordenam lifecycle; Assessment Engine valida transições, gates e invariantes.
+- Agentes sugerem e produzem drafts; humanos aprovam artifacts críticos.
+- Separe responsabilidades entre API Layer, Workflow Layer, Agent Layer, Tool Layer e Data Layer.
+- Mudanças arquiteturais exigem documentação em `docs/architecture/` e, quando relevantes, ADR em `adr/`.
+

@@ -1,0 +1,62 @@
+/**
+ * @module validation-result-write
+ * @description Write schema validation results for draft artifacts.
+ * Records whether a draft passes validation without constituting approval.
+ */
+
+export type ValidationResult = {
+  id: string;
+  artifact_version_id: string;
+  validation_type: string;
+  is_valid: boolean;
+  errors: string[];
+  warnings: string[];
+  validated_at: string;
+};
+
+export type ValidationResultWriteDependencies = {
+  writeValidation: (input: {
+    artifactVersionId: string;
+    tenantId: string;
+    validationType: string;
+    isValid: boolean;
+    errors: string[];
+    warnings: string[];
+    agentRunId?: string;
+  }) => Promise<ValidationResult>;
+};
+
+export type ValidationResultWriteArgs = {
+  tenant_id: string;
+  organization_id: string;
+  assessment_id: string;
+  trace_id: string;
+  artifact_version_id?: string;
+  artifact_type?: string;
+  query?: string;
+};
+
+export type ValidationResultWriteOutput = {
+  validation: ValidationResult;
+  disclaimer: string;
+};
+
+export function createValidationResultWriteTool(deps: ValidationResultWriteDependencies) {
+  return {
+    execute: async (args: ValidationResultWriteArgs): Promise<ValidationResultWriteOutput> => {
+      const result = await deps.writeValidation({
+        artifactVersionId: args.artifact_version_id ?? "",
+        tenantId: args.tenant_id,
+        validationType: args.artifact_type ?? "schema_validation",
+        isValid: false, // Agent proposes validation — human decides
+        errors: [],
+        warnings: [],
+      });
+      return {
+        validation: result,
+        disclaimer:
+          "Validation recorded. Does not constitute final approval.",
+      };
+    },
+  };
+}

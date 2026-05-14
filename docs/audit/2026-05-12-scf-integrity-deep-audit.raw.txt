@@ -1,0 +1,120 @@
+npm warn Unknown project config "shamefully-hoist". This will stop working in the next major version of npm.
+Reading XLSX file: C:\Users\resper\OneDrive\├ürea de Trabalho\aegis-api\assets\Secure Controls Framework (SCF) - 2026.1.1.xlsx
+
+=== XLSX Summary ===
+Sheet name:      SCF 2026.1
+Domains found:   33
+Controls found:  1468
+Frameworks (cols): 233
+
+Connecting to DB: postgresql://neondb_owner:***@ep-blue-breeze-anyfua57.c-6.us-east-1.aws.neon.tech/neondb?sslmode=require...
+Fetching DB tables...
+
+=== DOMAIN AUDIT ===
+Ô£à Match perfect
+
+=== CONTROL AUDIT (DEEP) ===
+Ô£à All Controls match perfectly including titles.
+
+=== FRAMEWORK AUDIT ===
+DB has 231 frameworks. XLSX has 233 columns. Not loaded: 0
+Ô£à Framework validation complete.
+
+=== MAPPING AUDIT (CELL BY CELL) ===
+Building in-memory mapping index from DB...
+Performing bi-directional cell checking against XLSX...
+ÔØî MAPPING DROP: XLSX cell for 27-2022/GOV-01.1 has content ('4.4
+5.1
+5.3
+5.3(a)
+5.3(b)
+9.3.1
+9.3.2(a)
+9.3.2(b)
+9.3.2(c)
+9.3.2(d)
+9.3.2(d)(1)
+9.3.2(d)(2)
+9.3.2(d)(3)
+9.3.2(d)(4)
+9.3.2(e)
+9.3.2(f)
+9.3.2(g)
+9.3.3
+10.1') but DB has NO records.
+ÔØî MAPPING DROP: XLSX cell for 27-2022/GOV-01.2 has content ('7.4
+7.4(a)
+7.4(b)
+7.4(c)
+7.4(d)
+9.1
+9.1(a)
+9.1(b)
+9.1(c)
+9.1(d)
+9.1(e)
+9.1(f)
+9.3.1
+9.3.2(a)
+9.3.2(b)
+9.3.2(c)
+9.3.2(d)
+9.3.2(d)(1)
+9.3.2(d)(2)
+9.3.2(d)(3)
+9.3.2(d)(4)
+9.3.2(e)
+9.3.2(f)
+9.3.2(g)
+9.3.3') but DB has NO records.
+ÔØî PHANTOM MAPPING: XLSX cell for 27-2025/GOV-01.2 is EMPTY, but DB claims mappings exist!
+ÔØî MAPPING DROP: XLSX cell for 27-2025/GOV-03 has content ('5.1
+5.37') but DB has NO records.
+ÔØî MAPPING DROP: XLSX cell for 27-2025/GOV-04.2 has content ('5.4') but DB has NO records.
+ÔØî MAPPING DROP: XLSX cell for 27-2022/GOV-05 has content ('9.1
+9.1(a)
+9.1(b)
+9.1(c)
+9.1(d)
+9.1(e)
+9.1(f)') but DB has NO records.
+ÔØî PHANTOM MAPPING: XLSX cell for 27-2025/GOV-05 is EMPTY, but DB claims mappings exist!
+ÔØî PHANTOM MAPPING: XLSX cell for 27-2022/GOV-06 is EMPTY, but DB claims mappings exist!
+ÔØî MAPPING DROP: XLSX cell for 27-2025/GOV-06 has content ('5.5') but DB has NO records.
+ÔØî PHANTOM MAPPING: XLSX cell for 27-2022/GOV-07 is EMPTY, but DB claims mappings exist!
+ÔØî MAPPING DROP: XLSX cell for 27-2025/GOV-07 has content ('5.6') but DB has NO records.
+ÔØî MAPPING DROP: XLSX cell for 27-2022/GOV-08 has content ('4.1
+4.2(a)
+4.3
+5.1') but DB has NO records.
+ÔØî PHANTOM MAPPING: XLSX cell for 27-2025/GOV-08 is EMPTY, but DB claims mappings exist!
+ÔØî MAPPING DROP: XLSX cell for 27-2022/GOV-09 has content ('4.1
+4.2
+4.2(b)
+4.2(c)
+5.2(b)
+6.2
+6.2(a)
+6.2(b)
+6.2(c)
+6.2(d)
+6.2(e)
+6.2(f)
+6.2(g)
+6.2(h)
+6.2(i)
+6.2(j)
+6.2(k)
+6.2(l)') but DB has NO records.
+ÔØî PHANTOM MAPPING: XLSX cell for 27-2025/GOV-09 is EMPTY, but DB claims mappings exist!
+ÔØî PHANTOM MAPPING: XLSX cell for 27-2022/GOV-10 is EMPTY, but DB claims mappings exist!
+ÔØî MAPPING DROP: XLSX cell for 27-2025/GOV-10 has content ('5.12') but DB has NO records.
+ÔØî PHANTOM MAPPING: XLSX cell for 27-2025/GOV-14 is EMPTY, but DB claims mappings exist!
+ÔØî MAPPING DROP: XLSX cell for 27-2022/GOV-15.5 has content ('9.2.2') but DB has NO records.
+ÔÜá´©Å Found 610 actual mapping drift errors (XLSX data vs DB data).
+
+=== DB Summary ===
+Domains found:   33
+Controls found:  1468
+Frameworks (db): 231
+Mappings found:  15717

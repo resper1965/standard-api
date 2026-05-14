@@ -1,0 +1,4 @@
+
+> @standard/agent-runtime@0.1.0 typecheck C:\Users\resper\OneDrive\├ürea de Trabalho\aegis-api\packages\agent-runtime
+> tsc --noEmit
+

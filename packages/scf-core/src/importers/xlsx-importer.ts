@@ -1,0 +1,487 @@
+/**
+ * SCF XLSX Importer
+ *
+ * Parses the official SCF Excel workbook (multi-tab) into the Standard
+ * ScfDataset format. Handles:
+ * - Main controls tab → ScfDomain[] + ScfControl[]
+ * - Crosswalk tabs → ScfFramework[] + ScfFrameworkRequirement[] + ScfMapping[]
+ * - Version metadata from filename / first row
+ *
+ * Uses SheetJS (xlsx) for parsing — isomórfico, sem deps nativas.
+ * Designed for admin ingestion, not runtime hot-path.
+ */
+
+import * as XLSX from "xlsx";
+import type {
+  ScfControl,
+  ScfDomain,
+  ScfFramework,
+  ScfFrameworkRequirement,
+  ScfImportRun,
+  ScfImportSource,
+  ScfMapping,
+  ScfStrmRelationship,
+  ScfVersion,
+} from "../types";
+import type { ScfImporter } from "./scf-importer";
+import { sha256Hex, validateBaseImportSource } from "./scf-importer";
+import {
+  classifyTab,
+  extractDomainCode,
+  findControlCode,
+  findControlDescription,
+  findControlQuestion,
+  findControlTitle,
+  findControlWeight,
+  findDomainName,
+  getSheetHeaders,
+  normalizeHeader,
+  parseSheetToRows,
+  type ParsedRow,
+} from "./xlsx-tab-parser";
+
+const newId = (): string => crypto.randomUUID();
+
+// ──── Expected Column Validation ────
+
+/** Minimum expected columns for a valid SCF controls tab */
+const EXPECTED_CONTROLS_COLUMNS = [
+  "scf_control_#",
+  "scf_control",
+  "scf_domain",
+] as const;
+
+/** Additional columns that improve import quality */
+const OPTIONAL_CONTROLS_COLUMNS = [
+  "scf_control_description",
+  "scf_control_question",
+  "scf_control_weighting",
+] as const;
+
+/**
+ * Validate that expected columns are present in the controls tab.
+ * Returns warnings for missing optional columns and errors for missing required columns.
+ */
+const validateExpectedColumns = (headers: string[]): { errors: string[]; warnings: string[] } => {
+  const normalizedHeaders = new Set(headers.map(normalizeHeader));
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
+  // At least one control identifier column must be present
+  const hasControlId = ["scf_control_#", "scf_#", "control_#", "scf_control_identifier", "scf_identifier", "control_code"].some(
+    (col) => normalizedHeaders.has(col)
+  );
+  if (!hasControlId) {
+    errors.push("Missing required column: SCF control identifier (e.g. 'SCF Control #', 'SCF #'). Cannot parse controls.");
+  }
+
+  // At least one control name/title column must be present
+  const hasControlName = ["scf_control", "control_name", "control_title", "scf_control_name"].some(
+    (col) => normalizedHeaders.has(col)
+  );
+  if (!hasControlName) {
+    errors.push("Missing required column: SCF control name/title (e.g. 'SCF Control', 'Control Name'). Cannot parse control titles.");
+  }
+
+  for (const col of OPTIONAL_CONTROLS_COLUMNS) {
+    if (!normalizedHeaders.has(col)) {
+      warnings.push(`Optional column missing: '${col}'. Import will proceed but this data will be empty.`);
+    }
+  }
+
+  return { errors, warnings };
+};
+
+// ──── Version Detection ────
+
+const detectVersionFromFilename = (filename?: string): string | null => {
+  if (!filename) return null;
+  // Match patterns like "2024.4", "2026.1.1", etc.
+  const match = filename.match(/(\d{4}\.\d+(?:\.\d+)?)/);
+  return match?.[1] ? `SCF ${match[1]}` : null;
+};
+
+// ──── Controls Tab Parser ────
+
+type ControlsParseResult = {
+  domains: ScfDomain[];
+  controls: ScfControl[];
+  warnings: string[];
+};
+
+const parseControlsTab = (
+  rows: ParsedRow[],
+  versionId: string,
+): ControlsParseResult => {
+  const domains: ScfDomain[] = [];
+  const controls: ScfControl[] = [];
+  const warnings: string[] = [];
+  const domainByCode = new Map<string, string>();
+  let domainSortOrder = 0;
+
+  for (const row of rows) {
+    const controlCode = findControlCode(row);
+    if (!controlCode) continue;
+
+    const domainCode = extractDomainCode(controlCode);
+    if (!domainCode) {
+      warnings.push(`Row skipped: cannot extract domain from control code "${controlCode}".`);
+      continue;
+    }
+
+    // Auto-create domain if not seen
+    if (!domainByCode.has(domainCode)) {
+      const domainId = newId();
+      domainByCode.set(domainCode, domainId);
+      domainSortOrder += 1;
+      const domainName = findDomainName(row) ?? domainCode;
+      domains.push({
+        id: domainId,
+        scf_version_id: versionId,
+        domain_code: domainCode,
+        domain_name: domainName,
+        description: `SCF domain: ${domainName}`,
+        sort_order: domainSortOrder,
+        is_synthetic: false,
+      });
+    }
+
+    const domainId = domainByCode.get(domainCode)!;
+    const controlTitle = findControlTitle(row);
+    if (!controlTitle) {
+      warnings.push(`Control "${controlCode}" skipped: no title found.`);
+      continue;
+    }
+
+    const controlDescription = findControlDescription(row);
+    const controlQuestion = findControlQuestion(row);
+    const controlWeight = findControlWeight(row);
+
+    controls.push({
+      id: newId(),
+      scf_version_id: versionId,
+      scf_domain_id: domainId,
+      control_code: controlCode,
+      control_title: controlTitle,
+      ...(controlDescription ? { control_description: controlDescription } : {}),
+      ...(controlQuestion ? { control_question: controlQuestion } : {}),
+      ...(controlWeight !== undefined ? { control_weight: controlWeight } : {}),
+      status: "active",
+      is_synthetic: false,
+    });
+  }
+
+  return { domains, controls, warnings };
+};
+
+// ──── Crosswalk Tab Parser ────
+
+type CrosswalkParseResult = {
+  framework: ScfFramework;
+  requirements: ScfFrameworkRequirement[];
+  mappings: ScfMapping[];
+  warnings: string[];
+};
+
+const parseCrosswalkTab = (
+  rows: ParsedRow[],
+  headers: string[],
+  sheetName: string,
+  versionId: string,
+  controlByCode: Map<string, string>,
+): CrosswalkParseResult => {
+  const warnings: string[] = [];
+  const frameworkId = newId();
+
+  // Create framework from sheet name
+  const framework: ScfFramework = {
+    id: frameworkId,
+    framework_code: sheetName.trim(),
+    framework_name: sheetName.trim(),
+    status: "active",
+    is_synthetic: false,
+  };
+
+  const requirements: ScfFrameworkRequirement[] = [];
+  const mappings: ScfMapping[] = [];
+  const requirementByCode = new Map<string, string>();
+
+  // Find the SCF control code column
+  const normalizedHeaders = headers.map(normalizeHeader);
+
+  // In SCF XLSX crosswalk tabs, each row typically has:
+  // - An SCF control code column
+  // - One or more framework requirement reference columns
+  // The exact column names vary per framework tab.
+
+  // Find which column has SCF control codes by checking content
+  let scfColumnKey: string | null = null;
+  for (const row of rows.slice(0, 10)) {
+    for (const [key, value] of Object.entries(row)) {
+      if (extractDomainCode(value)) {
+        scfColumnKey = key;
+        break;
+      }
+    }
+    if (scfColumnKey) break;
+  }
+
+  if (!scfColumnKey) {
+    warnings.push(`Crosswalk tab "${sheetName}": no SCF control code column detected.`);
+    return { framework, requirements, mappings, warnings };
+  }
+
+  // Find the framework reference columns (non-SCF columns with data)
+  const referenceColumns = normalizedHeaders.filter(
+    (h) => h !== scfColumnKey && h.length > 0 && !h.startsWith("scf_")
+  );
+
+  if (referenceColumns.length === 0) {
+    warnings.push(`Crosswalk tab "${sheetName}": no framework reference columns found.`);
+    return { framework, requirements, mappings, warnings };
+  }
+
+  // Use the first reference column as the primary mapping source
+  const primaryRefCol = referenceColumns[0]!;
+  let reqSortOrder = 0;
+
+  for (const row of rows) {
+    const controlCode = row[scfColumnKey]?.trim();
+    if (!controlCode || !extractDomainCode(controlCode)) continue;
+
+    const controlId = controlByCode.get(controlCode);
+    if (!controlId) {
+      // Control not found in the catalog — skip but don't warn excessively
+      continue;
+    }
+
+    const reqCode = row[primaryRefCol]?.trim();
+    if (!reqCode) continue;
+
+    // Split multiple requirement codes (some cells contain semicolons/newlines)
+    const reqCodes = reqCode.split(/[;\n\r]+/).map((s) => s.trim()).filter(Boolean);
+
+    for (const singleReqCode of reqCodes) {
+      // Create requirement if not seen
+      if (!requirementByCode.has(singleReqCode)) {
+        const reqId = newId();
+        requirementByCode.set(singleReqCode, reqId);
+        reqSortOrder += 1;
+        requirements.push({
+          id: reqId,
+          scf_framework_id: frameworkId,
+          requirement_code: singleReqCode,
+          requirement_title: singleReqCode,
+          sort_order: reqSortOrder,
+          status: "active",
+          is_synthetic: false,
+        });
+      }
+
+      const requirementId = requirementByCode.get(singleReqCode)!;
+
+      mappings.push({
+        id: newId(),
+        scf_version_id: versionId,
+        scf_framework_id: frameworkId,
+        scf_framework_requirement_id: requirementId,
+        scf_control_id: controlId,
+        relationship_type: "related",
+        mapping_source: `SCF XLSX crosswalk: ${sheetName}`,
+        is_official: true,
+        status: "active",
+        is_synthetic: false,
+      });
+    }
+  }
+
+  return { framework, requirements, mappings, warnings };
+};
+
+// ──── Main XLSX Importer ────
+
+export const createXlsxScfImporter = (): ScfImporter => ({
+  sourceType: "xlsx",
+
+  validate: async (source: ScfImportSource) => {
+    const base = validateBaseImportSource(source);
+    if (!base.valid) return base;
+
+    try {
+      // Attempt to parse the XLSX to validate structure
+      const data = Uint8Array.from(atob(source.content), (c) => c.charCodeAt(0));
+      const workbook = XLSX.read(data, { type: "array" });
+
+      if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
+        return { valid: false, errors: ["XLSX workbook contains no sheets."], warnings: [] };
+      }
+
+      // Check if at least one tab is classified as controls
+      let hasControlsTab = false;
+      const allWarnings: string[] = [];
+      for (const name of workbook.SheetNames) {
+        const sheet = workbook.Sheets[name];
+        if (!sheet) continue;
+        const headers = getSheetHeaders(sheet);
+        const classification = classifyTab(name, headers);
+        if (classification.type === "controls") {
+          hasControlsTab = true;
+
+          // Validate expected columns are present
+          const columnValidation = validateExpectedColumns(headers);
+          if (columnValidation.errors.length > 0) {
+            return {
+              valid: false,
+              errors: [`Controls tab "${name}": ${columnValidation.errors.join("; ")}`],
+              warnings: columnValidation.warnings,
+            };
+          }
+          allWarnings.push(...columnValidation.warnings);
+          break;
+        }
+      }
+
+      if (!hasControlsTab) {
+        return {
+          valid: false,
+          errors: ["No SCF controls catalog tab detected. Expected a tab with SCF control identifiers."],
+          warnings: [],
+        };
+      }
+
+      return { valid: true, errors: [], warnings: allWarnings };
+    } catch (err) {
+      return {
+        valid: false,
+        errors: [`Failed to parse XLSX: ${err instanceof Error ? err.message : "unknown error"}`],
+        warnings: [],
+      };
+    }
+  },
+
+  parse: async (source: ScfImportSource) => {
+    const sourceHash = source.source_hash ?? `sha256:${await sha256Hex(source.content.slice(0, 1024))}`;
+    const data = Uint8Array.from(atob(source.content), (c) => c.charCodeAt(0));
+    const workbook = XLSX.read(data, { type: "array" });
+
+    const versionId = newId();
+    const versionLabel =
+      source.version_label ??
+      detectVersionFromFilename(source.source_filename) ??
+      "SCF (unknown version)";
+
+    const version: ScfVersion = {
+      id: versionId,
+      version_label: versionLabel,
+      source_hash: sourceHash,
+      import_status: "succeeded",
+      imported_at: new Date().toISOString(),
+      imported_by: "xlsx-importer",
+      notes: `Imported from XLSX workbook with ${workbook.SheetNames.length} tabs.`,
+      is_synthetic: false,
+    };
+
+    let allDomains: ScfDomain[] = [];
+    let allControls: ScfControl[] = [];
+    const allFrameworks: ScfFramework[] = [];
+    const allRequirements: ScfFrameworkRequirement[] = [];
+    const allMappings: ScfMapping[] = [];
+    const allWarnings: string[] = [];
+    const controlByCode = new Map<string, string>();
+
+    // Phase 1: Parse controls tab(s) first — we need control IDs for crosswalk mapping
+    for (const name of workbook.SheetNames) {
+      const sheet = workbook.Sheets[name];
+      if (!sheet) continue;
+
+      const headers = getSheetHeaders(sheet);
+      const classification = classifyTab(name, headers);
+
+      if (classification.type === "controls") {
+        const rows = parseSheetToRows(sheet);
+        const result = parseControlsTab(rows, versionId);
+
+        allDomains = [...allDomains, ...result.domains];
+        allControls = [...allControls, ...result.controls];
+        allWarnings.push(...result.warnings);
+
+        // Build lookup for crosswalk phase
+        for (const ctrl of result.controls) {
+          controlByCode.set(ctrl.control_code, ctrl.id);
+        }
+      }
+    }
+
+    if (allControls.length === 0) {
+      allWarnings.push("No controls extracted from controls tab(s).");
+    }
+
+    // Phase 2: Parse crosswalk tabs
+    for (const name of workbook.SheetNames) {
+      const sheet = workbook.Sheets[name];
+      if (!sheet) continue;
+
+      const headers = getSheetHeaders(sheet);
+      const classification = classifyTab(name, headers);
+
+      if (classification.type === "crosswalk") {
+        const rows = parseSheetToRows(sheet);
+        const result = parseCrosswalkTab(
+          rows,
+          headers,
+          name,
+          versionId,
+          controlByCode,
+        );
+
+        // Only add framework if it produced at least one mapping
+        if (result.mappings.length > 0) {
+          allFrameworks.push(result.framework);
+          allRequirements.push(...result.requirements);
+          allMappings.push(...result.mappings);
+        }
+        allWarnings.push(...result.warnings);
+      }
+    }
+
+    const importRun: ScfImportRun = {
+      id: newId(),
+      scf_version_id: versionId,
+      source_type: "xlsx",
+      ...(source.source_filename ? { source_filename: source.source_filename } : {}),
+      source_hash: sourceHash,
+      status: "succeeded",
+      started_at: new Date().toISOString(),
+      completed_at: new Date().toISOString(),
+      import_statistics: {
+        versions: 1,
+        domains: allDomains.length,
+        controls: allControls.length,
+        frameworks: allFrameworks.length,
+        requirements: allRequirements.length,
+        mappings: allMappings.length,
+        strm_relationships: 0,
+        warnings: allWarnings.length,
+        synthetic_records: 0,
+      },
+      trace_id: `xlsx-importer-${Date.now()}`,
+    };
+
+    const strmRelationships: ScfStrmRelationship[] = [];
+
+    return {
+      dataset: {
+        versions: [version],
+        domains: allDomains,
+        controls: allControls,
+        frameworks: allFrameworks,
+        requirements: allRequirements,
+        mappings: allMappings,
+        strmRelationships,
+        importRuns: [importRun],
+      },
+      warnings: allWarnings,
+    };
+  },
+});
+

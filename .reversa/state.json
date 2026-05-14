@@ -1,0 +1,50 @@
+{
+  "version": "1.2.14",
+  "project": "standard-api",
+  "user_name": "esper",
+  "chat_language": "pt-br",
+  "doc_language": "Português",
+  "answer_mode": "chat",
+  "doc_level": "completo",
+  "output_folder": "_reversa_sdd",
+  "phase": "interpretacao",
+  "completed": [
+    "reconhecimento",
+    "escavacao",
+    "interpretacao"
+  ],
+  "pending": [
+    "geracao",
+    "revisao"
+  ],
+  "checkpoints": {
+    "reconhecimento": "2026-05-02T12:35:00Z",
+    "escavacao": "2026-05-02T12:35:00Z",
+    "interpretacao": "2026-05-02T12:36:00Z"
+  },
+  "engines": [
+    "claude-code",
+    "codex",
+    "cursor",
+    "antigravity",
+    "opencode"
+  ],
+  "agents": [
+    "reversa",
+    "reversa-scout",
+    "reversa-archaeologist",
+    "reversa-detective",
+    "reversa-architect",
+    "reversa-writer",
+    "reversa-reviewer",
+    "reversa-visor",
+    "reversa-data-master",
+    "reversa-design-system",
+    "reversa-agents-help",
+    "reversa-reconstructor"
+  ],
+  "created_files": [
+    "_reversa_sdd/01-reconhecimento.md",
+    "_reversa_sdd/03-arquitetura-c4.md"
+  ]
+}

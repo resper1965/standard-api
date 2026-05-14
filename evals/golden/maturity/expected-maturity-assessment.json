@@ -1,0 +1,12 @@
+{
+  "assessment_id": "30000000-0000-4000-8000-000000000001",
+  "status": "draft",
+  "controls": [
+    { "control_code": "GOV-001", "score": 2, "requires_validation": false },
+    { "control_code": "IAC-001", "score": 2, "requires_validation": true },
+    { "control_code": "VPM-001", "score": 3, "requires_validation": false },
+    { "control_code": "BCR-001", "score": 2, "requires_validation": false },
+    { "control_code": "TPR-001", "score": 1, "requires_validation": false }
+  ],
+  "max_allowed_score_without_operational_evidence": 3
+}

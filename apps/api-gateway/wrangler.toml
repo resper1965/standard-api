@@ -1,0 +1,127 @@
+name = "standard-api-gateway"
+main = "src/index.ts"
+compatibility_date = "2026-04-28"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+STANDARD_ENV = "development"
+LOG_LEVEL = "info"
+AI_GATEWAY_NAME = "standard-dev"
+AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/standard-dev"
+# Better Auth — SECRET must be set via `wrangler secret put BETTER_AUTH_SECRET` for production
+# For local dev, this placeholder is overridden by .dev.vars
+BETTER_AUTH_URL = "https://standard-api-gateway.ness.workers.dev"
+
+[[r2_buckets]]
+binding = "STANDARD_DOCUMENTS_BUCKET"
+bucket_name = "standard-documents-dev"
+
+[[r2_buckets]]
+binding = "STANDARD_REPORTS_BUCKET"
+bucket_name = "standard-reports-dev"
+
+[[r2_buckets]]
+binding = "STANDARD_EXPORTS_BUCKET"
+bucket_name = "standard-exports-dev"
+
+[[queues.producers]]
+binding = "DOCUMENT_INGESTION_QUEUE"
+queue = "standard-document-ingestion-dev"
+
+[[queues.producers]]
+binding = "KB_EMBEDDING_QUEUE"
+queue = "standard-kb-embedding-dev"
+
+[[queues.producers]]
+binding = "REPORT_EXPORT_QUEUE"
+queue = "standard-report-export-dev"
+
+[[queues.producers]]
+binding = "AGENT_RUN_QUEUE"
+queue = "standard-agent-run-dev"
+
+# ─── SOC Triage Queue (Background AI processing) ───────────
+[[queues.producers]]
+binding = "SOC_TRIAGE_QUEUE"
+queue = "standard-soc-triage-dev"
+
+
+# ─── Email Service (send transactional emails) ─────────────────
+[[send_email]]
+name = "EMAIL"
+remote = true
+
+[ai]
+binding = "AI"
+
+[[kv_namespaces]]
+binding = "STANDARD_CACHE"
+id = "4e027e07e0e5440a8666c3f8ee419333"
+
+[[vectorize]]
+binding = "STANDARD_KB_INDEX"
+index_name = "standard-kb-dev"
+
+# TODO: Uncomment when workflows worker is deployed
+# [[workflows]]
+# binding = "ASSESSMENT_WORKFLOW"
+# name = "standard-assessment-lifecycle-dev"
+# class_name = "AssessmentLifecycleWorkflow"
+# script_name = "standard-workflows"
+
+# ─── Production environment ────────────────────────────────────
+[env.production]
+workers_dev = true
+vars = { STANDARD_ENV = "production", BETTER_AUTH_URL = "https://standard-api-gateway-production.ness.workers.dev", LOG_LEVEL = "info", AI_GATEWAY_NAME = "standard-prod", AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/standard-prod" }
+routes = [{ pattern = "api.standard.bekaa.eu", custom_domain = true }]
+
+[[env.production.r2_buckets]]
+binding = "STANDARD_DOCUMENTS_BUCKET"
+bucket_name = "standard-documents-prod"
+
+[[env.production.r2_buckets]]
+binding = "STANDARD_REPORTS_BUCKET"
+bucket_name = "standard-reports-prod"
+
+[[env.production.r2_buckets]]
+binding = "STANDARD_EXPORTS_BUCKET"
+bucket_name = "standard-exports-prod"
+
+[[env.production.queues.producers]]
+binding = "DOCUMENT_INGESTION_QUEUE"
+queue = "standard-document-ingestion-prod"
+
+[[env.production.queues.producers]]
+binding = "KB_EMBEDDING_QUEUE"
+queue = "standard-kb-embedding-prod"
+
+[[env.production.queues.producers]]
+binding = "REPORT_EXPORT_QUEUE"
+queue = "standard-report-export-prod"
+
+[[env.production.queues.producers]]
+binding = "AGENT_RUN_QUEUE"
+queue = "standard-agent-run-prod"
+
+[[env.production.queues.producers]]
+binding = "SOC_TRIAGE_QUEUE"
+queue = "standard-soc-triage-prod"
+
+
+[env.production.ai]
+binding = "AI"
+
+[[env.production.kv_namespaces]]
+binding = "STANDARD_CACHE"
+id = "4e027e07e0e5440a8666c3f8ee419333"
+
+[[env.production.vectorize]]
+binding = "STANDARD_KB_INDEX"
+index_name = "standard-kb-prod"
+
+[[env.production.send_email]]
+name = "EMAIL"
+allowed_sender_addresses = ["noreply@bekaa.eu"]
+
+
+

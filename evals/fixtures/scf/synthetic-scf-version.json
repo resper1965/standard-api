@@ -1,0 +1,6 @@
+{
+  "scf_version_id": "50000000-0000-4000-8000-000000000001",
+  "version": "SYNTH-SCF-1",
+  "status": "synthetic",
+  "domains": ["GOV", "IAC", "VPM", "BCR", "TPR"]
+}

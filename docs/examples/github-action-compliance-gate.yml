@@ -1,0 +1,79 @@
+# Standard GRC — Compliance Gate for CI/CD
+#
+# This GitHub Action polls the Standard API compliance gate
+# before allowing deployment. If the assessment has critical
+# or high findings, the pipeline is blocked.
+#
+# Required secrets:
+#   STANDARD_API_KEY: Your Standard API key
+#
+# Required variables:
+#   STANDARD_API_URL: Base URL of the Standard API (e.g., https://api.standard.dev)
+#   STANDARD_ASSESSMENT_ID: UUID of the assessment to check
+
+name: Compliance Gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  compliance-check:
+    name: Check Compliance Gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Poll Standard Compliance Gate
+        id: gate
+        run: |
+          RESPONSE=$(curl -s -w "\n%{http_code}" \
+            -H "Authorization: Bearer ${{ secrets.STANDARD_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            "${{ vars.STANDARD_API_URL }}/api/v1/assessments/${{ vars.STANDARD_ASSESSMENT_ID }}/compliance-gate")
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n 1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+
+          echo "HTTP Status: $HTTP_CODE"
+          echo "$BODY" | jq .
+
+          STATUS=$(echo "$BODY" | jq -r '.status')
+          CRITICAL=$(echo "$BODY" | jq -r '.critical_findings')
+          HIGH=$(echo "$BODY" | jq -r '.high_findings')
+          SUMMARY=$(echo "$BODY" | jq -r '.findings_summary')
+
+          echo "gate_status=$STATUS" >> $GITHUB_OUTPUT
+          echo "critical=$CRITICAL" >> $GITHUB_OUTPUT
+          echo "high=$HIGH" >> $GITHUB_OUTPUT
+          echo "summary=$SUMMARY" >> $GITHUB_OUTPUT
+
+          if [ "$STATUS" != "pass" ]; then
+            echo "::error::Compliance gate FAILED: $SUMMARY"
+            exit 1
+          fi
+
+          echo "✅ Compliance gate passed"
+
+      - name: Gate Summary
+        if: always()
+        run: |
+          echo "## Compliance Gate Result" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Status | \`${{ steps.gate.outputs.gate_status }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Critical Findings | ${{ steps.gate.outputs.critical }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| High Findings | ${{ steps.gate.outputs.high }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "> ${{ steps.gate.outputs.summary }}" >> $GITHUB_STEP_SUMMARY
+
+  deploy:
+    name: Deploy
+    needs: compliance-check
+    runs-on: ubuntu-latest
+    if: success()
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy to production
+        run: echo "Deploying — compliance gate passed ✅"
