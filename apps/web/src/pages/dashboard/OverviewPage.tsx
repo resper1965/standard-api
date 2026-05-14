@@ -1,9 +1,32 @@
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Activity, Database, Users, ShieldAlert, Loader2, ArrowUpRight } from "lucide-react"
+import { Activity, Database, Users, ShieldAlert, ArrowUpRight, TrendingUp } from "lucide-react"
 import { useSession } from "@/lib/auth-client"
 import { apiClient } from "@/lib/api"
 import { Link } from "react-router-dom"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Badge } from "@/components/ui/badge"
+
+function getGreeting(): string {
+  const h = new Date().getHours()
+  if (h < 12) return "Good morning"
+  if (h < 18) return "Good afternoon"
+  return "Good evening"
+}
+
+const stateVariant: Record<string, "success" | "warning" | "info" | "muted" | "default"> = {
+  draft: "muted",
+  documents_uploaded: "info",
+  documents_ingested: "info",
+  framework_selected: "info",
+  soa_drafted: "warning",
+  soa_under_review: "warning",
+  gap_analysis_drafted: "warning",
+  maturity_assessed: "default",
+  closed: "success",
+  archived: "muted",
+  failed: "destructive" as any,
+}
 
 export function OverviewPage() {
   const { data: session, isPending: sessionLoading } = useSession()
@@ -36,25 +59,45 @@ export function OverviewPage() {
     if (!sessionLoading) fetchData()
   }, [session?.session?.activeOrganizationId, sessionLoading])
 
+  const greeting = `${getGreeting()}, ${session?.user?.name?.split(" ")[0] || "there"}`
+
   if (loading || sessionLoading) {
-     return (
-       <div className="flex w-full h-[50vh] items-center justify-center">
-         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-       </div>
-     )
+    return (
+      <div className="space-y-8 animate-slide-up">
+        <Skeleton className="h-5 w-64" />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Card key={i} className="border-border/60 bg-card shadow-none">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-4 rounded" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-8 w-16 mb-2" />
+                <Skeleton className="h-3 w-32" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <div className="grid gap-6 lg:grid-cols-7">
+          <Skeleton className="h-[280px] lg:col-span-4 rounded-xl" />
+          <Skeleton className="h-[280px] lg:col-span-3 rounded-xl" />
+        </div>
+      </div>
+    )
   }
 
-  const greeting = session?.user?.name ? `Welcome back, ${session.user.name}` : "Welcome back"
-
   return (
-    <div className="space-y-8">
-      {/* Greeting bar */}
-      <p className="text-sm text-muted-foreground">
-        {greeting}. {hasActiveOrg ? "Organization context active." : "No active organization — select one in Settings."}
-      </p>
+    <div className="space-y-8 animate-slide-up">
+      {/* Greeting */}
+      <div>
+        <p className="text-sm text-muted-foreground">
+          {greeting}. {hasActiveOrg ? "Organization context active." : "No active organization — select one in Settings."}
+        </p>
+      </div>
 
       {/* ── Stat Cards ─────────────────────────────────── */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 animate-stagger">
         <StatCard
           label="Pending Reviews"
           value={assessments.filter(a => a.state?.includes('under_review')).length}
@@ -101,8 +144,12 @@ export function OverviewPage() {
           </CardHeader>
           <CardContent>
             {assessments.length === 0 ? (
-              <div className="text-sm text-muted-foreground py-8 text-center border border-dashed border-border/60 rounded-lg">
-                No assessments found in this organization.
+              <div className="flex flex-col items-center justify-center py-10 border border-dashed border-border/60 rounded-lg">
+                <div className="h-10 w-10 rounded-lg bg-muted/60 flex items-center justify-center text-muted-foreground mb-3">
+                  <Activity className="h-5 w-5" />
+                </div>
+                <p className="text-sm font-medium text-foreground mb-1">No assessments yet</p>
+                <p className="text-xs text-muted-foreground">Create one to start your compliance journey</p>
               </div>
             ) : (
               <div className="space-y-1">
@@ -116,11 +163,13 @@ export function OverviewPage() {
                       <span className="font-medium text-foreground group-hover:text-primary transition-colors truncate">
                         {assessment.name}
                       </span>
-                      <span className="text-muted-foreground text-xs mt-0.5">{assessment.state?.replace(/_/g, ' ')}</span>
+                      <span className="text-muted-foreground text-xs mt-0.5">
+                        Created {new Date(assessment.created_at || Date.now()).toLocaleDateString()}
+                      </span>
                     </div>
-                    <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium text-[11px] shrink-0">
-                      {assessment.scf_version_id?.split('-')[0] || 'N/A'}
-                    </span>
+                    <Badge variant={stateVariant[assessment.state] || "muted"}>
+                      {assessment.state?.replace(/_/g, ' ')}
+                    </Badge>
                   </Link>
                 ))}
               </div>
@@ -134,9 +183,13 @@ export function OverviewPage() {
             <CardDescription className="mt-0.5">Token usage and confidence metrics</CardDescription>
           </CardHeader>
           <CardContent>
-             <div className="flex h-[180px] items-center justify-center border border-dashed border-border/60 rounded-lg">
-                <p className="text-sm text-muted-foreground">No agent runs recorded yet</p>
-             </div>
+            <div className="flex flex-col h-[180px] items-center justify-center border border-dashed border-border/60 rounded-lg">
+              <div className="h-10 w-10 rounded-lg bg-muted/60 flex items-center justify-center text-muted-foreground mb-3">
+                <TrendingUp className="h-5 w-5 animate-pulse" />
+              </div>
+              <p className="text-sm font-medium text-foreground mb-1">No agent runs yet</p>
+              <p className="text-xs text-muted-foreground">Metrics will appear after assessments run</p>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -158,13 +211,13 @@ function StatCard({ label, value, sub, icon, accent }: {
     muted: "text-muted-foreground"
   }
   return (
-    <Card className="border-border/60 bg-card shadow-none">
+    <Card className="border-border/60 bg-card shadow-none hover-lift group">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">{label}</CardTitle>
-        <div className={colorMap[accent]}>{icon}</div>
+        <div className={`${colorMap[accent]} opacity-60 group-hover:opacity-100 transition-opacity`}>{icon}</div>
       </CardHeader>
       <CardContent>
-        <div className={`text-2xl font-semibold tracking-tight ${accent === "destructive" ? "text-destructive" : "text-foreground"}`}>
+        <div className={`text-2xl font-semibold tracking-tight animate-count-up ${accent === "destructive" ? "text-destructive" : "text-foreground"}`}>
           {value}
         </div>
         <p className="text-xs text-muted-foreground mt-1">{sub}</p>

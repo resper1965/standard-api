@@ -4,7 +4,9 @@ import { AssessmentCard } from "../components/AssessmentCard";
 import type { Assessment } from "../components/AssessmentCard";
 import { CreateAssessmentModal } from "../components/CreateAssessmentModal";
 import { Button } from "../components/ui/button";
-import { Plus, Loader2, Filter } from "lucide-react";
+import { EmptyState } from "../components/ui/empty-state";
+import { Skeleton } from "../components/ui/skeleton";
+import { Plus, Filter, ClipboardList } from "lucide-react";
 
 export function AssessmentsPage() {
   const [assessments, setAssessments] = useState<Assessment[]>([]);
@@ -28,7 +30,7 @@ export function AssessmentsPage() {
   }, []);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-slide-up">
       {/* Action bar */}
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
@@ -47,22 +49,27 @@ export function AssessmentsPage() {
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-[140px] rounded-xl" />
+          ))}
         </div>
       ) : assessments.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-24 border border-dashed border-border/60 rounded-xl">
-          <div className="text-4xl mb-4">📋</div>
-          <h3 className="text-base font-medium text-foreground mb-1">No assessments yet</h3>
-          <p className="text-muted-foreground mb-6 text-sm">Start your compliance journey</p>
-          <Button onClick={() => setShowModal(true)}>
-            Start Your First Assessment
-          </Button>
-        </div>
+        <EmptyState
+          icon={<ClipboardList className="h-6 w-6" />}
+          title="No assessments yet"
+          description="Start your compliance journey by creating your first security assessment."
+          action={{
+            label: "Start Your First Assessment",
+            onClick: () => setShowModal(true),
+          }}
+        />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
           {assessments.map(assessment => (
-            <AssessmentCard key={assessment.assessment_id} assessment={assessment} />
+            <div key={assessment.assessment_id} className="hover-lift">
+              <AssessmentCard assessment={assessment} />
+            </div>
           ))}
         </div>
       )}

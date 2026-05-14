@@ -183,3 +183,191 @@
   .animate-stagger > *:nth-child(5) { animation-delay: 250ms; }
   .animate-stagger > *:nth-child(6) { animation-delay: 300ms; }
 }
+
+/* ── Legacy variables (Login.css compat) ───────────────────── */
+:root {
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+  --radius: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --accent: hsl(199 89% 48%);
+  --accent-hover: hsl(199 89% 42%);
+  --admin: hsl(265 80% 55%);
+  --text-secondary: hsl(218 11% 60%);
+  --text-muted: hsl(218 11% 50%);
+  --danger: hsl(0 84% 60%);
+  --danger-subtle: hsl(0 84% 60% / 0.1);
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ── Custom scrollbar ──────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.2);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.35);
+}
+
+/* ── Slide-up animation ────────────────────────────────────── */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-up {
+  animation: slideUp 400ms var(--ease-spring) forwards;
+}
+
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-count-up {
+  animation: countUp 600ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ── Fullpage center (login) ───────────────────────────────── */
+.fullpage-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: hsl(var(--background));
+  position: relative;
+  overflow: hidden;
+}
+.fullpage-center::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 30%, hsl(199 89% 48% / 0.06) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 40% at 80% 70%, hsl(265 80% 55% / 0.04) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* ── Form elements (login compat) ──────────────────────────── */
+.form-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin: var(--space-6) 0;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.form-divider::before,
+.form-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: hsl(var(--border));
+}
+.form-group {
+  margin-bottom: var(--space-4);
+}
+.form-label {
+  display: block;
+  margin-bottom: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: hsl(var(--foreground));
+}
+.form-input {
+  width: 100%;
+  height: 2.75rem;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius);
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-size: var(--text-sm);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.form-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px hsl(199 89% 48% / 0.15);
+}
+.form-input::placeholder {
+  color: var(--text-muted);
+}
+
+/* ── Buttons (login compat) ────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  border-radius: var(--radius);
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-sm);
+  padding: 0 var(--space-6);
+  height: 2.75rem;
+  transition: all var(--transition-fast);
+  cursor: pointer;
+  border: none;
+}
+.btn-primary {
+  background: var(--accent);
+  color: white;
+}
+.btn-primary:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px hsl(199 89% 48% / 0.25);
+}
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+.btn-google {
+  width: 100%;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  color: hsl(var(--foreground));
+}
+.btn-google:hover {
+  background: hsl(var(--muted));
+  border-color: hsl(var(--muted-foreground) / 0.3);
+}
+.btn-lg {
+  height: 3rem;
+  font-size: var(--text-base);
+}
+
+/* ── Table row hover ───────────────────────────────────────── */
+table tbody tr {
+  transition: background-color 150ms ease;
+}
+table tbody tr:hover {
+  background-color: hsl(var(--muted) / 0.4);
+}
+

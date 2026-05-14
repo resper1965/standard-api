@@ -1,4 +1,4 @@
-/* ── Login Page · Apple HIG Edition ───────────────────────── */
+/* ── Login Page · Premium Edition ─────────────────────────── */
 
 .login-container {
   width: 100%;
@@ -13,22 +13,20 @@
   margin-bottom: var(--space-8);
 }
 
-.login-shield {
-  font-size: 3.5rem;
-  display: block;
-  margin-bottom: var(--space-4);
-  filter: drop-shadow(0 4px 12px rgba(10, 132, 255, 0.2));
+.login-logo {
+  margin-bottom: var(--space-3);
 }
 
-.login-title {
-  font-size: var(--text-3xl);
-  font-weight: var(--weight-bold);
+.login-logo-text {
+  font-family: "Inter", sans-serif;
+  font-size: 2rem;
+  font-weight: 700;
   letter-spacing: -0.04em;
-  background: linear-gradient(135deg, var(--accent) 0%, var(--admin) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin-bottom: var(--space-2);
+  color: hsl(var(--foreground));
+}
+
+.login-logo-dot {
+  color: var(--accent);
 }
 
 .login-subtitle {
@@ -37,6 +35,27 @@
   letter-spacing: -0.01em;
 }
 
+/* Input with icon */
+.form-input-wrapper {
+  position: relative;
+}
+
+.form-input-icon {
+  position: absolute;
+  left: 0.875rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.form-input--with-icon {
+  padding-left: 2.5rem;
+}
+
+/* Error */
 .login-error {
   background: var(--danger-subtle);
   color: var(--danger);
@@ -48,6 +67,7 @@
   animation: slideUp 200ms var(--ease-spring);
 }
 
+/* Toggle */
 .login-toggle {
   text-align: center;
   margin-top: var(--space-8);
@@ -60,6 +80,9 @@
   font-weight: var(--weight-medium);
   font-size: var(--text-sm);
   transition: color var(--transition-fast);
+  background: none;
+  border: none;
+  cursor: pointer;
 }
 .login-toggle-btn:hover {
   color: var(--accent-hover);

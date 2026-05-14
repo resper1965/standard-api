@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { signIn, signUp, useSession } from "../lib/auth-client";
 import { Navigate } from "react-router-dom";
+import { Loader2, Mail, Lock, User } from "lucide-react";
 import "./Login.css";
 
 export function LoginPage() {
@@ -57,14 +58,19 @@ export function LoginPage() {
   return (
     <div className="fullpage-center">
       <div className="login-container animate-slide-up">
+        {/* Brand header */}
         <div className="login-header">
-          <span className="login-shield">🛡️</span>
-          <h1 className="login-title">Standard</h1>
+          <div className="login-logo">
+            <span className="login-logo-text">
+              standard<span className="login-logo-dot">.</span>
+            </span>
+          </div>
           <p className="login-subtitle">
             Security & Compliance Assessment Platform
           </p>
         </div>
 
+        {/* Google OAuth */}
         <button
           className="btn btn-google"
           onClick={handleGoogle}
@@ -93,56 +99,64 @@ export function LoginPage() {
 
         <div className="form-divider">or</div>
 
+        {/* Email/Password form */}
         <form onSubmit={handleSubmit}>
           {mode === "signup" && (
             <div className="form-group">
-              <label className="form-label" htmlFor="name">
-                Name
-              </label>
-              <input
-                id="name"
-                className="form-input"
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Your name"
-                required
-              />
+              <label className="form-label" htmlFor="name">Name</label>
+              <div className="form-input-wrapper">
+                <User className="form-input-icon" />
+                <input
+                  id="name"
+                  className="form-input form-input--with-icon"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Your name"
+                  required
+                />
+              </div>
             </div>
           )}
 
           <div className="form-group">
-            <label className="form-label" htmlFor="email">
-              Email
-            </label>
-            <input
-              id="email"
-              className="form-input"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              required
-            />
+            <label className="form-label" htmlFor="email">Email</label>
+            <div className="form-input-wrapper">
+              <Mail className="form-input-icon" />
+              <input
+                id="email"
+                className="form-input form-input--with-icon"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@company.com"
+                required
+              />
+            </div>
           </div>
 
           <div className="form-group">
-            <label className="form-label" htmlFor="password">
-              Password
-            </label>
-            <input
-              id="password"
-              className="form-input"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              required
-              minLength={8}
-            />
+            <label className="form-label" htmlFor="password">Password</label>
+            <div className="form-input-wrapper">
+              <Lock className="form-input-icon" />
+              <input
+                id="password"
+                className="form-input form-input--with-icon"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+                minLength={8}
+              />
+            </div>
           </div>
 
-          {error && <div className="login-error">{error}</div>}
+          {error && (
+            <div className="login-error">
+              {error}
+            </div>
+          )}
 
           <button
             className="btn btn-primary btn-lg"
@@ -150,11 +164,13 @@ export function LoginPage() {
             disabled={loading}
             style={{ width: "100%" }}
           >
-            {loading
-              ? "Loading..."
-              : mode === "login"
-                ? "Sign In"
-                : "Create Account"}
+            {loading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : mode === "login" ? (
+              "Sign In"
+            ) : (
+              "Create Account"
+            )}
           </button>
         </form>
 
@@ -162,22 +178,14 @@ export function LoginPage() {
           {mode === "login" ? (
             <>
               Don't have an account?{" "}
-              <button
-                className="login-toggle-btn"
-                onClick={() => setMode("signup")}
-                type="button"
-              >
+              <button className="login-toggle-btn" onClick={() => setMode("signup")} type="button">
                 Sign up
               </button>
             </>
           ) : (
             <>
               Already have an account?{" "}
-              <button
-                className="login-toggle-btn"
-                onClick={() => setMode("login")}
-                type="button"
-              >
+              <button className="login-toggle-btn" onClick={() => setMode("login")} type="button">
                 Sign in
               </button>
             </>
@@ -187,5 +195,3 @@ export function LoginPage() {
     </div>
   );
 }
-
-

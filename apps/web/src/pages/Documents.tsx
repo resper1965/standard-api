@@ -4,7 +4,10 @@ import { api } from "../lib/api";
 import { FileUpload } from "../components/FileUpload";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "../components/ui/table";
-import { Loader2, AlertTriangle, Upload } from "lucide-react";
+import { Badge } from "../components/ui/badge";
+import { EmptyState } from "../components/ui/empty-state";
+import { Skeleton } from "../components/ui/skeleton";
+import { Loader2, AlertTriangle, Upload, FileText } from "lucide-react";
 
 interface DocumentRecord {
   id: string;
@@ -17,6 +20,14 @@ interface DocumentRecord {
   uploaded_at: string;
   uploaded_by: string;
 }
+
+const statusVariant: Record<string, "success" | "warning" | "info" | "muted"> = {
+  processed: "success",
+  ingested: "success",
+  uploaded: "info",
+  pending: "warning",
+  failed: "muted",
+};
 
 export function DocumentsPage() {
   const [searchParams] = useSearchParams();
@@ -73,9 +84,9 @@ export function DocumentsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-slide-up">
       {!assessmentId && (
-        <div className="flex items-center gap-3 p-4 rounded-lg bg-warning/10 border border-warning/20 text-sm text-warning">
+        <div className="flex items-center gap-3 p-4 rounded-lg bg-amber-500/10 border border-amber-500/20 text-sm text-amber-500">
           <AlertTriangle className="h-4 w-4 shrink-0" />
           Navigate to a specific assessment to upload documents.
         </div>
@@ -97,7 +108,12 @@ export function DocumentsPage() {
           </CardHeader>
           <CardContent>
             <FileUpload onUpload={handleUpload} />
-            {uploading && <p className="mt-3 text-sm text-muted-foreground">Uploading and scanning for malware...</p>}
+            {uploading && (
+              <div className="flex items-center gap-2 mt-3 text-sm text-muted-foreground">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Uploading and scanning for malware...
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
@@ -111,13 +127,17 @@ export function DocumentsPage() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            <div className="space-y-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} className="h-10 w-full rounded" />
+              ))}
             </div>
           ) : documents.length === 0 ? (
-            <div className="text-sm text-muted-foreground py-12 text-center border border-dashed border-border/60 rounded-lg">
-              No documents found.
-            </div>
+            <EmptyState
+              icon={<FileText className="h-6 w-6" />}
+              title="No documents found"
+              description="Upload evidence files to start your compliance documentation."
+            />
           ) : (
             <Table>
               <TableHeader>
@@ -132,13 +152,9 @@ export function DocumentsPage() {
                   <TableRow key={doc.id}>
                     <TableCell className="font-medium">{doc.title}</TableCell>
                     <TableCell>
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${
-                        doc.status === "processed" || doc.status === "ingested"
-                          ? "bg-success/10 text-success"
-                          : "bg-warning/10 text-warning"
-                      }`}>
+                      <Badge variant={statusVariant[doc.status] || "muted"}>
                         {doc.status.replace(/_/g, " ")}
-                      </span>
+                      </Badge>
                     </TableCell>
                     <TableCell className="text-muted-foreground text-sm">
                       {new Date(doc.uploaded_at || Date.now()).toLocaleDateString()}

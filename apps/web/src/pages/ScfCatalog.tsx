@@ -1,11 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { api } from "../lib/api";
 import { PageHeader } from "../components/PageHeader";
 import { Card, CardContent } from "../components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "../components/ui/table";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
-import { Loader2, Search, Shield, Layers } from "lucide-react";
+import { Badge } from "../components/ui/badge";
+import { Pagination } from "../components/ui/pagination";
+import { Skeleton } from "../components/ui/skeleton";
+import { Search, Shield, Layers, Copy, Check } from "lucide-react";
+
+const PAGE_SIZE = 50;
 
 type ScfVersion = {
   scf_version_id: string;
@@ -38,6 +43,29 @@ type ScfFramework = {
   status: string;
 };
 
+function CopyCode({ code }: { code: string }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = () => {
+    navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+  return (
+    <button
+      onClick={handleCopy}
+      className="inline-flex items-center gap-1.5 font-semibold text-primary font-mono text-xs group/code"
+      title="Copy code"
+    >
+      {code}
+      {copied ? (
+        <Check className="h-3 w-3 text-emerald-500" />
+      ) : (
+        <Copy className="h-3 w-3 opacity-0 group-hover/code:opacity-50 transition-opacity" />
+      )}
+    </button>
+  );
+}
+
 export function ScfCatalogPage() {
   const [version, setVersion] = useState<ScfVersion | null>(null);
   const [domains, setDomains] = useState<ScfDomain[]>([]);
@@ -47,6 +75,8 @@ export function ScfCatalogPage() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"controls" | "frameworks">("controls");
+  const [controlPage, setControlPage] = useState(1);
+  const [frameworkPage, setFrameworkPage] = useState(1);
 
   useEffect(() => {
     const load = async () => {
@@ -70,28 +100,46 @@ export function ScfCatalogPage() {
     load();
   }, []);
 
-  const filtered = controls.filter((c) => {
-    const matchesDomain = !activeDomain || c.control_code.startsWith(activeDomain);
-    const matchesSearch =
-      !search ||
-      c.control_code.toLowerCase().includes(search.toLowerCase()) ||
-      c.control_title.toLowerCase().includes(search.toLowerCase());
-    return matchesDomain && matchesSearch;
-  });
+  const filtered = useMemo(() => {
+    return controls.filter((c) => {
+      const matchesDomain = !activeDomain || c.control_code.startsWith(activeDomain);
+      const matchesSearch =
+        !search ||
+        c.control_code.toLowerCase().includes(search.toLowerCase()) ||
+        c.control_title.toLowerCase().includes(search.toLowerCase());
+      return matchesDomain && matchesSearch;
+    });
+  }, [controls, activeDomain, search]);
 
-  if (loading)
+  // Reset page when filters change
+  useEffect(() => { setControlPage(1); }, [search, activeDomain]);
+
+  const controlTotalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const paginatedControls = filtered.slice((controlPage - 1) * PAGE_SIZE, controlPage * PAGE_SIZE);
+
+  const frameworkTotalPages = Math.ceil(frameworks.length / PAGE_SIZE);
+  const paginatedFrameworks = frameworks.slice((frameworkPage - 1) * PAGE_SIZE, frameworkPage * PAGE_SIZE);
+
+  if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      <div className="space-y-6 animate-slide-up">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-4 w-96" />
+        <div className="flex gap-2">
+          <Skeleton className="h-9 w-32 rounded-lg" />
+          <Skeleton className="h-9 w-36 rounded-lg" />
+        </div>
+        <Skeleton className="h-[400px] w-full rounded-xl" />
       </div>
     );
+  }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-slide-up">
       <PageHeader
         title="SCF Catalog"
         description={version
-          ? `Version ${version.version_label} · ${controls.length} controls · ${frameworks.length} frameworks · ${domains.length} domains`
+          ? `Version ${version.version_label} · ${controls.length.toLocaleString()} controls · ${frameworks.length} frameworks · ${domains.length} domains`
           : "No SCF version loaded"}
       />
 
@@ -104,7 +152,7 @@ export function ScfCatalogPage() {
           className="text-xs"
         >
           <Shield className="h-3.5 w-3.5 mr-1.5" />
-          Controls ({controls.length})
+          Controls ({controls.length.toLocaleString()})
         </Button>
         <Button
           variant={tab === "frameworks" ? "default" : "ghost"}
@@ -150,35 +198,44 @@ export function ScfCatalogPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[120px]">Code</TableHead>
+                    <TableHead className="w-[140px]">Code</TableHead>
                     <TableHead>Title</TableHead>
                     <TableHead className="w-[100px]">Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filtered.length === 0 ? (
+                  {paginatedControls.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={3} className="text-center text-muted-foreground h-24">
                         No controls found.
                       </TableCell>
                     </TableRow>
                   ) : (
-                    filtered.map((c) => (
+                    paginatedControls.map((c) => (
                       <TableRow key={c.control_id}>
-                        <TableCell className="font-semibold text-primary font-mono text-xs">
-                          {c.control_code}
+                        <TableCell>
+                          <CopyCode code={c.control_code} />
                         </TableCell>
                         <TableCell className="text-sm">{c.control_title}</TableCell>
                         <TableCell>
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-success/10 text-success">
-                            {c.status}
-                          </span>
+                          <Badge variant="success">{c.status}</Badge>
                         </TableCell>
                       </TableRow>
                     ))
                   )}
                 </TableBody>
               </Table>
+              {filtered.length > PAGE_SIZE && (
+                <div className="px-4 pb-4">
+                  <Pagination
+                    currentPage={controlPage}
+                    totalPages={controlTotalPages}
+                    totalItems={filtered.length}
+                    pageSize={PAGE_SIZE}
+                    onPageChange={setControlPage}
+                  />
+                </div>
+              )}
             </CardContent>
           </Card>
         </>
@@ -197,30 +254,39 @@ export function ScfCatalogPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {frameworks.length === 0 ? (
+                {paginatedFrameworks.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={4} className="text-center text-muted-foreground h-24">
                       No frameworks loaded.
                     </TableCell>
                   </TableRow>
                 ) : (
-                  frameworks.map((f) => (
+                  paginatedFrameworks.map((f) => (
                     <TableRow key={f.framework_id || (f as any).id}>
-                      <TableCell className="font-semibold text-primary font-mono text-xs">
-                        {f.framework_code || (f as any).framework_id}
+                      <TableCell>
+                        <CopyCode code={f.framework_code || (f as any).framework_id} />
                       </TableCell>
                       <TableCell className="text-sm">{f.framework_name || (f as any).name}</TableCell>
                       <TableCell className="text-muted-foreground text-sm">{f.publisher ?? "—"}</TableCell>
                       <TableCell>
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-success/10 text-success">
-                          {f.status}
-                        </span>
+                        <Badge variant="success">{f.status}</Badge>
                       </TableCell>
                     </TableRow>
                   ))
                 )}
               </TableBody>
             </Table>
+            {frameworks.length > PAGE_SIZE && (
+              <div className="px-4 pb-4">
+                <Pagination
+                  currentPage={frameworkPage}
+                  totalPages={frameworkTotalPages}
+                  totalItems={frameworks.length}
+                  pageSize={PAGE_SIZE}
+                  onPageChange={setFrameworkPage}
+                />
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
