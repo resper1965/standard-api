@@ -237,3 +237,24 @@ pnpm test:ci
 - KB é fonte de evidências candidatas; SCF estruturado continua fonte normativa.
 - Agentes não aprovam artefatos finais e não inventam mappings oficiais.
 
+## Segurança
+
+Para reportar vulnerabilidades, veja [SECURITY.md](SECURITY.md). O endpoint `/.well-known/security.txt` está ativo em produção.
+
+## Contribuindo
+
+Leia [CONTRIBUTING.md](CONTRIBUTING.md) para guidelines de desenvolvimento, branch strategy e requisitos de teste.
+
+## Licença
+
+Este projeto é licenciado sob a [Business Source License 1.1](LICENSE). Converte automaticamente para Apache 2.0 em 2028-05-14.
+
+## Links Úteis
+
+| Recurso | Link |
+| ------- | ---- |
+| Produção | [standard.bekaa.eu](https://standard.bekaa.eu) |
+| CI Status | [GitHub Actions](https://github.com/resper1965/agentic-aegis/actions) |
+| Changelog | [CHANGELOG.md](CHANGELOG.md) |
+| Roadmap | [ROADMAP.md](ROADMAP.md) |
+| Code of Conduct | [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) |

@@ -1,12 +1,18 @@
 node_modules/
 dist/
 .wrangler/
+
+# AI agent / IDE tooling (local only)
 .agents/
+.agent/
 .claude/
 .cursor/
+.cursorrules
 .reversa/
 _reversa_sdd/
 conductor/
+skills/
+skills-lock.json
 
 # Secrets & env
 .dev.vars
@@ -24,26 +30,26 @@ migrate_*.log
 errors.txt
 old_schema.ts
 .neon
+
+# Scratch / one-off files (never commit)
 tsc-errors.txt
-tsc-full.log
-tsc-phase6.log
-typecheck.log
-agent-runtime-typecheck.log
-extract_out.log
-out.log
 headers.txt
 knip_report.txt
 ai-exports.txt
 ai-tool-types.txt
+api-docs-for-ai-devs.md
+api-gaps-g5-g4-g1.md
+apply-tcp.ts
+execution-plan-phase1-2.md
+tech-debt-resolution.md
+standard-api.code-workspace
 
 # Official SCF data files (download locally, never commit)
 evals/fixtures/*.xlsx
 evals/fixtures/*.xls
 
-# Generated SCF seed files (regenerate from XLSX with extract-framework-from-xlsx.ts)
+# Generated SCF seed files (regenerate from XLSX)
 infra/docker/postgres/seeds/0010_scf_official_frameworks_seed.sql
 
 .worktrees/
 worktrees/
-skills-lock.json
-
