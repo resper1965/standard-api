@@ -1,0 +1,49 @@
+[010] SCF Version ID: 50000000-0000-4000-8000-000000000001
+
+[010] === ASSESSMENT OBJECTIVES ===
+[010] Table scf_assessment_objectives created
+  [AO: 500/5776]
+  [AO: 1000/5776]
+  [AO: 1500/5776]
+  [AO: 2000/5776]
+  [AO: 2500/5776]
+  [AO: 3000/5776]
+  [AO: 3500/5776]
+  [AO: 4000/5776]
+  [AO: 4500/5776]
+  [AO: 5000/5776]
+  [AO: 5500/5776]
+[010] AOs: 5776 ok, 0 failed
+
+[010] === EVIDENCE REQUEST LIST ===
+[010] Table scf_evidence_request_list created
+[010] ERLs: 303 ok, 0 failed
+
+[010] === COMPENSATING CONTROLS ===
+[010] Table scf_compensating_controls created
+  [CC: 200/1468]
+  [CC: 400/1468]
+  [CC: 600/1468]
+  [CC: 800/1468]
+  [CC: 1000/1468]
+  [CC: 1200/1468]
+  [CC: 1400/1468]
+[010] Compensating Controls: 1468 ok, 0 failed
+
+[010] === THREAT CATALOG ===
+[010] Table scf_threat_catalog created
+[010] Threats: 5
+
+[010] === RISK CATALOG ===
+[010] Table scf_risk_catalog created
+[010] Risks: 11
+
+[010] ÔòÉÔòÉÔòÉ FINAL VERIFICATION ÔòÉÔòÉÔòÉ
+  scf_controls: 1468
+  scf_frameworks: 231
+  scf_mappings: 15717
+  scf_assessment_objectives: 5776
+  scf_evidence_request_list: 303
+  scf_compensating_controls: 1468
+  scf_threat_catalog: 5
+  scf_risk_catalog: 11

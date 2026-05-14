@@ -1,0 +1,15 @@
+---
+description: Padrões de desenvolvimento, testes e PRs
+alwaysApply: true
+---
+
+# Padrões de Desenvolvimento
+
+- Use TypeScript estrito e schemas compartilhados em `packages/schemas`.
+- Ao alterar API, atualize `docs/api/openapi.yaml`, `docs/api/openapi.md` ou contrato equivalente.
+- Ao alterar banco/schema, inclua caminho de migration; não edite modelo persistente sem plano.
+- Módulos críticos exigem testes: assessment engine, SCF, KB, workflows, tenancy, approvals, security e agent runtime.
+- Antes de finalizar, rode validações aplicáveis ou documente claramente o gap.
+- Evite refactors fora do escopo da tarefa.
+- Preserve mudanças existentes do usuário; nunca reverta trabalho alheio sem pedido explícito.
+- PRs devem explicar impacto, riscos, validação e contexto atualizado.

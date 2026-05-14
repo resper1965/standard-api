@@ -1,0 +1,31 @@
+npm warn Unknown project config "shamefully-hoist". This will stop working in the next major version of npm.
+Reading XLSX file: C:\Users\resper\OneDrive\├ürea de Trabalho\aegis-api\assets\Secure Controls Framework (SCF) - 2026.1.1.xlsx
+
+=== XLSX Summary ===
+Sheet name:      SCF 2026.1
+Domains found:   33
+Controls found:  1468
+Frameworks (cols): 355
+
+Connecting to DB: postgresql://neondb_owner:***@ep-REDACTED-endpoint.c-6.us-east-1.aws.neon.tech/neondb?sslmode=require...
+Fetching versions...
+Using DB Version: 2026.1.1 (50000000-0000-4000-8000-000000000001)
+
+=== DOMAIN AUDIT ===
+Ô£à All Domains match perfectly between XLSX and Database.
+
+=== CONTROL AUDIT ===
+Ô£à All Controls match perfectly (No missing or phantom data).
+
+=== FRAMEWORK AUDIT ===
+DB has 231 frameworks. XLSX has 355 framework columns.
+Ô£à Framework validation complete.
+
+=== MAPPING AUDIT ===
+Ô£à Mapping validation complete for DB mappings.
+
+=== DB Summary ===
+Domains found:   33
+Controls found:  1468
+Frameworks (db): 231
+Mappings found:  15717

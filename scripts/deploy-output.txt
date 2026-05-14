@@ -1,0 +1,33 @@
+
+ Ôøà´©Å wrangler 4.90.0
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+Total Upload: 4729.07 KiB / gzip: 802.96 KiB
+Worker Startup Time: 242 ms
+Your Worker has access to the following bindings:
+Binding                                                                         Resource                  
+env.STANDARD_CACHE (4e027e07e0e5440a8666c3f8ee419333)                           KV Namespace              
+env.EMAIL (unrestricted - senders: noreply@bekaa.eu)                            Send Email                
+env.DOCUMENT_INGESTION_QUEUE (standard-document-ingestion-prod)                 Queue                     
+env.KB_EMBEDDING_QUEUE (standard-kb-embedding-prod)                             Queue                     
+env.REPORT_EXPORT_QUEUE (standard-report-export-prod)                           Queue                     
+env.AGENT_RUN_QUEUE (standard-agent-run-prod)                                   Queue                     
+env.STANDARD_KB_INDEX (standard-kb-prod)                                        Vectorize Index           
+env.STANDARD_DOCUMENTS_BUCKET (aegis-documents-prod)                            R2 Bucket                 
+env.STANDARD_REPORTS_BUCKET (aegis-reports-prod)                                R2 Bucket                 
+env.STANDARD_EXPORTS_BUCKET (aegis-exports-prod)                                R2 Bucket                 
+env.AI                                                                          AI                        
+env.STANDARD_ENV ("production")                                                 Environment Variable      
+env.BETTER_AUTH_URL ("https://standard-api-gateway-producti...")                Environment Variable      
+env.LOG_LEVEL ("info")                                                          Environment Variable      
+env.AI_GATEWAY_NAME ("standard-prod")                                           Environment Variable      
+env.AI_GATEWAY_BASE_URL ("https://gateway.ai.cloudflare.com/v1/...")            Environment Variable      
+
+Uploaded standard-api-gateway-production (28.05 sec)
+Deployed standard-api-gateway-production triggers (8.38 sec)
+  https://standard-api-gateway-production.ness.workers.dev
+  api.standard.bekaa.eu (custom domain)
+  Producer for standard-document-ingestion-prod
+  Producer for standard-kb-embedding-prod
+  Producer for standard-report-export-prod
+  Producer for standard-agent-run-prod
+Current Version ID: b7f3ab11-8357-4388-bf5e-d4ebdb772e34

@@ -1,0 +1,169 @@
+name = "standard-api-gateway"
+main = "../../apps/api-gateway/src/index.ts"
+compatibility_date = "2026-04-28"
+compatibility_flags = [ "nodejs_compat" ]
+
+[vars]
+STANDARD_ENV = "development"
+LOG_LEVEL = "info"
+AI_GATEWAY_NAME = "standard-dev"
+AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/standard-dev"
+
+[[r2_buckets]]
+binding = "STANDARD_DOCUMENTS_BUCKET"
+bucket_name = "standard-documents-staging"
+
+[[r2_buckets]]
+binding = "STANDARD_REPORTS_BUCKET"
+bucket_name = "standard-reports-staging"
+
+[[r2_buckets]]
+binding = "STANDARD_EXPORTS_BUCKET"
+bucket_name = "standard-exports-staging"
+
+[[queues.producers]]
+binding = "DOCUMENT_INGESTION_QUEUE"
+queue = "standard-document-ingestion-dev"
+
+[[queues.producers]]
+binding = "KB_EMBEDDING_QUEUE"
+queue = "standard-kb-embedding-dev"
+
+[[queues.producers]]
+binding = "REPORT_EXPORT_QUEUE"
+queue = "standard-report-export-dev"
+
+[[queues.producers]]
+binding = "AGENT_TASK_QUEUE"
+queue = "standard-agent-task-dev"
+
+[[kv_namespaces]]
+binding = "STANDARD_CONFIG_KV"
+id = "1780e8372a814b049d7283bfdd022d55"
+
+[[kv_namespaces]]
+binding = "STANDARD_FEATURE_FLAGS_KV"
+id = "757b7c1c18f744a8ab8b8fcafa84bc9d"
+
+[[kv_namespaces]]
+binding = "STANDARD_CACHE_KV"
+id = "094323d4e27d4b92994c89d412d27f74"
+
+[[workflows]]
+binding = "ASSESSMENT_WORKFLOW"
+name = "standard-assessment-lifecycle-dev"
+class_name = "AssessmentLifecycleWorkflow"
+script_name = "standard-workflows"
+
+[env.staging]
+name = "standard-api-gateway-staging"
+
+[env.staging.vars]
+STANDARD_ENV = "staging"
+LOG_LEVEL = "info"
+AI_GATEWAY_NAME = "standard-staging"
+AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/standard-staging"
+
+[[env.staging.r2_buckets]]
+binding = "STANDARD_DOCUMENTS_BUCKET"
+bucket_name = "standard-documents-staging"
+
+[[env.staging.r2_buckets]]
+binding = "STANDARD_REPORTS_BUCKET"
+bucket_name = "standard-reports-staging"
+
+[[env.staging.r2_buckets]]
+binding = "STANDARD_EXPORTS_BUCKET"
+bucket_name = "standard-exports-staging"
+
+[[env.staging.queues.producers]]
+binding = "DOCUMENT_INGESTION_QUEUE"
+queue = "standard-document-ingestion-staging"
+
+[[env.staging.queues.producers]]
+binding = "KB_EMBEDDING_QUEUE"
+queue = "standard-kb-embedding-staging"
+
+[[env.staging.queues.producers]]
+binding = "REPORT_EXPORT_QUEUE"
+queue = "standard-report-export-staging"
+
+[[env.staging.queues.producers]]
+binding = "AGENT_TASK_QUEUE"
+queue = "standard-agent-task-staging"
+
+[[env.staging.kv_namespaces]]
+binding = "STANDARD_CONFIG_KV"
+id = "1780e8372a814b049d7283bfdd022d55"
+
+[[env.staging.kv_namespaces]]
+binding = "STANDARD_FEATURE_FLAGS_KV"
+id = "757b7c1c18f744a8ab8b8fcafa84bc9d"
+
+[[env.staging.kv_namespaces]]
+binding = "STANDARD_CACHE_KV"
+id = "094323d4e27d4b92994c89d412d27f74"
+
+[[env.staging.workflows]]
+binding = "ASSESSMENT_WORKFLOW"
+name = "standard-assessment-lifecycle-staging"
+class_name = "AssessmentLifecycleWorkflow"
+script_name = "standard-workflows-staging"
+
+[env.production]
+name = "standard-api-gateway-production"
+
+[env.production.vars]
+STANDARD_ENV = "production"
+LOG_LEVEL = "warn"
+AI_GATEWAY_NAME = "standard-prod"
+AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/standard-prod"
+
+[[env.production.r2_buckets]]
+binding = "STANDARD_DOCUMENTS_BUCKET"
+bucket_name = "standard-documents-prod"
+
+[[env.production.r2_buckets]]
+binding = "STANDARD_REPORTS_BUCKET"
+bucket_name = "standard-reports-prod"
+
+[[env.production.r2_buckets]]
+binding = "STANDARD_EXPORTS_BUCKET"
+bucket_name = "standard-exports-prod"
+
+[[env.production.queues.producers]]
+binding = "DOCUMENT_INGESTION_QUEUE"
+queue = "standard-document-ingestion-prod"
+
+[[env.production.queues.producers]]
+binding = "KB_EMBEDDING_QUEUE"
+queue = "standard-kb-embedding-prod"
+
+[[env.production.queues.producers]]
+binding = "REPORT_EXPORT_QUEUE"
+queue = "standard-report-export-prod"
+
+[[env.production.queues.producers]]
+binding = "AGENT_TASK_QUEUE"
+queue = "standard-agent-task-prod"
+
+[[env.production.kv_namespaces]]
+binding = "STANDARD_CONFIG_KV"
+id = "e7aba96b342b4060ab3869ca7789832d"
+
+[[env.production.kv_namespaces]]
+binding = "STANDARD_FEATURE_FLAGS_KV"
+id = "23e073ec707d4803a8957e13a4046810"
+
+[[env.production.kv_namespaces]]
+binding = "STANDARD_CACHE_KV"
+id = "55f97abbf9794b0196bdf51e8c1dedec"
+
+[[env.production.workflows]]
+binding = "ASSESSMENT_WORKFLOW"
+name = "standard-assessment-lifecycle-prod"
+class_name = "AssessmentLifecycleWorkflow"
+script_name = "standard-workflows-production"
+
+
+

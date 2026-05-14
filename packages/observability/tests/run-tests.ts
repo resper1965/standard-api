@@ -1,0 +1,4 @@
+import "./observability.test";
+import { run } from "./test-kit";
+
+await run();

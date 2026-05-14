@@ -1,0 +1,33 @@
+name = "standard-workflows"
+main = "../../workers/workflows/src/assessment-lifecycle.ts"
+compatibility_date = "2026-04-28"
+compatibility_flags = [ "nodejs_compat" ]
+
+[vars]
+STANDARD_ENV = "development"
+LOG_LEVEL = "info"
+
+[[workflows]]
+binding = "ASSESSMENT_WORKFLOW"
+name = "standard-assessment-lifecycle-dev"
+class_name = "AssessmentLifecycleWorkflow"
+
+[env.staging]
+name = "standard-workflows-staging"
+vars = { STANDARD_ENV = "staging", LOG_LEVEL = "info" }
+
+[[env.staging.workflows]]
+binding = "ASSESSMENT_WORKFLOW"
+name = "standard-assessment-lifecycle-staging"
+class_name = "AssessmentLifecycleWorkflow"
+
+[env.production]
+name = "standard-workflows-production"
+vars = { STANDARD_ENV = "production", LOG_LEVEL = "warn" }
+
+[[env.production.workflows]]
+binding = "ASSESSMENT_WORKFLOW"
+name = "standard-assessment-lifecycle-prod"
+class_name = "AssessmentLifecycleWorkflow"
+
+

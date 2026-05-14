@@ -1,0 +1,21 @@
+{
+  "name": "@standard/document-ingestion",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "tsx tests/run-tests.ts"
+  },
+  "dependencies": {
+    "@standard/schemas": "workspace:*",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260430.1",
+    "tsx": "^4.21.0"
+  }
+}
+

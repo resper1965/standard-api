@@ -1,0 +1,10 @@
+[migration] Adding missing columns to scf_domains...
+[ok] scf_domains updated
+[migration] Adding missing columns to scf_controls...
+[ok] scf_controls updated
+
+=== scf_domains columns after migration ===
+id, scf_version_id, domain_code, name, description, created_at, updated_at, deleted_at, sort_order, is_synthetic
+
+=== scf_controls columns after migration ===
+id, scf_version_id, scf_domain_id, control_code, title, description, created_at, updated_at, deleted_at, control_question, control_intent, implementation_guidance, expected_evidence, control_weight, maturity_criteria_ref, sort_order, status, is_synthetic

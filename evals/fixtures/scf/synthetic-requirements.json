@@ -1,0 +1,27 @@
+[
+  {
+    "requirement_id": "52000000-0000-4000-8000-000000000001",
+    "requirement_code": "SYNTH-1.1",
+    "title": "Governance Policy"
+  },
+  {
+    "requirement_id": "52000000-0000-4000-8000-000000000002",
+    "requirement_code": "SYNTH-1.2",
+    "title": "Access Control"
+  },
+  {
+    "requirement_id": "52000000-0000-4000-8000-000000000003",
+    "requirement_code": "SYNTH-1.3",
+    "title": "Vulnerability Management"
+  },
+  {
+    "requirement_id": "52000000-0000-4000-8000-000000000004",
+    "requirement_code": "SYNTH-1.4",
+    "title": "Backup and Recovery"
+  },
+  {
+    "requirement_id": "52000000-0000-4000-8000-000000000005",
+    "requirement_code": "SYNTH-1.5",
+    "title": "Vendor Management"
+  }
+]

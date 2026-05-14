@@ -1,0 +1,65 @@
+[005] Aligning POA&M and report tables...
+  [ok] ALTER TABLE poam_versions ADD COLUMN IF NOT EXISTS source_gap_analysis_version_id uuid REFERENCES ga
+  [ok] ALTER TABLE poam_versions ADD COLUMN IF NOT EXISTS source_maturity_assessment_version_id uuid REFERE
+  [ok] ALTER TABLE poam_versions ADD COLUMN IF NOT EXISTS framework_id uuid REFERENCES scf_frameworks(id)
+  [ok] ALTER TABLE poam_versions ADD COLUMN IF NOT EXISTS scf_version_id uuid REFERENCES scf_versions(id)
+  [ok] ALTER TABLE poam_versions ADD COLUMN IF NOT EXISTS generated_by_agent_run_id uuid REFERENCES agent_r
+  [ok] ALTER TABLE poam_versions ADD COLUMN IF NOT EXISTS created_by uuid REFERENCES users(id)
+  [ok] ALTER TABLE poam_versions ADD COLUMN IF NOT EXISTS submitted_for_review_at timestamptz
+  [ok] ALTER TABLE poam_versions ADD COLUMN IF NOT EXISTS approved_by uuid REFERENCES users(id)
+  [ok] ALTER TABLE poam_versions ADD COLUMN IF NOT EXISTS approved_at timestamptz
+  [ok] ALTER TABLE poam_versions ADD COLUMN IF NOT EXISTS superseded_by uuid
+  [ok] ALTER TABLE poam_versions ADD COLUMN IF NOT EXISTS trace_id text
+  [ok] ALTER TABLE poam_versions ADD COLUMN IF NOT EXISTS metadata jsonb NOT NULL DEFAULT '{}'
+  [ok] CREATE INDEX IF NOT EXISTS poam_versions_gap_idx ON poam_versions(source_gap_analysis_version_id)
+  [ok] ALTER TABLE poam_items ADD COLUMN IF NOT EXISTS poam_code text
+  [ok] ALTER TABLE poam_items ADD COLUMN IF NOT EXISTS related_gap_finding_id uuid REFERENCES gap_findings(
+  [ok] ALTER TABLE poam_items ADD COLUMN IF NOT EXISTS source_maturity_score_id uuid REFERENCES maturity_sc
+  [ok] ALTER TABLE poam_items ADD COLUMN IF NOT EXISTS soa_item_id uuid REFERENCES soa_items(id)
+  [ok] ALTER TABLE poam_items ADD COLUMN IF NOT EXISTS framework_id uuid REFERENCES scf_frameworks(id)
+  [ok] ALTER TABLE poam_items ADD COLUMN IF NOT EXISTS framework_requirement_id uuid REFERENCES scf_framewo
+  [ok] ALTER TABLE poam_items ADD COLUMN IF NOT EXISTS scf_version_id uuid REFERENCES scf_versions(id)
+  [ok] ALTER TABLE poam_items ADD COLUMN IF NOT EXISTS scf_domain_id uuid REFERENCES scf_domains(id)
+  [ok] ALTER TABLE poam_items ADD COLUMN IF NOT EXISTS scf_control_id uuid REFERENCES scf_controls(id)
+  [ok] ALTER TABLE poam_items ADD COLUMN IF NOT EXISTS action_type poam_action_type
+  [ok] ALTER TABLE poam_items ADD COLUMN IF NOT EXISTS risk_rating text
+  [ok] ALTER TABLE poam_items ADD COLUMN IF NOT EXISTS effort_estimate poam_effort_estimate DEFAULT 'unknow
+  [ok] ALTER TABLE poam_items ADD COLUMN IF NOT EXISTS owner_role text
+  [ok] ALTER TABLE poam_items ADD COLUMN IF NOT EXISTS target_maturity_score integer
+  [ok] ALTER TABLE poam_items ADD COLUMN IF NOT EXISTS expected_evidence_jsonb jsonb NOT NULL DEFAULT '[]'
+  [ok] ALTER TABLE poam_items ADD COLUMN IF NOT EXISTS acceptance_criteria_jsonb jsonb NOT NULL DEFAULT '[]
+  [ok] ALTER TABLE poam_items ADD COLUMN IF NOT EXISTS dependencies_summary text
+  [ok] ALTER TABLE poam_items ADD COLUMN IF NOT EXISTS rationale text
+  [ok] ALTER TABLE poam_items ADD COLUMN IF NOT EXISTS confidence_score numeric(5,4)
+  [ok] ALTER TABLE poam_items ADD COLUMN IF NOT EXISTS requires_user_validation boolean NOT NULL DEFAULT fa
+  [ok] CREATE INDEX IF NOT EXISTS poam_items_gap_idx ON poam_items(related_gap_finding_id)
+  [ok] CREATE INDEX IF NOT EXISTS poam_items_control_idx ON poam_items(scf_control_id)
+  [ok] ALTER TABLE report_versions ADD COLUMN IF NOT EXISTS title text NOT NULL DEFAULT 'Standard Assessmen
+  [ok] ALTER TABLE report_versions ADD COLUMN IF NOT EXISTS report_type report_type
+  [ok] ALTER TABLE report_versions ADD COLUMN IF NOT EXISTS source_scope_id uuid REFERENCES assessment_scop
+  [ok] ALTER TABLE report_versions ADD COLUMN IF NOT EXISTS source_soa_version_id uuid REFERENCES soa_versi
+  [ok] ALTER TABLE report_versions ADD COLUMN IF NOT EXISTS source_gap_analysis_version_id uuid REFERENCES 
+  [ok] ALTER TABLE report_versions ADD COLUMN IF NOT EXISTS source_maturity_assessment_version_id uuid REFE
+  [ok] ALTER TABLE report_versions ADD COLUMN IF NOT EXISTS source_poam_version_id uuid REFERENCES poam_ver
+  [ok] ALTER TABLE report_versions ADD COLUMN IF NOT EXISTS framework_id uuid REFERENCES scf_frameworks(id)
+  [ok] ALTER TABLE report_versions ADD COLUMN IF NOT EXISTS scf_version_id uuid REFERENCES scf_versions(id)
+  [ok] ALTER TABLE report_versions ADD COLUMN IF NOT EXISTS generated_by_agent_run_id uuid REFERENCES agent
+  [ok] ALTER TABLE report_versions ADD COLUMN IF NOT EXISTS created_by uuid REFERENCES users(id)
+  [ok] ALTER TABLE report_versions ADD COLUMN IF NOT EXISTS submitted_for_review_at timestamptz
+  [ok] ALTER TABLE report_versions ADD COLUMN IF NOT EXISTS approved_by uuid REFERENCES users(id)
+  [ok] ALTER TABLE report_versions ADD COLUMN IF NOT EXISTS approved_at timestamptz
+  [ok] ALTER TABLE report_versions ADD COLUMN IF NOT EXISTS superseded_by uuid
+  [ok] ALTER TABLE report_versions ADD COLUMN IF NOT EXISTS trace_id text NOT NULL DEFAULT 'trace-not-set'
+  [ok] ALTER TABLE report_versions ADD COLUMN IF NOT EXISTS metadata jsonb NOT NULL DEFAULT '{}'
+  [ok] CREATE INDEX IF NOT EXISTS report_versions_sources_idx ON report_versions(source_soa_version_id, sou
+  [ok] ALTER TABLE report_artifacts ADD COLUMN IF NOT EXISTS artifact_type report_artifact_type NOT NULL DE
+  [ok] ALTER TABLE report_artifacts ADD COLUMN IF NOT EXISTS format report_format NOT NULL DEFAULT 'json'
+  [ok] ALTER TABLE report_artifacts ADD COLUMN IF NOT EXISTS storage_bucket text
+  [ok] ALTER TABLE report_artifacts ADD COLUMN IF NOT EXISTS generated_at timestamptz NOT NULL DEFAULT now(
+  [ok] ALTER TABLE report_artifacts ADD COLUMN IF NOT EXISTS metadata jsonb NOT NULL DEFAULT '{}'
+
+[005] Done: 58 ok, 0 failed
+  poam_versions: 23 columns
+  poam_items: 39 columns
+  report_versions: 28 columns
+  report_artifacts: 16 columns

@@ -1,0 +1,42 @@
+{
+  "name": "@standard/api-gateway",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx tests/run-tests.ts"
+  },
+  "dependencies": {
+    "@standard/agent-runtime": "workspace:*",
+    "@standard/assessment-engine": "workspace:*",
+    "@standard/auth": "workspace:*",
+    "@standard/document-ingestion": "workspace:*",
+    "@standard/email": "workspace:*",
+    "@standard/gap-analysis": "workspace:*",
+    "@standard/kb": "workspace:*",
+    "@standard/observability": "workspace:*",
+    "@standard/poam": "workspace:*",
+    "@standard/privacy": "workspace:*",
+    "@standard/reporting": "workspace:*",
+    "@standard/scf-core": "workspace:*",
+    "@standard/schemas": "workspace:*",
+    "@standard/security": "workspace:*",
+    "@standard/soa": "workspace:*",
+    "@standard/workflows": "workspace:*",
+    "@neondatabase/serverless": "^0.9.3",
+    "@asteasolutions/zod-to-openapi": "^7.3.0",
+    "better-auth": "^1.2.10",
+    "drizzle-orm": "^0.45.2",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260426.1",
+    "tsx": "^4.21.0",
+    "typescript": "latest",
+    "wrangler": "latest"
+  }
+}
+

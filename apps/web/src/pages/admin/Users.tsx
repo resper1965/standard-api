@@ -1,0 +1,228 @@
+import { useEffect, useState } from "react";
+import { authClient } from "../../lib/auth-client";
+import { PageHeader } from "../../components/PageHeader";
+import { Card, CardContent } from "../../components/ui/card";
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "../../components/ui/table";
+import { Button } from "../../components/ui/button";
+import { Loader2, UserPlus, Pencil, Check, X, Shield, ShieldAlert } from "lucide-react";
+
+type User = {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  createdAt: string;
+  banned?: boolean;
+  image?: string;
+};
+
+type EditingUser = {
+  id: string;
+  name: string;
+  role: string;
+};
+
+export function AdminUsers() {
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [editing, setEditing] = useState<EditingUser | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  const fetchUsers = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await authClient.admin.listUsers({
+        query: { limit: 100 }
+      });
+      if (res?.data?.users) {
+        setUsers(res.data.users as unknown as User[]);
+      } else if (res?.error) {
+        setError(res.error.message || "Admin API returned an error.");
+      } else {
+        setError("No user data returned from admin API.");
+      }
+    } catch (e: any) {
+      console.error("[Users] admin.listUsers error:", e);
+      setError(e?.message || "Failed to fetch users. You may not have admin permissions.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchUsers(); }, []);
+
+  const startEdit = (u: User) => {
+    setEditing({ id: u.id, name: u.name || "", role: u.role || "user" });
+  };
+
+  const cancelEdit = () => setEditing(null);
+
+  const saveEdit = async () => {
+    if (!editing) return;
+    setSaving(true);
+    try {
+      // Update user name
+      const currentUser = users.find(u => u.id === editing.id);
+      if (currentUser && editing.name !== currentUser.name) {
+        await authClient.admin.updateUser({
+          userId: editing.id,
+          data: { name: editing.name },
+        });
+      }
+
+      // Update role if changed
+      if (currentUser && editing.role !== currentUser.role) {
+        await authClient.admin.setRole({
+          userId: editing.id,
+          role: editing.role,
+        });
+      }
+
+      // Refresh data
+      await fetchUsers();
+      setEditing(null);
+    } catch (e: any) {
+      console.error("[Users] save error:", e);
+      setError(e?.message || "Failed to save changes.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const toggleRole = (userId: string, currentRole: string) => {
+    const newRole = currentRole === "admin" ? "user" : "admin";
+    setEditing(prev => prev?.id === userId ? { ...prev, role: newRole } : prev);
+  };
+
+  return (
+    <div className="space-y-6">
+      <PageHeader title="User Administration" description="Manage users, roles, and access control">
+        <Button size="sm" disabled>
+          <UserPlus className="h-4 w-4 mr-1.5" />
+          Invite User
+        </Button>
+      </PageHeader>
+
+      <Card className="border-border/60 shadow-none">
+        <CardContent className="p-0">
+          {error && (
+            <div className="p-4 text-sm text-destructive bg-destructive/5 border-b border-border/60">
+              {error}
+            </div>
+          )}
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : users.length === 0 && !error ? (
+            <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
+              No users found.
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Joined</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {users.map((u) => {
+                  const isEditing = editing?.id === u.id;
+
+                  return (
+                    <TableRow key={u.id}>
+                      <TableCell className="font-medium">
+                        {isEditing ? (
+                          <input
+                            className="bg-background border border-border rounded px-2 py-1 text-sm w-full max-w-[180px]"
+                            value={editing.name}
+                            onChange={(e) => setEditing({ ...editing, name: e.target.value })}
+                          />
+                        ) : (
+                          u.name || "—"
+                        )}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">{u.email}</TableCell>
+                      <TableCell>
+                        {isEditing ? (
+                          <button
+                            onClick={() => toggleRole(u.id, editing.role)}
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold cursor-pointer transition-colors ${
+                              editing.role === "admin"
+                                ? "bg-primary/10 text-primary hover:bg-primary/20"
+                                : "bg-muted text-muted-foreground hover:bg-muted/80"
+                            }`}
+                          >
+                            {editing.role === "admin" ? (
+                              <ShieldAlert className="h-3 w-3" />
+                            ) : (
+                              <Shield className="h-3 w-3" />
+                            )}
+                            {editing.role}
+                            <span className="text-[9px] opacity-60 ml-0.5">click to toggle</span>
+                          </button>
+                        ) : (
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${
+                            u.role === "admin" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                          }`}>
+                            {u.role === "admin" ? (
+                              <ShieldAlert className="h-3 w-3" />
+                            ) : (
+                              <Shield className="h-3 w-3" />
+                            )}
+                            {u.role || "user"}
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${
+                          u.banned ? "bg-destructive/10 text-destructive" : "bg-emerald-500/10 text-emerald-500"
+                        }`}>
+                          {u.banned ? "banned" : "active"}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-sm">
+                        {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "—"}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {isEditing ? (
+                          <div className="flex items-center justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={saveEdit}
+                              disabled={saving}
+                              className="text-emerald-500 hover:text-emerald-600"
+                            >
+                              {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+                              Save
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={cancelEdit} disabled={saving}>
+                              <X className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button variant="ghost" size="sm" onClick={() => startEdit(u)}>
+                            <Pencil className="h-3.5 w-3.5 mr-1" />
+                            Edit
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

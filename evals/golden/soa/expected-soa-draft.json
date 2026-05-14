@@ -1,0 +1,13 @@
+{
+  "assessment_id": "30000000-0000-4000-8000-000000000001",
+  "framework_code": "SYNTH-STD-1",
+  "status": "draft",
+  "items": [
+    { "control_code": "GOV-001", "applicability_status": "applicable", "mapping_type": "official" },
+    { "control_code": "IAC-001", "applicability_status": "applicable", "mapping_type": "official" },
+    { "control_code": "VPM-001", "applicability_status": "applicable", "mapping_type": "official" },
+    { "control_code": "BCR-001", "applicability_status": "applicable", "mapping_type": "official" },
+    { "control_code": "TPR-001", "applicability_status": "applicable", "mapping_type": "official" },
+    { "control_code": "UNMAPPED-001", "applicability_status": "requires_validation", "mapping_type": "none" }
+  ]
+}

@@ -1,0 +1,78 @@
+[004] Aligning evidence, gap, and scope tables...
+  [ok] ALTER TABLE evidence_findings ADD COLUMN IF NOT EXISTS soa_version_id uuid REFERENCES soa_versi
+  [ok] ALTER TABLE evidence_findings ADD COLUMN IF NOT EXISTS framework_id uuid REFERENCES scf_framewo
+  [ok] ALTER TABLE evidence_findings ADD COLUMN IF NOT EXISTS framework_requirement_id uuid REFERENCES
+  [ok] ALTER TABLE evidence_findings ADD COLUMN IF NOT EXISTS scf_version_id uuid REFERENCES scf_versi
+  [ok] ALTER TABLE evidence_findings ADD COLUMN IF NOT EXISTS scf_control_id uuid REFERENCES scf_contr
+  [ok] ALTER TABLE evidence_findings ADD COLUMN IF NOT EXISTS evidence_strength evidence_strength DEFA
+  [ok] ALTER TABLE evidence_findings ADD COLUMN IF NOT EXISTS evidence_status evidence_status DEFAULT 
+  [ok] ALTER TABLE evidence_findings ADD COLUMN IF NOT EXISTS evidence_summary text
+  [ok] ALTER TABLE evidence_findings ADD COLUMN IF NOT EXISTS evidence_limitations jsonb NOT NULL DEFA
+  [ok] ALTER TABLE evidence_findings ADD COLUMN IF NOT EXISTS confidence_score numeric(5,4)
+  [ok] ALTER TABLE evidence_findings ADD COLUMN IF NOT EXISTS generated_by_agent_run_id uuid REFERENCE
+  [ok] ALTER TABLE evidence_findings ADD COLUMN IF NOT EXISTS trace_id text
+  [ok] CREATE INDEX IF NOT EXISTS evidence_findings_soa_item_idx ON evidence_findings(soa_item_id)
+  [ok] CREATE INDEX IF NOT EXISTS evidence_findings_control_idx ON evidence_findings(scf_control_id)
+  [ok] CREATE INDEX IF NOT EXISTS evidence_findings_agent_idx ON evidence_findings(generated_by_agent_
+  [ok] ALTER TABLE evidence_sources ADD COLUMN IF NOT EXISTS document_id uuid REFERENCES documents(id)
+  [ok] ALTER TABLE evidence_sources ADD COLUMN IF NOT EXISTS chunk_id uuid REFERENCES document_chunks(
+  [ok] ALTER TABLE evidence_sources ADD COLUMN IF NOT EXISTS vector_reference_id uuid REFERENCES vecto
+  [ok] ALTER TABLE evidence_sources ADD COLUMN IF NOT EXISTS source_type text
+  [ok] ALTER TABLE evidence_sources ADD COLUMN IF NOT EXISTS source_title text
+  [ok] ALTER TABLE evidence_sources ADD COLUMN IF NOT EXISTS source_location text
+  [ok] ALTER TABLE evidence_sources ADD COLUMN IF NOT EXISTS snippet text
+  [ok] ALTER TABLE evidence_sources ADD COLUMN IF NOT EXISTS retrieval_score numeric(8,6)
+  [ok] ALTER TABLE evidence_sources ADD COLUMN IF NOT EXISTS retrieval_method text
+  [ok] ALTER TABLE evidence_sources ADD COLUMN IF NOT EXISTS candidate_evidence boolean NOT NULL DEFAU
+  [ok] CREATE INDEX IF NOT EXISTS evidence_sources_chunk_idx ON evidence_sources(chunk_id)
+  [ok] CREATE INDEX IF NOT EXISTS evidence_sources_vector_reference_idx ON evidence_sources(vector_ref
+  [ok] ALTER TABLE gap_analysis_versions ADD COLUMN IF NOT EXISTS source_soa_version_id uuid REFERENCE
+  [ok] ALTER TABLE gap_analysis_versions ADD COLUMN IF NOT EXISTS framework_id uuid REFERENCES scf_fra
+  [ok] ALTER TABLE gap_analysis_versions ADD COLUMN IF NOT EXISTS scf_version_id uuid REFERENCES scf_v
+  [ok] ALTER TABLE gap_analysis_versions ADD COLUMN IF NOT EXISTS generated_by_agent_run_id uuid REFER
+  [ok] ALTER TABLE gap_analysis_versions ADD COLUMN IF NOT EXISTS created_by uuid REFERENCES users(id)
+  [ok] ALTER TABLE gap_analysis_versions ADD COLUMN IF NOT EXISTS submitted_for_review_at timestamptz
+  [ok] ALTER TABLE gap_analysis_versions ADD COLUMN IF NOT EXISTS approved_by uuid REFERENCES users(id
+  [ok] ALTER TABLE gap_analysis_versions ADD COLUMN IF NOT EXISTS approved_at timestamptz
+  [ok] ALTER TABLE gap_analysis_versions ADD COLUMN IF NOT EXISTS superseded_by uuid
+  [ok] ALTER TABLE gap_analysis_versions ADD COLUMN IF NOT EXISTS trace_id text
+  [ok] ALTER TABLE gap_analysis_versions ADD COLUMN IF NOT EXISTS metadata jsonb NOT NULL DEFAULT '{}'
+  [ok] ALTER TABLE gap_findings ADD COLUMN IF NOT EXISTS soa_version_id uuid REFERENCES soa_versions(i
+  [ok] ALTER TABLE gap_findings ADD COLUMN IF NOT EXISTS soa_item_id uuid REFERENCES soa_items(id)
+  [ok] ALTER TABLE gap_findings ADD COLUMN IF NOT EXISTS framework_id uuid REFERENCES scf_frameworks(i
+  [ok] ALTER TABLE gap_findings ADD COLUMN IF NOT EXISTS framework_requirement_id uuid REFERENCES scf_
+  [ok] ALTER TABLE gap_findings ADD COLUMN IF NOT EXISTS scf_version_id uuid REFERENCES scf_versions(i
+  [ok] ALTER TABLE gap_findings ADD COLUMN IF NOT EXISTS scf_control_id uuid REFERENCES scf_controls(i
+  [ok] ALTER TABLE gap_findings ADD COLUMN IF NOT EXISTS evidence_finding_id uuid REFERENCES evidence_
+  [ok] ALTER TABLE gap_findings ADD COLUMN IF NOT EXISTS gap_code text
+  [ok] ALTER TABLE gap_findings ADD COLUMN IF NOT EXISTS assessment_status gap_status
+  [ok] ALTER TABLE gap_findings ADD COLUMN IF NOT EXISTS gap_type gap_type
+  [ok] ALTER TABLE gap_findings ADD COLUMN IF NOT EXISTS severity severity
+  [ok] ALTER TABLE gap_findings ADD COLUMN IF NOT EXISTS impact text
+  [ok] ALTER TABLE gap_findings ADD COLUMN IF NOT EXISTS likelihood text
+  [ok] ALTER TABLE gap_findings ADD COLUMN IF NOT EXISTS gap_summary text
+  [ok] ALTER TABLE gap_findings ADD COLUMN IF NOT EXISTS gap_rationale text
+  [ok] ALTER TABLE gap_findings ADD COLUMN IF NOT EXISTS recommendation_summary text
+  [ok] ALTER TABLE gap_findings ADD COLUMN IF NOT EXISTS confidence_score numeric(5,4)
+  [ok] ALTER TABLE gap_findings ADD COLUMN IF NOT EXISTS requires_user_validation boolean NOT NULL DEF
+  [ok] CREATE INDEX IF NOT EXISTS gap_findings_control_idx ON gap_findings(scf_control_id)
+  [ok] CREATE INDEX IF NOT EXISTS gap_findings_requirement_idx ON gap_findings(framework_requirement_i
+  [ok] ALTER TABLE assessment_scope ADD COLUMN IF NOT EXISTS scope_version integer NOT NULL DEFAULT 1
+  [ok] ALTER TABLE assessment_scope ADD COLUMN IF NOT EXISTS title text
+  [ok] ALTER TABLE assessment_scope ADD COLUMN IF NOT EXISTS description text
+  [ok] ALTER TABLE assessment_scope ADD COLUMN IF NOT EXISTS business_units jsonb NOT NULL DEFAULT '[]
+  [ok] ALTER TABLE assessment_scope ADD COLUMN IF NOT EXISTS processes jsonb NOT NULL DEFAULT '[]'
+  [ok] ALTER TABLE assessment_scope ADD COLUMN IF NOT EXISTS systems jsonb NOT NULL DEFAULT '[]'
+  [ok] ALTER TABLE assessment_scope ADD COLUMN IF NOT EXISTS locations jsonb NOT NULL DEFAULT '[]'
+  [ok] ALTER TABLE assessment_scope ADD COLUMN IF NOT EXISTS legal_entities jsonb NOT NULL DEFAULT '[]
+  [ok] ALTER TABLE assessment_scope ADD COLUMN IF NOT EXISTS data_types jsonb NOT NULL DEFAULT '[]'
+  [ok] ALTER TABLE assessment_scope ADD COLUMN IF NOT EXISTS third_parties jsonb NOT NULL DEFAULT '[]'
+  [ok] ALTER TABLE assessment_scope ADD COLUMN IF NOT EXISTS constraints jsonb NOT NULL DEFAULT '[]'
+  [ok] ALTER TABLE assessment_scope ADD COLUMN IF NOT EXISTS created_by uuid REFERENCES users(id)
+
+[004] Done: 70 ok, 0 failed
+  evidence_findings: 25 columns
+  evidence_sources: 20 columns
+  gap_analysis_versions: 22 columns
+  gap_findings: 32 columns
+  assessment_scope: 25 columns

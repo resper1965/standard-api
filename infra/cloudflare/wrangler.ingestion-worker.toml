@@ -1,0 +1,62 @@
+name = "standard-ingestion"
+main = "../../workers/ingestion/src/index.ts"
+compatibility_date = "2026-04-28"
+compatibility_flags = [ "nodejs_compat" ]
+
+[vars]
+STANDARD_ENV = "development"
+LOG_LEVEL = "info"
+AI_GATEWAY_NAME = "standard-dev"
+AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/standard-dev"
+
+[[queues.consumers]]
+queue = "standard-document-ingestion-dev"
+max_batch_size = 10
+max_batch_timeout = 30
+dead_letter_queue = "standard-dead-letter-dev"
+
+[[r2_buckets]]
+binding = "STANDARD_DOCUMENTS_BUCKET"
+bucket_name = "standard-documents-dev"
+
+[[vectorize]]
+binding = "STANDARD_KB_INDEX"
+index_name = "standard-kb-dev"
+
+[env.staging]
+name = "standard-ingestion-staging"
+vars = { STANDARD_ENV = "staging", LOG_LEVEL = "info", AI_GATEWAY_NAME = "standard-staging", AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/standard-staging" }
+
+[[env.staging.queues.consumers]]
+queue = "standard-document-ingestion-staging"
+max_batch_size = 10
+max_batch_timeout = 30
+dead_letter_queue = "standard-dead-letter-staging"
+
+[[env.staging.r2_buckets]]
+binding = "STANDARD_DOCUMENTS_BUCKET"
+bucket_name = "standard-documents-staging"
+
+[[env.staging.vectorize]]
+binding = "STANDARD_KB_INDEX"
+index_name = "standard-kb-staging"
+
+[env.production]
+name = "standard-ingestion-production"
+vars = { STANDARD_ENV = "production", LOG_LEVEL = "warn", AI_GATEWAY_NAME = "standard-prod", AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/standard-prod" }
+
+[[env.production.queues.consumers]]
+queue = "standard-document-ingestion-prod"
+max_batch_size = 10
+max_batch_timeout = 30
+dead_letter_queue = "standard-dead-letter-prod"
+
+[[env.production.r2_buckets]]
+binding = "STANDARD_DOCUMENTS_BUCKET"
+bucket_name = "standard-documents-prod"
+
+[[env.production.vectorize]]
+binding = "STANDARD_KB_INDEX"
+index_name = "standard-kb-prod"
+
+

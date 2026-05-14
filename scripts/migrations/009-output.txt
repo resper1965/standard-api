@@ -1,0 +1,37 @@
+[009] Reading: C:\Users\resper\OneDrive\├ürea de Trabalho\aegis-api\evals\fixtures\scf-2026.1.1.xlsx
+[009] Authoritative sources: 249
+[009] XLSX headers: 369
+[009] DB frameworks: 231
+
+[009] Matched and updated: 227
+[009] Unmatched: 2
+
+Sample matches:
+  Ô£ô "21434 2021" ÔåÆ "ISO 21434 (2021)"
+  Ô£ô "22301 2019" ÔåÆ "ISO 22301 (2019)"
+  Ô£ô "27017 2015" ÔåÆ "ISO 27017 (2015)"
+  Ô£ô "27002 2022" ÔåÆ "ISO 27002 (2022)"
+  Ô£ô "27701 2025" ÔåÆ "ISO 27701 (2025)"
+  Ô£ô "29100 2024" ÔåÆ "ISO 29100 (2024)"
+  Ô£ô "31010 2009" ÔåÆ "ISO 31010 (2009)"
+  Ô£ô "31000 2018" ÔåÆ "ISO 31000 (2018)"
+  Ô£ô "4.0.1 SAQ A" ÔåÆ "Payment Card Industry Data Security Standard (PCI DSS) - SAQ A (v4.0.1)"
+  Ô£ô "4.0.1 SAQ A-EP" ÔåÆ "Payment Card Industry Data Security Standard (PCI DSS) - SAQ A-EP (v4.0.1)"
+  Ô£ô "4.0.1 SAQ B" ÔåÆ "Payment Card Industry Data Security Standard (PCI DSS) - SAQ A (v4.0.1)"
+  Ô£ô "4.0.1 SAQ B-IP" ÔåÆ "Payment Card Industry Data Security Standard (PCI DSS) - SAQ B-IP (v4.0.1)"
+  Ô£ô "4.0.1 SAQ C" ÔåÆ "Payment Card Industry Data Security Standard (PCI DSS) - SAQ A (v4.0.1)"
+  Ô£ô "4.0.1 SAQ C-VT" ÔåÆ "Payment Card Industry Data Security Standard (PCI DSS) - SAQ C-VT (v4.0.1)"
+  Ô£ô "4.0.1 SAQ D Merchant" ÔåÆ "Payment Card Industry Data Security Standard (PCI DSS) - SAQ D Merchant (v4.0.1)"
+...
+
+Sample enriched names:
+  "AICPA-PRIVACY-MANAGEMENT-FRAMEWORK-(PMF)" ÔåÆ "AICPA Privacy Management Framework (PMF) (2020)"
+  "PR-2015" ÔåÆ "APEC Privacy Framework (2015)"
+  "US---AK-PIPA" ÔåÆ "Alaska Personal Information Protection Act (PIPA) (2009)"
+  "AR-REG-132-2018" ÔåÆ "Argentina - Protection of Personal Data (2018)"
+  "AU-IOT-CODE-OF-PRACTICE" ÔåÆ "Australia - Code of Practice - Securing the Internet of Things for Consumers (2020)"
+  "AU-ESSENTIAL-8" ÔåÆ "Australia - Essential Eight (2024)"
+  "AU-ISM-JUNE-2024" ÔåÆ "Australia - Information Security Manual (ISM) (June 2024)"
+  "APAC-AUSTRALIAN-PRIVACY-PRINCIPLES" ÔåÆ "Australia - Privacy Principles (2026)"
+  "AU-PRUDENTIAL-STANDARD-CPS230" ÔåÆ "Australia - Prudential Standard CPS 230 (2023)"
+  "AU-PRUDENTIAL-STANDARD-CPS234" ÔåÆ "Australia - Prudential Standard CPS 234 (2019)"
