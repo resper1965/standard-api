@@ -10,7 +10,8 @@ test("SCF versions endpoint returns array", async () => {
     authorization: "Bearer dev:admin",
   });
   expect(result.response.status).toBe(200);
-  if (!Array.isArray(result.body)) {
+  const versions = result.body.data ?? result.body;
+  if (!Array.isArray(versions)) {
     throw new Error("Expected SCF versions response to be an array");
   }
 });
@@ -21,15 +22,18 @@ test("SCF controls endpoint returns controls with control_code pattern", async (
     "x-standard-actor-id": ids.actorId,
     authorization: "Bearer dev:admin",
   });
-  if (result.response.status === 200 && Array.isArray(result.body) && result.body.length > 0) {
-    const first = result.body[0];
-    if (!first.control_code) {
-      throw new Error("Expected control to have control_code field");
-    }
-    // Control codes follow pattern: UPPERCASE-DIGITS (e.g., GOV-01, IAC-12)
-    const pattern = /^[A-Z]{2,10}-\d+/;
-    if (!pattern.test(first.control_code)) {
-      throw new Error(`Expected control_code to match pattern XX-NN, got: ${first.control_code}`);
+  if (result.response.status === 200) {
+    const controls = result.body.data ?? result.body;
+    if (Array.isArray(controls) && controls.length > 0) {
+      const first = controls[0];
+      if (!first.control_code) {
+        throw new Error("Expected control to have control_code field");
+      }
+      // Control codes follow pattern: UPPERCASE-DIGITS (e.g., GOV-01, IAC-12)
+      const pattern = /^[A-Z]{2,10}-\d+/;
+      if (!pattern.test(first.control_code)) {
+        throw new Error(`Expected control_code to match pattern XX-NN, got: ${first.control_code}`);
+      }
     }
   }
 });
@@ -41,7 +45,8 @@ test("SCF domains endpoint returns domain list", async () => {
     authorization: "Bearer dev:admin",
   });
   if (result.response.status === 200) {
-    if (!Array.isArray(result.body)) {
+    const domains = result.body.data ?? result.body;
+    if (!Array.isArray(domains)) {
       throw new Error("Expected SCF domains response to be an array");
     }
   }

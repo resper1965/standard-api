@@ -43,7 +43,8 @@ test("document list contract returns array with required fields", async () => {
     }
   );
   if (result.response.status === 200) {
-    if (!Array.isArray(result.body.documents) && !Array.isArray(result.body)) {
+    const docs = result.body.data ?? result.body.documents ?? result.body;
+    if (!Array.isArray(docs)) {
       throw new Error("Expected documents response to be or contain an array");
     }
   }
