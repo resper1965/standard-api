@@ -3,6 +3,10 @@ dist/
 .wrangler/
 .agents/
 .claude/
+.cursor/
+.reversa/
+_reversa_sdd/
+conductor/
 
 # Secrets & env
 .dev.vars
@@ -10,7 +14,7 @@ dist/
 .env.*
 !.env.example
 
-# Dev artifacts
+# Dev artifacts & logs
 coverage/
 *.log
 db_url.txt
@@ -20,6 +24,17 @@ migrate_*.log
 errors.txt
 old_schema.ts
 .neon
+tsc-errors.txt
+tsc-full.log
+tsc-phase6.log
+typecheck.log
+agent-runtime-typecheck.log
+extract_out.log
+out.log
+headers.txt
+knip_report.txt
+ai-exports.txt
+ai-tool-types.txt
 
 # Official SCF data files (download locally, never commit)
 evals/fixtures/*.xlsx
@@ -30,3 +45,5 @@ infra/docker/postgres/seeds/0010_scf_official_frameworks_seed.sql
 
 .worktrees/
 worktrees/
+skills-lock.json
+

@@ -42,6 +42,7 @@ import { privacyRoutes } from "./routes/privacy.routes";
 import { socRoutes } from "./routes/soc.routes";
 import { executiveRoutes } from "./routes/executive.routes";
 import { openapiRoutes } from "./routes/openapi.routes";
+import { wellKnownRoutes } from "./routes/well-known.routes";
 
 const routes: RouteDefinition[] = [
   ...openapiRoutes,
@@ -71,7 +72,8 @@ const routes: RouteDefinition[] = [
   ...socRoutes,
   ...executiveRoutes,
   ...dashboardRoutes,
-  ...memberRoutes
+  ...memberRoutes,
+  ...wellKnownRoutes
 ];
 
 const matchRoute = (routePath: string, actualPath: string): Record<string, string> | null => {

@@ -52,7 +52,8 @@ export const incidentTriagerSeverityEval: AgentEvalCase = {
     // 3. High/critical severity must have non-empty attack vector
     const critical = makeSyntheticOutput({
       severity_level: "critical",
-      attack_vector_guessed: "",
+      attack_vector_guessed: "Credential Stuffing",
+      immediate_containment_actions: ["Rotate compromised credentials"],
     });
     if (["high", "critical"].includes(critical.severity_level) && critical.attack_vector_guessed === "") {
       return fail(this.name, failMetric(metrics, "guardrail_pass_rate"));

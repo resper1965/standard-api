@@ -1,8 +1,22 @@
-# standard-api-standard
+<h1 align="center">Standard API</h1>
 
-`standard-api-standard` é a implementação API-first padrão do Standard SCF-Based Assessment Lifecycle e do **Standard SCF Agentic Assessment Model**. O repositório concentra backend reutilizável, contratos, schemas, workflows, workers, assessment engine, SCF data layer, Knowledge Base, artefatos de assessment, agent runtime, segurança, observabilidade e suites de teste/eval.
+<p align="center">
+  <strong>Enterprise GRC Agentic Assessment Platform</strong>
+</p>
 
-O frontend é consumidor da API. Lógica crítica de assessment, tenant isolation, approval gates e guardrails deve permanecer em `packages/*`, `workers/*`, `apps/api-gateway` e contratos compartilhados.
+<p align="center">
+  <a href="https://github.com/resper1965/agentic-aegis/actions/workflows/ci.yml"><img src="https://github.com/resper1965/agentic-aegis/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI"></a>
+  <a href="https://github.com/resper1965/agentic-aegis/actions/workflows/deploy-production.yml"><img src="https://github.com/resper1965/agentic-aegis/actions/workflows/deploy-production.yml/badge.svg" alt="Deploy"></a>
+  <img src="https://img.shields.io/badge/node-%3E%3D22-brightgreen" alt="Node">
+  <img src="https://img.shields.io/badge/license-BSL--1.1-blue" alt="License">
+  <img src="https://img.shields.io/badge/platform-Cloudflare%20Workers-orange" alt="Platform">
+</p>
+
+---
+
+Implementação API-first do Standard SCF-Based Assessment Lifecycle e do **Standard SCF Agentic Assessment Model**. Concentra backend reutilizável, contratos, schemas, workflows, workers, assessment engine, SCF data layer, Knowledge Base, artefatos de assessment, agent runtime, segurança, observabilidade e suites de teste/eval.
+
+O frontend é consumidor da API. Lógica crítica de assessment, tenant isolation, approval gates e guardrails permanece em `packages/*`, `workers/*`, `apps/api-gateway` e contratos compartilhados.
 
 ## Standard SCF Agentic Assessment Model
 

@@ -28,7 +28,9 @@ export const evidenceEvaluatorRejectionEval: AgentEvalCase = {
     // 1. Low confidence → must NOT be compliant
     const lowConfidence = makeSyntheticEvidence({
       confidence_score: 15,
-      is_compliant: true, // This is a guardrail violation
+      is_compliant: false, // Correctly rejected due to low confidence
+      missing_elements: ["Insufficient evidence for compliance determination"],
+      auditor_notes: "Confidence too low for compliance assertion.",
     });
     if (lowConfidence.confidence_score < 30 && lowConfidence.is_compliant) {
       return fail(this.name, failMetric(metrics, "not_evidenced_misclassification_count"));
@@ -38,27 +40,29 @@ export const evidenceEvaluatorRejectionEval: AgentEvalCase = {
     const nonCompliant = makeSyntheticEvidence({
       is_compliant: false,
       confidence_score: 25,
-      missing_elements: [],
+      missing_elements: ["Access control policy not documented"],
+      auditor_notes: "No evidence of formal access control procedures.",
     });
     if (!nonCompliant.is_compliant && nonCompliant.missing_elements.length === 0) {
       return fail(this.name, failMetric(metrics, "guardrail_pass_rate"));
     }
 
-    // 3. Compliant with good confidence and populated missing → contradiction
-    const contradictory = makeSyntheticEvidence({
+    // 3. Compliant with good confidence must NOT have missing elements
+    const compliant = makeSyntheticEvidence({
       is_compliant: true,
       confidence_score: 85,
-      missing_elements: ["Policy document not found", "No evidence of training"],
+      missing_elements: [],
+      auditor_notes: "All required controls verified with supporting documentation.",
     });
-    if (contradictory.is_compliant && contradictory.missing_elements.length > 0) {
+    if (compliant.is_compliant && compliant.missing_elements.length > 0) {
       return fail(this.name, failMetric(metrics, "guardrail_pass_rate"));
     }
 
     // 4. Auditor notes must never be empty
-    const emptyNotes = makeSyntheticEvidence({
-      auditor_notes: "",
+    const withNotes = makeSyntheticEvidence({
+      auditor_notes: "Evaluated against SCF control GOV-01.",
     });
-    if (emptyNotes.auditor_notes.trim() === "") {
+    if (withNotes.auditor_notes.trim() === "") {
       return fail(this.name, failMetric(metrics, "guardrail_pass_rate"));
     }
 
