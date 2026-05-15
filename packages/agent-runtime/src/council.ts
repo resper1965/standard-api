@@ -73,6 +73,10 @@ export class CouncilOrchestrator {
     const { EvidenceEvaluatorUseCase } = await import("./usecases/evidence-evaluator").catch(() => ({ EvidenceEvaluatorUseCase: null }));
     const { PoamArchitectUseCase } = await import("./usecases/poam-architect").catch(() => ({ PoamArchitectUseCase: null }));
     const { CLevelBoardTranslatorUseCase } = await import("./usecases/c-level-translator").catch(() => ({ CLevelBoardTranslatorUseCase: null }));
+    const { IncidentTriagerUseCase } = await import("./usecases/incident-triager").catch(() => ({ IncidentTriagerUseCase: null }));
+    const { VendorScannerUseCase } = await import("./usecases/vendor-scanner").catch(() => ({ VendorScannerUseCase: null }));
+    const { RopaAnalyzerUseCase } = await import("./usecases/ropa-analyzer").catch(() => ({ RopaAnalyzerUseCase: null }));
+    const { DpiaAssessorUseCase } = await import("./usecases/dpia-assessor").catch(() => ({ DpiaAssessorUseCase: null }));
 
     const llmProvider = (this.runtimeService as any).deps.llm; // Safely grabbing the LLM from DI
     
@@ -102,6 +106,39 @@ export class CouncilOrchestrator {
                tenantId: tenantId
            });
            finalSummary = currentPayload.executive_summary;
+        }
+        else if (agentName === "incident_triager" && IncidentTriagerUseCase) {
+           const triager = new IncidentTriagerUseCase(llmProvider);
+           currentPayload = await triager.triage({
+               rawLogsExcerpt: currentPayload.rawLogsExcerpt || inputData.rawLogsExcerpt || "",
+               systemModuleName: currentPayload.systemModuleName || inputData.systemModuleName || "Unknown",
+               tenantId: tenantId
+           });
+           if (currentPayload.severity_level === "critical") finalSummary = "CRITICAL security incident triaged.";
+        }
+        else if (agentName === "vendor_scanner" && VendorScannerUseCase) {
+           const scanner = new VendorScannerUseCase(llmProvider);
+           currentPayload = await scanner.scan({
+               contractExcerpt: currentPayload.contractExcerpt || inputData.contractExcerpt || "",
+               vendorName: currentPayload.vendorName || inputData.vendorName || "Unknown Vendor",
+               tenantId: tenantId
+           });
+        }
+        else if (agentName === "ropa_analyzer" && RopaAnalyzerUseCase) {
+           const analyzer = new RopaAnalyzerUseCase(llmProvider);
+           currentPayload = await analyzer.analyze({
+               naturalLanguageDescription: currentPayload.naturalLanguageDescription || inputData.naturalLanguageDescription || "",
+               tenantId: tenantId
+           });
+        }
+        else if (agentName === "dpia_assessor" && DpiaAssessorUseCase) {
+           const assessor = new DpiaAssessorUseCase(llmProvider);
+           currentPayload = await assessor.assess({
+               ropaContext: currentPayload,
+               projectDescription: inputData.projectDescription || "General data processing project",
+               tenantId: tenantId
+           });
+           if (currentPayload.residual_risk_level === "high" || currentPayload.residual_risk_level === "critical") finalSummary = "High-Risk DPIA Requires Board Sign-off.";
         }
         else {
            // Fallback to generic functional agent execution via executor
@@ -182,6 +219,49 @@ export class CouncilOrchestrator {
     return await translator.translate({
         poamPlan: currentPayload,
         regulatoryContext: inputData.regulatoryContext as string || "Standard Compliance Framework",
+        tenantId: tenantId
+    });
+  }
+
+  async executeIncidentTriager(tenantId: string, currentPayload: any, inputData: any): Promise<any> {
+    const { IncidentTriagerUseCase } = await import("./usecases/incident-triager");
+    const llmProvider = (this.runtimeService as any).deps.llm;
+    const triager = new IncidentTriagerUseCase(llmProvider);
+    return await triager.triage({
+        rawLogsExcerpt: currentPayload.rawLogsExcerpt || inputData.rawLogsExcerpt || "",
+        systemModuleName: currentPayload.systemModuleName || inputData.systemModuleName || "Unknown",
+        tenantId: tenantId
+    });
+  }
+
+  async executeVendorScanner(tenantId: string, currentPayload: any, inputData: any): Promise<any> {
+    const { VendorScannerUseCase } = await import("./usecases/vendor-scanner");
+    const llmProvider = (this.runtimeService as any).deps.llm;
+    const scanner = new VendorScannerUseCase(llmProvider);
+    return await scanner.scan({
+        contractExcerpt: currentPayload.contractExcerpt || inputData.contractExcerpt || "",
+        vendorName: currentPayload.vendorName || inputData.vendorName || "Unknown Vendor",
+        tenantId: tenantId
+    });
+  }
+
+  async executeRopaAnalyzer(tenantId: string, currentPayload: any, inputData: any): Promise<any> {
+    const { RopaAnalyzerUseCase } = await import("./usecases/ropa-analyzer");
+    const llmProvider = (this.runtimeService as any).deps.llm;
+    const analyzer = new RopaAnalyzerUseCase(llmProvider);
+    return await analyzer.analyze({
+        naturalLanguageDescription: currentPayload.naturalLanguageDescription || inputData.naturalLanguageDescription || "",
+        tenantId: tenantId
+    });
+  }
+
+  async executeDpiaAssessor(tenantId: string, currentPayload: any, inputData: any): Promise<any> {
+    const { DpiaAssessorUseCase } = await import("./usecases/dpia-assessor");
+    const llmProvider = (this.runtimeService as any).deps.llm;
+    const assessor = new DpiaAssessorUseCase(llmProvider);
+    return await assessor.assess({
+        ropaContext: currentPayload,
+        projectDescription: inputData.projectDescription || "General data processing project",
         tenantId: tenantId
     });
   }

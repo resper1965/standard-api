@@ -1,4 +1,4 @@
-import { Node, Edge } from '@xyflow/react';
+import type { Node, Edge } from '@xyflow/react';
 
 export interface LinkedEntity {
   id: string;
@@ -8,7 +8,12 @@ export interface LinkedEntity {
 
 export interface MapData {
   control_id: string;
-  linked_entities: LinkedEntity[];
+  linked_entities: {
+    risks?: { category: string; risk: any }[];
+    regulations?: { id: string; name: string }[];
+    data_categories?: { id: string; name: any }[];
+    retention_rules?: { category: string; context: string }[];
+  }
 }
 
 /**
@@ -26,7 +31,32 @@ export function generateRadialLayout(data: MapData): { nodes: Node[], edges: Edg
     data: { label: data.control_id, description: 'Standard Control' }
   });
 
-  const numLinks = data.linked_entities.length;
+  const flattenedEntities: LinkedEntity[] = [];
+
+  if (data.linked_entities) {
+    data.linked_entities.risks?.forEach(r => flattenedEntities.push({
+        id: `risk-${r.category}-${Math.random().toString(36).substring(7)}`,
+        type: 'Risk',
+        name: typeof r.risk === 'object' ? r.risk.en || r.risk.pt || 'Risk' : r.risk
+    }));
+    data.linked_entities.regulations?.forEach(reg => flattenedEntities.push({
+        id: `reg-${reg.id}`,
+        type: 'Regulation',
+        name: reg.name || reg.id
+    }));
+    data.linked_entities.data_categories?.forEach(dc => flattenedEntities.push({
+        id: `dc-${dc.id}`,
+        type: 'Data Category',
+        name: typeof dc.name === 'object' ? dc.name.en || dc.name.pt || dc.id : dc.name
+    }));
+    data.linked_entities.retention_rules?.forEach(rr => flattenedEntities.push({
+        id: `rr-${rr.category}-${rr.context}`,
+        type: 'Retention Rule',
+        name: `Retention: ${rr.category} / ${rr.context}`
+    }));
+  }
+
+  const numLinks = flattenedEntities.length;
   if (numLinks === 0) return { nodes, edges };
 
   // Calculate coordinates on a circle
@@ -34,7 +64,7 @@ export function generateRadialLayout(data: MapData): { nodes: Node[], edges: Edg
   const baseRadius = 250;
   const radius = Math.max(baseRadius, (numLinks * 60) / (2 * Math.PI));
   
-  data.linked_entities.forEach((entity, index) => {
+  flattenedEntities.forEach((entity, index) => {
     // Angle evenly spaced around the circle. Use -PI/2 offset to start at the top.
     const angle = (index / numLinks) * 2 * Math.PI - Math.PI / 2;
     

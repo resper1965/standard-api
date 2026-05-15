@@ -5,7 +5,7 @@ import {
   LayoutDashboard, Settings, LogOut, Loader2, FileText, Search,
   BarChart3, Shield, Puzzle, ClipboardList, Menu, X,
   Building2, Key, Users, ScrollText, HeartPulse, ChevronRight,
-  Bell
+  Bell, Network
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { PageHeaderProvider, usePageHeader } from "./PageHeaderContext"
@@ -24,6 +24,7 @@ const navItems: NavItem[] = [
   { name: "Gap Analysis", path: "/dashboard/gap-analysis", icon: Search },
   { name: "Reports", path: "/dashboard/reports", icon: BarChart3 },
   { name: "SCF Catalog", path: "/dashboard/scf-catalog", icon: Shield },
+  { name: "Reflection Graph", path: "/dashboard/knowledge-graph", icon: Network },
   { name: "SDK & Docs", path: "/dashboard/sdk", icon: Puzzle },
 ]
 
@@ -43,6 +44,7 @@ const routeTitles: Record<string, string> = {
   "/dashboard/gap-analysis": "Gap Analysis",
   "/dashboard/reports": "Reports",
   "/dashboard/scf-catalog": "SCF Catalog",
+  "/dashboard/knowledge-graph": "Reflection Graph",
   "/dashboard/agent-runs": "Agent Runs",
   "/dashboard/sdk": "SDK & Docs",
   "/dashboard/settings": "Settings",
