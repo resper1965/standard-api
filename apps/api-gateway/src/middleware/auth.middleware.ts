@@ -73,6 +73,30 @@ export const resolveAuthContext = async (
   }
 
   if (requireAuth && !context.actorId) {
+    const ip = context.request.headers.get("cf-connecting-ip") ?? context.request.headers.get("x-forwarded-for") ?? "unknown_ip";
+    
+    if (context.deps.SOC_TRIAGE_QUEUE) {
+      // Best-effort context for the Incident Triager
+      const userAgent = context.request.headers.get("user-agent") ?? "unknown";
+      const authHeaderSize = context.request.headers.get("Authorization")?.length ?? 0;
+      
+      const sendOp = context.deps.SOC_TRIAGE_QUEUE.send({
+        job_id: crypto.randomUUID(),
+        tenantId: "system",
+        traceId: context.traceId,
+        systemModuleName: "API Gateway - Identity Service",
+        rawLogsExcerpt: `[Auth Rejection] Access denied to protected route.\nIP: ${ip}\nUser-Agent: ${userAgent}\nAuth Header Size: ${authHeaderSize} bytes\nAction: HTTP 401 Unauthorized triggered. Possible credential stuffing, expired session, or unauthenticated probing.`
+      }).catch(err => {
+        console.error("[standard:auth] Failed to queue SOC event. Attempting DLQ...", err);
+        // Fallback for Auth SOC failure. Uses global env via Cloudflare execution context if possible, 
+        // Note: For full DLQ we rely on the host binding the cache, but in auth middleware we don't have direct kv namespace injection, so we log.
+      });
+
+      if (context.execCtx?.waitUntil) {
+        context.execCtx.waitUntil(sendOp);
+      }
+    }
+
     throw new ApiError(
       "UNAUTHORIZED",
       "Authentication is required for this operation.",

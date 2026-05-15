@@ -1,7 +1,7 @@
 <h1 align="center">Standard API</h1>
 
 <p align="center">
-  <strong>Enterprise GRC Agentic Assessment Platform</strong>
+  <strong>Automate security & compliance assessments across 231+ frameworks</strong>
 </p>
 
 <p align="center">
@@ -14,9 +14,29 @@
 
 ---
 
-Implementação API-first do Standard SCF-Based Assessment Lifecycle e do **Standard SCF Agentic Assessment Model**. Concentra backend reutilizável, contratos, schemas, workflows, workers, assessment engine, SCF data layer, Knowledge Base, artefatos de assessment, agent runtime, segurança, observabilidade e suites de teste/eval.
+Standard is a **compliance assessment API** that automates security evaluations against SOC 2, ISO 27001, HIPAA, NIST, and 231+ regulatory frameworks. Upload your security documents, and Standard's AI agents analyze them against the Secure Controls Framework (1,468 controls, 32,903 requirements, 15,717 crosswalk mappings) to produce gap analyses, maturity scores, remediation plans, and audit-ready reports.
 
-O frontend é consumidor da API. Lógica crítica de assessment, tenant isolation, approval gates e guardrails permanece em `packages/*`, `workers/*`, `apps/api-gateway` e contratos compartilhados.
+**Your application calls the API — Standard does the compliance intelligence.**
+
+## 🚀 Quickstart
+
+```bash
+# Health check (no auth required)
+curl https://standard-api-gateway-production.ness.workers.dev/health
+
+# List compliance frameworks
+curl -H "Authorization: ApiKey YOUR_KEY" \
+  https://standard-api-gateway-production.ness.workers.dev/api/v1/scf/frameworks
+
+# Create an assessment
+curl -X POST -H "Authorization: ApiKey YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"organization_id":"YOUR_ORG","name":"Q2 Assessment"}' \
+  https://standard-api-gateway-production.ness.workers.dev/api/v1/assessments
+```
+
+📖 **[Getting Started →](docs/getting-started.md)** | 🔗 **[API Explorer →](https://standard-api-gateway-production.ness.workers.dev/docs)** | 📖 **[Cookbook →](https://standard-api-gateway-production.ness.workers.dev/docs/cookbook)** | 💻 **[Examples →](examples/)**
+
 
 ## Standard SCF Agentic Assessment Model
 
@@ -41,8 +61,27 @@ Comportamento agentic alvo:
 
 ## Status do Projeto
 
-Status: Release Candidate do MVP Enterprise-Grade Finalizado (Backend Drizzle/PostgreSQL, Orquestração de Filas e LLM testado e maduro em Cloudflare + Pipeline E2E). Próximo passo: Integração Front-end Real e Plena Configuração Cloudflare Staging/Produção.
-Não use dados reais de clientes no MVP. Não configure secrets reais em arquivos versionados. Production deploy permanece manual e protegido.
+Status: **Release Candidate** — Backend funcional com AI Gateway, assessment lifecycle de 14 passos, SCF catalog, Gap Analysis, Maturity Scoring, PoA&M e Report Generation. Hardening de produção em andamento.
+
+**Implementado:**
+- ✅ Assessment Engine com state machine completa (25 estados)
+- ✅ SCF Catalog com importador XLSX e 1000+ controles
+- ✅ AI Gateway (OpenAI via Cloudflare) com fallback para Mock
+- ✅ Better Auth com sessions, Google OAuth
+- ✅ Gap Analysis, SoA, Maturity Scoring, PoA&M
+- ✅ Document Ingestion com upload → R2, chunking
+- ✅ Tenant isolation em todas as tabelas
+- ✅ Agent Runtime com tool contracts e guardrails
+- ✅ API Key auth com SHA-256 hash + timing-safe comparison
+- ✅ Rate limiting por tenant (sliding window)
+- ✅ Audit log persistence em PostgreSQL
+- ✅ DOCX export, Cloudflare AI embeddings, OpenAI cost tracking
+
+**Diferido (Phase 4):**
+- ⬜ OSCAL JSON importer (XLSX cobre 100% das necessidades atuais)
+- ⬜ Hostname-based tenant resolution (custom domains)
+
+Não use dados reais de clientes sem validação completa de segurança. Não configure secrets reais em arquivos versionados.
 
 Checklist principal: `docs/releases/mvp-release-candidate-checklist.md`.
 

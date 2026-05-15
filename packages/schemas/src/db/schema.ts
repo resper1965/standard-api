@@ -148,6 +148,14 @@ export const reportFormatEnum = pgEnum("report_format", ["json", "markdown", "ht
 export const exportJobStatusEnum = pgEnum("export_job_status", ["queued", "running", "succeeded", "failed", "skipped", "cancelled", "retrying"]);
 export const malwareScanStatusEnum = pgEnum("malware_scan_status", ["pending", "clean", "infected", "error", "skipped"]);
 export const scfIngestionModeEnum = pgEnum("scf_ingestion_mode", ["scf_official_xlsx", "oscal_json", "synthetic", "manual"]);
+export const controlImplementationStatusEnum = pgEnum("control_implementation_status", [
+  "not_assessed",
+  "not_implemented",
+  "planned",
+  "partially_implemented",
+  "implemented",
+  "not_applicable"
+]);
 
 export const tenants = pgTable("tenants", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -385,6 +393,37 @@ export const scfControlMetadata = pgTable("scf_control_metadata", {
   ...timestamps()
 }, (table) => [
   uniqueIndex("scf_control_metadata_control_uidx").on(table.tenantId, table.scfControlId)
+]);
+
+/**
+ * Single Source of Truth for control implementation status.
+ * The assessment is ALWAYS against SCF controls. Frameworks are projections (masks).
+ *
+ * Flow: Upload docs → AI assesses controls → status stored here
+ *       → Apply ISO 27001 mask → project gaps/SoA
+ *       → Apply SOC 2 mask    → project gaps/SoA (zero re-work)
+ */
+export const controlAssessmentStatus = pgTable("control_assessment_status", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
+  organizationId: uuid("organization_id").notNull().references(() => organizations.id),
+  assessmentId: uuid("assessment_id").notNull().references(() => assessments.id),
+  scfVersionId: uuid("scf_version_id").notNull().references(() => scfVersions.id),
+  scfControlId: uuid("scf_control_id").notNull().references(() => scfControls.id),
+  implementationStatus: controlImplementationStatusEnum("implementation_status").default("not_assessed").notNull(),
+  evidenceSummary: text("evidence_summary"),
+  evidenceStrength: evidenceStrengthEnum("evidence_strength").default("not_checked"),
+  maturityLevel: integer("maturity_level"),
+  confidenceScore: numeric("confidence_score", { precision: 5, scale: 4 }),
+  assessedBy: uuid("assessed_by").references(() => users.id),
+  assessedByAgentRunId: uuid("assessed_by_agent_run_id").references(() => agentRuns.id),
+  assessedAt: timestamp("assessed_at", { withTimezone: true }),
+  notes: text("notes"),
+  ...timestamps()
+}, (table) => [
+  uniqueIndex("control_assessment_status_assessment_control_uidx").on(table.assessmentId, table.scfControlId),
+  index("control_assessment_status_tenant_org_idx").on(table.tenantId, table.organizationId),
+  index("control_assessment_status_impl_status_idx").on(table.assessmentId, table.implementationStatus)
 ]);
 
 export const assessments = pgTable("assessments", {
@@ -1316,6 +1355,12 @@ export const scfMappingRelations = relations(scfMappings, ({ one, many }) => ({
   }),
   control: one(scfControls, { fields: [scfMappings.scfControlId], references: [scfControls.id] }),
   strmRelationships: many(scfStrmRelationships)
+}));
+
+export const controlAssessmentStatusRelations = relations(controlAssessmentStatus, ({ one }) => ({
+  assessment: one(assessments, { fields: [controlAssessmentStatus.assessmentId], references: [assessments.id] }),
+  scfControl: one(scfControls, { fields: [controlAssessmentStatus.scfControlId], references: [scfControls.id] }),
+  scfVersion: one(scfVersions, { fields: [controlAssessmentStatus.scfVersionId], references: [scfVersions.id] }),
 }));
 
 // ── Webhooks ──────────────────────────────────────────────────────

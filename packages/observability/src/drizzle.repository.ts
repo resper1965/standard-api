@@ -1,5 +1,6 @@
 import { eq, and, desc } from "drizzle-orm";
 import {
+  auditLogs,
   securityEvents,
   operationalMetrics,
   usageRecords,
@@ -25,6 +26,39 @@ type DrizzleDb = {
  *
  * AGENTS.md §13: Audit logs for state changes, approvals, uploads, agent outputs, and exports.
  */
+
+const createDrizzleAuditEventsRepo = (db: DrizzleDb): ObservabilityRepository<AuditEvent> => ({
+  async create(record) {
+    await db.insert(auditLogs).values({
+      id: record.id,
+      actorId: record.actor_id ?? null,
+      tenantId: record.tenant_id ?? null,
+      organizationId: record.organization_id ?? null,
+      action: record.action,
+      resourceType: record.resource_type,
+      resourceId: record.resource_id ?? null,
+      ipAddress: record.ip_address ?? null,
+      userAgent: record.user_agent ?? null,
+      traceId: record.trace_id,
+      metadata: record.metadata_safe ?? {},
+    });
+    return record;
+  },
+  async get(id) {
+    const rows = await db.select().from(auditLogs).where(eq(auditLogs.id, id)).limit(1);
+    return rows[0] ? mapAuditRow(rows[0]) : null;
+  },
+  async list(filter) {
+    const conditions = [];
+    if (filter?.tenant_id) conditions.push(eq(auditLogs.tenantId, filter.tenant_id));
+    if (filter?.assessment_id) conditions.push(eq(auditLogs.organizationId, filter.assessment_id));
+    const query = db.select().from(auditLogs);
+    const rows = conditions.length > 0
+      ? await query.where(and(...conditions)).orderBy(desc(auditLogs.createdAt)).limit(filter?.limit ?? 25)
+      : await query.orderBy(desc(auditLogs.createdAt)).limit(filter?.limit ?? 25);
+    return rows.map(mapAuditRow);
+  }
+});
 
 const createDrizzleSecurityEventsRepo = (db: DrizzleDb): ObservabilityRepository<SecurityEventRecord> => ({
   async create(record) {
@@ -178,20 +212,8 @@ const createDrizzleAgentUsageRepo = (db: DrizzleDb): ObservabilityRepository<Age
  * Here we provide a thin wrapper that satisfies the ObservabilityRepository<AuditEvent> contract.
  */
 export const createDrizzleObservabilityDependencies = (db: DrizzleDb): ObservabilityDependencies => {
-  // AuditEvent uses the existing audit_logs table pattern but through the observability interface
-  const auditEventsRepo: ObservabilityRepository<AuditEvent> = {
-    async create(record) {
-      // Audit events are written via the gateway's audit.repository.ts (createDrizzleAuditRepository)
-      // This path is for the ObservabilityDependencies interface compatibility
-      // In production, audit events flow through the middleware, so this is a no-op fallback
-      return record;
-    },
-    async get() { return null; },
-    async list() { return []; }
-  };
-
   return {
-    auditEvents: auditEventsRepo,
+    auditEvents: createDrizzleAuditEventsRepo(db),
     securityEvents: createDrizzleSecurityEventsRepo(db),
     metrics: createDrizzleMetricsRepo(db),
     usage: createDrizzleUsageRepo(db),
@@ -200,6 +222,26 @@ export const createDrizzleObservabilityDependencies = (db: DrizzleDb): Observabi
 };
 
 // ─── Row mappers ─────────────────────────────────────────────────
+
+function mapAuditRow(row: any): AuditEvent {
+  return {
+    id: row.id,
+    tenant_id: row.tenantId ?? undefined,
+    organization_id: row.organizationId ?? undefined,
+    assessment_id: undefined,
+    actor_id: row.actorId ?? undefined,
+    action: row.action,
+    resource_type: row.resourceType,
+    resource_id: row.resourceId ?? undefined,
+    outcome: "success",
+    timestamp: row.createdAt instanceof Date ? row.createdAt.toISOString() : row.createdAt,
+    trace_id: row.traceId ?? "",
+    ip_address: row.ipAddress ?? undefined,
+    user_agent: row.userAgent ?? undefined,
+    metadata_safe: row.metadata ?? {},
+    created_at: row.createdAt instanceof Date ? row.createdAt.toISOString() : row.createdAt,
+  };
+}
 
 function mapSecurityEventRow(row: any): SecurityEventRecord {
   return {

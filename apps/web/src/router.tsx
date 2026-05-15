@@ -24,6 +24,10 @@ const AdminUsers = lazy(() => import("./pages/admin/Users").then(m => ({ default
 const AdminAuditLogs = lazy(() => import("./pages/admin/AuditLogs").then(m => ({ default: m.AdminAuditLogs })))
 const AdminSystemHealth = lazy(() => import("./pages/admin/SystemHealth").then(m => ({ default: m.AdminSystemHealth })))
 
+// Intelligence
+const KnowledgeGraph = lazy(() => import("./pages/knowledge-graph/KnowledgeGraph").then(m => ({ default: m.KnowledgeGraphPage })))
+
+
 // Simple Guard
 const requireAuth = async () => {
     const session = await authClient.getSession()
@@ -83,6 +87,7 @@ export const router = createBrowserRouter([
             { path: "scf-catalog", element: <SuspenseWrap><ScfCatalog /></SuspenseWrap> },
             { path: "agent-runs", element: <SuspenseWrap><AgentRuns /></SuspenseWrap> },
             { path: "sdk", element: <SuspenseWrap><SdkPage /></SuspenseWrap> },
+            { path: "knowledge-graph", element: <SuspenseWrap><KnowledgeGraph /></SuspenseWrap> },
             { path: "settings", element: <SettingsPage /> },
             // Admin
             { path: "organizations", element: <SuspenseWrap><AdminOrganizations /></SuspenseWrap> },

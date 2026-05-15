@@ -47,6 +47,19 @@ export const processAgentRunQueueMessage = async (messageBody: unknown, env: Env
   const runtimeService = new AgentRuntimeService(agentDeps);
   const executor = new AgentExecutor(runtimeService, agentDeps);
 
-  await executor.resumeRun(parsed.data.agent_run_id, parsed.data.tenant_id);
+  // Fetch run early to determine route
+  const run = await runtimeService.getRun(parsed.data.agent_run_id, parsed.data.tenant_id);
+  if (!run) {
+     console.warn(`Agent Run ${parsed.data.agent_run_id} not found in DB!`);
+     return;
+  }
+
+  if (run.agent_id === ("council_orchestrator" as any)) {
+      const { CouncilOrchestrator } = await import("@standard/agent-runtime");
+      const council = new CouncilOrchestrator(runtimeService, executor);
+      await council.executeCouncilRun(parsed.data.agent_run_id, parsed.data.tenant_id);
+  } else {
+      await executor.resumeRun(parsed.data.agent_run_id, parsed.data.tenant_id);
+  }
 };
 

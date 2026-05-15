@@ -1,0 +1,360 @@
+/**
+ * CB-B: Risk Methodology + Taxonomy (Spec v3 -> V2 TS Schema)
+ *
+ * Enriched with:
+ * - risk_statuses (open→closed)
+ * - appetite_levels (conservative→aggressive)
+ * - risk_categories with colors
+ * - label_en on scales
+ * - id on scale entries
+ * - mitre_techniques on risks
+ * - estimated_effort on treatment_examples
+ * - id + unit on KRIs
+ *
+ * All link to SCF via scf_controls[] / scf_domains[].
+ */
+import type { RouteDefinition } from "../http";
+import { json, routeParam } from "../http";
+import { ApiError } from "../errors/api-error";
+import { flattenI18n } from "../utils/i18n";
+
+// ── Risk Methodology ────────────────────────────────────────────────────────
+
+const RISK_METHODOLOGIES = [
+  {
+    id: "qualitative_5x5",
+    name_i18n: { pt: "Matriz Qualitativa 5×5", en: "Qualitative 5x5 Matrix" },
+
+    dimensions: [
+      {
+        id: "likelihood",
+        name_i18n: { pt: "Probabilidade", en: "Likelihood" },
+        scale: [
+          { value: 1, id: "rare", label_i18n: { pt: "Raro", en: "Rare" }, description_i18n: { pt: "< 5% de chance em 12 meses" } },
+          { value: 2, id: "unlikely", label_i18n: { pt: "Improvável", en: "Unlikely" }, description_i18n: { pt: "5-20% de chance em 12 meses" } },
+          { value: 3, id: "possible", label_i18n: { pt: "Possível", en: "Possible" }, description_i18n: { pt: "20-50% de chance em 12 meses" } },
+          { value: 4, id: "likely", label_i18n: { pt: "Provável", en: "Likely" }, description_i18n: { pt: "50-80% de chance em 12 meses" } },
+          { value: 5, id: "almost_certain", label_i18n: { pt: "Quase Certo", en: "Almost Certain" }, description_i18n: { pt: "> 80% de chance em 12 meses" } },
+        ]
+      },
+      {
+        id: "impact",
+        name_i18n: { pt: "Impacto", en: "Impact" },
+        scale: [
+          { value: 1, id: "negligible", label_i18n: { pt: "Negligenciável", en: "Negligible" }, description_i18n: { pt: "Sem impacto significativo nas operações" } },
+          { value: 2, id: "low", label_i18n: { pt: "Baixo", en: "Low" }, description_i18n: { pt: "Impacto leve, perdas controláveis" } },
+          { value: 3, id: "medium", label_i18n: { pt: "Médio", en: "Medium" }, description_i18n: { pt: "Impacto moderado, interrupção notável" } },
+          { value: 4, id: "high", label_i18n: { pt: "Alto", en: "High" }, description_i18n: { pt: "Impacto severo, perdas grandes" } },
+          { value: 5, id: "critical", label_i18n: { pt: "Crítico", en: "Critical" }, description_i18n: { pt: "Impacto desastroso, ameaça continuidade" } },
+        ]
+      }
+    ],
+
+    matrix: [
+      { min_score: 1, max_score: 3, level: "low", label_i18n: { pt: "Baixo", en: "Low" }, color: "#22c55e", action_i18n: { pt: "Aceitar — monitorar periodicamente" } },
+      { min_score: 4, max_score: 7, level: "medium", label_i18n: { pt: "Médio", en: "Medium" }, color: "#eab308", action_i18n: { pt: "Monitorar — ação dentro de 90 dias" } },
+      { min_score: 8, max_score: 14, level: "high", label_i18n: { pt: "Alto", en: "High" }, color: "#f97316", action_i18n: { pt: "Mitigar — ação dentro de 30 dias" } },
+      { min_score: 15, max_score: 25, level: "critical", label_i18n: { pt: "Crítico", en: "Critical" }, color: "#ef4444", action_i18n: { pt: "Escalar — ação imediata" } },
+    ],
+
+    statuses: [
+      { id: "open", name_i18n: { pt: "Aberto", en: "Open" }, order: 1, is_terminal: false },
+      { id: "mitigating", name_i18n: { pt: "Em mitigação", en: "Mitigating" }, order: 2, is_terminal: false },
+      { id: "accepted", name_i18n: { pt: "Aceito", en: "Accepted" }, order: 3, is_terminal: true },
+      { id: "closed", name_i18n: { pt: "Fechado", en: "Closed" }, order: 4, is_terminal: true },
+    ],
+
+    appetite_levels: [
+      { id: "conservative", name_i18n: { pt: "Conservador", en: "Conservative" }, description_i18n: { pt: "Tolerância mínima a riscos. Foco em prevenção e compliance rigoroso." }, default_max_score: 5 },
+      { id: "moderate", name_i18n: { pt: "Moderado", en: "Moderate" }, description_i18n: { pt: "Aceita riscos calculados com benefício claro. Maioria das organizações." }, default_max_score: 15 },
+      { id: "aggressive", name_i18n: { pt: "Agressivo", en: "Aggressive" }, description_i18n: { pt: "Alta tolerância a riscos. Foco em inovação e crescimento acelerado." }, default_max_score: 25 },
+    ],
+
+    treatment_options: [
+      { id: "avoid", name_i18n: { pt: "Evitar", en: "Avoid" }, description_i18n: { pt: "Eliminar a atividade que gera o risco" }, when_i18n: { pt: "Quando a atividade pode ser eliminada sem impacto ao negócio" }, scf_domains: ["RSK"] },
+      { id: "mitigate", name_i18n: { pt: "Mitigar", en: "Mitigate" }, description_i18n: { pt: "Implementar controles para reduzir probabilidade ou impacto" }, when_i18n: { pt: "Quando o custo de mitigação < impacto potencial" }, scf_domains: ["RSK"] },
+      { id: "transfer", name_i18n: { pt: "Transferir", en: "Transfer" }, description_i18n: { pt: "Compartilhar o risco com terceiro (seguro, contrato)" }, when_i18n: { pt: "Via seguro ou contrato (ex: ciberseguro)" }, scf_domains: ["RSK", "TPM"] },
+      { id: "accept", name_i18n: { pt: "Aceitar", en: "Accept" }, description_i18n: { pt: "Reconhecer o risco e monitorar sem ação adicional" }, when_i18n: { pt: "Quando o risco está dentro do apetite e o custo de mitigação é desproporcional" }, scf_domains: ["RSK"] },
+    ],
+  },
+];
+
+// ── Risk Categories ─────────────────────────────────────────────────────────
+
+const RISK_CATEGORIES = [
+  { id: "operational", name_i18n: { pt: "Operacional", en: "Operational" }, color: "#f97316", applicable_domains: ["operational", "governance", "risk"] as const },
+  { id: "compliance", name_i18n: { pt: "Compliance", en: "Compliance" }, color: "#8b5cf6", applicable_domains: ["governance", "privacy", "health"] as const },
+  { id: "security", name_i18n: { pt: "Segurança", en: "Security" }, color: "#ef4444", applicable_domains: ["security", "risk"] as const },
+  { id: "privacy", name_i18n: { pt: "Privacidade", en: "Privacy" }, color: "#06b6d4", applicable_domains: ["privacy"] as const },
+  { id: "financial", name_i18n: { pt: "Financeiro", en: "Financial" }, color: "#eab308", applicable_domains: ["financial", "governance"] as const },
+  { id: "strategic", name_i18n: { pt: "Estratégico", en: "Strategic" }, color: "#3b82f6", applicable_domains: ["governance"] as const },
+];
+
+// ── Risk Taxonomy & Methodology ─────────────────────────────────────────────
+
+export const RISK_TAXONOMY = {
+  categories: [
+    {
+      id: "cyber", name_i18n: { pt: "Cibernético" },
+      risks: [
+        { id: "ransomware", name_i18n: { pt: "Ransomware" }, description_i18n: { pt: "Malware que criptografa dados e exige resgate" }, typical_likelihood: 4, typical_impact: 5, scf_controls: ["END-04", "IAO-03", "MON-01", "IRO-01", "BCD-01"], mitre_techniques: ["T1486", "T1490"],
+          kris: [
+            { id: "kri_patch_compliance", name_i18n: { pt: "Taxa de Patch Compliance" }, formula: "patched / total * 100", unit: "%", frequency: "mensal", thresholds: { green: ">= 95%", yellow: "80-94%", red: "< 80%" }, scf_controls: ["VUL-05"], risk_ids: [] },
+            { id: "kri_edr_coverage", name_i18n: { pt: "Cobertura de EDR" }, formula: "endpoints_with_edr / total_endpoints * 100", unit: "%", frequency: "semanal", thresholds: { green: ">= 98%", yellow: "90-97%", red: "< 90%" }, scf_controls: ["END-04"], risk_ids: [] },
+            { id: "kri_backup_recovery", name_i18n: { pt: "Tempo médio de backup recovery" }, formula: "avg(restore_time_minutes)", unit: "min", frequency: "mensal", thresholds: { green: "< 60", yellow: "60-240", red: "> 240" }, scf_controls: ["BCD-01"], risk_ids: [] },
+          ],
+          treatment_examples: [
+            { strategy: "mitigate", action_i18n: { pt: "Implementar EDR em todos os endpoints" }, scf_control: "END-04", estimated_effort: "medium" as const },
+            { strategy: "mitigate", action_i18n: { pt: "Backup imutável com teste mensal de restore" }, scf_control: "BCD-01", estimated_effort: "medium" as const },
+            { strategy: "transfer", action_i18n: { pt: "Contratar ciberseguro com cobertura de ransomware" }, scf_control: "", estimated_effort: "low" as const },
+          ],
+        },
+        { id: "phishing", name_i18n: { pt: "Phishing" }, description_i18n: { pt: "Engenharia social via email para roubo de credenciais" }, typical_likelihood: 5, typical_impact: 3, scf_controls: ["SAT-01", "SAT-02", "IAC-15", "TDA-01", "MON-06"], mitre_techniques: ["T1566", "T1598"],
+          kris: [
+            { id: "kri_phish_click", name_i18n: { pt: "Taxa de clique em simulação de phishing" }, formula: "clicks / recipients * 100", unit: "%", frequency: "trimestral", thresholds: { green: "< 3%", yellow: "3-10%", red: "> 10%" }, scf_controls: ["SAT-02"], risk_ids: [] },
+            { id: "kri_phish_report", name_i18n: { pt: "Report rate de phishing" }, formula: "reports / total_phishing * 100", unit: "%", frequency: "trimestral", thresholds: { green: "> 70%", yellow: "40-70%", red: "< 40%" }, scf_controls: ["SAT-02"], risk_ids: [] },
+          ],
+          treatment_examples: [
+            { strategy: "mitigate", action_i18n: { pt: "Programa de conscientização com simulações trimestrais" }, scf_control: "SAT-02", estimated_effort: "medium" as const },
+            { strategy: "mitigate", action_i18n: { pt: "MFA em todas as contas corporativas" }, scf_control: "IAC-15", estimated_effort: "medium" as const },
+          ],
+        },
+        { id: "insider_threat", name_i18n: { pt: "Ameaça Interna" }, description_i18n: { pt: "Funcionário malicioso ou negligente causando vazamento" }, typical_likelihood: 3, typical_impact: 4, scf_controls: ["HRS-04", "HRS-06", "IAC-06", "MON-01", "DLP-01"], mitre_techniques: ["T1078", "T1530"],
+          kris: [
+            { id: "kri_dlp_alerts", name_i18n: { pt: "Alertas de DLP por mês" }, formula: "count(dlp_alerts)", unit: "count", frequency: "mensal", thresholds: { green: "< 5", yellow: "5-20", red: "> 20" }, scf_controls: ["DLP-01"], risk_ids: [] },
+            { id: "kri_priv_access", name_i18n: { pt: "Acessos privilegiados acima do baseline" }, formula: "current - baseline", unit: "count", frequency: "semanal", thresholds: { green: "0", yellow: "1-3", red: "> 3" }, scf_controls: ["IAC-06"], risk_ids: [] },
+          ],
+          treatment_examples: [
+            { strategy: "mitigate", action_i18n: { pt: "Implementar DLP com monitoramento de exfiltração" }, scf_control: "DLP-01", estimated_effort: "high" as const },
+            { strategy: "mitigate", action_i18n: { pt: "Background check periódico para acessos privilegiados" }, scf_control: "HRS-04", estimated_effort: "medium" as const },
+          ],
+        },
+        { id: "data_breach", name_i18n: { pt: "Vazamento de Dados" }, description_i18n: { pt: "Exposição não autorizada de dados pessoais ou confidenciais" }, typical_likelihood: 3, typical_impact: 5, scf_controls: ["DCH-01", "CRY-01", "IAC-06", "PRI-01", "IRO-02"], mitre_techniques: ["T1567", "T1537"],
+          kris: [
+            { id: "kri_unencrypted", name_i18n: { pt: "Dados sensíveis sem criptografia" }, formula: "unencrypted / total * 100", unit: "%", frequency: "mensal", thresholds: { green: "0%", yellow: "1-5%", red: "> 5%" }, scf_controls: ["CRY-01"], risk_ids: [] },
+            { id: "kri_breach_detect", name_i18n: { pt: "Tempo médio de detecção de breach" }, formula: "avg(hours)", unit: "h", frequency: "trimestral", thresholds: { green: "< 24", yellow: "24-72", red: "> 72" }, scf_controls: ["MON-01"], risk_ids: [] },
+          ],
+          treatment_examples: [
+            { strategy: "mitigate", action_i18n: { pt: "Criptografia em repouso e em trânsito" }, scf_control: "CRY-01", estimated_effort: "medium" as const },
+            { strategy: "mitigate", action_i18n: { pt: "Classificação de dados com DLP integrado" }, scf_control: "DCH-01", estimated_effort: "high" as const },
+          ],
+        },
+        { id: "ddos", name_i18n: { pt: "DDoS" }, description_i18n: { pt: "Ataque de negação de serviço distribuído" }, typical_likelihood: 3, typical_impact: 3, scf_controls: ["NET-13", "NET-01", "BCD-01"], mitre_techniques: ["T1498", "T1499"],
+          kris: [{ id: "kri_uptime", name_i18n: { pt: "Uptime de serviços críticos" }, formula: "uptime_min / total_min * 100", unit: "%", frequency: "mensal", thresholds: { green: ">= 99.9%", yellow: "99-99.9%", red: "< 99%" }, scf_controls: ["BCD-01"], risk_ids: [] }],
+          treatment_examples: [{ strategy: "mitigate", action_i18n: { pt: "CDN com proteção anti-DDoS" }, scf_control: "NET-13", estimated_effort: "medium" as const }],
+        },
+        { id: "supply_chain", name_i18n: { pt: "Supply Chain Attack" }, description_i18n: { pt: "Comprometimento via fornecedor ou dependência de software" }, typical_likelihood: 3, typical_impact: 4, scf_controls: ["TPM-01", "TPM-04", "SCR-01", "VUL-02"], mitre_techniques: ["T1195"],
+          kris: [
+            { id: "kri_critical_cves", name_i18n: { pt: "Dependências com CVE crítico" }, formula: "count(unpatched)", unit: "count", frequency: "semanal", thresholds: { green: "0", yellow: "1-3", red: "> 3" }, scf_controls: ["VUL-02"], risk_ids: [] },
+            { id: "kri_vendor_overdue", name_i18n: { pt: "Vendors sem assessment atualizado" }, formula: "overdue / total * 100", unit: "%", frequency: "mensal", thresholds: { green: "0%", yellow: "1-10%", red: "> 10%" }, scf_controls: ["TPM-04"], risk_ids: [] },
+          ],
+          treatment_examples: [
+            { strategy: "mitigate", action_i18n: { pt: "SBOM + monitoramento de CVEs" }, scf_control: "SCR-01", estimated_effort: "medium" as const },
+            { strategy: "mitigate", action_i18n: { pt: "Assessment periódico de vendors com TPRA" }, scf_control: "TPM-04", estimated_effort: "medium" as const },
+          ],
+        },
+        { id: "zero_day", name_i18n: { pt: "Zero-Day" }, description_i18n: { pt: "Vulnerabilidade desconhecida explorada antes de patch" }, typical_likelihood: 2, typical_impact: 5, scf_controls: ["VUL-01", "VUL-05", "THR-01", "IRO-01"], mitre_techniques: ["T1203"],
+          kris: [{ id: "kri_emergency_patch", name_i18n: { pt: "Tempo médio de patches emergenciais" }, formula: "avg(hours)", unit: "h", frequency: "por evento", thresholds: { green: "< 24", yellow: "24-72", red: "> 72" }, scf_controls: ["VUL-05"], risk_ids: [] }],
+          treatment_examples: [{ strategy: "mitigate", action_i18n: { pt: "Threat intelligence feed com correlação automática" }, scf_control: "THR-01", estimated_effort: "high" as const }],
+        },
+        { id: "credential_compromise", name_i18n: { pt: "Comprometimento de Credenciais" }, description_i18n: { pt: "Roubo ou vazamento de credenciais de acesso" }, typical_likelihood: 4, typical_impact: 4, scf_controls: ["IAC-01", "IAC-15", "IAC-21", "MON-01"], mitre_techniques: ["T1078", "T1110"],
+          kris: [{ id: "kri_mfa_coverage", name_i18n: { pt: "Cobertura de MFA" }, formula: "mfa_enabled / total * 100", unit: "%", frequency: "mensal", thresholds: { green: ">= 99%", yellow: "90-99%", red: "< 90%" }, scf_controls: ["IAC-15"], risk_ids: [] }],
+          treatment_examples: [{ strategy: "mitigate", action_i18n: { pt: "MFA obrigatório + credential monitoring" }, scf_control: "IAC-15", estimated_effort: "medium" as const }],
+        },
+      ],
+    },
+    {
+      id: "operational", name_i18n: { pt: "Operacional" },
+      risks: [
+        { id: "process_failure", name_i18n: { pt: "Falha de Processo" }, description_i18n: { pt: "Erro em processo manual causando inconsistência" }, typical_likelihood: 4, typical_impact: 2, scf_controls: ["GOV-02", "PRM-01", "PRM-05"], mitre_techniques: [],
+          kris: [{ id: "kri_process_incidents", name_i18n: { pt: "Incidentes de processo por mês" }, formula: "count(process_incidents)", unit: "count", frequency: "mensal", thresholds: { green: "< 3", yellow: "3-10", red: "> 10" }, scf_controls: ["PRM-01"], risk_ids: [] }],
+          treatment_examples: [{ strategy: "mitigate", action_i18n: { pt: "Automatizar processos críticos" }, scf_control: "PRM-01", estimated_effort: "high" as const }],
+        },
+        { id: "human_error", name_i18n: { pt: "Erro Humano" }, description_i18n: { pt: "Falha por desatenção ou falta de treinamento" }, typical_likelihood: 4, typical_impact: 3, scf_controls: ["SAT-01", "HRS-09", "OPS-01"], mitre_techniques: [],
+          kris: [{ id: "kri_human_err_pct", name_i18n: { pt: "Incidentes causados por erro humano" }, formula: "human_err / total * 100", unit: "%", frequency: "mensal", thresholds: { green: "< 15%", yellow: "15-30%", red: "> 30%" }, scf_controls: ["SAT-01"], risk_ids: [] }],
+          treatment_examples: [{ strategy: "mitigate", action_i18n: { pt: "Treinamento periódico + checklists" }, scf_control: "SAT-01", estimated_effort: "low" as const }],
+        },
+        { id: "system_outage", name_i18n: { pt: "Indisponibilidade de Sistema" }, description_i18n: { pt: "Falha em sistema crítico" }, typical_likelihood: 3, typical_impact: 4, scf_controls: ["BCD-01", "BCD-11", "OPS-01", "CCC-02"], mitre_techniques: [],
+          kris: [{ id: "kri_mttr", name_i18n: { pt: "MTTR" }, formula: "avg(recovery_min)", unit: "min", frequency: "mensal", thresholds: { green: "< 30", yellow: "30-120", red: "> 120" }, scf_controls: ["BCD-11"], risk_ids: [] }],
+          treatment_examples: [{ strategy: "mitigate", action_i18n: { pt: "HA com failover automático" }, scf_control: "BCD-11", estimated_effort: "high" as const }],
+        },
+      ],
+    },
+    {
+      id: "compliance", name_i18n: { pt: "Compliance / Regulatório" },
+      risks: [
+        { id: "regulatory_fine", name_i18n: { pt: "Multa Regulatória" }, description_i18n: { pt: "Penalidade por não conformidade" }, typical_likelihood: 2, typical_impact: 4, scf_controls: ["GOV-01", "GOV-06", "CPL-01", "CPL-03"], mitre_techniques: [],
+          kris: [{ id: "kri_open_findings", name_i18n: { pt: "Achados de auditoria abertos" }, formula: "count(open)", unit: "count", frequency: "mensal", thresholds: { green: "0", yellow: "1-5", red: "> 5" }, scf_controls: ["CPL-01"], risk_ids: [] }],
+          treatment_examples: [{ strategy: "mitigate", action_i18n: { pt: "Gap analysis contínuo com remediação automatizada" }, scf_control: "CPL-01", estimated_effort: "medium" as const }],
+        },
+        { id: "audit_failure", name_i18n: { pt: "Falha em Auditoria" }, description_i18n: { pt: "Resultado negativo em auditoria" }, typical_likelihood: 3, typical_impact: 3, scf_controls: ["AIS-01", "AIS-04", "GOV-05"], mitre_techniques: [],
+          kris: [{ id: "kri_no_evidence", name_i18n: { pt: "Controles sem evidência" }, formula: "no_evidence / total * 100", unit: "%", frequency: "mensal", thresholds: { green: "< 5%", yellow: "5-20%", red: "> 20%" }, scf_controls: ["AIS-04"], risk_ids: [] }],
+          treatment_examples: [{ strategy: "mitigate", action_i18n: { pt: "Coleta automatizada de evidências" }, scf_control: "AIS-04", estimated_effort: "medium" as const }],
+        },
+      ],
+    },
+    {
+      id: "strategic", name_i18n: { pt: "Estratégico" },
+      risks: [
+        { id: "reputation_damage", name_i18n: { pt: "Dano Reputacional" }, description_i18n: { pt: "Perda de confiança de stakeholders" }, typical_likelihood: 2, typical_impact: 5, scf_controls: ["GOV-01", "IRO-09", "PRI-01"], mitre_techniques: [],
+          kris: [{ id: "kri_nps", name_i18n: { pt: "NPS Score" }, formula: "nps", unit: "score", frequency: "mensal", thresholds: { green: "> 50", yellow: "20-50", red: "< 20" }, scf_controls: ["GOV-01"], risk_ids: [] }],
+          treatment_examples: [{ strategy: "mitigate", action_i18n: { pt: "Plano de comunicação de crise" }, scf_control: "IRO-09", estimated_effort: "medium" as const }],
+        },
+      ],
+    },
+  ],
+};
+
+const METHODOLOGY_INDEX = new Map(RISK_METHODOLOGIES.map(m => [m.id, m]));
+const TAXONOMY_CAT_INDEX = new Map(RISK_TAXONOMY.categories.map(c => [c.id, c]));
+
+// ── Routes ──────────────────────────────────────────────────────────────────
+
+export const riskRoutes: RouteDefinition[] = [
+  // Methodology
+  {
+    method: "GET", path: "/api/v1/risk/methodology",
+    authRequired: true, tenantRequired: false,
+    handler: async ({ request, traceId }) => {
+      const locale = new URL(request.url).searchParams.get("locale") || "pt";
+      const method = RISK_METHODOLOGIES[0];
+      return json({ data: flattenI18n(method, locale), trace_id: traceId });
+    },
+  },
+  {
+    method: "GET", path: "/api/v1/risk/methodologies",
+    authRequired: true, tenantRequired: false,
+    handler: async ({ request, traceId }) => {
+      const locale = new URL(request.url).searchParams.get("locale") || "pt";
+      const data = RISK_METHODOLOGIES.map(m => ({ id: m.id, name_i18n: m.name_i18n }));
+      return json({ data: flattenI18n(data, locale), trace_id: traceId });
+    }
+  },
+  {
+    method: "GET", path: "/api/v1/risk/methodologies/:methodId",
+    authRequired: true, tenantRequired: false,
+    handler: async ({ request, params, traceId }) => {
+      const locale = new URL(request.url).searchParams.get("locale") || "pt";
+      const method = METHODOLOGY_INDEX.get(routeParam(params, "methodId"));
+      if (!method) throw new ApiError("NOT_FOUND", "Methodology not found.", 404);
+      return json({ data: flattenI18n(method, locale), trace_id: traceId });
+    },
+  },
+  {
+    method: "GET", path: "/api/v1/risk/methodologies/:methodId/matrix",
+    authRequired: true, tenantRequired: false,
+    handler: async ({ request, params, traceId }) => {
+      const locale = new URL(request.url).searchParams.get("locale") || "pt";
+      const method = METHODOLOGY_INDEX.get(routeParam(params, "methodId"));
+      if (!method) throw new ApiError("NOT_FOUND", "Methodology not found.", 404);
+      const cells = [];
+      const likelihoodScale = method.dimensions.find(d => d.id === "likelihood")?.scale || [];
+      const impactScale = method.dimensions.find(d => d.id === "impact")?.scale || [];
+      
+      for (const l of likelihoodScale) {
+        for (const i of impactScale) {
+          const score = l.value * i.value;
+          const level = method.matrix.find((m: any) => score >= m.min_score && score <= m.max_score);
+          cells.push({ likelihood: l.value, impact: i.value, score, level: level?.level, color: level?.color, action_i18n: level?.action_i18n });
+        }
+      }
+      return json({
+        data: flattenI18n({ methodology: method.id, cells, likelihood_scale: likelihoodScale, impact_scale: impactScale, legend: method.matrix }, locale), 
+        trace_id: traceId 
+      });
+    },
+  },
+  // Categories
+  {
+    method: "GET", path: "/api/v1/risk/categories",
+    authRequired: true, tenantRequired: false,
+    handler: async ({ request, traceId }) => {
+      const locale = new URL(request.url).searchParams.get("locale") || "pt";
+      return json({ data: flattenI18n(RISK_CATEGORIES, locale), trace_id: traceId });
+    }
+  },
+  // Taxonomy
+  {
+    method: "GET", path: "/api/v1/risk/taxonomy",
+    authRequired: true, tenantRequired: false,
+    handler: async ({ request, traceId }) => {
+      const locale = new URL(request.url).searchParams.get("locale") || "pt";
+      const summary = RISK_TAXONOMY.categories.map(c => ({
+        id: c.id, name_i18n: c.name_i18n, risk_count: c.risks.length,
+        risks: c.risks.map(r => ({ id: r.id, name_i18n: r.name_i18n, typical_likelihood: r.typical_likelihood, typical_impact: r.typical_impact, scf_control_count: r.scf_controls.length, kri_count: r.kris.length })),
+      }));
+      return json({ data: flattenI18n(summary, locale), trace_id: traceId });
+    },
+  },
+  {
+    method: "GET", path: "/api/v1/risk/taxonomy/:categoryId",
+    authRequired: true, tenantRequired: false,
+    handler: async ({ request, params, traceId }) => {
+      const locale = new URL(request.url).searchParams.get("locale") || "pt";
+      const cat = TAXONOMY_CAT_INDEX.get(routeParam(params, "categoryId"));
+      if (!cat) throw new ApiError("NOT_FOUND", `Category not found. Available: ${RISK_TAXONOMY.categories.map(c => c.id).join(", ")}`, 404);
+      return json({ data: flattenI18n(cat, locale), trace_id: traceId });
+    },
+  },
+  {
+    method: "GET", path: "/api/v1/risk/taxonomy/:categoryId/:riskId",
+    authRequired: true, tenantRequired: false,
+    handler: async ({ request, params, traceId }) => {
+      const locale = new URL(request.url).searchParams.get("locale") || "pt";
+      const cat = TAXONOMY_CAT_INDEX.get(routeParam(params, "categoryId"));
+      if (!cat) throw new ApiError("NOT_FOUND", "Category not found.", 404);
+      const risk = cat.risks.find((r: any) => r.id === routeParam(params, "riskId"));
+      if (!risk) throw new ApiError("NOT_FOUND", `Risk not found in ${cat.id}: ${cat.risks.map((r: any) => r.id).join(", ")}`, 404);
+      const data = { ...risk, category: { id: cat.id, name_i18n: cat.name_i18n } };
+      return json({ data: flattenI18n(data, locale), trace_id: traceId });
+    },
+  },
+  // KRIs
+  {
+    method: "GET", path: "/api/v1/risk/kris",
+    authRequired: true, tenantRequired: false,
+    handler: async ({ request, traceId }) => {
+      const locale = new URL(request.url).searchParams.get("locale") || "pt";
+      const url = new URL(request.url);
+      const category = url.searchParams.get("category");
+      const frequency = url.searchParams.get("frequency");
+      const allKris = [];
+      for (const cat of RISK_TAXONOMY.categories) {
+        if (category && cat.id !== category) continue;
+        for (const risk of cat.risks) {
+          for (const kri of risk.kris) {
+            if (frequency && kri.frequency !== frequency) continue;
+            allKris.push({ ...kri, risk_id: risk.id, risk_name_i18n: risk.name_i18n, category_id: cat.id, category_name_i18n: cat.name_i18n });
+          }
+        }
+      }
+      return json({ data: flattenI18n(allKris, locale), total: allKris.length, trace_id: traceId });
+    },
+  },
+  // Treatment options
+  {
+    method: "GET", path: "/api/v1/risk/treatment-options",
+    authRequired: true, tenantRequired: false,
+    handler: async ({ request, traceId }) => {
+      const locale = new URL(request.url).searchParams.get("locale") || "pt";
+      return json({ data: flattenI18n(RISK_METHODOLOGIES[0]?.treatment_options ?? [], locale), trace_id: traceId });
+    }
+  },
+  // Controls for risk
+  {
+    method: "GET", path: "/api/v1/risk/controls/:riskId",
+    authRequired: true, tenantRequired: false,
+    handler: async ({ request, params, traceId }) => {
+      const locale = new URL(request.url).searchParams.get("locale") || "pt";
+      const riskId = routeParam(params, "riskId");
+      for (const cat of RISK_TAXONOMY.categories) {
+        const risk = cat.risks.find((r: any) => r.id === riskId);
+        if (risk) {
+          const data = { risk: { id: risk.id, name_i18n: risk.name_i18n, category: cat.id }, scf_controls: risk.scf_controls, treatment_examples: risk.treatment_examples, kris: risk.kris };
+          return json({ data: flattenI18n(data, locale), trace_id: traceId });
+        }
+      }
+      throw new ApiError("NOT_FOUND", "Risk not found.", 404);
+    },
+  },
+];

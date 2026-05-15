@@ -1,7 +1,6 @@
 export * from "./constants";
 export * from "./consumer";
 export * from "./embeddings/cloudflare-ai-embedding-provider";
-export * from "./embeddings/cloudflare-ai-embedding-provider.placeholder";
 export * from "./embeddings/embedding-provider";
 export * from "./embeddings/mock-embedding-provider";
 export * from "./factory";
