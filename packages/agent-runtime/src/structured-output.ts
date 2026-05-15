@@ -10,6 +10,7 @@ export type StructuredOutputOptions<T> = {
   schema: Record<string, unknown>; // JSON Schema
   temperature?: number;
   maxTokens?: number;
+  tenantId?: string; // Requires tenant context if semantic cache is enabled
   cache?: LlmResponseCache; // Optional semantic cache for repeat evaluations
 };
 
@@ -64,8 +65,8 @@ export async function generateStructuredOutputWithUsage<T>(options: StructuredOu
   };
 
   // ── Check cache first ──
-  if (options.cache) {
-    const cached = await options.cache.get(generateInput);
+  if (options.cache && options.tenantId) {
+    const cached = await options.cache.get(options.tenantId, generateInput);
     if (cached) {
       // Validate cached response structure (cache may be stale vs schema changes)
       let parsed: Record<string, unknown>;
@@ -113,8 +114,8 @@ export async function generateStructuredOutputWithUsage<T>(options: StructuredOu
     }
 
     // ── Step 3: Cache the validated response ──
-    if (options.cache) {
-      options.cache.set(generateInput, response).catch(() => {}); // Fire-and-forget
+    if (options.cache && options.tenantId) {
+      options.cache.set(options.tenantId, generateInput, response).catch(() => {}); // Fire-and-forget
     }
 
     // ── Step 4: Return validated data + usage ──

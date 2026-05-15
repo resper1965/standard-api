@@ -403,7 +403,17 @@ export const intelligenceRoutes: RouteDefinition[] = [
               input: body.input
           });
 
-          if (deps.AGENT_RUN_QUEUE) {
+          if (deps.COUNCIL_WORKFLOW) {
+              await deps.COUNCIL_WORKFLOW.create({
+                  id: job.run_id,
+                  params: {
+                      runId: job.run_id,
+                      tenantId: tenantId!,
+                      agents: body.agents,
+                      inputData: body.input
+                  }
+              });
+          } else if (deps.AGENT_RUN_QUEUE) {
               await deps.AGENT_RUN_QUEUE.send({
                   agent_run_id: job.run_id,
                   tenant_id: tenantId!,
