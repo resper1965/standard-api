@@ -1,0 +1,33 @@
+name: DefectDojo
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  semgrep-defectdojo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Semgrep (código)
+        run: |
+          pip install semgrep
+          semgrep scan --config auto --json -o semgrep.json || true
+          
+      - name: Enviar para DefectDojo
+        env:
+          DD_URL: ${{ secrets.DEFECTDOJO_URL }}
+          DD_KEY: ${{ secrets.DEFECTDOJO_API_KEY }}
+          DD_ENGAGEMENT: ${{ vars.DEFECTDOJO_ENGAGEMENT_ID || '2' }}
+        run: |
+          curl -f -sS -X POST \
+            -H "Authorization: Token ${DD_KEY}" \
+            -F "engagement=${DD_ENGAGEMENT}" \
+            -F "scan_type=Semgrep JSON Report" \
+            -F "active=true" \
+            -F "verified=false" \
+            -F "file=@semgrep.json" \
+            "${DD_URL}/api/v2/import-scan/"
