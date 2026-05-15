@@ -8,8 +8,10 @@ import ControlNode from './nodes/ControlNode';
 import RegulationNode from './nodes/RegulationNode';
 import RiskNode from './nodes/RiskNode';
 import { Search, Loader2 } from 'lucide-react';
+import { usePageHeader } from '../../components/layouts/PageHeaderContext';
 
 export const KnowledgeGraphPage: React.FC = () => {
+  const { setHeader, clear } = usePageHeader();
   const [controlId, setControlId] = useState('GOV-01');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -23,16 +25,17 @@ export const KnowledgeGraphPage: React.FC = () => {
     riskNode: RiskNode
   }), []);
 
-  const handleSearch = async (e?: React.FormEvent) => {
+  const handleSearch = async (e?: React.FormEvent, searchId?: string) => {
     if (e) e.preventDefault();
-    if (!controlId.trim()) return;
+    const targetId = searchId || controlId;
+    if (!targetId.trim()) return;
 
     setIsLoading(true);
     setError(null);
     try {
       const response = await api<{ data: MapData }>('/api/v1/intelligence/blast-radius', {
         method: 'POST',
-        body: JSON.stringify({ control_id: controlId })
+        body: JSON.stringify({ control_id: targetId })
       });
 
       const { nodes: newNodes, edges: newEdges } = generateRadialLayout(response.data);
@@ -47,41 +50,40 @@ export const KnowledgeGraphPage: React.FC = () => {
     }
   };
 
-  // Load initially or let user search? Let's just load the default GOV-01
+  // Sync page header actions
   React.useEffect(() => {
-    handleSearch();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  return (
-    <div className="flex flex-col h-full w-full bg-[#0B1120]">
-      {/* Header & Controls */}
-      <div className="absolute top-0 left-0 right-0 z-20 flex flex-col md:flex-row items-center justify-between p-6 bg-slate-900/50 backdrop-blur-md border-b border-white/5">
-        <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Controls-as-Truth</h1>
-          <p className="text-slate-400 mt-1 text-sm">
-            Mapping Blast-Radius Architecture Intel for Enterprise GRC.
-          </p>
-        </div>
-
-        <form onSubmit={handleSearch} className="mt-4 md:mt-0 flex items-center bg-slate-800/50 border border-slate-700 rounded-xl p-1 shadow-inner focus-within:ring-2 ring-blue-500/50 transition-all">
-          <Search className="w-5 h-5 text-slate-400 ml-3" />
+    setHeader({
+      description: "Mapping Blast-Radius Architecture Intel for Enterprise GRC.",
+      actions: (
+        <form onSubmit={(e) => handleSearch(e)} className="flex items-center bg-slate-800/50 border border-slate-700/60 rounded-lg p-0.5 shadow-inner hover:border-slate-600 focus-within:ring-2 focus-within:border-blue-500 ring-blue-500/20 transition-all">
+          <Search className="w-4 h-4 text-slate-400 ml-2.5 shrink-0" />
           <input
             value={controlId}
             onChange={(e) => setControlId(e.target.value.toUpperCase())}
-            placeholder="Search SCF Control (e.g. GOV-01)"
-            className="bg-transparent border-none outline-none text-white px-3 py-2 w-64 uppercase placeholder:normal-case placeholder:text-slate-500"
+            placeholder="Search Control (e.g. GOV-01)"
+            className="bg-transparent border-none outline-none text-white px-2.5 py-1.5 w-48 text-sm uppercase placeholder:normal-case placeholder:text-slate-500 focus:ring-0"
           />
           <button 
             type="submit" 
             disabled={isLoading}
-            className="flex items-center justify-center bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-medium transition disabled:opacity-50 min-w-[100px]"
+            className="flex items-center justify-center bg-primary hover:bg-primary/90 text-primary-foreground px-3 py-1.5 rounded-md text-xs font-semibold tracking-wide transition disabled:opacity-50 min-w-[80px]"
           >
-            {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Analyze'}
+            {isLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin mx-auto" /> : 'ANALYZE'}
           </button>
         </form>
-      </div>
+      )
+    });
+    return () => clear();
+  }, [controlId, isLoading, setHeader, clear]);
 
+  // Load initially
+  React.useEffect(() => {
+    handleSearch(undefined, 'GOV-01');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <div className="flex flex-col h-full w-full min-h-[70vh] bg-slate-950/40 rounded-2xl border border-slate-800/60 overflow-hidden shadow-2xl relative">
       {/* Main Map Container */}
       <div className="flex-1 w-full relative">
         {error && (
