@@ -76,3 +76,46 @@ test("Intelligence Endpoint rejects resource exhaustion attacks (WAF Defense)", 
     throw new Error(`Expected VALIDATION_ERROR but got ${result.body.error.code}`);
   }
 });
+
+test("Intelligence Council dispatches a detached agentic execution correctly", async () => {
+  const client = createTestClient();
+  const validUUID = "123e4567-e89b-12d3-a456-426614174000";
+
+  // Test successful dispatch
+  const result = await client.send(
+    "/api/v1/intelligence/council",
+    "POST",
+    {
+      assessment_id: validUUID,
+      target_framework_id: validUUID,
+      agents: ["incident_triager", "poam_architect"],
+      input: { context: "testing" }
+    },
+    { 
+      "x-standard-actor-id": ids.actorId,
+      "x-standard-tenant-id": ids.tenantId
+    }
+  );
+
+  expect(result.response.status).toBe(202);
+  expect(result.body.job_id).toBeDefined();
+  expect(result.body.status).toBe("accepted");
+  
+  // Test validation error (empty agents array)
+  const resultInvalid = await client.send(
+    "/api/v1/intelligence/council",
+    "POST",
+    {
+      assessment_id: validUUID,
+      target_framework_id: validUUID,
+      agents: [], // at least 1 agent required
+      input: {}
+    },
+    { 
+      "x-standard-actor-id": ids.actorId,
+      "x-standard-tenant-id": ids.tenantId
+    }
+  );
+
+  expect(resultInvalid.response.status).toBe(400);
+});
