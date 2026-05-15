@@ -23,6 +23,16 @@ jobs:
           DD_KEY: ${{ secrets.DEFECTDOJO_API_KEY }}
           DD_ENGAGEMENT: ${{ vars.DEFECTDOJO_ENGAGEMENT_ID || '2' }}
         run: |
+          if [ -z "$DD_URL" ]; then
+            echo "::error::DEFECTDOJO_URL secret está vazio! Configure no GitHub > Settings > Secrets and variables > Actions > Repository secrets."
+            exit 1
+          fi
+          
+          if [ -z "$DD_KEY" ]; then
+            echo "::error::DEFECTDOJO_API_KEY secret está vazio! Configure no GitHub Settings."
+            exit 1
+          fi
+
           curl -f -sS -X POST \
             -H "Authorization: Token ${DD_KEY}" \
             -F "engagement=${DD_ENGAGEMENT}" \
