@@ -171,6 +171,8 @@ export type RequestContext = {
   deps: AppDependencies;
   /** Pre-validated request body (populated when route defines bodySchema) */
   validatedBody?: unknown;
+  /** Cloudflare native execution context for background tasks */
+  execCtx?: any;
 };
 
 export type RouteHandler = (context: RequestContext) => Promise<Response> | Response;

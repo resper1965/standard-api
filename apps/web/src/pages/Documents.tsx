@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { api } from "../lib/api";
+import { PageHeader } from "../components/PageHeader";
 import { FileUpload } from "../components/FileUpload";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "../components/ui/table";
@@ -85,6 +86,7 @@ export function DocumentsPage() {
 
   return (
     <div className="space-y-6 animate-slide-up">
+      <PageHeader title="Documents" description="Upload, manage, and track compliance evidence files" />
       {!assessmentId && (
         <div className="flex items-center gap-3 p-4 rounded-lg bg-amber-500/10 border border-amber-500/20 text-sm text-amber-500">
           <AlertTriangle className="h-4 w-4 shrink-0" />

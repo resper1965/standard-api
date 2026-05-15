@@ -8,6 +8,7 @@ import {
   Bell
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { PageHeaderProvider, usePageHeader } from "./PageHeaderContext"
 
 type NavItem = {
   name: string
@@ -67,13 +68,13 @@ function NavLinks({ items, currentPath, onNavigate }: {
         return (
           <Link key={item.name} to={item.path} onClick={onNavigate}>
             <div
-              className={`group flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-medium transition-all duration-150 ${
+              className={`nav-magnetic group flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-medium transition-all duration-150 ${
                 isActive
-                  ? "bg-primary/10 text-primary"
+                  ? "nav-active-pill bg-primary/10 text-primary"
                   : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
               }`}
             >
-              <Icon className="h-[18px] w-[18px] shrink-0" strokeWidth={isActive ? 2 : 1.5} />
+              <Icon className="nav-icon h-[18px] w-[18px] shrink-0" strokeWidth={isActive ? 2 : 1.5} />
               <span className="truncate">{item.name}</span>
               {isActive && <ChevronRight className="ml-auto h-3.5 w-3.5 opacity-40" />}
             </div>
@@ -183,13 +184,14 @@ export function DashboardLayout() {
   )
 
   return (
+    <PageHeaderProvider>
     <div className="flex min-h-screen w-full bg-background text-foreground">
       {/* ── Desktop Sidebar ───────────────────────────── */}
       <aside className="w-[260px] flex-col border-r border-border/60 bg-card hidden md:flex h-screen sticky top-0">
         <div className="flex h-14 items-center px-6 border-b border-border/50 shrink-0">
           <Link to="/dashboard" className="flex items-center gap-2">
-            <span className="text-lg font-brand">
-              standard<span className="text-primary">.</span>
+            <span className="text-[1.46rem] font-brand">
+              standard<span className="brand-dot text-primary">.</span>
             </span>
           </Link>
         </div>
@@ -211,8 +213,8 @@ export function DashboardLayout() {
         }`}
       >
         <div className="flex h-14 items-center justify-between px-5 border-b border-border/50">
-          <span className="text-lg font-brand">
-            standard<span className="text-primary">.</span>
+          <span className="text-[1.46rem] font-brand">
+            standard<span className="brand-dot text-primary">.</span>
           </span>
           <Button variant="ghost" size="icon" onClick={closeMobile} className="h-8 w-8">
             <X className="h-4 w-4" />
@@ -229,36 +231,57 @@ export function DashboardLayout() {
           <Button variant="ghost" size="icon" onClick={() => setMobileOpen(true)} className="h-9 w-9" aria-label="Open navigation">
             <Menu className="h-5 w-5" />
           </Button>
-          <span className="text-base font-brand">
-            standard<span className="text-primary">.</span>
+          <span className="text-[1.3rem] font-brand">
+            standard<span className="brand-dot text-primary">.</span>
           </span>
           <div className="h-7 w-7 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground text-[10px] font-bold">
             {userInitial}
           </div>
         </header>
 
-        {/* Desktop sticky topbar with page title */}
-        <header className="hidden md:flex h-12 items-center justify-between border-b border-border/50 bg-card/80 backdrop-blur-sm px-8 sticky top-0 z-30">
-          <h1 className="text-[15px] font-semibold tracking-tight text-foreground">
-            {pageTitle}
-          </h1>
-          <div className="flex items-center gap-3">
-            <button className="relative h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors">
-              <Bell className="h-4 w-4" />
-              <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-primary" />
-            </button>
-            <div className="h-7 w-7 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground text-[10px] font-bold cursor-pointer hover:scale-105 transition-transform">
-              {userInitial}
-            </div>
-          </div>
-        </header>
+        {/* Desktop sticky topbar with page title + description + actions */}
+        <DesktopTopbar pageTitle={pageTitle} userInitial={userInitial} />
 
         <div className="flex-1 px-6 md:px-8 py-6 overflow-auto">
-          <div className="max-w-[1400px]">
-            <Outlet />
-          </div>
+          <Outlet />
         </div>
       </main>
     </div>
+    </PageHeaderProvider>
+  )
+}
+
+/** Sticky desktop topbar — receives page-level description + actions via context */
+function DesktopTopbar({ pageTitle, userInitial }: { pageTitle: string; userInitial: string }) {
+  const { state } = usePageHeader()
+  const hasExtra = !!(state.description || state.actions)
+
+  return (
+    <header className={`hidden md:block border-b border-border/50 bg-card/80 backdrop-blur-sm px-8 sticky top-0 z-30 transition-all duration-200 ${
+      hasExtra ? 'py-3' : ''
+    }`}>
+      <div className={`flex items-center justify-between ${hasExtra ? '' : 'h-12'}`}>
+        <div className="min-w-0">
+          <h1 className="text-[15px] font-semibold tracking-tight text-foreground">
+            {pageTitle}
+          </h1>
+          {state.description && (
+            <p className="text-[13px] text-muted-foreground mt-0.5 leading-snug">
+              {state.description}
+            </p>
+          )}
+        </div>
+        <div className="flex items-center gap-3 shrink-0">
+          {state.actions}
+          <button className="bell-spell relative h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors">
+            <Bell className="h-4 w-4" />
+            <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-primary" />
+          </button>
+          <div className="avatar-glow h-7 w-7 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground text-[10px] font-bold cursor-pointer hover:scale-105 transition-transform">
+            {userInitial}
+          </div>
+        </div>
+      </div>
+    </header>
   )
 }

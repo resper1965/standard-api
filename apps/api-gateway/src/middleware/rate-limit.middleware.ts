@@ -21,7 +21,8 @@ const ROUTE_LIMITS: Record<string, RateLimitConfig> = {
   "/kb/search": { maxRequests: 60, windowSeconds: 60 },
   "/agent-runs": { maxRequests: 10, windowSeconds: 60 },
   "/render": { maxRequests: 20, windowSeconds: 60 },
-  "/admin/": { maxRequests: 15, windowSeconds: 60 }
+  "/admin/": { maxRequests: 15, windowSeconds: 60 },
+  "/intelligence/": { maxRequests: 20, windowSeconds: 60 }
 };
 
 const DEFAULT_LIMIT: RateLimitConfig = { maxRequests: 120, windowSeconds: 60 };
@@ -96,6 +97,8 @@ export const assertRateLimit = async (
 
   // Check limit in-memory (0ms, no I/O)
   if (counter.count >= config.maxRequests) {
+    const ip = context.request.headers.get("cf-connecting-ip") ?? context.request.headers.get("x-forwarded-for") ?? "unknown_ip";
+    
     await context.deps.audit.record("security_rate_limit_exceeded", {
       route,
       tenant_id: context.tenantId,
@@ -103,8 +106,29 @@ export const assertRateLimit = async (
       trace_id: context.traceId,
       current_count: counter.count,
       max_requests: config.maxRequests,
-      window_seconds: config.windowSeconds
+      window_seconds: config.windowSeconds,
+      ip_address: ip
     });
+
+    if (context.deps.SOC_TRIAGE_QUEUE) {
+      const sendOp = context.deps.SOC_TRIAGE_QUEUE.send({
+        job_id: crypto.randomUUID(),
+        tenantId: context.tenantId ?? "system",
+        traceId: context.traceId,
+        systemModuleName: "API Gateway - WAF/Rate Limiter",
+        rawLogsExcerpt: `[Rate Limiting Block] Endpoint: ${route} breached quota. \nActor: ${context.actorId ?? 'anon'}\nIP: ${ip}\nCount: ${counter.count}/${config.maxRequests} per ${config.windowSeconds}s.\nAction: HTTP 429 triggered. Possible Unrestricted Resource Consumption attack.`
+      }).catch(async (err) => {
+        // Dead-Letter Queue (DLQ) Fallback
+        console.error("[standard:rate-limit] SOC Queue down. Saving to DLQ KV:", err);
+        if (kvNamespace) {
+           await kvNamespace.put(`dlq:soc:rate-limit:${context.traceId}`, JSON.stringify({ ip, route, count: counter.count }), { expirationTtl: 86400 });
+        }
+      });
+      // Fire and guarantee execution via Cloudflare Edge WaitUntil
+      if (context.execCtx?.waitUntil) {
+         context.execCtx.waitUntil(sendOp);
+      }
+    }
 
     throw new ApiError(
       "RATE_LIMIT_EXCEEDED",
@@ -131,23 +155,4 @@ export const assertRateLimit = async (
   }
 };
 
-/**
- * @deprecated Use `assertRateLimit` instead. Kept for backward compatibility.
- */
-export const assertRateLimitPlaceholder = async (context: RequestContext, route: string): Promise<void> => {
-  if (
-    route.includes("/documents") ||
-    route.includes("/kb/search") ||
-    route.includes("/agent-runs") ||
-    route.includes("/render") ||
-    route.includes("/admin/")
-  ) {
-    await context.deps.audit.record("security_rate_limit_placeholder_checked", {
-      route,
-      tenant_id: context.tenantId,
-      actor_id: context.actorId,
-      trace_id: context.traceId
-    });
-  }
-};
 
