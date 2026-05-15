@@ -147,6 +147,8 @@ export type AppDependencies = {
   email?: SendEmail | undefined;
   /** Cloudflare Queue for async agent run processing (optional) */
   AGENT_RUN_QUEUE?: Queue | undefined;
+  /** Cloudflare Workflow engine for durable, stateful parallel council agent runs (optional) */
+  COUNCIL_WORKFLOW?: any | undefined;
   /** Cloudflare Queue for SOC incident triage background processing (optional) */
   SOC_TRIAGE_QUEUE?: Queue | undefined;
   /** Webhook endpoint management (optional — requires storage adapter) */

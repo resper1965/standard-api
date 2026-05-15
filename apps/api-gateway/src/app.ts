@@ -152,11 +152,12 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
     const allowedOrigins = [
       "https://standard.bekaa.eu",
       "https://standard-web.pages.dev",
-      "https://standard-web-m99.pages.dev",
+      "https://production.standard-web.pages.dev",
       ...(isDevMode ? ["http://localhost:5173", "http://localhost:3000"] : []),
     ];
     const origin = request.headers.get("Origin") ?? "";
-    const corsOrigin = allowedOrigins.includes(origin) ? origin : "";
+    const isPagesDevAlias = origin.endsWith(".standard-web.pages.dev");
+    const corsOrigin = allowedOrigins.includes(origin) || isPagesDevAlias ? origin : "";
     const corsHeaders: Record<string, string> = corsOrigin
       ? {
           "Access-Control-Allow-Origin": corsOrigin,

@@ -18,7 +18,7 @@ export interface LlmCacheStore {
 }
 
 export interface LlmVectorStore {
-  query(vector: number[], options?: { topK?: number; returnMetadata?: boolean }): Promise<Array<{ id: string; score: number; metadata?: Record<string, unknown> }>>;
+  query(vector: number[], options?: { topK?: number; filter?: Record<string, unknown>; returnMetadata?: boolean }): Promise<Array<{ id: string; score: number; metadata?: Record<string, unknown> }>>;
   insert(vectors: Array<{ id: string; values: number[]; metadata?: Record<string, unknown> }>): Promise<void>;
 }
 
@@ -74,15 +74,16 @@ export class LlmResponseCache {
   /**
    * Look up a cached response for the given LLM input.
    * Promotes Tier 1 (Exact Match) then Tier 2 (Semantic Match).
+   * Enforces tenant isolation.
    */
-  async get(input: LlmGenerateInput): Promise<LlmGenerateOutput | null> {
+  async get(tenantId: string, input: LlmGenerateInput): Promise<LlmGenerateOutput | null> {
     if (!this.enabled) return null;
 
     try {
       const hash = await hashInput(input);
       
-      // Tier 1: Exact Match
-      const raw = await this.config.store.get(`llm:cache:${hash}`);
+      // Tier 1: Exact Match (Tenant Isolated)
+      const raw = await this.config.store.get(`llm:cache:${tenantId}:${hash}`);
       if (raw) return JSON.parse(raw) as LlmGenerateOutput;
 
       // Tier 2: Semantic Match
@@ -97,10 +98,13 @@ export class LlmResponseCache {
           
         if (userContent.trim() !== "") {
           const vector = await embeddingsProvider.embed(userContent);
-          const topMatches = await vectorStore.query(vector, { topK: 1 });
+          const topMatches = await vectorStore.query(vector, { 
+            topK: 1, 
+            filter: { tenant_id: tenantId } 
+          });
           
-          if (topMatches.length > 0 && topMatches[0].score >= this.similarityThreshold) {
-            const semanticRaw = await this.config.store.get(`llm:cache:${topMatches[0].id}`);
+          if (topMatches.length > 0 && topMatches[0] && topMatches[0].score >= this.similarityThreshold) {
+            const semanticRaw = await this.config.store.get(`llm:cache:${tenantId}:${topMatches[0].id}`);
             if (semanticRaw) return JSON.parse(semanticRaw) as LlmGenerateOutput;
           }
         }
@@ -115,8 +119,9 @@ export class LlmResponseCache {
 
   /**
    * Store a response in the cache. Fire-and-forget — never blocks the caller.
+   * Enforces tenant isolation.
    */
-  async set(input: LlmGenerateInput, output: LlmGenerateOutput): Promise<void> {
+  async set(tenantId: string, input: LlmGenerateInput, output: LlmGenerateOutput): Promise<void> {
     if (!this.enabled) return;
 
     try {
@@ -125,8 +130,8 @@ export class LlmResponseCache {
 
       const hash = await hashInput(input);
       
-      // Store in KV (Tier 1)
-      await this.config.store.put(`llm:cache:${hash}`, serialized, {
+      // Store in KV (Tier 1 - Tenant Isolated)
+      await this.config.store.put(`llm:cache:${tenantId}:${hash}`, serialized, {
         expirationTtl: this.ttl,
       });
 
@@ -145,7 +150,10 @@ export class LlmResponseCache {
           await vectorStore.insert([{
             id: hash,
             values: vector,
-            metadata: { model: input.model } // Store model so we can filter later if needed
+            metadata: { 
+              model: input.model,
+              tenant_id: tenantId
+            }
           }]);
         }
       }

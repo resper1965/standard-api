@@ -98,7 +98,8 @@ export class CouncilOrchestrator {
            const translator = new CLevelBoardTranslatorUseCase(llmProvider);
            currentPayload = await translator.translate({
                poamPlan: currentPayload,
-               regulatoryContext: inputData.regulatoryContext as string || "Standard Compliance Framework"
+               regulatoryContext: inputData.regulatoryContext as string || "Standard Compliance Framework",
+               tenantId: tenantId
            });
            finalSummary = currentPayload.executive_summary;
         }
@@ -135,6 +136,88 @@ export class CouncilOrchestrator {
       writes_final_finding: true,
       creates_official_mapping: false,
       metadata: { final_payload: currentPayload, input_data: inputData }
+    };
+
+    return await this.runtimeService.completeRun(runId, {
+      context: {
+        tenant_id: run.tenant_id,
+        organization_id: run.organization_id,
+        assessment_id: run.assessment_id,
+        trace_id: run.trace_id,
+        framework_id: (run as any).framework_id ?? "",
+        scf_version_id: (run as any).scf_version_id ?? "latest"
+      },
+      output: finalOutput
+    });
+  }
+
+  // Atomic Steps for Cloudflare Workflows SDK Integration
+
+  async executeEvidenceEvaluator(tenantId: string, currentPayload: any): Promise<any> {
+    const { EvidenceEvaluatorUseCase } = await import("./usecases/evidence-evaluator");
+    const llmProvider = (this.runtimeService as any).deps.llm;
+    const evaluator = new EvidenceEvaluatorUseCase(llmProvider);
+    return await evaluator.evaluate({
+        controlRequirement: currentPayload.controlObjective || "Ensure proper configuration",
+        evidenceDescription: currentPayload.evidenceText || "",
+        tenantId: tenantId
+    });
+  }
+
+  async executePoamArchitect(tenantId: string, currentPayload: any, inputData: any): Promise<any> {
+    const { PoamArchitectUseCase } = await import("./usecases/poam-architect");
+    const llmProvider = (this.runtimeService as any).deps.llm;
+    const architect = new PoamArchitectUseCase(llmProvider);
+    return await architect.architect({
+        evidenceContext: currentPayload,
+        systemArchitectureDescription: inputData.systemArchitectureDescription as string || "Default Architecture",
+        tenantId: tenantId
+    });
+  }
+
+  async executeBoardTranslator(tenantId: string, currentPayload: any, inputData: any): Promise<any> {
+    const { CLevelBoardTranslatorUseCase } = await import("./usecases/c-level-translator");
+    const llmProvider = (this.runtimeService as any).deps.llm;
+    const translator = new CLevelBoardTranslatorUseCase(llmProvider);
+    return await translator.translate({
+        poamPlan: currentPayload,
+        regulatoryContext: inputData.regulatoryContext as string || "Standard Compliance Framework",
+        tenantId: tenantId
+    });
+  }
+
+  async executeGenericAgent(tenantId: string, agentName: string, currentPayload: any, run: any, inputData: any): Promise<any> {
+    const genericRun = await this.executor.execute({
+        agent_id: agentName as any,
+        agent_version: "1.0.0",
+        prompt_version: "1.0",
+        model: "orchestrator",
+        context: {
+           tenant_id: tenantId,
+           organization_id: run.organization_id,
+           assessment_id: run.assessment_id,
+           framework_id: (run.metadata as any)?.framework_id ?? "",
+           scf_version_id: "latest",
+           trace_id: run.trace_id,
+        },
+        input: { prior_output: currentPayload }
+    });
+    return (genericRun.metadata as any)?.FinalOutput || (genericRun as any).summary;
+  }
+
+  async finalizeCouncilRun(runId: string, tenantId: string, finalPayload: any, finalSummary: string, inputData: any): Promise<AgentRunResponse> {
+    const run = await this.runtimeService.getRun(runId, tenantId);
+    if (!run) throw new AgentRuntimeError("NOT_FOUND", "Council run not found");
+
+    const finalOutput = {
+      summary: finalSummary,
+      assumptions: [],
+      limitations: [],
+      sources: (run.metadata as Record<string, unknown>)?.agents as string[] ?? [],
+      confidence_score: 0.95,
+      writes_final_finding: true,
+      creates_official_mapping: false,
+      metadata: { final_payload: finalPayload, input_data: inputData }
     };
 
     return await this.runtimeService.completeRun(runId, {
