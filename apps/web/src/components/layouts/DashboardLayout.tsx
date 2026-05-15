@@ -106,6 +106,14 @@ export function DashboardLayout() {
 
   const closeMobile = useCallback(() => setMobileOpen(false), [])
 
+  // Resolve current page title from route map
+  const pageTitle = useMemo(() => {
+    const path = location.pathname
+    return routeTitles[path]
+      ?? Object.entries(routeTitles).find(([p]) => path.startsWith(p + "/"))?.[1]
+      ?? ""
+  }, [location.pathname])
+
   if (isPending) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
@@ -118,14 +126,6 @@ export function DashboardLayout() {
 
   const userInitial = session.user.name?.charAt(0).toUpperCase() || "?"
   const userRole = (session.user as any).role || "member"
-
-  // Resolve current page title from route map
-  const pageTitle = useMemo(() => {
-    const path = location.pathname
-    return routeTitles[path]
-      ?? Object.entries(routeTitles).find(([p]) => path.startsWith(p + "/"))?.[1]
-      ?? ""
-  }, [location.pathname])
 
   const sidebarContent = (
     <>

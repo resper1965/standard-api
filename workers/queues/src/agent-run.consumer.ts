@@ -55,11 +55,8 @@ export const processAgentRunQueueMessage = async (messageBody: unknown, env: Env
   }
 
   if (run.agent_id === ("council_orchestrator" as any)) {
-      const { CouncilOrchestrator } = await import("@standard/agent-runtime");
-      const council = new CouncilOrchestrator(runtimeService, executor);
-      await council.executeCouncilRun(parsed.data.agent_run_id, parsed.data.tenant_id);
-  } else {
-      await executor.resumeRun(parsed.data.agent_run_id, parsed.data.tenant_id);
+      console.warn(`Agent Run ${parsed.data.agent_run_id} is a council DAG. Workflows engine must handle this. Skipping queue execution.`);
+      return;
   }
+  await executor.resumeRun(parsed.data.agent_run_id, parsed.data.tenant_id);
 };
-

@@ -1,5 +1,5 @@
 name = "standard-workflows"
-main = "src/assessment-lifecycle.ts"
+main = "src/index.ts"
 compatibility_date = "2026-04-28"
 
 [vars]
@@ -8,10 +8,17 @@ LOG_LEVEL = "info"
 
 [[workflows]]
 binding = "ASSESSMENT_WORKFLOW"
-name = "standard-assessment-lifecycle-dev"
+name = "standard-assessment-lifecycle-production"
 class_name = "AssessmentLifecycleWorkflow"
+
+[[workflows]]
+binding = "COUNCIL_WORKFLOW"
+name = "standard-council-orchestration-production"
+class_name = "CouncilOrchestrationWorkflow"
+
+[[kv_namespaces]]
+binding = "STANDARD_CACHE"
+id = "4e027e07e0e5440a8666c3f8ee419333"
 
 # Database configured via secrets:
 # wrangler secret put DATABASE_URL --name standard-workflows
-
-
