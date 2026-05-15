@@ -34,8 +34,8 @@ binding = "REPORT_EXPORT_QUEUE"
 queue = "standard-report-export-dev"
 
 [[queues.producers]]
-binding = "AGENT_TASK_QUEUE"
-queue = "standard-agent-task-dev"
+binding = "AGENT_RUN_QUEUE"
+queue = "standard-agent-run-dev"
 
 [[kv_namespaces]]
 binding = "STANDARD_CONFIG_KV"
@@ -89,8 +89,8 @@ binding = "REPORT_EXPORT_QUEUE"
 queue = "standard-report-export-staging"
 
 [[env.staging.queues.producers]]
-binding = "AGENT_TASK_QUEUE"
-queue = "standard-agent-task-staging"
+binding = "AGENT_RUN_QUEUE"
+queue = "standard-agent-run-staging"
 
 [[env.staging.kv_namespaces]]
 binding = "STANDARD_CONFIG_KV"
@@ -144,8 +144,8 @@ binding = "REPORT_EXPORT_QUEUE"
 queue = "standard-report-export-prod"
 
 [[env.production.queues.producers]]
-binding = "AGENT_TASK_QUEUE"
-queue = "standard-agent-task-prod"
+binding = "AGENT_RUN_QUEUE"
+queue = "standard-agent-run-prod"
 
 [[env.production.kv_namespaces]]
 binding = "STANDARD_CONFIG_KV"

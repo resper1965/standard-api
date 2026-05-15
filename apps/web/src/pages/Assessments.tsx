@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../lib/api";
+import { PageHeader } from "../components/PageHeader";
 import { AssessmentCard } from "../components/AssessmentCard";
 import type { Assessment } from "../components/AssessmentCard";
 import { CreateAssessmentModal } from "../components/CreateAssessmentModal";
@@ -31,22 +32,19 @@ export function AssessmentsPage() {
 
   return (
     <div className="space-y-6 animate-slide-up">
-      {/* Action bar */}
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          {assessments.length} assessment{assessments.length !== 1 ? "s" : ""}
-        </p>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm">
-            <Filter className="h-3.5 w-3.5 mr-1.5" />
-            Filter
-          </Button>
-          <Button size="sm" onClick={() => setShowModal(true)}>
-            <Plus className="h-4 w-4 mr-1.5" />
-            New Assessment
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Assessments"
+        description={`${assessments.length} assessment${assessments.length !== 1 ? "s" : ""} — Manage compliance assessments and track progress`}
+      >
+        <Button variant="outline" size="sm">
+          <Filter className="h-3.5 w-3.5 mr-1.5" />
+          Filter
+        </Button>
+        <Button size="sm" onClick={() => setShowModal(true)}>
+          <Plus className="h-4 w-4 mr-1.5" />
+          New Assessment
+        </Button>
+      </PageHeader>
 
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">

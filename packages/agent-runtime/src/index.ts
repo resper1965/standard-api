@@ -12,6 +12,7 @@ export * from "./llm-cache";
 export * from "./executor";
 export * from "./tools";
 export * from "./structured-output";
+export * from "./council";
 export * from "./usecases/ropa-analyzer";
 export * from "./usecases/dpia-assessor";
 export * from "./usecases/evidence-evaluator";

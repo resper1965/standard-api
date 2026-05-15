@@ -1,4 +1,4 @@
-export * from "./auth/api-key-auth-provider.placeholder";
+export * from "./auth/api-key-auth-provider";
 export * from "./auth/auth-provider";
 export * from "./auth/jwt-auth-provider";
 export * from "./auth/mock-auth-provider";
@@ -8,6 +8,7 @@ export * from "./middleware/require-assessment-access";
 export * from "./middleware/require-auth";
 export * from "./middleware/require-permission";
 export * from "./middleware/require-tenant";
+export * from "./middleware/rate-limiter";
 export * from "./middleware/secure-error";
 export * from "./prompt-security/prompt-injection-rules";
 export * from "./prompt-security/tool-use-policy";

@@ -2,6 +2,9 @@ import { ScfImportSourceSchema, type ScfControl, type ScfFramework, type ScfFram
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";
 import { json, parseJson, routeParam } from "../http";
+import { REGULATIONS } from "./regulations.routes";
+import { RISK_TAXONOMY } from "./risk.routes";
+import { DATA_CATEGORIES, RETENTION_RULES } from "./reference-data.routes";
 
 const requireVersionQuery = (request: Request, name = "scf_version"): string => {
   const value = new URL(request.url).searchParams.get(name);
@@ -53,6 +56,62 @@ const requirementResponse = (requirement: ScfFrameworkRequirement) => ({
 });
 
 export const scfRoutes: RouteDefinition[] = [
+  {
+    method: "GET",
+    path: "/api/v1/scf/controls/:controlId/linked-entities",
+    protected: true,
+    handler: async ({ params, traceId }) => {
+      const controlId = routeParam(params, "controlId").toUpperCase();
+      
+      const linkedRegulations: any[] = [];
+      const linkedRisks: any[] = [];
+      const linkedDataCategories: any[] = [];
+      const linkedRetentionRules: any[] = [];
+
+      for (const cat of RISK_TAXONOMY.categories) {
+          for (const r of cat.risks) {
+              if (r.scf_controls.includes(controlId)) {
+                  linkedRisks.push({ category: cat.id, risk: r.name_i18n });
+              }
+          }
+      }
+
+      for (const reg of REGULATIONS) {
+          let hit = false;
+          if (reg.dpia_triggers.some(t => t.scf_controls.includes(controlId))) hit = true;
+          if (reg.consent_rules.scf_controls.includes(controlId)) hit = true;
+          if (reg.breach_rules.scf_controls.includes(controlId)) hit = true;
+          if (reg.legal_bases.some(lb => lb.scf_controls.includes(controlId))) hit = true;
+          if (reg.sensitive_legal_bases.some(lb => lb.scf_controls.includes(controlId))) hit = true;
+          if (reg.data_subject_rights.some(r => r.scf_controls.includes(controlId))) hit = true;
+          if (hit) linkedRegulations.push({ id: reg.id, name: reg.name });
+      }
+
+      for (const dc of DATA_CATEGORIES) {
+          if ((dc as any).scf_controls?.includes(controlId)) {
+              linkedDataCategories.push({ id: dc.id, name: dc.name_i18n });
+          }
+      }
+
+      for (const rr of RETENTION_RULES) {
+          if ((rr as any).scf_controls?.includes(controlId)) {
+              linkedRetentionRules.push({ category: rr.data_category_id, context: rr.context_id });
+          }
+      }
+
+      const result = {
+         control_id: controlId,
+         linked_entities: {
+            risks: linkedRisks,
+            regulations: linkedRegulations,
+            data_categories: linkedDataCategories,
+            retention_rules: linkedRetentionRules
+         }
+      };
+      
+      return json({ data: result, trace_id: traceId });
+    }
+  },
   {
     method: "GET",
     path: "/api/v1/scf/versions",
@@ -199,6 +258,76 @@ export const scfRoutes: RouteDefinition[] = [
       const scfVersionId = requireVersionQuery(request);
       const coverage = await deps.scf.mappings.getCoverageSummary(routeParam(params, "frameworkId"), scfVersionId);
       return json({ ...coverage, trace_id: traceId });
+    }
+  },
+  {
+    method: "GET",
+    path: "/api/v1/scf/cross-mapping/:frameworkA/:frameworkB",
+    protected: true,
+    handler: async ({ deps, params, request, traceId }) => {
+      const scfVersionId = requireVersionQuery(request);
+      const fwAId = routeParam(params, "frameworkA");
+      const fwBId = routeParam(params, "frameworkB");
+
+      // Validate both frameworks exist
+      const [fwA, fwB] = await Promise.all([
+        deps.scf.frameworks.getFramework(fwAId),
+        deps.scf.frameworks.getFramework(fwBId),
+      ]);
+      if (!fwA) throw new ApiError("NOT_FOUND", `Framework not found: ${fwAId}`, 404);
+      if (!fwB) throw new ApiError("NOT_FOUND", `Framework not found: ${fwBId}`, 404);
+
+      // Get requirements for both frameworks
+      const [reqsA, reqsB] = await Promise.all([
+        deps.scf.frameworks.listRequirements(fwAId),
+        deps.scf.frameworks.listRequirements(fwBId),
+      ]);
+
+      // For each requirement in Framework A, find SCF control mappings
+      // and check if any of those controls also map to Framework B
+      const controlIdsA = new Set<string>();
+      const controlIdsB = new Set<string>();
+
+      // Get all mappings for both frameworks in bulk
+      const [mappingsA, mappingsB] = await Promise.all([
+        Promise.all(reqsA.slice(0, 200).map(r =>
+          deps.scf.mappings.getMappingsForRequirement(r.id, scfVersionId).catch(() => [])
+        )),
+        Promise.all(reqsB.slice(0, 200).map(r =>
+          deps.scf.mappings.getMappingsForRequirement(r.id, scfVersionId).catch(() => [])
+        )),
+      ]);
+
+      for (const batch of mappingsA) for (const m of batch) controlIdsA.add(m.scf_control_id);
+      for (const batch of mappingsB) for (const m of batch) controlIdsB.add(m.scf_control_id);
+
+      // Calculate overlap
+      const sharedControls = [...controlIdsA].filter(id => controlIdsB.has(id));
+      const onlyInA = [...controlIdsA].filter(id => !controlIdsB.has(id));
+      const onlyInB = [...controlIdsB].filter(id => !controlIdsA.has(id));
+
+      const totalUnique = new Set([...controlIdsA, ...controlIdsB]).size;
+      const overlapPct = totalUnique > 0 ? Math.round((sharedControls.length / totalUnique) * 100) : 0;
+
+      return json({
+        data: {
+          framework_a: { id: fwAId, name: fwA.framework_name, requirement_count: reqsA.length, control_count: controlIdsA.size },
+          framework_b: { id: fwBId, name: fwB.framework_name, requirement_count: reqsB.length, control_count: controlIdsB.size },
+          overlap: {
+            shared_control_count: sharedControls.length,
+            only_in_a: onlyInA.length,
+            only_in_b: onlyInB.length,
+            overlap_percentage: overlapPct,
+          },
+          interpretation: overlapPct >= 80
+            ? `High overlap (${overlapPct}%). ${fwA.framework_name} compliance substantially covers ${fwB.framework_name}.`
+            : overlapPct >= 50
+              ? `Moderate overlap (${overlapPct}%). Significant gaps remain between the two frameworks.`
+              : `Low overlap (${overlapPct}%). These frameworks have largely independent control sets.`,
+        },
+        scf_version_id: scfVersionId,
+        trace_id: traceId,
+      });
     }
   },
   {

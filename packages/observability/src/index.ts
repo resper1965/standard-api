@@ -2,6 +2,7 @@ export * from "./audit/audit-event.service";
 export * from "./constants";
 export * from "./cost/cost-tracking.service";
 export * from "./cost/pricing-provider.placeholder";
+export * from "./cost/openai-pricing-provider";
 export * from "./logger/redaction";
 export * from "./logger/structured-logger";
 export * from "./metrics/metrics.service";

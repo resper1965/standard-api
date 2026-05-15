@@ -174,6 +174,23 @@ const CreateAssessmentInput = z.object({
 }).openapi("CreateAssessmentInput");
 
 // ==========================================
+// Intelligence Engine Schemas
+// ==========================================
+
+import {
+  GapAnalysisRequestSchema,
+  ComplianceScoreRequestSchema,
+  DpiaScoreRequestSchema,
+  CrossCoverageRequestSchema,
+  RoiPathRequestSchema,
+  BlastRadiusRequestSchema,
+  BlastRadiusOutputSchema,
+  GapAnalysisOutputSchema,
+  ComplianceScoreOutputSchema,
+  DpiaScoreOutputSchema,
+  CrossCoverageOutputSchema,
+  RoiPathOutputSchema
+} from "./schemas/intelligence.schema";// ==========================================
 // Health Schema
 // ==========================================
 
@@ -598,6 +615,76 @@ registry.registerPath({
   request: { params: z.object({ controlId: z.string() }) },
   responses: {
     200: { description: "Framework mappings", content: { "application/json": { schema: z.object({ control_id: z.string(), mappings: z.array(z.object({ framework: z.string(), reference: z.string() })) }) } } }
+  }
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/api/v1/intelligence/blast-radius",
+  summary: "Get SCF Blast Radius",
+  description: "Returns the impact topology (linked regulations, risks, categories) of a given control.",
+  request: { body: { content: { "application/json": { schema: BlastRadiusRequestSchema } } } },
+  responses: {
+    200: { description: "Blast Radius topology", content: { "application/json": { schema: BlastRadiusOutputSchema } } }
+  }
+});
+
+// ==========================================
+// Intelligence Engine Routes
+// ==========================================
+
+registry.registerPath({
+  method: "post",
+  path: "/api/v1/intelligence/gap-analysis",
+  summary: "Run Intelligence Gap Analysis",
+  description: "Calculate missing controls against a target framework securely.",
+  request: { body: { content: { "application/json": { schema: GapAnalysisRequestSchema } } } },
+  responses: {
+    200: { description: "Gap analysis results", content: { "application/json": { schema: GapAnalysisOutputSchema } } }
+  }
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/api/v1/intelligence/compliance-score",
+  summary: "Calculate Compliance Score",
+  description: "Get real-time compliance score for a regulation based on implemented controls.",
+  request: { body: { content: { "application/json": { schema: ComplianceScoreRequestSchema } } } },
+  responses: {
+    200: { description: "Compliance Score outputs", content: { "application/json": { schema: ComplianceScoreOutputSchema } } }
+  }
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/api/v1/intelligence/dpia-score",
+  summary: "Get DPIA Trigger Score",
+  description: "Calculate DPIA severity triggering based on volume, categories, and controls.",
+  request: { body: { content: { "application/json": { schema: DpiaScoreRequestSchema } } } },
+  responses: {
+    200: { description: "DPIA score results", content: { "application/json": { schema: DpiaScoreOutputSchema } } }
+  }
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/api/v1/intelligence/cross-coverage",
+  summary: "Calculate Cross-framework Coverage",
+  description: "See how implementing one framework covers another.",
+  request: { body: { content: { "application/json": { schema: CrossCoverageRequestSchema } } } },
+  responses: {
+    200: { description: "Cross Coverage results", content: { "application/json": { schema: CrossCoverageOutputSchema } } }
+  }
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/api/v1/intelligence/roi-path",
+  summary: "Calculate Optimal ROI Path",
+  description: "Determines the Shortest Path to compliance by finding the most impactful missing controls.",
+  request: { body: { content: { "application/json": { schema: RoiPathRequestSchema } } } },
+  responses: {
+    200: { description: "ROI Path results", content: { "application/json": { schema: RoiPathOutputSchema } } }
   }
 });
 

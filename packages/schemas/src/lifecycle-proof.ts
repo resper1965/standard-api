@@ -22,7 +22,6 @@ import postgres from "postgres";
 import { drizzle } from "drizzle-orm/postgres-js";
 import { eq, and } from "drizzle-orm";
 import * as schema from "./db/schema";
-import { randomUUID } from "node:crypto";
 
 const IDS = {
   tenant: "10000000-0000-4000-8000-000000000001",
@@ -39,7 +38,7 @@ async function main() {
   }
 
   const traceId = `lifecycle-proof-${Date.now()}`;
-  const documentId = randomUUID();
+  const documentId = crypto.randomUUID();
 
   console.log("🔬 Standard Lifecycle Proof — Starting...");
   console.log(`   trace_id: ${traceId}\n`);

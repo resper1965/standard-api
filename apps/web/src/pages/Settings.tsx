@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { authClient } from "../lib/auth-client";
+import { PageHeader } from "../components/PageHeader";
 import { TenantSubscriptionTab } from "../components/settings/TenantSubscriptionTab";
 import { DeveloperDocsTab } from "../components/settings/DeveloperDocsTab";
 import { ApiKeysManager } from "../components/ApiKeysManager";
@@ -39,6 +40,7 @@ export function SettingsPage() {
 
   return (
     <div className="space-y-6">
+      <PageHeader title="Settings" description="Manage subscription, API keys, and developer integrations" />
 
       {isSuperAdmin && (
         <div className="bg-yellow-950/40 border border-yellow-700 p-4 rounded-md flex items-center gap-3 mb-6">

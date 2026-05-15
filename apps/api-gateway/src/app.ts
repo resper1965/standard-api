@@ -43,9 +43,18 @@ import { socRoutes } from "./routes/soc.routes";
 import { executiveRoutes } from "./routes/executive.routes";
 import { openapiRoutes } from "./routes/openapi.routes";
 import { wellKnownRoutes } from "./routes/well-known.routes";
+import { regulationsRoutes } from "./routes/regulations.routes";
+import { riskRoutes } from "./routes/risk.routes";
+import { projectionRoutes } from "./routes/projection.routes";
+import { assessmentsTemplatesRoutes } from "./routes/assessments-templates.routes";
+import { workflowsTemplatesRoutes } from "./routes/workflows-templates.routes";
+import { referenceDataRoutes } from "./routes/reference-data.routes";
+import { intelligenceRoutes } from "./routes/intelligence.routes";
+import { jobsRoutes } from "./routes/jobs.routes";
 
 const routes: RouteDefinition[] = [
   ...openapiRoutes,
+  ...jobsRoutes,
   ...healthRoutes,
   ...tenantsRoutes,
   ...organizationsRoutes,
@@ -73,7 +82,14 @@ const routes: RouteDefinition[] = [
   ...executiveRoutes,
   ...dashboardRoutes,
   ...memberRoutes,
-  ...wellKnownRoutes
+  ...wellKnownRoutes,
+  ...regulationsRoutes,
+  ...riskRoutes,
+  ...projectionRoutes,
+  ...assessmentsTemplatesRoutes,
+  ...workflowsTemplatesRoutes,
+  ...referenceDataRoutes,
+  ...intelligenceRoutes
 ];
 
 const matchRoute = (routePath: string, actualPath: string): Record<string, string> | null => {
@@ -132,11 +148,12 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
     const traceId = resolveTraceId(request);
 
     // ── CORS ────────────────────────────────────────────────
+    const isDevMode = env?.STANDARD_ENV === "development" || env?.STANDARD_ENV === "test";
     const allowedOrigins = [
       "https://standard.bekaa.eu",
       "https://standard-web.pages.dev",
       "https://standard-web-m99.pages.dev",
-      "http://localhost:5173",
+      ...(isDevMode ? ["http://localhost:5173", "http://localhost:3000"] : []),
     ];
     const origin = request.headers.get("Origin") ?? "";
     const corsOrigin = allowedOrigins.includes(origin) ? origin : "";
@@ -189,7 +206,8 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
           const msg = authError instanceof Error ? authError.message : String(authError);
           const stack = authError instanceof Error ? authError.stack : undefined;
           console.error(`[standard:auth] handler error: ${msg}`, stack);
-          return withSecurityHeaders(new Response(JSON.stringify({ error: msg, stack: env?.STANDARD_ENV !== "production" ? stack : undefined }), {
+          const isDev = env?.STANDARD_ENV === "development" || env?.STANDARD_ENV === "test";
+          return withSecurityHeaders(new Response(JSON.stringify({ error: msg, ...(isDev ? { stack } : {}) }), {
             status: 500,
             headers: { "Content-Type": "application/json" },
           }));
@@ -202,7 +220,7 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
       }
 
       const params = matchRoute(route.path, url.pathname)!;
-      const context: RequestContext = { request, params, traceId, deps };
+      const context: RequestContext = { request, params, traceId, deps, execCtx };
       const startedAt = Date.now();
 
       // ── Auth context resolution ──────────────────────────────
@@ -263,7 +281,7 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
         const stack = error instanceof Error ? error.stack : undefined;
         console.error(`[standard:api] Unhandled error on ${request.method} ${url.pathname}: ${msg}`, stack);
       }
-      return withSecurityHeaders(errorResponse(error, traceId));
+      return withSecurityHeaders(errorResponse(error, traceId, url.pathname));
     }
   }
 });
