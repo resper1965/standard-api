@@ -1,6 +1,5 @@
 export * from "./domain";
 export * from "./db/schema";
-export * from "./db/auth-schema";
 export * from "./common";
 export * from "./dashboard";
 export * from "./errors";
