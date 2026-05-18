@@ -1,9 +1,11 @@
+import "./openapi/registry"; // Must be imported first to extend Zod
 import { createApp } from "./app";
 import { createDrizzleRepositories, createMockRepositories } from "./adapters";
 import { createDb } from "./adapters/db";
 import { createAuth, type StandardAuth } from "@standard/auth";
 import type { SendEmail } from "@standard/email";
 import type { AppDependencies } from "./http";
+import * as schema from "@standard/schemas";
 
 export interface Env {
   DATABASE_URL?: string;
@@ -43,6 +45,11 @@ let cachedAuth: StandardAuth | null = null;
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+    const url = new URL(request.url);
+
+    // API Authentication is managed exclusively by Neon Auth.
+    // The Gateway intercepts valid JWT tokens via NeonAuthValidator middleware during standard routing.
+
     if (!cachedApp) {
       const hasDb = Boolean(env.DATABASE_URL);
       console.log(`[standard:init] Starting API gateway. DATABASE_URL=${hasDb ? 'SET' : 'MISSING'}, ENV=${env.STANDARD_ENV}`);
@@ -55,14 +62,9 @@ export default {
           SOC_TRIAGE_QUEUE: env.SOC_TRIAGE_QUEUE ?? undefined,
         };
 
-        // Initialize Better Auth with the same Drizzle DB instance
-        cachedAuth = createAuth(db, {
-          BETTER_AUTH_SECRET: env.BETTER_AUTH_SECRET,
-          BETTER_AUTH_URL: env.BETTER_AUTH_URL ?? new URL(request.url).origin,
-          STANDARD_ENV: env.STANDARD_ENV,
-          GOOGLE_CLIENT_ID: env.GOOGLE_CLIENT_ID,
-          GOOGLE_CLIENT_SECRET: env.GOOGLE_CLIENT_SECRET,
-          waitUntil: (p) => ctx.waitUntil(p),
+        // Initialize Neon Auth / Stateless JWKS Validator
+        cachedAuth = createAuth({
+          NEON_AUTH_JWKS_URL: env.JWT_JWKS_URL ?? "https://ep-blue-breeze-anyfua57.neonauth.c-6.us-east-1.aws.neon.tech/neondb/auth/.well-known/jwks.json",
         });
         console.log('[standard:init] Drizzle repositories initialized.');
       } else {
@@ -74,4 +76,3 @@ export default {
     return cachedApp.fetch(request, ctx);
   }
 };
-

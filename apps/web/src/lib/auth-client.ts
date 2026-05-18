@@ -1,16 +1,9 @@
-import { createAuthClient } from "better-auth/react"
-import { organizationClient, adminClient } from "better-auth/client/plugins"
-import { apiKeyClient } from "@better-auth/api-key/client"
+import { createAuthClient } from '@neondatabase/neon-js/auth';
 
-const API_URL = import.meta.env.VITE_API_URL || "https://standard-api-gateway-production.ness.workers.dev"
+// We point directly to Neon Auth (Managed Better Auth)
+const NEON_AUTH_URL = import.meta.env.VITE_NEON_AUTH_URL || "https://ep-blue-breeze-anyfua57.neonauth.c-6.us-east-1.aws.neon.tech/neondb/auth"
 
-export const authClient = createAuthClient({
-  baseURL: `${API_URL}/api/auth`,
-  plugins: [
-    organizationClient(),
-    adminClient(),
-    apiKeyClient()
-  ]
-})
+export const authClient = createAuthClient(NEON_AUTH_URL);
 
-export const { useSession, signIn, signOut, signUp, useActiveOrganization } = authClient
+// We export the standard destructured hooks just in case your Aegis UI components still invoke them natively.
+export const { useSession, signIn, signOut, signUp, useActiveOrganization } = authClient as any;
