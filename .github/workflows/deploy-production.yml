@@ -52,39 +52,11 @@ jobs:
         env:
           VITE_NEON_AUTH_URL: https://ep-blue-breeze-anyfua57.neonauth.c-6.us-east-1.aws.neon.tech/neondb/auth
 
-  migrate:
-    name: Run Database Migrations
-    runs-on: ubuntu-latest
-    environment: production
-    needs: validate
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm
-
-      - name: Install
-        run: pnpm install --no-frozen-lockfile
-
-      - name: Migrate Database
-        run: pnpm db:migrate
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-
   deploy-workers:
     name: Deploy Cloudflare Workers
     runs-on: ubuntu-latest
     environment: production
-    needs: migrate
+    needs: validate
     strategy:
       max-parallel: 1
       matrix:
@@ -123,7 +95,7 @@ jobs:
     name: Deploy Frontend (Cloudflare Pages)
     runs-on: ubuntu-latest
     environment: production
-    needs: migrate
+    needs: validate
     steps:
       - name: Checkout
         uses: actions/checkout@v4
