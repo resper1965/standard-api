@@ -85,8 +85,11 @@ jobs:
       - name: Install
         run: pnpm install --no-frozen-lockfile
 
+      - name: Install Wrangler
+        run: npm install -g wrangler@latest
+
       - name: Deploy ${{ matrix.worker }}
-        run: pnpm exec wrangler deploy -c infra/cloudflare/wrangler.${{ matrix.worker }}.toml -e production
+        run: wrangler deploy -c infra/cloudflare/wrangler.${{ matrix.worker }}.toml -e production
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -114,6 +117,9 @@ jobs:
       - name: Install
         run: pnpm install --no-frozen-lockfile
 
+      - name: Install Wrangler
+        run: npm install -g wrangler@latest
+
       - name: Build Frontend
         run: pnpm --filter @standard/web build
         env:
@@ -122,7 +128,7 @@ jobs:
           VITE_NEON_DATA_API_URL: https://ep-blue-breeze-anyfua57.apirest.c-6.us-east-1.aws.neon.tech/neondb/rest/v1
 
       - name: Deploy to Cloudflare Pages
-        run: pnpm exec wrangler pages deploy apps/web/dist --project-name=standard-web --branch=main
+        run: wrangler pages deploy apps/web/dist --project-name=standard-web --branch=main
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
