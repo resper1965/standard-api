@@ -13,8 +13,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@better-auth/api-key": "^1.2.10",
-    "@neondatabase/serverless": "^0.9.3",
+    "@better-auth/api-key": "^1.6.11",
+    "@neondatabase/serverless": "^1.1.0",
     "@standard/schemas": "workspace:*",
     "better-auth": "^1.2.10",
     "drizzle-orm": "^0.45.2"
