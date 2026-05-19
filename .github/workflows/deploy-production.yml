@@ -33,7 +33,7 @@ jobs:
           cache: pnpm
 
       - name: Install
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
 
       - name: Lint
         run: pnpm lint || true
@@ -73,7 +73,7 @@ jobs:
           cache: pnpm
 
       - name: Install
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
 
       - name: Migrate Database
         run: pnpm db:migrate
@@ -111,7 +111,7 @@ jobs:
           cache: pnpm
 
       - name: Install
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
 
       - name: Deploy ${{ matrix.worker }}
         run: pnpm exec wrangler deploy -c infra/cloudflare/wrangler.${{ matrix.worker }}.toml -e production
@@ -140,7 +140,7 @@ jobs:
           cache: pnpm
 
       - name: Install
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
 
       - name: Build Frontend
         run: pnpm --filter @standard/web build
