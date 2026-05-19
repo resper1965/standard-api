@@ -1,17 +1,17 @@
-import { createAuthClient } from 'better-auth/react';
-
 /**
- * Better Auth client — points to the API Gateway which handles
- * all /api/auth/* routes via the centralized @standard/auth package.
+ * @module auth-client
+ * @description Standard Auth client for the web frontend.
  *
- * In production the gateway lives at a different origin, so we
- * read VITE_API_BASE_URL from environment. In local dev the Vite
- * proxy in vite.config.ts forwards /api → localhost:8787.
+ * Uses the centralized createStandardAuthClient from @standard/auth/client
+ * which includes organization + admin plugins matching the server config.
+ *
+ * In production, VITE_API_BASE_URL points to the Cloudflare Worker gateway.
+ * In dev, Vite proxy forwards /api → localhost:8787 so baseURL can be empty.
  */
+import { createStandardAuthClient } from "@standard/auth/client";
+
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
 
-export const authClient = createAuthClient({
-  baseURL: API_BASE,
-});
+export const authClient = createStandardAuthClient(API_BASE);
 
 export const { useSession, signIn, signOut, signUp } = authClient;
