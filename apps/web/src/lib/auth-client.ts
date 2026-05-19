@@ -1,9 +1,17 @@
-import { createAuthClient } from '@neondatabase/neon-js/auth';
+/**
+ * @module auth-client
+ * @description Standard Auth client for the web frontend.
+ *
+ * Uses the centralized createStandardAuthClient from @standard/auth/client
+ * which includes organization + admin plugins matching the server config.
+ *
+ * In production, VITE_API_BASE_URL points to the Cloudflare Worker gateway.
+ * In dev, Vite proxy forwards /api → localhost:8787 so baseURL can be empty.
+ */
+import { createStandardAuthClient } from "@standard/auth/client";
 
-// We point directly to Neon Auth (Managed Better Auth)
-const NEON_AUTH_URL = import.meta.env.VITE_NEON_AUTH_URL || "https://ep-blue-breeze-anyfua57.neonauth.c-6.us-east-1.aws.neon.tech/neondb/auth"
+const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
 
-export const authClient = createAuthClient(NEON_AUTH_URL);
+export const authClient = createStandardAuthClient(API_BASE);
 
-// We export the standard destructured hooks just in case your Aegis UI components still invoke them natively.
-export const { useSession, signIn, signOut, signUp, useActiveOrganization } = authClient as any;
+export const { useSession, signIn, signOut, signUp } = authClient;
