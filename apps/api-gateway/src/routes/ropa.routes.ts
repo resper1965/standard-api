@@ -225,7 +225,7 @@ export const ropaRoutes: RouteDefinition[] = [
       const url = new URL(request.url);
       const sensitivity = url.searchParams.get("sensitivity");
       let filtered = SECURITY_MEASURES;
-      if (sensitivity === "special") filtered = filtered.filter(m => m.priority_for_sensitive !== "optional");
+      if (sensitivity === "special") filtered = filtered.filter(m => m.priority_for_sensitive === "mandatory");
       return json({ data: filtered, total: filtered.length, trace_id: traceId });
     },
   },
