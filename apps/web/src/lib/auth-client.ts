@@ -1,9 +1,17 @@
-import { createAuthClient } from '@neondatabase/neon-js/auth';
+import { createAuthClient } from 'better-auth/react';
 
-// We point directly to Neon Auth (Managed Better Auth)
-const NEON_AUTH_URL = import.meta.env.VITE_NEON_AUTH_URL || "https://ep-blue-breeze-anyfua57.neonauth.c-6.us-east-1.aws.neon.tech/neondb/auth"
+/**
+ * Better Auth client — points to the API Gateway which handles
+ * all /api/auth/* routes via the centralized @standard/auth package.
+ *
+ * In production the gateway lives at a different origin, so we
+ * read VITE_API_BASE_URL from environment. In local dev the Vite
+ * proxy in vite.config.ts forwards /api → localhost:8787.
+ */
+const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
 
-export const authClient = createAuthClient(NEON_AUTH_URL);
+export const authClient = createAuthClient({
+  baseURL: API_BASE,
+});
 
-// We export the standard destructured hooks just in case your Aegis UI components still invoke them natively.
-export const { useSession, signIn, signOut, signUp, useActiveOrganization } = authClient as any;
+export const { useSession, signIn, signOut, signUp } = authClient;
