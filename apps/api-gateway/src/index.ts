@@ -1,4 +1,3 @@
-import "./openapi/registry"; // Must be imported first to extend Zod
 import { createApp } from "./app";
 import { createDrizzleRepositories, createMockRepositories } from "./adapters";
 import { createDb } from "./adapters/db";
