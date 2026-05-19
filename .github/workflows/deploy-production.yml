@@ -55,39 +55,11 @@ jobs:
       - name: Build
         run: pnpm build
 
-  migrate:
-    name: Run Database Migrations
-    runs-on: ubuntu-latest
-    environment: production
-    needs: validate
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm
-
-      - name: Install
-        run: pnpm install --frozen-lockfile
-
-      - name: Migrate Database
-        run: pnpm db:migrate
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-
   deploy:
     name: Deploy Cloudflare Workers
     runs-on: ubuntu-latest
     environment: production
-    needs: migrate
+    needs: validate
     strategy:
       max-parallel: 1
       matrix:
