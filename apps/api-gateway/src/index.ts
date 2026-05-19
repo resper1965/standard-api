@@ -47,9 +47,6 @@ export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
 
-    // API Authentication is managed exclusively by Neon Auth.
-    // The Gateway intercepts valid JWT tokens via NeonAuthValidator middleware during standard routing.
-
     if (!cachedApp) {
       const hasDb = Boolean(env.DATABASE_URL);
       console.log(`[standard:init] Starting API gateway. DATABASE_URL=${hasDb ? 'SET' : 'MISSING'}, ENV=${env.STANDARD_ENV}`);
@@ -62,11 +59,16 @@ export default {
           SOC_TRIAGE_QUEUE: env.SOC_TRIAGE_QUEUE ?? undefined,
         };
 
-        // Initialize Neon Auth / Stateless JWKS Validator
-        cachedAuth = createAuth({
-          NEON_AUTH_JWKS_URL: env.JWT_JWKS_URL ?? "https://ep-REDACTED-endpoint.neonauth.c-6.us-east-1.aws.neon.tech/neondb/auth/.well-known/jwks.json",
+        // Initialize Better Auth with Drizzle DB + environment config
+        cachedAuth = createAuth(db, {
+          BETTER_AUTH_SECRET: env.BETTER_AUTH_SECRET,
+          BETTER_AUTH_URL: env.BETTER_AUTH_URL ?? url.origin,
+          STANDARD_ENV: env.STANDARD_ENV,
+          GOOGLE_CLIENT_ID: env.GOOGLE_CLIENT_ID,
+          GOOGLE_CLIENT_SECRET: env.GOOGLE_CLIENT_SECRET,
+          waitUntil: (p) => ctx.waitUntil(p),
         });
-        console.log('[standard:init] Drizzle repositories initialized.');
+        console.log('[standard:init] Better Auth + Drizzle repositories initialized.');
       } else {
         console.warn('[standard:init] No DATABASE_URL — using MOCK repositories. SCF data will be synthetic.');
         cachedDeps = createMockRepositories();
