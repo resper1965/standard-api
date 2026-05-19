@@ -64,12 +64,12 @@ export const projectionRoutes: RouteDefinition[] = [
     path: "/api/v1/assessments/:assessmentId/projection/:frameworkId",
     protected: true,
     requireActor: true,
-    handler: async ({ deps, params, request, traceId }) => {
+    handler: async ({ deps, params, request, tenantId, traceId }) => {
       const assessmentId = routeParam(params, "assessmentId");
       const frameworkId = routeParam(params, "frameworkId");
 
-      // 1. Validate assessment exists
-      const assessment = await deps.assessments.get(assessmentId);
+      // 1. Validate assessment exists (use 2-arg direct call for type safety)
+      const assessment = await deps.assessments.get(assessmentId, tenantId!);
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
 
       const scfVersionId = assessment.scf_version_id;
@@ -98,8 +98,6 @@ export const projectionRoutes: RouteDefinition[] = [
       }
 
       // 5. Get all control assessment statuses for this assessment
-      // We use a raw query via the scf repository to fetch from control_assessment_status
-      const url = new URL(request.url);
       const controlStatuses = await getControlStatusesForAssessment(deps, assessmentId);
 
       // Index by control_id for O(1) lookup
