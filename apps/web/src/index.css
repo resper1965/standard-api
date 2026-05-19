@@ -172,9 +172,10 @@
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
   }
 
-  /* Stagger animation */
+  /* Stagger animation — uses cardEnter which explicitly goes 0→1 */
   .animate-stagger > * {
-    @apply opacity-0 animate-in fade-in slide-in-from-bottom-2 fill-mode-forwards;
+    opacity: 0;
+    animation: cardEnter 350ms ease both;
   }
   .animate-stagger > *:nth-child(1) { animation-delay:  50ms; }
   .animate-stagger > *:nth-child(2) { animation-delay: 100ms; }
@@ -446,4 +447,3 @@ table tbody tr {
 table tbody tr:hover {
   background-color: hsl(var(--muted) / 0.4);
 }
-
