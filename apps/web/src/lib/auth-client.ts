@@ -1,17 +1,11 @@
-/**
- * @module auth-client
- * @description Standard Auth client for the web frontend.
- *
- * Uses the centralized createStandardAuthClient from @standard/auth/client
- * which includes organization + admin plugins matching the server config.
- *
- * In production, VITE_API_BASE_URL points to the Cloudflare Worker gateway.
- * In dev, Vite proxy forwards /api → localhost:8787 so baseURL can be empty.
- */
-import { createStandardAuthClient } from "@standard/auth/client";
+import { createAuthClient, BetterAuthReactAdapter } from '@neondatabase/auth';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
+// Point directly to Neon Auth (Managed Better Auth)
+const NEON_AUTH_URL = import.meta.env.VITE_NEON_AUTH_URL || "https://ep-REDACTED-endpoint.neonauth.c-6.us-east-1.aws.neon.tech/neondb/auth"
 
-export const authClient = createStandardAuthClient(API_BASE);
+export const authClient = createAuthClient(NEON_AUTH_URL, {
+  adapter: BetterAuthReactAdapter(),
+});
 
-export const { useSession, signIn, signOut, signUp } = authClient;
+// Re-export convenience hooks/methods from the fully-bound client
+export const { useSession, signIn, signOut, signUp, useActiveOrganization } = authClient;
