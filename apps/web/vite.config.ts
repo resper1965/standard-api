@@ -7,7 +7,10 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src")
-    }
+    },
+    // Ensure Vite resolves package.json exports (subpath exports)
+    // This is needed for @neondatabase/neon-js/auth to resolve correctly
+    conditions: ["import", "module", "default"]
   },
   server: {
     port: 5173,
