@@ -128,7 +128,7 @@ jobs:
           VITE_NEON_DATA_API_URL: https://ep-blue-breeze-anyfua57.apirest.c-6.us-east-1.aws.neon.tech/neondb/rest/v1
 
       - name: Deploy to Cloudflare Pages
-        run: wrangler pages deploy apps/web/dist --project-name=standard-web --branch=main
+        run: wrangler pages deploy apps/web/dist --project-name=standard-web-production --branch=main
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

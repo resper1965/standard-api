@@ -54,6 +54,9 @@ jobs:
       - name: Install
         run: pnpm install --no-frozen-lockfile
 
+      - name: Install Wrangler
+        run: npm install -g wrangler@latest
+
       - name: Run Migrations
         run: pnpm db:migrate
         env:
@@ -69,8 +72,8 @@ jobs:
       - name: Deploy Preview to Cloudflare Pages
         id: cf_deploy
         run: |
-          DEPLOY_OUTPUT=$(pnpm exec wrangler pages deploy apps/web/dist \
-            --project-name=standard-web \
+          DEPLOY_OUTPUT=$(wrangler pages deploy apps/web/dist \
+            --project-name=standard-web-production \
             --branch=${{ steps.branch_name.outputs.current_branch }} 2>&1)
           echo "$DEPLOY_OUTPUT"
           PREVIEW_URL=$(echo "$DEPLOY_OUTPUT" | grep -oP 'https://[^ ]*\.pages\.dev')
@@ -112,7 +115,7 @@ jobs:
       - name: Delete Cloudflare Pages Preview Deployments
         run: |
           BRANCH="${{ steps.branch_name.outputs.current_branch }}"
-          PROJECT_NAME="standard-web"
+          PROJECT_NAME="standard-web-production"
 
           DEPLOYMENTS=$(curl -s -X GET \
             "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/${PROJECT_NAME}/deployments" \
