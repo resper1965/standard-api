@@ -139,3 +139,17 @@ pnpm -r run typecheck    # Type check all 23 packages
 pnpm run dev             # Start local dev server
 pnpm run deploy          # Deploy to Cloudflare Workers
 ```
+
+## Agent skills
+
+### Issue tracker
+
+GitHub Issues is the primary tracker (via `gh` CLI). Local markdown under `.scratch/` is also supported for quick drafts. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default five-label vocabulary (needs-triage, needs-info, ready-for-agent, ready-for-human, wontfix). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context layout — one `CONTEXT.md` + `adr/` at the repo root. See `docs/agents/domain.md`.
