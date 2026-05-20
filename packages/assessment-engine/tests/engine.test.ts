@@ -84,7 +84,7 @@ test("permite qualquer estado → cancelled (interruption state)", () => {
 
 test("permite qualquer estado → blocked (interruption state)", () => {
   const result = executeTransition(
-    assessment({ state: "gap_analysis_drafted", gapAnalysisDrafted: true }),
+    assessment({ state: "gap_analysis_drafted", soaApproved: true, gapAnalysisDrafted: true }),
     "blocked",
     baseContext({ reason: "awaiting external data" })
   );
@@ -246,7 +246,7 @@ test("bloqueia gap_analysis_drafted → gap_analysis_under_review sem rascunho",
   expectErrorCode(
     () =>
       validateTransition(
-        assessment({ state: "gap_analysis_drafted", gapAnalysisDrafted: false }),
+        assessment({ state: "gap_analysis_drafted", soaApproved: true, gapAnalysisDrafted: false }),
         "gap_analysis_under_review",
         baseContext()
       ),
@@ -298,7 +298,7 @@ test("bloqueia poam_drafted → poam_under_review sem rascunho do POAM", () => {
   expectErrorCode(
     () =>
       validateTransition(
-        assessment({ state: "poam_drafted", poamDrafted: false }),
+        assessment({ state: "poam_drafted", gapAnalysisApproved: true, poamDrafted: false }),
         "poam_under_review",
         baseContext()
       ),
@@ -344,9 +344,10 @@ test("permite soa_under_review → soa_drafted por rejeição", () => {
   expect(result.event.eventType).toBe("soa_rejected");
 });
 
+// Rejeição de gap_analysis exige soaApproved + gapAnalysisDrafted (mesmos prereqs do estado destino)
 test("permite gap_analysis_under_review → gap_analysis_drafted por rejeição", () => {
   const result = executeTransition(
-    assessment({ state: "gap_analysis_under_review", gapAnalysisDrafted: true }),
+    assessment({ state: "gap_analysis_under_review", soaApproved: true, gapAnalysisDrafted: true }),
     "gap_analysis_drafted",
     baseContext({ reason: "gaps incompletos" })
   );
@@ -356,7 +357,7 @@ test("permite gap_analysis_under_review → gap_analysis_drafted por rejeição"
 
 test("permite poam_under_review → poam_drafted por rejeição", () => {
   const result = executeTransition(
-    assessment({ state: "poam_under_review", poamDrafted: true }),
+    assessment({ state: "poam_under_review", gapAnalysisApproved: true, poamDrafted: true }),
     "poam_drafted",
     baseContext({ reason: "plano de ação incompleto" })
   );
@@ -373,10 +374,9 @@ test("evento de transição inclui previousState e nextState corretos", () => {
   expect(result.event.nextState).toBe("documents_uploaded");
 });
 
-test("evento preserva idempotencyKey do contexto", () => {
+test("evento preserva traceId do contexto", () => {
   const ctx = baseContext({ idempotencyKey: "idem-chave-especifica" });
   const result = executeTransition(assessment({ documentCount: 1 }), "documents_uploaded", ctx);
-  // idempotencyKey é opcional no evento; verificamos que o contexto é repassado
   expect(result.event.traceId).toBe(ctx.traceId);
 });
 
@@ -398,7 +398,7 @@ test("getAllowedNextStates inclui interruption states para qualquer estado", () 
   expect(allowed).toContain("blocked");
 });
 
-test("getAllowedNextStates para draft inclui apenas documents_uploaded além de interruptions", () => {
+test("getAllowedNextStates para draft inclui documents_uploaded", () => {
   const allowed = getAllowedNextStates("draft");
   expect(allowed).toContain("documents_uploaded");
 });
