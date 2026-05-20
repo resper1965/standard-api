@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Activity, Database, Users, ShieldAlert, ArrowUpRight, TrendingUp } from "lucide-react"
+import { Activity, Users, ShieldAlert, ArrowUpRight, TrendingUp, Zap } from "lucide-react"
 import { useSession } from "@/lib/auth-client"
 import { apiClient } from "@/lib/api"
 import { Link } from "react-router-dom"
@@ -28,12 +28,25 @@ const stateVariant: Record<string, "success" | "warning" | "info" | "muted" | "d
   failed: "destructive" as any,
 }
 
+interface DashboardMetrics {
+  compliance_score?: number
+  critical_findings?: number
+  open_poams?: number
+}
+
+interface AgentUsage {
+  agent_type: string
+  total_tokens: number
+  total_calls: number
+}
+
 export function OverviewPage() {
   const { data: session, isPending: sessionLoading } = useSession()
   const hasActiveOrg = !!session?.session?.activeOrganizationId
 
   const [assessments, setAssessments] = useState<any[]>([])
-  const [frameworks, setFrameworks] = useState<any[]>([])
+  const [metrics, setMetrics] = useState<DashboardMetrics>({})
+  const [agentUsage, setAgentUsage] = useState<AgentUsage[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -42,14 +55,17 @@ export function OverviewPage() {
         setLoading(false)
         return
       }
+      const orgId = session.session.activeOrganizationId
       setLoading(true)
       try {
-        const [assessmentsData, frameworksData] = await Promise.all([
+        const [assessmentsData, dashboardData, usageData] = await Promise.all([
           apiClient<{ data: any[] }>("/api/v1/assessments").catch(() => ({ data: [] })),
-          apiClient<{ data: any[] }>("/api/v1/scf/frameworks").catch(() => ({ data: [] }))
+          apiClient<{ data: DashboardMetrics }>(`/api/v1/organizations/${orgId}/dashboard`).catch(() => ({ data: {} })),
+          apiClient<{ data: AgentUsage[] }>("/api/v1/admin/usage").catch(() => ({ data: [] })),
         ])
         setAssessments(assessmentsData?.data ?? [])
-        setFrameworks(frameworksData?.data ?? [])
+        setMetrics(dashboardData?.data ?? {})
+        setAgentUsage(usageData?.data ?? [])
       } catch (err) {
         console.error("Failed to fetch dashboard data:", err)
       } finally {
@@ -87,6 +103,11 @@ export function OverviewPage() {
     )
   }
 
+  const complianceScore = metrics.compliance_score ?? null
+  const criticalFindings = metrics.critical_findings ?? 0
+  const openPoams = metrics.open_poams ?? 0
+  const totalTokens = agentUsage.reduce((sum, a) => sum + (a.total_tokens || 0), 0)
+
   return (
     <div className="space-y-8 animate-slide-up">
       {/* Greeting */}
@@ -99,18 +120,25 @@ export function OverviewPage() {
       {/* ── Stat Cards ─────────────────────────────────── */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 animate-stagger">
         <StatCard
-          label="Pending Reviews"
-          value={assessments.filter(a => a.state?.includes('under_review')).length}
-          sub="Awaiting manual approval"
-          icon={<Activity className="h-4 w-4" />}
+          label="Compliance Score"
+          value={complianceScore !== null ? `${complianceScore}%` : "—"}
+          sub={complianceScore !== null ? "Overall posture" : "No data yet"}
+          icon={<TrendingUp className="h-4 w-4" />}
           accent="primary"
         />
         <StatCard
-          label="SCF Frameworks"
-          value={frameworks.length}
-          sub="Loaded in catalog"
-          icon={<Database className="h-4 w-4" />}
-          accent="primary"
+          label="Critical Findings"
+          value={criticalFindings}
+          sub="Require immediate action"
+          icon={<ShieldAlert className="h-4 w-4" />}
+          accent={criticalFindings > 0 ? "destructive" : "muted"}
+        />
+        <StatCard
+          label="Open POAMs"
+          value={openPoams}
+          sub="Plans of action pending"
+          icon={<Activity className="h-4 w-4" />}
+          accent={openPoams > 0 ? "destructive" : "muted"}
         />
         <StatCard
           label="Active Assessments"
@@ -118,13 +146,6 @@ export function OverviewPage() {
           sub="Total in this organization"
           icon={<Users className="h-4 w-4" />}
           accent="primary"
-        />
-        <StatCard
-          label="Security Events"
-          value={0}
-          sub="No recent alerts"
-          icon={<ShieldAlert className="h-4 w-4" />}
-          accent="muted"
         />
       </div>
 
@@ -180,16 +201,39 @@ export function OverviewPage() {
         <Card className="lg:col-span-3 border-border/60 bg-card shadow-none">
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Agent Telemetry</CardTitle>
-            <CardDescription className="mt-0.5">Token usage and confidence metrics</CardDescription>
+            <CardDescription className="mt-0.5">Token usage per AI analyst</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col h-[180px] items-center justify-center border border-dashed border-border/60 rounded-lg">
-              <div className="h-10 w-10 rounded-lg bg-muted/60 flex items-center justify-center text-muted-foreground mb-3">
-                <TrendingUp className="h-5 w-5 animate-pulse" />
+            {agentUsage.length === 0 ? (
+              <div className="flex flex-col h-[180px] items-center justify-center border border-dashed border-border/60 rounded-lg">
+                <div className="h-10 w-10 rounded-lg bg-muted/60 flex items-center justify-center text-muted-foreground mb-3">
+                  <TrendingUp className="h-5 w-5 animate-pulse" />
+                </div>
+                <p className="text-sm font-medium text-foreground mb-1">No agent runs yet</p>
+                <p className="text-xs text-muted-foreground">Metrics will appear after assessments run</p>
               </div>
-              <p className="text-sm font-medium text-foreground mb-1">No agent runs yet</p>
-              <p className="text-xs text-muted-foreground">Metrics will appear after assessments run</p>
-            </div>
+            ) : (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs text-muted-foreground">Total tokens consumed</span>
+                  <span className="text-sm font-semibold text-foreground flex items-center gap-1">
+                    <Zap className="h-3 w-3 text-primary" />
+                    {totalTokens.toLocaleString()}
+                  </span>
+                </div>
+                {agentUsage.slice(0, 5).map((agent) => (
+                  <div key={agent.agent_type} className="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-muted/30 transition-colors">
+                    <span className="text-xs text-foreground capitalize truncate max-w-[140px]">
+                      {agent.agent_type.replace(/_/g, ' ')}
+                    </span>
+                    <div className="flex items-center gap-2 text-right">
+                      <span className="text-xs text-muted-foreground">{agent.total_calls} runs</span>
+                      <span className="text-xs font-medium text-foreground">{agent.total_tokens.toLocaleString()} tok</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -200,7 +244,7 @@ export function OverviewPage() {
 /* ── Stat Card ──────────────────────────────────────────────── */
 function StatCard({ label, value, sub, icon, accent }: {
   label: string
-  value: number
+  value: number | string
   sub: string
   icon: React.ReactNode
   accent: "primary" | "destructive" | "muted"

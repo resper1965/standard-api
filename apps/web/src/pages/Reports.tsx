@@ -18,10 +18,11 @@ interface ReportVersion {
 export function ReportsPage() {
   const [searchParams] = useSearchParams();
   const assessmentId = searchParams.get("assessment");
-  
+
   const [reports, setReports] = useState<ReportVersion[]>([]);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [downloading, setDownloading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const fetchReports = async () => {
@@ -62,6 +63,27 @@ export function ReportsPage() {
     }
   };
 
+  const downloadReport = async (reportVersionId: string) => {
+    if (!assessmentId) return;
+    setDownloading(reportVersionId);
+    setError(null);
+    try {
+      const res = await api<{ data: { url: string } }>(
+        `/api/v1/assessments/${assessmentId}/reports/${reportVersionId}/download`
+      );
+      const url = res?.data?.url;
+      if (url) {
+        window.open(url, "_blank", "noopener,noreferrer");
+      } else {
+        setError("Download URL not available for this report.");
+      }
+    } catch (e: any) {
+      setError(e.message || "Failed to download report");
+    } finally {
+      setDownloading(null);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -92,7 +114,7 @@ export function ReportsPage() {
                 {error}
               </div>
             )}
-            
+
             {loading ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
@@ -130,9 +152,18 @@ export function ReportsPage() {
                         {new Date(r.created_at).toLocaleDateString()}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="sm" disabled>
-                          <FileDown className="h-3.5 w-3.5 mr-1.5" />
-                          Download
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => downloadReport(r.report_version_id)}
+                          disabled={downloading === r.report_version_id}
+                        >
+                          {downloading === r.report_version_id ? (
+                            <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                          ) : (
+                            <FileDown className="h-3.5 w-3.5 mr-1.5" />
+                          )}
+                          {downloading === r.report_version_id ? "Downloading..." : "Download"}
                         </Button>
                       </TableCell>
                     </TableRow>
