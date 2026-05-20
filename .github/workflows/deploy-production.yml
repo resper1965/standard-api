@@ -11,7 +11,7 @@ permissions:
 
 env:
   NODE_VERSION: '22'
-  PNPM_VERSION: '9.0.0'
+  PNPM_VERSION: '9.15.9'
 
 jobs:
   validate:
@@ -39,10 +39,10 @@ jobs:
         run: pnpm lint || true
 
       - name: Typecheck
-        run: pnpm typecheck || true
+        run: pnpm typecheck
 
       - name: Unit & Contract Tests
-        run: pnpm test:unit && pnpm test:contracts || true
+        run: pnpm test:unit && pnpm test:contracts
 
       - name: Security Audit
         run: pnpm audit --audit-level=high || true
@@ -50,17 +50,47 @@ jobs:
       - name: Build
         run: pnpm build
         env:
-          VITE_NEON_AUTH_URL: https://ep-blue-breeze-anyfua57.neonauth.c-6.us-east-1.aws.neon.tech/neondb/auth
+          VITE_NEON_AUTH_URL: ${{ vars.VITE_NEON_AUTH_URL }}
+          VITE_API_URL: ${{ vars.VITE_API_URL }}
+          VITE_NEON_DATA_API_URL: ${{ vars.VITE_NEON_DATA_API_URL }}
 
-  deploy-workers:
-    name: Deploy Cloudflare Workers
+  migrate:
+    name: Run Database Migrations
     runs-on: ubuntu-latest
     environment: production
     needs: validate
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Migrate Database
+        run: pnpm db:migrate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+  deploy:
+    name: Deploy Cloudflare Workers
+    runs-on: ubuntu-latest
+    environment: production
+    needs: migrate
     strategy:
       max-parallel: 1
       matrix:
-        worker: 
+        worker:
           - workflows
           - api-gateway
           - ingestion-worker
@@ -85,7 +115,7 @@ jobs:
       - name: Install
         run: pnpm install --no-frozen-lockfile
 
-      - name: Install Wrangler
+      - name: Install wrangler globally
         run: npm install -g wrangler@latest
 
       - name: Deploy ${{ matrix.worker }}
@@ -94,73 +124,30 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
-  deploy-frontend:
-    name: Deploy Frontend (Cloudflare Pages)
-    runs-on: ubuntu-latest
-    environment: production
-    needs: validate
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm
-
-      - name: Install
-        run: pnpm install --no-frozen-lockfile
-
-      - name: Install Wrangler
-        run: npm install -g wrangler@latest
-
-      - name: Build Frontend
-        run: pnpm --filter @standard/web build
-        env:
-          VITE_NEON_AUTH_URL: https://ep-blue-breeze-anyfua57.neonauth.c-6.us-east-1.aws.neon.tech/neondb/auth
-          VITE_API_URL: https://standard-api-gateway-production.ness.workers.dev
-          VITE_NEON_DATA_API_URL: https://ep-blue-breeze-anyfua57.apirest.c-6.us-east-1.aws.neon.tech/neondb/rest/v1
-
-      - name: Deploy to Cloudflare Pages
-        run: wrangler pages deploy apps/web/dist --project-name=standard-web-production --branch=main
-        env:
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-
   smoke-test:
     name: Post-Deploy Smoke Test
     runs-on: ubuntu-latest
-    needs: [deploy-workers, deploy-frontend]
+    needs: deploy
     steps:
-      - name: Wait for cold start
-        run: sleep 15
+      - name: Wait for propagation
+        run: sleep 30
 
-      - name: Health check — API Gateway
+      - name: Health check — API Gateway (Custom Domain)
+        run: |
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://standard-api.bekaa.eu/health)
+          echo "standard-api.bekaa.eu /health returned: $HTTP_STATUS"
+          if [ "$HTTP_STATUS" -ne 200 ]; then
+            echo "::warning::Custom Domain smoke test FAILED — standard-api.bekaa.eu not healthy (may be DNS propagation)"
+          else
+            echo "✅ Custom Domain is healthy"
+          fi
+
+      - name: Health check — Worker Domain (authoritative)
         run: |
           HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://standard-api-gateway-production.ness.workers.dev/health)
-          echo "API Gateway /health returned: $HTTP_STATUS"
+          echo "Worker domain /health returned: $HTTP_STATUS"
           if [ "$HTTP_STATUS" -ne 200 ]; then
-            echo "::error::Smoke test FAILED — API Gateway is not healthy"
+            echo "::error::Worker Domain Smoke test FAILED — pipeline blocked"
             exit 1
           fi
-          echo "✅ API Gateway is healthy"
-
-      - name: Fetch health details
-        run: |
-          curl -sf https://standard-api-gateway-production.ness.workers.dev/health | jq . || echo "Could not parse health response"
-
-      - name: Verify frontend is accessible
-        run: |
-          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://standard.bekaa.eu/)
-          echo "Frontend returned: $HTTP_STATUS"
-          if [ "$HTTP_STATUS" -ne 200 ]; then
-            echo "::warning::Frontend returned $HTTP_STATUS"
-          else
-            echo "✅ Frontend is accessible"
-          fi
+          echo "✅ Worker domain is healthy"
