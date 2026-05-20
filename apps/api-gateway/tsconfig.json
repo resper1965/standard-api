@@ -2,7 +2,7 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "types": ["@cloudflare/workers-types"],
-    "typeRoots": ["../../node_modules/@types", "../../node_modules/@cloudflare"]
+    "typeRoots": ["../../node_modules/@types", "./node_modules/@types"]
   },
   "include": ["src/**/*.ts"],
   "exclude": ["src/**/__tests__/**"]
