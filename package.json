@@ -53,5 +53,11 @@
   },
   "dependencies": {
     "dotenv": "^17.4.2"
+  },
+  "pnpm": {
+    "overrides": {
+      "better-auth": "1.2.10",
+      "@better-auth/api-key": "1.2.10"
+    }
   }
 }
