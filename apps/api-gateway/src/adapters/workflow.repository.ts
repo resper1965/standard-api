@@ -10,72 +10,75 @@ import type { WorkflowRepository, WorkflowAuditAdapter, WorkflowAuditEvent, Work
 import { executeTransition } from "@standard/assessment-engine";
 import type { DbClient } from "./db";
 
-export const createDrizzleWorkflowRepository = (db: DbClient): WorkflowRepository => ({
-  async create(input: WorkflowRunRecord) {
-    await db.insert(workflowRuns).values({
-      id: input.workflow_run_id,
-      tenantId: input.state.tenant_id,
-      organizationId: input.state.organization_id,
-      assessmentId: input.state.assessment_id,
-      status: input.status,
-      idempotencyKey: input.idempotency_key,
-      state: input.state as Record<string, unknown>,
-      signalIdempotencyKeys: input.signal_idempotency_keys,
-      stepIdempotencyKeys: input.step_idempotency_keys,
-    }).onConflictDoNothing();
-    return input;
-  },
+export const createDrizzleWorkflowRepository = (db: DbClient): WorkflowRepository => {
+  const repo: WorkflowRepository = {
+    async create(input: WorkflowRunRecord) {
+      await db.insert(workflowRuns).values({
+        id: input.workflow_run_id,
+        tenantId: input.state.tenant_id,
+        organizationId: input.state.organization_id,
+        assessmentId: input.state.assessment_id,
+        status: input.status,
+        idempotencyKey: input.idempotency_key,
+        state: input.state as Record<string, unknown>,
+        signalIdempotencyKeys: input.signal_idempotency_keys,
+        stepIdempotencyKeys: input.step_idempotency_keys,
+      }).onConflictDoNothing();
+      return input;
+    },
 
-  async get(workflowRunId: string) {
-    const [row] = await db.select().from(workflowRuns)
-      .where(eq(workflowRuns.id, workflowRunId))
-      .limit(1);
-    return row ? mapWorkflowRow(row) : null;
-  },
+    async get(workflowRunId: string) {
+      const [row] = await db.select().from(workflowRuns)
+        .where(eq(workflowRuns.id, workflowRunId))
+        .limit(1);
+      return row ? mapWorkflowRow(row) : null;
+    },
 
-  async getActiveByAssessment(assessmentId: string, tenantId: string) {
-    const [row] = await db.select().from(workflowRuns)
-      .where(and(
-        eq(workflowRuns.assessmentId, assessmentId),
-        eq(workflowRuns.tenantId, tenantId),
-        notInArray(workflowRuns.status, ["completed", "cancelled"])
-      ))
-      .limit(1);
-    return row ? mapWorkflowRow(row) : null;
-  },
+    async getActiveByAssessment(assessmentId: string, tenantId: string) {
+      const [row] = await db.select().from(workflowRuns)
+        .where(and(
+          eq(workflowRuns.assessmentId, assessmentId),
+          eq(workflowRuns.tenantId, tenantId),
+          notInArray(workflowRuns.status, ["completed", "cancelled"])
+        ))
+        .limit(1);
+      return row ? mapWorkflowRow(row) : null;
+    },
 
-  async listByAssessment(assessmentId: string, tenantId: string) {
-    const rows = await db.select().from(workflowRuns)
-      .where(and(
-        eq(workflowRuns.assessmentId, assessmentId),
-        eq(workflowRuns.tenantId, tenantId)
-      ));
-    return rows.map(mapWorkflowRow);
-  },
+    async listByAssessment(assessmentId: string, tenantId: string) {
+      const rows = await db.select().from(workflowRuns)
+        .where(and(
+          eq(workflowRuns.assessmentId, assessmentId),
+          eq(workflowRuns.tenantId, tenantId)
+        ));
+      return rows.map(mapWorkflowRow);
+    },
 
-  async save(record: WorkflowRunRecord) {
-    await db.update(workflowRuns).set({
-      status: record.status,
-      state: record.state as Record<string, unknown>,
-      signalIdempotencyKeys: record.signal_idempotency_keys,
-      stepIdempotencyKeys: record.step_idempotency_keys,
-      updatedAt: new Date(),
-    }).where(eq(workflowRuns.id, record.workflow_run_id));
-  },
+    async save(record: WorkflowRunRecord) {
+      await db.update(workflowRuns).set({
+        status: record.status,
+        state: record.state as Record<string, unknown>,
+        signalIdempotencyKeys: record.signal_idempotency_keys,
+        stepIdempotencyKeys: record.step_idempotency_keys,
+        updatedAt: new Date(),
+      }).where(eq(workflowRuns.id, record.workflow_run_id));
+    },
 
-  withTenant(tenantId: string) {
-    return {
-      create: async (input) => this.create(input),
-      get: async (workflowRunId) => {
-        const run = await this.get(workflowRunId);
-        return run && run.state.tenant_id === tenantId ? run : null;
-      },
-      getActiveByAssessment: async (assessmentId: string) => this.getActiveByAssessment(assessmentId, tenantId),
-      listByAssessment: async (assessmentId: string) => this.listByAssessment(assessmentId, tenantId),
-      save: async (record) => this.save(record),
-    };
-  }
-});
+    withTenant(tenantId: string) {
+      return {
+        create: async (input) => repo.create(input),
+        get: async (workflowRunId) => {
+          const run = await repo.get(workflowRunId);
+          return run && run.state.tenant_id === tenantId ? run : null;
+        },
+        getActiveByAssessment: async (assessmentId: string) => repo.getActiveByAssessment(assessmentId, tenantId),
+        listByAssessment: async (assessmentId: string) => repo.listByAssessment(assessmentId, tenantId),
+        save: async (record) => repo.save(record),
+      };
+    }
+  };
+  return repo;
+};
 
 export const createDrizzleWorkflowAuditAdapter = (db: DbClient): WorkflowAuditAdapter => ({
   async record(event: WorkflowAuditEvent) {
