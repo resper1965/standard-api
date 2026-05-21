@@ -1,7 +1,7 @@
 <h1 align="center">Standard API</h1>
 
 <p align="center">
-  <strong>Automate security & compliance assessments across 231+ frameworks</strong>
+  <strong>Automate security &amp; compliance assessments across 231+ frameworks</strong>
 </p>
 
 <p align="center">

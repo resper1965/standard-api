@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "description": "API-first standard implementation of the Standard SCF-Based Assessment Lifecycle.",
   "type": "module",
-  "packageManager": "pnpm@9.0.0",
+  "packageManager": "pnpm@9.15.9",
   "scripts": {
     "DESTRUIR-FANTASMAS": "node force.mjs",
     "prepare": "node -e \"if(process.env.NODE_ENV==='production'){process.exit(0)}process.exit(1)\" || husky",
@@ -13,7 +13,7 @@
     "lint": "node scripts/lint.mjs && pnpm -r --if-present lint",
     "typecheck": "pnpm -r --if-present typecheck",
     "test": "pnpm -r --if-present test",
-    "test:unit": "pnpm -r --if-present --filter \"./packages/*\" --filter \"./workers/*\" test",
+    "test:unit": "pnpm -r --if-present --filter \"./packages/*\" test",
     "test:integration": "pnpm --filter @standard/api-gateway test && pnpm --filter @standard/workflows test",
     "test:contracts": "tsx tests/contracts/run-tests.ts",
     "test:security": "pnpm --filter @standard/security test && pnpm --filter @standard/api-gateway test",

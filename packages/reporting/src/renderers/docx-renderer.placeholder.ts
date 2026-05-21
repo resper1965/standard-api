@@ -40,8 +40,10 @@ function buildDocumentXml(title: string, sections: ReportSectionResponse[]): str
   for (const section of sections) {
     paragraphs.push(heading(section.title, 2));
 
-    if (section.content) {
-      const lines = section.content.split("\n");
+    const rawContent = section.content;
+    if (rawContent) {
+      const text = typeof rawContent === "string" ? rawContent : JSON.stringify(rawContent);
+      const lines = text.split("\n");
       for (const line of lines) {
         const trimmed = line.trim();
         if (trimmed.startsWith("## ")) {
