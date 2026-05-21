@@ -1,16 +1,18 @@
-import { createAuthClient } from "better-auth/react"
-import { organizationClient, adminClient } from "better-auth/client/plugins"
-import { apiKeyClient } from "@better-auth/api-key/client"
+/**
+ * Auth client for the Standard web frontend.
+ *
+ * Uses Better Auth's React client (stable, not beta).
+ * Points to the API Gateway which hosts Better Auth server-side.
+ */
+import { createStandardAuthClient } from "@standard/auth/client";
 
-const API_URL = import.meta.env.VITE_API_URL || "https://standard-api-gateway-production.ness.workers.dev"
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8787";
 
-export const authClient = createAuthClient({
-  baseURL: `${API_URL}/api/auth`,
-  plugins: [
-    organizationClient(),
-    adminClient(),
-    apiKeyClient()
-  ]
-})
+export const authClient = createStandardAuthClient(API_URL);
 
-export const { useSession, signIn, signOut, signUp, useActiveOrganization } = authClient
+// React hooks — session & organization
+export const useSession = authClient.useSession;
+export const useActiveOrganization = authClient.useActiveOrganization;
+
+// Auth actions
+export const { signIn, signOut, signUp } = authClient;

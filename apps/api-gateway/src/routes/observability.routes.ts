@@ -21,7 +21,7 @@ export const observabilityRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["audit:read"],
     handler: async ({ request, deps, params, tenantId, traceId }) => {
-      const assessment = await deps.assessments.get(routeParam(params, "assessmentId"), tenantId!);
+      const assessment = await deps.assessments.withTenant(tenantId!).get(routeParam(params, "assessmentId"));
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
       const query = parseQuery(request, AuditLogQuerySchema);
       const data = await deps.observability.auditEvents.list({
@@ -71,7 +71,7 @@ export const observabilityRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["assessment:read"],
     handler: async ({ request, deps, params, tenantId, traceId }) => {
-      const assessment = await deps.assessments.get(routeParam(params, "assessmentId"), tenantId!);
+      const assessment = await deps.assessments.withTenant(tenantId!).get(routeParam(params, "assessmentId"));
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
       const query = parseQuery(request, MetricsQuerySchema);
       const data = await deps.observability.metrics.list({
@@ -102,7 +102,7 @@ export const observabilityRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["assessment:read"],
     handler: async ({ request, deps, params, tenantId, traceId }) => {
-      const assessment = await deps.assessments.get(routeParam(params, "assessmentId"), tenantId!);
+      const assessment = await deps.assessments.withTenant(tenantId!).get(routeParam(params, "assessmentId"));
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
       const query = parseQuery(request, UsageQuerySchema);
       const usage = await deps.observability.usage.list({ tenant_id: tenantId, assessment_id: assessment.assessment_id, limit: query.limit });

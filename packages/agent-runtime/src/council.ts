@@ -79,19 +79,30 @@ export class CouncilOrchestrator {
     const { DpiaAssessorUseCase } = await import("./usecases/dpia-assessor").catch(() => ({ DpiaAssessorUseCase: null }));
 
     const llmProvider = (this.runtimeService as any).deps.llm; // Safely grabbing the LLM from DI
+    let totalTokens = 0;
+    const trackingLlmProvider: any = {
+      generate: async (input: any) => {
+        const res = await llmProvider.generate(input);
+        if (res.usage?.total_tokens) {
+          totalTokens += res.usage.total_tokens;
+        }
+        return res;
+      }
+    };
     
     // Process pipeline sequentially
     for (const agentName of agents) {
         if (agentName === "evidence_evaluator" && EvidenceEvaluatorUseCase) {
-           const evaluator = new EvidenceEvaluatorUseCase(llmProvider);
+           const evaluator = new EvidenceEvaluatorUseCase(trackingLlmProvider);
            currentPayload = await evaluator.evaluate({
                controlRequirement: currentPayload.controlObjective || "Ensure proper configuration",
+               regulatoryContext: currentPayload.regulatoryContext || inputData.regulatoryContext,
                evidenceDescription: currentPayload.evidenceText || "",
                tenantId: tenantId
            });
         } 
         else if (agentName === "poam_architect" && PoamArchitectUseCase) {
-           const architect = new PoamArchitectUseCase(llmProvider);
+           const architect = new PoamArchitectUseCase(trackingLlmProvider);
            currentPayload = await architect.architect({
                evidenceContext: currentPayload,
                systemArchitectureDescription: inputData.systemArchitectureDescription as string || "Default Architecture",
@@ -99,7 +110,7 @@ export class CouncilOrchestrator {
            });
         }
         else if (agentName === "board_translator" && CLevelBoardTranslatorUseCase) {
-           const translator = new CLevelBoardTranslatorUseCase(llmProvider);
+           const translator = new CLevelBoardTranslatorUseCase(trackingLlmProvider);
            currentPayload = await translator.translate({
                poamPlan: currentPayload,
                regulatoryContext: inputData.regulatoryContext as string || "Standard Compliance Framework",
@@ -108,7 +119,7 @@ export class CouncilOrchestrator {
            finalSummary = currentPayload.executive_summary;
         }
         else if (agentName === "incident_triager" && IncidentTriagerUseCase) {
-           const triager = new IncidentTriagerUseCase(llmProvider);
+           const triager = new IncidentTriagerUseCase(trackingLlmProvider);
            currentPayload = await triager.triage({
                rawLogsExcerpt: currentPayload.rawLogsExcerpt || inputData.rawLogsExcerpt || "",
                systemModuleName: currentPayload.systemModuleName || inputData.systemModuleName || "Unknown",
@@ -117,7 +128,7 @@ export class CouncilOrchestrator {
            if (currentPayload.severity_level === "critical") finalSummary = "CRITICAL security incident triaged.";
         }
         else if (agentName === "vendor_scanner" && VendorScannerUseCase) {
-           const scanner = new VendorScannerUseCase(llmProvider);
+           const scanner = new VendorScannerUseCase(trackingLlmProvider);
            currentPayload = await scanner.scan({
                contractExcerpt: currentPayload.contractExcerpt || inputData.contractExcerpt || "",
                vendorName: currentPayload.vendorName || inputData.vendorName || "Unknown Vendor",
@@ -125,17 +136,17 @@ export class CouncilOrchestrator {
            });
         }
         else if (agentName === "ropa_analyzer" && RopaAnalyzerUseCase) {
-           const analyzer = new RopaAnalyzerUseCase(llmProvider);
+           const analyzer = new RopaAnalyzerUseCase(trackingLlmProvider);
            currentPayload = await analyzer.analyze({
                naturalLanguageDescription: currentPayload.naturalLanguageDescription || inputData.naturalLanguageDescription || "",
                tenantId: tenantId
            });
         }
         else if (agentName === "dpia_assessor" && DpiaAssessorUseCase) {
-           const assessor = new DpiaAssessorUseCase(llmProvider);
+           const assessor = new DpiaAssessorUseCase(trackingLlmProvider);
            currentPayload = await assessor.assess({
                ropaContext: currentPayload,
-               projectDescription: inputData.projectDescription || "General data processing project",
+               projectDescription: (inputData.projectDescription as string) || "General data processing project",
                tenantId: tenantId
            });
            if (currentPayload.residual_risk_level === "high" || currentPayload.residual_risk_level === "critical") finalSummary = "High-Risk DPIA Requires Board Sign-off.";
@@ -165,14 +176,14 @@ export class CouncilOrchestrator {
     }
 
     const finalOutput = {
-      summary: finalSummary,
+      summary: finalSummary + (totalTokens > 0 ? ` (A análise custou ${totalTokens} tokens)` : ""),
       assumptions: [],
       limitations: [],
       sources: agents,
       confidence_score: 0.95,
       writes_final_finding: true,
       creates_official_mapping: false,
-      metadata: { final_payload: currentPayload, input_data: inputData }
+      metadata: { final_payload: currentPayload, input_data: inputData, total_tokens_used: totalTokens }
     };
 
     return await this.runtimeService.completeRun(runId, {
@@ -190,12 +201,13 @@ export class CouncilOrchestrator {
 
   // Atomic Steps for Cloudflare Workflows SDK Integration
 
-  async executeEvidenceEvaluator(tenantId: string, currentPayload: any): Promise<any> {
+  async executeEvidenceEvaluator(tenantId: string, currentPayload: any, inputData: any): Promise<any> {
     const { EvidenceEvaluatorUseCase } = await import("./usecases/evidence-evaluator");
     const llmProvider = (this.runtimeService as any).deps.llm;
     const evaluator = new EvidenceEvaluatorUseCase(llmProvider);
     return await evaluator.evaluate({
         controlRequirement: currentPayload.controlObjective || "Ensure proper configuration",
+        regulatoryContext: currentPayload.regulatoryContext || inputData.regulatoryContext,
         evidenceDescription: currentPayload.evidenceText || "",
         tenantId: tenantId
     });

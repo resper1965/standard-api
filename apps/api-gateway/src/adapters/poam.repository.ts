@@ -51,6 +51,14 @@ export const createDrizzlePoamVersionRepository = (db: DbClient): PoamVersionRep
       .where(and(eq(poamVersions.assessmentId, assessmentId), eq(poamVersions.tenantId, tenantId)));
     return rows.map(mapPoamVersionRow);
   },
+  withTenant(tenantId) {
+    return {
+      save: async (version) => this.save(version),
+      update: async (version) => this.update(version),
+      get: async (poamVersionId) => this.get(poamVersionId, tenantId),
+      listByAssessment: async (assessmentId) => this.listByAssessment(assessmentId, tenantId),
+    };
+  },
 });
 
 export const createDrizzlePoamItemRepository = (db: DbClient): PoamItemRepository => ({
@@ -120,6 +128,14 @@ export const createDrizzlePoamItemRepository = (db: DbClient): PoamItemRepositor
       .where(and(eq(poamItems.poamVersionId, poamVersionId), eq(poamItems.tenantId, tenantId)));
     return rows.map(mapPoamItemRow);
   },
+  withTenant(tenantId) {
+    return {
+      saveMany: async (items) => this.saveMany(items),
+      update: async (item) => this.update(item),
+      get: async (poamItemId) => this.get(poamItemId, tenantId),
+      listByVersion: async (poamVersionId, filters) => this.listByVersion(poamVersionId, tenantId, filters),
+    };
+  },
 });
 
 export const createDrizzlePoamMilestoneRepository = (db: DbClient): PoamMilestoneRepository => ({
@@ -177,6 +193,15 @@ export const createDrizzlePoamMilestoneRepository = (db: DbClient): PoamMileston
       .where(and(eq(poamMilestones.poamItemId, poamItemId), eq(poamMilestones.tenantId, tenantId)));
     return rows.map(mapPoamMilestoneRow);
   },
+  withTenant(tenantId) {
+    return {
+      save: async (milestone) => this.save(milestone),
+      saveMany: async (milestones) => this.saveMany(milestones),
+      update: async (milestone) => this.update(milestone),
+      get: async (milestoneId) => this.get(milestoneId, tenantId),
+      listByItem: async (poamItemId) => this.listByItem(poamItemId, tenantId),
+    };
+  },
 });
 
 export const createDrizzlePoamDependencyRepository = (db: DbClient): PoamDependencyRepository => ({
@@ -209,6 +234,13 @@ export const createDrizzlePoamDependencyRepository = (db: DbClient): PoamDepende
     const rows = await db.select().from(poamDependencies)
       .where(and(eq(poamDependencies.poamItemId, poamItemId), eq(poamDependencies.tenantId, tenantId)));
     return rows.map(mapPoamDependencyRow);
+  },
+  withTenant(tenantId) {
+    return {
+      save: async (dep) => this.save(dep),
+      saveMany: async (deps) => this.saveMany(deps),
+      listByItem: async (poamItemId) => this.listByItem(poamItemId, tenantId),
+    };
   },
 });
 

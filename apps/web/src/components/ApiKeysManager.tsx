@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { authClient } from "../../lib/auth-client";
+import { useSession } from "../lib/auth-client";
 
 interface ApiKey {
   id: string;
@@ -17,7 +17,7 @@ interface ApiKeysManagerProps {
 }
 
 export function ApiKeysManager({ apiKeys, onKeysChanged, loading, setLoading }: ApiKeysManagerProps) {
-  const { data: session } = authClient.useSession();
+  const { data: session } = useSession();
   const [newKeyName, setNewKeyName] = useState("");
   const [newlyGeneratedKey, setNewlyGeneratedKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);

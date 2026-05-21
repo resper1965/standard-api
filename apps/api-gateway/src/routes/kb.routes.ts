@@ -6,7 +6,7 @@ import type { RouteDefinition } from "../http";
 import { json, parseJson, routeParam } from "../http";
 
 const getAssessmentContext = async (deps: Parameters<RouteDefinition["handler"]>[0]["deps"], assessmentId: string, tenantId: string) => {
-  const assessment = await deps.assessments.get(assessmentId, tenantId);
+  const assessment = await deps.assessments.withTenant(tenantId).get(assessmentId);
   if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
   return {
     tenantId: assessment.tenant_id,

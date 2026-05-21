@@ -11,6 +11,7 @@ export const tenantsRoutes: RouteDefinition[] = [
     handler: async ({ request, deps, traceId }) => {
       const body = await parseJson(request, CreateTenantRequestSchema);
       const tenant = await deps.tenants.create(body);
+      await deps.audit.record("tenant.created", { tenant_id: tenant.tenant_id, trace_id: traceId });
       return json({ ...tenant, trace_id: traceId }, { status: 201 });
     }
   },
@@ -37,6 +38,7 @@ export const tenantsRoutes: RouteDefinition[] = [
       };
       const tenant = await deps.tenants.update(routeParam(params, "tenantId"), patch);
       if (!tenant) throw new ApiError("NOT_FOUND", "Tenant not found.", 404);
+      await deps.audit.record("tenant.updated", { tenant_id: tenant.tenant_id, trace_id: traceId, changes: patch });
       return json({ ...tenant, trace_id: traceId });
     }
   }

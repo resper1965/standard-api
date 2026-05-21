@@ -16,6 +16,16 @@ export const apiKeysRoutes: RouteDefinition[] = [
     path: "/api/v1/organizations/:organizationId/api-keys",
     authRequired: true,
     protected: true,
+    openapi: {
+      summary: "List API Keys",
+      description: "Returns all API keys for the authenticated tenant (masked).",
+      request: {
+        params: z.object({ organizationId: z.string() })
+      },
+      responses: {
+        200: { description: "API key list", content: { "application/json": { schema: z.object({ data: z.array(z.object({ id: z.string(), name: z.string(), maskedKey: z.string(), scopes: z.array(z.string()), lastUsedAt: z.string().nullable() })) }) } } }
+      }
+    },
     handler: async (context) => {
       const { organizationId } = context.params;
       
@@ -45,6 +55,18 @@ export const apiKeysRoutes: RouteDefinition[] = [
     path: "/api/v1/organizations/:organizationId/api-keys",
     authRequired: true,
     protected: true,
+    bodySchema: createApiKeyInput,
+    openapi: {
+      summary: "Create API Key",
+      description: "Creates a new M2M API key with scoped permissions. The raw key is returned only once.",
+      request: {
+        params: z.object({ organizationId: z.string() }),
+        body: { content: { "application/json": { schema: createApiKeyInput } } }
+      },
+      responses: {
+        201: { description: "API key created", content: { "application/json": { schema: z.object({ data: z.object({ id: z.string(), name: z.string(), key: z.string().openapi({ description: "Raw key — shown only once" }), maskedKey: z.string(), scopes: z.array(z.string()), expiresAt: z.string().nullable() }) }) } } }
+      }
+    },
     handler: async (context) => {
       const { organizationId } = context.params;
       const input = await parseJson(context.request, createApiKeyInput);
@@ -74,6 +96,7 @@ export const apiKeysRoutes: RouteDefinition[] = [
         expiresAt: input.expiresAt ? new Date(input.expiresAt) : undefined,
         ...(input.scopes ? { scopes: input.scopes } : {})
       });
+      await context.deps.audit.record("api_key.created", { tenant_id: context.tenantId, organization_id: organizationId, key_id: record.id, trace_id: context.traceId });
 
       return json({
         data: {
@@ -104,6 +127,7 @@ export const apiKeysRoutes: RouteDefinition[] = [
       if (!revoked) {
          return json({ error: "Key not found" }, { status: 404 });
       }
+      await context.deps.audit.record("api_key.revoked", { tenant_id: context.tenantId, organization_id: organizationId, key_id: keyId, trace_id: context.traceId });
 
       return json({ ok: true });
     }

@@ -1,4 +1,5 @@
 import type { z } from "zod";
+import type { RouteConfig } from "@asteasolutions/zod-to-openapi";
 import type { AgentRuntimeDependencies } from "@standard/agent-runtime";
 import type { ObservabilityDependencies } from "@standard/observability";
 import type {
@@ -22,6 +23,7 @@ import type { WorkflowDependencies } from "@standard/workflows";
 import type { SendEmail } from "@standard/email";
 import type { WebhookRepositoryAdapter } from "@standard/schemas";
 import { ApiError } from "./errors/api-error";
+import type { ResolvedTenantContext } from "./adapters/tenant-mapping";
 
 export type TenantRecord = {
   tenant_id: string;
@@ -57,12 +59,22 @@ export type ApprovalRecord = ApprovalEvent & {
   reason: string;
 };
 
+export interface TenantScopedAssessmentRepository {
+  create(input: Omit<AssessmentRecord, "snapshot" | "tenant_id"> & { documentCount: number }): Promise<AssessmentRecord>;
+  get(assessmentId: string): Promise<AssessmentRecord | null>;
+  listByOrganization(organizationId: string): Promise<AssessmentRecord[]>;
+  listAll(): Promise<AssessmentRecord[]>;
+  save(record: AssessmentRecord): Promise<void>;
+}
+
 export type AssessmentRepositoryAdapter = {
   create(input: Omit<AssessmentRecord, "snapshot"> & { documentCount: number }): Promise<AssessmentRecord>;
   get(assessmentId: string, tenantId: string): Promise<AssessmentRecord | null>;
   listByOrganization(organizationId: string, tenantId: string): Promise<AssessmentRecord[]>;
   listAll(tenantId: string): Promise<AssessmentRecord[]>;
   save(record: AssessmentRecord): Promise<void>;
+  /** Strict tenant-scoped data access pattern */
+  withTenant(tenantId: string): TenantScopedAssessmentRepository;
 };
 
 export type ApiKeyRecord = {
@@ -93,29 +105,61 @@ export type TenantRepositoryAdapter = {
   update(tenantId: string, patch: Partial<Pick<TenantRecord, "name" | "status">>): Promise<TenantRecord | null>;
 };
 
+export interface TenantScopedOrganizationRepository {
+  create(input: Omit<OrganizationRecord, "organization_id" | "status" | "tenant_id">): Promise<OrganizationRecord>;
+  get(organizationId: string): Promise<OrganizationRecord | null>;
+  list(): Promise<OrganizationRecord[]>;
+  update(organizationId: string, patch: Partial<Pick<OrganizationRecord, "name" | "slug" | "status">>): Promise<OrganizationRecord | null>;
+}
+
 export type OrganizationRepositoryAdapter = {
   create(input: Omit<OrganizationRecord, "organization_id" | "status">): Promise<OrganizationRecord>;
   get(organizationId: string, tenantId: string): Promise<OrganizationRecord | null>;
   listByTenant(tenantId: string): Promise<OrganizationRecord[]>;
+  update(organizationId: string, tenantId: string, patch: Partial<Pick<OrganizationRecord, "name" | "slug" | "status">>): Promise<OrganizationRecord | null>;
+  /** Strict tenant-scoped data access pattern */
+  withTenant(tenantId: string): TenantScopedOrganizationRepository;
 };
+
+export interface TenantScopedApprovalRepository {
+  create(input: ApprovalRecord): Promise<ApprovalRecord>;
+  get(approvalId: string): Promise<ApprovalRecord | null>;
+  getForGate(approvalId: string, gate: ApprovalGate): Promise<ApprovalEvent | null>;
+  listByAssessment(assessmentId: string): Promise<ApprovalRecord[]>;
+}
 
 export type ApprovalRepositoryAdapter = {
   create(input: ApprovalRecord): Promise<ApprovalRecord>;
   get(approvalId: string): Promise<ApprovalRecord | null>;
   getForGate(approvalId: string, gate: ApprovalGate): Promise<ApprovalEvent | null>;
   listByAssessment(assessmentId: string, tenantId: string): Promise<ApprovalRecord[]>;
+  withTenant(tenantId: string): TenantScopedApprovalRepository;
 };
+
+export interface TenantScopedArtifactRepository {
+  create(input: Omit<ArtifactVersion, "versionNumber" | "status">): Promise<ArtifactVersion>;
+  get(versionId: string): Promise<ArtifactVersion | null>;
+  save(version: ArtifactVersion): Promise<void>;
+  listByAssessment(assessmentId: string, artifactType: ArtifactType): Promise<ArtifactVersion[]>;
+}
 
 export type ArtifactRepositoryAdapter = {
   create(input: Omit<ArtifactVersion, "versionNumber" | "status">): Promise<ArtifactVersion>;
   get(versionId: string): Promise<ArtifactVersion | null>;
   save(version: ArtifactVersion): Promise<void>;
   listByAssessment(assessmentId: string, artifactType: ArtifactType): Promise<ArtifactVersion[]>;
+  withTenant(tenantId: string): TenantScopedArtifactRepository;
 };
+
+export interface TenantScopedLifecycleEventRepository {
+  record(event: AssessmentLifecycleEvent): Promise<void>;
+  listByAssessment(assessmentId: string): Promise<AssessmentLifecycleEvent[]>;
+}
 
 export type LifecycleEventRepositoryAdapter = {
   record(event: AssessmentLifecycleEvent): Promise<void>;
   listByAssessment(assessmentId: string, tenantId: string): Promise<AssessmentLifecycleEvent[]>;
+  withTenant(tenantId: string): TenantScopedLifecycleEventRepository;
 };
 
 export type AuditRepositoryAdapter = {
@@ -153,6 +197,8 @@ export type AppDependencies = {
   SOC_TRIAGE_QUEUE?: Queue | undefined;
   /** Webhook endpoint management (optional — requires storage adapter) */
   webhooks?: WebhookRepositoryAdapter | undefined;
+  /** Resolves Better Auth org ID → Standard domain UUIDs (JIT provisioning) */
+  resolveTenantContext?: (betterAuthOrgId: string) => Promise<ResolvedTenantContext | null>;
 };
 
 export type RequestContext = {
@@ -175,6 +221,8 @@ export type RequestContext = {
   validatedBody?: unknown;
   /** Cloudflare native execution context for background tasks */
   execCtx?: any;
+  /** Cloudflare Worker Environment variables and bindings */
+  env?: any;
 };
 
 export type RouteHandler = (context: RequestContext) => Promise<Response> | Response;
@@ -190,6 +238,8 @@ export type RouteDefinition = {
   /** Zod schema for request body validation. When defined, body is parsed
    *  and validated before the handler runs. Access via `context.validatedBody`. */
   bodySchema?: z.ZodType;
+  /** OpenAPI configuration mapping for this route */
+  openapi?: Omit<RouteConfig, "method" | "path">;
   handler: RouteHandler;
 };
 

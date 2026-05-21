@@ -54,6 +54,15 @@ export class InMemoryDocumentRepository implements DocumentRecordRepository {
   async updateDocument(document: DocumentResponse): Promise<void> {
     this.records.set(document.document_id, document);
   }
+
+  withTenant(tenantId: string) {
+    return {
+      saveDocument: async (document: DocumentResponse) => this.saveDocument(document),
+      getDocument: async (documentId: string) => this.getDocument(documentId, tenantId),
+      listDocuments: async (assessmentId: string) => this.listDocuments(assessmentId, tenantId),
+      updateDocument: async (document: DocumentResponse) => this.updateDocument(document)
+    };
+  }
 }
 
 export class InMemoryDocumentJobRepository implements DocumentJobRepository {
@@ -79,6 +88,16 @@ export class InMemoryDocumentJobRepository implements DocumentJobRepository {
   async updateJob(job: DocumentJobResponse): Promise<void> {
     this.records.set(job.job_id, job);
   }
+
+  withTenant(tenantId: string) {
+    return {
+      saveJob: async (job: DocumentJobResponse) => this.saveJob(job),
+      getJob: async (jobId: string) => this.getJob(jobId, tenantId),
+      listJobsByDocument: async (documentId: string) => this.listJobsByDocument(documentId, tenantId),
+      listJobsByAssessment: async (assessmentId: string) => this.listJobsByAssessment(assessmentId, tenantId),
+      updateJob: async (job: DocumentJobResponse) => this.updateJob(job)
+    };
+  }
 }
 
 export class InMemoryDocumentChunkRepository implements DocumentChunkRepository {
@@ -94,6 +113,13 @@ export class InMemoryDocumentChunkRepository implements DocumentChunkRepository 
       .filter((record) => record.document_id === documentId && record.tenant_id === tenantId)
       .sort((a, b) => a.chunk_index - b.chunk_index)
       .slice(start, start + limit);
+  }
+
+  withTenant(tenantId: string) {
+    return {
+      saveChunks: async (chunks: DocumentChunk[]) => this.saveChunks(chunks),
+      listChunks: async (documentId: string, limit: number, cursor?: string) => this.listChunks(documentId, tenantId, limit, cursor)
+    };
   }
 }
 

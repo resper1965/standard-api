@@ -35,7 +35,7 @@ export type StandardClientConfig = {
   fetch?: typeof globalThis.fetch;
 };
 
-const DEFAULT_BASE_URL = "https://standard-api-gateway-production.ness.workers.dev";
+const DEFAULT_BASE_URL = "https://api.standard.bekaa.eu";
 const DEFAULT_TIMEOUT = 30_000;
 
 export class StandardClient {

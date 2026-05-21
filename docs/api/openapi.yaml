@@ -16,7 +16,7 @@ info:
     name: Proprietary
 
 servers:
-  - url: https://standard-api-gateway-production.ness.workers.dev
+  - url: https://api.standard.bekaa.eu
     description: Production API
   - url: http://localhost:8787
     description: Local development

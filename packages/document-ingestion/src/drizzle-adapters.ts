@@ -103,6 +103,15 @@ export class DrizzleDocumentRepository implements DocumentRecordRepository {
       })
       .where(eq(schema.documents.id, document.document_id));
   }
+
+  withTenant(tenantId: string) {
+    return {
+      saveDocument: async (document: DocumentResponse) => this.saveDocument(document),
+      getDocument: async (documentId: string) => this.getDocument(documentId, tenantId),
+      listDocuments: async (assessmentId: string) => this.listDocuments(assessmentId, tenantId),
+      updateDocument: async (document: DocumentResponse) => this.updateDocument(document)
+    };
+  }
 }
 
 export class DrizzleDocumentJobRepository implements DocumentJobRepository {
@@ -214,6 +223,16 @@ export class DrizzleDocumentJobRepository implements DocumentJobRepository {
   async updateJob(job: DocumentJobResponse): Promise<void> {
     await this.saveJob(job);
   }
+
+  withTenant(tenantId: string) {
+    return {
+      saveJob: async (job: DocumentJobResponse) => this.saveJob(job),
+      getJob: async (jobId: string) => this.getJob(jobId, tenantId),
+      listJobsByDocument: async (documentId: string) => this.listJobsByDocument(documentId, tenantId),
+      listJobsByAssessment: async (assessmentId: string) => this.listJobsByAssessment(assessmentId, tenantId),
+      updateJob: async (job: DocumentJobResponse) => this.updateJob(job)
+    };
+  }
 }
 
 export class DrizzleDocumentChunkRepository implements DocumentChunkRepository {
@@ -238,6 +257,13 @@ export class DrizzleDocumentChunkRepository implements DocumentChunkRepository {
 
   async listChunks(documentId: string, tenantId: string, limit: number, cursor?: string): Promise<DocumentChunk[]> {
     return []; // For now not deeply needed by workers if only inserting
+  }
+
+  withTenant(tenantId: string) {
+    return {
+      saveChunks: async (chunks: DocumentChunk[]) => this.saveChunks(chunks),
+      listChunks: async (documentId: string, limit: number, cursor?: string) => this.listChunks(documentId, tenantId, limit, cursor)
+    };
   }
 }
 

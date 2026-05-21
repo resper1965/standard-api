@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Copy, Plus, Users, Building, Key, Check, BookOpen, Trash2, ChevronDown, ChevronRight, ExternalLink } from "lucide-react"
 
-const API_URL = import.meta.env.VITE_API_URL || "https://standard-api-gateway-production.ness.workers.dev"
+const API_URL = import.meta.env.VITE_API_URL || "https://api.standard.bekaa.eu"
 
 // ─── API Reference Data ─────────────────────────────────────
 type Endpoint = {
@@ -474,7 +474,7 @@ export function SettingsPage() {
     setTimeout(() => setCopiedId(""), 2000)
   }
 
-  const CopyBtn = ({ text, id, size = "icon" }: { text: string; id: string; size?: "icon" | "sm" }) => (
+  const renderCopyBtn = (text: string, id: string, size: "icon" | "sm" = "icon") => (
     <Button variant="outline" size={size} onClick={() => copy(text, id)} className="shrink-0">
       {copiedId === id ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
     </Button>
@@ -533,7 +533,7 @@ export function SettingsPage() {
                 <Label>Tenant ID</Label>
                 <div className="flex max-w-md items-center space-x-2">
                   <Input readOnly value={activeOrg?.id || "..."} className="font-mono bg-muted/50 text-sm" />
-                  <CopyBtn text={activeOrg?.id || ""} id="tid" />
+                  {renderCopyBtn(activeOrg?.id || "", "tid")}
                 </div>
               </div>
               <div className="grid gap-2">
@@ -544,7 +544,7 @@ export function SettingsPage() {
                 <Label>API Base URL</Label>
                 <div className="flex max-w-lg items-center space-x-2">
                   <Input readOnly value={`${API_URL}/api/v1`} className="font-mono bg-muted/50 text-sm" />
-                  <CopyBtn text={`${API_URL}/api/v1`} id="baseurl" />
+                  {renderCopyBtn(`${API_URL}/api/v1`, "baseurl")}
                 </div>
               </div>
             </CardContent>
@@ -611,7 +611,7 @@ export function SettingsPage() {
                 <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-lg space-y-2">
                   <div className="text-sm font-semibold text-emerald-600 flex items-center justify-between">
                     <span>⚠ Save this key now — it won't be shown again.</span>
-                    <CopyBtn text={newKey} id="newkey" size="sm" />
+                    {renderCopyBtn(newKey, "newkey", "sm")}
                   </div>
                   <code className="text-sm font-mono break-all bg-emerald-500/5 px-2 py-1 rounded block">{newKey}</code>
                 </div>

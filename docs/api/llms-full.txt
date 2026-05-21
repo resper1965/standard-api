@@ -157,6 +157,12 @@ All endpoints are prefixed with `/api/v1`.
 - `POST /api/v1/organizations/{orgId}/webhooks` — Create webhook
 - `GET /api/v1/webhooks/{id}/deliveries` — Delivery log
 
+### Intelligence Council
+- `POST /api/v1/intelligence/council` — Dispatch asynchronous multi-agent evaluation. Body requires `{ tenant_id, context, agents: string[] }`. Returns `202 Accepted` with `{ job_id }`.
+
+### Jobs
+- `GET /api/v1/jobs/{id}` — Poll for the status of an asynchronous job (e.g. Council). Returns `{ status, output, progress }`.
+
 ### API Keys
 - `GET /api/v1/api-keys` — List keys
 - `POST /api/v1/api-keys` — Create key

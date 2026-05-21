@@ -52,23 +52,46 @@ export const resolveAuthContext = async (
       }
     }
 
-    // Interactive Session (Browser / Better Auth)
+    // Interactive Session (Better Auth cookie-based session)
     const session = await auth.api.getSession({
       headers: context.request.headers,
     });
 
-    if (session) {
-      context.actorId = session.user.id;
-      context.session = session;
+    if (session?.user) {
+      // Enforce JWT Blacklisting from Edge Cache (Revocation Check)
+      if (context.env?.STANDARD_CACHE) {
+        const isRevoked = await context.env.STANDARD_CACHE.get(`revocations:user:${session.user.id}`);
+        if (isRevoked) {
+          throw new ApiError("UNAUTHORIZED", "Token has been revoked.", 401);
+        }
+      }
 
-      // Active organization = Standard tenant context
-      if (session.session.activeOrganizationId) {
-        context.tenantId = session.session.activeOrganizationId;
-        context.organizationId = session.session.activeOrganizationId;
+      context.actorId = session.user.id;
+      
+      // Restore context.session so RBAC and Audit middlewares remain healthy
+      context.session = {
+        user: {
+          id: session.user.id,
+          email: session.user.email,
+          name: session.user.name,
+          role: (session.user as any).role || "viewer"
+        },
+        session: {
+          id: session.session.id,
+          activeOrganizationId: (session.session as any).activeOrganizationId
+        }
+      };
+      
+      // Better Auth organization plugin stores active org in session
+      const activeOrgId = (session.session as any).activeOrganizationId;
+      if (activeOrgId) {
+        context.tenantId = activeOrgId;
+        context.organizationId = activeOrgId;
       }
     }
   } catch (err) {
     // Session resolution failed — log and treat as unauthenticated
+    if (err instanceof ApiError) throw err; // Re-throw intentional ApiErrors (revocation)
     console.warn("[standard:auth] Session resolution failed:", err instanceof Error ? err.message : err);
   }
 
@@ -88,8 +111,6 @@ export const resolveAuthContext = async (
         rawLogsExcerpt: `[Auth Rejection] Access denied to protected route.\nIP: ${ip}\nUser-Agent: ${userAgent}\nAuth Header Size: ${authHeaderSize} bytes\nAction: HTTP 401 Unauthorized triggered. Possible credential stuffing, expired session, or unauthenticated probing.`
       }).catch(err => {
         console.error("[standard:auth] Failed to queue SOC event. Attempting DLQ...", err);
-        // Fallback for Auth SOC failure. Uses global env via Cloudflare execution context if possible, 
-        // Note: For full DLQ we rely on the host binding the cache, but in auth middleware we don't have direct kv namespace injection, so we log.
       });
 
       if (context.execCtx?.waitUntil) {
@@ -104,4 +125,3 @@ export const resolveAuthContext = async (
     );
   }
 };
-

@@ -12,6 +12,7 @@ export type StructuredOutputOptions<T> = {
   maxTokens?: number;
   tenantId?: string; // Requires tenant context if semantic cache is enabled
   cache?: LlmResponseCache; // Optional semantic cache for repeat evaluations
+  onUsage?: (usage: { prompt_tokens: number; completion_tokens: number; total_tokens: number }) => void; // Telemetry hook
 };
 
 export type StructuredOutputResult<T> = {
@@ -119,6 +120,9 @@ export async function generateStructuredOutputWithUsage<T>(options: StructuredOu
     }
 
     // ── Step 4: Return validated data + usage ──
+    if (options.onUsage && response.usage) {
+       options.onUsage(response.usage);
+    }
     return {
       data: parsed as T,
       usage: response.usage,

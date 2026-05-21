@@ -28,9 +28,9 @@ export function AppLayout() {
   return (
     <div className="app-layout">
       <Sidebar />
-      <div className="app-main">
+      <div className="app-main overflow-hidden">
         <PageTopBar title={title} />
-        <main className="main-content animate-fade-in">
+        <main className="main-content px-8 py-8 animate-fade-in overflow-y-auto h-[calc(100vh-64px)]">
           <Outlet />
         </main>
       </div>

@@ -17,6 +17,11 @@ import {
 } from "@standard/privacy";
 import { RopaAnalyzerUseCase, DpiaAssessorUseCase, VendorScannerUseCase } from "@standard/agent-runtime";
 import { z } from "zod";
+import { 
+  VendorScannerInputSchema,
+  VendorScannerBatchInputSchema,
+  VendorScannerOutputSchema 
+} from "../openapi/schemas";
 import { ApiError } from "../errors/api-error";
 import type { ApiErrorCode } from "../errors/error-codes";
 import type { RouteDefinition } from "../http";
@@ -482,6 +487,83 @@ export const privacyRoutes: RouteDefinition[] = [
 
   {
     method: "POST",
+    path: "/api/v1/privacy/scan-vendor-contract/batch",
+    authRequired: true,
+    tenantRequired: true,
+    bodySchema: z.object({
+      batch_id: z.string().optional(),
+      items: z.array(z.object({
+        correlation_id: z.string(),
+        payload: z.object({
+          vendorName: z.string().min(2),
+          contractExcerpt: z.string().min(20)
+        })
+      })).max(500)
+    }),
+    handler: async (ctx) => {
+      const body = ctx.validatedBody as { batch_id?: string; items: { correlation_id: string; payload: { vendorName: string; contractExcerpt: string } }[] };
+      const jobId = crypto.randomUUID();
+      
+      const backgroundTask = async () => {
+        const llmProvider = ctx.deps.agentRuntime.llm;
+        if (!llmProvider) return;
+        const usecase = new VendorScannerUseCase(llmProvider);
+        
+        const results = await Promise.allSettled(
+          body.items.map(async (item) => {
+            const result = await usecase.scan({
+              vendorName: item.payload.vendorName,
+              contractExcerpt: item.payload.contractExcerpt,
+              tenantId: ctx.tenantId!
+            });
+            await ctx.deps.audit.record("privacy.vendor_contract.batch.item_evaluated", { 
+              job_id: jobId, 
+              correlation_id: item.correlation_id,
+              vendor: item.payload.vendorName,
+              compliant: result.is_dpa_compliant 
+            });
+            return result;
+          })
+        );
+        
+        await ctx.deps.audit.record("privacy.vendor_contract.batch.completed", {
+          job_id: jobId,
+          total: body.items.length,
+          successful: results.filter(r => r.status === "fulfilled").length
+        });
+      };
+
+      if (ctx.execCtx?.waitUntil) {
+        ctx.execCtx.waitUntil(backgroundTask());
+      } else {
+        Promise.resolve().then(backgroundTask).catch(console.error);
+      }
+
+      return json({ status: "queued", job_id: jobId }, { status: 202 });
+    },
+    openapi: {
+      summary: "Scan Vendor Contracts in Bulk (Async)",
+      description: "Dispatches long-running analysis across up to 500 contract snippets simultaneously. Returns a jobId for polling.",
+      request: {
+        body: {
+          content: {
+            "application/json": {
+              schema: VendorScannerBatchInputSchema
+            }
+          }
+        }
+      },
+      responses: {
+        202: {
+          description: "Batch job dispatched successfully",
+          content: { "application/json": { schema: z.object({ status: z.string(), job_id: z.string() }) } }
+        }
+      }
+    }
+  },
+
+  {
+    method: "POST",
     path: "/api/v1/privacy/scan-vendor-contract",
     authRequired: true,
     tenantRequired: true,
@@ -511,6 +593,25 @@ export const privacyRoutes: RouteDefinition[] = [
         throw new ApiError("INTERNAL_ERROR", "Agent Vendor Contract Scanning failed", 500);
       }
     },
+    openapi: {
+      summary: "B2B Legal Analyzer (Vendor Risk Scanner)",
+      description: "Transforms raw contract text into executive intelligence about sub-processors and LGPD/GDPR privacy compliance.",
+      request: {
+        body: {
+          content: {
+            "application/json": {
+              schema: VendorScannerInputSchema
+            }
+          }
+        }
+      },
+      responses: {
+        200: {
+          description: "Vendor risks and compliance gaps",
+          content: { "application/json": { schema: VendorScannerOutputSchema } }
+        }
+      }
+    }
   },
 
   // ═══════════════════════════════════════════════════════════════════

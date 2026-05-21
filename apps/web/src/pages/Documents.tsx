@@ -8,7 +8,7 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from ".
 import { Badge } from "../components/ui/badge";
 import { EmptyState } from "../components/ui/empty-state";
 import { Skeleton } from "../components/ui/skeleton";
-import { Loader2, AlertTriangle, Upload, FileText } from "lucide-react";
+import { Loader2, AlertTriangle, Upload, FileText, ClipboardCopy } from "lucide-react";
 
 interface DocumentRecord {
   id: string;
@@ -38,6 +38,37 @@ export function DocumentsPage() {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const copyAsMarkdown = () => {
+    const now = new Date().toISOString();
+    const lines: string[] = [
+      `# Documents — Standard GRC`,
+      ``,
+      `> Snapshot: ${now}`,
+      `> Assessment: ${assessmentId ?? "(none)"}`,
+      `> URL: ${window.location.href}`,
+      ``,
+    ];
+
+    if (documents.length === 0) {
+      lines.push(`_No documents uploaded yet._`);
+    } else {
+      lines.push(`| # | Title | Status | Uploaded |`);
+      lines.push(`|---|-------|--------|----------|`);
+      documents.forEach((doc, i) => {
+        const date = new Date(doc.uploaded_at || Date.now()).toLocaleDateString();
+        lines.push(`| ${i + 1} | ${doc.title} | ${doc.status} | ${date} |`);
+      });
+      lines.push(``);
+      lines.push(`**Total: ${documents.length} file(s)**`);
+    }
+
+    navigator.clipboard.writeText(lines.join("\n")).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
 
   const fetchDocuments = async () => {
     if (!assessmentId) {
@@ -86,7 +117,17 @@ export function DocumentsPage() {
 
   return (
     <div className="space-y-6 animate-slide-up">
-      <PageHeader title="Documents" description="Upload, manage, and track compliance evidence files" />
+      <div className="flex items-center justify-between">
+        <PageHeader title="Documents" description="Upload, manage, and track compliance evidence files" />
+        <button
+          onClick={copyAsMarkdown}
+          className="btn flex items-center gap-2 text-sm"
+          title="Copy page as Markdown to clipboard"
+        >
+          <ClipboardCopy className="h-4 w-4" />
+          {copied ? "Copied!" : "Copy as MD"}
+        </button>
+      </div>
       {!assessmentId && (
         <div className="flex items-center gap-3 p-4 rounded-lg bg-amber-500/10 border border-amber-500/20 text-sm text-amber-500">
           <AlertTriangle className="h-4 w-4 shrink-0" />

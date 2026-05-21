@@ -56,6 +56,15 @@ export const createAssessmentRepository = (): AssessmentRepositoryAdapter => {
     },
     async save(record) {
       records.set(record.assessment_id, record);
+    },
+    withTenant(tenantId) {
+      return {
+        create: async (input) => this.create({ ...input, tenant_id: tenantId }),
+        get: async (id) => this.get(id, tenantId),
+        listByOrganization: async (orgId) => this.listByOrganization(orgId, tenantId),
+        listAll: async () => this.listAll(tenantId),
+        save: async (record) => this.save(record)
+      };
     }
   };
 };
@@ -150,6 +159,15 @@ export const createDrizzleAssessmentRepository = (db: DbClient): AssessmentRepos
           updatedAt: new Date()
         })
         .where(eq(assessments.id, record.assessment_id));
+    },
+    withTenant(tenantId) {
+      return {
+        create: async (input) => this.create({ ...input, tenant_id: tenantId }),
+        get: async (id) => this.get(id, tenantId),
+        listByOrganization: async (orgId) => this.listByOrganization(orgId, tenantId),
+        listAll: async () => this.listAll(tenantId),
+        save: async (record) => this.save(record)
+      };
     }
   };
 };

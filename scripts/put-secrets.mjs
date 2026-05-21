@@ -33,10 +33,11 @@ for (const worker of workers) {
       continue;
     }
     console.log(`Setting ${key} for worker "${worker}"...`);
+    // shell: false — args are static string literals; value is piped via stdin, never shell-interpolated
     const result = spawnSync("npx", ["wrangler", "secret", "put", key, "--name", worker], {
       input: value,
       stdio: ["pipe", "inherit", "inherit"],
-      shell: true,
+      shell: process.platform === "win32",
     });
     if (result.status === 0) ok++;
     else console.error(`✗ Failed to set ${key}`);

@@ -61,12 +61,12 @@ export function LoginPage() {
         {/* Brand header */}
         <div className="login-header">
           <div className="login-logo">
-            <span className="login-logo-text">
-              standard<span className="login-logo-dot">.</span>
+            <span className="login-logo-text font-brand">
+              standard<span className="text-primary brand-dot">.</span>
             </span>
           </div>
           <p className="login-subtitle">
-            Security & Compliance Assessment Platform
+            Agentic Compliance & Security Platform
           </p>
         </div>
 

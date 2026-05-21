@@ -27,6 +27,21 @@ export const createArtifactRepository = (): ArtifactRepositoryAdapter => {
       return [...records.values()].filter(
         (record) => record.assessmentId === assessmentId && record.artifactType === artifactType
       );
+    },
+    withTenant(tenantId: string) {
+      return {
+        create: async (input) => this.create(input),
+        get: async (versionId) => {
+          const artifact = await this.get(versionId);
+          return artifact && artifact.tenantId === tenantId ? artifact : null;
+        },
+        save: async (version) => this.save(version),
+        listByAssessment: async (assessmentId, artifactType) => {
+          return [...records.values()].filter(
+            (record) => record.assessmentId === assessmentId && record.artifactType === artifactType && record.tenantId === tenantId
+          );
+        }
+      };
     }
   };
 };

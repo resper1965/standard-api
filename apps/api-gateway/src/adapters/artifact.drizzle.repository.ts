@@ -112,8 +112,33 @@ export const createDrizzleArtifactRepository = (db: DbClient): ArtifactRepositor
   async listByAssessment(assessmentId, artifactType) {
     const table = tableForType(artifactType);
     const rows = await db.select().from(table as typeof soaVersions)
-      .where(eq((table as typeof soaVersions).assessmentId, assessmentId));
+      .where(and(
+        eq((table as typeof soaVersions).assessmentId, assessmentId),
+        // We lack tenantId parameter in this method signature natively, but wait, the signature in http.ts doesn't pass tenantId to listByAssessment?
+        // Ah, looking at http.ts, `listByAssessment(assessmentId: string, artifactType: ArtifactType): Promise<ArtifactVersion[]>;`
+        // So I can't filter by tenantId in the base method unless I change http.ts. But I CAN in withTenant!
+      ));
     return rows.map(r => mapRowToVersion(r as unknown as GenericVersionRow, artifactType));
   },
+
+  withTenant(tenantId: string) {
+    return {
+      create: async (input) => this.create(input),
+      get: async (versionId) => {
+        const artifact = await this.get(versionId);
+        return artifact && artifact.tenantId === tenantId ? artifact : null;
+      },
+      save: async (version) => this.save(version),
+      listByAssessment: async (assessmentId, artifactType) => {
+        const table = tableForType(artifactType);
+        const rows = await db.select().from(table as typeof soaVersions)
+          .where(and(
+            eq((table as typeof soaVersions).assessmentId, assessmentId),
+            eq((table as typeof soaVersions).tenantId, tenantId)
+          ));
+        return rows.map(r => mapRowToVersion(r as unknown as GenericVersionRow, artifactType));
+      }
+    };
+  }
 });
 

@@ -5,15 +5,17 @@
   "type": "module",
   "main": "src/index.ts",
   "types": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./client": "./src/client.ts"
+  },
   "scripts": {
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@better-auth/api-key": "^1.2.10",
-    "@neondatabase/serverless": "^0.9.3",
-    "@standard/schemas": "workspace:*",
     "better-auth": "^1.2.10",
-    "drizzle-orm": "^0.45.2"
+    "@neondatabase/serverless": "^0.9.3",
+    "@standard/schemas": "workspace:*"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260430.1",

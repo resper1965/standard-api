@@ -21,12 +21,14 @@ export const lifecycleRoutes: RouteDefinition[] = [
     requireActor: true,
     handler: async ({ request, deps, params, tenantId, actorId, traceId }) => {
       const body = await parseJson(request, TransitionRequestSchema);
-      const assessment = await deps.assessments.get(routeParam(params, "assessmentId"), tenantId!);
+      const tenantAssessmentsDb = deps.assessments.withTenant(tenantId!);
+      const assessment = await tenantAssessmentsDb.get(routeParam(params, "assessmentId"));
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
 
       const gate = gateForState[body.next_state];
+      const tenantApprovalsDb = deps.approvals.withTenant(tenantId!);
       const approvalEvent =
-        gate && body.approval_event_id ? await deps.approvals.getForGate(body.approval_event_id, gate) : undefined;
+        gate && body.approval_event_id ? await tenantApprovalsDb.getForGate(body.approval_event_id, gate) : undefined;
 
       const result = executeTransition(assessment.snapshot, body.next_state, {
         tenantId: assessment.tenant_id,
@@ -41,8 +43,8 @@ export const lifecycleRoutes: RouteDefinition[] = [
       });
 
       const updated = { ...assessment, snapshot: result.assessment, trace_id: traceId };
-      await deps.assessments.save(updated);
-      await deps.lifecycleEvents.record(result.event);
+      await tenantAssessmentsDb.save(updated);
+      await deps.lifecycleEvents.withTenant(tenantId!).record(result.event);
 
       return json({
         assessment_id: assessment.assessment_id,
@@ -60,7 +62,8 @@ export const lifecycleRoutes: RouteDefinition[] = [
     path: "/api/v1/assessments/:assessmentId/available-transitions",
     protected: true,
     handler: async ({ deps, params, tenantId, traceId }) => {
-      const assessment = await deps.assessments.get(routeParam(params, "assessmentId"), tenantId!);
+      const tenantAssessmentsDb = deps.assessments.withTenant(tenantId!);
+      const assessment = await tenantAssessmentsDb.get(routeParam(params, "assessmentId"));
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
 
       return json({
@@ -78,7 +81,8 @@ export const lifecycleRoutes: RouteDefinition[] = [
     path: "/api/v1/assessments/:assessmentId/lifecycle-events",
     protected: true,
     handler: async ({ deps, params, tenantId, traceId }) => {
-      const events = await deps.lifecycleEvents.listByAssessment(routeParam(params, "assessmentId"), tenantId!);
+      const tenantLifecycleDb = deps.lifecycleEvents.withTenant(tenantId!);
+      const events = await tenantLifecycleDb.listByAssessment(routeParam(params, "assessmentId"));
       return json({ data: events.map(lifecycleEventResponse), trace_id: traceId });
     }
   }

@@ -19,8 +19,8 @@ export const assertApiKeyScopes = (
   routePath: string,
   method: string
 ): void => {
-  // Only enforce for M2M agents
-  if (context.actorId !== "m2m-agent") return;
+  // Only enforce for M2M agents (actorId begins with m2m:)
+  if (!context.actorId?.startsWith("m2m:")) return;
 
   const requiredScopes = getRequiredScopesForRoute(method, routePath);
 

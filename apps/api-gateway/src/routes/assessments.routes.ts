@@ -3,6 +3,14 @@ import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";
 import { json, newId, parseJson, routeParam } from "../http";
 import { assessmentResponse, lifecycleEventResponse } from "../presenters";
+import { z } from "zod";
+
+const AssessmentAutomationConfigSchema = z.object({
+  agents_enabled: z.array(z.string()).optional(),
+  auto_remediation: z.boolean().optional(),
+  approval_gates: z.boolean().optional(),
+  schedule: z.string().optional()
+}).openapi("AssessmentAutomationConfig");
 
 export const assessmentsRoutes: RouteDefinition[] = [
   {
@@ -13,13 +21,25 @@ export const assessmentsRoutes: RouteDefinition[] = [
     bodySchema: CreateAssessmentRequestSchema,
     handler: async ({ validatedBody, deps, tenantId, traceId }) => {
       const body = validatedBody as import("@standard/schemas").CreateAssessmentRequest;
-      const organization = await deps.organizations.get(body.organization_id, tenantId!);
-      if (!organization) throw new ApiError("NOT_FOUND", "Organization not found.", 404);
 
-      const assessment = await deps.assessments.create({
+      // Bridge Better Auth text ID → Standard domain UUID context
+      const betterAuthOrgId = body.organization_id ?? tenantId!;
+      if (!deps.resolveTenantContext) {
+        throw new ApiError("INTERNAL_ERROR", "Tenant mapping not configured.", 500);
+      }
+      const ctx = await deps.resolveTenantContext(betterAuthOrgId);
+      if (!ctx) {
+        throw new ApiError(
+          "NOT_FOUND",
+          `Organization "${betterAuthOrgId}" not found in Better Auth. Please create an organization first.`,
+          404
+        );
+      }
+
+      const tenantDb = deps.assessments.withTenant(ctx.tenant_id);
+      const assessment = await tenantDb.create({
         assessment_id: newId(),
-        tenant_id: tenantId!,
-        organization_id: body.organization_id,
+        organization_id: ctx.organization_id,
         name: body.name,
         scf_version_id: body.scf_version_id,
         documentCount: body.document_count,
@@ -34,7 +54,15 @@ export const assessmentsRoutes: RouteDefinition[] = [
     path: "/api/v1/assessments/:assessmentId",
     protected: true,
     handler: async ({ deps, params, tenantId }) => {
-      const assessment = await deps.assessments.get(routeParam(params, "assessmentId"), tenantId!);
+      // Resolve Better Auth org ID → Standard domain UUID
+      let resolvedTenantId = tenantId!;
+      try {
+        const ctx = await deps.resolveTenantContext?.(tenantId!);
+        if (ctx) resolvedTenantId = ctx.tenant_id;
+      } catch { /* use original tenantId if mapping fails */ }
+
+      const tenantDb = deps.assessments.withTenant(resolvedTenantId);
+      const assessment = await tenantDb.get(routeParam(params, "assessmentId"));
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
       return json(assessmentResponse(assessment));
     }
@@ -44,7 +72,15 @@ export const assessmentsRoutes: RouteDefinition[] = [
     path: "/api/v1/assessments",
     protected: true,
     handler: async ({ deps, tenantId, traceId }) => {
-      const assessments = await deps.assessments.listAll(tenantId!);
+      // Resolve Better Auth org ID → Standard domain UUID
+      let resolvedTenantId = tenantId!;
+      try {
+        const ctx = await deps.resolveTenantContext?.(tenantId!);
+        if (ctx) resolvedTenantId = ctx.tenant_id;
+      } catch { /* use original tenantId if mapping fails */ }
+
+      const tenantDb = deps.assessments.withTenant(resolvedTenantId);
+      const assessments = await tenantDb.listAll();
       return json({ data: assessments.map(assessmentResponse), trace_id: traceId });
     }
   },
@@ -53,7 +89,15 @@ export const assessmentsRoutes: RouteDefinition[] = [
     path: "/api/v1/organizations/:organizationId/assessments",
     protected: true,
     handler: async ({ deps, params, tenantId, traceId }) => {
-      const assessments = await deps.assessments.listByOrganization(routeParam(params, "organizationId"), tenantId!);
+      // Resolve Better Auth org ID → Standard domain UUID
+      let resolvedTenantId = tenantId!;
+      try {
+        const ctx = await deps.resolveTenantContext?.(tenantId!);
+        if (ctx) resolvedTenantId = ctx.tenant_id;
+      } catch { /* use original tenantId if mapping fails */ }
+
+      const tenantDb = deps.assessments.withTenant(resolvedTenantId);
+      const assessments = await tenantDb.listByOrganization(routeParam(params, "organizationId"));
       return json({ data: assessments.map(assessmentResponse), trace_id: traceId });
     }
   },
@@ -65,11 +109,14 @@ export const assessmentsRoutes: RouteDefinition[] = [
     bodySchema: UpdateAssessmentRequestSchema,
     handler: async ({ validatedBody, deps, params, tenantId }) => {
       const body = validatedBody as import("@standard/schemas").UpdateAssessmentRequest;
-      const assessment = await deps.assessments.get(routeParam(params, "assessmentId"), tenantId!);
+      let resolvedTenantId = tenantId!;
+      try { const ctx = await deps.resolveTenantContext?.(tenantId!); if (ctx) resolvedTenantId = ctx.tenant_id; } catch {}
+      const tenantDb = deps.assessments.withTenant(resolvedTenantId);
+      const assessment = await tenantDb.get(routeParam(params, "assessmentId"));
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
 
       const updated = { ...assessment, name: body.name ?? assessment.name };
-      await deps.assessments.save(updated);
+      await tenantDb.save(updated);
       return json(assessmentResponse(updated));
     }
   },
@@ -78,7 +125,10 @@ export const assessmentsRoutes: RouteDefinition[] = [
     path: "/api/v1/assessments/:assessmentId/status",
     protected: true,
     handler: async ({ deps, params, tenantId, traceId }) => {
-      const assessment = await deps.assessments.get(routeParam(params, "assessmentId"), tenantId!);
+      let resolvedTenantId = tenantId!;
+      try { const ctx = await deps.resolveTenantContext?.(tenantId!); if (ctx) resolvedTenantId = ctx.tenant_id; } catch {}
+      const tenantDb = deps.assessments.withTenant(resolvedTenantId);
+      const assessment = await tenantDb.get(routeParam(params, "assessmentId"));
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
       return json({
         assessment_id: assessment.assessment_id,
@@ -94,10 +144,13 @@ export const assessmentsRoutes: RouteDefinition[] = [
     path: "/api/v1/assessments/:assessmentId/timeline",
     protected: true,
     handler: async ({ deps, params, tenantId, traceId }) => {
+      let resolvedTenantId = tenantId!;
+      try { const ctx = await deps.resolveTenantContext?.(tenantId!); if (ctx) resolvedTenantId = ctx.tenant_id; } catch {}
       const assessmentId = routeParam(params, "assessmentId");
-      const assessment = await deps.assessments.get(assessmentId, tenantId!);
+      const tenantDb = deps.assessments.withTenant(resolvedTenantId);
+      const assessment = await tenantDb.get(assessmentId);
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
-      const events = await deps.lifecycleEvents.listByAssessment(assessmentId, tenantId!);
+      const events = await deps.lifecycleEvents.listByAssessment(assessmentId, resolvedTenantId);
       return json({
         assessment_id: assessment.assessment_id,
         tenant_id: assessment.tenant_id,
@@ -112,12 +165,15 @@ export const assessmentsRoutes: RouteDefinition[] = [
     path: "/api/v1/assessments/:assessmentId/compliance-gate",
     protected: true,
     handler: async ({ deps, params, tenantId, traceId }) => {
+      let resolvedTenantId = tenantId!;
+      try { const ctx = await deps.resolveTenantContext?.(tenantId!); if (ctx) resolvedTenantId = ctx.tenant_id; } catch {}
       const assessmentId = routeParam(params, "assessmentId");
-      const assessment = await deps.assessments.get(assessmentId, tenantId!);
+      const tenantDb = deps.assessments.withTenant(resolvedTenantId);
+      const assessment = await tenantDb.get(assessmentId);
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
 
       // Find latest approved gap analysis version
-      const versions = await deps.gapAnalysis.repositories.gapVersions.listByAssessment(assessmentId, tenantId!);
+      const versions = await deps.gapAnalysis.repositories.gapVersions.listByAssessment(assessmentId, resolvedTenantId);
       const approved = versions
         .filter((v) => v.status === "approved")
         .sort((a, b) => b.version_number - a.version_number)[0];
@@ -137,7 +193,7 @@ export const assessmentsRoutes: RouteDefinition[] = [
         return json(gate);
       }
 
-      const findings = await deps.gapAnalysis.repositories.gapFindings.listByVersion(approved.gap_analysis_version_id, tenantId!);
+      const findings = await deps.gapAnalysis.repositories.gapFindings.listByVersion(approved.gap_analysis_version_id, resolvedTenantId);
       const critical = findings.filter((f) => f.severity === "critical").length;
       const high = findings.filter((f) => f.severity === "high").length;
       const total = findings.length;
@@ -191,6 +247,51 @@ export const assessmentsRoutes: RouteDefinition[] = [
       }
 
       return json(gate);
+    }
+  },
+  {
+    method: "PUT",
+    path: "/api/v1/assessments/:assessmentId/automation-rules",
+    protected: true,
+    requireActor: true,
+    bodySchema: AssessmentAutomationConfigSchema,
+    handler: async ({ validatedBody, deps, params, tenantId, traceId }) => {
+      // Resolve Better Auth org ID → Standard domain UUID
+      let resolvedTenantId = tenantId!;
+      try {
+        const ctx = await deps.resolveTenantContext?.(tenantId!);
+        if (ctx) resolvedTenantId = ctx.tenant_id;
+      } catch { /* use original tenantId if mapping fails */ }
+
+      const assessmentId = routeParam(params, "assessmentId");
+      const assessment = await deps.assessments.withTenant(resolvedTenantId).get(assessmentId);
+      
+      if (!assessment) {
+        throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
+      }
+
+      // Instead of changing the schema natively, we'll embed the config in snapshot.automation_config
+      // to keep it within the existing AssessmentRecord bounds without schema migrations
+      const config = validatedBody as import("zod").infer<typeof AssessmentAutomationConfigSchema>;
+      
+      const snapshot = assessment.snapshot || {};
+      (snapshot as any).automation_config = config;
+      
+      const updated = {
+        ...assessment,
+        snapshot,
+        trace_id: traceId
+      };
+      
+      await deps.assessments.withTenant(updated.tenant_id).save(updated);
+      await deps.audit.record("assessment.rules.updated", {
+        assessment_id: assessmentId,
+        tenant_id: resolvedTenantId,
+        trace_id: traceId,
+        config
+      });
+      
+      return json({ data: updated, trace_id: traceId });
     }
   }
 ];
