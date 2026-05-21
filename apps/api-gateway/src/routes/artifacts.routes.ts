@@ -32,10 +32,12 @@ export const artifactsRoutes: RouteDefinition[] = [
     handler: async ({ request, deps, params, tenantId, actorId, traceId }) => {
       const artifactType = parseArtifactType(routeParam(params, "artifactType"));
       const body = await parseJson(request, CreateArtifactVersionRequestSchema);
-      const assessment = await deps.assessments.get(routeParam(params, "assessmentId"), tenantId!);
+      const tenantAssessmentsDb = deps.assessments.withTenant(tenantId!);
+      const assessment = await tenantAssessmentsDb.get(routeParam(params, "assessmentId"));
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
 
-      const version = await deps.artifacts.create({
+      const tenantArtifactsDb = deps.artifacts.withTenant(tenantId!);
+      const version = await tenantArtifactsDb.create({
         id: newId(),
         tenantId: assessment.tenant_id,
         organizationId: assessment.organization_id,
@@ -57,9 +59,11 @@ export const artifactsRoutes: RouteDefinition[] = [
     handler: async ({ deps, params, tenantId, traceId }) => {
       const artifactType = parseArtifactType(routeParam(params, "artifactType"));
       const assessmentId = routeParam(params, "assessmentId");
-      const assessment = await deps.assessments.get(assessmentId, tenantId!);
+      const tenantAssessmentsDb = deps.assessments.withTenant(tenantId!);
+      const assessment = await tenantAssessmentsDb.get(assessmentId);
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
-      const versions = await deps.artifacts.listByAssessment(assessmentId, artifactType);
+      const tenantArtifactsDb = deps.artifacts.withTenant(tenantId!);
+      const versions = await tenantArtifactsDb.listByAssessment(assessmentId, artifactType);
       return json({ data: versions.map(artifactVersionResponse), trace_id: traceId });
     }
   },
@@ -68,8 +72,9 @@ export const artifactsRoutes: RouteDefinition[] = [
     path: "/api/v1/artifacts/:artifactVersionId",
     protected: true,
     handler: async ({ deps, params, tenantId }) => {
-      const version = await deps.artifacts.get(routeParam(params, "artifactVersionId"));
-      if (!version || version.tenantId !== tenantId) throw new ApiError("NOT_FOUND", "Artifact version not found.", 404);
+      const tenantArtifactsDb = deps.artifacts.withTenant(tenantId!);
+      const version = await tenantArtifactsDb.get(routeParam(params, "artifactVersionId"));
+      if (!version) throw new ApiError("NOT_FOUND", "Artifact version not found.", 404);
       return json(artifactVersionResponse(version));
     }
   },
@@ -80,8 +85,9 @@ export const artifactsRoutes: RouteDefinition[] = [
     requireActor: true,
     handler: async ({ request, deps, params, tenantId, traceId }) => {
       await parseJson(request, SubmitArtifactReviewRequestSchema);
-      const version = await deps.artifacts.get(routeParam(params, "artifactVersionId"));
-      if (!version || version.tenantId !== tenantId) throw new ApiError("NOT_FOUND", "Artifact version not found.", 404);
+      const tenantArtifactsDb = deps.artifacts.withTenant(tenantId!);
+      const version = await tenantArtifactsDb.get(routeParam(params, "artifactVersionId"));
+      if (!version) throw new ApiError("NOT_FOUND", "Artifact version not found.", 404);
       const updated = markArtifactUnderReview(version, {
         tenantId: version.tenantId,
         organizationId: version.organizationId,
@@ -90,7 +96,7 @@ export const artifactsRoutes: RouteDefinition[] = [
         traceId,
         occurredAt: new Date().toISOString()
       });
-      await deps.artifacts.save(updated);
+      await tenantArtifactsDb.save(updated);
       return json(artifactVersionResponse(updated));
     }
   },
@@ -101,11 +107,13 @@ export const artifactsRoutes: RouteDefinition[] = [
     requireActor: true,
     handler: async ({ request, deps, params, tenantId, actorId, traceId }) => {
       const body = await parseJson(request, ApproveArtifactRequestSchema);
-      const version = await deps.artifacts.get(routeParam(params, "artifactVersionId"));
-      if (!version || version.tenantId !== tenantId) throw new ApiError("NOT_FOUND", "Artifact version not found.", 404);
+      const tenantArtifactsDb = deps.artifacts.withTenant(tenantId!);
+      const version = await tenantArtifactsDb.get(routeParam(params, "artifactVersionId"));
+      if (!version) throw new ApiError("NOT_FOUND", "Artifact version not found.", 404);
 
+      const tenantApprovalsDb = deps.approvals.withTenant(tenantId!);
       const approvalEvent = body.approval_id
-        ? await deps.approvals.getForGate(body.approval_id, body.gate)
+        ? await tenantApprovalsDb.getForGate(body.approval_id, body.gate)
         : {
             id: newId(),
             gate: body.gate,
@@ -118,11 +126,11 @@ export const artifactsRoutes: RouteDefinition[] = [
       if (!approvalEvent) throw new ApiError("APPROVAL_REQUIRED", "Approved approval event is required.", 409);
 
       const approved = approveArtifactVersion(version, approvalEvent);
-      const siblings = await deps.artifacts.listByAssessment(version.assessmentId, version.artifactType);
+      const siblings = await tenantArtifactsDb.listByAssessment(version.assessmentId, version.artifactType);
       for (const sibling of supersedeApprovedVersions(siblings, approved)) {
-        await deps.artifacts.save(sibling);
+        await tenantArtifactsDb.save(sibling);
       }
-      await deps.artifacts.save(approved);
+      await tenantArtifactsDb.save(approved);
       return json(artifactVersionResponse(approved));
     }
   },
@@ -133,8 +141,9 @@ export const artifactsRoutes: RouteDefinition[] = [
     requireActor: true,
     handler: async ({ request, deps, params, tenantId, actorId, traceId }) => {
       await parseJson(request, SupersedeArtifactRequestSchema);
-      const version = await deps.artifacts.get(routeParam(params, "artifactVersionId"));
-      if (!version || version.tenantId !== tenantId) throw new ApiError("NOT_FOUND", "Artifact version not found.", 404);
+      const tenantArtifactsDb = deps.artifacts.withTenant(tenantId!);
+      const version = await tenantArtifactsDb.get(routeParam(params, "artifactVersionId"));
+      if (!version) throw new ApiError("NOT_FOUND", "Artifact version not found.", 404);
       const next = createNextArtifactVersion(version, {
         tenantId: version.tenantId,
         organizationId: version.organizationId,
@@ -144,7 +153,7 @@ export const artifactsRoutes: RouteDefinition[] = [
         traceId,
         occurredAt: new Date().toISOString()
       }, newId());
-      await deps.artifacts.save(next);
+      await tenantArtifactsDb.save(next);
       return json(artifactVersionResponse(next), { status: 201 });
     }
   }

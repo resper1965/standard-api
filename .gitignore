@@ -1,6 +1,6 @@
-node_modules/
-dist/
-.wrangler/
+**/node_modules/
+**/dist/
+**/.wrangler/
 
 # AI agent / IDE tooling (local only)
 .agents/
@@ -31,18 +31,34 @@ errors.txt
 old_schema.ts
 .neon
 
-# Scratch / one-off files (never commit)
-tsc-errors.txt
-headers.txt
-knip_report.txt
+# Scratch / one-off root scripts & temp files (auto-pattern, never commit)
+# Batch / PowerShell scripts at root
+*.bat
+*.ps1
+# Temp deploy/fix/force scripts
+deploy*.mjs
+force*.mjs
+fix*.mjs
+refactor*.mjs
+fix_*.ts
+clean_*.ts
+drop_*.ts
+apply-*.ts
+# Exported AI context dumps
 ai-exports.txt
 ai-tool-types.txt
+headers.txt
+knip_report.txt
+# Scratch docs
 api-docs-for-ai-devs.md
-api-gaps-g5-g4-g1.md
-apply-tcp.ts
-execution-plan-phase1-2.md
+api-gaps-*.md
+execution-plan-*.md
 tech-debt-resolution.md
-standard-api.code-workspace
+# IDE workspace files
+*.code-workspace
+
+# Specific scratch files kept for historical compat
+tsc-errors.txt
 
 # Official SCF data files (download locally, never commit)
 evals/fixtures/*.xlsx

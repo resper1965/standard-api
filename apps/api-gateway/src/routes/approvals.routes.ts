@@ -31,16 +31,19 @@ export const approvalsRoutes: RouteDefinition[] = [
         throw new ApiError("FORBIDDEN", "Approval requires explicit approve permission.", 403, [{ required_permission: requiredPermission }]);
       }
 
-      const assessment = await deps.assessments.get(assessmentId, tenantId!);
+      const tenantAssessmentsDb = deps.assessments.withTenant(tenantId!);
+      const assessment = await tenantAssessmentsDb.get(assessmentId);
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
       if (body.target_type === "artifact_version") {
-        const artifact = await deps.artifacts.get(body.target_id);
-        if (!artifact || artifact.assessmentId !== assessmentId || artifact.tenantId !== tenantId) {
+        const tenantArtifactsDb = deps.artifacts.withTenant(tenantId!);
+        const artifact = await tenantArtifactsDb.get(body.target_id);
+        if (!artifact || artifact.assessmentId !== assessmentId) {
           throw new ApiError("NOT_FOUND", "Approval target not found.", 404);
         }
       }
 
-      const approval = await deps.approvals.create({
+      const tenantApprovalsDb = deps.approvals.withTenant(tenantId!);
+      const approval = await tenantApprovalsDb.create({
         id: newId(),
         tenantId: assessment.tenant_id,
         organizationId: assessment.organization_id,
@@ -63,7 +66,8 @@ export const approvalsRoutes: RouteDefinition[] = [
     path: "/api/v1/assessments/:assessmentId/approvals",
     protected: true,
     handler: async ({ deps, params, tenantId, traceId }) => {
-      const approvals = await deps.approvals.listByAssessment(routeParam(params, "assessmentId"), tenantId!);
+      const tenantApprovalsDb = deps.approvals.withTenant(tenantId!);
+      const approvals = await tenantApprovalsDb.listByAssessment(routeParam(params, "assessmentId"));
       return json({ data: approvals.map(approvalResponse), trace_id: traceId });
     }
   },
@@ -72,8 +76,9 @@ export const approvalsRoutes: RouteDefinition[] = [
     path: "/api/v1/approvals/:approvalId",
     protected: true,
     handler: async ({ deps, params, tenantId }) => {
-      const approval = await deps.approvals.get(routeParam(params, "approvalId"));
-      if (!approval || approval.tenantId !== tenantId) throw new ApiError("NOT_FOUND", "Approval not found.", 404);
+      const tenantApprovalsDb = deps.approvals.withTenant(tenantId!);
+      const approval = await tenantApprovalsDb.get(routeParam(params, "approvalId"));
+      if (!approval) throw new ApiError("NOT_FOUND", "Approval not found.", 404);
       return json(approvalResponse(approval));
     }
   }

@@ -48,8 +48,13 @@ export const API_KEY_SCOPES = [
   "agent:read",
   "agent:run",
 
-  // Integration (text analysis)
+  // Integrations
   "integration:analyze",
+
+  // Intelligence & MCP
+  "intelligence:read",
+  "intelligence:run",
+  "job:read",
 
   // Observability
   "audit:read",
@@ -136,6 +141,10 @@ export const ROUTE_SCOPE_MAP: Record<string, M2mScope[]> = {
 
   // Integrations
   "POST:/api/v1/integrations/assessments/:assessmentId/analyze-text": ["integration:analyze"],
+  
+  // Intelligence APIs (Agentic Council and Async Jobs)
+  "POST:/api/v1/intelligence/council": ["intelligence:run"],
+  "GET:/api/v1/jobs/:jobId": ["job:read", "intelligence:read"],
 
   // Workflows
   "POST:/api/v1/assessments/:assessmentId/workflows/lifecycle/start": ["workflow:write"],

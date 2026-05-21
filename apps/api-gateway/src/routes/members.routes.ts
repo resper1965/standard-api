@@ -57,6 +57,7 @@ export const memberRoutes: RouteDefinition[] = [
       };
 
       memberships.set(membership.membership_id, membership);
+      await deps.audit.record("member.invited", { tenant_id: tenantId, organization_id: orgId, email: body.email, role: body.role, trace_id: traceId });
       return json(membership, { status: 201, headers: { "x-trace-id": traceId } });
     }
   },
@@ -81,7 +82,7 @@ export const memberRoutes: RouteDefinition[] = [
     protected: true,
     requireActor: true,
     permissions: ["membership:manage"],
-    handler: async ({ request, params, tenantId, traceId }) => {
+    handler: async ({ request, deps, params, tenantId, traceId }) => {
       const memberId = routeParam(params, "memberId");
       const member = getById(memberId, tenantId!);
       if (!member) throw new ApiError("NOT_FOUND", "Membership not found.", 404);
@@ -90,7 +91,7 @@ export const memberRoutes: RouteDefinition[] = [
       member.role = body.role;
       member.updated_at = new Date().toISOString();
       memberships.set(memberId, member);
-
+      await deps.audit.record("member.role_updated", { tenant_id: tenantId, organization_id: member.organization_id, member_id: memberId, role: body.role, trace_id: traceId });
       return json(member, { headers: { "x-trace-id": traceId } });
     }
   },
@@ -101,7 +102,7 @@ export const memberRoutes: RouteDefinition[] = [
     protected: true,
     requireActor: true,
     permissions: ["membership:manage"],
-    handler: async ({ params, tenantId, traceId }) => {
+    handler: async ({ deps, params, tenantId, traceId }) => {
       const memberId = routeParam(params, "memberId");
       const member = getById(memberId, tenantId!);
       if (!member) throw new ApiError("NOT_FOUND", "Membership not found.", 404);
@@ -109,7 +110,7 @@ export const memberRoutes: RouteDefinition[] = [
       member.status = "removed";
       member.updated_at = new Date().toISOString();
       memberships.set(memberId, member);
-
+      await deps.audit.record("member.removed", { tenant_id: tenantId, organization_id: member.organization_id, member_id: memberId, trace_id: traceId });
       return new Response(null, { status: 204, headers: { "x-trace-id": traceId } });
     }
   },

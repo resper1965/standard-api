@@ -67,6 +67,22 @@ export const createApprovalRepository = (): ApprovalRepositoryAdapter => {
         (record) => record.assessmentId === assessmentId && record.tenantId === tenantId
       );
     },
+    withTenant(tenantId: string) {
+      return {
+        create: async (input) => this.create(input),
+        get: async (approvalId) => {
+          const approval = await this.get(approvalId);
+          return approval && approval.tenantId === tenantId ? approval : null;
+        },
+        getForGate: async (approvalId, gate) => {
+          const approval = await this.getForGate(approvalId, gate);
+          if (!approval) return null;
+          const fullRecord = records.get(approvalId);
+          return fullRecord && fullRecord.tenantId === tenantId ? approval : null;
+        },
+        listByAssessment: async (assessmentId) => this.listByAssessment(assessmentId, tenantId),
+      };
+    }
   };
 };
 
@@ -120,5 +136,30 @@ export const createDrizzleApprovalRepository = (db: DbClient): ApprovalRepositor
         );
       return results.map(mapRowToRecord);
     },
+    withTenant(tenantId: string) {
+      return {
+        create: async (input) => this.create(input),
+        get: async (approvalId) => {
+          const [found] = await db.select().from(approvalEvents)
+            .where(and(eq(approvalEvents.id, approvalId), eq(approvalEvents.tenantId, tenantId)))
+            .limit(1);
+          return found ? mapRowToRecord(found) : null;
+        },
+        getForGate: async (approvalId, gate) => {
+          const [found] = await db.select().from(approvalEvents)
+            .where(
+              and(
+                eq(approvalEvents.id, approvalId),
+                eq(approvalEvents.gate, gate as ApprovalRow["gate"]),
+                eq(approvalEvents.decision, "approved" as ApprovalRow["decision"]),
+                eq(approvalEvents.tenantId, tenantId)
+              )
+            )
+            .limit(1);
+          return found ? mapRowToEvent(found) : null;
+        },
+        listByAssessment: async (assessmentId: string) => this.listByAssessment(assessmentId, tenantId)
+      };
+    }
   };
 };

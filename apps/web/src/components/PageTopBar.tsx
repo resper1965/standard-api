@@ -15,9 +15,9 @@ export function PageTopBar({ title }: PageTopBarProps) {
     .slice(0, 2) ?? "?";
 
   return (
-    <header className="page-topbar">
+    <header className="page-topbar glass sticky top-0 z-10 border-b border-white/5 backdrop-blur-md">
       <div className="page-topbar-left">
-        <h1 className="page-topbar-title">{title}</h1>
+        <h1 className="text-xl font-brand font-semibold tracking-tight">{title}</h1>
       </div>
 
       <div className="page-topbar-right">

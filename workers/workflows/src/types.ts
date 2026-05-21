@@ -59,12 +59,21 @@ export type WorkflowSignalInput = {
   approvalEvent?: ApprovalEvent;
 };
 
+export interface TenantScopedWorkflowRepository {
+  create(input: WorkflowRunRecord): Promise<WorkflowRunRecord>;
+  get(workflowRunId: string): Promise<WorkflowRunRecord | null>;
+  getActiveByAssessment(assessmentId: string): Promise<WorkflowRunRecord | null>;
+  listByAssessment(assessmentId: string): Promise<WorkflowRunRecord[]>;
+  save(record: WorkflowRunRecord): Promise<void>;
+}
+
 export type WorkflowRepository = {
   create(input: WorkflowRunRecord): Promise<WorkflowRunRecord>;
   get(workflowRunId: string): Promise<WorkflowRunRecord | null>;
   getActiveByAssessment(assessmentId: string, tenantId: string): Promise<WorkflowRunRecord | null>;
   listByAssessment(assessmentId: string, tenantId: string): Promise<WorkflowRunRecord[]>;
   save(record: WorkflowRunRecord): Promise<void>;
+  withTenant(tenantId: string): TenantScopedWorkflowRepository;
 };
 
 export type WorkflowAuditAdapter = {
@@ -74,6 +83,12 @@ export type WorkflowAuditAdapter = {
 export type AssessmentEngineAdapter = {
   transition(assessment: AssessmentSnapshot, nextState: AssessmentState, context: TransitionContext): TransitionResult;
   transitions: AssessmentState[];
+};
+
+export type TenantScopedWorkflowDependencies = {
+  workflows: TenantScopedWorkflowRepository;
+  audit: WorkflowAuditAdapter;
+  assessmentEngine: AssessmentEngineAdapter;
 };
 
 export type WorkflowDependencies = {

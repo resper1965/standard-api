@@ -11,7 +11,7 @@ import type {
 } from "@standard/schemas";
 import { APPROVAL_STEP_BY_TYPE, SYSTEM_ACTOR } from "./constants";
 import { WorkflowOrchestrationError } from "./errors";
-import type { WorkflowAuditEventType, WorkflowDependencies, WorkflowRunRecord } from "./types";
+import type { WorkflowAuditEventType, TenantScopedWorkflowDependencies, WorkflowRunRecord } from "./types";
 
 type ProgressResult = {
   assessment: AssessmentSnapshot;
@@ -63,12 +63,12 @@ const approvalForSignal = (signalType: WorkflowSignalRequest["signal_type"]): Ap
 };
 
 export class AssessmentLifecycleOrchestrator {
-  constructor(private readonly deps: WorkflowDependencies) {}
+  constructor(private readonly deps: TenantScopedWorkflowDependencies) {}
 
   async start(input: AssessmentLifecycleWorkflowInput, assessment: AssessmentSnapshot): Promise<WorkflowRunResponse> {
     assertSameContext(input, assessment);
 
-    const existing = await this.deps.workflows.getActiveByAssessment(input.assessment_id, input.tenant_id);
+    const existing = await this.deps.workflows.getActiveByAssessment(input.assessment_id);
     if (existing) {
       if (existing.idempotency_key === input.idempotency_key) return toResponse(existing);
       throw new WorkflowOrchestrationError("DUPLICATE_ACTIVE_WORKFLOW", "Assessment already has an active lifecycle workflow.", {
@@ -108,14 +108,14 @@ export class AssessmentLifecycleOrchestrator {
     return toResponse(progressed);
   }
 
-  async get(workflowRunId: string, tenantId: string): Promise<WorkflowRunResponse | null> {
+  async get(workflowRunId: string): Promise<WorkflowRunResponse | null> {
     const run = await this.deps.workflows.get(workflowRunId);
-    if (!run || run.state.tenant_id !== tenantId) return null;
+    if (!run) return null;
     return toResponse(run);
   }
 
-  async listByAssessment(assessmentId: string, tenantId: string): Promise<WorkflowRunResponse[]> {
-    return (await this.deps.workflows.listByAssessment(assessmentId, tenantId)).map(toResponse);
+  async listByAssessment(assessmentId: string): Promise<WorkflowRunResponse[]> {
+    return (await this.deps.workflows.listByAssessment(assessmentId)).map(toResponse);
   }
 
   async signal(

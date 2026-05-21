@@ -78,7 +78,10 @@ export const KnowledgeGraphPage: React.FC = () => {
 
   // Load initially
   React.useEffect(() => {
-    handleSearch(undefined, 'GOV-01');
+    const timer = setTimeout(() => {
+      handleSearch(undefined, 'GOV-01');
+    }, 0);
+    return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

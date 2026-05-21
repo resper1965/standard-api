@@ -124,5 +124,8 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
 
+      - name: Security Audit
+        run: pnpm audit --audit-level=high
+
       - name: Build
         run: pnpm build

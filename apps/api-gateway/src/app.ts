@@ -52,7 +52,7 @@ import { referenceDataRoutes } from "./routes/reference-data.routes";
 import { intelligenceRoutes } from "./routes/intelligence.routes";
 import { jobsRoutes } from "./routes/jobs.routes";
 
-const routes: RouteDefinition[] = [
+export const routes: RouteDefinition[] = [
   ...openapiRoutes,
   ...jobsRoutes,
   ...healthRoutes,
@@ -197,31 +197,16 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
       return newRes;
     };
 
-    try {
-      // ── Better Auth route delegation ─────────────────────────
-      // All /api/auth/* requests are handled by Better Auth directly
-      if (auth && url.pathname.startsWith("/api/auth")) {
-        try {
-          return withSecurityHeaders(await auth.handler(request));
-        } catch (authError: unknown) {
-          const msg = authError instanceof Error ? authError.message : String(authError);
-          const stack = authError instanceof Error ? authError.stack : undefined;
-          console.error(`[standard:auth] handler error: ${msg}`, stack);
-          const isDev = env?.STANDARD_ENV === "development" || env?.STANDARD_ENV === "test";
-          return withSecurityHeaders(new Response(JSON.stringify({ error: msg, ...(isDev ? { stack } : {}) }), {
-            status: 500,
-            headers: { "Content-Type": "application/json" },
-          }));
-        }
-      }
 
+
+    try {
       const route = findRoute(request.method, url.pathname);
       if (!route) {
         throw new ApiError("NOT_FOUND", "Endpoint not found.", 404);
       }
 
       const params = matchRoute(route.path, url.pathname)!;
-      const context: RequestContext = { request, params, traceId, deps, execCtx };
+      const context: RequestContext = { request, params, traceId, deps, execCtx, env };
       const startedAt = Date.now();
 
       // ── Auth context resolution ──────────────────────────────

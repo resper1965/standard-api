@@ -32,6 +32,16 @@ export class InMemoryEvidenceFindingRepository implements EvidenceFindingReposit
   async findBySoaItem(soaItemId: string, tenantId: string): Promise<EvidenceFindingResponse | null> {
     return [...this.records.values()].find((finding) => finding.soa_item_id === soaItemId && finding.tenant_id === tenantId) ?? null;
   }
+
+  withTenant(tenantId: string) {
+    return {
+      save: async (finding: EvidenceFindingResponse) => this.save(finding),
+      update: async (finding: EvidenceFindingResponse) => this.update(finding),
+      get: async (evidenceFindingId: string) => this.get(evidenceFindingId, tenantId),
+      listByAssessment: async (assessmentId: string) => this.listByAssessment(assessmentId, tenantId),
+      findBySoaItem: async (soaItemId: string) => this.findBySoaItem(soaItemId, tenantId)
+    };
+  }
 }
 
 export class InMemoryEvidenceSourceRepository implements EvidenceSourceRepository {
@@ -43,6 +53,13 @@ export class InMemoryEvidenceSourceRepository implements EvidenceSourceRepositor
 
   async listByFinding(evidenceFindingId: string, tenantId: string): Promise<EvidenceSourceResponse[]> {
     return [...this.records.values()].filter((source) => source.evidence_finding_id === evidenceFindingId && source.tenant_id === tenantId);
+  }
+
+  withTenant(tenantId: string) {
+    return {
+      saveMany: async (sources: EvidenceSourceResponse[]) => this.saveMany(sources),
+      listByFinding: async (evidenceFindingId: string) => this.listByFinding(evidenceFindingId, tenantId)
+    };
   }
 }
 
@@ -65,6 +82,15 @@ export class InMemoryGapAnalysisVersionRepository implements GapAnalysisVersionR
   async listByAssessment(assessmentId: string, tenantId: string): Promise<GapAnalysisVersionResponse[]> {
     return [...this.records.values()].filter((version) => version.assessment_id === assessmentId && version.tenant_id === tenantId);
   }
+
+  withTenant(tenantId: string) {
+    return {
+      save: async (version: GapAnalysisVersionResponse) => this.save(version),
+      update: async (version: GapAnalysisVersionResponse) => this.update(version),
+      get: async (gapAnalysisVersionId: string) => this.get(gapAnalysisVersionId, tenantId),
+      listByAssessment: async (assessmentId: string) => this.listByAssessment(assessmentId, tenantId)
+    };
+  }
 }
 
 export class InMemoryGapFindingRepository implements GapFindingRepository {
@@ -85,6 +111,15 @@ export class InMemoryGapFindingRepository implements GapFindingRepository {
 
   async listByVersion(gapAnalysisVersionId: string, tenantId: string): Promise<GapFindingResponse[]> {
     return [...this.records.values()].filter((finding) => finding.gap_analysis_version_id === gapAnalysisVersionId && finding.tenant_id === tenantId);
+  }
+
+  withTenant(tenantId: string) {
+    return {
+      saveMany: async (findings: GapFindingResponse[]) => this.saveMany(findings),
+      update: async (finding: GapFindingResponse) => this.update(finding),
+      get: async (gapFindingId: string) => this.get(gapFindingId, tenantId),
+      listByVersion: async (gapAnalysisVersionId: string) => this.listByVersion(gapAnalysisVersionId, tenantId)
+    };
   }
 }
 

@@ -1,9 +1,11 @@
+import "./openapi/registry"; // Must be imported first to extend Zod
 import { createApp } from "./app";
 import { createDrizzleRepositories, createMockRepositories } from "./adapters";
 import { createDb } from "./adapters/db";
 import { createAuth, type StandardAuth } from "@standard/auth";
 import type { SendEmail } from "@standard/email";
 import type { AppDependencies } from "./http";
+import * as schema from "@standard/schemas";
 
 export interface Env {
   DATABASE_URL?: string;
@@ -43,6 +45,8 @@ let cachedAuth: StandardAuth | null = null;
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+    const url = new URL(request.url);
+
     if (!cachedApp) {
       const hasDb = Boolean(env.DATABASE_URL);
       console.log(`[standard:init] Starting API gateway. DATABASE_URL=${hasDb ? 'SET' : 'MISSING'}, ENV=${env.STANDARD_ENV}`);
@@ -55,23 +59,44 @@ export default {
           SOC_TRIAGE_QUEUE: env.SOC_TRIAGE_QUEUE ?? undefined,
         };
 
-        // Initialize Better Auth with the same Drizzle DB instance
-        cachedAuth = createAuth(db, {
+        // Initialize Better Auth — self-hosted, no JWKS dependency
+        cachedAuth = createAuth({
+          DATABASE_URL: env.DATABASE_URL!,
           BETTER_AUTH_SECRET: env.BETTER_AUTH_SECRET,
-          BETTER_AUTH_URL: env.BETTER_AUTH_URL ?? new URL(request.url).origin,
-          STANDARD_ENV: env.STANDARD_ENV,
-          GOOGLE_CLIENT_ID: env.GOOGLE_CLIENT_ID,
-          GOOGLE_CLIENT_SECRET: env.GOOGLE_CLIENT_SECRET,
-          waitUntil: (p) => ctx.waitUntil(p),
+          BETTER_AUTH_URL: env.BETTER_AUTH_URL,
         });
-        console.log('[standard:init] Drizzle repositories initialized.');
+        console.log('[standard:init] Better Auth self-hosted initialized.');
       } else {
         console.warn('[standard:init] No DATABASE_URL — using MOCK repositories. SCF data will be synthetic.');
         cachedDeps = createMockRepositories();
       }
       cachedApp = createApp(cachedDeps, env, cachedAuth ?? undefined);
     }
+
+    // ── Better Auth route handler ────────────────────────────
+    // Delegate /api/auth/* requests directly to Better Auth.
+    // This MUST happen before the standard API router runs.
+    if (cachedAuth && url.pathname.startsWith("/api/auth")) {
+      const response = await cachedAuth.handler(request);
+      // Inject CORS headers for the auth endpoints
+      const origin = request.headers.get("Origin") ?? "";
+      const allowedOrigins = [
+        "https://standard.bekaa.eu",
+        "https://standard-web.pages.dev",
+        "https://production.standard-web.pages.dev",
+        "http://localhost:5173",
+        "http://localhost:3000",
+      ];
+      const isPagesDevAlias = origin.endsWith(".standard-web.pages.dev");
+      if (allowedOrigins.includes(origin) || isPagesDevAlias) {
+        response.headers.set("Access-Control-Allow-Origin", origin);
+        response.headers.set("Access-Control-Allow-Credentials", "true");
+        response.headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+        response.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Trace-Id, X-Tenant-Id, x-standard-tenant-id");
+      }
+      return response;
+    }
+
     return cachedApp.fetch(request, ctx);
   }
 };
-

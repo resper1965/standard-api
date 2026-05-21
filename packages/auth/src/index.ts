@@ -3,7 +3,7 @@
  * @description Public API for the Standard auth package.
  */
 
-// Core auth
+// Core auth — Better Auth server
 export { createAuth } from "./auth";
 export type { StandardAuth, AuthEnv } from "./auth";
 
@@ -17,4 +17,3 @@ export type { StandardResource, StandardPermission, StandardRole } from "./permi
 
 // Types
 export type { DrizzleClient } from "./types";
-

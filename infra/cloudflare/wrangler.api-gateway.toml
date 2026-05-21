@@ -112,6 +112,10 @@ script_name = "standard-workflows-staging"
 
 [env.production]
 name = "standard-api-gateway-production"
+routes = [
+  { pattern = "standard-api.bekaa.eu", custom_domain = true }
+]
+
 
 [env.production.vars]
 STANDARD_ENV = "production"

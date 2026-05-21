@@ -64,12 +64,12 @@ export const projectionRoutes: RouteDefinition[] = [
     path: "/api/v1/assessments/:assessmentId/projection/:frameworkId",
     protected: true,
     requireActor: true,
-    handler: async ({ deps, params, request, traceId }) => {
+    handler: async ({ deps, params, request, tenantId, traceId }) => {
       const assessmentId = routeParam(params, "assessmentId");
       const frameworkId = routeParam(params, "frameworkId");
 
       // 1. Validate assessment exists
-      const assessment = await deps.assessments.get(assessmentId);
+      const assessment = await deps.assessments.withTenant(tenantId!).get(assessmentId);
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
 
       const scfVersionId = assessment.scf_version_id;

@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { PageHeader } from "../../components/PageHeader";
 import { Card, CardContent } from "../../components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "../../components/ui/table";
 import { Button } from "../../components/ui/button";
-import { Loader2, RefreshCw, CheckCircle2, XCircle, Activity } from "lucide-react";
+import { Loader2, RefreshCw, CheckCircle2, XCircle, AlertTriangle, Activity, Wifi, WifiOff } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL || "https://standard-api-gateway-production.ness.workers.dev";
 
@@ -14,6 +14,7 @@ type HealthState = {
   version: string;
   timestamp: string;
   services: ServiceStatus[];
+  connectionError: boolean;
   operational: {
     window: string;
     total_requests: number;
@@ -24,62 +25,83 @@ type HealthState = {
   } | null;
 };
 
+function buildDownState(connectionError: boolean): HealthState {
+  return {
+    overall: "down",
+    version: "—",
+    timestamp: new Date().toISOString(),
+    services: [
+      { name: "API Gateway", status: "down" },
+      { name: "Database", status: "down" },
+      { name: "Auth (Better Auth)", status: "down" },
+      { name: "Storage (R2)", status: "down" },
+    ],
+    connectionError,
+    operational: null,
+  };
+}
+
 export function AdminSystemHealth() {
   const [health, setHealth] = useState<HealthState | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const fetchIdRef = useRef(0);
 
   const fetchHealth = async () => {
+    const currentId = ++fetchIdRef.current;
     setLoading(true);
     setError(null);
     try {
-      // Fetch both endpoints in parallel for complete picture
-      // Use direct fetch (not apiClient) to avoid auth redirect on health endpoints
       const [basicRes, detailedRes] = await Promise.allSettled([
-        fetch(`${API_URL}/health`).then(r => r.ok ? r.json() : null),
-        fetch(`${API_URL}/api/v1/health`).then(r => r.ok ? r.json() : null),
+        fetch(`${API_URL}/health`, { signal: AbortSignal.timeout(8000) })
+          .then(r => r.ok ? r.json() : null),
+        fetch(`${API_URL}/api/v1/health`, { signal: AbortSignal.timeout(8000) })
+          .then(r => r.ok ? r.json() : null),
       ]);
+
+      // Stale check — another fetch was triggered while we were waiting
+      if (currentId !== fetchIdRef.current) return;
 
       const basic = basicRes.status === "fulfilled" ? basicRes.value : null;
       const detailed = detailedRes.status === "fulfilled" ? detailedRes.value : null;
 
+      // Both endpoints unreachable (rejected or returned null)
+      const bothUnreachable = !basic && !detailed;
+
+      if (bothUnreachable) {
+        setError("Cannot reach the API Gateway. The Worker may be down or unreachable.");
+        setHealth(buildDownState(true));
+        return;
+      }
+
       // Determine service statuses from actual API fields
-      const dbStatus = basic?.database === "connected" ? "operational" : "down";
-      const apiStatus = (basic?.ok === true || detailed?.ok === true) ? "operational" : "down";
+      const gatewayUp = basic?.ok === true || detailed?.ok === true;
+      const dbUp = basic?.database === "connected";
 
       const services: ServiceStatus[] = [
-        { name: "API Gateway", status: apiStatus },
-        { name: "Database", status: dbStatus as ServiceStatus["status"] },
-        { name: "Auth", status: "operational" }, // Better Auth is part of API gateway
-        { name: "Storage (R2)", status: "operational" }, // R2 doesn't have a health probe yet
+        { name: "API Gateway", status: gatewayUp ? "operational" : "down" },
+        { name: "Database", status: dbUp ? "operational" : "down" },
+        { name: "Auth (Better Auth)", status: gatewayUp ? "operational" : "down" },
+        { name: "Storage (R2)", status: "operational" },
       ];
 
       const hasDown = services.some(s => s.status === "down");
       const hasDegraded = services.some(s => s.status === "degraded");
 
       setHealth({
-        overall: hasDown ? "down" : hasDegraded ? "degraded" : "operational",
+        overall: hasDown ? (gatewayUp ? "degraded" : "down") : hasDegraded ? "degraded" : "operational",
         version: detailed?.service || basic?.service || "standard-api",
-        timestamp: detailed?.timestamp || new Date().toISOString(),
+        timestamp: detailed?.timestamp || basic?.timestamp || new Date().toISOString(),
         services,
+        connectionError: false,
         operational: detailed?.operational ?? null,
       });
     } catch (e: any) {
-      setError("Failed to reach API. The service may be temporarily unavailable.");
-      setHealth({
-        overall: "down",
-        version: "unknown",
-        timestamp: new Date().toISOString(),
-        services: [
-          { name: "API Gateway", status: "down" },
-          { name: "Database", status: "down" },
-          { name: "Auth", status: "down" },
-          { name: "Storage (R2)", status: "down" },
-        ],
-        operational: null,
-      });
+      if (currentId !== fetchIdRef.current) return;
+      setError("Network error: Unable to connect to the API Gateway.");
+      setHealth(buildDownState(true));
     } finally {
-      setLoading(false);
+      if (currentId === fetchIdRef.current) setLoading(false);
     }
   };
 
@@ -88,11 +110,6 @@ export function AdminSystemHealth() {
     const interval = setInterval(fetchHealth, 30000);
     return () => clearInterval(interval);
   }, []);
-
-  const statusIcon = (status: string) =>
-    status === "operational"
-      ? <CheckCircle2 className="h-4 w-4 text-success" />
-      : <XCircle className="h-4 w-4 text-destructive" />;
 
   const statusBadge = (status: string) => {
     const styles = status === "operational"
@@ -104,6 +121,18 @@ export function AdminSystemHealth() {
     return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${styles}`}>{label}</span>;
   };
 
+  const overallIcon = (overall: string) => {
+    if (overall === "operational") return <CheckCircle2 className="h-8 w-8 text-success flex-shrink-0" />;
+    if (overall === "degraded") return <AlertTriangle className="h-8 w-8 text-warning flex-shrink-0" />;
+    return <XCircle className="h-8 w-8 text-destructive flex-shrink-0" />;
+  };
+
+  const overallLabel = (overall: string) => {
+    if (overall === "operational") return "All Systems Operational";
+    if (overall === "degraded") return "System Degraded";
+    return "System Down";
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader title="System Health" description="Monitor infrastructure and service status">
@@ -113,7 +142,17 @@ export function AdminSystemHealth() {
         </Button>
       </PageHeader>
 
-      {error && <div className="p-4 text-sm text-destructive bg-destructive/5 border border-destructive/20 rounded-lg">{error}</div>}
+      {error && (
+        <div className="p-4 text-sm text-destructive bg-destructive/5 border border-destructive/20 rounded-lg flex items-center gap-3">
+          <WifiOff className="h-5 w-5 flex-shrink-0" />
+          <div>
+            <p className="font-medium">{error}</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Endpoint: <code className="bg-muted px-1 py-0.5 rounded text-[10px]">{API_URL}/health</code>
+            </p>
+          </div>
+        </div>
+      )}
 
       {!health && loading ? (
         <div className="flex items-center justify-center py-16">
@@ -124,14 +163,10 @@ export function AdminSystemHealth() {
           {/* Overall status */}
           <Card className="border-border/60 shadow-none">
             <CardContent className="flex items-center gap-4 py-5">
-              {health.overall === "operational" ? (
-                <CheckCircle2 className="h-8 w-8 text-success flex-shrink-0" />
-              ) : (
-                <XCircle className="h-8 w-8 text-destructive flex-shrink-0" />
-              )}
+              {overallIcon(health.overall)}
               <div>
                 <p className="font-semibold text-lg leading-none">
-                  {health.overall === "operational" ? "All Systems Operational" : health.overall === "degraded" ? "System Degraded" : "System Down"}
+                  {overallLabel(health.overall)}
                 </p>
                 <p className="text-sm text-muted-foreground mt-1">
                   Last checked: {new Date(health.timestamp).toLocaleString()}
@@ -144,14 +179,14 @@ export function AdminSystemHealth() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Card className="border-border/60 shadow-none">
               <CardContent className="py-4">
-                <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Service</p>
+                <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">API Version</p>
                 <p className="text-xl font-bold">{health.version}</p>
               </CardContent>
             </Card>
             <Card className="border-border/60 shadow-none">
               <CardContent className="py-4">
                 <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Uptime</p>
-                <p className="text-xl font-bold">99.9%</p>
+                <p className="text-xl font-bold">{health.overall === "down" ? "—" : "99.9%"}</p>
               </CardContent>
             </Card>
             <Card className="border-border/60 shadow-none">
@@ -161,6 +196,22 @@ export function AdminSystemHealth() {
               </CardContent>
             </Card>
           </div>
+
+          {/* Connection error hint */}
+          {health.connectionError && (
+            <Card className="border-warning/30 shadow-none bg-warning/5">
+              <CardContent className="py-4 flex items-start gap-3">
+                <WifiOff className="h-5 w-5 text-warning flex-shrink-0 mt-0.5" />
+                <div className="text-sm">
+                  <p className="font-medium text-warning">Connection Failed</p>
+                  <p className="text-muted-foreground mt-1">
+                    The Cloudflare Worker at <code className="bg-muted px-1 py-0.5 rounded text-[10px]">{API_URL}</code> is not responding.
+                    Check the Cloudflare Dashboard → Workers & Pages to verify the deployment status.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Operational metrics */}
           {health.operational && (
@@ -212,7 +263,13 @@ export function AdminSystemHealth() {
                 <TableBody>
                   {health.services.map((svc) => (
                     <TableRow key={svc.name}>
-                      <TableCell className="font-medium">{svc.name}</TableCell>
+                      <TableCell className="font-medium flex items-center gap-2">
+                        {svc.status === "operational"
+                          ? <Wifi className="h-3.5 w-3.5 text-success" />
+                          : <WifiOff className="h-3.5 w-3.5 text-destructive" />
+                        }
+                        {svc.name}
+                      </TableCell>
                       <TableCell className="text-right">
                         {statusBadge(svc.status)}
                       </TableCell>

@@ -26,8 +26,8 @@ This project adheres to the [Code of Conduct](CODE_OF_CONDUCT.md). By participat
 ### Setup
 
 ```bash
-git clone https://github.com/resper1965/standard-api.git
-cd standard-api
+git clone https://github.com/resper1965/bekaa-site.git
+cd bekaa-site
 pnpm install
 cp .env.example .env   # configure local env
 docker compose -f infra/docker/docker-compose.yml up -d
@@ -125,4 +125,4 @@ infra/       → Infrastructure as code, Docker, Terraform
 
 ## Questions?
 
-Open a [GitHub Discussion](https://github.com/resper1965/standard-api/discussions) or contact the maintainers.
+Open a [GitHub Discussion](https://github.com/resper1965/bekaa-site/discussions) or contact the maintainers.

@@ -386,6 +386,17 @@ export const intelligenceRoutes: RouteDefinition[] = [
               throw new ApiError("INTERNAL_ERROR", "Agent Runtime is not configured.", 500);
           }
 
+          // === Context Injection (RAG) ===
+          if (body.input.control_id && deps.scf) {
+              const latestVersion = await deps.scf.versions.getLatestVersion();
+              if (latestVersion) {
+                  const control = await deps.scf.controls.getControlByCode(latestVersion.id, String(body.input.control_id));
+                  if (control) {
+                      body.input.regulatoryContext = `[Control ${control.scf_control_id}] ${control.control_question}\n${control.guidance}`;
+                  }
+              }
+          }
+
           // Import runtime classes dynamically or use the ones from deps
           const { AgentRuntimeService, AgentExecutor, CouncilOrchestrator } = await import("@standard/agent-runtime");
           

@@ -34,6 +34,12 @@ export const createLifecycleEventRepository = (): LifecycleEventRepositoryAdapte
     async listByAssessment(assessmentId, tenantId) {
       return records.filter((record) => record.assessmentId === assessmentId && record.tenantId === tenantId);
     },
+    withTenant(tenantId: string) {
+      return {
+        record: async (event) => this.record(event),
+        listByAssessment: async (assessmentId: string) => this.listByAssessment(assessmentId, tenantId)
+      };
+    }
   };
 };
 
@@ -65,5 +71,11 @@ export const createDrizzleLifecycleEventRepository = (db: DbClient): LifecycleEv
         );
       return results.map(mapRowToEvent);
     },
+    withTenant(tenantId: string) {
+      return {
+        record: async (event) => this.record(event),
+        listByAssessment: async (assessmentId: string) => this.listByAssessment(assessmentId, tenantId)
+      };
+    }
   };
 };
