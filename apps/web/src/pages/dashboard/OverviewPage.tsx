@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Activity, Database, ShieldAlert, ArrowUpRight, TrendingUp, CheckSquare, Zap } from "lucide-react"
+import { Activity, Users, ShieldAlert, ArrowUpRight, TrendingUp, Zap } from "lucide-react"
 import { useSession } from "@/lib/auth-client"
 import { apiClient } from "@/lib/api"
 import { Link } from "react-router-dom"
@@ -28,61 +28,44 @@ const stateVariant: Record<string, "success" | "warning" | "info" | "muted" | "d
   failed: "destructive" as any,
 }
 
-interface OrgDashboard {
-  compliance_avg_pct: number
-  total_open_poams: number
-  total_critical_findings: number
-  total_high_findings: number
-  total_assessments: number
-  assessments_by_state: Record<string, number>
+interface DashboardMetrics {
+  compliance_score?: number
+  critical_findings?: number
+  open_poams?: number
 }
 
-interface AgentUsageRow {
-  agent_name: string
+interface AgentUsage {
+  agent_type: string
   total_tokens: number
-  avg_confidence?: number
-  run_count?: number
-}
-
-interface UsageRow {
-  model: string
-  total_tokens: number
-  created_at: string
+  total_calls: number
 }
 
 export function OverviewPage() {
   const { data: session, isPending: sessionLoading } = useSession()
-  const orgId = session?.session?.activeOrganizationId
+  const hasActiveOrg = !!session?.session?.activeOrganizationId
 
   const [assessments, setAssessments] = useState<any[]>([])
-  const [frameworks, setFrameworks] = useState<any[]>([])
-  const [orgDash, setOrgDash] = useState<OrgDashboard | null>(null)
-  const [agentUsage, setAgentUsage] = useState<AgentUsageRow[]>([])
-  const [usageRows, setUsageRows] = useState<UsageRow[]>([])
+  const [metrics, setMetrics] = useState<DashboardMetrics>({})
+  const [agentUsage, setAgentUsage] = useState<AgentUsage[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function fetchData() {
-      if (!orgId) {
+      if (!session?.session?.activeOrganizationId) {
         setLoading(false)
         return
       }
+      const orgId = session.session.activeOrganizationId
       setLoading(true)
       try {
-        const [assessmentsData, frameworksData, orgDashData, usageData] = await Promise.allSettled([
-          apiClient<{ data: any[] }>("/api/v1/assessments"),
-          apiClient<{ data: any[] }>("/api/v1/scf/frameworks"),
-          apiClient<OrgDashboard>(`/api/v1/organizations/${orgId}/dashboard`),
-          apiClient<{ usage: UsageRow[]; agent_usage: AgentUsageRow[] }>("/api/v1/admin/usage"),
+        const [assessmentsData, dashboardData, usageData] = await Promise.all([
+          apiClient<{ data: any[] }>("/api/v1/assessments").catch(() => ({ data: [] })),
+          apiClient<{ data: DashboardMetrics }>(`/api/v1/organizations/${orgId}/dashboard`).catch(() => ({ data: {} })),
+          apiClient<{ data: AgentUsage[] }>("/api/v1/admin/usage").catch(() => ({ data: [] })),
         ])
-
-        if (assessmentsData.status === "fulfilled") setAssessments(assessmentsData.value?.data ?? [])
-        if (frameworksData.status === "fulfilled") setFrameworks(frameworksData.value?.data ?? [])
-        if (orgDashData.status === "fulfilled") setOrgDash(orgDashData.value ?? null)
-        if (usageData.status === "fulfilled") {
-          setAgentUsage(usageData.value?.agent_usage ?? [])
-          setUsageRows(usageData.value?.usage ?? [])
-        }
+        setAssessments(assessmentsData?.data ?? [])
+        setMetrics(dashboardData?.data ?? {})
+        setAgentUsage(usageData?.data ?? [])
       } catch (err) {
         console.error("Failed to fetch dashboard data:", err)
       } finally {
@@ -90,10 +73,9 @@ export function OverviewPage() {
       }
     }
     if (!sessionLoading) fetchData()
-  }, [orgId, sessionLoading])
+  }, [session?.session?.activeOrganizationId, sessionLoading])
 
   const greeting = `${getGreeting()}, ${session?.user?.name?.split(" ")[0] || "there"}`
-  const totalTokens = usageRows.reduce((s, r) => s + (r.total_tokens || 0), 0)
 
   if (loading || sessionLoading) {
     return (
@@ -121,53 +103,54 @@ export function OverviewPage() {
     )
   }
 
+  const complianceScore = metrics.compliance_score ?? null
+  const criticalFindings = metrics.critical_findings ?? 0
+  const openPoams = metrics.open_poams ?? 0
+  const totalTokens = agentUsage.reduce((sum, a) => sum + (a.total_tokens || 0), 0)
+
   return (
     <div className="space-y-8 animate-slide-up">
       {/* Greeting */}
       <div>
         <p className="text-sm text-muted-foreground">
-          {greeting}.{" "}
-          {orgId
-            ? "Organization context active."
-            : "No active organization — select one in Settings."}
+          {greeting}. {hasActiveOrg ? "Organization context active." : "No active organization — select one in Settings."}
         </p>
       </div>
 
       {/* ── Stat Cards ─────────────────────────────────── */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 animate-stagger">
         <StatCard
-          label="Compliance Avg"
-          value={orgDash ? `${orgDash.compliance_avg_pct.toFixed(1)}%` : "—"}
-          sub={orgDash ? `Across ${orgDash.total_assessments} assessments` : "No data yet"}
+          label="Compliance Score"
+          value={complianceScore !== null ? `${complianceScore}%` : "—"}
+          sub={complianceScore !== null ? "Overall posture" : "No data yet"}
           icon={<TrendingUp className="h-4 w-4" />}
           accent="primary"
         />
         <StatCard
-          label="SCF Frameworks"
-          value={frameworks.length > 0 ? String(frameworks.length) : "—"}
-          sub="Loaded in catalog"
-          icon={<Database className="h-4 w-4" />}
-          accent="primary"
+          label="Critical Findings"
+          value={criticalFindings}
+          sub="Require immediate action"
+          icon={<ShieldAlert className="h-4 w-4" />}
+          accent={criticalFindings > 0 ? "destructive" : "muted"}
         />
         <StatCard
           label="Open POAMs"
-          value={orgDash != null ? String(orgDash.total_open_poams) : "—"}
-          sub="Remediation items in progress"
-          icon={<CheckSquare className="h-4 w-4" />}
-          accent={orgDash && orgDash.total_open_poams > 0 ? "warning" : "primary"}
+          value={openPoams}
+          sub="Plans of action pending"
+          icon={<Activity className="h-4 w-4" />}
+          accent={openPoams > 0 ? "destructive" : "muted"}
         />
         <StatCard
-          label="Critical Findings"
-          value={orgDash != null ? String(orgDash.total_critical_findings) : "—"}
-          sub={orgDash && orgDash.total_high_findings > 0 ? `+ ${orgDash.total_high_findings} high` : "No critical issues"}
-          icon={<ShieldAlert className="h-4 w-4" />}
-          accent={orgDash && orgDash.total_critical_findings > 0 ? "destructive" : "muted"}
+          label="Active Assessments"
+          value={assessments.length}
+          sub="Total in this organization"
+          icon={<Users className="h-4 w-4" />}
+          accent="primary"
         />
       </div>
 
       {/* ── Content Grid ───────────────────────────────── */}
       <div className="grid gap-6 lg:grid-cols-7">
-        {/* Recent Assessments */}
         <Card className="lg:col-span-4 border-border/60 bg-card shadow-none">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
@@ -206,7 +189,7 @@ export function OverviewPage() {
                       </span>
                     </div>
                     <Badge variant={stateVariant[assessment.state] || "muted"}>
-                      {assessment.state?.replace(/_/g, " ")}
+                      {assessment.state?.replace(/_/g, ' ')}
                     </Badge>
                   </Link>
                 ))}
@@ -215,14 +198,13 @@ export function OverviewPage() {
           </CardContent>
         </Card>
 
-        {/* Agent Telemetry */}
         <Card className="lg:col-span-3 border-border/60 bg-card shadow-none">
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Agent Telemetry</CardTitle>
-            <CardDescription className="mt-0.5">Token usage and confidence metrics</CardDescription>
+            <CardDescription className="mt-0.5">Token usage per AI analyst</CardDescription>
           </CardHeader>
           <CardContent>
-            {agentUsage.length === 0 && usageRows.length === 0 ? (
+            {agentUsage.length === 0 ? (
               <div className="flex flex-col h-[180px] items-center justify-center border border-dashed border-border/60 rounded-lg">
                 <div className="h-10 w-10 rounded-lg bg-muted/60 flex items-center justify-center text-muted-foreground mb-3">
                   <TrendingUp className="h-5 w-5 animate-pulse" />
@@ -231,35 +213,25 @@ export function OverviewPage() {
                 <p className="text-xs text-muted-foreground">Metrics will appear after assessments run</p>
               </div>
             ) : (
-              <div className="space-y-3">
-                {/* Summary row */}
-                <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted/30">
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Zap className="h-3.5 w-3.5" />
-                    Total tokens used
-                  </div>
-                  <span className="text-sm font-semibold tabular-nums">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs text-muted-foreground">Total tokens consumed</span>
+                  <span className="text-sm font-semibold text-foreground flex items-center gap-1">
+                    <Zap className="h-3 w-3 text-primary" />
                     {totalTokens.toLocaleString()}
                   </span>
                 </div>
-                {/* Per-agent breakdown */}
-                <div className="space-y-1.5">
-                  {agentUsage.slice(0, 5).map((row, i) => (
-                    <div key={i} className="flex items-center justify-between py-1.5 px-3 rounded-md hover:bg-muted/20 text-sm">
-                      <span className="text-muted-foreground truncate text-xs">{row.agent_name}</span>
-                      <div className="flex items-center gap-3 shrink-0">
-                        {row.avg_confidence != null && (
-                          <span className="text-xs text-muted-foreground">
-                            {(row.avg_confidence * 100).toFixed(0)}% conf.
-                          </span>
-                        )}
-                        <span className="text-xs font-medium tabular-nums">
-                          {(row.total_tokens || 0).toLocaleString()} tok
-                        </span>
-                      </div>
+                {agentUsage.slice(0, 5).map((agent) => (
+                  <div key={agent.agent_type} className="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-muted/30 transition-colors">
+                    <span className="text-xs text-foreground capitalize truncate max-w-[140px]">
+                      {agent.agent_type.replace(/_/g, ' ')}
+                    </span>
+                    <div className="flex items-center gap-2 text-right">
+                      <span className="text-xs text-muted-foreground">{agent.total_calls} runs</span>
+                      <span className="text-xs font-medium text-foreground">{agent.total_tokens.toLocaleString()} tok</span>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
             )}
           </CardContent>
@@ -272,15 +244,14 @@ export function OverviewPage() {
 /* ── Stat Card ──────────────────────────────────────────────── */
 function StatCard({ label, value, sub, icon, accent }: {
   label: string
-  value: string
+  value: number | string
   sub: string
   icon: React.ReactNode
-  accent: "primary" | "destructive" | "warning" | "muted"
+  accent: "primary" | "destructive" | "muted"
 }) {
   const colorMap = {
     primary: "text-primary",
     destructive: "text-destructive",
-    warning: "text-amber-500",
     muted: "text-muted-foreground"
   }
   return (
@@ -290,7 +261,7 @@ function StatCard({ label, value, sub, icon, accent }: {
         <div className={`${colorMap[accent]} opacity-60 group-hover:opacity-100 transition-opacity`}>{icon}</div>
       </CardHeader>
       <CardContent>
-        <div className={`text-2xl font-semibold tracking-tight animate-count-up ${accent === "destructive" ? "text-destructive" : accent === "warning" ? "text-amber-500" : "text-foreground"}`}>
+        <div className={`text-2xl font-semibold tracking-tight animate-count-up ${accent === "destructive" ? "text-destructive" : "text-foreground"}`}>
           {value}
         </div>
         <p className="text-xs text-muted-foreground mt-1">{sub}</p>

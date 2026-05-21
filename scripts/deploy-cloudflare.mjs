@@ -17,9 +17,10 @@ const configs = [
 ];
 
 for (const config of configs) {
+  console.log(`\n🚀 Deploying ${config} to ${environment}...`);
   const result = spawnSync("npx", ["--yes", "wrangler", "deploy", "-c", config, "-e", environment], {
     stdio: "inherit",
-    shell: process.platform === "win32"
+    shell: true
   });
 
   if (result.status !== 0) {
