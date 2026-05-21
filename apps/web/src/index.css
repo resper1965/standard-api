@@ -172,6 +172,7 @@
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
   }
 
+<<<<<<< HEAD
   .bento-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -187,6 +188,8 @@
     background-size: 24px 24px;
   }
 
+=======
+>>>>>>> fdf6d291032b55389a8d20036039cda5e81d56d8
   /* Stagger animation — uses cardEnter which explicitly goes 0→1 */
   .animate-stagger > * {
     opacity: 0;
@@ -473,4 +476,3 @@ table tbody tr {
 table tbody tr:hover {
   background-color: hsl(var(--muted) / 0.4);
 }
-

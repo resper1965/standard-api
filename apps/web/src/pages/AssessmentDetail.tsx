@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 import { useEffect, useState, useMemo } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
+=======
+import { useEffect, useState } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
+>>>>>>> fdf6d291032b55389a8d20036039cda5e81d56d8
 import { api } from "../lib/api";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
@@ -54,6 +59,7 @@ export function AssessmentDetail() {
         ]);
         setAssessment(assRes);
         setEvents(eventsRes?.data || []);
+<<<<<<< HEAD
 
         // Fetch live stats in parallel (best-effort — don't block render)
         Promise.allSettled([
@@ -68,6 +74,8 @@ export function AssessmentDetail() {
             setGapCount(versions.length > 0 ? versions.length : 0);
           }
         });
+=======
+>>>>>>> fdf6d291032b55389a8d20036039cda5e81d56d8
       } catch (e) {
         console.error(e);
       } finally {
@@ -77,11 +85,14 @@ export function AssessmentDetail() {
     fetchDetails();
   }, [id]);
 
+<<<<<<< HEAD
   const actorCount = useMemo(() => {
     const unique = new Set(events.map(e => e.actor_id).filter(Boolean));
     return unique.size;
   }, [events]);
 
+=======
+>>>>>>> fdf6d291032b55389a8d20036039cda5e81d56d8
   if (loading) {
     return (
       <div className="space-y-8">
@@ -132,7 +143,10 @@ export function AssessmentDetail() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
+<<<<<<< HEAD
           {/* Quick Stats Grid */}
+=======
+>>>>>>> fdf6d291032b55389a8d20036039cda5e81d56d8
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
              <div className="glass p-4 rounded-2xl border border-border/40">
                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-2">Progress</span>
@@ -142,27 +156,41 @@ export function AssessmentDetail() {
                </div>
              </div>
              <div className="glass p-4 rounded-2xl border border-border/40">
+<<<<<<< HEAD
                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-2">Gap Versions</span>
                <div className="flex items-end justify-between">
                  <span className="text-2xl font-bold">
                    {gapCount === null ? <span className="text-sm text-muted-foreground animate-pulse">…</span> : gapCount}
                  </span>
+=======
+               <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-2">Controls</span>
+               <div className="flex items-end justify-between">
+                 <span className="text-2xl font-bold">142</span>
+>>>>>>> fdf6d291032b55389a8d20036039cda5e81d56d8
                  <Shield className="h-4 w-4 text-emerald-500 opacity-50 mb-1" />
                </div>
              </div>
              <div className="glass p-4 rounded-2xl border border-border/40">
                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-2">Evidence</span>
                <div className="flex items-end justify-between">
+<<<<<<< HEAD
                  <span className="text-2xl font-bold">
                    {docCount === null ? <span className="text-sm text-muted-foreground animate-pulse">…</span> : docCount}
                  </span>
+=======
+                 <span className="text-2xl font-bold">28</span>
+>>>>>>> fdf6d291032b55389a8d20036039cda5e81d56d8
                  <FileText className="h-4 w-4 text-amber-500 opacity-50 mb-1" />
                </div>
              </div>
              <div className="glass p-4 rounded-2xl border border-border/40">
                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-2">Actors</span>
                <div className="flex items-end justify-between">
+<<<<<<< HEAD
                  <span className="text-2xl font-bold">{actorCount || events.length > 0 ? actorCount : "—"}</span>
+=======
+                 <span className="text-2xl font-bold">3</span>
+>>>>>>> fdf6d291032b55389a8d20036039cda5e81d56d8
                  <User className="h-4 w-4 text-purple-500 opacity-50 mb-1" />
                </div>
              </div>
@@ -246,7 +274,11 @@ export function AssessmentDetail() {
                         </p>
                         {ev.reason && (
                           <div className="p-3 bg-muted/40 rounded-xl border border-border/50 text-xs text-muted-foreground italic">
+<<<<<<< HEAD
                             {ev.reason}
+=======
+                            "{ev.reason}"
+>>>>>>> fdf6d291032b55389a8d20036039cda5e81d56d8
                           </div>
                         )}
                       </div>
