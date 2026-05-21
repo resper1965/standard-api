@@ -6,7 +6,7 @@ const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 export const createInMemoryWorkflowRepository = (): WorkflowRepository => {
   const records = new Map<string, WorkflowRunRecord>();
 
-  return {
+  const repo: WorkflowRepository = {
     async create(input) {
       records.set(input.workflow_run_id, clone(input));
       return clone(input);
@@ -30,8 +30,21 @@ export const createInMemoryWorkflowRepository = (): WorkflowRepository => {
     },
     async save(record) {
       records.set(record.workflow_run_id, clone(record));
+    },
+    withTenant(tenantId: string) {
+      return {
+        create: async (input) => repo.create(input),
+        get: async (workflowRunId) => {
+          const run = await repo.get(workflowRunId);
+          return run && run.state.tenant_id === tenantId ? run : null;
+        },
+        getActiveByAssessment: async (assessmentId: string) => repo.getActiveByAssessment(assessmentId, tenantId),
+        listByAssessment: async (assessmentId: string) => repo.listByAssessment(assessmentId, tenantId),
+        save: async (record) => repo.save(record),
+      };
     }
   };
+  return repo;
 };
 
 export const createInMemoryWorkflowAuditAdapter = () => {
