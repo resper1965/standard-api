@@ -6,9 +6,11 @@
   "type": "module",
   "packageManager": "pnpm@9.0.0",
   "scripts": {
+    "DESTRUIR-FANTASMAS": "node force.mjs",
+    "prepare": "node -e \"if(process.env.NODE_ENV==='production'){process.exit(0)}process.exit(1)\" || husky",
     "dev": "pnpm dev:api",
     "build": "pnpm -r --if-present build",
-    "lint": "node scripts/lint.mjs",
+    "lint": "node scripts/lint.mjs && pnpm -r --if-present lint",
     "typecheck": "pnpm -r --if-present typecheck",
     "test": "pnpm -r --if-present test",
     "test:unit": "pnpm -r --if-present --filter \"./packages/*\" --filter \"./workers/*\" test",
@@ -32,12 +34,22 @@
     "db:seed": "pnpm --filter @standard/schemas db:seed",
     "db:studio": "echo \"db:studio ainda não configurado\""
   },
+  "lint-staged": {
+    "*.{ts,js}": [
+      "eslint --fix",
+      "prettier --write"
+    ]
+  },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260426.1",
+    "@commitlint/cli": "^19.3.0",
+    "@commitlint/config-conventional": "^19.2.2",
     "@types/node": "^25.7.0",
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.2",
     "tsx": "latest",
-    "typescript": "latest",
-    "wrangler": "latest"
+    "typescript": "6.0.3",
+    "wrangler": "4.90.0"
   },
   "dependencies": {
     "dotenv": "^17.4.2"

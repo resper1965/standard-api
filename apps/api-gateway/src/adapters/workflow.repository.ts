@@ -62,6 +62,19 @@ export const createDrizzleWorkflowRepository = (db: DbClient): WorkflowRepositor
       updatedAt: new Date(),
     }).where(eq(workflowRuns.id, record.workflow_run_id));
   },
+
+  withTenant(tenantId: string) {
+    return {
+      create: async (input) => this.create(input),
+      get: async (workflowRunId) => {
+        const run = await this.get(workflowRunId);
+        return run && run.state.tenant_id === tenantId ? run : null;
+      },
+      getActiveByAssessment: async (assessmentId: string) => this.getActiveByAssessment(assessmentId, tenantId),
+      listByAssessment: async (assessmentId: string) => this.listByAssessment(assessmentId, tenantId),
+      save: async (record) => this.save(record),
+    };
+  }
 });
 
 export const createDrizzleWorkflowAuditAdapter = (db: DbClient): WorkflowAuditAdapter => ({

@@ -16,7 +16,7 @@ export const PoamActionTypeSchema = z.enum([
   "validation_required",
   "other"
 ]);
-export const PoamPrioritySchema = z.enum(["low", "medium", "high", "urgent"]);
+export const PoamPrioritySchema = z.enum(["low", "medium", "high", "critical", "urgent"]);
 export const PoamSeveritySchema = z.enum(["informational", "low", "medium", "high", "critical"]);
 export const PoamEffortEstimateSchema = z.enum(["small", "medium", "large", "extra_large", "unknown"]);
 export const PoamDependencyTypeSchema = z.enum(["blocks", "related_to", "prerequisite", "duplicates", "depends_on_external_party"]);

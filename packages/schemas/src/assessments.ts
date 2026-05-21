@@ -3,7 +3,7 @@ import { AssessmentLifecycleStateSchema } from "./domain";
 import { UuidSchema } from "./common";
 
 export const CreateAssessmentRequestSchema = z.object({
-  organization_id: UuidSchema,
+  organization_id: z.string().min(1),
   name: z.string().min(1),
   scf_version_id: UuidSchema,
   document_count: z.number().int().nonnegative().default(0)

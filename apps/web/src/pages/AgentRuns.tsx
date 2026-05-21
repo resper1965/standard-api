@@ -2,7 +2,15 @@ import { useEffect, useState } from "react";
 import { api } from "../lib/api";
 import { PageHeader } from "../components/PageHeader";
 import { Card, CardContent } from "../components/ui/card";
-import { Loader2, Bot, CheckCircle2, XCircle, Clock, ChevronRight } from "lucide-react";
+import { Loader2, Bot, CheckCircle2, XCircle, Clock, Eye } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../components/ui/dialog";
 
 interface AgentRun {
   agent_run_id: string;
@@ -17,6 +25,12 @@ interface AgentRun {
     prompt_tokens: number;
     completion_tokens: number;
     estimated_cost?: number;
+  };
+  output?: {
+    auditor_thinking_process?: string;
+    architect_reasoning_process?: string;
+    devops_commands_suggested?: string[];
+    [key: string]: any;
   };
 }
 
@@ -177,8 +191,9 @@ export function AgentRunsPage() {
                     const tokens = (run.usage?.prompt_tokens ?? 0) + (run.usage?.completion_tokens ?? 0);
 
                     return (
-                      <tr key={run.agent_run_id} className="hover:bg-muted/50 transition-colors">
-                        <td className="px-4 py-3">
+                      <Dialog key={run.agent_run_id}>
+                        <tr className="hover:bg-muted/50 transition-colors">
+                          <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
                             <span className="text-base">{agentInfo.emoji}</span>
                             <div>
@@ -205,9 +220,65 @@ export function AgentRunsPage() {
                           {new Date(run.created_at).toLocaleString()}
                         </td>
                         <td className="px-4 py-3">
-                          <ChevronRight className="h-4 w-4 text-muted-foreground/40" />
+                          <DialogTrigger asChild>
+                            <button className="flex h-8 w-8 items-center justify-center rounded-md hover:bg-muted text-muted-foreground transition-colors">
+                              <Eye className="h-4 w-4" />
+                            </button>
+                          </DialogTrigger>
                         </td>
                       </tr>
+                      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle className="flex items-center gap-2">
+                            <span>{agentInfo.emoji}</span>
+                            {agentInfo.label} Output
+                          </DialogTitle>
+                          <DialogDescription>
+                            Reasoning and results for run {run.agent_run_id.slice(0, 8)}...
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          {run.output?.auditor_thinking_process && (
+                            <div className="rounded-md border p-4 bg-muted/30">
+                              <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
+                                <Bot className="h-4 w-4" /> Auditor Thinking Process
+                              </h4>
+                              <p className="text-sm text-muted-foreground whitespace-pre-wrap font-mono">
+                                {run.output.auditor_thinking_process}
+                              </p>
+                            </div>
+                          )}
+                          {run.output?.architect_reasoning_process && (
+                            <div className="rounded-md border p-4 bg-muted/30">
+                              <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
+                                <Bot className="h-4 w-4" /> Architect Reasoning
+                              </h4>
+                              <p className="text-sm text-muted-foreground whitespace-pre-wrap font-mono">
+                                {run.output.architect_reasoning_process}
+                              </p>
+                            </div>
+                          )}
+                          {run.output?.devops_commands_suggested && run.output.devops_commands_suggested.length > 0 && (
+                            <div className="rounded-md border p-4 bg-muted/30">
+                              <h4 className="text-sm font-semibold mb-2">DevOps Commands</h4>
+                              <div className="space-y-2">
+                                {run.output.devops_commands_suggested.map((cmd, i) => (
+                                  <pre key={i} className="text-xs p-2 rounded bg-background border overflow-x-auto text-sky-500">
+                                    {cmd}
+                                  </pre>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          <div className="pt-4 border-t">
+                            <h4 className="text-sm font-medium mb-2">Raw Output Schema</h4>
+                            <pre className="text-xs p-3 rounded bg-muted overflow-x-auto text-foreground/80">
+                              {JSON.stringify(run.output || {}, null, 2)}
+                            </pre>
+                          </div>
+                        </div>
+                      </DialogContent>
+                      </Dialog>
                     );
                   })}
                 </tbody>

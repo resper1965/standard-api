@@ -32,7 +32,8 @@ const toApiError = (error: unknown): never => {
 };
 
 const requireAssessment = async (deps: AppDependencies, assessmentId: string, tenantId: string): Promise<AssessmentRecord> => {
-  const assessment = await deps.assessments.get(assessmentId, tenantId);
+  const tenantAssessmentsDb = deps.assessments.withTenant(tenantId);
+  const assessment = await tenantAssessmentsDb.get(assessmentId);
   if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
   return assessment;
 };
@@ -58,8 +59,8 @@ const applyTransitionIfAllowed = async (deps: AppDependencies, assessment: Asses
   });
   assessment.snapshot = result.assessment;
   assessment.trace_id = traceId;
-  await deps.assessments.save(assessment);
-  await deps.lifecycleEvents.record(result.event);
+  await deps.assessments.withTenant(assessment.tenant_id).save(assessment);
+  await deps.lifecycleEvents.withTenant(assessment.tenant_id).record(result.event);
 };
 
 export const reportingRoutes: RouteDefinition[] = [
@@ -176,7 +177,7 @@ export const reportingRoutes: RouteDefinition[] = [
       const report = await deps.reporting.repositories.versions.get(routeParam(params, "reportVersionId"), tenantId!);
       if (!report) throw new ApiError("REPORT_NOT_FOUND", "Report version not found.", 404);
       const assessment = await requireAssessment(deps, report.assessment_id, tenantId!);
-      const approval = await deps.approvals.getForGate(body.approval_event_id, "report");
+      const approval = await deps.approvals.withTenant(tenantId!).getForGate(body.approval_event_id, "report");
       if (!approval) throw new ApiError("APPROVAL_REQUIRED", "A valid report approval_event is required.", 409);
       try {
         return json(await new ReportApprovalService(deps.reporting).approveReport(report.report_version_id, body, contextFor(assessment, traceId, actorId!)));

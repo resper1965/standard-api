@@ -67,7 +67,8 @@ export const documentsRoutes: RouteDefinition[] = [
     permissions: ["document:upload"],
     handler: async ({ request, deps, params, tenantId, actorId, traceId }) => {
       const assessmentId = routeParam(params, "assessmentId");
-      const assessment = await deps.assessments.get(assessmentId, tenantId!);
+      const tenantAssessmentsDb = deps.assessments.withTenant(tenantId!);
+      const assessment = await tenantAssessmentsDb.get(assessmentId);
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
 
       const { file, metadata } = await readUploadForm(request);
@@ -105,7 +106,7 @@ export const documentsRoutes: RouteDefinition[] = [
           metadata
         });
 
-        await deps.assessments.save({
+        await tenantAssessmentsDb.save({
           ...assessment,
           snapshot: {
             ...assessment.snapshot,
@@ -113,7 +114,8 @@ export const documentsRoutes: RouteDefinition[] = [
           }
         });
 
-        const job = await deps.documentIngestion.repositories.jobs.getJob(result.message.job_id, tenantId!);
+        const tenantJobsDb = deps.documentIngestion.repositories.jobs.withTenant(tenantId!);
+        const job = await tenantJobsDb.getJob(result.message.job_id);
         return json({ document: result.document, job, trace_id: traceId }, { status: 202 });
       } catch (error) {
         throw mapUploadError(error);
@@ -125,7 +127,8 @@ export const documentsRoutes: RouteDefinition[] = [
     path: "/api/v1/assessments/:assessmentId/documents",
     protected: true,
     handler: async ({ deps, params, tenantId, traceId }) => {
-      const documents = await deps.documentIngestion.repositories.documents.listDocuments(routeParam(params, "assessmentId"), tenantId!);
+      const tenantDocDb = deps.documentIngestion.repositories.documents.withTenant(tenantId!);
+      const documents = await tenantDocDb.listDocuments(routeParam(params, "assessmentId"));
       return json({ data: documents, trace_id: traceId });
     }
   },
@@ -134,7 +137,8 @@ export const documentsRoutes: RouteDefinition[] = [
     path: "/api/v1/documents/:documentId",
     protected: true,
     handler: async ({ deps, params, tenantId }) => {
-      const document = await deps.documentIngestion.repositories.documents.getDocument(routeParam(params, "documentId"), tenantId!);
+      const tenantDocDb = deps.documentIngestion.repositories.documents.withTenant(tenantId!);
+      const document = await tenantDocDb.getDocument(routeParam(params, "documentId"));
       if (!document) throw new ApiError("NOT_FOUND", "Document not found.", 404);
       return json(document);
     }
@@ -147,7 +151,8 @@ export const documentsRoutes: RouteDefinition[] = [
       const url = new URL(request.url);
       const limit = Math.min(Number.parseInt(url.searchParams.get("limit") ?? "25", 10), 100);
       const cursor = url.searchParams.get("cursor") ?? undefined;
-      const chunks = await deps.documentIngestion.repositories.chunks.listChunks(routeParam(params, "documentId"), tenantId!, limit, cursor);
+      const tenantChunksDb = deps.documentIngestion.repositories.chunks.withTenant(tenantId!);
+      const chunks = await tenantChunksDb.listChunks(routeParam(params, "documentId"), limit, cursor);
       return json({ data: chunks, trace_id: traceId });
     }
   },
@@ -156,7 +161,8 @@ export const documentsRoutes: RouteDefinition[] = [
     path: "/api/v1/documents/:documentId/jobs",
     protected: true,
     handler: async ({ deps, params, tenantId, traceId }) => {
-      const jobs = await deps.documentIngestion.repositories.jobs.listJobsByDocument(routeParam(params, "documentId"), tenantId!);
+      const tenantJobDb = deps.documentIngestion.repositories.jobs.withTenant(tenantId!);
+      const jobs = await tenantJobDb.listJobsByDocument(routeParam(params, "documentId"));
       return json({ data: jobs, trace_id: traceId });
     }
   },
@@ -168,7 +174,10 @@ export const documentsRoutes: RouteDefinition[] = [
     permissions: ["document:reprocess"],
     handler: async ({ request, deps, params, tenantId, actorId, traceId }) => {
       await parseJson(request, ReprocessDocumentRequestSchema);
-      const document = await deps.documentIngestion.repositories.documents.getDocument(routeParam(params, "documentId"), tenantId!);
+      const tenantDocDb = deps.documentIngestion.repositories.documents.withTenant(tenantId!);
+      const tenantJobDb = deps.documentIngestion.repositories.jobs.withTenant(tenantId!);
+      
+      const document = await tenantDocDb.getDocument(routeParam(params, "documentId"));
       if (!document) throw new ApiError("NOT_FOUND", "Document not found.", 404);
 
       const job = {
@@ -184,7 +193,7 @@ export const documentsRoutes: RouteDefinition[] = [
         trace_id: traceId,
         metadata: { reprocess_requested_by: actorId }
       };
-      await deps.documentIngestion.repositories.jobs.saveJob(job);
+      await tenantJobDb.saveJob(job);
       await deps.documentIngestion.queue.enqueue({
         tenant_id: document.tenant_id,
         organization_id: document.organization_id,
@@ -206,10 +215,11 @@ export const documentsRoutes: RouteDefinition[] = [
     protected: true,
     requireActor: true,
     handler: async ({ deps, params, tenantId, traceId }) => {
-      const document = await deps.documentIngestion.repositories.documents.getDocument(routeParam(params, "documentId"), tenantId!);
+      const tenantDocDb = deps.documentIngestion.repositories.documents.withTenant(tenantId!);
+      const document = await tenantDocDb.getDocument(routeParam(params, "documentId"));
       if (!document) throw new ApiError("NOT_FOUND", "Document not found.", 404);
       const archived = { ...document, status: "archived" as const, trace_id: traceId };
-      await deps.documentIngestion.repositories.documents.updateDocument(archived);
+      await tenantDocDb.updateDocument(archived);
       return json(archived);
     }
   },
@@ -218,7 +228,8 @@ export const documentsRoutes: RouteDefinition[] = [
     path: "/api/v1/assessments/:assessmentId/ingestion-jobs",
     protected: true,
     handler: async ({ deps, params, tenantId, traceId }) => {
-      const jobs = await deps.documentIngestion.repositories.jobs.listJobsByAssessment(routeParam(params, "assessmentId"), tenantId!);
+      const tenantJobsDb = deps.documentIngestion.repositories.jobs.withTenant(tenantId!);
+      const jobs = await tenantJobsDb.listJobsByAssessment(routeParam(params, "assessmentId"));
       return json({ data: jobs, trace_id: traceId });
     }
   },
@@ -227,7 +238,8 @@ export const documentsRoutes: RouteDefinition[] = [
     path: "/api/v1/ingestion-jobs/:jobId",
     protected: true,
     handler: async ({ deps, params, tenantId }) => {
-      const job = await deps.documentIngestion.repositories.jobs.getJob(routeParam(params, "jobId"), tenantId!);
+      const tenantJobsDb = deps.documentIngestion.repositories.jobs.withTenant(tenantId!);
+      const job = await tenantJobsDb.getJob(routeParam(params, "jobId"));
       if (!job) throw new ApiError("NOT_FOUND", "Ingestion job not found.", 404);
       return json(job);
     }
@@ -238,10 +250,11 @@ export const documentsRoutes: RouteDefinition[] = [
     protected: true,
     requireActor: true,
     handler: async ({ deps, params, tenantId, traceId }) => {
-      const document = await deps.documentIngestion.repositories.documents.getDocument(routeParam(params, "documentId"), tenantId!);
+      const tenantDocDb = deps.documentIngestion.repositories.documents.withTenant(tenantId!);
+      const document = await tenantDocDb.getDocument(routeParam(params, "documentId"));
       if (!document) throw new ApiError("NOT_FOUND", "Document not found.", 404);
       const updated = { ...document, status: "queued_for_embedding" as const, trace_id: traceId };
-      await deps.documentIngestion.repositories.documents.updateDocument(updated);
+      await tenantDocDb.updateDocument(updated);
       return json(updated, { status: 202 });
     }
   },
@@ -251,9 +264,12 @@ export const documentsRoutes: RouteDefinition[] = [
     protected: true,
     requireActor: true,
     handler: async ({ deps, params, tenantId, traceId }) => {
-      const job = await deps.documentIngestion.repositories.jobs.getJob(routeParam(params, "jobId"), tenantId!);
+      const tenantJobsDb = deps.documentIngestion.repositories.jobs.withTenant(tenantId!);
+      const tenantDocDb = deps.documentIngestion.repositories.documents.withTenant(tenantId!);
+      
+      const job = await tenantJobsDb.getJob(routeParam(params, "jobId"));
       if (!job) throw new ApiError("NOT_FOUND", "Ingestion job not found.", 404);
-      const document = await deps.documentIngestion.repositories.documents.getDocument(job.document_id, tenantId!);
+      const document = await tenantDocDb.getDocument(job.document_id);
       if (!document) throw new ApiError("NOT_FOUND", "Document not found.", 404);
       await processDocumentIngestionJob(
         {
@@ -270,7 +286,7 @@ export const documentsRoutes: RouteDefinition[] = [
         },
         deps.documentIngestion
       );
-      const updated = await deps.documentIngestion.repositories.jobs.getJob(job.job_id, tenantId!);
+      const updated = await tenantJobsDb.getJob(job.job_id);
       return json(updated);
     }
   }

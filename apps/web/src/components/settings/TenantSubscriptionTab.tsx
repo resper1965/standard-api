@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { authClient } from "../../lib/auth-client";
+import { useSession } from "../../lib/auth-client";
 import { apiClient } from "../../lib/api";
 
 interface TenantData {
@@ -11,7 +11,7 @@ interface TenantData {
 }
 
 export function TenantSubscriptionTab() {
-  const { data: session } = authClient.useSession();
+  const { data: session } = useSession();
   const [tenant, setTenant] = useState<TenantData | null>(null);
   const [loading, setLoading] = useState(true);
 

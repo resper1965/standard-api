@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
-import { authClient } from "../lib/auth-client";
+import { useSession } from "../lib/auth-client";
 import { PageHeader } from "../components/PageHeader";
 import { TenantSubscriptionTab } from "../components/settings/TenantSubscriptionTab";
 import { DeveloperDocsTab } from "../components/settings/DeveloperDocsTab";
+import { OrganizationSettingsTab } from "../components/settings/OrganizationSettingsTab";
 import { ApiKeysManager } from "../components/ApiKeysManager";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { ShieldAlert } from "lucide-react";
 
 export function SettingsPage() {
-  const { data: session } = authClient.useSession();
+  const { data: session } = useSession();
   const [loading, setLoading] = useState(false);
   const [apiKeys, setApiKeys] = useState<any[]>([]);
 
@@ -53,6 +54,7 @@ export function SettingsPage() {
 
       <Tabs defaultValue="subscription" className="space-y-6">
         <TabsList className="bg-black border border-zinc-800 mb-2">
+          <TabsTrigger value="organization" className="data-[state=active]:bg-zinc-800 data-[state=active]:text-white">Organization</TabsTrigger>
           <TabsTrigger value="subscription" className="data-[state=active]:bg-zinc-800 data-[state=active]:text-white">Assinatura</TabsTrigger>
           <TabsTrigger value="apikeys" className="data-[state=active]:bg-zinc-800 data-[state=active]:text-white">B2B API Keys</TabsTrigger>
           <TabsTrigger value="docs" className="data-[state=active]:bg-zinc-800 data-[state=active]:text-white flex items-center gap-2">
@@ -60,6 +62,10 @@ export function SettingsPage() {
           </TabsTrigger>
         </TabsList>
         
+        <TabsContent value="organization" className="mt-0 border-none outline-none">
+          <OrganizationSettingsTab />
+        </TabsContent>
+
         <TabsContent value="subscription" className="mt-0 border-none outline-none">
           <TenantSubscriptionTab />
         </TabsContent>

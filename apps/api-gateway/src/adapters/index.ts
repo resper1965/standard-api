@@ -42,6 +42,7 @@ import { createDrizzlePoamRepositories } from "./poam.repository";
 import { createDrizzleReportRepositories } from "./reporting.repository";
 import { createMockApiKeysRepository, createDrizzleApiKeysRepository } from "./api-keys.repository";
 import { createInMemoryWebhookRepository, createDrizzleWebhookRepository } from "./webhook.repository";
+import { resolveTenantContext } from "./tenant-mapping";
 
 /**
  * Type bridge: NeonHttpDatabase (edge) ↔ PostgresJsDatabase (packages).
@@ -123,6 +124,7 @@ export const createDrizzleRepositories = (db: DbClient, env?: Env): AppDependenc
     observability,
     alerts,
     privacy: { repositories: createDrizzlePrivacyRepositories(db) },
-    webhooks: createDrizzleWebhookRepository(db)
+    webhooks: createDrizzleWebhookRepository(db),
+    resolveTenantContext: (baOrgId: string) => resolveTenantContext(db, baOrgId)
   };
 };

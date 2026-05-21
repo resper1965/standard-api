@@ -169,6 +169,45 @@ jobs:
 
 ---
 
+## Recipe 6: Async Multi-Agent Council Dispatch
+
+```typescript
+// Define multiple specialized agents for complex analysis
+const agents = ["poam_architect", "evidence_evaluator", "board_translator"];
+const context = "Architecture document showing new ephemeral cloud deployment strategies.";
+
+// 1. Dispatch the job asynchronously
+const { data: council } = await client.intelligence.dispatchCouncil({
+  tenant_id: "tenant-uuid",
+  context: context,
+  agents: agents
+});
+console.log(`Job Dispatched. ID: ${council.job_id}`);
+
+// 2. Poll the job status via the Jobs API
+let jobStatus = "pending";
+let output = null;
+
+while (jobStatus === "pending" || jobStatus === "running") {
+  // Wait 2 seconds before polling
+  await new Promise(resolve => setTimeout(resolve, 2000));
+  
+  const { data: job } = await client.jobs.getStatus(council.job_id);
+  jobStatus = job.status;
+  output = job.output;
+  console.log(`Polling... Current Status: ${jobStatus}`);
+}
+
+if (jobStatus === "completed") {
+  console.log("Council completed evaluation!");
+  console.log(output);
+} else {
+  console.error("Council job failed", output);
+}
+```
+
+---
+
 ## Lifecycle State Machine
 
 ```

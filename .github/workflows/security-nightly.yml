@@ -1,0 +1,53 @@
+name: "SSDLC: Nightly Scans & Dojo Upload"
+
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  nightly-scanners:
+    name: Advanced Scanners
+    runs-on: ubuntu-latest
+    env:
+      DD_URL: ${{ secrets.DEFECTDOJO_URL || 'https://dd.esper.ws' }}
+      DD_API_KEY: ${{ secrets.DEFECTDOJO_API_KEY }}
+      # Hardcoded fallback conforme ID passado pelo time
+      ENGAGE_ID: ${{ vars.DEFECTDOJO_ENGAGEMENT_ID || '2' }}
+      
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: CodeQL/Semgrep SAST
+        run: docker run --rm -v "${{ github.workspace }}:/src" returntocorp/semgrep semgrep scan --config auto --json -o /src/semgrep.json --error || true
+      
+      - name: Upload SAST to DefectDojo
+        if: always() && env.DD_API_KEY != ''
+        run: |
+          curl -sS -X POST "${DD_URL}/api/v2/import-scan/" \
+            -H "Authorization: Token ${DD_API_KEY}" \
+            -F "engagement=${ENGAGE_ID}" \
+            -F "scan_type=Semgrep JSON Report" \
+            -F "active=true" \
+            -F "verified=false" \
+            -F "file=@semgrep.json" || echo "Falha ao enviar SAST"
+
+      - name: Gitleaks Scan
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          report-format: json
+          report-path: gitleaks.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+
+      - name: Upload Gitleaks to DefectDojo
+        if: always() && env.DD_API_KEY != ''
+        run: |
+          curl -sS -X POST "${DD_URL}/api/v2/import-scan/" \
+            -H "Authorization: Token ${DD_API_KEY}" \
+            -F "engagement=${ENGAGE_ID}" \
+            -F "scan_type=Gitleaks Scan" \
+            -F "active=true" \
+            -F "verified=false" \
+            -F "file=@gitleaks.json" || echo "Falha ao enviar Gitleaks"

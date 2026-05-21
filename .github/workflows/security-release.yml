@@ -1,0 +1,36 @@
+name: "SSDLC: Release & Compliance"
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  release-scans:
+    name: SBOM Generation
+    runs-on: ubuntu-latest
+    env:
+      DD_URL: ${{ secrets.DEFECTDOJO_URL || 'https://dd.esper.ws' }}
+      DD_API_KEY: ${{ secrets.DEFECTDOJO_API_KEY }}
+      # Hardcoded fallback conforme ID passado pelo time
+      ENGAGE_ID: ${{ vars.DEFECTDOJO_ENGAGEMENT_ID || '2' }}
+      
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate SBOM (Syft CycloneDX)
+        uses: anchore/sbom-action@v0
+        with:
+          format: cyclonedx-json
+          output-file: sbom.json
+
+      - name: Upload SBOM to DefectDojo
+        if: always() && env.DD_API_KEY != ''
+        run: |
+          curl -sS -X POST "${DD_URL}/api/v2/import-scan/" \
+            -H "Authorization: Token ${DD_API_KEY}" \
+            -F "engagement=${ENGAGE_ID}" \
+            -F "scan_type=CycloneDX Scan" \
+            -F "active=true" \
+            -F "verified=true" \
+            -F "file=@sbom.json" || echo "Falha ao enviar SBOM"

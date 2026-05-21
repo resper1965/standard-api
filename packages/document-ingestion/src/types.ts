@@ -70,12 +70,28 @@ export type QueueAdapter = {
   enqueueKbEmbeddingJob(message: any): Promise<void>; // using any temporarily to avoid circular deps
 };
 
+export interface TenantScopedDocumentRecordRepository {
+  saveDocument(document: DocumentResponse): Promise<void>;
+  getDocument(documentId: string): Promise<DocumentResponse | null>;
+  listDocuments(assessmentId: string): Promise<DocumentResponse[]>;
+  updateDocument(document: DocumentResponse): Promise<void>;
+}
+
 export type DocumentRecordRepository = {
   saveDocument(document: DocumentResponse): Promise<void>;
   getDocument(documentId: string, tenantId: string): Promise<DocumentResponse | null>;
   listDocuments(assessmentId: string, tenantId: string): Promise<DocumentResponse[]>;
   updateDocument(document: DocumentResponse): Promise<void>;
+  withTenant(tenantId: string): TenantScopedDocumentRecordRepository;
 };
+
+export interface TenantScopedDocumentJobRepository {
+  saveJob(job: DocumentJobResponse): Promise<void>;
+  getJob(jobId: string): Promise<DocumentJobResponse | null>;
+  listJobsByDocument(documentId: string): Promise<DocumentJobResponse[]>;
+  listJobsByAssessment(assessmentId: string): Promise<DocumentJobResponse[]>;
+  updateJob(job: DocumentJobResponse): Promise<void>;
+}
 
 export type DocumentJobRepository = {
   saveJob(job: DocumentJobResponse): Promise<void>;
@@ -83,11 +99,18 @@ export type DocumentJobRepository = {
   listJobsByDocument(documentId: string, tenantId: string): Promise<DocumentJobResponse[]>;
   listJobsByAssessment(assessmentId: string, tenantId: string): Promise<DocumentJobResponse[]>;
   updateJob(job: DocumentJobResponse): Promise<void>;
+  withTenant(tenantId: string): TenantScopedDocumentJobRepository;
 };
+
+export interface TenantScopedDocumentChunkRepository {
+  saveChunks(chunks: DocumentChunk[]): Promise<void>;
+  listChunks(documentId: string, limit: number, cursor?: string): Promise<DocumentChunk[]>;
+}
 
 export type DocumentChunkRepository = {
   saveChunks(chunks: DocumentChunk[]): Promise<void>;
   listChunks(documentId: string, tenantId: string, limit: number, cursor?: string): Promise<DocumentChunk[]>;
+  withTenant(tenantId: string): TenantScopedDocumentChunkRepository;
 };
 
 export type VectorReferenceRepository = {

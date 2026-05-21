@@ -20,6 +20,15 @@ export class InMemoryPoamVersionRepository {
   async listByAssessment(assessmentId: string, tenantId: string): Promise<PoamVersionResponse[]> {
     return [...this.versions.values()].filter((version) => version.assessment_id === assessmentId && version.tenant_id === tenantId);
   }
+
+  withTenant(tenantId: string) {
+    return {
+      save: async (version: PoamVersionResponse) => this.save(version),
+      update: async (version: PoamVersionResponse) => this.update(version),
+      get: async (poamVersionId: string) => this.get(poamVersionId, tenantId),
+      listByAssessment: async (assessmentId: string) => this.listByAssessment(assessmentId, tenantId)
+    };
+  }
 }
 
 export class InMemoryPoamItemRepository {
@@ -50,6 +59,15 @@ export class InMemoryPoamItemRepository {
       (filters.requires_validation === undefined || item.requires_user_validation === filters.requires_validation)
     );
   }
+
+  withTenant(tenantId: string) {
+    return {
+      saveMany: async (items: PoamItemResponse[]) => this.saveMany(items),
+      update: async (item: PoamItemResponse) => this.update(item),
+      get: async (poamItemId: string) => this.get(poamItemId, tenantId),
+      listByVersion: async (poamVersionId: string, filters?: PoamItemFilters) => this.listByVersion(poamVersionId, tenantId, filters)
+    };
+  }
 }
 
 export class InMemoryPoamMilestoneRepository {
@@ -74,6 +92,16 @@ export class InMemoryPoamMilestoneRepository {
 
   async listByItem(poamItemId: string, tenantId: string): Promise<PoamMilestoneResponse[]> {
     return [...this.milestones.values()].filter((milestone) => milestone.poam_item_id === poamItemId && milestone.tenant_id === tenantId);
+  }
+
+  withTenant(tenantId: string) {
+    return {
+      save: async (milestone: PoamMilestoneResponse) => this.save(milestone),
+      saveMany: async (milestones: PoamMilestoneResponse[]) => this.saveMany(milestones),
+      update: async (milestone: PoamMilestoneResponse) => this.update(milestone),
+      get: async (milestoneId: string) => this.get(milestoneId, tenantId),
+      listByItem: async (poamItemId: string) => this.listByItem(poamItemId, tenantId)
+    };
   }
 }
 
@@ -100,6 +128,14 @@ export class InMemoryPoamDependencyRepository {
 
   async listByItem(poamItemId: string, tenantId: string): Promise<PoamDependencyResponse[]> {
     return [...this.dependencies.values()].filter((dependency) => dependency.poam_item_id === poamItemId && dependency.tenant_id === tenantId);
+  }
+
+  withTenant(tenantId: string) {
+    return {
+      save: async (dependency: PoamDependencyResponse) => this.save(dependency),
+      saveMany: async (dependencies: PoamDependencyResponse[]) => this.saveMany(dependencies),
+      listByItem: async (poamItemId: string) => this.listByItem(poamItemId, tenantId)
+    };
   }
 }
 

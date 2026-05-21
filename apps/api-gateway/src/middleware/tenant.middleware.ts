@@ -9,6 +9,11 @@ export const resolveTenantContext = (context: RequestContext, protectedRoute: bo
   const resolvedTenantId = headerTenantId ?? pathTenantId;
 
   if (protectedRoute && !resolvedTenantId) {
+    // Only enforce tenant requirement when there IS an authenticated actor.
+    // If the request is unauthenticated, auth middleware will throw 401 first —
+    // returning 400 here would leak that the route exists and confuse clients.
+    if (!context.actorId) return;
+
     void new SecurityEventService(context.deps.observability).record({
       event_type: "tenant_context_missing",
       severity: "medium",

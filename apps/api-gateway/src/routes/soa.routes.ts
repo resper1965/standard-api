@@ -28,7 +28,8 @@ const toApiError = (error: unknown): never => {
 };
 
 const requireAssessment = async (deps: AppDependencies, assessmentId: string, tenantId: string): Promise<AssessmentRecord> => {
-  const assessment = await deps.assessments.get(assessmentId, tenantId);
+  const tenantAssessmentsDb = deps.assessments.withTenant(tenantId);
+  const assessment = await tenantAssessmentsDb.get(assessmentId);
   if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
   return assessment;
 };
@@ -62,8 +63,8 @@ const applyTransitionIfAllowed = async (
   });
   assessment.snapshot = result.assessment;
   assessment.trace_id = traceId;
-  await deps.assessments.save(assessment);
-  await deps.lifecycleEvents.record(result.event);
+  await deps.assessments.withTenant(assessment.tenant_id).save(assessment);
+  await deps.lifecycleEvents.withTenant(assessment.tenant_id).record(result.event);
 };
 
 export const soaRoutes: RouteDefinition[] = [
@@ -78,7 +79,7 @@ export const soaRoutes: RouteDefinition[] = [
       try {
         const scope = await new ScopeService(deps.soa).createDraftScope(body, contextFor(assessment, traceId, actorId!));
         assessment.snapshot.scopeDrafted = true;
-        await deps.assessments.save(assessment);
+        await deps.assessments.withTenant(assessment.tenant_id).save(assessment);
         await applyTransitionIfAllowed(deps, assessment, "scope_drafted", traceId, actorId!);
         return json(scope, { status: 201 });
       } catch (error) {
@@ -169,7 +170,7 @@ export const soaRoutes: RouteDefinition[] = [
       try {
         const draft = await new SoaDraftService(deps.soa).createDraftFromFramework(assessment.assessment_id, body.framework_id, body.scf_version_id, contextFor(assessment, traceId, actorId!));
         assessment.snapshot.soaDraftVersionComplete = true;
-        await deps.assessments.save(assessment);
+        await deps.assessments.withTenant(assessment.tenant_id).save(assessment);
         await applyTransitionIfAllowed(deps, assessment, "soa_drafted", traceId, actorId!);
         return json(draft, { status: 201 });
       } catch (error) {
@@ -260,7 +261,7 @@ export const soaRoutes: RouteDefinition[] = [
       try {
         const submitted = await new SoaReviewService(deps.soa).submitSoaForReview(version.soa_version_id, contextFor(assessment, traceId, actorId!), body.exception_rationale);
         assessment.snapshot.soaDraftVersionComplete = true;
-        await deps.assessments.save(assessment);
+        await deps.assessments.withTenant(assessment.tenant_id).save(assessment);
         await applyTransitionIfAllowed(deps, assessment, "soa_under_review", traceId, actorId!);
         return json(submitted);
       } catch (error) {
@@ -278,12 +279,12 @@ export const soaRoutes: RouteDefinition[] = [
       if (!version) throw new ApiError("NOT_FOUND", "SoA version not found.", 404);
       const assessment = await requireAssessment(deps, version.assessment_id, tenantId!);
       const body = await parseJson(request, ApproveSoaRequestSchema);
-      const approvalEvent = await deps.approvals.getForGate(body.approval_event_id, "soa");
+      const approvalEvent = await deps.approvals.withTenant(tenantId!).getForGate(body.approval_event_id, "soa");
       if (!approvalEvent || approvalEvent.approvedBy !== actorId) throw new ApiError("APPROVAL_REQUIRED", "Valid human SoA approval_event is required.", 409);
       try {
         const approved = await new SoaApprovalService(deps.soa).approveSoa(version.soa_version_id, body, contextFor(assessment, traceId, actorId!));
         assessment.snapshot.soaApproved = true;
-        await deps.assessments.save(assessment);
+        await deps.assessments.withTenant(assessment.tenant_id).save(assessment);
         await applyTransitionIfAllowed(deps, assessment, "soa_approved", traceId, actorId!, approvalEvent);
         return json(approved);
       } catch (error) {
@@ -302,7 +303,7 @@ export const soaRoutes: RouteDefinition[] = [
       const assessment = await requireAssessment(deps, version.assessment_id, tenantId!);
       const marked = await new SoaApprovalService(deps.soa).markSoaIngested(version.soa_version_id, contextFor(assessment, traceId, actorId!));
       assessment.snapshot.soaIngested = true;
-      await deps.assessments.save(assessment);
+      await deps.assessments.withTenant(assessment.tenant_id).save(assessment);
       await applyTransitionIfAllowed(deps, assessment, "soa_ingested", traceId, actorId!);
       return json(marked);
     }

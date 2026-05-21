@@ -26,7 +26,7 @@ export const dashboardRoutes: RouteDefinition[] = [
     permissions: ["assessment:read"],
     handler: async ({ deps, params, tenantId, traceId }) => {
       const assessmentId = routeParam(params, "assessmentId");
-      const assessment = await deps.assessments.get(assessmentId, tenantId!);
+      const assessment = await deps.assessments.withTenant(tenantId!).get(assessmentId);
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
 
       // SoA items → total & implemented controls

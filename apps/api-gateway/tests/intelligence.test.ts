@@ -119,3 +119,66 @@ test("Intelligence Council dispatches a detached agentic execution correctly", a
 
   expect(resultInvalid.response.status).toBe(400);
 });
+
+test("Job Status Polling endpoint returns 404 for non-existent job", async () => {
+  const client = createTestClient();
+  const validUUID = "550e8400-e29b-41d4-a716-446655440000";
+
+  // When a job does not exist or we mock DB misses, it returns 404
+  const result = await client.send(
+    `/api/v1/jobs/${validUUID}`,
+    "GET",
+    undefined,
+    { 
+      "x-standard-actor-id": ids.actorId,
+      "x-standard-tenant-id": ids.tenantId
+    }
+  );
+
+  expect(result.response.status).toBe(404);
+  expect(result.body.error).toBeDefined();
+  expect(result.body.error.code).toBe("NOT_FOUND");
+});
+
+test("Job Status Polling endpoint returns 200 OK and pending status for newly dispatched job", async () => {
+  const client = createTestClient();
+  const validUUID = "123e4567-e89b-12d3-a456-426614174000";
+
+  // Step 1: Dispatch a job
+  const dispatchResult = await client.send(
+    "/api/v1/intelligence/council",
+    "POST",
+    {
+      assessment_id: validUUID,
+      target_framework_id: validUUID,
+      agents: ["incident_triager"],
+      input: { context: "testing" }
+    },
+    { 
+      "x-standard-actor-id": ids.actorId,
+      "x-standard-tenant-id": ids.tenantId
+    }
+  );
+
+  expect(dispatchResult.response.status).toBe(202);
+  const jobId = dispatchResult.body.job_id;
+
+  if (!jobId) {
+    throw new Error("Dispatch did not return a valid job_id");
+  }
+
+  // Step 2: Poll the created job status
+  const pollResult = await client.send(
+    `/api/v1/jobs/${jobId}`,
+    "GET",
+    undefined,
+    { 
+      "x-standard-actor-id": ids.actorId,
+      "x-standard-tenant-id": ids.tenantId
+    }
+  );
+
+  expect(pollResult.response.status).toBe(200);
+  expect(pollResult.body.job_id).toBe(jobId);
+  expect(pollResult.body.status).toBe("pending");
+});

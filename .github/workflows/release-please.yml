@@ -1,0 +1,52 @@
+name: Release Please and SBOM
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: google-github-actions/release-please-action@v4
+        id: release
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          release-type: node
+
+      # If a release was created, generate an SBOM and attach it to the release
+      - name: Checkout Repository
+        if: ${{ steps.release.outputs.release_created }}
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        if: ${{ steps.release.outputs.release_created }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install pnpm
+        if: ${{ steps.release.outputs.release_created }}
+        run: npm install -g pnpm@9.0.0
+
+      - name: Install @cyclonedx/cyclonedx-npm
+        if: ${{ steps.release.outputs.release_created }}
+        run: npm install -g @cyclonedx/cyclonedx-npm
+
+      - name: Generate SBOM
+        if: ${{ steps.release.outputs.release_created }}
+        run: cyclonedx-npm --output-format json --output-file bom.json
+
+      - name: Upload SBOM to Release
+        if: ${{ steps.release.outputs.release_created }}
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.release.outputs.tag_name }}
+          files: bom.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -6,6 +6,7 @@ import { OverviewPage } from "./pages/dashboard/OverviewPage"
 import { SettingsPage } from "./pages/dashboard/settings/SettingsPage"
 import { authClient } from "./lib/auth-client"
 import { lazy, Suspense } from "react"
+import { ErrorPage } from "./components/ErrorPage"
 
 // Lazy-load heavy pages
 const Assessments = lazy(() => import("./pages/Assessments").then(m => ({ default: m.AssessmentsPage })))
@@ -26,7 +27,6 @@ const AdminSystemHealth = lazy(() => import("./pages/admin/SystemHealth").then(m
 
 // Intelligence
 const KnowledgeGraph = lazy(() => import("./pages/knowledge-graph/KnowledgeGraph").then(m => ({ default: m.KnowledgeGraphPage })))
-
 
 // Simple Guard
 const requireAuth = async () => {
@@ -64,42 +64,46 @@ const SuspenseWrap = ({ children }: { children: React.ReactNode }) => (
 export const router = createBrowserRouter([
     {
         path: "/",
-        element: <AuthLayout />,
-        loader: requireNoAuth,
-        HydrateFallback: LoadingFallback,
+        errorElement: <ErrorPage />,
         children: [
-            { index: true, element: <Navigate to="/login" replace /> },
-            { path: "login", element: <LoginPage /> }
+            {
+                element: <AuthLayout />,
+                loader: requireNoAuth,
+                HydrateFallback: LoadingFallback,
+                children: [
+                    { index: true, element: <Navigate to="/login" replace /> },
+                    { path: "login", element: <LoginPage /> }
+                ]
+            },
+            {
+                path: "dashboard",
+                element: <DashboardLayout />,
+                loader: requireAuth,
+                HydrateFallback: LoadingFallback,
+                children: [
+                    { index: true, element: <OverviewPage /> },
+                    { path: "assessments", element: <SuspenseWrap><Assessments /></SuspenseWrap> },
+                    { path: "assessments/:assessmentId", element: <SuspenseWrap><AssessmentDetail /></SuspenseWrap> },
+                    { path: "documents", element: <SuspenseWrap><Documents /></SuspenseWrap> },
+                    { path: "gap-analysis", element: <SuspenseWrap><GapAnalysis /></SuspenseWrap> },
+                    { path: "reports", element: <SuspenseWrap><Reports /></SuspenseWrap> },
+                    { path: "scf-catalog", element: <SuspenseWrap><ScfCatalog /></SuspenseWrap> },
+                    { path: "agent-runs", element: <SuspenseWrap><AgentRuns /></SuspenseWrap> },
+                    { path: "sdk", element: <SuspenseWrap><SdkPage /></SuspenseWrap> },
+                    { path: "knowledge-graph", element: <SuspenseWrap><KnowledgeGraph /></SuspenseWrap> },
+                    { path: "settings", element: <SettingsPage /> },
+                    // Admin
+                    { path: "organizations", element: <SuspenseWrap><AdminOrganizations /></SuspenseWrap> },
+                    { path: "licenses", element: <SuspenseWrap><AdminLicenses /></SuspenseWrap> },
+                    { path: "users", element: <SuspenseWrap><AdminUsers /></SuspenseWrap> },
+                    { path: "audit-logs", element: <SuspenseWrap><AdminAuditLogs /></SuspenseWrap> },
+                    { path: "system-health", element: <SuspenseWrap><AdminSystemHealth /></SuspenseWrap> },
+                ]
+            },
+            {
+                path: "*",
+                loader: () => redirect("/dashboard")
+            }
         ]
-    },
-    {
-        path: "/dashboard",
-        element: <DashboardLayout />,
-        loader: requireAuth,
-        HydrateFallback: LoadingFallback,
-        children: [
-            { index: true, element: <OverviewPage /> },
-            { path: "assessments", element: <SuspenseWrap><Assessments /></SuspenseWrap> },
-            { path: "assessments/:assessmentId", element: <SuspenseWrap><AssessmentDetail /></SuspenseWrap> },
-            { path: "documents", element: <SuspenseWrap><Documents /></SuspenseWrap> },
-            { path: "gap-analysis", element: <SuspenseWrap><GapAnalysis /></SuspenseWrap> },
-            { path: "reports", element: <SuspenseWrap><Reports /></SuspenseWrap> },
-            { path: "scf-catalog", element: <SuspenseWrap><ScfCatalog /></SuspenseWrap> },
-            { path: "agent-runs", element: <SuspenseWrap><AgentRuns /></SuspenseWrap> },
-            { path: "sdk", element: <SuspenseWrap><SdkPage /></SuspenseWrap> },
-            { path: "knowledge-graph", element: <SuspenseWrap><KnowledgeGraph /></SuspenseWrap> },
-            { path: "settings", element: <SettingsPage /> },
-            // Admin
-            { path: "organizations", element: <SuspenseWrap><AdminOrganizations /></SuspenseWrap> },
-            { path: "licenses", element: <SuspenseWrap><AdminLicenses /></SuspenseWrap> },
-            { path: "users", element: <SuspenseWrap><AdminUsers /></SuspenseWrap> },
-            { path: "audit-logs", element: <SuspenseWrap><AdminAuditLogs /></SuspenseWrap> },
-            { path: "system-health", element: <SuspenseWrap><AdminSystemHealth /></SuspenseWrap> },
-        ]
-    },
-    {
-        path: "*",
-        loader: () => redirect("/dashboard")
     }
 ])
-

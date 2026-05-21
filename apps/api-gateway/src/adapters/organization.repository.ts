@@ -17,8 +17,23 @@ export const createOrganizationRepository = (): OrganizationRepositoryAdapter =>
       const record = records.get(organizationId);
       return record?.tenant_id === tenantId ? record : null;
     },
+    async update(organizationId, tenantId, patch) {
+      const existing = records.get(organizationId);
+      if (!existing || existing.tenant_id !== tenantId) return null;
+      const updated = { ...existing, ...patch };
+      records.set(organizationId, updated);
+      return updated;
+    },
     async listByTenant(tenantId) {
       return [...records.values()].filter((record) => record.tenant_id === tenantId);
+    },
+    withTenant(tenantId) {
+      return {
+        create: async (input) => this.create({ ...input, tenant_id: tenantId }),
+        get: async (orgId) => this.get(orgId, tenantId),
+        list: async () => this.listByTenant(tenantId),
+        update: async (orgId, patch) => this.update(orgId, tenantId, patch)
+      };
     }
   };
 };
@@ -64,6 +79,39 @@ export const createDrizzleOrganizationRepository = (db: DbClient): OrganizationR
         name: found.name,
         status: found.status as "active" | "inactive"
       }));
+    },
+    async update(organizationId, tenantId, patch) {
+      const [updated] = await db.update(organizations)
+        .set({
+          name: patch.name,
+          slug: patch.slug,
+          status: patch.status
+        })
+        .where(
+          and(
+            eq(organizations.id, organizationId),
+            eq(organizations.tenantId, tenantId)
+          )
+        )
+        .returning();
+      
+      if (!updated) return null;
+
+      return {
+        organization_id: updated.id,
+        tenant_id: updated.tenantId,
+        slug: updated.slug,
+        name: updated.name,
+        status: updated.status as "active" | "inactive"
+      };
+    },
+    withTenant(tenantId) {
+      return {
+        create: async (input) => this.create({ ...input, tenant_id: tenantId }),
+        get: async (orgId) => this.get(orgId, tenantId),
+        list: async () => this.listByTenant(tenantId),
+        update: async (orgId, patch) => this.update(orgId, tenantId, patch)
+      };
     }
   };
 };

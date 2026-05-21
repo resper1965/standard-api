@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { api } from "../../lib/api";
+import { authClient, useSession } from "../../lib/auth-client";
 import { PageHeader } from "../../components/PageHeader";
 import { Card, CardContent } from "../../components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "../../components/ui/table";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
-import { Loader2, Plus } from "lucide-react";
+import { Loader2, Plus, CheckCircle2 } from "lucide-react";
 
 type Organization = {
   id: string;
@@ -19,6 +20,9 @@ type Organization = {
 };
 
 export function AdminOrganizations() {
+  const { data: session } = useSession();
+  const activeOrgId = (session?.session as any)?.activeOrganizationId ?? null;
+
   const [orgs, setOrgs] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -26,6 +30,7 @@ export function AdminOrganizations() {
   const [newOrgName, setNewOrgName] = useState("");
   const [newOrgSlug, setNewOrgSlug] = useState("");
   const [creating, setCreating] = useState(false);
+  const [activating, setActivating] = useState<string | null>(null);
 
   const fetchOrgs = async () => {
     setLoading(true);
@@ -43,6 +48,18 @@ export function AdminOrganizations() {
   };
 
   useEffect(() => { fetchOrgs(); }, []);
+
+  const handleActivate = async (orgId: string) => {
+    setActivating(orgId);
+    try {
+      await authClient.organization.setActive({ organizationId: orgId });
+      // Reload page to propagate session change across all components
+      window.location.reload();
+    } catch (e: any) {
+      alert("Failed to activate organization: " + e.message);
+      setActivating(null);
+    }
+  };
 
   const handleCreate = async (e: FormEvent) => {
     e.preventDefault();
@@ -90,16 +107,45 @@ export function AdminOrganizations() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {orgs.map((o) => (
-                  <TableRow key={o.id}>
-                    <TableCell className="font-medium">{o.name}</TableCell>
-                    <TableCell className="font-mono text-xs text-muted-foreground">{o.slug}</TableCell>
-                    <TableCell className="text-muted-foreground text-sm">{new Date(o.createdAt).toLocaleDateString()}</TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="ghost" size="sm" disabled>Edit</Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {orgs.map((o) => {
+                  const isActive = activeOrgId === o.id;
+                  return (
+                    <TableRow key={o.id} className={isActive ? "bg-emerald-500/5" : ""}>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-2">
+                          {o.name}
+                          {isActive && (
+                            <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500">
+                              <CheckCircle2 className="h-3 w-3" />
+                              Active
+                            </span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-mono text-xs text-muted-foreground">{o.slug}</TableCell>
+                      <TableCell className="text-muted-foreground text-sm">{new Date(o.createdAt).toLocaleDateString()}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          {!isActive && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleActivate(o.id)}
+                              disabled={activating === o.id}
+                            >
+                              {activating === o.id ? (
+                                <><Loader2 className="h-3 w-3 animate-spin mr-1.5" />Activating...</>
+                              ) : (
+                                "Activate"
+                              )}
+                            </Button>
+                          )}
+                          <Button variant="ghost" size="sm" disabled>Edit</Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           )}

@@ -1,6 +1,6 @@
 import { authClient } from "./auth-client"
 
-const API_URL = import.meta.env.VITE_API_URL || "https://standard-api-gateway-production.ness.workers.dev"
+const API_URL = import.meta.env.VITE_API_URL || "https://api.standard.bekaa.eu"
 
 export async function apiClient<T = unknown>(endpoint: string, options: RequestInit = {}): Promise<T> {
   // Pull active organization for tenant header

@@ -78,6 +78,69 @@
       "when": 1778587117083,
       "tag": "0010_steady_vance_astro",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1778587117100,
+      "tag": "0011_api_keys_scopes_webhooks",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1778587117200,
+      "tag": "0012_control_assessment_status",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1778587117300,
+      "tag": "0013_kb_embedding_jobs",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1778587117400,
+      "tag": "0014_soa_workflow",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1778587117500,
+      "tag": "0015_gap_analysis_workflow",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1778587117600,
+      "tag": "0016_poam_workflow",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1778587117700,
+      "tag": "0017_reporting_export_workflow",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1778587117800,
+      "tag": "0018_agent_runtime_tool_contracts",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1778587117900,
+      "tag": "0019_better-auth-tables",
+      "breakpoints": true
     }
   ]
 }

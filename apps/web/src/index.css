@@ -132,14 +132,14 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: "Inter", -apple-system, sans-serif;
-    letter-spacing: -0.025em;
+    font-family: "Outfit", "Inter", sans-serif;
+    letter-spacing: -0.03em;
   }
 
   .font-brand {
-    font-family: "Montserrat", sans-serif;
-    font-weight: 500;
-    letter-spacing: -0.02em;
+    font-family: "Outfit", sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.04em;
   }
 
   /* Smooth transitions when switching themes */
@@ -172,16 +172,43 @@
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
   }
 
-  /* Stagger animation */
+  .bento-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .bento-card {
+    @apply relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-8 transition-all hover:bg-white/[0.07];
+  }
+
+  .dot-grid {
+    background-image: radial-gradient(circle at 1px 1px, hsl(var(--foreground) / 0.05) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  /* Stagger animation — uses cardEnter which explicitly goes 0→1 */
   .animate-stagger > * {
-    @apply opacity-0 animate-in fade-in slide-in-from-bottom-2 fill-mode-forwards;
+    opacity: 0;
+    animation: cardEnter 350ms ease both;
   }
   .animate-stagger > *:nth-child(1) { animation-delay:  50ms; }
   .animate-stagger > *:nth-child(2) { animation-delay: 100ms; }
   .animate-stagger > *:nth-child(3) { animation-delay: 150ms; }
   .animate-stagger > *:nth-child(4) { animation-delay: 200ms; }
-  .animate-stagger > *:nth-child(5) { animation-delay: 250ms; }
   .animate-stagger > *:nth-child(6) { animation-delay: 300ms; }
+
+  .glass-card {
+    @apply bg-black/40 backdrop-blur-2xl border border-white/10 shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)];
+  }
+
+  @keyframes spin-slow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  .animate-spin-slow {
+    animation: spin-slow 3s linear infinite;
+  }
 }
 
 /* ── Legacy variables (Login.css compat) ───────────────────── */

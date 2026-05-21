@@ -58,6 +58,15 @@ export const createDrizzleEvidenceFindingRepository = (db: DbClient): EvidenceFi
       .limit(1);
     return row ? mapEvidenceFindingRow(row) : null;
   },
+  withTenant(tenantId: string) {
+    return {
+      save: async (finding: EvidenceFindingResponse) => this.save(finding),
+      update: async (finding: EvidenceFindingResponse) => this.update(finding),
+      get: async (evidenceFindingId: string) => this.get(evidenceFindingId, tenantId),
+      listByAssessment: async (assessmentId: string) => this.listByAssessment(assessmentId, tenantId),
+      findBySoaItem: async (soaItemId: string) => this.findBySoaItem(soaItemId, tenantId)
+    };
+  }
 });
 
 export const createDrizzleEvidenceSourceRepository = (db: DbClient): EvidenceSourceRepository => ({
@@ -86,6 +95,12 @@ export const createDrizzleEvidenceSourceRepository = (db: DbClient): EvidenceSou
       .where(and(eq(evidenceSources.evidenceFindingId, evidenceFindingId), eq(evidenceSources.tenantId, tenantId)));
     return rows.map(mapEvidenceSourceRow);
   },
+  withTenant(tenantId: string) {
+    return {
+      saveMany: async (sources: EvidenceSourceResponse[]) => this.saveMany(sources),
+      listByFinding: async (evidenceFindingId: string) => this.listByFinding(evidenceFindingId, tenantId)
+    };
+  }
 });
 
 export const createDrizzleGapAnalysisVersionRepository = (db: DbClient): GapAnalysisVersionRepository => ({
@@ -129,6 +144,14 @@ export const createDrizzleGapAnalysisVersionRepository = (db: DbClient): GapAnal
       .where(and(eq(gapAnalysisVersions.assessmentId, assessmentId), eq(gapAnalysisVersions.tenantId, tenantId)));
     return rows.map(mapGapVersionRow);
   },
+  withTenant(tenantId: string) {
+    return {
+      save: async (version: GapAnalysisVersionResponse) => this.save(version),
+      update: async (version: GapAnalysisVersionResponse) => this.update(version),
+      get: async (gapAnalysisVersionId: string) => this.get(gapAnalysisVersionId, tenantId),
+      listByAssessment: async (assessmentId: string) => this.listByAssessment(assessmentId, tenantId)
+    };
+  }
 });
 
 export const createDrizzleGapFindingRepository = (db: DbClient): GapFindingRepository => ({
@@ -186,6 +209,14 @@ export const createDrizzleGapFindingRepository = (db: DbClient): GapFindingRepos
       .where(and(eq(gapFindings.gapAnalysisVersionId, gapAnalysisVersionId), eq(gapFindings.tenantId, tenantId)));
     return rows.map(mapGapFindingRow);
   },
+  withTenant(tenantId: string) {
+    return {
+      saveMany: async (findings: GapFindingResponse[]) => this.saveMany(findings),
+      update: async (finding: GapFindingResponse) => this.update(finding),
+      get: async (gapFindingId: string) => this.get(gapFindingId, tenantId),
+      listByVersion: async (gapAnalysisVersionId: string) => this.listByVersion(gapAnalysisVersionId, tenantId)
+    };
+  }
 });
 
 export const createDrizzleGapAnalysisRepositories = (db: DbClient): GapAnalysisRepositories => ({

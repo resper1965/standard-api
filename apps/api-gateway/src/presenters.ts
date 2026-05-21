@@ -1,15 +1,42 @@
 import type { ArtifactVersion, AssessmentLifecycleEvent } from "@standard/assessment-engine";
 import type { ApprovalRecord, AssessmentRecord } from "./http";
 
-export const assessmentResponse = (record: AssessmentRecord) => ({
-  assessment_id: record.assessment_id,
-  tenant_id: record.tenant_id,
-  organization_id: record.organization_id,
-  name: record.name,
-  state: record.snapshot.state,
-  scf_version_id: record.scf_version_id,
-  trace_id: record.trace_id
-});
+export const assessmentResponse = (record: AssessmentRecord) => {
+  const snapshot = record.snapshot;
+  const progressFlags = [
+    snapshot.requiredDocumentJobsComplete,
+    snapshot.scfPreAnalysisRegistered,
+    snapshot.frameworkSelected,
+    snapshot.scopeDrafted,
+    snapshot.soaDraftVersionComplete,
+    snapshot.soaApproved,
+    snapshot.soaIngested,
+    snapshot.evidenceAnalysisReady,
+    snapshot.gapAnalysisDrafted,
+    snapshot.gapAnalysisApproved,
+    snapshot.maturityAssessed,
+    snapshot.maturityApproved,
+    snapshot.poamDrafted,
+    snapshot.poamApproved,
+    snapshot.reportGenerated,
+    snapshot.reportApproved
+  ];
+  const completedCount = progressFlags.filter(Boolean).length;
+  const progress = Math.round((completedCount / progressFlags.length) * 100);
+
+  return {
+    assessment_id: record.assessment_id,
+    tenant_id: record.tenant_id,
+    organization_id: record.organization_id,
+    name: record.name,
+    status: record.snapshot.state, // Renamed from state for frontend consistency
+    state: record.snapshot.state,  // Kept for backward compatibility
+    progress,
+    scf_version_id: record.scf_version_id,
+    trace_id: record.trace_id
+  };
+};
+
 
 export const lifecycleEventResponse = (event: AssessmentLifecycleEvent) => ({
   tenant_id: event.tenantId,

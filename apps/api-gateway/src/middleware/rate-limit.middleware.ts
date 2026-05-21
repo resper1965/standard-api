@@ -22,6 +22,7 @@ const ROUTE_LIMITS: Record<string, RateLimitConfig> = {
   "/agent-runs": { maxRequests: 10, windowSeconds: 60 },
   "/render": { maxRequests: 20, windowSeconds: 60 },
   "/admin/": { maxRequests: 15, windowSeconds: 60 },
+  "/intelligence/council": { maxRequests: 5, windowSeconds: 60 },
   "/intelligence/": { maxRequests: 20, windowSeconds: 60 }
 };
 

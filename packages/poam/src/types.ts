@@ -63,11 +63,19 @@ export type PoamMaturityProvider = {
   findScoreByControl(maturityAssessmentVersionId: string, scfControlId: string, tenantId: string): Promise<MaturityScoreReference | null>;
 };
 
+export interface TenantScopedPoamVersionRepository {
+  save(version: PoamVersionResponse): Promise<void>;
+  update(version: PoamVersionResponse): Promise<void>;
+  get(poamVersionId: string): Promise<PoamVersionResponse | null>;
+  listByAssessment(assessmentId: string): Promise<PoamVersionResponse[]>;
+}
+
 export type PoamVersionRepository = {
   save(version: PoamVersionResponse): Promise<void>;
   update(version: PoamVersionResponse): Promise<void>;
   get(poamVersionId: string, tenantId: string): Promise<PoamVersionResponse | null>;
   listByAssessment(assessmentId: string, tenantId: string): Promise<PoamVersionResponse[]>;
+  withTenant(tenantId: string): TenantScopedPoamVersionRepository;
 };
 
 export type PoamItemFilters = {
@@ -79,12 +87,28 @@ export type PoamItemFilters = {
   requires_validation?: boolean;
 };
 
+export interface TenantScopedPoamItemRepository {
+  saveMany(items: PoamItemResponse[]): Promise<void>;
+  update(item: PoamItemResponse): Promise<void>;
+  get(poamItemId: string): Promise<PoamItemResponse | null>;
+  listByVersion(poamVersionId: string, filters?: PoamItemFilters): Promise<PoamItemResponse[]>;
+}
+
 export type PoamItemRepository = {
   saveMany(items: PoamItemResponse[]): Promise<void>;
   update(item: PoamItemResponse): Promise<void>;
   get(poamItemId: string, tenantId: string): Promise<PoamItemResponse | null>;
   listByVersion(poamVersionId: string, tenantId: string, filters?: PoamItemFilters): Promise<PoamItemResponse[]>;
+  withTenant(tenantId: string): TenantScopedPoamItemRepository;
 };
+
+export interface TenantScopedPoamMilestoneRepository {
+  save(milestone: PoamMilestoneResponse): Promise<void>;
+  saveMany(milestones: PoamMilestoneResponse[]): Promise<void>;
+  update(milestone: PoamMilestoneResponse): Promise<void>;
+  get(milestoneId: string): Promise<PoamMilestoneResponse | null>;
+  listByItem(poamItemId: string): Promise<PoamMilestoneResponse[]>;
+}
 
 export type PoamMilestoneRepository = {
   save(milestone: PoamMilestoneResponse): Promise<void>;
@@ -92,12 +116,20 @@ export type PoamMilestoneRepository = {
   update(milestone: PoamMilestoneResponse): Promise<void>;
   get(milestoneId: string, tenantId: string): Promise<PoamMilestoneResponse | null>;
   listByItem(poamItemId: string, tenantId: string): Promise<PoamMilestoneResponse[]>;
+  withTenant(tenantId: string): TenantScopedPoamMilestoneRepository;
 };
+
+export interface TenantScopedPoamDependencyRepository {
+  save(dependency: PoamDependencyResponse): Promise<void>;
+  saveMany(dependencies: PoamDependencyResponse[]): Promise<void>;
+  listByItem(poamItemId: string): Promise<PoamDependencyResponse[]>;
+}
 
 export type PoamDependencyRepository = {
   save(dependency: PoamDependencyResponse): Promise<void>;
   saveMany(dependencies: PoamDependencyResponse[]): Promise<void>;
   listByItem(poamItemId: string, tenantId: string): Promise<PoamDependencyResponse[]>;
+  withTenant(tenantId: string): TenantScopedPoamDependencyRepository;
 };
 
 export type PoamRepositories = {

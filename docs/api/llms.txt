@@ -27,6 +27,8 @@ Tenant: `x-standard-tenant-id` header (required for all protected endpoints)
 - [POA&M](#poam): Remediation planning
 - [Reports](#reports): Generate, download
 - [AI Agents](#ai-agents): 7 specialized agents
+- [Intelligence Council](#intelligence-council): Async multi-agent workflow dispatch
+- [Jobs](#jobs): Job polling for async jobs
 - [Agent Runtime](#agent-runtime): Execution monitoring
 - [Approvals](#approvals): Human-in-the-loop gates
 - [Webhooks](#webhooks): Event-driven integrations

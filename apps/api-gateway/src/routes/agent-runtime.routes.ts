@@ -25,7 +25,7 @@ const toApiError = (error: unknown): never => {
 };
 
 const requireAssessment = async (deps: AppDependencies, assessmentId: string, tenantId: string): Promise<AssessmentRecord> => {
-  const assessment = await deps.assessments.get(assessmentId, tenantId);
+  const assessment = await deps.assessments.withTenant(tenantId).get(assessmentId);
   if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
   return assessment;
 };
