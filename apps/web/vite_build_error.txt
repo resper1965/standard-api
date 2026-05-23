@@ -1,0 +1,31 @@
+vite.config.ts (1:412) [UNRESOLVED_IMPORT] Warning: Could not resolve 'vite' in vite.config.ts
+   Ôò¡ÔöÇ[ vite.config.ts:1:413 ]
+   Ôöé
+ 1 Ôöé const __vite_injected_original_dirname = "C:\\Users\\resper\\OneDrive\\├ürea de Trabalho\\aegis-api\\apps\\web";const __vite_injected_original_filename = "C:\\Users\\resper\\OneDrive\\├ürea de Trabalho\\aegis-api\\apps\\web\\vite.config.ts";const __vite_injected_original_import_meta_url = "file:///C:/Users/resper/OneDrive/%C3%81rea%20de%20Trabalho/aegis-api/apps/web/vite.config.ts";import { defineConfig } from "vite";
+   Ôöé                                                                                                                                                                                                                                                                                                                                                                                                                             ÔöÇÔöÇÔöÇÔö¼ÔöÇÔöÇ  
+   Ôöé                                                                                                                                                                                                                                                                                                                                                                                                                                Ôò░ÔöÇÔöÇÔöÇÔöÇ Module not found, treating it as an external dependency
+ÔöÇÔöÇÔöÇÔò»
+
+vite.config.ts (2:18) [UNRESOLVED_IMPORT] Warning: Could not resolve '@vitejs/plugin-react-swc' in vite.config.ts
+   Ôò¡ÔöÇ[ vite.config.ts:2:19 ]
+   Ôöé
+ 2 Ôöé import react from "@vitejs/plugin-react-swc";
+   Ôöé                   ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔö¼ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ  
+   Ôöé                                Ôò░ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ Module not found, treating it as an external dependency
+ÔöÇÔöÇÔöÇÔò»
+
+failed to load config from C:\Users\resper\OneDrive\├ürea de Trabalho\aegis-api\apps\web\vite.config.ts
+error during build:
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'vite' imported from C:\Users\resper\OneDrive\├ürea de Trabalho\aegis-api\apps\web\node_modules\.vite-temp\vite.config.ts.timestamp-1779483070235-5d895e8b4f3078.mjs
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:316:9)
+    at packageResolve (node:internal/modules/esm/resolve:768:81)
+    at moduleResolve (node:internal/modules/esm/resolve:858:18)
+    at defaultResolve (node:internal/modules/esm/resolve:990:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:718:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:735:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:764:52)
+    at #resolve (node:internal/modules/esm/loader:700:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:620:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:143:33) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}

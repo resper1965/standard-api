@@ -69,7 +69,6 @@ export const router = createBrowserRouter([
             {
                 element: <AuthLayout />,
                 loader: requireNoAuth,
-                HydrateFallback: LoadingFallback,
                 children: [
                     { index: true, element: <Navigate to="/login" replace /> },
                     { path: "login", element: <LoginPage /> }
@@ -79,7 +78,6 @@ export const router = createBrowserRouter([
                 path: "dashboard",
                 element: <DashboardLayout />,
                 loader: requireAuth,
-                HydrateFallback: LoadingFallback,
                 children: [
                     { index: true, element: <OverviewPage /> },
                     { path: "assessments", element: <SuspenseWrap><Assessments /></SuspenseWrap> },

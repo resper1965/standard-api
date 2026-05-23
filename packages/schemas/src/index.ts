@@ -13,6 +13,7 @@ export * from "./scf";
 export * from "./documents";
 export * from "./gap-analysis";
 export * from "./poam";
+export * from "./maturity";
 export * from "./reporting";
 export * from "./kb";
 export * from "./soa";
