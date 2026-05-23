@@ -1,0 +1,37 @@
+M  .github/workflows/ci.yml
+M  .github/workflows/deploy-production.yml
+ M .npmrc
+ M CONTEXT.md
+MM apps/api-gateway/package.json
+M  apps/api-gateway/src/index.ts
+M  apps/api-gateway/src/routes/flow-templates.routes.ts
+M  apps/api-gateway/src/routes/governance-ref.routes.ts
+M  apps/api-gateway/src/routes/projection.routes.ts
+M  apps/api-gateway/src/routes/reference-data.routes.ts
+M  apps/api-gateway/src/routes/regulations.routes.ts
+M  apps/api-gateway/src/routes/ropa.routes.ts
+M  apps/api-gateway/src/routes/tpra.routes.ts
+MM apps/web/package.json
+M  apps/web/src/index.css
+MM apps/web/src/lib/auth-client.ts
+M  apps/web/src/pages/AssessmentDetail.tsx
+ M apps/web/src/router.tsx
+ D apps/web/vite.config.ts
+MM package.json
+MM packages/auth/package.json
+A  packages/scf-data/package.json
+A  packages/scf-data/src/controls.ts
+A  packages/scf-data/src/flow-templates.ts
+A  packages/scf-data/src/index.ts
+A  packages/scf-data/src/regulations.ts
+A  packages/scf-data/src/types.ts
+A  packages/scf-data/tsconfig.json
+M  packages/schemas/src/index.ts
+A  packages/schemas/src/v2-schemas.ts
+M  packages/schemas/src/v2-types.ts
+ M pnpm-lock.yaml
+M  tsconfig.base.json
+?? apps/web/vite.config.mjs
+?? apps/web/vite_build_error.txt
+?? tmp/
+?? tmp_git_status.txt
