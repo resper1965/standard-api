@@ -1,25 +1,8 @@
 /**
- * CB-D: Flow Templates — Process Automation Templates (Spec v3)
- *
- * Enriched with:
- * - id on steps
- * - ai_prompt_hint on steps
- * - outputs_pt on steps
- * - scf_controls per step
- * - severity on escalation_rules
- * - sla_article on templates
- * - trigger_pt instead of trigger
- * - consent_renewal template (new)
- * - vendor_review template (new)
+ * Flow Templates — Process Automation Templates (Spec v3)
  */
-import type { RouteDefinition } from "../http";
-import { json, routeParam } from "../http";
-import { flattenI18n } from "../utils/i18n";
-import { ApiError } from "../errors/api-error";
 
-// ── Flow Templates ──────────────────────────────────────────────────────────
-
-const FLOW_TEMPLATES = [
+export const FLOW_TEMPLATES = [
   {
     id: "dsar_response",
     name_i18n: { pt: "Resposta a Requisição de Titular (DSAR)", en: "Subject Access Request (DSAR) Response" },
@@ -118,7 +101,7 @@ const FLOW_TEMPLATES = [
       { order: 4, id: "evaluate", name_i18n: { pt: "Avaliar evidências contra controles", en: "Evaluate evidence against controls" }, description_i18n: { pt: "Auditor verifica conformidade", en: "Auditor verifies compliance" }, type: "manual" as const, role: "auditor", timeout_hours: 336, ai_assist: true, ai_prompt_hint: "Avaliar adequação da evidência usando assessment objectives do SCF", condition: null, outputs_pt: ["Avaliação por controle"], scf_controls: ["AIS-04"] },
       { order: 5, id: "generate_report", name_i18n: { pt: "Gerar relatório de achados", en: "Generate findings report" }, description_i18n: { pt: "Sistema consolida findings em relatório", en: "System consolidates findings into report" }, type: "automated" as const, role: "system", timeout_hours: 24, ai_assist: true, ai_prompt_hint: "Gerar relatório com severidade, impacto e recomendações", condition: null, outputs_pt: ["Relatório de achados"], scf_controls: ["AIS-04"] },
       { order: 6, id: "review_report", name_i18n: { pt: "Revisar e aprovar relatório", en: "Review and approve report" }, description_i18n: { pt: "Gestão valida achados e recomendações", en: "Management validates findings and recommendations" }, type: "approval" as const, role: "audit_manager", timeout_hours: 72, ai_assist: false, ai_prompt_hint: null, condition: null, outputs_pt: ["Relatório aprovado"], scf_controls: ["AIS-01"] },
-      { order: 7, id: "distribute", name_i18n: { pt: "Distribuir e iniciar remediação", en: "Distribute and start remediation" }, description_i18n: { pt: "Notificar stakeholders e criar PoA&M", en: "Notify stakeholders and create PoA&M" }, type: "automated" as const, role: "system", timeout_hours: 24, ai_assist: false, ai_prompt_hint: null, condition: null, outputs_pt: ["PoA&M criado", "Stakeholders notificados"], scf_controls: ["AIS-01", "RSK-02"] },
+      { order: 7, id: "distribute", name_i18n: { pt: "Distribuir e iniciar remedição", en: "Distribute and start remediation" }, description_i18n: { pt: "Notificar stakeholders e criar PoA&M", en: "Notify stakeholders and create PoA&M" }, type: "automated" as const, role: "system", timeout_hours: 24, ai_assist: false, ai_prompt_hint: null, condition: null, outputs_pt: ["PoA&M criado", "Stakeholders notificados"], scf_controls: ["AIS-01", "RSK-02"] },
     ],
     escalation_rules: [
       { trigger_i18n: { pt: "Coleta de evidências atrasada", en: "Evidence collection delayed" }, action_i18n: { pt: "Escalar para gestor do controle", en: "Escalate to control owner" }, severity: "warning" as const },
@@ -196,7 +179,7 @@ const FLOW_TEMPLATES = [
       { order: 1, id: "notify", name_i18n: { pt: "Gerar notificação de revisão", en: "Generate review notification" }, description_i18n: { pt: "Alertar que revisão periódica é devida", en: "Alert that periodic review is due" }, type: "notification" as const, role: "system", timeout_hours: 1, ai_assist: false, ai_prompt_hint: null, condition: null, outputs_pt: ["Notificação enviada"], scf_controls: ["TPM-04"] },
       { order: 2, id: "send_questionnaire", name_i18n: { pt: "Enviar questionário de avaliação", en: "Send assessment questionnaire" }, description_i18n: { pt: "Solicitar preenchimento de conformidade ao fornecedor", en: "Request compliance completion from vendor" }, type: "automated" as const, role: "system", timeout_hours: 24, ai_assist: false, ai_prompt_hint: null, condition: null, outputs_pt: ["Questionário enviado"], scf_controls: ["TPM-04"] },
       { order: 3, id: "collect_responses", name_i18n: { pt: "Coletar e processar respostas", en: "Collect and process responses" }, description_i18n: { pt: "Receber respostas e calcular score", en: "Receive responses and calculate score" }, type: "manual" as const, role: "vendor_manager", timeout_hours: 336, ai_assist: true, ai_prompt_hint: "Usar scoring engine do TPRA para calcular score", condition: null, outputs_pt: ["Score calculado"], scf_controls: ["TPM-04"] },
-      { order: 4, id: "evaluate", name_i18n: { pt: "Avaliar score e determinar risco", en: "Evaluate score and determine risk" }, description_i18n: { pt: "Comparar score com threshold do tier", en: "Compare score with tier threshold" }, type: "automated" as const, role: "system", timeout_hours: 1, ai_assist: true, ai_prompt_hint: "Comparar com vendor_tiers", condition: null, outputs_pt: ["Risk level determinado"], scf_controls: ["TPM-04"] },
+      { order: 4, id: "evaluate", name_i18n: { pt: "Avaliar score e determinar risco", en: "Evaluate score and determine risk" }, description_i18n: { pt: "Comparar score com threshold do tier", en: "Compare score with threshold do tier" }, type: "automated" as const, role: "system", timeout_hours: 1, ai_assist: true, ai_prompt_hint: "Comparar com vendor_tiers", condition: null, outputs_pt: ["Risk level determinado"], scf_controls: ["TPM-04"] },
       { order: 5, id: "decide", name_i18n: { pt: "Aprovar ou exigir remediação", en: "Approve or require remediation" }, description_i18n: { pt: "Se score abaixo do mínimo, exigir plano de remediação", en: "If score below minimum, require remediation plan" }, type: "decision" as const, role: "risk_manager", timeout_hours: 72, ai_assist: false, ai_prompt_hint: null, condition: "score < tier_minimum", outputs_pt: ["Vendor aprovado ou em remediação"], scf_controls: ["TPM-01"] },
       { order: 6, id: "schedule_next", name_i18n: { pt: "Agendar próxima revisão", en: "Schedule next review" }, description_i18n: { pt: "Definir data da próxima avaliação baseada no tier", en: "Define next assessment date based on tier" }, type: "automated" as const, role: "system", timeout_hours: 1, ai_assist: false, ai_prompt_hint: null, condition: null, outputs_pt: ["Próxima revisão agendada"], scf_controls: ["TPM-04"] },
     ],
@@ -204,52 +187,5 @@ const FLOW_TEMPLATES = [
       { trigger_i18n: { pt: "Fornecedor não respondeu ao questionário", en: "Vendor did not respond to questionnaire" }, action_i18n: { pt: "Escalar para gestão de contratos", en: "Escalate to contract management" }, severity: "warning" as const },
       { trigger_i18n: { pt: "Score classificado como critical", en: "Score classified as critical" }, action_i18n: { pt: "Avaliar suspensão do fornecedor", en: "Evaluate vendor suspension" }, severity: "critical" as const },
     ],
-  },
-];
-
-const TEMPLATE_INDEX = new Map(FLOW_TEMPLATES.map(t => [t.id, t]));
-
-// ── Routes ──────────────────────────────────────────────────────────────────
-
-export const flowTemplateRoutes: RouteDefinition[] = [
-  {
-    method: "GET",
-    path: "/api/v1/flow-templates",
-    authRequired: true, tenantRequired: false,
-    handler: async ({ request, traceId }) => {
-      const url = new URL(request.url);
-      const module = url.searchParams.get("module");
-      const locale = (url.searchParams.get("locale") || "pt") as any;
-      let filtered = FLOW_TEMPLATES;
-      if (module) filtered = filtered.filter(t => t.module === module);
-      const summary = flattenI18n(filtered, locale).map((t: any) => ({
-        id: t.id, name: t.name, module: t.module, trigger: t.trigger,
-        regulation_id: t.regulation_id, sla_days: t.sla_days, sla_article: t.sla_article,
-        step_count: t.steps.length, scf_control_count: t.scf_controls.length,
-      }));
-      return json({ data: summary, total: summary.length, available_modules: ["privacy", "governance", "risk"], trace_id: traceId });
-    },
-  },
-  {
-    method: "GET",
-    path: "/api/v1/flow-templates/:templateId",
-    authRequired: true, tenantRequired: false,
-    handler: async ({ request, params, traceId }) => {
-      const locale = (new URL(request.url).searchParams.get("locale") || "pt") as any;
-      const template = FLOW_TEMPLATES.find(t => t.id === routeParam(params, "templateId"));
-      if (!template) {
-        return json({ error: "Template not found", trace_id: traceId }, { status: 404 });
-      }
-      return json({ data: flattenI18n(template, locale), trace_id: traceId });
-    },
-  },
-  {
-    method: "GET",
-    path: "/api/v1/flow-templates/scf-mapping",
-    authRequired: true, tenantRequired: false,
-    handler: async ({ request, traceId }) => {
-      const locale = (new URL(request.url).searchParams.get("locale") || "pt") as any;
-      return json({ data: flattenI18n(FLOW_TEMPLATES, locale), trace_id: traceId });
-    },
   },
 ];

@@ -1,6 +1,23 @@
 import type { RouteDefinition } from "../http";
 import { json } from "../http";
 import { flattenI18n } from "../utils/i18n";
+import {
+  DataSubjectRefSchema,
+  DataCategoryRefSchema,
+  LifeCycleStageRefSchema,
+  DataOriginRefSchema,
+  CollectionMethodRefSchema,
+  ProcessingPurposeRefSchema,
+  SecurityMeasureRefSchema,
+  DisposalMethodRefSchema,
+  RiskFactorRefSchema,
+  VolumeScaleRefSchema,
+  DepartmentRefSchema,
+  BgCheckTypeRefSchema,
+  ClearanceLevelRefSchema,
+  MaturityLevelRefSchema,
+  RetentionRuleRefSchema
+} from "@standard/schemas";
 import type {
   DataSubjectRef,
   DataCategoryRef,
@@ -35,6 +52,9 @@ const DATA_SUBJECTS: DataSubjectRef[] = [
   { id: "public_servant", name_i18n: { pt: "Servidor Público", en: "Public Servant" }, type: "internal", is_minor: false, requires_consent_by_default: false, default_legal_basis: "public_administration", examples_i18n: { pt: ["funcionário de órgão público"], en: ["government employee"] }, applicable_regulations: ["lgpd"], scf_controls: ["PRI-01"] }
 ];
 
+DATA_SUBJECTS.forEach(i => DataSubjectRefSchema.parse(i));
+
+
 // ── Data Categories ─────────────────────────────────────────────────────────
 
 export const DATA_CATEGORIES: DataCategoryRef[] = [
@@ -60,6 +80,9 @@ export const DATA_CATEGORIES: DataCategoryRef[] = [
   { id: "voice", name_i18n: { pt: "Voz", en: "Voice" }, sensitivity: "normal", keywords_i18n: { pt: ["gravação", "voz", "call center"], en: ["recording", "voice", "call center"] }, article_by_regulation: [{ regulation_id: "lgpd", article: "Art. 5°, I", extra_legal_basis_required: false, extra_requirement_i18n: { pt: "", en: "" } }], examples_i18n: { pt: ["gravação de call center", "mensagem de voz"], en: ["call center recording", "voicemail"] }, scf_controls: ["DCH-01", "PRI-01"], auto_triggers: [] }
 ];
 
+DATA_CATEGORIES.forEach(i => DataCategoryRefSchema.parse(i));
+
+
 // ── Retention Rules ─────────────────────────────────────────────────────────
 
 export const RETENTION_RULES: RetentionRuleRef[] = [
@@ -73,6 +96,9 @@ export const RETENTION_RULES: RetentionRuleRef[] = [
   { data_category_id: "geolocation", context_id: "fleet", context_i18n: { pt: "Fleet management", en: "Fleet management" }, period_i18n: { pt: "1 a 3 anos", en: "1 to 3 years" }, min_months: 12, max_months: 36, legal_basis: "Contrato", jurisdiction: "BR", disposal_method: "secure_delete", scf_controls: ["DCH-17"] },
 ];
 
+RETENTION_RULES.forEach(i => RetentionRuleRefSchema.parse(i));
+
+
 // ── Life Cycle Stages ───────────────────────────────────────────────────────
 
 const LIFE_CYCLE_STAGES: LifeCycleStageRef[] = [
@@ -84,6 +110,9 @@ const LIFE_CYCLE_STAGES: LifeCycleStageRef[] = [
   { id: "disposal", name_i18n: { pt: "Eliminação", en: "Disposal" }, order: 6, description_i18n: { pt: "Destruição", en: "Destruction" }, scf_controls: ["DCH-17", "DCH-18"], articles_by_regulation: { gdpr: "Art. 17", lgpd: "Art. 16" } }
 ];
 
+LIFE_CYCLE_STAGES.forEach(i => LifeCycleStageRefSchema.parse(i));
+
+
 // ── Data Origins ────────────────────────────────────────────────────────────
 
 const DATA_ORIGINS: DataOriginRef[] = [
@@ -94,6 +123,9 @@ const DATA_ORIGINS: DataOriginRef[] = [
   { id: "internal_generation", name_i18n: { pt: "Gerado internamente", en: "Internally generated" }, requires_consent_notice: false, scf_controls: ["PRI-01"] },
   { id: "legal_obligation", name_i18n: { pt: "Recebido por obrigação legal", en: "Received by legal obligation" }, requires_consent_notice: false, scf_controls: ["PRI-01", "CPL-01"] }
 ];
+
+DATA_ORIGINS.forEach(i => DataOriginRefSchema.parse(i));
+
 
 // ── Collection Methods ──────────────────────────────────────────────────────
 
@@ -109,6 +141,9 @@ const COLLECTION_METHODS: CollectionMethodRef[] = [
   { id: "biometric_scanner", name_i18n: { pt: "Leitor biométrico", en: "Biometric scanner" }, requires_consent_checkbox: true, privacy_notice_required: true, scf_controls: ["IAC-15", "PRI-01"] }
 ];
 
+COLLECTION_METHODS.forEach(i => CollectionMethodRefSchema.parse(i));
+
+
 // ── Processing Purposes ─────────────────────────────────────────────────────
 
 const PROCESSING_PURPOSES: ProcessingPurposeRef[] = [
@@ -123,6 +158,9 @@ const PROCESSING_PURPOSES: ProcessingPurposeRef[] = [
   { id: "vendor_management", name_i18n: { pt: "Gestão de Fornecedores", en: "Vendor Management" }, category: "compras", typical_legal_basis: "contract", typical_retention_i18n: { pt: "5 anos após fim do contrato", en: "5 years post contract" }, dpia_likely: false, examples_i18n: { pt: ["cadastro de fornecedor", "due diligence"], en: ["vendor onboarding", "due diligence"] }, scf_controls: ["TPM-01", "PRI-01"] },
   { id: "fraud_prevention", name_i18n: { pt: "Prevenção à Fraude", en: "Fraud Prevention" }, category: "compliance", typical_legal_basis: "legitimate_interest", typical_retention_i18n: { pt: "5 anos", en: "5 years" }, dpia_likely: true, examples_i18n: { pt: ["análise antifraude", "KYC"], en: ["anti-fraud analysis", "KYC"] }, scf_controls: ["PRI-01", "RSK-01"] }
 ];
+
+PROCESSING_PURPOSES.forEach(i => ProcessingPurposeRefSchema.parse(i));
+
 
 // ── Security Measures ───────────────────────────────────────────────────────
 
@@ -142,6 +180,9 @@ const SECURITY_MEASURES: SecurityMeasureRef[] = [
   { id: "clean_desk", name_i18n: { pt: "Política de mesa limpa", en: "Clean desk policy" }, category: "physical", scf_controls: ["PES-06"], applicable_data_categories: ["all"], priority_for_sensitive: "recommended", priority_for_normal: "optional" }
 ];
 
+SECURITY_MEASURES.forEach(i => SecurityMeasureRefSchema.parse(i));
+
+
 // ── Disposal Methods ────────────────────────────────────────────────────────
 
 const DISPOSAL_METHODS: DisposalMethodRef[] = [
@@ -151,6 +192,9 @@ const DISPOSAL_METHODS: DisposalMethodRef[] = [
   { id: "anonymization", name_i18n: { pt: "Anonimização", en: "Anonymization" }, description_i18n: { pt: "Tornar impossível a identificação", en: "Make identification impossible" }, applicable_to: "digital", scf_controls: ["PRI-01", "DCH-17"], articles_by_regulation: { lgpd: "Art. 12, §1°" } },
   { id: "paper_shredding", name_i18n: { pt: "Trituração de papel", en: "Paper shredding" }, description_i18n: { pt: "Destruição de documentos físicos", en: "Destruction of physical documents" }, applicable_to: "physical", scf_controls: ["DCH-18"], articles_by_regulation: { lgpd: "Art. 16" } }
 ];
+
+DISPOSAL_METHODS.forEach(i => DisposalMethodRefSchema.parse(i));
+
 
 // ── Risk Factors ────────────────────────────────────────────────────────────
 
@@ -162,6 +206,9 @@ const RISK_FACTORS: RiskFactorRef[] = [
   { id: "profiling", name_i18n: { pt: "Profiling", en: "Profiling" }, description_i18n: { pt: "Análise comportamental", en: "Behavioral analysis" }, weight: 2, triggers_dpia: true, triggers_lia: false, regulation_refs: ["GDPR Art. 35(3)(a)"], detection_rule: "profiling == true", scf_controls: ["PRI-05"] }
 ];
 
+RISK_FACTORS.forEach(i => RiskFactorRefSchema.parse(i));
+
+
 // ── Volume Scale ────────────────────────────────────────────────────────────
 
 export const VOLUME_SCALE: VolumeScaleRef[] = [
@@ -171,6 +218,9 @@ export const VOLUME_SCALE: VolumeScaleRef[] = [
   { id: "high", label_i18n: { pt: "Alto", en: "High" }, max_records: 100000, risk_contribution: 3 },
   { id: "very_high", label_i18n: { pt: "Muito Alto", en: "Very High" }, max_records: Infinity, risk_contribution: 4 }
 ];
+
+VOLUME_SCALE.forEach(i => VolumeScaleRefSchema.parse(i));
+
 
 // ── Governance Reference Data ───────────────────────────────────────────────
 
@@ -182,6 +232,9 @@ const MATURITY_LEVELS: MaturityLevelRef[] = [
   { level: 5, label_i18n: { pt: "Otimizado", en: "Optimized" }, description_i18n: { pt: "Melhoria contínua e inovação.", en: "Continuous improvement." } }
 ];
 
+MATURITY_LEVELS.forEach(i => MaturityLevelRefSchema.parse(i));
+
+
 const BG_CHECK_TYPES: BgCheckTypeRef[] = [
   { id: "criminal", name_i18n: { pt: "Antecedentes Criminais", en: "Criminal Record" }, scf_controls: ["HRS-04"], required_for_clearance: ["standard", "elevated", "privileged"] },
   { id: "credit", name_i18n: { pt: "Análise de Crédito", en: "Credit Check" }, scf_controls: ["HRS-04"], required_for_clearance: ["elevated", "privileged"] },
@@ -190,11 +243,17 @@ const BG_CHECK_TYPES: BgCheckTypeRef[] = [
   { id: "identity", name_i18n: { pt: "Verificação de Identidade", en: "Identity Verification" }, scf_controls: ["HRS-04", "IAC-01"], required_for_clearance: ["standard", "elevated", "privileged"] }
 ];
 
+BG_CHECK_TYPES.forEach(i => BgCheckTypeRefSchema.parse(i));
+
+
 const CLEARANCE_LEVELS: ClearanceLevelRef[] = [
   { id: "standard", name_i18n: { pt: "Padrão", en: "Standard" }, required_checks: ["identity", "criminal"], scf_controls: ["HRS-04", "IAC-01"] },
   { id: "elevated", name_i18n: { pt: "Elevado", en: "Elevated" }, required_checks: ["identity", "criminal", "credit", "employment", "sanctions"], scf_controls: ["HRS-04", "IAC-01", "IAC-06"] },
   { id: "privileged", name_i18n: { pt: "Privilegiado", en: "Privileged" }, required_checks: ["identity", "criminal", "credit", "employment", "education", "reference", "sanctions"], scf_controls: ["HRS-04", "IAC-01", "IAC-06", "IAC-20"] }
 ];
+
+CLEARANCE_LEVELS.forEach(i => ClearanceLevelRefSchema.parse(i));
+
 
 const DEPARTMENTS: DepartmentRef[] = [
   { id: "geral", name_i18n: { pt: "Geral / Administrativo", en: "General / Admin" }, typical_data_subjects: ["employee", "visitor"], typical_processing_purposes: ["employment_management"] },
@@ -204,6 +263,9 @@ const DEPARTMENTS: DepartmentRef[] = [
   { id: "compliance", name_i18n: { pt: "Compliance / GRC", en: "Compliance / GRC" }, typical_data_subjects: ["employee", "supplier"], typical_processing_purposes: ["legal_compliance", "audit_governance", "fraud_prevention"] },
   { id: "financeiro", name_i18n: { pt: "Financeiro", en: "Finance" }, typical_data_subjects: ["employee", "customer", "supplier"], typical_processing_purposes: ["payroll", "contract_execution", "legal_compliance"] }
 ];
+
+DEPARTMENTS.forEach(i => DepartmentRefSchema.parse(i));
+
 
 // ── Routes ──────────────────────────────────────────────────────────────────
 
