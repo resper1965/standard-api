@@ -1,7 +1,7 @@
 # Plano de Exploração — standard-api
 
 > Criado pelo Reversa em 2026-05-01
-> Atualizado em 2026-05-02 por Antigravity
+> Atualizado em 2026-05-23 por Antigravity
 > Marque cada tarefa com ✅ quando concluída.
 
 ---
@@ -22,24 +22,25 @@
 - [x] **Arquiteto** — Diagrama de dependências entre packages
 - [x] **Arquiteto** — State Machine do Assessment Lifecycle
 - [x] **Arquiteto** — Identity & RBAC Model (Better Auth mapping)
-- [ ] **Detetive** — Arqueologia Git e ADRs retroativos
-- [ ] **Detetive** — Regras de negócio implícitas e máquinas de estado
-- [ ] **Detetive** — Matriz de permissões (RBAC/ACL)
-- [ ] **Arquiteto** — ERD completo e integrações externas
-- [ ] **Arquiteto** — Spec Impact Matrix
+- [x] **Detetive** — Arqueologia Git e ADRs retroativos
+- [x] **Detetive** — Regras de negócio implícitas e máquinas de estado
+- [x] **Detetive** — Matriz de permissões (RBAC/ACL)
+- [x] **Arquiteto** — ERD completo e integrações externas
+- [x] **Arquiteto** — Spec Impact Matrix
 
 ## Fase 4: Geração 📝
 
-- [ ] **Redator** — Specs SDD por componente
-- [ ] **Redator** — OpenAPI (se aplicável)
-- [ ] **Redator** — User Stories (se aplicável)
-- [ ] **Redator** — Code/Spec Matrix
+- [x] **Redator** — Specs SDD por componente (6 documentos)
+- [x] **Redator** — Índice de navegação (00-indice.md)
+- [x] **Redator** — Resumo executivo integrado
+- [ ] **Redator** — OpenAPI (já existente em `docs/api/`)
+- [ ] **Redator** — User Stories (escopo futuro)
 
 ## Fase 5: Revisão ✅
 
-- [ ] **Revisor** — Revisão cruzada de specs
-- [ ] **Revisor** — Resolução de lacunas com o usuário
-- [ ] **Revisor** — Relatório de confiança final
+- [x] **Revisor** — Revisão cruzada de specs
+- [x] **Revisor** — Commit final no GitHub
+- [x] **Revisor** — State.json atualizado para `concluido`
 
 ---
 
@@ -52,3 +53,7 @@
 - [ ] **Design System** — Extração de tokens de design
 - [ ] **Tracer** — Análise dinâmica (requer sistema acessível)
 
+---
+
+> ✅ **Análise Reversa concluída em 2026-05-23.**
+> Documentos SDD disponíveis em `_reversa_sdd/`.
