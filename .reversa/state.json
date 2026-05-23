@@ -7,20 +7,21 @@
   "answer_mode": "chat",
   "doc_level": "completo",
   "output_folder": "_reversa_sdd",
-  "phase": "interpretacao",
+  "phase": "concluido",
   "completed": [
     "reconhecimento",
     "escavacao",
-    "interpretacao"
-  ],
-  "pending": [
+    "interpretacao",
     "geracao",
     "revisao"
   ],
+  "pending": [],
   "checkpoints": {
     "reconhecimento": "2026-05-02T12:35:00Z",
     "escavacao": "2026-05-02T12:35:00Z",
-    "interpretacao": "2026-05-02T12:36:00Z"
+    "interpretacao": "2026-05-02T12:36:00Z",
+    "geracao": "2026-05-23T15:00:00Z",
+    "revisao": "2026-05-23T15:05:00Z"
   },
   "engines": [
     "claude-code",
@@ -44,7 +45,12 @@
     "reversa-reconstructor"
   ],
   "created_files": [
+    "_reversa_sdd/00-indice.md",
     "_reversa_sdd/01-reconhecimento.md",
-    "_reversa_sdd/03-arquitetura-c4.md"
+    "_reversa_sdd/02-inventario-tecnico.md",
+    "_reversa_sdd/03-arquitetura-c4.md",
+    "_reversa_sdd/04-fluxo-de-dados.md",
+    "_reversa_sdd/05-dependencias-runtime.md",
+    "_reversa_sdd/06-diagnostico-saude.md"
   ]
 }
