@@ -34,7 +34,6 @@ jobs:
 
       - name: Install
         run: pnpm install --no-frozen-lockfile
-<<<<<<< HEAD
 
       - name: Lint
         run: pnpm lint || true
@@ -55,50 +54,6 @@ jobs:
 
   migrate:
     name: Run Database Migrations
-    runs-on: ubuntu-latest
-    environment: production
-    needs: validate
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm
-
-      - name: Install
-        run: pnpm install --no-frozen-lockfile
-=======
->>>>>>> fdf6d291032b55389a8d20036039cda5e81d56d8
-
-      - name: Lint
-        run: pnpm lint || true
-
-      - name: Typecheck
-        run: pnpm typecheck
-
-      - name: Unit & Contract Tests
-        run: pnpm test:unit && pnpm test:contracts
-
-      - name: Security Audit
-        run: pnpm audit --audit-level=high || true
-
-      - name: Build
-        run: pnpm build
-        env:
-          VITE_NEON_AUTH_URL: ${{ vars.VITE_NEON_AUTH_URL }}
-          VITE_API_URL: ${{ vars.VITE_API_URL }}
-          VITE_NEON_DATA_API_URL: ${{ vars.VITE_NEON_DATA_API_URL }}
-
-  migrate:
-    name: Sync Database Schema
     runs-on: ubuntu-latest
     environment: production
     needs: validate
