@@ -68,13 +68,8 @@ export const projectionRoutes: RouteDefinition[] = [
       const assessmentId = routeParam(params, "assessmentId");
       const frameworkId = routeParam(params, "frameworkId");
 
-<<<<<<< HEAD
       // 1. Validate assessment exists
       const assessment = await deps.assessments.withTenant(tenantId!).get(assessmentId);
-=======
-      // 1. Validate assessment exists (use 2-arg direct call for type safety)
-      const assessment = await deps.assessments.get(assessmentId, tenantId!);
->>>>>>> fdf6d291032b55389a8d20036039cda5e81d56d8
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
 
       const scfVersionId = assessment.scf_version_id;
