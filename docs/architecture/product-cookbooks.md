@@ -158,6 +158,89 @@ O que a plataforma entrega como capacidades para um cliente (humano ou IA) que c
 
 ---
 
+## 🔶 Cookbook 8: ROPA — Registro de Atividades de Tratamento
+
+**Problema:** "Preciso gerar e manter meu ROPA (Art. 37 LGPD / Art. 30 GDPR) e não sei por onde começar."
+
+**Fluxo do cliente:**
+```
+1. Upload de documentos: políticas de privacidade, contratos de DPA,
+   mapeamento de sistemas, questionários respondidos
+2. → Sistema extrai automaticamente:
+   - Atividades de tratamento identificadas
+   - Dados pessoais envolvidos (categorias)
+   - Base legal por atividade
+   - Finalidade do tratamento
+   - Compartilhamentos e transferências internacionais
+   - Período de retenção
+   - Medidas de segurança aplicadas
+3. → Gera ROPA estruturado (formato ANPD / EDPB)
+4. → Identifica gaps: atividades sem base legal, sem retenção definida, etc.
+5. → Versionamento: novo upload = delta report do ROPA
+```
+
+**Valor:** DPOs gastam meses montando ROPA manualmente. Com documentos existentes, o sistema gera draft em minutos. Auditável e versionado.
+
+**Saída:** ROPA estruturado com `processing_activity_id`, `data_categories[]`, `legal_basis`, `retention_period`, `security_measures[]`, `gaps[]`
+
+---
+
+## 🔷 Cookbook 9: DPIA — Avaliação de Impacto à Proteção de Dados
+
+**Problema:** "Preciso avaliar o impacto de um novo projeto/sistema sobre dados pessoais antes de lançar."
+
+**Fluxo do cliente:**
+```
+1. Descrição do projeto/sistema (texto livre ou formulário guiado)
+2. Upload de documentação técnica e funcional
+3. → Sistema avalia:
+   - Necessidade e proporcionalidade do tratamento
+   - Riscos aos titulares (scoring por categoria de risco)
+   - Medidas mitigatórias existentes vs recomendadas
+   - Parecer de necessidade de consulta à ANPD/DPA
+4. → Gera relatório DPIA (formato ANPD / ICO / CNIL)
+5. → POA&M específico para riscos residuais
+6. → Registro para accountability (Art. 38 LGPD / Art. 35 GDPR)
+```
+
+**Valor:** Obrigatório para tratamentos de alto risco. Consultorias cobram R$30-80k por DPIA. O sistema gera draft fundamentado em evidências.
+
+**Saída:** DPIA report com `risk_assessment[]`, `mitigation_measures[]`, `residual_risk_score`, `dpa_consultation_needed`, `poam_items[]`
+
+---
+
+## 🟠 Cookbook 10: Privacy Program Assessment (LGPD/GDPR)
+
+**Problema:** "Quero saber o nível de maturidade do meu programa de privacidade como um todo."
+
+**Fluxo do cliente:**
+```
+1. Seleciona framework de privacidade:
+   - LGPD (Lei 13.709)
+   - GDPR
+   - ISO 27701
+   - NIST Privacy Framework
+   - SCF Privacy Controls
+2. Upload de toda documentação de privacidade
+3. → Sistema avalia por domínio:
+   - Governança de privacidade
+   - Direitos dos titulares
+   - Gestão de consentimento
+   - Transferência internacional
+   - Incidentes e notificação
+   - Privacy by Design
+   - Contratos e terceiros
+4. → Maturity score por domínio (0-5)
+5. → Gap Analysis específico de privacidade
+6. → POA&M para programa de privacidade
+```
+
+**Valor:** Visão 360° do programa de privacidade. O SCF já mapeia controles de privacidade para LGPD, GDPR, ISO 27701 e NIST PF — o crosswalk é automático.
+
+**Saída:** Privacy maturity radar, domain scores, gap analysis, POA&M, regulatory mapping
+
+---
+
 ## Modelo de Consumo
 
 Todos os cookbooks acima são consumíveis de **3 formas**:
@@ -183,9 +266,12 @@ O MCP Server é o diferencial competitivo: **nenhuma plataforma GRC hoje oferece
 | 5 | Prep Auditoria | 🟡 Média | 🔴 Alto | Derivado de 1+2 |
 | 6 | C-Level Report | 🟢 Baixa | 🟡 Médio | Report writer existe |
 | 7 | Vendor Risk | 🔴 Alta | 🟡 Médio | Futuro |
+| 8 | **ROPA** | 🟡 Média | 🔴 **Altíssimo** | Derivado do engine + extração |
+| 9 | **DPIA** | 🟡 Média | 🔴 **Alto** | Derivado de Gap + Risk scoring |
+| 10 | **Privacy Program** | 🟢 Baixa* | 🔴 **Altíssimo** | SCF privacy controls prontos |
 
-*Crosswalk usa SCF que já é a base — a complexidade real é baixa porque o mapping existe.
+*Privacy Program usa o mesmo engine de Gap/Maturity, apenas com framework de privacidade selecionado. Crosswalk SCF já mapeia LGPD↔GDPR↔ISO 27701↔NIST PF.
 
 ---
 
-> **Bottom line:** O Standard não é "mais um GRC tool". É o primeiro **motor de assessment SCF-native que fala MCP** — qualquer IA pode ser um analista de compliance.
+> **Bottom line:** O Standard não é "mais um GRC tool". É o primeiro **motor de assessment SCF-native que fala MCP** — qualquer IA pode ser um analista de compliance e privacidade.
