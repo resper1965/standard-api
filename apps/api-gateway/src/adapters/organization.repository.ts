@@ -9,7 +9,7 @@ export const createOrganizationRepository = (): OrganizationRepositoryAdapter =>
 
   return {
     async create(input) {
-      const record = { organization_id: newId(), status: "active" as const, ...input };
+      const record = { organization_id: newId(), status: "active" as const, billing_tier: "free", ...input };
       records.set(record.organization_id, record);
       return record;
     },
@@ -41,14 +41,15 @@ export const createOrganizationRepository = (): OrganizationRepositoryAdapter =>
 export const createDrizzleOrganizationRepository = (db: DbClient): OrganizationRepositoryAdapter => {
   return {
     async create(input) {
-      const record = { id: newId(), status: "active" as const, tenantId: input.tenant_id, name: input.name, slug: input.slug };
+      const record = { id: newId(), status: "active" as const, tenantId: input.tenant_id, name: input.name, slug: input.slug, billingTier: "free" };
       const [inserted] = await db.insert(organizations).values(record).returning();
       return {
         organization_id: inserted!.id,
         tenant_id: inserted!.tenantId,
         slug: inserted!.slug,
         name: inserted!.name,
-        status: inserted!.status as "active" | "inactive"
+        status: inserted!.status as "active" | "inactive",
+        billing_tier: inserted!.billingTier
       };
     },
     async get(organizationId, tenantId) {
@@ -67,7 +68,8 @@ export const createDrizzleOrganizationRepository = (db: DbClient): OrganizationR
         tenant_id: found.tenantId,
         slug: found.slug,
         name: found.name,
-        status: found.status as "active" | "inactive"
+        status: found.status as "active" | "inactive",
+        billing_tier: found.billingTier
       };
     },
     async listByTenant(tenantId) {
@@ -77,7 +79,8 @@ export const createDrizzleOrganizationRepository = (db: DbClient): OrganizationR
         tenant_id: found.tenantId,
         slug: found.slug,
         name: found.name,
-        status: found.status as "active" | "inactive"
+        status: found.status as "active" | "inactive",
+        billing_tier: found.billingTier
       }));
     },
     async update(organizationId, tenantId, patch) {
@@ -85,7 +88,8 @@ export const createDrizzleOrganizationRepository = (db: DbClient): OrganizationR
         .set({
           name: patch.name,
           slug: patch.slug,
-          status: patch.status
+          status: patch.status,
+          billingTier: patch.billing_tier
         })
         .where(
           and(
@@ -102,7 +106,8 @@ export const createDrizzleOrganizationRepository = (db: DbClient): OrganizationR
         tenant_id: updated.tenantId,
         slug: updated.slug,
         name: updated.name,
-        status: updated.status as "active" | "inactive"
+        status: updated.status as "active" | "inactive",
+        billing_tier: updated.billingTier
       };
     },
     withTenant(tenantId) {

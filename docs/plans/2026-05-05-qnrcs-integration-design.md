@@ -1,3 +1,6 @@
+> [!WARNING]
+> **[ARCHIVED/LEGACY PLAN]** Este é um plano de execução legado e histórico de fases anteriores do desenvolvimento da plataforma. Ele pode não refletir a arquitetura atenuada atual.
+
 # Design: Integração do QNRCS 2019 ao Standard API
 
 > **Status**: `[CONCLUÍDO]` Design implementado. Seed em `infra/docker/postgres/seeds/0011_pt_qnrcs_derived_seed.sql`.

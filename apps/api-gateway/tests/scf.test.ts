@@ -56,3 +56,24 @@ test("SCF admin import endpoint requires actor and records failed run safely", a
   expect(failed.body.import_run.status).toBe("failed");
 });
 
+test("SCF admin import-xlsx rejeita arquivo sem assinatura ZIP", async () => {
+  const client = createTestClient();
+  const form = new FormData();
+  form.append("file", new Blob(["not a zip file"], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }), "bad.xlsx");
+
+  const result = await client.sendMultipart(
+    "/api/v1/admin/scf/import-xlsx",
+    form,
+    {
+      "x-standard-actor-id": ids.actorId,
+      "x-standard-tenant-id": ids.tenantId,
+      "authorization": "Bearer dev:platform_admin"
+    }
+  );
+
+  expect(result.response.status).toBe(400);
+  expect(result.body.error.code).toBe("VALIDATION_ERROR");
+  expect(result.body.error.message).toBe("Invalid XLSX file: missing ZIP file signature.");
+});
+
+

@@ -1,3 +1,6 @@
+> [!WARNING]
+> **[ARCHIVED/LEGACY PLAN]** Este é um plano de execução legado e histórico de fases anteriores do desenvolvimento da plataforma. Ele pode não refletir a arquitetura atenuada atual.
+
 # QNRCS Integration Implementation Plan
 
 > **Status**: `[CONCLUÍDO]` Seed SQL criado e expandido com todos os requisitos QNRCS. Ver `infra/docker/postgres/seeds/0011_pt_qnrcs_derived_seed.sql`.

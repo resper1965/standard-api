@@ -28,6 +28,7 @@ import { kbRoutes } from "./routes/kb.routes";
 import { lifecycleRoutes } from "./routes/lifecycle.routes";
 import { memberRoutes } from "./routes/members.routes";
 import { organizationsRoutes } from "./routes/organizations.routes";
+import { organizationsMgmtRoutes } from "./routes/organizations-mgmt.routes";
 import { observabilityRoutes } from "./routes/observability.routes";
 import { poamRoutes } from "./routes/poam.routes";
 import { reportingRoutes } from "./routes/reporting.routes";
@@ -58,6 +59,7 @@ export const routes: RouteDefinition[] = [
   ...healthRoutes,
   ...tenantsRoutes,
   ...organizationsRoutes,
+  ...organizationsMgmtRoutes,
   ...apiKeysRoutes,
   ...assessmentsRoutes,
   ...documentsRoutes,

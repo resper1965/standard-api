@@ -109,3 +109,23 @@ test("listagem não retorna documentos de outro tenant", async () => {
   expect(list.body.data.length).toBe(0);
 });
 
+test("upload rejeita arquivo contendo padrão de teste de malware EICAR", async () => {
+  const client = createTestClient();
+  const created = await client.createAssessment();
+
+  // EICAR standard antivirus test file pattern
+  const EICAR_PATTERN = "X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*";
+  const form = uploadForm("eicar.txt", "text/plain", EICAR_PATTERN);
+
+  const { response, body } = await client.sendMultipart(`/api/v1/assessments/${created.assessmentId}/documents`, form, {
+    "x-standard-tenant-id": created.tenantId,
+    "x-standard-actor-id": ids.actorId
+  });
+
+  expect(response.status).toBe(422);
+  expect(body.error.code).toBe("MALWARE_DETECTED");
+  expect(body.error.details[0].threat).toBe("EICAR-Test-File");
+  expect(body.error.details[0].scanner).toBe("builtin");
+});
+
+

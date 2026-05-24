@@ -38,6 +38,7 @@ export type OrganizationRecord = {
   slug: string;
   name: string;
   status: string;
+  billing_tier: string;
 };
 
 export type AssessmentRecord = {
@@ -106,17 +107,17 @@ export type TenantRepositoryAdapter = {
 };
 
 export interface TenantScopedOrganizationRepository {
-  create(input: Omit<OrganizationRecord, "organization_id" | "status" | "tenant_id">): Promise<OrganizationRecord>;
+  create(input: Omit<OrganizationRecord, "organization_id" | "status" | "tenant_id" | "billing_tier">): Promise<OrganizationRecord>;
   get(organizationId: string): Promise<OrganizationRecord | null>;
   list(): Promise<OrganizationRecord[]>;
-  update(organizationId: string, patch: Partial<Pick<OrganizationRecord, "name" | "slug" | "status">>): Promise<OrganizationRecord | null>;
+  update(organizationId: string, patch: Partial<Pick<OrganizationRecord, "name" | "slug" | "status" | "billing_tier">>): Promise<OrganizationRecord | null>;
 }
 
 export type OrganizationRepositoryAdapter = {
-  create(input: Omit<OrganizationRecord, "organization_id" | "status">): Promise<OrganizationRecord>;
+  create(input: Omit<OrganizationRecord, "organization_id" | "status" | "billing_tier">): Promise<OrganizationRecord>;
   get(organizationId: string, tenantId: string): Promise<OrganizationRecord | null>;
   listByTenant(tenantId: string): Promise<OrganizationRecord[]>;
-  update(organizationId: string, tenantId: string, patch: Partial<Pick<OrganizationRecord, "name" | "slug" | "status">>): Promise<OrganizationRecord | null>;
+  update(organizationId: string, tenantId: string, patch: Partial<Pick<OrganizationRecord, "name" | "slug" | "status" | "billing_tier">>): Promise<OrganizationRecord | null>;
   /** Strict tenant-scoped data access pattern */
   withTenant(tenantId: string): TenantScopedOrganizationRepository;
 };

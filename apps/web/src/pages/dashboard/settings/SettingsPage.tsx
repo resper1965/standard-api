@@ -6,7 +6,18 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Copy, Plus, Users, Building, Key, Check, BookOpen, Trash2, ChevronDown, ChevronRight, ExternalLink } from "lucide-react"
+import { Copy, Plus, Users, Building, Key, Check, BookOpen, Trash2, ChevronDown, ChevronRight, ExternalLink, Loader2 } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog"
 
 const API_URL = import.meta.env.VITE_API_URL || "https://api.standard.bekaa.eu"
 
@@ -429,6 +440,7 @@ assessment.created, document.ingested, kb.indexed, soa.approved, gap.approved, m
 // ─── Component ───────────────────────────────────────────────
 export function SettingsPage() {
   const { data: session } = useSession()
+  const { toast } = useToast()
   const hasActiveOrg = !!session?.session?.activeOrganizationId
 
   const [activeOrg, setActiveOrg] = useState<any>(null)
@@ -439,6 +451,23 @@ export function SettingsPage() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [expandedGroup, setExpandedGroup] = useState<string | null>("Assessments")
   const [keyName, setKeyName] = useState("External System Key")
+
+  // Org settings and faturamento states
+  const [orgName, setOrgName] = useState("")
+  const [orgSlug, setOrgSlug] = useState("")
+  const [billingTier, setBillingTier] = useState("free")
+  const [isUpdatingOrg, setIsUpdatingOrg] = useState(false)
+  const [isUpdatingBilling, setIsUpdatingBilling] = useState(false)
+
+  // Invite states
+  const [inviteEmail, setInviteEmail] = useState("")
+  const [inviteRole, setInviteRole] = useState("member")
+  const [inviteName, setInviteName] = useState("")
+  const [isInviting, setIsInviting] = useState(false)
+  const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false)
+
+  const loggedMember = members.find(m => m.userId === session?.user?.id || m.user?.id === session?.user?.id);
+  const isOwner = loggedMember?.role === "owner" || session?.user?.role === "owner";
 
   const loadApiKeys = async (orgId: string) => {
     try {
@@ -453,6 +482,21 @@ export function SettingsPage() {
     } catch { /* silent */ }
   }
 
+  const loadOrganizationDetails = async (orgId: string) => {
+    try {
+      const res = await fetch(`${API_URL}/api/v1/organizations/${orgId}`, {
+        headers: { "x-standard-tenant-id": orgId },
+        credentials: "include"
+      })
+      if (res.ok) {
+        const json = await res.json()
+        setActiveOrg((prev: any) => ({ ...prev, ...json }))
+      }
+    } catch (e) {
+      console.error("Failed to load organization extra details", e)
+    }
+  }
+
   useEffect(() => {
     async function load() {
       if (!hasActiveOrg) return
@@ -462,11 +506,20 @@ export function SettingsPage() {
           setActiveOrg(orgData.data)
           setMembers(orgData.data.members || [])
           await loadApiKeys(orgData.data.id)
+          await loadOrganizationDetails(orgData.data.id)
         }
       } catch (e) { console.error("Failed to load organization", e) }
     }
     load()
   }, [hasActiveOrg])
+
+  useEffect(() => {
+    if (activeOrg) {
+      setOrgName(activeOrg.name || "")
+      setOrgSlug(activeOrg.slug || "")
+      setBillingTier(activeOrg.billing_tier || "free")
+    }
+  }, [activeOrg])
 
   const copy = (text: string, id: string) => {
     navigator.clipboard.writeText(text)
@@ -479,6 +532,129 @@ export function SettingsPage() {
       {copiedId === id ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
     </Button>
   )
+
+  const handleUpdateOrg = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!activeOrg?.id) return
+    setIsUpdatingOrg(true)
+    try {
+      const res = await fetch(`${API_URL}/api/v1/organizations/${activeOrg.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "x-standard-tenant-id": activeOrg.id
+        },
+        credentials: "include",
+        body: JSON.stringify({ name: orgName, slug: orgSlug })
+      })
+      const json = await res.json()
+      if (res.ok) {
+        toast({
+          title: "Organization updated",
+          description: "Your organization settings have been updated successfully."
+        })
+        setActiveOrg((prev: any) => ({ ...prev, name: json.name, slug: json.slug }))
+      } else {
+        toast({
+          title: "Update failed",
+          description: json.error?.message || "Failed to update organization details."
+        })
+      }
+    } catch (err) {
+      toast({
+        title: "Update failed",
+        description: "An error occurred while updating settings."
+      })
+    } finally {
+      setIsUpdatingOrg(false)
+    }
+  }
+
+  const handleUpdateBilling = async () => {
+    if (!activeOrg?.id) return
+    setIsUpdatingBilling(true)
+    try {
+      const res = await fetch(`${API_URL}/api/v1/organizations/${activeOrg.id}/billing`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "x-standard-tenant-id": activeOrg.id
+        },
+        credentials: "include",
+        body: JSON.stringify({ billing_tier: billingTier })
+      })
+      const json = await res.json()
+      if (res.ok) {
+        toast({
+          title: "Plan updated",
+          description: `Organization billing plan updated to ${billingTier.toUpperCase()} successfully.`
+        })
+        setActiveOrg((prev: any) => ({ ...prev, billing_tier: json.billing_tier }))
+      } else {
+        toast({
+          title: "Update failed",
+          description: json.error?.message || "Failed to update billing tier."
+        })
+      }
+    } catch (err) {
+      toast({
+        title: "Update failed",
+        description: "An error occurred while updating the plan."
+      })
+    } finally {
+      setIsUpdatingBilling(false)
+    }
+  }
+
+  const handleInviteMember = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!activeOrg?.id) return
+    setIsInviting(true)
+    try {
+      const res = await fetch(`${API_URL}/api/v1/organizations/${activeOrg.id}/invites`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-standard-tenant-id": activeOrg.id
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          email: inviteEmail,
+          role: inviteRole,
+          display_name: inviteName || undefined
+        })
+      })
+      const json = await res.json()
+      if (res.ok) {
+        toast({
+          title: "Member invited",
+          description: `Invitation sent to ${inviteEmail}.`
+        })
+        const orgData = await authClient.organization.getFullOrganization()
+        if (orgData.data) {
+          setActiveOrg(orgData.data)
+          setMembers(orgData.data.members || [])
+          await loadOrganizationDetails(orgData.data.id)
+        }
+        setInviteEmail("")
+        setInviteName("")
+        setInviteRole("member")
+        setIsInviteDialogOpen(false)
+      } else {
+        toast({
+          title: "Invite failed",
+          description: json.error?.message || "Failed to invite member."
+        })
+      }
+    } catch (err) {
+      toast({
+        title: "Invite failed",
+        description: "An error occurred while sending the invite."
+      })
+    } finally {
+      setIsInviting(false)
+    }
+  }
 
   const handleGenerateKey = async () => {
     if (!activeOrg?.id) return
@@ -537,16 +713,90 @@ export function SettingsPage() {
                 </div>
               </div>
               <div className="grid gap-2">
-                <Label>Organization Name</Label>
-                <Input value={activeOrg?.name || ""} readOnly className="max-w-md" />
-              </div>
-              <div className="grid gap-2">
                 <Label>API Base URL</Label>
                 <div className="flex max-w-lg items-center space-x-2">
                   <Input readOnly value={`${API_URL}/api/v1`} className="font-mono bg-muted/50 text-sm" />
                   {renderCopyBtn(`${API_URL}/api/v1`, "baseurl")}
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border bg-card/60">
+            <CardHeader>
+              <CardTitle>Organization Settings</CardTitle>
+              <CardDescription>Update your organization's display name and URL slug.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleUpdateOrg} className="space-y-4">
+                <div className="grid gap-2 max-w-md">
+                  <Label htmlFor="orgName">Organization Name</Label>
+                  <Input
+                    id="orgName"
+                    value={orgName}
+                    onChange={(e) => setOrgName(e.target.value)}
+                    disabled={!isOwner}
+                    placeholder="Organization Name"
+                  />
+                </div>
+                <div className="grid gap-2 max-w-md">
+                  <Label htmlFor="orgSlug">Organization Slug (URL path)</Label>
+                  <Input
+                    id="orgSlug"
+                    value={orgSlug}
+                    onChange={(e) => setOrgSlug(e.target.value)}
+                    disabled={!isOwner}
+                    placeholder="organization-slug"
+                  />
+                </div>
+                {isOwner && (
+                  <Button type="submit" disabled={isUpdatingOrg} className="bg-primary/80">
+                    {isUpdatingOrg ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      "Save Settings"
+                    )}
+                  </Button>
+                )}
+              </form>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border bg-card/60">
+            <CardHeader>
+              <CardTitle>Billing & Subscription</CardTitle>
+              <CardDescription>Manage subscription tier for your organization.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-2 max-w-md">
+                <Label htmlFor="billingTier">Active Plan</Label>
+                <select
+                  id="billingTier"
+                  value={billingTier}
+                  onChange={(e) => setBillingTier(e.target.value)}
+                  disabled={!isOwner}
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <option value="free">Free - SCF & Local Assessments</option>
+                  <option value="pro">Pro - Unlimited Assessments & Integrations</option>
+                  <option value="enterprise">Enterprise - Dedicated Workspace & Support</option>
+                </select>
+              </div>
+              {isOwner && (
+                <Button onClick={handleUpdateBilling} disabled={isUpdatingBilling} className="bg-primary/80">
+                  {isUpdatingBilling ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Updating Plan...
+                    </>
+                  ) : (
+                    "Update Plan"
+                  )}
+                </Button>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -559,7 +809,71 @@ export function SettingsPage() {
                 <CardTitle>Team Members</CardTitle>
                 <CardDescription>Users with access to this organization.</CardDescription>
               </div>
-              <Button disabled className="bg-primary/80"><Plus className="w-4 h-4 mr-2" />Invite Member</Button>
+              {isOwner && (
+                <Dialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="bg-primary/80"><Plus className="w-4 h-4 mr-2" />Invite Member</Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px] border-border bg-card/95 backdrop-blur-md">
+                    <DialogHeader>
+                      <DialogTitle>Invite Team Member</DialogTitle>
+                      <DialogDescription>
+                        Send an invitation to join your organization.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleInviteMember} className="space-y-4 py-2">
+                      <div className="grid gap-2">
+                        <Label htmlFor="inviteName">Name (Optional)</Label>
+                        <Input
+                          id="inviteName"
+                          value={inviteName}
+                          onChange={(e) => setInviteName(e.target.value)}
+                          placeholder="e.g. John Doe"
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="inviteEmail">Email Address</Label>
+                        <Input
+                          id="inviteEmail"
+                          type="email"
+                          required
+                          value={inviteEmail}
+                          onChange={(e) => setInviteEmail(e.target.value)}
+                          placeholder="e.g. john@company.com"
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="inviteRole">Role</Label>
+                        <select
+                          id="inviteRole"
+                          value={inviteRole}
+                          onChange={(e) => setInviteRole(e.target.value)}
+                          className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        >
+                          <option value="member">Member</option>
+                          <option value="admin">Admin</option>
+                          <option value="owner">Owner</option>
+                        </select>
+                      </div>
+                      <DialogFooter className="pt-4">
+                        <DialogClose asChild>
+                          <Button type="button" variant="outline">Cancel</Button>
+                        </DialogClose>
+                        <Button type="submit" disabled={isInviting} className="bg-primary/80">
+                          {isInviting ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Inviting...
+                            </>
+                          ) : (
+                            "Send Invitation"
+                          )}
+                        </Button>
+                      </DialogFooter>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              )}
             </CardHeader>
             <CardContent>
               <Table>

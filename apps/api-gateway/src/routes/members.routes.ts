@@ -11,7 +11,7 @@ import { json, parseJson, routeParam } from "../http";
 
 // ── In-memory membership store (production: Drizzle adapter) ─
 // This follows the same pattern as other in-memory repos in the monorepo.
-const memberships = new Map<string, Membership>();
+export const memberships = new Map<string, Membership>();
 
 const listByOrg = (orgId: string, tenantId: string): Membership[] =>
   [...memberships.values()].filter((m) => m.organization_id === orgId && m.tenant_id === tenantId && m.status !== "removed");

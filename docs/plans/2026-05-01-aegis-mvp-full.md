@@ -1,3 +1,6 @@
+> [!WARNING]
+> **[ARCHIVED/LEGACY PLAN]** Este é um plano de execução legado e histórico de fases anteriores do desenvolvimento da plataforma. Ele pode não refletir a arquitetura atenuada atual.
+
 # Standard MVP — Full Implementation Plan
 
 > **Status**: `[CONCLUÍDO — PARCIAL]` Fases 1–3 (frontend + admin) executadas. Fases 4–5 (backend gaps + polish) parcialmente executadas. Itens remanescentes migrados para `docs/backlog/backlog.md`.

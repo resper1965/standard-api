@@ -1,17 +1,22 @@
-# ADR-0007: Design System "Trust & Authority"
+# ADR 0007: Design System "Trust & Authority"
 
-**Status**: aceita
-**Data**: 2026-05-01
-**Contexto**: O frontend precisava de um design system que transmitisse confiança institucional para CISOs, DPOs e auditores GRC.
-**Decisão**: Adotar design system "Trust & Authority" com dark mode corporativo, tipografia Inter, paleta controlada e acessibilidade WCAG AAA.
-**Consequências**:
-- Paleta: `--bg: #0F172A`, `--surface: #1E293B`, `--accent: #3B82F6`, sem gradientes decorativos
-- Anti-patterns: proibido emojis como ícones, gradientes arco-íris, glassmorphismo excessivo, animações decorativas
-- Tipografia: Inter via Google Fonts, sem fontes decorativas
-- Vanilla CSS com custom properties (sem Tailwind)
-- Acessibilidade: foco em contraste, navegação por teclado, estados claros
-**Alternativas consideradas**:
-- Tailwind CSS: produtivo mas add 1 build dependency; decisão pode ser revisitada
-- Material Design: muito genérico, não transmite autoridade GRC
-- Shadcn/UI: depende de Tailwind, complexidade desnecessária para MVP
-**Referências**: `docs/context/design.md`, `apps/web/src/styles/`
+## Status
+
+Aceita.
+
+## Contexto
+
+A plataforma Standard precisa transmitir credibilidade, segurança técnica e governança executiva, que são cruciais no domínio de GRC (Governança, Risco e Conformidade). As decisões estéticas e componentes visuais do frontend React devem reforçar essa percepção.
+
+## Decisão
+
+Adotamos a diretriz estética baseada no design system **"Trust & Authority"**.
+- Paleta de cores sóbria baseada em tons harmônicos de HSL, azul escuro profundo, grafites, e detalhes pontuais em verde oliva e laranja queimado (para indicar criticidades).
+- Tipografia premium moderna (Outfit e Inter de Google Fonts) integrada nos arquivos de estilização de componentes.
+- Utilização de micro-animações suaves para feedbacks de transição de estado do assessment.
+- Estilo minimalista com bordas suaves, superfícies em glassmorphism leve e separadores nítidos.
+
+## Consequências
+
+- Interface de usuário profissional que gera segurança imediata para auditores e CISOs.
+- Consistência de layout e facilidade de reutilização de estilos entre diferentes páginas.
