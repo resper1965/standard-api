@@ -11,6 +11,7 @@ export const FunctionalAgentIdSchema = z.enum([
   "maturity_assessor",
   "poam_planner",
   "report_writer",
+  "council_orchestrator",
   // Integration-specific agent roles (M2M text analysis)
   "standard-consultative-analyst",
   "standard-strict-gap-analyst"
@@ -35,7 +36,7 @@ export const AgentRuntimeContextSchema = z.object({
   organization_id: UuidSchema,
   assessment_id: UuidSchema,
   framework_id: UuidSchema,
-  scf_version_id: UuidSchema,
+  scf_version_id: z.union([UuidSchema, z.literal("latest")]),
   trace_id: TraceIdSchema,
   actor_id: UuidSchema.optional(),
   locale: SupportedLocaleSchema.optional()
@@ -89,7 +90,7 @@ export const StartAgentRunRequestSchema = z.object({
   prompt_version: z.string().min(1),
   model: z.string().min(1),
   framework_id: UuidSchema,
-  scf_version_id: UuidSchema,
+  scf_version_id: z.union([UuidSchema, z.literal("latest")]),
   input: z.record(z.string(), z.unknown()).default({})
 });
 

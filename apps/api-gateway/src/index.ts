@@ -63,7 +63,7 @@ export default {
         cachedAuth = createAuth({
           DATABASE_URL: env.DATABASE_URL!,
           BETTER_AUTH_SECRET: env.BETTER_AUTH_SECRET,
-          BETTER_AUTH_URL: env.BETTER_AUTH_URL,
+          ...(env.BETTER_AUTH_URL !== undefined ? { BETTER_AUTH_URL: env.BETTER_AUTH_URL } : {}),
         });
         console.log('[standard:init] Better Auth self-hosted initialized.');
       } else {

@@ -1,9 +1,15 @@
-import { AssessmentLifecycleOrchestrator, createInMemoryWorkflowDependencies } from "../src";
+import { AssessmentLifecycleOrchestrator } from "../src/assessment-lifecycle.workflow";
+import { createInMemoryWorkflowDependencies } from "../src/repositories";
 import { approval, ids, snapshot } from "./lifecycle.workflow.test";
 import { expect, test } from "./test-kit";
 
 test("idempotency_key evita duplicidade de signal e versões lógicas", async () => {
-  const deps = createInMemoryWorkflowDependencies();
+  const rawDeps = createInMemoryWorkflowDependencies();
+  const deps = {
+    workflows: rawDeps.workflows.withTenant(ids.tenantId),
+    audit: rawDeps.audit,
+    assessmentEngine: rawDeps.assessmentEngine
+  };
   const orchestrator = new AssessmentLifecycleOrchestrator(deps);
   const started = await orchestrator.start({
     tenant_id: ids.tenantId,
@@ -31,7 +37,12 @@ test("idempotency_key evita duplicidade de signal e versões lógicas", async ()
 });
 
 test("cancel muda status para cancelled e resume só funciona em blocked ou failed", async () => {
-  const deps = createInMemoryWorkflowDependencies();
+  const rawDeps = createInMemoryWorkflowDependencies();
+  const deps = {
+    workflows: rawDeps.workflows.withTenant(ids.tenantId),
+    audit: rawDeps.audit,
+    assessmentEngine: rawDeps.assessmentEngine
+  };
   const orchestrator = new AssessmentLifecycleOrchestrator(deps);
   const started = await orchestrator.start({
     tenant_id: ids.tenantId,
@@ -66,7 +77,12 @@ test("cancel muda status para cancelled e resume só funciona em blocked ou fail
 });
 
 test("blocked registra blocked_reason seguro", async () => {
-  const deps = createInMemoryWorkflowDependencies();
+  const rawDeps = createInMemoryWorkflowDependencies();
+  const deps = {
+    workflows: rawDeps.workflows.withTenant(ids.tenantId),
+    audit: rawDeps.audit,
+    assessmentEngine: rawDeps.assessmentEngine
+  };
   const orchestrator = new AssessmentLifecycleOrchestrator(deps);
   const started = await orchestrator.start({
     tenant_id: ids.tenantId,
@@ -92,9 +108,13 @@ test("blocked registra blocked_reason seguro", async () => {
 });
 
 test("tenant isolation bloqueia acesso cruzado ao workflow", async () => {
-  const deps = createInMemoryWorkflowDependencies();
-  const orchestrator = new AssessmentLifecycleOrchestrator(deps);
-  const started = await orchestrator.start({
+  const rawDeps = createInMemoryWorkflowDependencies();
+  const orchestratorA = new AssessmentLifecycleOrchestrator({
+    workflows: rawDeps.workflows.withTenant(ids.tenantId),
+    audit: rawDeps.audit,
+    assessmentEngine: rawDeps.assessmentEngine
+  });
+  const started = await orchestratorA.start({
     tenant_id: ids.tenantId,
     organization_id: ids.organizationId,
     assessment_id: ids.assessmentId,
@@ -104,12 +124,22 @@ test("tenant isolation bloqueia acesso cruzado ao workflow", async () => {
     options: {}
   }, snapshot());
 
-  const run = await orchestrator.get(started.workflow_run_id, "99999999-9999-4999-8999-999999999999");
+  const orchestratorB = new AssessmentLifecycleOrchestrator({
+    workflows: rawDeps.workflows.withTenant("99999999-9999-4999-8999-999999999999"),
+    audit: rawDeps.audit,
+    assessmentEngine: rawDeps.assessmentEngine
+  });
+  const run = await orchestratorB.get(started.workflow_run_id);
   expect(run).toBe(null);
 });
 
 test("approval gate errado permanece bloqueado pelo Assessment Engine", async () => {
-  const deps = createInMemoryWorkflowDependencies();
+  const rawDeps = createInMemoryWorkflowDependencies();
+  const deps = {
+    workflows: rawDeps.workflows.withTenant(ids.tenantId),
+    audit: rawDeps.audit,
+    assessmentEngine: rawDeps.assessmentEngine
+  };
   const orchestrator = new AssessmentLifecycleOrchestrator(deps);
   const started = await orchestrator.start({
     tenant_id: ids.tenantId,

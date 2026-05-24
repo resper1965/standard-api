@@ -163,8 +163,8 @@ export const intelligenceRoutes: RouteDefinition[] = [
           total_required_controls: totalControls,
           missing_controls: missingControls,
           message_i18n: {
-             pt: `O score de conformidade para ${regulation.name} é de ${score}%.`,
-             en: `The compliance score for ${regulation.name_en || regulation.name} is ${score}%.`
+             pt: `O score de conformidade para ${regulation.name_i18n.pt} é de ${score}%.`,
+             en: `The compliance score for ${regulation.name_i18n.en || regulation.name_i18n.pt} is ${score}%.`
           }
         };
 
@@ -392,7 +392,7 @@ export const intelligenceRoutes: RouteDefinition[] = [
               if (latestVersion) {
                   const control = await deps.scf.controls.getControlByCode(latestVersion.id, String(body.input.control_id));
                   if (control) {
-                      body.input.regulatoryContext = `[Control ${control.scf_control_id}] ${control.control_question}\n${control.guidance}`;
+                      body.input.regulatoryContext = `[Control ${control.control_code}] ${control.control_question ?? ""}\n${control.implementation_guidance ?? ""}`;
                   }
               }
           }
