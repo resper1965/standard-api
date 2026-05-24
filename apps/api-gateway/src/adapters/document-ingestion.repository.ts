@@ -30,51 +30,63 @@ import type { DbClient } from "./db";
 
 // ---------- Documents ----------
 
-export const createDrizzleDocumentRepository = (db: DbClient): DocumentRecordRepository => ({
-  async saveDocument(doc: DocumentResponse) {
-    await db.insert(documents).values({
-      id: doc.document_id,
-      tenantId: doc.tenant_id,
-      organizationId: doc.organization_id,
-      assessmentId: doc.assessment_id,
-      originalFilename: doc.original_filename,
-      storageProvider: doc.storage_provider as "r2" | "external" | "r2_compatible_mock",
-      storageKey: doc.storage_key,
-      contentHash: doc.content_hash,
-      mimeType: doc.mime_type,
-      fileSize: doc.file_size,
-      uploadedBy: doc.uploaded_by,
-      classification: doc.classification as "public" | "internal" | "confidential" | "restricted",
-      documentType: doc.document_type as "policy" | "procedure" | "standard" | "evidence" | "soa" | "report" | "other",
-      language: doc.language,
-      versionLabel: doc.version_label,
-      effectiveDate: doc.effective_date,
-    }).onConflictDoNothing();
-  },
+export const createDrizzleDocumentRepository = (db: DbClient): DocumentRecordRepository => {
+  const repo = {
+    async saveDocument(doc: DocumentResponse) {
+      await db.insert(documents).values({
+        id: doc.document_id,
+        tenantId: doc.tenant_id,
+        organizationId: doc.organization_id,
+        assessmentId: doc.assessment_id,
+        originalFilename: doc.original_filename,
+        storageProvider: doc.storage_provider as "r2" | "external" | "r2_compatible_mock",
+        storageKey: doc.storage_key,
+        contentHash: doc.content_hash,
+        mimeType: doc.mime_type,
+        fileSize: doc.file_size,
+        uploadedBy: doc.uploaded_by,
+        classification: doc.classification as "public" | "internal" | "confidential" | "restricted",
+        documentType: doc.document_type as "policy" | "procedure" | "standard" | "evidence" | "soa" | "report" | "other",
+        language: doc.language,
+        versionLabel: doc.version_label,
+        effectiveDate: doc.effective_date,
+      }).onConflictDoNothing();
+    },
 
-  async getDocument(documentId: string, tenantId: string) {
-    const [row] = await db.select().from(documents)
-      .where(and(eq(documents.id, documentId), eq(documents.tenantId, tenantId)))
-      .limit(1);
-    return row ? mapDocumentRow(row) : null;
-  },
+    async getDocument(documentId: string, tenantId: string) {
+      const [row] = await db.select().from(documents)
+        .where(and(eq(documents.id, documentId), eq(documents.tenantId, tenantId)))
+        .limit(1);
+      return row ? mapDocumentRow(row) : null;
+    },
 
-  async listDocuments(assessmentId: string, tenantId: string) {
-    const rows = await db.select().from(documents)
-      .where(and(eq(documents.assessmentId, assessmentId), eq(documents.tenantId, tenantId)));
-    return rows.map(mapDocumentRow);
-  },
+    async listDocuments(assessmentId: string, tenantId: string) {
+      const rows = await db.select().from(documents)
+        .where(and(eq(documents.assessmentId, assessmentId), eq(documents.tenantId, tenantId)));
+      return rows.map(mapDocumentRow);
+    },
 
-  async updateDocument(doc: DocumentResponse) {
-    await db.update(documents).set({
-      originalFilename: doc.original_filename,
-      contentHash: doc.content_hash,
-      mimeType: doc.mime_type,
-      fileSize: doc.file_size,
-      updatedAt: new Date(),
-    }).where(eq(documents.id, doc.document_id));
-  },
-});
+    async updateDocument(doc: DocumentResponse) {
+      await db.update(documents).set({
+        originalFilename: doc.original_filename,
+        contentHash: doc.content_hash,
+        mimeType: doc.mime_type,
+        fileSize: doc.file_size,
+        updatedAt: new Date(),
+      }).where(eq(documents.id, doc.document_id));
+    },
+
+    withTenant(tenantId: string) {
+      return {
+        saveDocument: (doc: DocumentResponse) => repo.saveDocument(doc),
+        getDocument: (documentId: string) => repo.getDocument(documentId, tenantId),
+        listDocuments: (assessmentId: string) => repo.listDocuments(assessmentId, tenantId),
+        updateDocument: (doc: DocumentResponse) => repo.updateDocument(doc),
+      };
+    }
+  };
+  return repo;
+};
 
 type DocumentRow = typeof documents.$inferSelect;
 const mapDocumentRow = (row: DocumentRow): DocumentResponse => ({
@@ -106,57 +118,70 @@ const mapDocumentRow = (row: DocumentRow): DocumentResponse => ({
 
 // ---------- Extraction Jobs ----------
 
-export const createDrizzleDocumentJobRepository = (db: DbClient): DocumentJobRepository => ({
-  async saveJob(job: DocumentJobResponse) {
-    await db.insert(documentExtractionJobs).values({
-      id: job.job_id,
-      tenantId: job.tenant_id,
-      organizationId: job.organization_id,
-      assessmentId: job.assessment_id,
-      documentId: job.document_id,
-      status: job.status === "running" ? "processing" :
-              job.status === "succeeded" ? "completed" :
-              job.status as "queued" | "processing" | "completed" | "failed" | "cancelled",
-      errorCode: job.error_code,
-      errorMessage: job.error_message_safe,
-      startedAt: job.started_at ? new Date(job.started_at) : null,
-      completedAt: job.completed_at ? new Date(job.completed_at) : null,
-      traceId: job.trace_id,
-    }).onConflictDoNothing();
-  },
+export const createDrizzleDocumentJobRepository = (db: DbClient): DocumentJobRepository => {
+  const repo = {
+    async saveJob(job: DocumentJobResponse) {
+      await db.insert(documentExtractionJobs).values({
+        id: job.job_id,
+        tenantId: job.tenant_id,
+        organizationId: job.organization_id,
+        assessmentId: job.assessment_id,
+        documentId: job.document_id,
+        status: job.status === "running" ? "processing" :
+                job.status === "succeeded" ? "completed" :
+                job.status as "queued" | "processing" | "completed" | "failed" | "cancelled",
+        errorCode: job.error_code,
+        errorMessage: job.error_message_safe,
+        startedAt: job.started_at ? new Date(job.started_at) : null,
+        completedAt: job.completed_at ? new Date(job.completed_at) : null,
+        traceId: job.trace_id,
+      }).onConflictDoNothing();
+    },
 
-  async getJob(jobId: string, tenantId: string) {
-    const [row] = await db.select().from(documentExtractionJobs)
-      .where(and(eq(documentExtractionJobs.id, jobId), eq(documentExtractionJobs.tenantId, tenantId)))
-      .limit(1);
-    return row ? mapJobRow(row) : null;
-  },
+    async getJob(jobId: string, tenantId: string) {
+      const [row] = await db.select().from(documentExtractionJobs)
+        .where(and(eq(documentExtractionJobs.id, jobId), eq(documentExtractionJobs.tenantId, tenantId)))
+        .limit(1);
+      return row ? mapJobRow(row) : null;
+    },
 
-  async listJobsByDocument(documentId: string, tenantId: string) {
-    const rows = await db.select().from(documentExtractionJobs)
-      .where(and(eq(documentExtractionJobs.documentId, documentId), eq(documentExtractionJobs.tenantId, tenantId)));
-    return rows.map(mapJobRow);
-  },
+    async listJobsByDocument(documentId: string, tenantId: string) {
+      const rows = await db.select().from(documentExtractionJobs)
+        .where(and(eq(documentExtractionJobs.documentId, documentId), eq(documentExtractionJobs.tenantId, tenantId)));
+      return rows.map(mapJobRow);
+    },
 
-  async listJobsByAssessment(assessmentId: string, tenantId: string) {
-    const rows = await db.select().from(documentExtractionJobs)
-      .where(and(eq(documentExtractionJobs.assessmentId, assessmentId), eq(documentExtractionJobs.tenantId, tenantId)));
-    return rows.map(mapJobRow);
-  },
+    async listJobsByAssessment(assessmentId: string, tenantId: string) {
+      const rows = await db.select().from(documentExtractionJobs)
+        .where(and(eq(documentExtractionJobs.assessmentId, assessmentId), eq(documentExtractionJobs.tenantId, tenantId)));
+      return rows.map(mapJobRow);
+    },
 
-  async updateJob(job: DocumentJobResponse) {
-    await db.update(documentExtractionJobs).set({
-      status: job.status === "running" ? "processing" :
-              job.status === "succeeded" ? "completed" :
-              job.status as "queued" | "processing" | "completed" | "failed" | "cancelled",
-      errorCode: job.error_code,
-      errorMessage: job.error_message_safe,
-      startedAt: job.started_at ? new Date(job.started_at) : null,
-      completedAt: job.completed_at ? new Date(job.completed_at) : null,
-      updatedAt: new Date(),
-    }).where(eq(documentExtractionJobs.id, job.job_id));
-  },
-});
+    async updateJob(job: DocumentJobResponse) {
+      await db.update(documentExtractionJobs).set({
+        status: job.status === "running" ? "processing" :
+                job.status === "succeeded" ? "completed" :
+                job.status as "queued" | "processing" | "completed" | "failed" | "cancelled",
+        errorCode: job.error_code,
+        errorMessage: job.error_message_safe,
+        startedAt: job.started_at ? new Date(job.started_at) : null,
+        completedAt: job.completed_at ? new Date(job.completed_at) : null,
+        updatedAt: new Date(),
+      }).where(eq(documentExtractionJobs.id, job.job_id));
+    },
+
+    withTenant(tenantId: string) {
+      return {
+        saveJob: (job: DocumentJobResponse) => repo.saveJob(job),
+        getJob: (jobId: string) => repo.getJob(jobId, tenantId),
+        listJobsByDocument: (documentId: string) => repo.listJobsByDocument(documentId, tenantId),
+        listJobsByAssessment: (assessmentId: string) => repo.listJobsByAssessment(assessmentId, tenantId),
+        updateJob: (job: DocumentJobResponse) => repo.updateJob(job),
+      };
+    }
+  };
+  return repo;
+};
 
 type JobRow = typeof documentExtractionJobs.$inferSelect;
 const mapJobRow = (row: JobRow): DocumentJobResponse => ({
@@ -181,33 +206,43 @@ const mapJobRow = (row: JobRow): DocumentJobResponse => ({
 
 // ---------- Document Chunks ----------
 
-export const createDrizzleDocumentChunkRepository = (db: DbClient): DocumentChunkRepository => ({
-  async saveChunks(chunks: DocumentChunk[]) {
-    if (chunks.length === 0) return;
-    await db.insert(documentChunks).values(
-      chunks.map((chunk) => ({
-        id: chunk.chunk_id,
-        tenantId: chunk.tenant_id,
-        organizationId: chunk.organization_id,
-        assessmentId: chunk.assessment_id,
-        documentId: chunk.document_id,
-        documentVersionId: chunk.document_version_id,
-        chunkIndex: chunk.chunk_index,
-        textHash: chunk.text_hash,
-        pageNumber: chunk.page_number,
-        approximateTokenCount: chunk.token_count_estimate,
-        locationMetadata: chunk.location_metadata,
-      }))
-    ).onConflictDoNothing();
-  },
+export const createDrizzleDocumentChunkRepository = (db: DbClient): DocumentChunkRepository => {
+  const repo = {
+    async saveChunks(chunks: DocumentChunk[]) {
+      if (chunks.length === 0) return;
+      await db.insert(documentChunks).values(
+        chunks.map((chunk) => ({
+          id: chunk.chunk_id,
+          tenantId: chunk.tenant_id,
+          organizationId: chunk.organization_id,
+          assessmentId: chunk.assessment_id,
+          documentId: chunk.document_id,
+          documentVersionId: chunk.document_version_id,
+          chunkIndex: chunk.chunk_index,
+          textHash: chunk.text_hash,
+          pageNumber: chunk.page_number,
+          approximateTokenCount: chunk.token_count_estimate,
+          locationMetadata: chunk.location_metadata,
+        }))
+      ).onConflictDoNothing();
+    },
 
-  async listChunks(documentId: string, tenantId: string, limit: number) {
-    const rows = await db.select().from(documentChunks)
-      .where(and(eq(documentChunks.documentId, documentId), eq(documentChunks.tenantId, tenantId)))
-      .limit(limit);
-    return rows.map(mapChunkRow);
-  },
-});
+    async listChunks(documentId: string, tenantId: string, limit: number, cursor?: string) {
+      const rows = await db.select().from(documentChunks)
+        .where(and(eq(documentChunks.documentId, documentId), eq(documentChunks.tenantId, tenantId)))
+        .limit(limit);
+      return rows.map(mapChunkRow);
+    },
+
+    withTenant(tenantId: string) {
+      return {
+        saveChunks: (chunks: DocumentChunk[]) => repo.saveChunks(chunks),
+        listChunks: (documentId: string, limit: number, cursor?: string) => repo.listChunks(documentId, tenantId, limit, cursor),
+      };
+    }
+  };
+  return repo;
+};
 
 type ChunkRow = typeof documentChunks.$inferSelect;
 const mapChunkRow = (row: ChunkRow): DocumentChunk => ({

@@ -157,6 +157,14 @@ export const FUNCTIONAL_AGENT_CONTRACTS: FunctionalAgentContract[] = [
     allowed_tools: ["assessment_state_read", "artifact_version_read", "artifact_draft_create", "validation_result_write"],
     forbidden_actions: ["Alter approved findings", "Approve reports"],
     requires_human_approval_for: ["Report approval and publication"]
+  },
+  {
+    agent_id: "council_orchestrator" as any,
+    display_name: "Standard Council Orchestrator",
+    responsibility: "Orchestrate sequence of specialized GRC agents.",
+    allowed_tools: ["assessment_state_read", "artifact_version_read", "scf_control_lookup", "scf_mapping_lookup", "kb_evidence_search", "artifact_draft_create", "validation_result_write"],
+    forbidden_actions: [],
+    requires_human_approval_for: []
   }
 ];
 

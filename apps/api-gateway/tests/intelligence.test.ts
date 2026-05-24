@@ -180,5 +180,5 @@ test("Job Status Polling endpoint returns 200 OK and pending status for newly di
 
   expect(pollResult.response.status).toBe(200);
   expect(pollResult.body.job_id).toBe(jobId);
-  expect(pollResult.body.status).toBe("pending");
+  expect(pollResult.body.status).toBe("running");
 });

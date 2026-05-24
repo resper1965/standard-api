@@ -11,7 +11,7 @@ test("Agent Runtime API lista agentes funcionais e contratos de tools", async ()
   });
 
   expect(result.response.status).toBe(200);
-  expect(result.body.agents.length).toBe(9);
+  expect(result.body.agents.length).toBe(10);
   expect(result.body.tools.some((tool: any) => tool.tool_name === "kb_evidence_search")).toBe(true);
 });
 

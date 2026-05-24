@@ -24,7 +24,7 @@ const context = {
 };
 
 test("registry exposes the functional Standard agents with least-privilege tools", () => {
-  expect(FUNCTIONAL_AGENT_CONTRACTS.length).toBe(9);
+  expect(FUNCTIONAL_AGENT_CONTRACTS.length).toBe(10);
   const knowledgeSteward = FUNCTIONAL_AGENT_CONTRACTS.find((agent) => agent.agent_id === "knowledge_steward");
   expect(knowledgeSteward).toBeDefined();
   expect(knowledgeSteward!.allowed_tools).toContain("kb_evidence_search");

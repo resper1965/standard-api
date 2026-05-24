@@ -10,6 +10,7 @@
     "test": "tsx tests/run-tests.ts"
   },
   "dependencies": {
+    "@standard/agent-runtime": "workspace:*",
     "@standard/assessment-engine": "workspace:*",
     "@standard/kb": "workspace:*",
     "@standard/scf-core": "workspace:*",

@@ -3,8 +3,8 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "main": "src/index.ts",
-  "types": "src/index.ts",
+  "main": "src/orchestrator-entry.ts",
+  "types": "src/orchestrator-entry.ts",
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",

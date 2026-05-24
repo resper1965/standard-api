@@ -20,3 +20,5 @@ export * from "./usecases/poam-architect";
 export * from "./usecases/vendor-scanner";
 export * from "./usecases/incident-triager";
 export * from "./usecases/board-translator";
+export * from "./prompts/evidence-classification";
+export * from "./prompts/gap-identification";

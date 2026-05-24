@@ -75,7 +75,7 @@ export class IntelligenceService {
       if (reg.legal_bases.some((lb: any) => lb.scf_controls.includes(rawControlId))) hit = true;
       if (reg.sensitive_legal_bases.some((lb: any) => lb.scf_controls.includes(rawControlId))) hit = true;
       if (reg.data_subject_rights.some((r: any) => r.scf_controls.includes(rawControlId))) hit = true;
-      if (hit) linkedRegulations.push({ id: reg.id, name: reg.name });
+      if (hit) linkedRegulations.push({ id: reg.id, name: reg.name_i18n });
     }
 
     for (const dc of DATA_CATEGORIES) {

@@ -7,5 +7,7 @@ export * from "./services/evidence-classification.service";
 export * from "./services/gap-approval.service";
 export * from "./services/gap-draft.service";
 export * from "./services/gap-review.service";
+export * from "./services/gap-analysis-execution.service";
 export * from "./services/gap-validation.service";
+export * from "./repositories/drizzle-gap-analysis.repository";
 export * from "./types";
