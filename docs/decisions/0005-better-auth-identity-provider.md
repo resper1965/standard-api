@@ -1,17 +1,22 @@
-# ADR-0005: Better Auth como Identity Provider
+# ADR 0005: Better Auth Identity Provider
 
-**Status**: aceita
-**Data**: 2026-05-01
-**Contexto**: O projeto precisava de um provedor de autenticação real para substituir `MockAuthProvider` e `JwtAuthProvider`. Alternativas avaliadas: Clerk, Auth0, Supabase Auth, Lucia Auth, Better Auth.
-**Decisão**: Adotar Better Auth como identity provider com session cookies, Google OAuth, API keys, organizations e secondary storage via Cloudflare KV.
-**Consequências**:
-- Better Auth gera e mantém 8 tabelas no PostgreSQL (user, session, account, verification, organization, member, invitation, apikey)
-- Session cookies eliminam necessidade de JWT no frontend
-- Secondary storage via KV elimina round-trip ao DB para validação de sessão
-- Organizations plugin habilita multi-tenancy nativa
-- API keys plugin habilita M2M e acesso programático
-**Alternativas consideradas**:
-- Clerk: SaaS externo, vendor lock-in, custo por MAU
-- Auth0: complexidade desnecessária para MVP
-- Lucia Auth: descontinuado
-**Referências**: `packages/auth/`, `apps/api-gateway/src/routes/auth.routes.ts`
+## Status
+
+Aceita.
+
+## Contexto
+
+A plataforma Standard exige uma solução robusta para gerenciamento de identidades, sessões de usuário, login social (Google OAuth), chaves de API e isolamento baseado em organizações para multi-tenancy. Precisamos de uma biblioteca moderna, segura e com suporte nativo a TypeScript que possa rodar de forma leve no ambiente do Cloudflare Workers conectado ao Neon PostgreSQL.
+
+## Decisão
+
+Adotamos a biblioteca **Better Auth** (versão 1.6.11) como o provedor oficial de autenticação e identidade da plataforma.
+- Armazenamento das tabelas de autenticação (user, session, account, verification, activeOrganization, etc.) no Neon PostgreSQL.
+- Ativação do plugin `@better-auth/api-key` para o provisionamento e controle de M2M/API Keys de forma nativa e integrada às contas de organizações.
+- Configuração de cookies de sessão seguros para persistência e compartilhamento de tokens de autenticação no API Gateway.
+
+## Consequências
+
+- Segurança de nível enterprise com sessões baseadas em banco e renovação de tokens automatizada.
+- Integração nativa com RBAC/ABAC por meio de escopos vinculados a chaves de API.
+- Requer acoplamento de schemas específicos nas tabelas do banco de dados relacional.

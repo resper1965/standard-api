@@ -1,0 +1,1 @@
+ALTER TABLE "organizations" ADD COLUMN "billing_tier" text DEFAULT 'free' NOT NULL;

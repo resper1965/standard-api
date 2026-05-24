@@ -65,7 +65,7 @@ export const documentsRoutes: RouteDefinition[] = [
     protected: true,
     requireActor: true,
     permissions: ["document:upload"],
-    handler: async ({ request, deps, params, tenantId, actorId, traceId }) => {
+    handler: async ({ request, deps, params, tenantId, actorId, traceId, env }) => {
       const assessmentId = routeParam(params, "assessmentId");
       const tenantAssessmentsDb = deps.assessments.withTenant(tenantId!);
       const assessment = await tenantAssessmentsDb.get(assessmentId);
@@ -75,7 +75,7 @@ export const documentsRoutes: RouteDefinition[] = [
 
       // Anti-malware scan before persisting
       const fileBytes = new Uint8Array(await file.arrayBuffer());
-      const scanResult = await scanForMalware(fileBytes, file.name);
+      const scanResult = await scanForMalware(fileBytes, file.name, env?.CLAMAV_API_URL);
       if (!scanResult.clean) {
         throw new ApiError(
           "MALWARE_DETECTED" as any,

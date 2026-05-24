@@ -51,7 +51,7 @@ export function ReportsPage() {
       await api(`/api/v1/assessments/${assessmentId}/reports/draft`, {
         method: "POST",
         body: JSON.stringify({
-          report_type: "full_assessment",
+          report_type: "full_assessment_report",
           options: { include_evidence: true }
         })
       });
@@ -63,22 +63,34 @@ export function ReportsPage() {
     }
   };
 
-  const downloadReport = async (reportVersionId: string) => {
+  const downloadReport = async (reportVersionId: string, format: "pdf" | "docx" | "markdown" | "json" = "markdown") => {
     if (!assessmentId) return;
-    setDownloading(reportVersionId);
+    const downloadKey = `${reportVersionId}_${format}`;
+    setDownloading(downloadKey);
     setError(null);
     try {
-      const res = await api<{ data: { url: string } }>(
-        `/api/v1/assessments/${assessmentId}/reports/${reportVersionId}/download`
+      // Step 1: POST to trigger artifact generation
+      const exportRes = await api<any>(
+        `/api/v1/reports/${reportVersionId}/exports/${format}`,
+        { method: "POST" }
       );
-      const url = res?.data?.url;
+      const artifactId = exportRes?.report_artifact_id || exportRes?.data?.report_artifact_id;
+      if (!artifactId) {
+        throw new Error(`Failed to generate ${format.toUpperCase()} export.`);
+      }
+
+      // Step 2: GET the download URL of the generated artifact
+      const dlRes = await api<{ download_url: string }>(
+        `/api/v1/report-artifacts/${artifactId}/download-url`
+      );
+      const url = dlRes?.download_url || (dlRes as any)?.data?.download_url;
       if (url) {
         window.open(url, "_blank", "noopener,noreferrer");
       } else {
-        setError("Download URL not available for this report.");
+        setError(`Download URL not available for ${format.toUpperCase()} export.`);
       }
     } catch (e: any) {
-      setError(e.message || "Failed to download report");
+      setError(e.message || `Failed to download report as ${format.toUpperCase()}`);
     } finally {
       setDownloading(null);
     }
@@ -152,19 +164,47 @@ export function ReportsPage() {
                         {new Date(r.created_at).toLocaleDateString()}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => downloadReport(r.report_version_id)}
-                          disabled={downloading === r.report_version_id}
-                        >
-                          {downloading === r.report_version_id ? (
-                            <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-                          ) : (
-                            <FileDown className="h-3.5 w-3.5 mr-1.5" />
-                          )}
-                          {downloading === r.report_version_id ? "Downloading..." : "Download"}
-                        </Button>
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => downloadReport(r.report_version_id, "pdf")}
+                            disabled={!!downloading}
+                          >
+                            {downloading === `${r.report_version_id}_pdf` ? (
+                              <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                            ) : (
+                              <FileDown className="h-3.5 w-3.5 mr-1.5" />
+                            )}
+                            PDF
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => downloadReport(r.report_version_id, "docx")}
+                            disabled={!!downloading}
+                          >
+                            {downloading === `${r.report_version_id}_docx` ? (
+                              <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                            ) : (
+                              <FileDown className="h-3.5 w-3.5 mr-1.5" />
+                            )}
+                            DOCX
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => downloadReport(r.report_version_id, "markdown")}
+                            disabled={!!downloading}
+                          >
+                            {downloading === `${r.report_version_id}_markdown` ? (
+                              <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                            ) : (
+                              <FileDown className="h-3.5 w-3.5 mr-1.5" />
+                            )}
+                            Markdown
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}

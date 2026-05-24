@@ -22,7 +22,12 @@ export class MockAuthProvider implements AuthProvider {
 
     const roles = input.roles?.length ? input.roles : this.rolesFromHeader(input.authHeader);
     const permissions = unique([
-      ...roles.flatMap((role) => DEFAULT_ROLE_PERMISSIONS[role] ?? []),
+      ...roles.flatMap((role) => {
+        if (role as string === "owner") {
+          return ["membership:manage", "organization:update", "organization:read"];
+        }
+        return DEFAULT_ROLE_PERMISSIONS[role] ?? [];
+      }),
       ...(input.permissions ?? [])
     ]) as Permission[];
 

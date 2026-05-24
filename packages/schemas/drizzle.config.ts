@@ -17,7 +17,7 @@ if (!databaseUrl) {
 
 export default defineConfig({
   schema: ["./src/db/schema.ts", "./src/db/auth-schema.ts"],
-  out: "./migrations",
+  out: "../../infra/docker/postgres/migrations",
   dialect: "postgresql",
   dbCredentials: {
     url: databaseUrl,

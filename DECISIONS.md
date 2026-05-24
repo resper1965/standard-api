@@ -17,6 +17,7 @@ Este arquivo é o índice central de decisões arquiteturais e operacionais rele
 - `docs/decisions/0007-design-system-trust-authority.md`: Design system "Trust & Authority".
 - `docs/decisions/0008-scf-official-xlsx-2026.md`: SCF Official XLSX 2026.1.1 como fonte de dados.
 - `docs/decisions/0009-superpowers-sdlc.md`: Superpowers SDLC como processo de desenvolvimento.
+- `docs/decisions/adr-0010-discard-architecture-refactoring-branch.md`: Descarte da branch feature/architecture-refactoring.
 
 ## Como Registrar Nova Decisão
 

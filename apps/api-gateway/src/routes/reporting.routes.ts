@@ -285,9 +285,18 @@ export const reportingRoutes: RouteDefinition[] = [
       const report = await deps.reporting.repositories.versions.get(routeParam(params, "reportVersionId"), tenantId!);
       if (!report) throw new ApiError("REPORT_NOT_FOUND", "Report version not found.", 404);
       const assessment = await requireAssessment(deps, report.assessment_id, tenantId!);
-      const format = routeParam(params, "format") === "markdown" ? "markdown" : "json";
+      const format = routeParam(params, "format");
       const service = new ReportRendererService(deps.reporting);
-      const rendered = format === "markdown" ? await service.renderMarkdown(report.report_version_id, contextFor(assessment, traceId, actorId!)) : await service.renderJson(report.report_version_id, contextFor(assessment, traceId, actorId!));
+      let rendered;
+      if (format === "markdown") {
+        rendered = await service.renderMarkdown(report.report_version_id, contextFor(assessment, traceId, actorId!));
+      } else if (format === "pdf") {
+        rendered = await service.renderPdf(report.report_version_id, contextFor(assessment, traceId, actorId!));
+      } else if (format === "docx") {
+        rendered = await service.renderDocx(report.report_version_id, contextFor(assessment, traceId, actorId!));
+      } else {
+        rendered = await service.renderJson(report.report_version_id, contextFor(assessment, traceId, actorId!));
+      }
       return json(await new ReportStorageService(deps.reporting).storeArtifact(report.report_version_id, rendered, contextFor(assessment, traceId, actorId!)), { status: 201 });
     }
   },

@@ -3,6 +3,7 @@ import "./assessments.test";
 import "./lifecycle.test";
 import "./approvals.test";
 import "./documents.test";
+import "./document-reprocessing-verify.test";
 import "./kb.test";
 import "./scf.test";
 import "./soa.test";
@@ -16,6 +17,7 @@ import "./observability.test";
 import "./auth.test";
 import "./rate-limit.test";
 import "./intelligence.test";
+import "./organizations-mgmt.test";
 import { runTests } from "./test-kit";
 
 await runTests();
