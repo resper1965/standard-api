@@ -12,7 +12,10 @@ test("public API error contains trace_id and not stack trace", async () => {
   }));
   const body = await response.json() as any;
   expect(response.status).toBe(404);
-  expect(body.error.trace_id).toBe("trace-error-contract-0001");
+  expect(body.trace_id).toBe("trace-error-contract-0001");
+  expect(body.type).toBe("https://api.standard-grc.com/errors/not_found");
+  expect(body.title).toBe("NOT FOUND");
+  expect(body.status).toBe(404);
   expect(JSON.stringify(body).includes("stack")).toBe(false);
 });
 
