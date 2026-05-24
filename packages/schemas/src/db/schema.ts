@@ -173,6 +173,7 @@ export const organizations = pgTable("organizations", {
   slug: text("slug").notNull(),
   name: text("name").notNull(),
   status: text("status").default("active").notNull(),
+  billingTier: text("billing_tier").default("free").notNull(),
   ...timestamps()
 }, (table) => [
   index("organizations_tenant_idx").on(table.tenantId),

@@ -1,3 +1,6 @@
+> [!WARNING]
+> **[ARCHIVED/LEGACY PLAN]** Este é um plano de execução legado e histórico de fases anteriores do desenvolvimento da plataforma. Ele pode não refletir a arquitetura atenuada atual.
+
 # Privacy Processing Activity — Phase 1 Implementation Plan
 
 > **For Antigravity:** REQUIRED WORKFLOW: Use `.agent/workflows/execute-plan.md` to execute this plan in single-flow mode.

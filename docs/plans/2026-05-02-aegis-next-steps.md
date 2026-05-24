@@ -1,3 +1,6 @@
+> [!WARNING]
+> **[ARCHIVED/LEGACY PLAN]** Este é um plano de execução legado e histórico de fases anteriores do desenvolvimento da plataforma. Ele pode não refletir a arquitetura atenuada atual.
+
 # Standard Next Steps Implementation Plan
 
 > **Status**: `[CONCLUÍDO — PARCIAL]` Phase A (SCF browser) e B (admin polish) executadas. Phase C (SCF import) removida. Phase D (hardening) parcial. Phase E (docs) parcial.

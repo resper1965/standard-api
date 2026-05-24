@@ -12,7 +12,8 @@ export const OrganizationResponseSchema = z.object({
   tenant_id: UuidSchema,
   slug: z.string(),
   name: z.string(),
-  status: z.string()
+  status: z.string(),
+  billing_tier: z.string()
 });
 
 export type CreateOrganizationRequest = z.infer<typeof CreateOrganizationRequestSchema>;

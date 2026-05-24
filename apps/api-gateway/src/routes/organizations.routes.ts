@@ -62,28 +62,6 @@ export const organizationsRoutes: RouteDefinition[] = [
       const organizations = await tenantDb.list();
       return json({ data: organizations, trace_id: traceId });
     }
-  },
-  {
-    method: "PATCH",
-    path: "/api/v1/organizations/:organizationId",
-    protected: true,
-    handler: async ({ request, deps, params, tenantId, traceId }) => {
-      const organizationId = routeParam(params, "organizationId");
-      const body = await request.json() as { name?: string; slug?: string; status?: "active" | "inactive" };
-      
-      const patch: any = {};
-      if (body.name !== undefined) patch.name = body.name;
-      if (body.slug !== undefined) patch.slug = body.slug;
-      if (body.status !== undefined) patch.status = body.status;
-
-      const tenantDb = deps.organizations.withTenant(tenantId!);
-      const updated = await tenantDb.update(organizationId, patch);
-
-      if (!updated) throw new ApiError("NOT_FOUND", "Organization not found.", 404);
-      
-      await deps.audit.record("organization.updated", { organization_id: organizationId, trace_id: traceId });
-      return json({ ...updated, trace_id: traceId });
-    }
   }
 ];
 

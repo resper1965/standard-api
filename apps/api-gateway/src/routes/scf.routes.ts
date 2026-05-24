@@ -409,6 +409,12 @@ export const scfRoutes: RouteDefinition[] = [
       // Convert file to base64 for the importer
       const arrayBuffer = await file.arrayBuffer();
       const bytes = new Uint8Array(arrayBuffer);
+
+      // ZIP magic bytes check (ZIP signature is 50 4B 03 04)
+      if (bytes.length < 4 || bytes[0] !== 0x50 || bytes[1] !== 0x4B || bytes[2] !== 0x03 || bytes[3] !== 0x04) {
+        throw new ApiError("VALIDATION_ERROR", "Invalid XLSX file: missing ZIP file signature.", 400);
+      }
+
       const base64 = btoa(String.fromCharCode(...bytes));
 
       const source = {
@@ -448,6 +454,12 @@ export const scfRoutes: RouteDefinition[] = [
 
       const arrayBuffer = await file.arrayBuffer();
       const bytes = new Uint8Array(arrayBuffer);
+
+      // ZIP magic bytes check (ZIP signature is 50 4B 03 04)
+      if (bytes.length < 4 || bytes[0] !== 0x50 || bytes[1] !== 0x4B || bytes[2] !== 0x03 || bytes[3] !== 0x04) {
+        throw new ApiError("VALIDATION_ERROR", "Invalid XLSX file: missing ZIP file signature.", 400);
+      }
+
       const base64 = btoa(String.fromCharCode(...bytes));
 
       const source = {

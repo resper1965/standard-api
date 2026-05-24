@@ -1,3 +1,6 @@
+> [!WARNING]
+> **[ARCHIVED/LEGACY PLAN]** Este é um plano de execução legado e histórico de fases anteriores do desenvolvimento da plataforma. Ele pode não refletir a arquitetura atenuada atual.
+
 # Standard Post-Auth Hardening — Implementation Plan
 
 > **Status**: `[CONCLUÍDO — PARCIAL]` Fases 1–3 (cleanup, secrets, deploy) executadas. Fase 4 (seed) parcial. Fase 5 (deprecar legado) parcial. Remanescentes em `docs/backlog/backlog.md`.

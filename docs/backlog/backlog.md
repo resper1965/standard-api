@@ -16,13 +16,13 @@
 |---|------|:----------:|--------|
 | 0.1 | ROADMAP.md com fases e milestones | P0 | concluído |
 | 0.2 | Backlog unificado (este documento) | P0 | concluído |
-| 0.3 | Reescrita de `docs/context/produto.md` | P0 | pendente |
-| 0.4 | `docs/operations/environments.md` | P1 | pendente |
-| 0.5 | Status headers em planos legados | P1 | pendente |
-| 0.6 | ADRs retroativos (0005–0009) | P1 | pendente |
-| 0.7 | Deprecar pendencias.md, post-mvp-backlog.md, roadmap-to-production.md | P1 | pendente |
-| 0.8 | Atualizar DECISIONS.md | P1 | pendente |
-| 0.9 | Atualizar dev-log.md | P2 | pendente |
+| 0.3 | Reescrita de `docs/context/produto.md` | P0 | concluído |
+| 0.4 | `docs/operations/environments.md` | P1 | concluído |
+| 0.5 | Status headers em planos legados | P1 | concluído |
+| 0.6 | ADRs retroativos (0005–0009) | P1 | concluído |
+| 0.7 | Deprecar pendencias.md, post-mvp-backlog.md, roadmap-to-production.md | P1 | concluído |
+| 0.8 | Atualizar DECISIONS.md | P1 | concluído |
+| 0.9 | Atualizar dev-log.md | P2 | concluído |
 
 ---
 
@@ -52,10 +52,10 @@
 | 2.3 | Reprocessamento com rastreabilidade (motivo, versão, ator) | P1 | concluído | AGENTS.md §11 |
 | 2.4 | Immutability enforcement em artifacts aprovados | P1 | concluído | engine analysis |
 | 2.5 | LLM provider real via AI Gateway | P1 | concluído | post-mvp P1 |
-| 2.6 | DOCX/PDF renderer para relatórios | P2 | pendente | roadmap T2 |
-| 2.7 | Anti-malware scanning em uploads | P1 | pendente | roadmap T3 |
-| 2.8 | SCF official importer hardening (XLSX/OSCAL validation) | P1 | pendente | post-mvp P1 |
-| 2.9 | Advanced evals (adversarial, prompt injection, regression) | P1 | pendente | post-mvp P1 |
+| 2.6 | DOCX/PDF renderer para relatórios | P2 | concluído | roadmap T2 |
+| 2.7 | Anti-malware scanning em uploads | P1 | concluído | roadmap T3 |
+| 2.8 | SCF official importer hardening (XLSX/OSCAL validation) | P1 | concluído | post-mvp P1 |
+| 2.9 | Advanced evals (adversarial, prompt injection, regression) | P1 | concluído | post-mvp P1 |
 | 2.10 | Conectores externos (webhooks, DLQ, third-party scanners) | P2 | pendente | pendencias |
 | 2.11 | SOC monitoring (alertas, DLQ, tenant mismatch) | P1 | pendente | post-mvp P1 |
 
@@ -66,12 +66,12 @@
 | # | Item | Prioridade | Status | Origem |
 |---|------|:----------:|--------|--------|
 | 3.1 | API Playground | P1 | pendente | plano novo |
-| 3.2 | Organization Self-Service (perfil, membros, convites) | P1 | pendente | plano novo |
+| 3.2 | Organization Self-Service (perfil, membros, convites) | P1 | concluído | plano novo |
 | 3.3 | API Keys Self-Service (criação, revogação, monitoramento) | P1 | pendente | pendencias |
-| 3.4 | Billing/Plans dashboard | P2 | pendente | plano novo |
+| 3.4 | Billing/Plans dashboard | P2 | concluído | plano novo |
 | 3.5 | Onboarding wizard | P2 | pendente | plano novo |
 | 3.6 | Separação Master Admin vs Tenant Admin vs User | P0 | pendente | plano novo |
-| 3.7 | Backend endpoints faltantes (org update, invites, billing) | P1 | pendente | analysis |
+| 3.7 | Backend endpoints faltantes (org update, invites, billing) | P1 | concluído | analysis |
 
 ---
 
