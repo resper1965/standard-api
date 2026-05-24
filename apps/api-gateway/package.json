@@ -31,13 +31,13 @@
     "@asteasolutions/zod-to-openapi": "^7.3.0",
     "better-auth": "1.1.18",
     "@better-auth/api-key": "1.1.18",
-    "drizzle-orm": "^0.38.3",
-    "zod": "^3.23.8"
+    "drizzle-orm": "^0.45.2",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260426.1",
     "tsx": "latest",
-    "typescript": "^5.7.3",
+    "typescript": "^6.0.3",
     "wrangler": "3.107.0"
   }
 }

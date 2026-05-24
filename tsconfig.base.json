@@ -12,6 +12,8 @@
     "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
     "paths": {
+      "@standard/workflows": ["workers/workflows/src/orchestrator-entry.ts"],
+      "@standard/workflows/*": ["workers/workflows/src/*"],
       "@standard/*": ["packages/*/src/index.ts"]
     }
   }

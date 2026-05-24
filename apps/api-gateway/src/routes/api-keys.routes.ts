@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
+extendZodWithOpenApi(z);
 import { M2mScopesArraySchema } from "@standard/schemas";
 import type { RouteDefinition } from "../http";
 import { json, parseJson } from "../http";

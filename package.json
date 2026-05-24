@@ -5,6 +5,11 @@
   "description": "API-first standard implementation of the Standard SCF-Based Assessment Lifecycle.",
   "type": "module",
   "packageManager": "pnpm@9.15.9",
+  "workspaces": [
+    "apps/*",
+    "workers/*",
+    "packages/*"
+  ],
   "scripts": {
     "DESTRUIR-FANTASMAS": "node force.mjs",
     "prepare": "node -e \"if(process.env.NODE_ENV==='production'){process.exit(0)}process.exit(1)\" || husky",
@@ -48,7 +53,7 @@
     "husky": "^9.0.11",
     "lint-staged": "^15.2.2",
     "tsx": "latest",
-    "typescript": "^5.7.3",
+    "typescript": "^6.0.3",
     "wrangler": "3.107.0"
   },
   "dependencies": {

@@ -48,6 +48,7 @@ async function cmdGate(args: string[]) {
   if (!assessmentId) {
     console.error("Usage: standard gate --assessment-id <uuid>");
     process.exit(1);
+    return;
   }
 
   const client = createClient();

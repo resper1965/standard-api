@@ -1,5 +1,7 @@
 import type { ApprovalEvent, AssessmentSnapshot } from "@standard/assessment-engine";
-import { AssessmentLifecycleOrchestrator, createInMemoryWorkflowDependencies, WorkflowOrchestrationError } from "../src";
+import { AssessmentLifecycleOrchestrator } from "../src/assessment-lifecycle.workflow";
+import { createInMemoryWorkflowDependencies } from "../src/repositories";
+import { WorkflowOrchestrationError } from "../src/errors";
 import { expect, test } from "./test-kit";
 
 export const ids = {
@@ -56,7 +58,12 @@ const input = {
 };
 
 test("start cria workflow state com trace_id e bloqueia duplicado ativo", async () => {
-  const deps = createInMemoryWorkflowDependencies();
+  const rawDeps = createInMemoryWorkflowDependencies();
+  const deps = {
+    workflows: rawDeps.workflows.withTenant(ids.tenantId),
+    audit: rawDeps.audit,
+    assessmentEngine: rawDeps.assessmentEngine
+  };
   const orchestrator = new AssessmentLifecycleOrchestrator(deps);
 
   const started = await orchestrator.start(input, snapshot());
@@ -73,7 +80,12 @@ test("start cria workflow state com trace_id e bloqueia duplicado ativo", async 
 });
 
 test("framework_selected avança por Assessment Engine até aguardar SoA approval", async () => {
-  const deps = createInMemoryWorkflowDependencies();
+  const rawDeps = createInMemoryWorkflowDependencies();
+  const deps = {
+    workflows: rawDeps.workflows.withTenant(ids.tenantId),
+    audit: rawDeps.audit,
+    assessmentEngine: rawDeps.assessmentEngine
+  };
   const orchestrator = new AssessmentLifecycleOrchestrator(deps);
   const started = await orchestrator.start(input, snapshot());
 
@@ -88,11 +100,16 @@ test("framework_selected avança por Assessment Engine até aguardar SoA approva
   expect(result.status).toBe("waiting_for_approval");
   expect(result.current_step).toBe("wait_for_soa_approval");
   expect(result.pending_approval_type).toBe("soa");
-  expect(deps.assessmentEngine.transitions).toContain("soa_under_review");
+  expect(rawDeps.assessmentEngine.transitions).toContain("soa_under_review");
 });
 
 test("SoA approval sem approval_event válido é bloqueado", async () => {
-  const deps = createInMemoryWorkflowDependencies();
+  const rawDeps = createInMemoryWorkflowDependencies();
+  const deps = {
+    workflows: rawDeps.workflows.withTenant(ids.tenantId),
+    audit: rawDeps.audit,
+    assessmentEngine: rawDeps.assessmentEngine
+  };
   const orchestrator = new AssessmentLifecycleOrchestrator(deps);
   const started = await orchestrator.start(input, snapshot());
   await orchestrator.signal(started.workflow_run_id, {
@@ -118,7 +135,12 @@ test("SoA approval sem approval_event válido é bloqueado", async () => {
 });
 
 test("aprovações válidas avançam até completed e fecham assessment", async () => {
-  const deps = createInMemoryWorkflowDependencies();
+  const rawDeps = createInMemoryWorkflowDependencies();
+  const deps = {
+    workflows: rawDeps.workflows.withTenant(ids.tenantId),
+    audit: rawDeps.audit,
+    assessmentEngine: rawDeps.assessmentEngine
+  };
   const orchestrator = new AssessmentLifecycleOrchestrator(deps);
   const started = await orchestrator.start(input, snapshot());
 
@@ -179,6 +201,6 @@ test("aprovações válidas avançam até completed e fecham assessment", async 
     payload: {}
   }, snapshot({ state: "report_generated", reportGenerated: true }), approval("report"));
   expect(afterReport.status).toBe("completed");
-  expect(deps.assessmentEngine.transitions).toContain("closed");
+  expect(rawDeps.assessmentEngine.transitions).toContain("closed");
 });
 

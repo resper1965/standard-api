@@ -142,7 +142,7 @@ const VOLUME_SCALE = [
   { id: "low", label_i18n: { pt: "Baixo", en: "Low" }, max_records: 1000, risk_contribution: 1 },
   { id: "medium", label_i18n: { pt: "Médio", en: "Medium" }, max_records: 10000, risk_contribution: 2 },
   { id: "high", label_i18n: { pt: "Alto", en: "High" }, max_records: 100000, risk_contribution: 3 },
-  { id: "very_high", label_i18n: { pt: "Muito Alto", en: "Very High" }, max_records: Infinity, risk_contribution: 4 },
+  { id: "very_high", label_i18n: { pt: "Muito Alto", en: "Very High" }, max_records: Number.MAX_SAFE_INTEGER, risk_contribution: 4 },
 ];
 
 // ── Routes ──────────────────────────────────────────────────────────────────

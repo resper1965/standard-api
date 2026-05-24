@@ -57,9 +57,69 @@ export const createMockRepositories = (): AppDependencies => {
   const soa = createInMemorySoaDependencies({ scf, kb });
   const gapAnalysis = createInMemoryGapAnalysisDependencies({ scf, kb, soa });
   const poam = createInMemoryPoamDependencies({ gapAnalysis, scf });
+
+  const tenants = createTenantRepository();
+  const orgsBase = createOrganizationRepository();
+  const orgMap = new Map<string, any>();
+
+  const organizations: any = {
+    ...orgsBase,
+    async create(input: any) {
+      const record = await orgsBase.create(input);
+      orgMap.set(record.organization_id, record);
+      return record;
+    },
+    async update(orgId: string, tenantId: string, patch: any) {
+      const record = await orgsBase.update(orgId, tenantId, patch);
+      if (record) orgMap.set(orgId, record);
+      return record;
+    },
+    withTenant(tenantId: string) {
+      const baseTenantDb = orgsBase.withTenant(tenantId);
+      return {
+        ...baseTenantDb,
+        create: async (input: any) => {
+          const record = await baseTenantDb.create(input);
+          orgMap.set(record.organization_id, record);
+          return record;
+        },
+        update: async (orgId: string, patch: any) => {
+          const record = await baseTenantDb.update(orgId, patch);
+          if (record) orgMap.set(orgId, record);
+          return record;
+        }
+      };
+    }
+  };
+
+  const resolveTenantContext = async (baOrgId: string) => {
+    let org = orgMap.get(baOrgId);
+    if (!org) {
+      org = [...orgMap.values()].find((o: any) => o.tenant_id === baOrgId);
+    }
+    if (org) {
+      return {
+        tenant_id: org.tenant_id,
+        organization_id: org.organization_id,
+        ba_org_id: baOrgId,
+        org_name: org.name
+      };
+    }
+    // JIT provision mock tenant + organization
+    const newTenant = await tenants.create({ name: `Tenant ${baOrgId}`, slug: baOrgId });
+    const newOrg = await orgsBase.create({ tenant_id: newTenant.tenant_id, name: `Org ${baOrgId}`, slug: baOrgId });
+    orgMap.set(newOrg.organization_id, newOrg);
+    return {
+      tenant_id: newTenant.tenant_id,
+      organization_id: newOrg.organization_id,
+      ba_org_id: baOrgId,
+      org_name: newOrg.name
+    };
+  };
+
   return {
-    tenants: createTenantRepository(),
-    organizations: createOrganizationRepository(),
+    tenants,
+    organizations,
     apiKeys: createMockApiKeysRepository(),
     assessments: createAssessmentRepository(),
     approvals: createApprovalRepository(),
@@ -78,7 +138,8 @@ export const createMockRepositories = (): AppDependencies => {
     observability: createInMemoryObservabilityDependencies(),
     alerts: new AlertService(new SecurityEventService(createInMemoryObservabilityDependencies())),
     privacy: createInMemoryPrivacyDependencies(),
-    webhooks: createInMemoryWebhookRepository()
+    webhooks: createInMemoryWebhookRepository(),
+    resolveTenantContext
   };
 };
 

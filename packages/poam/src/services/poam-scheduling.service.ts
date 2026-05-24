@@ -8,7 +8,7 @@ const addDays = (days: number): string => {
 
 export class PoamSchedulingService {
   suggestDueDate(priority: PoamPriority, effort: PoamEffortEstimate): string {
-    const priorityDays: Record<PoamPriority, number> = { urgent: 30, high: 60, medium: 90, low: 180 };
+    const priorityDays: Record<PoamPriority, number> = { urgent: 30, critical: 30, high: 60, medium: 90, low: 180 };
     const effortBuffer: Record<PoamEffortEstimate, number> = { small: 0, medium: 15, large: 30, extra_large: 60, unknown: 30 };
     return addDays(priorityDays[priority] + effortBuffer[effort]);
   }
