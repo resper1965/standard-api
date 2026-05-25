@@ -1,6 +1,6 @@
-# Cookbooks Specification: Aegis Platform API Requirements
+# Cookbooks Specification: Standard Platform API Requirements
 
-> Complete specification of 24 data cookbooks (CB-01 to CB-24) that the Aegis Platform
+> Complete specification of 24 data cookbooks (CB-01 to CB-24) that the Standard Platform
 > requires from the Standard API to feed all modules: Privacy, Governance, Risk, Flow Engine,
 > Offensive, Copilot, Cross-Mapping, and Maturity.
 >
@@ -9,7 +9,7 @@
 ## Module → Cookbook Mapping
 
 ```
-AEGIS MODULES          →  API COOKBOOKS
+STANDARD MODULES      →  API COOKBOOKS
 ─────────────────────     ──────────────────────────
 🔒 Privacy             →  CB-01 a CB-06 (Privacy Regulations)
 🏛️ Governance          →  CB-07 a CB-12 (Controls & Frameworks)

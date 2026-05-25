@@ -56,7 +56,7 @@
 | 2.7 | Anti-malware scanning em uploads | P1 | concluído | roadmap T3 |
 | 2.8 | SCF official importer hardening (XLSX/OSCAL validation) | P1 | concluído | post-mvp P1 |
 | 2.9 | Advanced evals (adversarial, prompt injection, regression) | P1 | concluído | post-mvp P1 |
-| 2.10 | Conectores externos (webhooks, DLQ, third-party scanners) | P2 | pendente | pendencias |
+| 2.10 | Conectores externos (webhooks, DLQ, third-party scanners) | P2 | parcial \| 2026-05-25 | pendencias |
 | 2.11 | SOC monitoring (alertas, DLQ, tenant mismatch) | P1 | concluído \| 2026-05-25 | post-mvp P1 |
 
 ---

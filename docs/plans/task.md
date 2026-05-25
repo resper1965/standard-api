@@ -1,15 +1,11 @@
-# Task Tracker — Better Auth Audit & Hardening
+# Task Tracker — Higienização & MCP (2026-05-25)
 
 | # | Task | Status |
 |---|------|--------|
-| 1 | ADR — Comportamentos Better Auth | `done` |
-| 2 | Version Lock | `done` |
-| 3 | Runbooks (secret rotation + update process) | `done` |
-| 4 | Testes — Sign-in e Session | `done` |
-| 5 | Testes — Organization | `done` |
-| 6 | Testes — Admin Plugin (auditoria) | `done` |
-| 7 | Health Check Endpoint `/api/health/auth` | `done` |
-| 8 | Gate de CI antes de todo deploy production | `done` |
-| 9 | Logs Estruturados para Auth | `done` |
-
-
+| 1 | getting-started.md: domínio antigo → standard-api.bekaa.eu | done |
+| 2 | next-server.ts: remover arquivo morto | done |
+| 3 | Backlog: corrigir 3.1 e 2.10 | done |
+| 4 | Aegis refs em código (llms-constants, ropa.routes) | done |
+| 5 | MCP Server (12 tools + /docs/mcp) | done |
+| 6 | Custom domain + UptimeRobot + CF Notifications | done |
+| 7 | Package READMEs (7 críticos) | done |

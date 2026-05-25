@@ -2,7 +2,7 @@
  * CB-E: ROPA Reference Data
  *
  * Dados de referência para inventário de dados pessoais (ROPA).
- * 11 endpoints estáticos com dados de referência para alimentar o módulo Privacy do Aegis.
+ * 11 endpoints estáticos com dados de referência para alimentar o módulo Privacy do Standard.
  * Todos linkam ao SCF via scf_controls[].
  */
 import type { RouteDefinition } from "../http";

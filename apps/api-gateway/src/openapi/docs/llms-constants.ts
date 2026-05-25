@@ -37,8 +37,8 @@ Tenant: \`x-standard-tenant-id\` header (required)
 
 ## Optional
 
-- [B2B Integration Guide](https://standard-api-gateway-production.ness.workers.dev/docs/api/B2B_INTEGRATION_GUIDE.md): Tenant provisioning, SSO, white-label
-- [Privacy SDK Guide](https://standard-api-gateway-production.ness.workers.dev/docs/api/privacy-ropa-sdk.md): RoPA, DPIA, vendor scanning
+- [B2B Integration Guide](https://standard-api.bekaa.eu/docs/api/B2B_INTEGRATION_GUIDE.md): Tenant provisioning, SSO, white-label
+- [Privacy SDK Guide](https://standard-api.bekaa.eu/docs/api/privacy-ropa-sdk.md): RoPA, DPIA, vendor scanning
 `;
 
 export const LLMS_FULL_HEADER = (spec: any, baseUrl: string) => `# Standard GRC Platform — Complete API Reference
@@ -100,7 +100,7 @@ export const getLlmsFullCookbook = (baseUrl: string) => `
 ## Cookbook — Recipes
 
 > [!CAUTION] **MANDATORY DATA FORMATTING RULE**
-> The Aegis API acts purely as a deterministic GRC intelligence engine. **Clients MUST NOT upload raw binary streams, PDFs, or raw image screenshots.**
+> The Standard API acts purely as a deterministic GRC intelligence engine. **Clients MUST NOT upload raw binary streams, PDFs, or raw image screenshots.**
 > It is the sole responsibility of the consuming client application to perform OCR (Optical Character Recognition), PDF parsing, or audio transcription. All contextual evidence must be structured and normalized into Markdown or flat Strings prior to ingestion through the \\\`evidenceDescription\\\` payload. Sending unparsed binary formats will result in rejection.
 
 > Each recipe is self-contained. Copy the curl command, replace the auth headers, and execute.
