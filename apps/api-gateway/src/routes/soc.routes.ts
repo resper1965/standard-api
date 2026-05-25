@@ -5,6 +5,45 @@ import type { RouteDefinition } from "../http";
 import { json, parseJson } from "../http";
 
 export const socRoutes: RouteDefinition[] = [
+  // ── GET /api/v1/soc/status ────────────────────────────────────────────
+  // SOC pipeline health check — used by dashboards and on-call runbooks.
+  // Platform admin or tenant admin only (security-sensitive aggregate).
+  {
+    method: "GET",
+    path: "/api/v1/soc/status",
+    protected: true,
+    requireActor: true,
+    permissions: ["admin:write"],
+    handler: async (ctx) => {
+      const now = new Date();
+      const since24h = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+
+      // Pipeline component status
+      const status = {
+        timestamp: now.toISOString(),
+        pipeline: {
+          soc_triage_queue: !!ctx.deps.SOC_TRIAGE_QUEUE ? "bound" : "unbound",
+          alert_service: !!ctx.deps.alerts ? "configured" : "unconfigured",
+        },
+        trace_id: ctx.traceId,
+      };
+
+      // Security events summary not available via ObservabilityRepository at this time.
+      // Use Cloudflare Logpush / tail workers or query security_events table directly.
+      const note = "For detailed security event counts, query the security_events table or Cloudflare Logpush.";
+
+      const isPipelineReady =
+        status.pipeline.soc_triage_queue === "bound" &&
+        status.pipeline.alert_service === "configured";
+
+      return json({
+        status: isPipelineReady ? "operational" : "degraded",
+        note,
+        ...status,
+      });
+    },
+  },
+
   // ═══════════════════════════════════════════════════════════════════
   // Phase 4: Incident Response Triager (SOC L3)
   // ═══════════════════════════════════════════════════════════════════
