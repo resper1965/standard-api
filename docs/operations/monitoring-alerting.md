@@ -94,17 +94,18 @@
 
 ## UptimeRobot Monitors
 
-> Status: ativo desde 2026-05-25
+> Status: ✅ ativos desde 2026-05-25  
+> Account key (rw): `u2205468-59923ece045f1f4344d9cdd8`  
+> Read-only key:    `ur2205468-7a46372f6cca29d280252cf2`  
+> Monitor key `/docs`: `m803152544-433e929c80345fafa70433c4`
 
-API: `u2205468-59923ece045f1f4344d9cdd8`
+| ID | Monitor | URL | Intervalo | Latência |
+|----|---------|-----|-----------|----------|
+| `803152537` | Standard API Health | https://standard-api.bekaa.eu/api/v1/health | 5 min | ~772ms |
+| `803152542` | Standard Auth Health | https://standard-api.bekaa.eu/api/health/auth | 5 min | ~515ms |
+| `803152544` | Standard API Playground | https://standard-api.bekaa.eu/docs | 5 min | ~523ms |
 
-| Monitor | URL | Intervalo |
-|---------|-----|-----------|
-| Standard API Health | https://standard-api.bekaa.eu/api/v1/health | 5 min |
-| Standard Auth Health | https://standard-api.bekaa.eu/api/health/auth | 5 min |
-| Standard Docs | https://standard-api.bekaa.eu/docs | 5 min |
-
-Notificações: configurar em https://uptimerobot.com/dashboard (alertas de email + webhook).
+> `/docs/mcp` coberto pelo monitor do `/docs` (mesmo Worker, mesma origem).
 
 ## Cloudflare Notifications
 
