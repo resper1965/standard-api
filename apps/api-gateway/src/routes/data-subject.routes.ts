@@ -38,7 +38,7 @@ export const dataSubjectRoutes: RouteDefinition[] = [
             export_format: z.string(),
             subject: z.object({ id: z.string(), email: z.string().nullable(), name: z.string().nullable() }),
             profile: z.object({ id: z.string(), email: z.string().nullable(), name: z.string().nullable() }),
-            memberships: z.array(z.record(z.unknown())),
+            memberships: z.array(z.record(z.string(), z.unknown())),
             notices: z.array(z.string()),
           }) } }
         }
