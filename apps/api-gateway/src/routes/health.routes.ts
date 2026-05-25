@@ -63,6 +63,40 @@ export const healthRoutes: RouteDefinition[] = [
 
       return json(health);
     }
+  },
+  {
+    method: "GET",
+    path: "/api/health/auth",
+    handler: async ({ traceId, deps }) => {
+      // Verifies Better Auth stack health:
+      // 1. DB connectivity (same lightweight probe as /health)
+      // 2. Reports auth version for monitoring dashboards
+      // Used by: CI deploy gate, external uptime monitoring, runbooks
+      const start = Date.now();
+      let dbStatus = "unknown";
+      try {
+        await deps.organizations.get(
+          "00000000-0000-0000-0000-000000000000",
+          "00000000-0000-0000-0000-000000000000"
+        );
+        dbStatus = "connected";
+      } catch {
+        dbStatus = "unreachable";
+      }
+      const latencyMs = Date.now() - start;
+      const isHealthy = dbStatus === "connected";
+
+      return json(
+        {
+          status: isHealthy ? "ok" : "degraded",
+          auth: "better-auth@1.6.11",
+          db: dbStatus,
+          latency_ms: latencyMs,
+          trace_id: traceId,
+        },
+        { status: isHealthy ? 200 : 503 }
+      );
+    }
   }
 ];
 

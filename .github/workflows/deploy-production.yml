@@ -149,3 +149,16 @@ jobs:
             exit 1
           fi
           echo "✅ Worker domain is healthy"
+
+      - name: Auth stack health check — /api/health/auth
+        # ADR-AUTH-001: This gate verifies DB connectivity for the Better Auth stack.
+        # A 503 here means Better Auth cannot reach the database — logins will fail.
+        # Never bypass this gate for production deploys.
+        run: |
+          AUTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://standard-api-gateway-production.ness.workers.dev/api/health/auth)
+          echo "/api/health/auth returned: $AUTH_STATUS"
+          if [ "$AUTH_STATUS" -ne 200 ]; then
+            echo "::error::Auth stack health check FAILED (status=$AUTH_STATUS) — logins may be broken"
+            exit 1
+          fi
+          echo "✅ Auth stack is healthy"
