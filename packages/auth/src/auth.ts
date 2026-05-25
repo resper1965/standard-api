@@ -74,6 +74,20 @@ export const createAuth = (env: AuthEnv, db: any) => {
           type: "string",
           fieldName: "metadata",
         },
+        /**
+         * Platform-level admin flag.
+         * When true, the user has cross-tenant access (Bekaa operator).
+         * - Never settable via public API (input: false).
+         * - Only set via SQL migration/seed by operators.
+         * - Checked by requirePlatformAdmin() in rbac.middleware.ts.
+         */
+        platformAdmin: {
+          type: "boolean",
+          fieldName: "platform_admin",
+          defaultValue: false,
+          returned: true,
+          input: false,
+        },
       },
     },
 

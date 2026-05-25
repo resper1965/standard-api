@@ -86,7 +86,7 @@
 | 4.5 | Revisão legal/privacy | P0 | pendente | — |
 | 4.6 | Primeiro tenant real onboarded | P0 | pendente | — |
 | 4.7 | Workers for Platforms (se necessário) | P3 | pendente | post-mvp P3 |
-| 4.8 | Customer custom domains (Cloudflare for SaaS) | P3 | pendente | post-mvp P2 |
+| 4.8 | Customer custom domains (Cloudflare for SaaS) | P3 | descartado | user: não se aplica |
 | 4.9 | Performance/load testing com k6 | P2 | pendente | post-mvp P2 |
 | 4.10 | Billing/usage previsão, budgets, chargeback | P3 | pendente | post-mvp P3 |
 
