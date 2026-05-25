@@ -29,6 +29,20 @@ export const resolveTenantContext = (context: RequestContext, protectedRoute: bo
   }
 
   if (pathTenantId && headerTenantId && pathTenantId !== headerTenantId) {
+    // Build structured mismatch alert for SOC
+    const mismatchAlert = {
+      queue_type: "soc_monitoring_alert" as const,
+      alert_subtype: "tenant_mismatch_alert" as const,
+      session_tenant_id: headerTenantId,
+      payload_tenant_id: pathTenantId,
+      actor_id: context.actorId ?? "anonymous",
+      request_path: new URL(context.request.url).pathname,
+      request_method: context.request.method,
+      trace_id: context.traceId,
+      ip_country: context.request.headers.get("cf-ipcountry") ?? undefined,
+    };
+
+    // Fire via AlertService if configured (high-fidelity path)
     if (context.deps.alerts) {
       void context.deps.alerts.fireTenantMismatch({
         tenantId: headerTenantId,
@@ -36,17 +50,24 @@ export const resolveTenantContext = (context: RequestContext, protectedRoute: bo
         traceId: context.traceId,
         ...(context.actorId ? { actorId: context.actorId } : {})
       });
-    } else {
-      void new SecurityEventService(context.deps.observability).record({
-        tenant_id: headerTenantId,
-        event_type: "tenant_context_mismatch",
-        severity: "high",
-        outcome: "blocked",
-        source: "api-gateway",
-        message_safe: "Tenant context mismatch.",
-        trace_id: context.traceId
-      });
     }
+
+    // Also enqueue to SOC queue for durable persistence (belt-and-suspenders)
+    if ((context.deps as any).SOC_TRIAGE_QUEUE) {
+      void (context.deps as any).SOC_TRIAGE_QUEUE.send(mismatchAlert).catch(() => {});
+    }
+
+    // SecurityEventService fallback (always record locally)
+    void new SecurityEventService(context.deps.observability).record({
+      tenant_id: headerTenantId,
+      event_type: "tenant_context_mismatch",
+      severity: "critical",
+      outcome: "blocked",
+      source: "api-gateway",
+      message_safe: "Tenant context mismatch — request blocked.",
+      trace_id: context.traceId
+    });
+
     throw new ApiError("FORBIDDEN", "Tenant context mismatch.", 403);
   }
 

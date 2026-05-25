@@ -43,6 +43,14 @@ max_batch_timeout = 30
 max_retries = 3
 dead_letter_queue = "standard-dead-letter-dev"
 
+# Dead Letter Queue consumer — receives messages that exhausted all retries.
+# The SOC monitoring consumer processes these as dlq_passthrough alerts.
+[[queues.consumers]]
+queue = "standard-dead-letter-dev"
+max_batch_size = 20
+max_batch_timeout = 60
+max_retries = 1
+
 [[r2_buckets]]
 binding = "STANDARD_DOCUMENTS_BUCKET"
 bucket_name = "standard-documents-dev"
@@ -107,6 +115,19 @@ max_batch_size = 5
 max_batch_timeout = 30
 max_retries = 3
 dead_letter_queue = "standard-soc-triage-dlq-prod"
+
+# Dead Letter Queue consumers — SOC monitoring processes all DLQ messages.
+[[env.production.queues.consumers]]
+queue = "standard-dead-letter-prod"
+max_batch_size = 20
+max_batch_timeout = 60
+max_retries = 1
+
+[[env.production.queues.consumers]]
+queue = "standard-soc-triage-dlq-prod"
+max_batch_size = 10
+max_batch_timeout = 60
+max_retries = 1
 
 [[env.production.r2_buckets]]
 binding = "STANDARD_DOCUMENTS_BUCKET"
