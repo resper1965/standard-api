@@ -3,6 +3,7 @@ import { InviteMemberRequestSchema } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";
 import { json, parseJson, routeParam } from "../http";
+import { assertRbac } from "../middleware/rbac.middleware";
 import { memberships } from "./members.routes";
 
 const updateOrgInput = z.object({
@@ -27,11 +28,8 @@ export const organizationsMgmtRoutes: RouteDefinition[] = [
       const organizationId = routeParam(context.params, "organizationId");
       const body = context.validatedBody as z.infer<typeof updateOrgInput>;
 
-      // Verify the caller is an owner of the organization
-      const isOwner = context.session?.user?.role === "owner" || (context.auth?.roles as string[])?.includes("owner");
-      if (!isOwner) {
-        throw new ApiError("FORBIDDEN", "Only organization owners can update settings.", 403);
-      }
+      // Only owners/admins (organization:update) can change org settings.
+      await assertRbac(context, ["organization:update"]);
 
       const patch: any = {};
       if (body.name !== undefined) patch.name = body.name;
@@ -69,11 +67,8 @@ export const organizationsMgmtRoutes: RouteDefinition[] = [
       const organizationId = routeParam(context.params, "organizationId");
       const body = context.validatedBody as z.infer<typeof updateBillingInput>;
 
-      // Verify the caller is an owner of the organization
-      const isOwner = context.session?.user?.role === "owner" || (context.auth?.roles as string[])?.includes("owner");
-      if (!isOwner) {
-        throw new ApiError("FORBIDDEN", "Only organization owners can update the billing plan.", 403);
-      }
+      // Only owners/admins (organization:update) can change billing.
+      await assertRbac(context, ["organization:update"]);
 
       const tenantDb = context.deps.organizations.withTenant(context.tenantId!);
       const updated = await tenantDb.update(organizationId, { billing_tier: body.billing_tier });
