@@ -7,6 +7,7 @@
 import { processKbEmbeddingQueueMessage } from "./kb-embedding.consumer";
 import { processAgentRunQueueMessage } from "./agent-run.consumer";
 import { processDataRetentionPurge, type RetentionPurgeMessage } from "./data-retention.consumer";
+import { processSocAlert, processDlqQueueMessage, type SocAlertMessage } from "./soc-monitoring.consumer";
 
 export interface Env {
   STANDARD_DOCUMENTS_BUCKET: R2Bucket;
@@ -64,6 +65,18 @@ export default {
               env
             );
             console.log(`[queues] data_retention_purge complete:`, JSON.stringify(retentionSummary));
+            break;
+
+          case "soc_monitoring_alert":
+            // SOC alert: DLQ notifications, tenant mismatch, anomaly detection.
+            // Always persists to security_events — never silent.
+            await processSocAlert(body as unknown as SocAlertMessage, env);
+            break;
+
+          case "dlq_passthrough":
+            // Catch-all for messages arriving from dead letter queues without
+            // a structured queue_type. Wraps them into a DLQ alert automatically.
+            await processDlqQueueMessage(body, batch.queue, env);
             break;
 
           default:
@@ -124,6 +137,8 @@ function detectQueueType(queueName: string, body: QueueMessageBody): string {
   if (queueName.includes("document-ingestion") || body?.job_type === "document_ingestion") return "document_ingestion";
   if (queueName.includes("agent-run") || body?.job_type === "agent_run") return "agent_run";
   if (queueName.includes("soc-triage") || body?.job_type === "soc_triage") return "soc_triage";
+  // DLQ queues: any message landing here has exhausted all retries → SOC alert
+  if (queueName.includes("dead-letter") || queueName.includes("dlq")) return "dlq_passthrough";
   return "unknown";
 }
 
