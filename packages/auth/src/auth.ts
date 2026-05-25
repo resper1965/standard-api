@@ -93,55 +93,56 @@ export const createAuth = (env: AuthEnv, db: any) => {
         schema: {
           organization: {
             additionalFields: {
+              // ADR-AUTH-001 Rule 1 (org plugin edition):
+              // Do NOT specify fieldName for multi-word camelCase fields.
+              // The Drizzle adapter converts camelCase→snake_case automatically.
+              // Specifying fieldName causes double-mapping → 500 error.
+              // Fields that pass: phone, address, city, state, country, industry (single-word or exact match)
+              // Fields that fail with fieldName: taxId, billingEmail, postalCode, employeeCount (multi-word)
               taxId: {
                 type: "string",
-                fieldName: "tax_id",
                 required: false,
+                // fieldName: "tax_id" ← REMOVED: causes double-mapping 500
               },
               billingEmail: {
                 type: "string",
-                fieldName: "billing_email",
                 required: false,
+                // fieldName: "billing_email" ← REMOVED: causes double-mapping 500
               },
               phone: {
                 type: "string",
-                fieldName: "phone",
                 required: false,
+                // fieldName not needed: single word, matches automatically
               },
               address: {
                 type: "string",
-                fieldName: "address",
                 required: false,
               },
               city: {
                 type: "string",
-                fieldName: "city",
                 required: false,
               },
               state: {
                 type: "string",
-                fieldName: "state",
                 required: false,
               },
               country: {
                 type: "string",
-                fieldName: "country",
                 required: false,
               },
               postalCode: {
                 type: "string",
-                fieldName: "postal_code",
                 required: false,
+                // fieldName: "postal_code" ← REMOVED: causes double-mapping 500
               },
               industry: {
                 type: "string",
-                fieldName: "industry",
                 required: false,
               },
               employeeCount: {
                 type: "string",
-                fieldName: "employee_count",
                 required: false,
+                // fieldName: "employee_count" ← REMOVED: causes double-mapping 500
               },
             },
           },

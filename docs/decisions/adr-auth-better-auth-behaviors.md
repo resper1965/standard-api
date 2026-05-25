@@ -71,17 +71,45 @@ betterAuth({
 
 **Exemplo correto:**
 ```typescript
-// ✅ CORRETO
+// ✅ CORRETO — sem fieldName para campos multi-palavra (ver Regra 2b)
 organization({
   schema: {
     organization: {
       additionalFields: {
-        taxId: { type: "string", fieldName: "tax_id", required: false },
-        billingEmail: { type: "string", fieldName: "billing_email", required: false },
+        taxId: { type: "string", required: false },
+        billingEmail: { type: "string", required: false },
       }
     }
   }
 })
+```
+
+---
+
+## Regra 2b — additionalFields em plugins: nunca especificar fieldName para campos camelCase multi-palavra
+
+**Comportamento observado (bug 2026-05-25, descoberto via smoke test):**
+```
+POST /api/auth/organization/create com { taxId: "..." } → 500
+POST /api/auth/organization/create com { phone: "..." } → 200 ✅
+```
+
+**Causa:** Em `plugins[].schema.organization.additionalFields`, o Drizzle adapter converte `camelCase → snake_case` automaticamente. Ao especificar `fieldName: "tax_id"` para `taxId`, o adapter aplica double-mapping → crash 500.
+
+**Campos afetados (falham com fieldName):** `taxId`, `billingEmail`, `postalCode`, `employeeCount`  
+**Campos não-afetados (palavra única):** `phone`, `address`, `city`, `state`, `country`, `industry`
+
+**Regra:**
+- ❌ NUNCA especificar `fieldName` em `additionalFields` de plugins para campos camelCase multi-palavra quando o Drizzle schema já define a coluna snake_case.
+- ✅ Omitir `fieldName` — o Drizzle faz a conversão automaticamente.
+
+```typescript
+// ✅ CORRETO
+taxId: { type: "string", required: false }          // → tax_id automático
+billingEmail: { type: "string", required: false }   // → billing_email automático
+
+// ❌ ERRADO — double-mapping → 500
+taxId: { type: "string", fieldName: "tax_id", required: false }
 ```
 
 ---
@@ -148,14 +176,28 @@ fix: pin better-auth to 1.2.10 — fixes dashboard TypeError crash
 
 ---
 
-## Regra 8 — Cookie session_token: expiração
+## Regra 8 — Cookie session_token e get-session sem autenticação
 
-**Comportamento:** A VERIFICAR.
+**Comportamento confirmado (auditado em 2026-05-25 via smoke test):**
 
-**Questões abertas:**
-- [ ] Tempo de expiração default do cookie `better-auth.session_token`?
-- [ ] Como configurar expiração personalizada?
-- [ ] O que acontece quando o cookie expira — redirect, 401, ou renovação automática?
+```
+GET /api/auth/get-session sem cookie → 200 com body literal: null
+```
+
+Better Auth retorna HTTP 200 com body `null` (string JSON literal) quando não há sessão ativa.
+Não retorna 401. Não retorna `{ session: null }`.
+
+**Implicação para o frontend:**
+- Verificar `body === null` (não `body.session === null`) para detectar ausência de sessão.
+- O frontend deve tratar `null` como "não autenticado".
+
+**Regra:**
+- ✅ Sempre verificar `if (!session)` no frontend — não `if (!session.user)`.
+- ❌ Nunca assumir que `get-session` retorna 401 quando não autenticado.
+
+**Comportamento adicional confirmado:**
+- `POST /api/auth/sign-in/email` com `Content-Type: text/plain` → **415** (não 400)
+- Better Auth requer `Content-Type: application/json` obrigatoriamente.
 
 ---
 
@@ -164,4 +206,5 @@ fix: pin better-auth to 1.2.10 — fixes dashboard TypeError crash
 | Data | Versão | Regra adicionada | Motivo |
 |------|--------|-----------------|--------|
 | 2026-05-25 | 1.6.11 | Regras 1-4 | Dois bugs críticos em produção |
-| (próxima) | | | |
+| 2026-05-25 | 1.6.11 | Regra 2b | Smoke test revelou: `fieldName` em additionalFields multi-palavra causa 500 |
+| 2026-05-25 | 1.6.11 | Regra 8 | Smoke test auditou: `get-session` sem cookie retorna `200 null`, não 401 |
