@@ -1,7 +1,5 @@
 /**
  * Inline Cloudflare Workers type stubs.
- * TODO: Remove once `npm i -D @cloudflare/workers-types` is run from the terminal.
- *       The tsconfig.json already references the package — only the install is missing.
  */
 interface QueueMessage<T = unknown> {
   readonly body: T;

@@ -1,6 +1,6 @@
 # Getting Started with Standard API
 
-> 🔗 **[Interactive API Explorer →](https://standard-api-gateway-production.ness.workers.dev/docs)** — Try endpoints directly in your browser
+> 🔗 **[Interactive API Explorer →](https://standard-api.bekaa.eu/docs)** — Try endpoints directly in your browser
 
 ## What is Standard?
 
@@ -80,7 +80,7 @@ Authorization: ApiKey sk-your-api-key-here
 ## Base URL
 
 ```
-Production: https://standard-api-gateway-production.ness.workers.dev
+Production: https://standard-api.bekaa.eu
 ```
 
 All endpoints are prefixed with `/api/v1`.
@@ -90,7 +90,7 @@ All endpoints are prefixed with `/api/v1`.
 ### 1. Health Check (no auth required)
 
 ```bash
-curl https://standard-api-gateway-production.ness.workers.dev/health
+curl https://standard-api.bekaa.eu/health
 ```
 
 Response:
@@ -112,7 +112,7 @@ See what compliance frameworks are available:
 
 ```bash
 curl -H "Authorization: ApiKey sk-your-key" \
-  https://standard-api-gateway-production.ness.workers.dev/api/v1/scf/frameworks
+  https://standard-api.bekaa.eu/api/v1/scf/frameworks
 ```
 
 Response (abbreviated):
@@ -157,7 +157,7 @@ curl -X POST \
     "name": "Q2 2026 ISO 27001 Assessment",
     "scf_version_id": "your-scf-version-id"
   }' \
-  https://standard-api-gateway-production.ness.workers.dev/api/v1/assessments
+  https://standard-api.bekaa.eu/api/v1/assessments
 ```
 
 Response:
@@ -177,7 +177,7 @@ curl -X POST \
   -H "Authorization: ApiKey sk-your-key" \
   -F "file=@./information-security-policy.pdf" \
   -F "description=Corporate InfoSec Policy v3.1" \
-  https://standard-api-gateway-production.ness.workers.dev/api/v1/assessments/{assessmentId}/documents
+  https://standard-api.bekaa.eu/api/v1/assessments/{assessmentId}/documents
 ```
 
 ### Step 3: Transition to Next State
@@ -187,7 +187,7 @@ curl -X POST \
   -H "Authorization: ApiKey sk-your-key" \
   -H "Content-Type: application/json" \
   -d '{ "next_state": "documents_uploaded" }' \
-  https://standard-api-gateway-production.ness.workers.dev/api/v1/assessments/{assessmentId}/transitions
+  https://standard-api.bekaa.eu/api/v1/assessments/{assessmentId}/transitions
 ```
 
 > **Tip:** Call `GET /api/v1/assessments/{id}/available-transitions` to see what states you can transition to.
@@ -268,9 +268,9 @@ Point your AI tool at these URLs for live, always-current API context:
 
 | URL | Purpose |
 |---|---|
-| [`/llms.txt`](https://standard-api-gateway-production.ness.workers.dev/llms.txt) | Compact summary for AI assistants |
-| [`/llms-full.txt`](https://standard-api-gateway-production.ness.workers.dev/llms-full.txt) | Complete API context in a single file |
-| [`/docs/openapi.json`](https://standard-api-gateway-production.ness.workers.dev/docs/openapi.json) | Machine-readable OpenAPI 3.1 spec |
+| [`/llms.txt`](https://standard-api.bekaa.eu/llms.txt) | Compact summary for AI assistants |
+| [`/llms-full.txt`](https://standard-api.bekaa.eu/llms-full.txt) | Complete API context in a single file |
+| [`/docs/openapi.json`](https://standard-api.bekaa.eu/docs/openapi.json) | Machine-readable OpenAPI 3.1 spec |
 
 ### Option 3: Context7
 
@@ -282,11 +282,11 @@ Connect your AI assistants (like Claude Desktop or Cursor) directly to the Stand
 
 ## API Reference
 
-- 🔗 **[Interactive API Explorer](https://standard-api-gateway-production.ness.workers.dev/docs)** — Scalar-powered, try endpoints in-browser
-- 📄 **[OpenAPI JSON](https://standard-api-gateway-production.ness.workers.dev/docs/openapi.json)** — Machine-readable spec
-- 📖 **[Cookbook](https://standard-api-gateway-production.ness.workers.dev/docs/cookbook)** — End-to-end recipes
+- 🔗 **[Interactive API Explorer](https://standard-api.bekaa.eu/docs)** — Scalar-powered, try endpoints in-browser
+- 📄 **[OpenAPI JSON](https://standard-api.bekaa.eu/docs/openapi.json)** — Machine-readable spec
+- 📖 **[Cookbook](https://standard-api.bekaa.eu/docs/cookbook)** — End-to-end recipes
 - 🔌 **[MCP Guide](./guides/mcp-server-setup.md)** — Connect your AI tools to the GRC catalog
-- 🤖 **[LLM Context](https://standard-api-gateway-production.ness.workers.dev/llms.txt)** — Full API context for AI assistants
+- 🤖 **[LLM Context](https://standard-api.bekaa.eu/llms.txt)** — Full API context for AI assistants
 
 ## Support
 
