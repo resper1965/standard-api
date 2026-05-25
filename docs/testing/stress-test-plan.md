@@ -111,7 +111,7 @@ export const options = {
 };
 
 export default function () {
-  const res = http.get('https://api.standard.bekaa.eu/api/v1/health');
+  const res = http.get('https://standard-api.bekaa.eu/api/v1/health');
   check(res, {
     'status is 200': (r) => r.status === 200,
     'response time < 200ms': (r) => r.timings.duration < 200,

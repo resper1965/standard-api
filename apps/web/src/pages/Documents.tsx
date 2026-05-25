@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { api } from "../lib/api";
+import { API_URL } from "../lib/config";
 import { PageHeader } from "../components/PageHeader";
 import { FileUpload } from "../components/FileUpload";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
@@ -101,8 +102,7 @@ export function DocumentsPage() {
       const formData = new FormData();
       formData.append("file", file);
       
-      const API_BASE = import.meta.env.PROD ? "https://api.standard.bekaa.eu" : "";
-      await fetch(`${API_BASE}/api/v1/assessments/${assessmentId}/documents/upload`, {
+      await fetch(`${API_URL}/api/v1/assessments/${assessmentId}/documents/upload`, {
         method: "POST",
         credentials: "include",
         body: formData,

@@ -167,7 +167,7 @@ export function ApiKeysManager({ apiKeys, onKeysChanged, loading, setLoading }: 
           Supply this endpoint to external agents. They can hit this to retrieve available Standard Tools formatted as standard OpenAI/LangChain Function call representations.
         </p>
         <code style={{ display: "block", fontSize: "0.875rem", color: "var(--accent)", wordBreak: "break-all" }}>
-          GET https://api.standard.bekaa.eu/api/v1/agent-tools/scf-controls
+          GET https://standard-api.bekaa.eu/api/v1/agent-tools/scf-controls
         </code>
       </div>
     </div>

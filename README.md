@@ -22,20 +22,20 @@ Standard is a **compliance assessment API** that automates security evaluations 
 
 ```bash
 # Health check (no auth required)
-curl https://api.standard.bekaa.eu/health
+curl https://standard-api.bekaa.eu/health
 
 # List compliance frameworks
 curl -H "Authorization: ApiKey YOUR_KEY" \
-  https://api.standard.bekaa.eu/api/v1/scf/frameworks
+  https://standard-api.bekaa.eu/api/v1/scf/frameworks
 
 # Create an assessment
 curl -X POST -H "Authorization: ApiKey YOUR_KEY" \
   -H "Content-Type: application/json" \
   -d '{"organization_id":"YOUR_ORG","name":"Q2 Assessment"}' \
-  https://api.standard.bekaa.eu/api/v1/assessments
+  https://standard-api.bekaa.eu/api/v1/assessments
 ```
 
-📖 **[Getting Started →](docs/getting-started.md)** | 🔗 **[API Explorer →](https://api.standard.bekaa.eu/docs)** | 📖 **[Cookbook →](https://api.standard.bekaa.eu/docs/cookbook)** | 💻 **[Examples →](examples/)**
+📖 **[Getting Started →](docs/getting-started.md)** | 🔗 **[API Explorer →](https://standard-api.bekaa.eu/docs)** | 📖 **[Cookbook →](https://standard-api.bekaa.eu/docs/cookbook)** | 💻 **[Examples →](examples/)**
 
 
 ## Standard SCF Agentic Assessment Model
