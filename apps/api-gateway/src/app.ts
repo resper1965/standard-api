@@ -52,6 +52,7 @@ import { workflowsTemplatesRoutes } from "./routes/workflows-templates.routes";
 import { referenceDataRoutes } from "./routes/reference-data.routes";
 import { intelligenceRoutes } from "./routes/intelligence.routes";
 import { jobsRoutes } from "./routes/jobs.routes";
+import { dataSubjectRoutes } from "./routes/data-subject.routes";
 
 export const routes: RouteDefinition[] = [
   ...openapiRoutes,
@@ -80,6 +81,7 @@ export const routes: RouteDefinition[] = [
   ...integrationRoutes,
   ...webhookRoutes,
   ...privacyRoutes,
+  ...dataSubjectRoutes,  // LGPD/GDPR data subject rights: /me/data-export, /me/account
   ...socRoutes,
   ...executiveRoutes,
   ...dashboardRoutes,

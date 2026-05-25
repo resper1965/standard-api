@@ -8,6 +8,10 @@ LOG_LEVEL = "info"
 AI_GATEWAY_NAME = "standard-dev"
 AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/standard-dev"
 
+# Data retention purge: every Sunday at 02:00 UTC
+[triggers]
+crons = ["0 2 * * 0"]
+
 [[queues.consumers]]
 queue = "standard-kb-embedding-dev"
 max_batch_size = 10
@@ -68,6 +72,10 @@ STANDARD_ENV = "production"
 LOG_LEVEL = "info"
 AI_GATEWAY_NAME = "standard-prod"
 AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/standard-prod"
+
+# Data retention purge: every Sunday at 02:00 UTC
+[env.production.triggers]
+crons = ["0 2 * * 0"]
 
 [[env.production.queues.consumers]]
 queue = "standard-kb-embedding-prod"
