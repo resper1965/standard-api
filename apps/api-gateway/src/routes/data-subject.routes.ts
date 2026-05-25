@@ -14,6 +14,7 @@
  *   docs/operations/data-retention-policy.md
  */
 
+import { z } from "zod";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";
 import { json } from "../http";
@@ -25,6 +26,24 @@ export const dataSubjectRoutes: RouteDefinition[] = [
     path: "/api/v1/me/data-export",
     protected: true,
     requireActor: true,
+    openapi: {
+      tags: ["Data Subject Rights"],
+      summary: "Export personal data (LGPD art. 18)",
+      description: "Returns a portable JSON export of all personal data stored for the authenticated user. Compliant with LGPD art. 18 (right of access and portability). The response includes a Content-Disposition header for download.",
+      responses: {
+        200: {
+          description: "Personal data export",
+          content: { "application/json": { schema: z.object({
+            export_generated_at: z.string(),
+            export_format: z.string(),
+            subject: z.object({ id: z.string(), email: z.string().nullable(), name: z.string().nullable() }),
+            profile: z.object({ id: z.string(), email: z.string().nullable(), name: z.string().nullable() }),
+            memberships: z.array(z.record(z.unknown())),
+            notices: z.array(z.string()),
+          }) } }
+        }
+      }
+    },
     handler: async (context) => {
       const userId = context.session?.user?.id;
       if (!userId) throw new ApiError("UNAUTHORIZED", "Session required.", 401);
@@ -93,6 +112,23 @@ export const dataSubjectRoutes: RouteDefinition[] = [
     path: "/api/v1/me/account",
     protected: true,
     requireActor: true,
+    openapi: {
+      tags: ["Data Subject Rights"],
+      summary: "Request account deletion (LGPD art. 18)",
+      description: "Initiates an account deletion request. The account is flagged for deletion immediately. Personal data is permanently purged within 30 days per the data retention policy.",
+      responses: {
+        200: {
+          description: "Deletion request accepted",
+          content: { "application/json": { schema: z.object({
+            message: z.string(),
+            requested_at: z.string(),
+            expected_purge_within: z.string(),
+            contact: z.string(),
+            trace_id: z.string(),
+          }) } }
+        }
+      }
+    },
     handler: async (context) => {
       const userId = context.session?.user?.id;
       const userEmail = context.session?.user?.email;

@@ -14,6 +14,26 @@ export const socRoutes: RouteDefinition[] = [
     protected: true,
     requireActor: true,
     permissions: ["admin:write"],
+    openapi: {
+      tags: ["SOC Monitoring"],
+      summary: "SOC pipeline health status",
+      description: "Returns SOC monitoring pipeline status: queue binding health, alert service configuration, and pipeline readiness. Requires admin:write permission (platform admin only).",
+      responses: {
+        200: {
+          description: "SOC pipeline status",
+          content: { "application/json": { schema: z.object({
+            status: z.enum(["operational", "degraded"]),
+            timestamp: z.string(),
+            pipeline: z.object({
+              soc_triage_queue: z.enum(["bound", "unbound"]),
+              alert_service: z.enum(["configured", "unconfigured"]),
+            }),
+            note: z.string(),
+            trace_id: z.string(),
+          }) } }
+        }
+      }
+    },
     handler: async (ctx) => {
       const now = new Date();
       const since24h = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
