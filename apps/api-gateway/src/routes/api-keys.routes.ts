@@ -37,7 +37,15 @@ export const apiKeysRoutes: RouteDefinition[] = [
          return json({ error: "M2M agents cannot manage API keys." }, { status: 403 });
       }
 
-      const keys = await context.deps.apiKeys.listByOrganization(organizationId!);
+      // Resolve Better Auth org ID → Standard UUIDs
+      const tenantCtx = await context.deps.resolveTenantContext?.(
+        context.tenantId || organizationId!
+      );
+      if (!tenantCtx) {
+        return json({ error: "Organization not found." }, { status: 404 });
+      }
+
+      const keys = await context.deps.apiKeys.listByOrganization(tenantCtx.organization_id);
       
       return json({
         data: keys.map(k => ({
@@ -77,6 +85,14 @@ export const apiKeysRoutes: RouteDefinition[] = [
          return json({ error: "M2M agents cannot create API keys." }, { status: 403 });
       }
 
+      // Resolve Better Auth org ID → Standard UUIDs
+      const tenantCtx = await context.deps.resolveTenantContext?.(
+        context.tenantId || organizationId!
+      );
+      if (!tenantCtx) {
+        return json({ error: "Organization not found." }, { status: 404 });
+      }
+
       // Generate actual token
       const rawSecret = crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "");
       const fullToken = `standard_live_${rawSecret}`;
@@ -90,15 +106,15 @@ export const apiKeysRoutes: RouteDefinition[] = [
       const keyHash = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
 
       const record = await context.deps.apiKeys.create({
-        tenantId: context.tenantId!,
-        organizationId: organizationId!,
+        tenantId: tenantCtx.tenant_id,
+        organizationId: tenantCtx.organization_id,
         name: input.name,
         keyHash,
         maskedKey,
         expiresAt: input.expiresAt ? new Date(input.expiresAt) : undefined,
         ...(input.scopes ? { scopes: input.scopes } : {})
       });
-      await context.deps.audit.record("api_key.created", { tenant_id: context.tenantId, organization_id: organizationId, key_id: record.id, trace_id: context.traceId });
+      await context.deps.audit.record("api_key.created", { tenant_id: tenantCtx.tenant_id, organization_id: tenantCtx.organization_id, key_id: record.id, trace_id: context.traceId });
 
       return json({
         data: {
@@ -124,12 +140,20 @@ export const apiKeysRoutes: RouteDefinition[] = [
       if (context.actorId === "m2m-agent") {
          return json({ error: "M2M agents cannot revoke API keys." }, { status: 403 });
       }
+
+      // Resolve Better Auth org ID → Standard UUIDs
+      const tenantCtx = await context.deps.resolveTenantContext?.(
+        context.tenantId || organizationId!
+      );
+      if (!tenantCtx) {
+        return json({ error: "Organization not found." }, { status: 404 });
+      }
       
-      const revoked = await context.deps.apiKeys.revokeKey(keyId!, organizationId!);
+      const revoked = await context.deps.apiKeys.revokeKey(keyId!, tenantCtx.organization_id);
       if (!revoked) {
          return json({ error: "Key not found" }, { status: 404 });
       }
-      await context.deps.audit.record("api_key.revoked", { tenant_id: context.tenantId, organization_id: organizationId, key_id: keyId, trace_id: context.traceId });
+      await context.deps.audit.record("api_key.revoked", { tenant_id: tenantCtx.tenant_id, organization_id: tenantCtx.organization_id, key_id: keyId, trace_id: context.traceId });
 
       return json({ ok: true });
     }

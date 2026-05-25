@@ -6,7 +6,7 @@
  */
 import { createStandardAuthClient } from "@standard/auth/client";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8787";
+import { API_URL } from "./config";
 
 export const authClient = createStandardAuthClient(API_URL);
 

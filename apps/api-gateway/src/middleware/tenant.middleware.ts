@@ -5,8 +5,11 @@ import type { RequestContext } from "../http";
 
 export const resolveTenantContext = (context: RequestContext, protectedRoute: boolean): void => {
   const pathTenantId = context.params.tenantId;
-  const headerTenantId = context.request.headers.get("x-standard-tenant-id") ?? undefined;
-  const resolvedTenantId = headerTenantId ?? pathTenantId;
+  const headerTenantId =
+    context.request.headers.get("x-standard-tenant-id") ??
+    context.request.headers.get("x-tenant-id") ??
+    undefined;
+  const resolvedTenantId = headerTenantId ?? pathTenantId ?? context.tenantId;
 
   if (protectedRoute && !resolvedTenantId) {
     // Only enforce tenant requirement when there IS an authenticated actor.
@@ -51,6 +54,7 @@ export const resolveTenantContext = (context: RequestContext, protectedRoute: bo
   context.securityTenant = new TenantResolver().resolve({
     ...(headerTenantId ? { headerTenantId } : {}),
     ...(pathTenantId ? { pathTenantId } : {}),
+    ...(context.actorId?.startsWith("m2m:") ? { apiKeyTenantId: resolvedTenantId } : { sessionTenantId: resolvedTenantId }),
     ...(context.params.organizationId ? { organizationId: context.params.organizationId } : {}),
     ...(context.params.assessmentId ? { assessmentId: context.params.assessmentId } : {}),
     hostname: new URL(context.request.url).hostname,

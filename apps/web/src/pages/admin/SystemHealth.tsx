@@ -5,7 +5,7 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from ".
 import { Button } from "../../components/ui/button";
 import { Loader2, RefreshCw, CheckCircle2, XCircle, AlertTriangle, Activity, Wifi, WifiOff } from "lucide-react";
 
-const API_URL = import.meta.env.VITE_API_URL || "https://standard-api-gateway-production.ness.workers.dev";
+import { API_URL } from "@/lib/config";
 
 type ServiceStatus = { name: string; status: "operational" | "degraded" | "down" };
 

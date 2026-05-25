@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { ExternalLink, Terminal, Code2, Bot, Key } from "lucide-react";
 import "./SdkPage.css";
 
-const API_URL = import.meta.env.VITE_API_URL || "https://standard-api-gateway-production.ness.workers.dev";
+import { API_URL } from "@/lib/config";
 
 function CodeBlock({ code, language = "typescript" }: { code: string; language?: string }) {
   const [copied, setCopied] = useState(false);

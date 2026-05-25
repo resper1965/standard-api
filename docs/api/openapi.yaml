@@ -16,7 +16,7 @@ info:
     name: Proprietary
 
 servers:
-  - url: https://api.standard.bekaa.eu
+  - url: https://standard-api.bekaa.eu
     description: Production API
   - url: http://localhost:8787
     description: Local development

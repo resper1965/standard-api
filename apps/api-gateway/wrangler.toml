@@ -72,8 +72,8 @@ index_name = "standard-kb-dev"
 # ─── Production environment ────────────────────────────────────
 [env.production]
 workers_dev = true
-vars = { STANDARD_ENV = "production", BETTER_AUTH_URL = "https://api.standard.bekaa.eu", LOG_LEVEL = "info", AI_GATEWAY_NAME = "standard-prod", AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/standard-prod" }
-routes = [{ pattern = "api.standard.bekaa.eu", custom_domain = true }]
+vars = { STANDARD_ENV = "production", BETTER_AUTH_URL = "https://standard-api.bekaa.eu", LOG_LEVEL = "info", AI_GATEWAY_NAME = "standard-prod", AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/standard-prod" }
+routes = [{ pattern = "standard-api.bekaa.eu", custom_domain = true }]
 
 [[env.production.r2_buckets]]
 binding = "STANDARD_DOCUMENTS_BUCKET"
