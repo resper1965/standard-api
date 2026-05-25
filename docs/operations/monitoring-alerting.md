@@ -83,11 +83,25 @@
 |------|--------|
 | Health check endpoint | ✅ Implementado |
 | Cloudflare Analytics | ✅ Automático (com Cloudflare Workers) |
-| Alerta de uptime externo | ❌ Não configurado |
-| Alerta de DLQ | ❌ Não configurado |
+| Alerta de uptime externo | ✅ UptimeRobot (3 monitores, desde 2026-05-25) |
+| Alerta de DLQ | ✅ SOC worker implementado (2026-05-25) |
 | Alerta de security events | ❌ Não configurado |
 | Dashboard operacional | ❌ Não configurado |
 | Dashboard de segurança | ❌ Não configurado |
 | Alerta de custo | ❌ Não configurado |
 
 > Items operacionais serão implementados nas Fases 1 e 4 conforme `ROADMAP.md`.
+
+## UptimeRobot Monitors
+
+> Status: ativo desde 2026-05-25
+
+API: `u2205468-59923ece045f1f4344d9cdd8`
+
+| Monitor | URL | Intervalo |
+|---------|-----|-----------|
+| Standard API Health | https://standard-api.bekaa.eu/api/v1/health | 5 min |
+| Standard Auth Health | https://standard-api.bekaa.eu/api/health/auth | 5 min |
+| Standard Docs | https://standard-api.bekaa.eu/docs | 5 min |
+
+Notificações: configurar em https://uptimerobot.com/dashboard (alertas de email + webhook).

@@ -18,6 +18,10 @@ O Standard é API-first, SaaS-ready, multi-tenant e Cloudflare-oriented. O backe
 - Outputs críticos exigem schema validation e rastreabilidade.
 - Nenhum fluxo crítico sem tenant/organization/assessment/trace.
 
+## MCP Server
+
+A plataforma expõe um servidor MCP remoto em `POST /mcp` (Streamable HTTP, JSON-RPC 2.0). AI assistants conectam via API Key Bearer e têm acesso a 12 tools cobrindo assessments, SCF, gap analysis e status da plataforma. Ver [`docs/context/mcp.md`](mcp.md).
+
 ## Referências
 
 - `docs/architecture/technical-proposal.md`

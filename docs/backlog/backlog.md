@@ -57,7 +57,7 @@
 | 2.8 | SCF official importer hardening (XLSX/OSCAL validation) | P1 | concluído | post-mvp P1 |
 | 2.9 | Advanced evals (adversarial, prompt injection, regression) | P1 | concluído | post-mvp P1 |
 | 2.10 | Conectores externos (webhooks, DLQ, third-party scanners) | P2 | pendente | pendencias |
-| 2.11 | SOC monitoring (alertas, DLQ, tenant mismatch) | P1 | pendente | post-mvp P1 |
+| 2.11 | SOC monitoring (alertas, DLQ, tenant mismatch) | P1 | concluído \| 2026-05-25 | post-mvp P1 |
 
 ---
 
@@ -80,10 +80,10 @@
 | # | Item | Prioridade | Status | Origem |
 |---|------|:----------:|--------|--------|
 | 4.1 | Production go-live checklist executado | P0 | pendente | ops docs |
-| 4.2 | Custom domains configurados | P1 | pendente | ops docs |
-| 4.3 | Monitoring e alertas ativos | P0 | pendente | post-mvp P1 |
-| 4.4 | Data retention enforcement | P0 | pendente | post-mvp P0 |
-| 4.5 | Revisão legal/privacy | P0 | pendente | — |
+| 4.2 | Custom domains configurados | P1 | concluído \| 2026-05-25 | ops docs |
+| 4.3 | Monitoring e alertas ativos | P0 | concluído \| 2026-05-25 | UptimeRobot + CF notifications pendentes |
+| 4.4 | Data retention enforcement | P0 | concluído \| 2026-05-25 | post-mvp P0 |
+| 4.5 | Revisão legal/privacy | P0 | em_andamento \| 2026-05-25 | docs criados, revisão jurídica pendente |
 | 4.6 | Primeiro tenant real onboarded | P0 | pendente | — |
 | 4.7 | Workers for Platforms (se necessário) | P3 | pendente | post-mvp P3 |
 | 4.8 | Customer custom domains (Cloudflare for SaaS) | P3 | descartado | user: não se aplica |
@@ -134,3 +134,16 @@
 | docs(context): STANDARD_API.md reescrito (removido Aegis/V2/Prisma) | 0 | 2026-05-25 |
 | docs(api): openapi.yaml atualizado com /api/v1/health e /api/health/auth | 0 | 2026-05-25 |
 | docs(plans): README.md criado como índice de planos com status | 0 | 2026-05-25 |
+| **MCP Server & Docs** | | |
+| feat(mcp): MCP server com 12 tools (assessment, SCF, gap, platform) | 3 | 2026-05-25 |
+| feat(mcp): /docs/mcp — página HTML de integração MCP | 3 | 2026-05-25 |
+| docs(api): mcp-integration-guide.md criado | 3 | 2026-05-25 |
+| feat: DLQ consumer worker implementado | 2 | 2026-05-25 |
+| feat: SOC status route (/api/v1/soc/status) | 2 | 2026-05-25 |
+| feat: API Playground Scalar (/docs) com links para /docs/mcp | 2 | 2026-05-25 |
+| infra: custom domain standard-api.bekaa.eu configurado e deployado | 4 | 2026-05-25 |
+| ops: 3 monitores UptimeRobot criados (health, auth, docs) | 4 | 2026-05-25 |
+| P0: RBAC platform_admin (plugin admin Better Auth) | 0 | 2026-05-25 |
+| P0: Data retention cron job implementado | 1 | 2026-05-25 |
+| P0: Legal docs criados (privacy-policy, terms-of-service, dpa-template) | 4 | 2026-05-25 |
+| P0: Seed platform_admin (resper@bekaa.eu) | 0 | 2026-05-25 |
