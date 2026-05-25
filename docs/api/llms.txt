@@ -38,3 +38,9 @@ Tenant: `x-standard-tenant-id` header (required for all protected endpoints)
 
 - [B2B Integration Guide](https://standard-api-gateway-production.ness.workers.dev/docs/api/B2B_INTEGRATION_GUIDE.md): Tenant provisioning, SSO, white-label
 - [Privacy SDK Guide](https://standard-api-gateway-production.ness.workers.dev/docs/api/privacy-ropa-sdk.md): RoPA, DPIA, vendor scanning
+
+## MCP Integration
+
+- https://standard-api.bekaa.eu/mcp (MCP server endpoint — JSON-RPC 2.0)
+- https://standard-api.bekaa.eu/docs/mcp (MCP integration guide)
+- docs/api/mcp-integration-guide.md
