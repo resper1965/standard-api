@@ -6,8 +6,11 @@
  * The active organization in the session maps to the Standard tenant_id.
  */
 import type { StandardAuth } from "@standard/auth";
+import { StructuredLogger } from "@standard/observability";
 import { ApiError } from "../errors/api-error";
 import type { RequestContext } from "../http";
+
+const logger = new StructuredLogger();
 
 /**
  * Resolve auth context from Better Auth session.
@@ -47,6 +50,18 @@ export const resolveAuthContext = async (
         context.deps.apiKeys.markUsed(apiKeyRecord.id).catch((e) => {
           console.error("Failed to mark API key used", e);
         });
+
+        logger.log({
+          level: "info",
+          message: "m2m_api_key_resolved",
+          service: "api-gateway",
+          module: "auth",
+          environment: "production",
+          trace_id: context.traceId,
+          tenant_id: apiKeyRecord.tenantId,
+          organization_id: apiKeyRecord.organizationId,
+          metadata: { actor_id: `m2m:${apiKeyRecord.id}`, key_id: apiKeyRecord.id }
+        });
         
         return;
       }
@@ -62,6 +77,16 @@ export const resolveAuthContext = async (
       if (context.env?.STANDARD_CACHE) {
         const isRevoked = await context.env.STANDARD_CACHE.get(`revocations:user:${session.user.id}`);
         if (isRevoked) {
+          logger.log({
+            level: "warn",
+            message: "token_revoked",
+            service: "api-gateway",
+            module: "auth",
+            environment: "production",
+            trace_id: context.traceId,
+            tenant_id: context.tenantId,
+            metadata: { actor_id: session.user.id }
+          });
           throw new ApiError("UNAUTHORIZED", "Token has been revoked.", 401);
         }
       }
@@ -88,11 +113,36 @@ export const resolveAuthContext = async (
         context.tenantId = activeOrgId;
         context.organizationId = activeOrgId;
       }
+
+      logger.log({
+        level: "info",
+        message: "session_resolved",
+        service: "api-gateway",
+        module: "auth",
+        environment: "production",
+        trace_id: context.traceId,
+        tenant_id: context.tenantId,
+        metadata: {
+          actor_id: session.user.id,
+          session_id: session.session.id,
+          active_org_id: activeOrgId ?? null,
+          role: (session.user as any).role || "viewer"
+        }
+      });
     }
   } catch (err) {
-    // Session resolution failed — log and treat as unauthenticated
+    // Session resolution failed — log structured event and treat as unauthenticated
     if (err instanceof ApiError) throw err; // Re-throw intentional ApiErrors (revocation)
-    console.warn("[standard:auth] Session resolution failed:", err instanceof Error ? err.message : err);
+    logger.log({
+      level: "warn",
+      message: "session_resolution_failed",
+      service: "api-gateway",
+      module: "auth",
+      environment: "production",
+      trace_id: context.traceId,
+      tenant_id: context.tenantId,
+      metadata: { error: err instanceof Error ? err.message : String(err) }
+    });
   }
 
   if (requireAuth && !context.actorId) {
