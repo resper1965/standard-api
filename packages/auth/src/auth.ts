@@ -96,42 +96,52 @@ export const createAuth = (env: AuthEnv, db: any) => {
               taxId: {
                 type: "string",
                 fieldName: "tax_id",
+                required: false,
               },
               billingEmail: {
                 type: "string",
                 fieldName: "billing_email",
+                required: false,
               },
               phone: {
                 type: "string",
                 fieldName: "phone",
+                required: false,
               },
               address: {
                 type: "string",
                 fieldName: "address",
+                required: false,
               },
               city: {
                 type: "string",
                 fieldName: "city",
+                required: false,
               },
               state: {
                 type: "string",
                 fieldName: "state",
+                required: false,
               },
               country: {
                 type: "string",
                 fieldName: "country",
+                required: false,
               },
               postalCode: {
                 type: "string",
                 fieldName: "postal_code",
+                required: false,
               },
               industry: {
                 type: "string",
                 fieldName: "industry",
+                required: false,
               },
               employeeCount: {
                 type: "string",
                 fieldName: "employee_count",
+                required: false,
               },
             },
           },
