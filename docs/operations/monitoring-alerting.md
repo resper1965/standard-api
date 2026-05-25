@@ -105,3 +105,12 @@ API: `u2205468-59923ece045f1f4344d9cdd8`
 | Standard Docs | https://standard-api.bekaa.eu/docs | 5 min |
 
 Notificações: configurar em https://uptimerobot.com/dashboard (alertas de email + webhook).
+
+## Cloudflare Notifications
+
+> Status: ✅ configurado em 2026-05-25
+
+| Alerta | Worker | Canal |
+|--------|--------|-------|
+| Worker error rate | `standard-api-gateway-production` | Email + Webhook |
+| DLQ alerts | Queues de produção | Email + Webhook |
