@@ -53,9 +53,13 @@ import { referenceDataRoutes } from "./routes/reference-data.routes";
 import { intelligenceRoutes } from "./routes/intelligence.routes";
 import { jobsRoutes } from "./routes/jobs.routes";
 import { dataSubjectRoutes } from "./routes/data-subject.routes";
+import { mcpRoutes } from "./routes/mcp.routes";
+import { mcpDocsRoutes } from "./routes/mcp-docs.routes";
 
 export const routes: RouteDefinition[] = [
   ...openapiRoutes,
+  ...mcpRoutes,       // MCP server — /mcp
+  ...mcpDocsRoutes,   // MCP guide  — /docs/mcp
   ...jobsRoutes,
   ...healthRoutes,
   ...tenantsRoutes,
