@@ -121,3 +121,16 @@
 | Artifact rejection com rastreabilidade completa | 2 | 2026-05-08 |
 | Immutability enforcement (já existente: assertVersionEditable) | 2 | 2026-05-08 |
 | LLM provider via AI Gateway (já existente: CloudflareAiGatewayAdapter) | 2 | 2026-05-08 |
+| **Better Auth Hardening** | | |
+| ADR-AUTH-001 — 8 regras comportamentais Better Auth documentadas | 1 | 2026-05-25 |
+| fix: remover field mappings duplicados no Drizzle adapter (Bug 2) | 1 | 2026-05-25 |
+| fix: `required: false` em todos os `additionalFields` (Bug 1) | 1 | 2026-05-25 |
+| fix: remover `fieldName` de campos multi-palavra no org plugin (Bug 3) | 1 | 2026-05-25 |
+| Runbooks: rotação de secret + processo de update do Better Auth | 1 | 2026-05-25 |
+| Smoke tests de auth: sign-in, session, org (13 campos), admin (15/15 ✅) | 1 | 2026-05-25 |
+| `/api/health/auth` — probe de DB do Better Auth (200/503) | 1 | 2026-05-25 |
+| CI gate em `deploy-production.yml` — bloqueia deploy se auth stack degradado | 1 | 2026-05-25 |
+| Logs estruturados de auth: 4 eventos com StructuredLogger (sem PII) | 1 | 2026-05-25 |
+| docs(context): STANDARD_API.md reescrito (removido Aegis/V2/Prisma) | 0 | 2026-05-25 |
+| docs(api): openapi.yaml atualizado com /api/v1/health e /api/health/auth | 0 | 2026-05-25 |
+| docs(plans): README.md criado como índice de planos com status | 0 | 2026-05-25 |
