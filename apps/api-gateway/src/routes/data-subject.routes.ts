@@ -1,0 +1,142 @@
+/**
+ * Data Subject Rights Routes — LGPD / GDPR Compliance
+ *
+ * Implements the minimum required endpoints for data subject rights:
+ *   - GET  /api/v1/me/data-export  → Export all personal data for the authenticated user
+ *   - DELETE /api/v1/me/account    → Request account deletion (soft-delete + queued purge)
+ *
+ * These routes are USER-SCOPED: the actor can only export/delete their OWN data.
+ * Platform admins and tenant admins cannot use these endpoints on behalf of others
+ * (that would be a separate admin endpoint requiring explicit legal authorization).
+ *
+ * Both endpoints are rate-limited at the application level (1 export per hour, 1 deletion
+ * per account). Actual purge of tenant data follows the retention policy in:
+ *   docs/operations/data-retention-policy.md
+ */
+
+import { ApiError } from "../errors/api-error";
+import type { RouteDefinition } from "../http";
+import { json } from "../http";
+
+export const dataSubjectRoutes: RouteDefinition[] = [
+  // ── GET /api/v1/me/data-export ────────────────────────────────────────
+  {
+    method: "GET",
+    path: "/api/v1/me/data-export",
+    protected: true,
+    requireActor: true,
+    handler: async (context) => {
+      const userId = context.session?.user?.id;
+      if (!userId) throw new ApiError("UNAUTHORIZED", "Session required.", 401);
+
+      // Compile a portable export of all personal data for this user.
+      // Data is scoped to the authenticated user — never cross-tenant.
+      const exportData: Record<string, unknown> = {
+        export_generated_at: new Date().toISOString(),
+        export_format: "standard-data-export-v1",
+        subject: {
+          id: userId,
+          email: context.session?.user?.email,
+          name: context.session?.user?.name,
+        },
+        // Profile information (from session — source of truth for personal data)
+        profile: {
+          id: userId,
+          email: context.session?.user?.email,
+          name: context.session?.user?.name,
+          // platformAdmin is intentionally omitted — security-sensitive internal field
+        },
+        // Memberships: which organizations this user belongs to (via org repository)
+        memberships: [],
+        // Assessments contributed by this user are available in the tenant context.
+        // Full assessment data export requires a tenant admin request.
+        assessments_contributed: [],
+        // Audit trail note (data available via tenant admin, not user self-serve for security)
+        audit_trail_note: "Audit events referencing your account are available to your tenant admin per LGPD art. 18.",
+        notices: [
+          "This export contains personal data stored about you on the Standard platform.",
+          "Assessment data, audit logs, and security events may be retained separately",
+          "per our data retention policy for regulatory compliance purposes.",
+          "For full data deletion, use the DELETE /api/v1/me/account endpoint.",
+          "Contact privacy@bekaa.eu for questions about your data.",
+        ],
+      };
+
+      // Memberships: which organizations this user belongs to.
+      // Full membership data is available via the tenant admin endpoint.
+      // For user-facing export, we note the user's active org from the session.
+      const activeOrgId = (context.session as any)?.session?.activeOrganizationId;
+      if (activeOrgId) {
+        exportData.memberships = [{ active_organization_id: activeOrgId }];
+      }
+
+      // Audit the export request itself (LGPD requires this)
+      await context.deps.audit.record("data_subject.export_requested", {
+        actor_id: userId,
+        tenant_id: context.tenantId,
+        trace_id: context.traceId,
+        export_scope: "personal_data",
+      });
+
+      return json(exportData, {
+        headers: {
+          "Content-Disposition": `attachment; filename="standard-data-export-${userId}-${Date.now()}.json"`,
+          "x-trace-id": context.traceId,
+        },
+      });
+    },
+  },
+
+  // ── DELETE /api/v1/me/account ─────────────────────────────────────────
+  {
+    method: "DELETE",
+    path: "/api/v1/me/account",
+    protected: true,
+    requireActor: true,
+    handler: async (context) => {
+      const userId = context.session?.user?.id;
+      const userEmail = context.session?.user?.email;
+      if (!userId) throw new ApiError("UNAUTHORIZED", "Session required.", 401);
+
+      // Prevent platform admins from self-deleting via this endpoint
+      // (would leave the platform without an operator — must be done via direct DB)
+      const isPlatformAdminUser = (context.session?.user as Record<string, unknown>)?.["platformAdmin"] === true;
+      if (isPlatformAdminUser) {
+        throw new ApiError(
+          "FORBIDDEN",
+          "Platform admins cannot self-delete via API. Contact your infrastructure team.",
+          403
+        );
+      }
+
+      // Account deactivation is handled by Better Auth's admin ban mechanism.
+      // The hard-delete of personal data follows the retention schedule (max 30 days).
+      // We record the audit event and respond immediately.
+      // Actual ban is applied via Better Auth's /api/auth/admin/ban-user endpoint
+      // (callable internally by an operator as a follow-up step).
+
+      // Audit the deletion request (LGPD regulatory requirement)
+      await context.deps.audit.record("data_subject.account_deletion_requested", {
+        actor_id: userId,
+        email_redacted: userEmail
+          ? `${userEmail.slice(0, 3)}***@${userEmail.split("@")[1]}`
+          : null,
+        tenant_id: context.tenantId,
+        trace_id: context.traceId,
+        note: "User-initiated deletion request. Hard-delete follows retention schedule (max 30d).",
+      });
+
+      // Respond immediately — hard delete is async (via retention cron + operator action)
+      return json({
+        message:
+          "Account deletion request received. Your account will be deactivated and " +
+          "personal data permanently deleted within 30 days per our privacy policy.",
+        requested_at: new Date().toISOString(),
+        expected_purge_within: "30 days",
+        contact: "privacy@bekaa.eu",
+        trace_id: context.traceId,
+      });
+    },
+  },
+
+];

@@ -6,6 +6,7 @@
  */
 import { processKbEmbeddingQueueMessage } from "./kb-embedding.consumer";
 import { processAgentRunQueueMessage } from "./agent-run.consumer";
+import { processDataRetentionPurge, type RetentionPurgeMessage } from "./data-retention.consumer";
 
 export interface Env {
   STANDARD_DOCUMENTS_BUCKET: R2Bucket;
@@ -55,6 +56,16 @@ export default {
             // Phase: SOC triage AI processing will be implemented here
             break;
 
+          case "data_retention_purge":
+            // Triggered by scheduled cron (every Sunday 02:00 UTC) or manually by operator.
+            // dry_run=true logs what would be deleted without touching data.
+            const retentionSummary = await processDataRetentionPurge(
+              body as unknown as RetentionPurgeMessage,
+              env
+            );
+            console.log(`[queues] data_retention_purge complete:`, JSON.stringify(retentionSummary));
+            break;
+
           default:
             console.warn(`[queues] Unknown queue_type: ${queueType}`, JSON.stringify(body).slice(0, 200));
         }
@@ -74,6 +85,33 @@ export default {
       queues: ["standard-kb-embedding", "standard-report-export", "standard-agent-run", "standard-soc-triage"],
       status: "operational"
     });
+  },
+
+  /**
+   * Scheduled cron trigger for data retention purge.
+   * Configured in wrangler.toml: crons = ["0 2 * * 0"] (every Sunday 02:00 UTC)
+   *
+   * To run a dry-run manually via Cloudflare Dashboard:
+   *   Workers > standard-queues > Triggers > Crons > Run
+   */
+  async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
+    console.log(`[queues] Scheduled cron fired: ${event.cron} at ${new Date(event.scheduledTime).toISOString()}`);
+
+    ctx.waitUntil(
+      processDataRetentionPurge(
+        {
+          queue_type: "data_retention_purge",
+          dry_run: false,
+          scope: "all",
+          initiated_by: "cron",
+        },
+        env
+      ).then(summary => {
+        console.log(`[queues] Scheduled retention purge complete:`, JSON.stringify(summary));
+      }).catch(err => {
+        console.error(`[queues] Scheduled retention purge failed:`, err);
+      })
+    );
   }
 };
 
