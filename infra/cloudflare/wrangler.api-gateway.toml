@@ -172,11 +172,4 @@ class_name = "AssessmentLifecycleWorkflow"
 script_name = "standard-workflows-production"
 
 
-
-
-# Custom domain route — update zone_name to match your actual domain
-# See docs/operations/custom-domain-setup.md for full runbook
-[env.production.route]
-# Uncomment and update before go-live:
-# pattern = "api.standard.bekaa.eu/*"
-# zone_name = "bekaa.eu"
+# Custom domain: standard-api.bekaa.eu is configured via routes in [env.production] above.
