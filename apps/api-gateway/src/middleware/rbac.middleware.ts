@@ -4,8 +4,59 @@ import type { Permission } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RequestContext } from "../http";
 
+/**
+ * Returns true if the current session belongs to a platform admin.
+ * Platform admins have cross-tenant access and bypass all tenant checks.
+ * The flag is stored as `platform_admin` boolean on the user row —
+ * never as a role string, to avoid confusion with org-scoped roles.
+ */
+export const isPlatformAdmin = (context: RequestContext): boolean => {
+  const user = context.session?.user as Record<string, unknown> | undefined;
+  return user?.["platformAdmin"] === true;
+};
+
+/**
+ * Guards a route so only platform admins (Bekaa operators) can access it.
+ * Logs the access attempt and throws 403 for any other actor.
+ *
+ * Use on all /api/v1/tenants/* and /api/v1/admin/* routes.
+ */
+export const requirePlatformAdmin = async (context: RequestContext): Promise<void> => {
+  if (isPlatformAdmin(context)) {
+    // Log successful platform admin access for auditability.
+    await context.deps.audit.record("platform_admin.access", {
+      actor_id: context.actorId,
+      path: context.request.url,
+      trace_id: context.traceId,
+    });
+    return;
+  }
+
+  // Record the unauthorized attempt before throwing.
+  await new SecurityEventService(context.deps.observability).record({
+    tenant_id: context.tenantId,
+    actor_id: context.actorId,
+    event_type: "forbidden_access_attempt",
+    severity: "high",
+    outcome: "denied",
+    source: "api-gateway",
+    resource_type: "platform_admin_route",
+    resource_id: context.request.url,
+    message_safe: "Platform admin access required.",
+    trace_id: context.traceId,
+    metadata_safe: { reason: "not_platform_admin" },
+  });
+
+  throw new ApiError("FORBIDDEN", "Platform admin access required.", 403, [
+    { reason: "not_platform_admin" },
+  ]);
+};
+
 export const assertRbac = async (context: RequestContext, requiredPermissions: Permission[] = []): Promise<void> => {
   if (requiredPermissions.length === 0) return;
+
+  // Platform admins bypass all permission checks — they have implicit ALL_PERMISSIONS.
+  if (isPlatformAdmin(context)) return;
 
   let allowed = true;
   let reason = "";
@@ -52,7 +103,7 @@ export const assertRbac = async (context: RequestContext, requiredPermissions: P
       void context.deps.alerts.fireApprovalBypass({
         tenantId: context.tenantId,
         assessmentId: context.params.assessmentId,
-        artifactType: "assessment_state", // Na API o recurso define o artifact type
+        artifactType: "assessment_state",
         traceId: context.traceId,
         ...(context.actorId ? { actorId: context.actorId } : {})
       });

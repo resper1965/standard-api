@@ -27,10 +27,13 @@ export const baUser = pgTable("user", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   // Admin plugin fields
-  role: text("role").default("user"),
+  role: text("role").default("member"),  // ADR-AUTH-001: was 'user' (invalid). Corrected to 'member'.
   banned: boolean("banned").default(false),
   banReason: text("ban_reason"),
   banExpires: timestamp("ban_expires"),
+  // Platform-level admin flag — cross-tenant access.
+  // Never set via public API. Only via SQL seed/migration by operators.
+  platformAdmin: boolean("platform_admin").notNull().default(false),
   // Custom Standard fields
   jobTitle: text("job_title"),
   phone: text("phone"),
