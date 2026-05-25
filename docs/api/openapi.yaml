@@ -74,7 +74,7 @@ paths:
   /health:
     get:
       tags: [Health]
-      summary: Health check
+      summary: Basic health check
       operationId: healthCheck
       security: []
       responses:
@@ -87,6 +87,61 @@ paths:
                 properties:
                   status: { type: string, example: "ok" }
                   timestamp: { type: string, format: date-time }
+
+  /api/v1/health:
+    get:
+      tags: [Health]
+      summary: Operational health with metrics (1h window)
+      operationId: operationalHealth
+      security: []
+      responses:
+        "200":
+          description: Operational health report
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: "ok" }
+                  uptime_s: { type: number }
+                  metrics_1h: { type: object }
+
+  /api/health/auth:
+    get:
+      tags: [Health]
+      summary: Auth stack health — DB connectivity probe
+      description: |
+        Probes Better Auth database connectivity.
+        Returns HTTP 200 when the auth DB is reachable, HTTP 503 when not.
+        Used as a CI gate in `deploy-production.yml` (see ADR-AUTH-001).
+        A 503 here means logins will fail for all users.
+      operationId: authHealth
+      security: []
+      responses:
+        "200":
+          description: Auth stack is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: "ok" }
+                  auth: { type: string, example: "better-auth@1.6.11" }
+                  db: { type: string, example: "connected" }
+                  latency_ms: { type: number, example: 42 }
+                  trace_id: { type: string }
+        "503":
+          description: Auth stack degraded — DB unreachable
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: "degraded" }
+                  auth: { type: string, example: "better-auth@1.6.11" }
+                  db: { type: string, example: "unreachable" }
+                  latency_ms: { type: number }
+                  trace_id: { type: string }
 
   # ── Assessments ─────────────────────────────────────────
   /api/v1/assessments:
