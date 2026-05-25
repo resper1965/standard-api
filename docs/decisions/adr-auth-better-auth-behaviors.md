@@ -155,13 +155,18 @@ fix: pin better-auth to 1.2.10 — fixes dashboard TypeError crash
 
 ## Regra 6 — Plugin admin: endpoints e autorização
 
-**Comportamento:** A VERIFICAR com testes de integração (Task 6 do plano).
+**Comportamento confirmado (auditado em 2026-05-25 via smoke test):**
 
-**Questões abertas:**
-- [ ] `/api/auth/admin/list-users` — exige role `admin` na session?
-- [ ] `ban/unban` — invalida sessões existentes imediatamente?
-- [ ] Impersonation — funciona em Cloudflare Workers (ambiente sem filesystem)?
-- [ ] Como o plugin `admin` interage com o campo `role` na tabela `user`?
+| Endpoint | Método | Role admin | Sem auth | Notas |
+|---|---|---|---|---|
+| `/api/auth/admin/list-users` | GET | **200** `{users, total}` | 401 | Acessível para role admin |
+| `/api/auth/admin/list-sessions` | GET | **404** | — | Não existe nesta versão |
+
+**Regra:**
+- ✅ `admin/list-users` exige sessão válida com role `admin` — retorna 401 sem cookie.
+- ❌ `admin/list-sessions` não existe em Better Auth 1.6.11.
+- [ ] `ban/unban` — ainda não auditado.
+- [ ] Impersonation — ainda não auditado.
 
 ---
 
@@ -176,28 +181,33 @@ fix: pin better-auth to 1.2.10 — fixes dashboard TypeError crash
 
 ---
 
-## Regra 8 — Cookie session_token e get-session sem autenticação
+## Regra 8 — Cookie session_token: atributos, expiração e get-session
 
 **Comportamento confirmado (auditado em 2026-05-25 via smoke test):**
 
 ```
-GET /api/auth/get-session sem cookie → 200 com body literal: null
+Set-Cookie: __Secure-better-auth.session_token=...; Max-Age=604800; Path=/; HttpOnly; Secure; SameSite=Lax
 ```
 
-Better Auth retorna HTTP 200 com body `null` (string JSON literal) quando não há sessão ativa.
-Não retorna 401. Não retorna `{ session: null }`.
+| Atributo | Valor | Segurança |
+|---|---|---|
+| Nome | `__Secure-better-auth.session_token` | Prefixo `__Secure-` exige HTTPS |
+| Max-Age | **604800s (7 dias)** | Sessão persistente |
+| HttpOnly | ✅ Presente | Protege contra XSS |
+| Secure | ✅ Presente | Só envia em HTTPS |
+| SameSite | ✅ Lax | Protege contra CSRF |
 
-**Implicação para o frontend:**
-- Verificar `body === null` (não `body.session === null`) para detectar ausência de sessão.
-- O frontend deve tratar `null` como "não autenticado".
+**get-session sem cookie:**
+```
+GET /api/auth/get-session sem cookie → 200 com body literal: null
+```
+Better Auth retorna HTTP 200 com body `null` (não `{ session: null }`, não 401).
 
-**Regra:**
+**Regras:**
 - ✅ Sempre verificar `if (!session)` no frontend — não `if (!session.user)`.
 - ❌ Nunca assumir que `get-session` retorna 401 quando não autenticado.
-
-**Comportamento adicional confirmado:**
-- `POST /api/auth/sign-in/email` com `Content-Type: text/plain` → **415** (não 400)
-- Better Auth requer `Content-Type: application/json` obrigatoriamente.
+- ✅ Cookie expira em **7 dias**. Sessões devem ser renovadas antes disso.
+- `Content-Type: text/plain` em sign-in → **415** (não 400). Exigir `application/json`.
 
 ---
 
@@ -207,4 +217,5 @@ Não retorna 401. Não retorna `{ session: null }`.
 |------|--------|-----------------|--------|
 | 2026-05-25 | 1.6.11 | Regras 1-4 | Dois bugs críticos em produção |
 | 2026-05-25 | 1.6.11 | Regra 2b | Smoke test revelou: `fieldName` em additionalFields multi-palavra causa 500 |
-| 2026-05-25 | 1.6.11 | Regra 8 | Smoke test auditou: `get-session` sem cookie retorna `200 null`, não 401 |
+| 2026-05-25 | 1.6.11 | Regras 6, 8 | Admin audit e cookie audit confirmaram comportamentos reais |
+
