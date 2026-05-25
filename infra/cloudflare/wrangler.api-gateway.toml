@@ -63,6 +63,7 @@ STANDARD_ENV = "staging"
 LOG_LEVEL = "info"
 AI_GATEWAY_NAME = "standard-staging"
 AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/standard-staging"
+BETTER_AUTH_URL = "https://standard-api-gateway-staging.ness.workers.dev"
 
 [[env.staging.r2_buckets]]
 binding = "STANDARD_DOCUMENTS_BUCKET"
@@ -122,6 +123,7 @@ STANDARD_ENV = "production"
 LOG_LEVEL = "warn"
 AI_GATEWAY_NAME = "standard-prod"
 AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/standard-prod"
+BETTER_AUTH_URL = "https://standard-api.bekaa.eu"
 
 [[env.production.r2_buckets]]
 binding = "STANDARD_DOCUMENTS_BUCKET"

@@ -64,7 +64,7 @@ export default {
           DATABASE_URL: env.DATABASE_URL!,
           BETTER_AUTH_SECRET: env.BETTER_AUTH_SECRET,
           ...(env.BETTER_AUTH_URL !== undefined ? { BETTER_AUTH_URL: env.BETTER_AUTH_URL } : {}),
-        });
+        }, db);
         console.log('[standard:init] Better Auth self-hosted initialized.');
       } else {
         console.warn('[standard:init] No DATABASE_URL — using MOCK repositories. SCF data will be synthetic.');
@@ -77,8 +77,6 @@ export default {
     // Delegate /api/auth/* requests directly to Better Auth.
     // This MUST happen before the standard API router runs.
     if (cachedAuth && url.pathname.startsWith("/api/auth")) {
-      const response = await cachedAuth.handler(request);
-      // Inject CORS headers for the auth endpoints
       const origin = request.headers.get("Origin") ?? "";
       const allowedOrigins = [
         "https://standard.bekaa.eu",
@@ -88,11 +86,31 @@ export default {
         "http://localhost:3000",
       ];
       const isPagesDevAlias = origin.endsWith(".standard-web.pages.dev");
-      if (allowedOrigins.includes(origin) || isPagesDevAlias) {
+      const isAllowed = allowedOrigins.includes(origin) || isPagesDevAlias;
+
+      // Handle CORS preflight — must respond BEFORE delegating to Better Auth
+      if (request.method === "OPTIONS") {
+        return new Response(null, {
+          status: 204,
+          headers: isAllowed
+            ? {
+                "Access-Control-Allow-Origin": origin,
+                "Access-Control-Allow-Credentials": "true",
+                "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+                "Access-Control-Allow-Headers": "Content-Type, Authorization",
+                "Access-Control-Max-Age": "86400",
+              }
+            : {},
+        });
+      }
+
+      const response = await cachedAuth.handler(request);
+      // Inject CORS headers for the auth endpoints
+      if (isAllowed) {
         response.headers.set("Access-Control-Allow-Origin", origin);
         response.headers.set("Access-Control-Allow-Credentials", "true");
         response.headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
-        response.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Trace-Id, X-Tenant-Id, x-standard-tenant-id");
+        response.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
       }
       return response;
     }

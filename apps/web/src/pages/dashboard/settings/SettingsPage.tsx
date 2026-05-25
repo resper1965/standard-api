@@ -19,7 +19,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog"
 
-const API_URL = import.meta.env.VITE_API_URL || "https://api.standard.bekaa.eu"
+import { API_URL } from "@/lib/config"
 
 // ─── API Reference Data ─────────────────────────────────────
 type Endpoint = {
