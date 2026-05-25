@@ -276,11 +276,16 @@ Point your AI tool at these URLs for live, always-current API context:
 
 If your AI tool supports [Context7](https://context7.com), the Standard API documentation is available as a resolvable library for automatic context fetching.
 
+### Option 4: Model Context Protocol (MCP) Server
+
+Connect your AI assistants (like Claude Desktop or Cursor) directly to the Standard GRC platform using our native MCP server. See the [MCP Server Setup Guide](./guides/mcp-server-setup.md) for installation and configuration instructions.
+
 ## API Reference
 
 - 🔗 **[Interactive API Explorer](https://standard-api-gateway-production.ness.workers.dev/docs)** — Scalar-powered, try endpoints in-browser
 - 📄 **[OpenAPI JSON](https://standard-api-gateway-production.ness.workers.dev/docs/openapi.json)** — Machine-readable spec
 - 📖 **[Cookbook](https://standard-api-gateway-production.ness.workers.dev/docs/cookbook)** — End-to-end recipes
+- 🔌 **[MCP Guide](./guides/mcp-server-setup.md)** — Connect your AI tools to the GRC catalog
 - 🤖 **[LLM Context](https://standard-api-gateway-production.ness.workers.dev/llms.txt)** — Full API context for AI assistants
 
 ## Support
