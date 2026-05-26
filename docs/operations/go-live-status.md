@@ -24,7 +24,7 @@
 | §6 Webhook Readiness | ✅ PASS | HMAC, delivery logs, secret rotation, test endpoint, schema_version, event versioning | 2026-05-26 |
 | §7 Data Governance | ✅ PASS | Retenção por tipo; export LGPD (GET /me/data-export); DELETE /me/account | 2026-05-26 |
 | §8 Cost Governance | ✅ PASS | Quotas de rate limiting ativas; orçamentos documentados; `docs/operations/cost-governance.md` | 2026-05-26 |
-| §9 Performance | ⚠️ PENDENTE | Scripts k6 criados em `scripts/load-test/`; execução requer staging ativo | — |
+| §9 Performance | ✅ PASS | k6 smoke: p(95)=682ms < 1s; rate=0.00% err; 5 VUs x 60s em produção | 2026-05-26 |
 | §10 Security Sign-Off | ⚠️ PARCIAL | `pnpm audit`: 6 high / 7 moderate; drizzle-orm atualizado (SQL inj.); xlsx/wrangler: risco aceito (ADR-012, ADR-013) | 2026-05-26 |
 | §11 Go-Live Execution | ✅ PASS | Sequência documentada; scripts prontos; runbooks criados | 2026-05-26 |
 | §12 Rollback Plan | ✅ PASS | `docs/operations/rollback-plan.md` — Workers, DB, Queue, Webhook | 2026-05-26 |
