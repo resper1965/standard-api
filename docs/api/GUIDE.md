@@ -273,7 +273,7 @@ curl -X POST \
        "controlRequirement": "Backup data must be stored at rest with AES-256 encryption.",
        "evidenceDescription": "Our AWS S3 buckets use SSE-S3 with AES-256 by default."
      }' \
-     https://standard-api-gateway-production.ness.workers.dev/api/v1/gap/evaluate-evidence
+     https://standard-api.bekaa.eu/api/v1/gap/evaluate-evidence
 ```
 
 **Response:**
@@ -420,7 +420,7 @@ All errors follow a consistent format:
 # 2. Get the SCF version
 curl -H "Authorization: Bearer standard_live_YOUR_KEY" \
      -H "x-standard-tenant-id: YOUR_ORG_ID" \
-     https://standard-api-gateway-production.ness.workers.dev/api/v1/scf/versions/latest
+     https://standard-api.bekaa.eu/api/v1/scf/versions/latest
 
 # 3. Create an assessment
 curl -X POST \
@@ -428,14 +428,14 @@ curl -X POST \
      -H "x-standard-tenant-id: YOUR_ORG_ID" \
      -H "Content-Type: application/json" \
      -d '{"name": "ISO 27001 Assessment Q2 2026"}' \
-     https://standard-api-gateway-production.ness.workers.dev/api/v1/assessments
+     https://standard-api.bekaa.eu/api/v1/assessments
 
 # 4. Upload evidence
 curl -X POST \
      -H "Authorization: Bearer standard_live_YOUR_KEY" \
      -H "x-standard-tenant-id: YOUR_ORG_ID" \
      -F "file=@security-policy.pdf" \
-     https://standard-api-gateway-production.ness.workers.dev/api/v1/assessments/ASSESSMENT_ID/documents
+     https://standard-api.bekaa.eu/api/v1/assessments/ASSESSMENT_ID/documents
 ```
 
 ---

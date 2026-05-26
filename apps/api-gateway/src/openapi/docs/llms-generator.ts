@@ -26,7 +26,7 @@ export function extractExample(schema: any): any {
 
 let cachedLlmsFullTxt: string | null = null;
 
-export function generateLlmsFullTxt(spec: any, baseUrl: string = "https://standard-api-gateway-production.ness.workers.dev"): string {
+export function generateLlmsFullTxt(spec: any, baseUrl: string = "https://standard-api.bekaa.eu"): string {
   if (cachedLlmsFullTxt) {
     return cachedLlmsFullTxt;
   }

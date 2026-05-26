@@ -42,7 +42,7 @@ export function generateOpenApiSpec() {
     },
     servers: [
       { url: "/", description: "Current environment" },
-      { url: "https://standard-api-gateway-production.ness.workers.dev", description: "Production" }
+      { url: "https://standard-api.bekaa.eu", description: "Production" }
     ],
     security: [{ BearerApiKey: [] }]
   });
