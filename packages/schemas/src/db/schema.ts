@@ -205,13 +205,23 @@ export const memberships = pgTable("memberships", {
   id: uuid("id").defaultRandom().primaryKey(),
   tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
   organizationId: uuid("organization_id").notNull().references(() => organizations.id),
-  userId: uuid("user_id").notNull().references(() => users.id),
-  roleId: uuid("role_id").notNull().references(() => roles.id),
+  /** Nullable — user may not exist yet (invite-first flow) */
+  userId: uuid("user_id").references(() => users.id),
+  /** Nullable — role FK; prefer inline `role` text field for invite-first */
+  roleId: uuid("role_id").references(() => roles.id),
+  /** Invite target email — set before user accepts */
+  email: text("email"),
+  displayName: text("display_name"),
+  /** Text role: 'member' | 'admin' | 'owner' — used for invite-first memberships */
+  role: text("role").default("member"),
   status: text("status").default("active").notNull(),
+  invitedAt: timestamp("invited_at", { withTimezone: true }),
+  acceptedAt: timestamp("accepted_at", { withTimezone: true }),
   ...timestamps()
 }, (table) => [
   index("memberships_tenant_org_idx").on(table.tenantId, table.organizationId),
-  uniqueIndex("memberships_org_user_role_uidx").on(table.organizationId, table.userId, table.roleId)
+  index("memberships_org_user_idx").on(table.organizationId, table.userId),
+  index("memberships_org_email_idx").on(table.organizationId, table.email),
 ]);
 
 export const apiKeys = pgTable("api_keys", {
