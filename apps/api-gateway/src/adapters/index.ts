@@ -42,6 +42,7 @@ import { createDrizzlePoamRepositories } from "./poam.repository";
 import { createDrizzleReportRepositories } from "./reporting.repository";
 import { createMockApiKeysRepository, createDrizzleApiKeysRepository } from "./api-keys.repository";
 import { createInMemoryWebhookRepository, createDrizzleWebhookRepository } from "./webhook.repository";
+import { createDrizzleMembershipRepository, createMockMembershipRepository } from "./membership.repository";
 import { resolveTenantContext } from "./tenant-mapping";
 
 /**
@@ -120,6 +121,7 @@ export const createMockRepositories = (): AppDependencies => {
   return {
     tenants,
     organizations,
+    members: createMockMembershipRepository(),
     apiKeys: createMockApiKeysRepository(),
     assessments: createAssessmentRepository(),
     approvals: createApprovalRepository(),
@@ -167,6 +169,7 @@ export const createDrizzleRepositories = (db: DbClient, env?: Env): AppDependenc
   return {
     tenants: createDrizzleTenantRepository(db),
     organizations: createDrizzleOrganizationRepository(db),
+    members: createDrizzleMembershipRepository(db),
     apiKeys: createDrizzleApiKeysRepository(db),
     assessments: createDrizzleAssessmentRepository(db),
     approvals: createDrizzleApprovalRepository(db),
