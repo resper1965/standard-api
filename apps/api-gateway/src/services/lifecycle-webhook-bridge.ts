@@ -42,6 +42,7 @@ export class LifecycleWebhookBridge {
     const timestamp = new Date().toISOString();
 
     const payload: WebhookDeliveryPayload = {
+      schema_version: "1.0",
       event_id: eventId,
       event_type: event.event_type,
       timestamp,

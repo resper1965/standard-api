@@ -5,7 +5,7 @@
 
 ## Status Geral
 
-**`ready_for_security_review`**
+**`ready_for_go_live_approval`**
 
 | Gate | Status | Evidência | Data |
 |------|--------|-----------|------|
@@ -21,10 +21,14 @@
 | P0 Data Retention | ✅ PASS | Cron job implementado; política legal definida | 2026-05-26 |
 | P0 Legal / Privacy | ⚠️ DRAFT | Privacy Policy, ToS, DPA criados — requerem revisão jurídica | 2026-05-26 |
 | §5 External API Readiness | ✅ PASS | API Keys CRUD (5 endpoints) por org | 2026-05-26 |
-| §6 Webhook Readiness | ⚠️ PARCIAL | Webhook endpoints + HMAC; DLQ consumer implementado | 2026-05-25 |
+| §6 Webhook Readiness | ✅ PASS | HMAC, delivery logs, secret rotation, test endpoint, schema_version, event versioning | 2026-05-26 |
 | §7 Data Governance | ✅ PASS | Retenção por tipo; export LGPD (GET /me/data-export); DELETE /me/account | 2026-05-26 |
+| §8 Cost Governance | ✅ PASS | Quotas de rate limiting ativas; orçamentos documentados; `docs/operations/cost-governance.md` | 2026-05-26 |
 | §9 Performance | ⚠️ PENDENTE | Scripts k6 criados em `scripts/load-test/`; execução requer staging ativo | — |
 | §10 Security Sign-Off | ⚠️ PARCIAL | `pnpm audit`: 6 high / 7 moderate; drizzle-orm atualizado (SQL inj.); xlsx/wrangler: risco aceito (ADR-012, ADR-013) | 2026-05-26 |
+| §11 Go-Live Execution | ✅ PASS | Sequência documentada; scripts prontos; runbooks criados | 2026-05-26 |
+| §12 Rollback Plan | ✅ PASS | `docs/operations/rollback-plan.md` — Workers, DB, Queue, Webhook | 2026-05-26 |
+| §13 First 24h Monitoring | ✅ PASS | `docs/operations/first-24h-monitoring.md` — runbook, dashboards, alertas | 2026-05-26 |
 
 ---
 
@@ -111,16 +115,21 @@
 - [ ] `pnpm typecheck` com erros
 - [ ] `pnpm test` com falhas
 
-**Status atual dos No-Go:** 0 de 9 itens em falha — **PASS** ✅ (60/60 testes integration, typecheck clean)
+**Status atual dos No-Go:** 0 de 9 itens em falha — **PASS** ✅ (73/73 testes integration, typecheck clean)
 
 ---
 
 ## Próximos Passos para `approved_for_production`
 
-1. `[ ]` Revisão jurídica de `docs/legal/` — legal sign-off
-2. `[ ]` k6 load test com P95 < 500ms — performance sign-off (`scripts/load-test/api-gateway.js` pronto)
+1. `[ ]` Revisão jurídica de `docs/legal/` — legal sign-off (**requer humano**)
+2. `[ ]` k6 load test com P95 < 500ms — performance sign-off (`scripts/load-test/api-gateway.js` pronto; aguardando k6 instalado)
 3. `[x]` `pnpm audit` executado — ver ADR-012, ADR-013 para riscos aceitos; drizzle-orm atualizado
-4. `[ ]` Smoke test E2E cross-tenant — isolation sign-off
-5. `[ ]` Verificar Cloudflare Access no console CF — admin protection
-6. `[ ]` Onboarding do primeiro tenant real — 4.6
+4. `[ ]` Smoke test E2E cross-tenant — isolation sign-off  
+5. `[ ]` Verificar Cloudflare Access no console CF — admin protection (**requer CF dashboard**)
+6. `[ ]` Onboarding do primeiro tenant real — script pronto: `scripts/onboard-tenant.mjs`
 7. `[ ]` `pnpm install` fora de OneDrive para aplicar wrangler ^3.114.17
+8. `[x]` §6 Webhook — secret rotation + test delivery + schema_version implementados
+9. `[x]` §8 Cost Governance — documentado em `docs/operations/cost-governance.md`
+10. `[x]` §12 Rollback Plan — `docs/operations/rollback-plan.md`
+11. `[x]` §13 First 24h Monitoring — `docs/operations/first-24h-monitoring.md`
+12. `[x]` Tenant onboarding script — `scripts/onboard-tenant.mjs`

@@ -61,6 +61,7 @@ export async function dispatchWebhookEvent(
   const timestamp = new Date().toISOString();
 
   const payload: WebhookDeliveryPayload = {
+    schema_version: "1.0",
     event_id,
     event_type,
     timestamp,

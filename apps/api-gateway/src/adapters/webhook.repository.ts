@@ -133,6 +133,14 @@ export const createDrizzleWebhookRepository = (db: DbClient): WebhookRepositoryA
       .limit(limit);
     return rows.map(toDeliveryLog);
   },
+
+  async rotateSecret(id, tenant_id, newSecretHash, newSecretMasked) {
+    const [row] = await db.update(webhookEndpoints)
+      .set({ signingSecretHash: newSecretHash, signingSecretMasked: newSecretMasked, updatedAt: new Date() })
+      .where(and(eq(webhookEndpoints.id, id), eq(webhookEndpoints.tenantId, tenant_id)))
+      .returning();
+    return row ? toEndpointRecord(row) : null;
+  },
 });
 
 // ── In-Memory Implementation ────────────────────────────────────
@@ -203,6 +211,19 @@ export const createInMemoryWebhookRepository = (): WebhookRepositoryAdapter => {
         .filter(d => d.endpoint_id === endpoint_id)
         .sort((a, b) => b.created_at.localeCompare(a.created_at))
         .slice(0, limit);
+    },
+
+    async rotateSecret(id, tenant_id, newSecretHash, newSecretMasked) {
+      const ep = endpoints.get(id);
+      if (!ep || ep.tenant_id !== tenant_id) return null;
+      const updated = {
+        ...ep,
+        signing_secret_hash: newSecretHash,
+        signing_secret_masked: newSecretMasked,
+        updated_at: new Date().toISOString()
+      };
+      endpoints.set(id, updated);
+      return updated;
     },
   };
 };
