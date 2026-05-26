@@ -13,7 +13,7 @@
     "@standard/schemas": "workspace:*",
     "@standard/document-ingestion": "workspace:*",
     "@neondatabase/serverless": "^0.9.3",
-    "drizzle-orm": "^0.30.10"
+    "drizzle-orm": "^0.45.2"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260426.1",
