@@ -5,7 +5,7 @@
  * Scoped by tenant_id on every operation.
  */
 import { sql } from "drizzle-orm";
-import type { DrizzleDb } from "./db";
+import type { DbClient } from "./db";
 import { ApiError } from "../errors/api-error";
 
 export type MembershipRecord = {
@@ -44,7 +44,7 @@ export type MembershipRepositoryAdapter = {
   remove(membershipId: string, tenantId: string): Promise<boolean>;
 };
 
-export function createDrizzleMembershipRepository(db: DrizzleDb): MembershipRepositoryAdapter {
+export function createDrizzleMembershipRepository(db: DbClient): MembershipRepositoryAdapter {
   return {
     async create(input): Promise<MembershipRecord> {
       const rows = await db.execute(

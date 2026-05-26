@@ -4,7 +4,7 @@ import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";
 import { json, parseJson, routeParam } from "../http";
 import { assertRbac } from "../middleware/rbac.middleware";
-import { memberships } from "./members.routes";
+
 
 const updateOrgInput = z.object({
   name: z.string().min(1).optional(),
@@ -99,19 +99,17 @@ export const organizationsMgmtRoutes: RouteDefinition[] = [
       const org = await context.deps.organizations.get(orgId, context.tenantId!);
       if (!org) throw new ApiError("NOT_FOUND", "Organization not found.", 404);
 
-      const body = context.validatedBody as z.infer<typeof InviteMemberRequestSchema>;
-      const now = new Date().toISOString();
+      const body = context.validatedBody as import("@standard/schemas").InviteMemberRequest;
 
-      // Check for duplicate invite in memberships store
-      const listByOrg = [...memberships.values()].filter(
-        (m) => m.organization_id === orgId && m.tenant_id === context.tenantId! && m.status !== "removed"
-      );
-      const existing = listByOrg.find((m) => m.email === body.email);
-      if (existing) {
+      // Check duplicate via Drizzle
+      const existing = await context.deps.members.listByOrganization(orgId, context.tenantId!);
+      if (existing.some((m) => m.email === body.email)) {
         throw new ApiError("CONFLICT", `Member with email ${body.email} already exists.`, 409);
       }
 
-      const membership = {
+
+      const now = new Date().toISOString();
+      const membership = await context.deps.members.create({
         membership_id: crypto.randomUUID(),
         tenant_id: context.tenantId!,
         organization_id: orgId,
@@ -119,14 +117,10 @@ export const organizationsMgmtRoutes: RouteDefinition[] = [
         email: body.email,
         display_name: body.display_name ?? null,
         role: body.role,
-        status: "invited" as const,
+        status: "invited",
         invited_at: now,
-        accepted_at: null,
-        created_at: now,
-        updated_at: now,
-      };
+      });
 
-      memberships.set(membership.membership_id, membership);
       await context.deps.audit.record("member.invited", {
         tenant_id: context.tenantId,
         organization_id: orgId,

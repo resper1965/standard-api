@@ -218,8 +218,6 @@ export type AppDependencies = {
   resolveTenantContext?: (betterAuthOrgId: string) => Promise<ResolvedTenantContext | null>;
   /** Bans/flags a user for deletion via Better Auth admin API (optional — delegates to cachedAuth) */
   banUser?: (userId: string, reason?: string) => Promise<void>;
-  /** Drizzle-backed membership repository (replaces in-memory Map in members.routes.ts) */
-  members: import("./adapters/membership.repository").MembershipRepositoryAdapter;
 };
 
 export type RequestContext = {
