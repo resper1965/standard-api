@@ -19,6 +19,7 @@ export const lifecycleRoutes: RouteDefinition[] = [
     path: "/api/v1/assessments/:assessmentId/transitions",
     protected: true,
     requireActor: true,
+    permissions: ["assessment:write"],
     handler: async ({ request, deps, params, tenantId, actorId, traceId }) => {
       const body = await parseJson(request, TransitionRequestSchema);
       const tenantAssessmentsDb = deps.assessments.withTenant(tenantId!);

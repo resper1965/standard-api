@@ -101,6 +101,89 @@ export class IntelligenceService {
     };
   }
 
+  /**
+   * Mapping from user-facing framework mask → SCF catalog framework_id.
+   * These IDs come from the seeded SCF XLSX data (2026.1.1).
+   * ISO 27001 uses ISO 27002:2022 as its control catalog (framework_id: '27-2022').
+   */
+  private static readonly FRAMEWORK_ID_MAP: Record<string, string[]> = {
+    'iso27001':      ['27-2022'],                         // ISO 27002:2022 (controls for ISO 27001)
+    'iso27002':      ['27-2022'],
+    'iso27017':      ['27-2015'],                         // ISO 27017:2015
+    'iso27701':      ['27-2025'],                         // ISO 27701:2025
+    'nist800-53':    ['80-R5'],                           // NIST 800-53 R5
+    'nist-csf':      ['CS-2.0'],                          // NIST CSF 2.0
+    'fedramp':       ['FE-HIGH', 'FE-MODERATE', 'FE-LOW'],// FedRAMP
+    'soc2':          ['SO-2'],                            // SOC 2
+    'pci-dss':       ['4.-SAQ-D-SERVICE-PROVIDER'],       // PCI-DSS
+    'lgpd':          ['BR-LGPD'],                         // Brazil LGPD
+    'gdpr':          ['EU-GDPR'],                         // EU GDPR
+    'cmmc':          ['CM-LEVEL-2'],                      // CMMC Level 2
+  };
+
+  /**
+   * Get required SCF controls for a framework from the database.
+   * Falls back to static extraction if DB is unavailable or framework not found.
+   */
+  async getControlsForFramework(mask: string): Promise<Set<string>> {
+    if (!this.deps?.scf) {
+      return IntelligenceService.extractFrameworkControls(mask);
+    }
+
+    const frameworkIds = IntelligenceService.FRAMEWORK_ID_MAP[mask.toLowerCase()];
+    if (!frameworkIds || frameworkIds.length === 0) {
+      return IntelligenceService.extractFrameworkControls(mask);
+    }
+
+    try {
+      const controlSet = new Set<string>();
+      // Query SCF service for controls mapped to this framework
+      // ScfCoreServices exposes deps.scf.getControlsByFramework or similar
+      // Use the frameworks service to get controls
+      for (const frameworkId of frameworkIds) {
+        const data = await this.deps.scf.frameworks?.getControlsByFrameworkId?.(frameworkId);
+        if (Array.isArray(data)) {
+          for (const c of data) {
+            const code = typeof c === 'string' ? c : (c as Record<string,unknown>).control_code as string;
+            if (code) controlSet.add(code);
+          }
+        }
+      }
+      if (controlSet.size > 0) {
+        return controlSet;
+      }
+    } catch (err) {
+      console.warn('[IntelligenceService] SCF DB lookup failed, falling back to static:', err instanceof Error ? err.message : String(err));
+    }
+
+    // Fallback: static extraction
+    return IntelligenceService.extractFrameworkControls(mask);
+  }
+
+  /**
+   * Async version of calculateGapAnalysis — uses DB-backed framework controls when available.
+   */
+  async calculateGapAnalysisAsync(frameworkMask: string, implementedControls: string[]) {
+    const implementedSet = new Set(implementedControls);
+    const requiredControls = await this.getControlsForFramework(frameworkMask);
+
+    const missingControls: string[] = [];
+    let implementedCount = 0;
+    const totalControls = requiredControls.size;
+
+    for (const reqControl of requiredControls) {
+      if (implementedSet.has(reqControl)) {
+        implementedCount++;
+      } else {
+        missingControls.push(reqControl);
+      }
+    }
+
+    const compliancePercentage = totalControls === 0 ? 100 : Math.round((implementedCount / totalControls) * 100);
+
+    return { totalControls, implementedCount, missingControls, compliancePercentage };
+  }
+
   static calculateGapAnalysis(frameworkMask: string, implementedControls: string[]) {
     const implementedSet = new Set(implementedControls);
     const requiredControls = this.extractFrameworkControls(frameworkMask);

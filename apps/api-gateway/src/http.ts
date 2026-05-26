@@ -185,6 +185,7 @@ export type AuditRepositoryAdapter = {
 export type AppDependencies = {
   tenants: TenantRepositoryAdapter;
   organizations: OrganizationRepositoryAdapter;
+  members: import("./adapters/membership.repository").MembershipRepositoryAdapter;
   apiKeys: ApiKeysRepositoryAdapter;
   assessments: AssessmentRepositoryAdapter;
   approvals: ApprovalRepositoryAdapter;
@@ -208,13 +209,17 @@ export type AppDependencies = {
   /** Cloudflare Queue for async agent run processing (optional) */
   AGENT_RUN_QUEUE?: Queue | undefined;
   /** Cloudflare Workflow engine for durable, stateful parallel council agent runs (optional) */
-  COUNCIL_WORKFLOW?: any | undefined;
+  COUNCIL_WORKFLOW?: Workflow | undefined;
   /** Cloudflare Queue for SOC incident triage background processing (optional) */
   SOC_TRIAGE_QUEUE?: Queue | undefined;
   /** Webhook endpoint management (optional — requires storage adapter) */
   webhooks?: WebhookRepositoryAdapter | undefined;
   /** Resolves Better Auth org ID → Standard domain UUIDs (JIT provisioning) */
   resolveTenantContext?: (betterAuthOrgId: string) => Promise<ResolvedTenantContext | null>;
+  /** Bans/flags a user for deletion via Better Auth admin API (optional — delegates to cachedAuth) */
+  banUser?: (userId: string, reason?: string) => Promise<void>;
+  /** Drizzle-backed membership repository (replaces in-memory Map in members.routes.ts) */
+  members: import("./adapters/membership.repository").MembershipRepositoryAdapter;
 };
 
 export type RequestContext = {
