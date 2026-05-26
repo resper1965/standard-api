@@ -10,7 +10,7 @@ export const approvalsRoutes: RouteDefinition[] = [
     path: "/api/v1/assessments/:assessmentId/approvals",
     protected: true,
     requireActor: true,
-    handler: async ({ request, deps, params, tenantId, actorId, traceId, auth }) => {
+    handler: async ({ request, deps, params, tenantId, actorId, traceId, session }) => {
       const body = await parseJson(request, CreateApprovalRequestSchema);
       const assessmentId = routeParam(params, "assessmentId");
 
@@ -27,8 +27,20 @@ export const approvalsRoutes: RouteDefinition[] = [
         report: "report:approve"
       } as const;
       const requiredPermission = permissionByGate[body.gate];
-      if (!auth?.permissions.includes(requiredPermission)) {
-        throw new ApiError("FORBIDDEN", "Approval requires explicit approve permission.", 403, [{ required_permission: requiredPermission }]);
+      // Use Better Auth session role for RBAC check
+      const sessionRole = (session?.user?.role as string | undefined) ?? 'viewer';
+      // Map gate-specific permissions to role capability
+      const gateRoleMap: Record<string, string[]> = {
+        'soa:approve': ['owner', 'admin', 'platform_admin'],
+        'gap:approve': ['owner', 'admin', 'platform_admin'],
+        'maturity:approve': ['owner', 'admin', 'platform_admin'],
+        'poam:approve': ['owner', 'admin', 'platform_admin'],
+        'report:approve': ['owner', 'admin', 'platform_admin'],
+      };
+      const allowedRoles = gateRoleMap[requiredPermission] ?? [];
+      const canApprove = allowedRoles.includes(sessionRole);
+      if (!canApprove) {
+        throw new ApiError("FORBIDDEN", "Approval requires explicit approve permission for this gate.", 403, [{ required_permission: requiredPermission, your_role: sessionRole }]);
       }
 
       const tenantAssessmentsDb = deps.assessments.withTenant(tenantId!);
