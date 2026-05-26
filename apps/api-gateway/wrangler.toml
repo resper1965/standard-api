@@ -11,6 +11,8 @@ AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT
 # Better Auth — SECRET must be set via `wrangler secret put BETTER_AUTH_SECRET` for production
 # For local dev, this placeholder is overridden by .dev.vars
 BETTER_AUTH_URL = "https://standard-api.bekaa.eu"
+# Comma-separated allowed CORS origins — override via wrangler secret or env var
+ALLOWED_ORIGINS = "http://localhost:5173,http://localhost:3000"
 
 [[r2_buckets]]
 binding = "STANDARD_DOCUMENTS_BUCKET"
@@ -75,7 +77,7 @@ index_name = "standard-kb-dev"
 # ─── Production environment ────────────────────────────────────
 [env.production]
 workers_dev = true
-vars = { STANDARD_ENV = "production", BETTER_AUTH_URL = "https://standard-api.bekaa.eu", LOG_LEVEL = "info", AI_GATEWAY_NAME = "standard-prod", AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/standard-prod" }
+vars = { STANDARD_ENV = "production", BETTER_AUTH_URL = "https://standard-api.bekaa.eu", LOG_LEVEL = "info", AI_GATEWAY_NAME = "standard-prod", AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/standard-prod", ALLOWED_ORIGINS = "https://standard.bekaa.eu,https://standard-web.pages.dev,https://production.standard-web.pages.dev" }
 routes = [{ pattern = "standard-api.bekaa.eu", custom_domain = true }]
 
 [[env.production.r2_buckets]]

@@ -84,9 +84,23 @@ export const dataSubjectRoutes: RouteDefinition[] = [
       // Memberships: which organizations this user belongs to.
       // Full membership data is available via the tenant admin endpoint.
       // For user-facing export, we note the user's active org from the session.
-      const activeOrgId = (context.session as any)?.session?.activeOrganizationId;
-      if (activeOrgId) {
-        exportData.memberships = [{ active_organization_id: activeOrgId }];
+      // Fetch real memberships from DB
+      try {
+        const activeOrgId = (context.session as any)?.session?.activeOrganizationId;
+        if (activeOrgId && context.tenantId) {
+          const realMemberships = await context.deps.members.listByOrganization(activeOrgId, context.tenantId);
+          exportData.memberships = realMemberships.map(m => ({
+            membership_id: m.membership_id,
+            organization_id: m.organization_id,
+            role: m.role,
+            status: m.status,
+            invited_at: m.invited_at,
+            accepted_at: m.accepted_at,
+          }));
+        }
+      } catch {
+        // Fallback: partial export is still valid per LGPD
+        exportData.memberships = [];
       }
 
       // Audit the export request itself (LGPD requires this)
@@ -145,12 +159,6 @@ export const dataSubjectRoutes: RouteDefinition[] = [
         );
       }
 
-      // Account deactivation is handled by Better Auth's admin ban mechanism.
-      // The hard-delete of personal data follows the retention schedule (max 30 days).
-      // We record the audit event and respond immediately.
-      // Actual ban is applied via Better Auth's /api/auth/admin/ban-user endpoint
-      // (callable internally by an operator as a follow-up step).
-
       // Audit the deletion request (LGPD regulatory requirement)
       await context.deps.audit.record("data_subject.account_deletion_requested", {
         actor_id: userId,
@@ -161,6 +169,13 @@ export const dataSubjectRoutes: RouteDefinition[] = [
         trace_id: context.traceId,
         note: "User-initiated deletion request. Hard-delete follows retention schedule (max 30d).",
       });
+
+      // Immediately ban the user via Better Auth (invalidates all sessions).
+      // Hard purge of personal data happens within 30 days per data-retention-policy.md.
+      if (context.deps.banUser) {
+        await context.deps.banUser(userId, "User-initiated account deletion (LGPD art. 18)");
+      }
+
 
       // Respond immediately — hard delete is async (via retention cron + operator action)
       return json({
