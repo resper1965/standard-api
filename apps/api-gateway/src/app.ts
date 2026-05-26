@@ -241,6 +241,37 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
             traceId
           });
           if (authCtx) context.auth = authCtx;
+          // Populate a minimal mock session so session.user.role RBAC checks work in dev/test.
+          // Priority: x-standard-mock-role header > role from Bearer header > "admin" default.
+          // We map security-package roles to auth-package roles (approval gateRoleMap uses owner/admin/member).
+          const overrideRole = request.headers.get("x-standard-mock-role");
+          const authRoles = authCtx?.roles ?? [];
+          const firstAuthRole = authRoles[0] as string | undefined;
+          const securityToSessionRole: Record<string, string> = {
+            platform_admin: "platform_admin",
+            tenant_admin: "admin",
+            organization_admin: "admin",
+            assessment_owner: "owner",
+            assessor: "member",
+            reviewer: "viewer",
+            approver: "viewer",
+            auditor_readonly: "viewer",
+            integration_service: "viewer",
+            support_readonly: "viewer",
+            system: "platform_admin"
+          };
+          const mockRole = overrideRole
+            ?? (firstAuthRole ? (securityToSessionRole[firstAuthRole] ?? firstAuthRole) : "admin");
+          context.session = {
+            user: {
+              id: legacyActor,
+              email: `${legacyActor}@mock.test`,
+              name: "Mock Test Actor",
+              role: mockRole,
+              platformAdmin: authRoles.includes("platform_admin" as any) || mockRole === "platform_admin"
+            },
+            session: { id: `mock-session-${legacyActor}` }
+          };
         }
         if (authRequired && !context.actorId) {
           throw new ApiError("UNAUTHORIZED", "Authentication is required for this operation.", 401);

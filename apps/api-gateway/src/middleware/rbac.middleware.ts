@@ -65,22 +65,23 @@ export const assertRbac = async (context: RequestContext, requiredPermissions: P
   if (!context.auth && !context.session) {
     allowed = false;
     reason = "missing_auth_context";
-  } else if (context.session) {
-    // Better Auth session — use role-based permission check
-    const role = (context.session.user?.role as StandardRole) || "viewer";
+  } else if (context.auth) {
+    // Legacy MockAuthProvider or API Key auth — check permissions directly from auth context.
+    // This path also applies in dev/test mode where context.auth and context.session coexist.
+    const grantedPermissions = context.auth.permissions ?? [];
     for (const reqPerm of requiredPermissions) {
-      const [resource, action] = reqPerm.split(":") as [StandardResource, string];
-      if (!roleHasPermission(role, resource, action)) {
+      if (!grantedPermissions.includes(reqPerm)) {
         allowed = false;
         reason = "permission_missing";
         break;
       }
     }
-  } else if (context.auth) {
-    // Legacy MockAuthProvider — check permissions directly from auth context
-    const grantedPermissions = context.auth.permissions ?? [];
+  } else if (context.session) {
+    // Better Auth session (production) — use role-based permission check
+    const role = (context.session.user?.role as StandardRole) || "viewer";
     for (const reqPerm of requiredPermissions) {
-      if (!grantedPermissions.includes(reqPerm)) {
+      const [resource, action] = reqPerm.split(":") as [StandardResource, string];
+      if (!roleHasPermission(role, resource, action)) {
         allowed = false;
         reason = "permission_missing";
         break;
