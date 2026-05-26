@@ -4,6 +4,12 @@
  *
  * Better Auth sessions are resolved from cookies (browser) or API keys (programmatic).
  * The active organization in the session maps to the Standard tenant_id.
+ *
+ * Type safety contract:
+ * - Session user fields are read via `StandardUser` (packages/auth/src/types.ts)
+ * - Session fields are read via `StandardSession` (packages/auth/src/types.ts)
+ * - No `as any`, `as StandardUser`, or `as StandardSession` casts in this file.
+ *   The single cast boundary is in resolveSessionFields() below.
  */
 import type { StandardAuth, StandardUser, StandardSession } from "@standard/auth";
 import { StructuredLogger } from "@standard/observability";
@@ -11,6 +17,24 @@ import { ApiError } from "../errors/api-error";
 import type { RequestContext } from "../http";
 
 const logger = new StructuredLogger();
+
+/**
+ * Typed session field extraction.
+ *
+ * Better Auth's `getSession()` returns an opaque inferred type that does not expose
+ * plugin-injected fields (role, activeOrganizationId, platformAdmin) in the base TS type.
+ * We perform a single cast here at the boundary — all callers receive typed objects.
+ */
+function resolveSessionFields(rawSession: { user: unknown; session: unknown }): {
+  user: StandardUser;
+  session: StandardSession;
+} {
+  // Single cast boundary: Better Auth returns plugin-augmented objects at runtime.
+  // StandardUser and StandardSession in @standard/auth/types include all plugin fields.
+  const user = rawSession.user as StandardUser;
+  const session = rawSession.session as StandardSession;
+  return { user, session };
+}
 
 /**
  * Resolve auth context from Better Auth session.
@@ -29,7 +53,7 @@ export const resolveAuthContext = async (
     // Machine-to-Machine API Key
     if (authHeader && authHeader.startsWith("Bearer standard_live_")) {
       const token = authHeader.replace("Bearer ", "");
-      
+
       // Hash the token using Web Crypto API
       const encoder = new TextEncoder();
       const data = encoder.encode(token);
@@ -42,10 +66,10 @@ export const resolveAuthContext = async (
         context.actorId = `m2m:${apiKeyRecord.id}`;
         context.tenantId = apiKeyRecord.tenantId;
         context.organizationId = apiKeyRecord.organizationId;
-        
+
         // Store scopes for downstream scope enforcement middleware
         context.m2mScopes = apiKeyRecord.scopes;
-        
+
         // Asynchronous update of last used time
         context.deps.apiKeys.markUsed(apiKeyRecord.id).catch((e) => {
           console.error("Failed to mark API key used", e);
@@ -62,20 +86,20 @@ export const resolveAuthContext = async (
           organization_id: apiKeyRecord.organizationId,
           metadata: { actor_id: `m2m:${apiKeyRecord.id}`, key_id: apiKeyRecord.id }
         });
-        
+
         return;
       }
     }
 
     // Interactive Session (Better Auth cookie-based session)
-    const session = await auth.api.getSession({
+    const rawSession = await auth.api.getSession({
       headers: context.request.headers,
     });
 
-    if (session?.user) {
+    if (rawSession?.user) {
       // Enforce JWT Blacklisting from Edge Cache (Revocation Check)
       if (context.env?.STANDARD_CACHE) {
-        const isRevoked = await context.env.STANDARD_CACHE.get(`revocations:user:${session.user.id}`);
+        const isRevoked = await context.env.STANDARD_CACHE.get(`revocations:user:${rawSession.user.id}`);
         if (isRevoked) {
           logger.log({
             level: "warn",
@@ -85,30 +109,35 @@ export const resolveAuthContext = async (
             environment: "production",
             trace_id: context.traceId,
             tenant_id: context.tenantId,
-            metadata: { actor_id: session.user.id }
+            metadata: { actor_id: rawSession.user.id }
           });
           throw new ApiError("UNAUTHORIZED", "Token has been revoked.", 401);
         }
       }
 
-      context.actorId = session.user.id;
-      
-      // Restore context.session so RBAC and Audit middlewares remain healthy
+      // Extract typed fields at the single cast boundary
+      const { user, session } = resolveSessionFields(rawSession);
+
+      context.actorId = user.id;
+
+      // Restore context.session so RBAC and Audit middlewares remain healthy.
+      // All fields are typed — no `as any` needed here.
       context.session = {
         user: {
-          id: session.user.id,
-          email: session.user.email,
-          name: session.user.name,
-          role: (session.user as StandardUser).role || "viewer"
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role ?? "viewer",
+          platformAdmin: user.platformAdmin ?? false,
         },
         session: {
-          id: session.session.id,
-          activeOrganizationId: (session.session as StandardSession).activeOrganizationId
+          id: session.id,
+          activeOrganizationId: session.activeOrganizationId,
         }
       };
-      
+
       // Better Auth organization plugin stores active org in session
-      const activeOrgId = (session.session as StandardSession).activeOrganizationId;
+      const activeOrgId = session.activeOrganizationId;
       if (activeOrgId) {
         context.tenantId = activeOrgId;
         context.organizationId = activeOrgId;
@@ -123,10 +152,11 @@ export const resolveAuthContext = async (
         trace_id: context.traceId,
         tenant_id: context.tenantId,
         metadata: {
-          actor_id: session.user.id,
-          session_id: session.session.id,
+          actor_id: user.id,
+          session_id: session.id,
           active_org_id: activeOrgId ?? null,
-          role: (session.user as StandardUser).role || "viewer"
+          role: user.role ?? "viewer",
+          platform_admin: user.platformAdmin ?? false,
         }
       });
     }
@@ -147,12 +177,12 @@ export const resolveAuthContext = async (
 
   if (requireAuth && !context.actorId) {
     const ip = context.request.headers.get("cf-connecting-ip") ?? context.request.headers.get("x-forwarded-for") ?? "unknown_ip";
-    
+
     if (context.deps.SOC_TRIAGE_QUEUE) {
       // Best-effort context for the Incident Triager
       const userAgent = context.request.headers.get("user-agent") ?? "unknown";
       const authHeaderSize = context.request.headers.get("Authorization")?.length ?? 0;
-      
+
       const sendOp = context.deps.SOC_TRIAGE_QUEUE.send({
         job_id: crypto.randomUUID(),
         tenantId: "system",

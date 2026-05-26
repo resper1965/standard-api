@@ -1,61 +1,10 @@
 /**
  * API error codes — canonical list lives in @standard/schemas.
  * This file re-exports for backwards compatibility within the gateway.
+ *
+ * Do NOT duplicate the code list here. The single source of truth is:
+ *   packages/schemas/src/errors.ts → ApiErrorCodeSchema (z.enum)
+ *
+ * Adding new error codes: edit packages/schemas/src/errors.ts only.
  */
 export { ApiErrorCode } from "@standard/schemas";
-
-// Re-export the full array for runtime use (e.g. validation)
-export const apiErrorCodes = [
-  "VALIDATION_ERROR",
-  "UNAUTHORIZED",
-  "FORBIDDEN",
-  "NOT_FOUND",
-  "CONFLICT",
-  "NOT_IMPLEMENTED",
-  "INTERNAL_ERROR",
-  "RATE_LIMIT_EXCEEDED",
-  "INSUFFICIENT_SCOPE",
-  "TENANT_CONTEXT_REQUIRED",
-  "TENANT_MISMATCH",
-  "ACTOR_REQUIRED",
-  "QUEUE_POISONED",
-  "UNSUPPORTED_MEDIA_TYPE",
-  "FILE_TOO_LARGE",
-  "EMAIL_SERVICE_UNAVAILABLE",
-  "EMAIL_SEND_FAILED",
-  "INVALID_STATE_TRANSITION",
-  "APPROVAL_REQUIRED",
-  "ARTIFACT_IMMUTABLE",
-  "APPROVAL_EVENT_REQUIRED",
-  "NON_APPLICABILITY_RATIONALE_REQUIRED",
-  "SCOPE_RATIONALE_REQUIRED",
-  "SOA_REVIEW_BLOCKED",
-  "SOA_VERSION_IMMUTABLE",
-  "APPROVED_SOA_REQUIRED",
-  "EVIDENCE_FINDING_NOT_FOUND",
-  "GAP_ANALYSIS_NOT_FOUND",
-  "GAP_FINDING_NOT_FOUND",
-  "GAP_ANALYSIS_IMMUTABLE",
-  "GAP_RATIONALE_REQUIRED",
-  "GAP_REVIEW_BLOCKED",
-  "GAP_APPROVAL_BLOCKED",
-  "APPROVED_GAP_ANALYSIS_REQUIRED",
-  "POAM_NOT_FOUND",
-  "POAM_ITEM_NOT_FOUND",
-  "POAM_MILESTONE_NOT_FOUND",
-  "POAM_IMMUTABLE",
-  "POAM_REVIEW_BLOCKED",
-  "POAM_APPROVAL_BLOCKED",
-  "POAM_CONTEXT_REQUIRED",
-  "POAM_ACTOR_REQUIRED",
-  "REPORT_NOT_FOUND",
-  "REPORT_ARTIFACT_NOT_FOUND",
-  "EXPORT_JOB_NOT_FOUND",
-  "REPORT_CONTEXT_REQUIRED",
-  "REPORT_ACTOR_REQUIRED",
-  "REPORT_IMMUTABLE",
-  "REPORT_REVIEW_BLOCKED",
-  "REPORT_APPROVAL_BLOCKED",
-  "REPORT_FORMAT_NOT_IMPLEMENTED",
-  "EXPORT_JOB_FAILED",
-] as const;

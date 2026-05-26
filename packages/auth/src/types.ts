@@ -2,8 +2,12 @@
  * @module @standard/auth/types
  * @description Extended types for Better Auth session fields added by plugins.
  *
- * The Better Auth base types do not include plugin-injected fields (role, activeOrganizationId).
- * These interfaces extend the base types so we can cast safely instead of using `as any`.
+ * The Better Auth base types do not include plugin-injected fields (role, activeOrganizationId,
+ * platformAdmin). These interfaces extend the base types so we can access them without `as any`.
+ *
+ * Rule: Never use `as any`, `as StandardUser`, or `as StandardSession` in middleware.
+ *       Cast with `as StandardUser` only here, at the boundary, when reading from the opaque
+ *       Better Auth session response. All downstream code uses these typed interfaces.
  */
 
 /**
@@ -20,8 +24,11 @@ import type { NeonHttpDatabase } from "drizzle-orm/neon-http";
 export type DrizzleClient = PostgresJsDatabase<any> | NeonHttpDatabase<any> | Record<string, unknown>;
 
 /**
- * Better Auth user type extended with the `admin` plugin field.
- * The `admin` plugin adds `role` to the user record.
+ * Better Auth user type extended with plugin-injected fields.
+ * - `role`: injected by the `admin` plugin.
+ * - `platformAdmin`: custom additionalField in auth.ts (fieldName: "platform_admin").
+ *   When true, the user is a Bekaa operator with cross-tenant access.
+ *   Only settable via SQL/seed — never via public API (input: false).
  */
 export interface StandardUser {
   id: string;
@@ -29,6 +36,12 @@ export interface StandardUser {
   name: string;
   /** Set by Better Auth `admin` plugin. Defaults to undefined for regular users. */
   role?: "admin" | "user" | string;
+  /**
+   * Platform-level admin flag (Bekaa operator).
+   * Populated from `platform_admin` column via Better Auth `additionalFields`.
+   * Checked by `isPlatformAdmin()` in `rbac.middleware.ts`.
+   */
+  platformAdmin?: boolean;
   emailVerified?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
@@ -52,3 +65,11 @@ export interface StandardAuthSession {
   user: StandardUser;
   session: StandardSession;
 }
+
+/**
+ * Typed result of resolving a Better Auth session.
+ * Use this as the return type of any function that wraps `auth.api.getSession()`.
+ */
+export type AuthSessionResult =
+  | { resolved: true; user: StandardUser; session: StandardSession }
+  | { resolved: false };
