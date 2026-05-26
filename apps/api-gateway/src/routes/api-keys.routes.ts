@@ -20,7 +20,7 @@ const updateApiKeyInput = z.object({
 
 /** Shared helper: resolve Better Auth orgId → Standard UUIDs and block M2M self-management */
 async function resolveOrgCtx(context: any, organizationId: string) {
-  if (context.actorId === "m2m-agent") {
+  if (context.actorId?.startsWith("m2m:")) {
     throw new ApiError("FORBIDDEN", "M2M agents cannot manage API keys.", 403);
   }
   const tenantCtx = await context.deps.resolveTenantContext?.(
