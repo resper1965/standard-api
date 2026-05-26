@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { ReactFlow, MiniMap, Controls, Background, useNodesState, useEdgesState } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { api } from '../../lib/api';
@@ -25,7 +25,7 @@ export const KnowledgeGraphPage: React.FC = () => {
     riskNode: RiskNode
   }), []);
 
-  const handleSearch = async (e?: React.FormEvent, searchId?: string) => {
+  const handleSearch = useCallback(async (e?: React.FormEvent, searchId?: string) => {
     if (e) e.preventDefault();
     const targetId = searchId || controlId;
     if (!targetId.trim()) return;
@@ -41,14 +41,15 @@ export const KnowledgeGraphPage: React.FC = () => {
       const { nodes: newNodes, edges: newEdges } = generateRadialLayout(response.data);
       setNodes(newNodes);
       setEdges(newEdges);
-    } catch (err: any) {
-      setError(err.message || 'Failed to map blast radius.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to map blast radius.';
+      setError(msg);
       setNodes([]);
       setEdges([]);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [controlId, setNodes, setEdges]);
 
   // Sync page header actions
   React.useEffect(() => {
@@ -82,8 +83,7 @@ export const KnowledgeGraphPage: React.FC = () => {
       handleSearch(undefined, 'GOV-01');
     }, 0);
     return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [handleSearch]);
 
   return (
     <div className="flex flex-col h-full w-full min-h-[70vh] bg-slate-950/40 rounded-2xl border border-slate-800/60 overflow-hidden shadow-2xl relative">

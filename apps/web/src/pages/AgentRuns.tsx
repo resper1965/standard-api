@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { api } from "../lib/api";
 import { PageHeader } from "../components/PageHeader";
 import { Card, CardContent } from "../components/ui/card";
@@ -57,18 +57,39 @@ function statusConfig(status: string) {
   }
 }
 
+const PAGE_SIZE = 20;
+
 export function AgentRunsPage() {
   const [runs, setRuns] = useState<AgentRun[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
   const [filterAgent, setFilterAgent] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
 
-  useEffect(() => {
-    api<{ data: AgentRun[] }>("/api/v1/agent-runs")
-      .then((d) => setRuns(d.data ?? []))
-      .catch(() => setRuns([]))
-      .finally(() => setLoading(false));
+  const fetchRuns = useCallback(async (pageNum: number, append = false) => {
+    if (pageNum === 0) setLoading(true);
+    else setLoadingMore(true);
+    try {
+      const d = await api<{ data: AgentRun[] }>(
+        `/api/v1/agent-runs?limit=${PAGE_SIZE}&offset=${pageNum * PAGE_SIZE}`
+      );
+      const fetched = d.data ?? [];
+      setRuns((prev) => (append ? [...prev, ...fetched] : fetched));
+      setHasMore(fetched.length === PAGE_SIZE);
+      setPage(pageNum);
+    } catch {
+      if (!append) setRuns([]);
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchRuns(0);
+  }, [fetchRuns]);
 
   const filteredRuns = runs.filter((r) => {
     if (filterAgent !== "all" && r.agent_id !== filterAgent) return false;
@@ -283,6 +304,18 @@ export function AgentRunsPage() {
                   })}
                 </tbody>
               </table>
+            </div>
+          )}
+          {hasMore && !loading && (
+            <div className="flex justify-center py-4 border-t border-border/40">
+              <button
+                onClick={() => fetchRuns(page + 1, true)}
+                disabled={loadingMore}
+                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors px-4 py-2 rounded-md hover:bg-muted disabled:opacity-50"
+              >
+                {loadingMore && <Loader2 className="h-4 w-4 animate-spin" />}
+                Load more
+              </button>
             </div>
           )}
         </CardContent>
