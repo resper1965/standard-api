@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
 import { api } from "../lib/api";
 import { GapTable } from "../components/GapTable";
 import type { GapFinding } from "../components/GapTable";
 import { PageHeader } from "../components/PageHeader";
 import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
-import { Loader2, AlertTriangle, Play } from "lucide-react";
+import { AssessmentSelector } from "../components/AssessmentSelector";
+import { useActiveAssessment } from "../hooks/use-active-assessment";
+import { Loader2, Play } from "lucide-react";
 
 interface GapVersion {
   id: string;
@@ -14,8 +15,7 @@ interface GapVersion {
 }
 
 export function GapAnalysisPage() {
-  const [searchParams] = useSearchParams();
-  const assessmentId = searchParams.get("assessment");
+  const { assessmentId } = useActiveAssessment();
 
   const [findings, setFindings] = useState<GapFinding[]>([]);
   const [versions, setVersions] = useState<GapVersion[]>([]);
@@ -82,10 +82,7 @@ export function GapAnalysisPage() {
       </PageHeader>
 
       {!assessmentId ? (
-        <div className="flex items-center gap-3 p-4 rounded-lg bg-warning/10 border border-warning/20 text-sm text-warning">
-          <AlertTriangle className="h-4 w-4 shrink-0" />
-          Select an assessment from the Assessments page to view its gap analysis.
-        </div>
+        <AssessmentSelector label="Gap Analysis" />
       ) : (
         <Card className="border-border/60 shadow-none">
           <CardContent className="pt-6">

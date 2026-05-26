@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
 import { api } from "../lib/api";
 import { API_URL } from "../lib/config";
 import { PageHeader } from "../components/PageHeader";
@@ -9,7 +8,9 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from ".
 import { Badge } from "../components/ui/badge";
 import { EmptyState } from "../components/ui/empty-state";
 import { Skeleton } from "../components/ui/skeleton";
-import { Loader2, AlertTriangle, Upload, FileText, ClipboardCopy } from "lucide-react";
+import { AssessmentSelector } from "../components/AssessmentSelector";
+import { useActiveAssessment } from "../hooks/use-active-assessment";
+import { Loader2, Upload, FileText, ClipboardCopy } from "lucide-react";
 
 interface DocumentRecord {
   id: string;
@@ -32,8 +33,7 @@ const statusVariant: Record<string, "success" | "warning" | "info" | "muted"> = 
 };
 
 export function DocumentsPage() {
-  const [searchParams] = useSearchParams();
-  const assessmentId = searchParams.get("assessment");
+  const { assessmentId } = useActiveAssessment();
   
   const [documents, setDocuments] = useState<DocumentRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -129,10 +129,7 @@ export function DocumentsPage() {
         </button>
       </div>
       {!assessmentId && (
-        <div className="flex items-center gap-3 p-4 rounded-lg bg-amber-500/10 border border-amber-500/20 text-sm text-amber-500">
-          <AlertTriangle className="h-4 w-4 shrink-0" />
-          Navigate to a specific assessment to upload documents.
-        </div>
+        <AssessmentSelector label="Documents" />
       )}
 
       {error && (
