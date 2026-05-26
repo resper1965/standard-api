@@ -70,6 +70,8 @@ export type WebhookEndpointRecord = {
 
 // ── Webhook Delivery ──────────────────────────────────────────────
 export type WebhookDeliveryPayload = {
+  /** Schema version for envelope versioning */
+  schema_version: "1.0";
   /** Unique event ID for idempotency */
   event_id: string;
   /** Event type */
@@ -158,4 +160,12 @@ export type WebhookRepositoryAdapter = {
   logDelivery(log: WebhookDeliveryLog): Promise<void>;
 
   listDeliveries(endpoint_id: string, limit?: number): Promise<WebhookDeliveryLog[]>;
+
+  /** Rotate the signing secret for an endpoint */
+  rotateSecret(
+    id: string,
+    tenant_id: string,
+    newSecretHash: string,
+    newSecretMasked: string
+  ): Promise<WebhookEndpointRecord | null>;
 };

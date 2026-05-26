@@ -9,6 +9,7 @@ import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";
 import { json, newId, parseJson, routeParam } from "../http";
 import { CreateWebhookEndpointSchema, UpdateWebhookEndpointSchema } from "@standard/schemas";
+import { WebhookDispatcher } from "../services/webhook-dispatcher";
 
 // ── Webhook Endpoint Management Routes ──────────────────────────
 
@@ -126,7 +127,101 @@ export const webhookRoutes: RouteDefinition[] = [
       const deliveries = await deps.webhooks.listDeliveries(endpoint.id, 50);
       return json({ data: deliveries, trace_id: traceId });
     }
-  }
+  },
+  {
+    method: "POST",
+    path: "/api/v1/webhooks/:webhookId/rotate-secret",
+    protected: true,
+    requireActor: true,
+    handler: async ({ deps, params, tenantId, traceId }) => {
+      if (!deps.webhooks) throw new ApiError("NOT_IMPLEMENTED", "Webhooks not configured.", 501);
+      const webhookId = routeParam(params, "webhookId");
+
+      // Verify ownership
+      const endpoint = await deps.webhooks.getEndpoint(webhookId, tenantId!);
+      if (!endpoint) throw new ApiError("NOT_FOUND", "Webhook endpoint not found.", 404);
+
+      // Generate new secret
+      const rawSecret = `whsec_${crypto.randomUUID().replace(/-/g, "")}${crypto.randomUUID().replace(/-/g, "")}`;
+      const maskedSecret = `whsec_...${rawSecret.slice(-6)}`;
+      const encoder = new TextEncoder();
+      const hashBuffer = await crypto.subtle.digest("SHA-256", encoder.encode(rawSecret));
+      const secretHash = Array.from(new Uint8Array(hashBuffer))
+        .map(b => b.toString(16).padStart(2, "0")).join("");
+
+      const updated = await deps.webhooks.rotateSecret(webhookId, tenantId!, secretHash, maskedSecret);
+      if (!updated) throw new ApiError("NOT_FOUND", "Webhook endpoint not found.", 404);
+
+      return json({
+        data: {
+          ...endpointResponse(updated),
+          signing_secret: rawSecret, // Only returned ONCE at rotation
+        },
+        trace_id: traceId,
+      });
+    }
+  },
+  {
+    method: "POST",
+    path: "/api/v1/webhooks/:webhookId/test",
+    protected: true,
+    requireActor: true,
+    handler: async ({ deps, params, tenantId, traceId }) => {
+      if (!deps.webhooks) throw new ApiError("NOT_IMPLEMENTED", "Webhooks not configured.", 501);
+      const webhookId = routeParam(params, "webhookId");
+
+      const endpoint = await deps.webhooks.getEndpoint(webhookId, tenantId!);
+      if (!endpoint) throw new ApiError("NOT_FOUND", "Webhook endpoint not found.", 404);
+      if (!endpoint.enabled) throw new ApiError("CONFLICT", "Endpoint is disabled.", 409);
+
+      const dispatcher = new WebhookDispatcher();
+      const now = new Date().toISOString();
+      const testPayload: WebhookDeliveryPayload = {
+        schema_version: "1.0",
+        event_id: crypto.randomUUID(),
+        event_type: "assessment.created",
+        timestamp: now,
+        tenant_id: tenantId!,
+        organization_id: endpoint.organization_id,
+        trace_id: traceId,
+        data: { test: true, message: "Standard webhook sandbox test delivery" },
+      };
+
+      const result = await dispatcher.deliver({
+        endpoint_url: endpoint.url,
+        signing_secret: endpoint.signing_secret_hash,
+        payload: testPayload,
+      });
+
+      // Log test delivery (max_attempts=1 — test is best-effort, no retry)
+      await deps.webhooks.logDelivery({
+        delivery_id: crypto.randomUUID(),
+        endpoint_id: endpoint.id,
+        event_id: testPayload.event_id,
+        event_type: testPayload.event_type,
+        status: result.success ? "delivered" : "failed",
+        http_status: result.http_status,
+        attempt_count: 1,
+        max_attempts: 1,
+        last_attempted_at: now,
+        next_retry_at: null,
+        response_body: result.response_body,
+        created_at: now,
+      }).catch(() => undefined); // best-effort logging
+
+      return json({
+        data: {
+          success: result.success,
+          http_status: result.http_status,
+          event_id: testPayload.event_id,
+          message: result.success
+            ? "Test delivery successful — your endpoint is correctly configured."
+            : "Test delivery failed — verify the URL is reachable and returns 2xx.",
+        },
+        trace_id: traceId,
+      }, { status: result.success ? 200 : 502 });
+    }
+  },
 ];
 
 // ── Presenter ──────────────────────────────────────────────────
