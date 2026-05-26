@@ -21,6 +21,14 @@ export default {
     if (!cachedApp) {
       const hasDb = Boolean(env.DATABASE_URL);
       console.log(`[standard:init] Starting API gateway. DATABASE_URL=${hasDb ? 'SET' : 'MISSING'}, ENV=${env.STANDARD_ENV}`);
+
+      // Refuse to start in mock mode in production — fail loudly, not silently
+      if (!hasDb && env.STANDARD_ENV === 'production') {
+        throw new Error(
+          '[standard:fatal] DATABASE_URL is required in production. ' +
+          'Configure it with: wrangler secret put DATABASE_URL --env production'
+        );
+      }
       if (hasDb) {
         const db = createDb(env.DATABASE_URL!);
         cachedDeps = {
@@ -28,6 +36,23 @@ export default {
           email: (env.EMAIL as unknown as SendEmail) ?? undefined,
           AGENT_RUN_QUEUE: env.AGENT_RUN_QUEUE ?? undefined,
           SOC_TRIAGE_QUEUE: env.SOC_TRIAGE_QUEUE ?? undefined,
+          banUser: async (userId: string, reason?: string) => {
+            // Delegate to Better Auth's admin ban API — marks user as banned and
+            // invalidates all active sessions. Hard purge happens within 30 days
+            // per data-retention-policy.md.
+            if (cachedAuth) {
+              try {
+                await (cachedAuth as any).api.banUser({
+                  body: {
+                    userId,
+                    banReason: reason ?? 'User-initiated account deletion (LGPD art. 18)',
+                  },
+                });
+              } catch (err) {
+                console.warn('[standard:banUser] Better Auth banUser failed:', err instanceof Error ? err.message : String(err));
+              }
+            }
+          },
         };
 
         // Initialize Better Auth — self-hosted, no JWKS dependency
