@@ -216,7 +216,11 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
       }
 
       const params = matchRoute(route.path, url.pathname)!;
-      const context: RequestContext = { request, params, traceId, deps, execCtx, env };
+      const context: RequestContext = {
+        request, params, traceId, deps,
+        ...(execCtx !== undefined ? { execCtx } : {}),
+        ...(env !== undefined ? { env } : {}),
+      };
       const startedAt = Date.now();
 
       // ── Auth context resolution ──────────────────────────────

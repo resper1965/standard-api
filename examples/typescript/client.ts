@@ -11,7 +11,7 @@
  *   npx tsx examples/typescript/client.ts
  */
 
-const BASE_URL = process.env.STANDARD_API_URL ?? "https://standard-api-gateway-production.ness.workers.dev";
+const BASE_URL = process.env.STANDARD_API_URL ?? "https://standard-api.bekaa.eu";
 const API_KEY = process.env.STANDARD_API_KEY ?? "";
 
 if (!API_KEY) {

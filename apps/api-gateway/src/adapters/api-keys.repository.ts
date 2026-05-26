@@ -23,7 +23,7 @@ export type CreateApiKeyInput = {
   keyHash: string;
   maskedKey: string;
   scopes?: string[];
-  expiresAt?: Date;
+  expiresAt?: Date | undefined;
 };
 
 export type ApiKeysRepositoryAdapter = {

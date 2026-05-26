@@ -27,7 +27,7 @@
 Set your environment:
 
 ```bash
-export API_URL="https://standard-api-gateway-production.ness.workers.dev"
+export API_URL="https://standard-api.bekaa.eu"
 export API_KEY="sk-your-api-key"
 export ORG_ID="your-organization-id"
 ```
@@ -265,7 +265,7 @@ GET  /api/v1/assessments/{id}/reports
 ## TypeScript Version
 
 ```typescript
-const BASE = "https://standard-api-gateway-production.ness.workers.dev";
+const BASE = "https://standard-api.bekaa.eu";
 const headers = {
   "Authorization": `ApiKey ${process.env.STANDARD_API_KEY}`,
   "Content-Type": "application/json",
@@ -323,7 +323,7 @@ console.log(`📋 ${gaps.findings.length} detailed findings with remediation`);
 ```python
 import httpx, os
 
-BASE = "https://standard-api-gateway-production.ness.workers.dev"
+BASE = "https://standard-api.bekaa.eu"
 KEY = os.getenv("STANDARD_API_KEY")
 client = httpx.Client(base_url=BASE, headers={"Authorization": f"ApiKey {KEY}"})
 

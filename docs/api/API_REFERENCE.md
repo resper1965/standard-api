@@ -1,6 +1,6 @@
 # Standard API — Developer Reference
 
-> **Base URL:** `https://standard-api-gateway-production.ness.workers.dev`
+> **Base URL:** `https://standard-api.bekaa.eu`
 >
 > **Version:** v1 — All endpoints are prefixed with `/api/v1`
 
@@ -462,7 +462,7 @@ Allowed headers: `Content-Type`, `Authorization`, `X-Trace-Id`, `X-Tenant-Id`, `
 # 2. List SCF frameworks
 curl -H "Authorization: Bearer standard_live_YOUR_KEY" \
      -H "x-standard-tenant-id: YOUR_ORG_ID" \
-     https://standard-api-gateway-production.ness.workers.dev/api/v1/scf/frameworks
+     https://standard-api.bekaa.eu/api/v1/scf/frameworks
 
 # 3. Create an assessment
 curl -X POST \
@@ -470,14 +470,14 @@ curl -X POST \
      -H "x-standard-tenant-id: YOUR_ORG_ID" \
      -H "Content-Type: application/json" \
      -d '{"name": "ISO 27001 Assessment", "scf_version_id": "..."}' \
-     https://standard-api-gateway-production.ness.workers.dev/api/v1/assessments
+     https://standard-api.bekaa.eu/api/v1/assessments
 
 # 4. Upload a document
 curl -X POST \
      -H "Authorization: Bearer standard_live_YOUR_KEY" \
      -H "x-standard-tenant-id: YOUR_ORG_ID" \
      -F "file=@policy.pdf" \
-     https://standard-api-gateway-production.ness.workers.dev/api/v1/assessments/ASSESSMENT_ID/documents
+     https://standard-api.bekaa.eu/api/v1/assessments/ASSESSMENT_ID/documents
 ```
 
 ---
