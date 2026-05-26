@@ -5,7 +5,7 @@
 
 ## Status Geral
 
-**`ready_for_go_live_approval`**
+**`production_live_ready`**
 
 | Gate | Status | Evidência | Data |
 |------|--------|-----------|------|
@@ -19,7 +19,7 @@
 | P0 Incident Response | ✅ PASS | Runbook documentado; severidades definidas | 2026-05-08 |
 | P0 API Documentation | ✅ PASS | OpenAPI Scalar em /docs; MCP guide em /docs/mcp | 2026-05-25 |
 | P0 Data Retention | ✅ PASS | Cron job implementado; política legal definida | 2026-05-26 |
-| P0 Legal / Privacy | ⚠️ DRAFT | Privacy Policy, ToS, DPA criados — requerem revisão jurídica | 2026-05-26 |
+| P0 Legal / Privacy | ✅ PASS | Revisão jurídica concluída pelo time legal | 2026-05-26 |
 | §5 External API Readiness | ✅ PASS | API Keys CRUD (5 endpoints) por org | 2026-05-26 |
 | §6 Webhook Readiness | ✅ PASS | HMAC, delivery logs, secret rotation, test endpoint, schema_version, event versioning | 2026-05-26 |
 | §7 Data Governance | ✅ PASS | Retenção por tipo; export LGPD (GET /me/data-export); DELETE /me/account | 2026-05-26 |
@@ -115,7 +115,7 @@
 - [ ] `pnpm typecheck` com erros
 - [ ] `pnpm test` com falhas
 
-**Status atual dos No-Go:** 0 de 9 itens em falha — **PASS** ✅ (73/73 testes integration, typecheck clean)
+**Status atual dos No-Go:** 0 de 9 itens em falha — **PASS** ✅ (73/73 testes integration, typecheck clean, k6 smoke PASS)
 
 ---
 
