@@ -67,13 +67,21 @@ preview_id = "d8a6d449689a47a5ae1ee5cec1f6ec8d"
 binding = "STANDARD_KB_INDEX"
 index_name = "standard-kb-dev"
 
-# TODO: Uncomment when workflows worker is deployed
-# [[workflows]]
-# binding = "ASSESSMENT_WORKFLOW"
-# name = "standard-assessment-lifecycle-dev"
-# class_name = "AssessmentLifecycleWorkflow"
-# script_name = "standard-workflows"
+# ─── Cloudflare Workflows (durable assessment lifecycle orchestration) ─────
+# Prerequisite: deploy workers/workflows worker first:
+#   cd workers/workflows && wrangler deploy
+# These bindings connect the API gateway to the durable workflow engine.
+[[workflows]]
+binding = "ASSESSMENT_WORKFLOW"
+name = "standard-assessment-lifecycle-dev"
+class_name = "AssessmentLifecycleWorkflow"
+script_name = "standard-workflows"
 
+[[workflows]]
+binding = "COUNCIL_WORKFLOW"
+name = "standard-council-orchestration-dev"
+class_name = "CouncilOrchestrationWorkflow"
+script_name = "standard-workflows"
 # ─── Production environment ────────────────────────────────────
 [env.production]
 workers_dev = true
@@ -128,5 +136,15 @@ index_name = "standard-kb-prod"
 name = "EMAIL"
 allowed_sender_addresses = ["noreply@bekaa.eu"]
 
+# ─── Production Workflows bindings ─────────────────────────────
+[[env.production.workflows]]
+binding = "ASSESSMENT_WORKFLOW"
+name = "standard-assessment-lifecycle-production"
+class_name = "AssessmentLifecycleWorkflow"
+script_name = "standard-workflows"
 
-
+[[env.production.workflows]]
+binding = "COUNCIL_WORKFLOW"
+name = "standard-council-orchestration-production"
+class_name = "CouncilOrchestrationWorkflow"
+script_name = "standard-workflows"

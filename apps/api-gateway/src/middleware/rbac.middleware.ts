@@ -11,8 +11,9 @@ import type { RequestContext } from "../http";
  * never as a role string, to avoid confusion with org-scoped roles.
  */
 export const isPlatformAdmin = (context: RequestContext): boolean => {
-  const user = context.session?.user as Record<string, unknown> | undefined;
-  return user?.["platformAdmin"] === true;
+  // platformAdmin is explicitly typed in RequestContext.session.user (http.ts)
+  // and populated by auth.middleware.ts from the Better Auth `additionalFields.platformAdmin`.
+  return context.session?.user?.platformAdmin === true;
 };
 
 /**
