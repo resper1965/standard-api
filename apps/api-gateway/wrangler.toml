@@ -57,10 +57,9 @@ binding = "AI"
 [[kv_namespaces]]
 binding = "STANDARD_CACHE"
 id = "4e027e07e0e5440a8666c3f8ee419333"
-# TODO(ops): Replace preview_id with a real separate KV namespace for dev.
-# Create via: npx wrangler kv namespace create "STANDARD_CACHE" --preview
-# Then set preview_id to the returned ID so `wrangler dev` uses an isolated namespace.
-preview_id = "REPLACE_WITH_DEV_KV_NAMESPACE_ID"
+# preview_id is used by `wrangler dev` — isolated from production.
+# Namespace: standard-api-gateway-STANDARD_CACHE_preview
+preview_id = "d8a6d449689a47a5ae1ee5cec1f6ec8d"
 
 [[vectorize]]
 binding = "STANDARD_KB_INDEX"
