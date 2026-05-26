@@ -1,15 +1,32 @@
+/**
+ * API error codes — canonical list lives in @standard/schemas.
+ * This file re-exports for backwards compatibility within the gateway.
+ */
+export { ApiErrorCode } from "@standard/schemas";
+
+// Re-export the full array for runtime use (e.g. validation)
 export const apiErrorCodes = [
   "VALIDATION_ERROR",
   "UNAUTHORIZED",
   "FORBIDDEN",
   "NOT_FOUND",
   "CONFLICT",
+  "NOT_IMPLEMENTED",
+  "INTERNAL_ERROR",
+  "RATE_LIMIT_EXCEEDED",
+  "INSUFFICIENT_SCOPE",
+  "TENANT_CONTEXT_REQUIRED",
+  "TENANT_MISMATCH",
+  "ACTOR_REQUIRED",
+  "QUEUE_POISONED",
+  "UNSUPPORTED_MEDIA_TYPE",
+  "FILE_TOO_LARGE",
+  "EMAIL_SERVICE_UNAVAILABLE",
+  "EMAIL_SEND_FAILED",
   "INVALID_STATE_TRANSITION",
   "APPROVAL_REQUIRED",
   "ARTIFACT_IMMUTABLE",
-  "TENANT_CONTEXT_REQUIRED",
-  "UNSUPPORTED_MEDIA_TYPE",
-  "FILE_TOO_LARGE",
+  "APPROVAL_EVENT_REQUIRED",
   "NON_APPLICABILITY_RATIONALE_REQUIRED",
   "SCOPE_RATIONALE_REQUIRED",
   "SOA_REVIEW_BLOCKED",
@@ -41,16 +58,4 @@ export const apiErrorCodes = [
   "REPORT_APPROVAL_BLOCKED",
   "REPORT_FORMAT_NOT_IMPLEMENTED",
   "EXPORT_JOB_FAILED",
-  "APPROVAL_EVENT_REQUIRED",
-  "ACTOR_REQUIRED",
-  "RATE_LIMIT_EXCEEDED",
-  "NOT_IMPLEMENTED",
-  "EMAIL_SERVICE_UNAVAILABLE",
-  "EMAIL_SEND_FAILED",
-  "INSUFFICIENT_SCOPE",
-  "TENANT_MISMATCH",
-  "QUEUE_POISONED",
-  "INTERNAL_ERROR"
 ] as const;
-
-export type ApiErrorCode = (typeof apiErrorCodes)[number];

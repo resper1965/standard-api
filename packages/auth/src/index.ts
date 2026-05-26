@@ -16,4 +16,4 @@ export {
 export type { StandardResource, StandardPermission, StandardRole } from "./permissions";
 
 // Types
-export type { DrizzleClient } from "./types";
+export type { DrizzleClient, StandardUser, StandardSession, StandardAuthSession } from "./types";

@@ -35,6 +35,8 @@ export interface Env {
   AI?: Ai;
   /** SOC webhook endpoint for alert delivery */
   SOC_WEBHOOK_URL?: string;
+  /** Comma-separated list of allowed CORS origins — overrides the hardcoded list when set. */
+  ALLOWED_ORIGINS?: string;
   /** Cloudflare Email Service binding for transactional emails */
 }
 
