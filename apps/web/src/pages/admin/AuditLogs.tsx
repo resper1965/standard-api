@@ -23,14 +23,15 @@ export function AdminAuditLogs() {
 
   const fetchLogs = async () => {
     setLoading(true);
+    setError(null);
     try {
-      const res = await api<{ data: AuditLog[] }>("/api/observability/audit", { method: "GET" }).catch(() => ({ data: [
-        { id: "log_1", action: "assessment_created", actorId: "admin", targetType: "assessment", targetId: "ass_123", createdAt: new Date() },
-        { id: "log_2", action: "user_invited", actorId: "admin", targetType: "user", targetId: "usr_456", createdAt: new Date(Date.now() - 3600000) }
-      ]})); 
-      setLogs(res.data);
-    } catch (e: any) {
-      setError(e.message || "Failed to fetch audit logs");
+      const res = await api<{ data: AuditLog[] }>("/api/observability/audit", { method: "GET" });
+      setLogs(res.data ?? []);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Failed to fetch audit logs";
+      console.error("[AdminAuditLogs] fetch error:", e);
+      setError(msg);
+      setLogs([]);
     } finally {
       setLoading(false);
     }

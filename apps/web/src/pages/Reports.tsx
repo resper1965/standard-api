@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
 import { api } from "../lib/api";
 import { PageHeader } from "../components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "../components/ui/table";
 import { Button } from "../components/ui/button";
-import { Loader2, AlertTriangle, FileDown, Plus } from "lucide-react";
+import { AssessmentSelector } from "../components/AssessmentSelector";
+import { useActiveAssessment } from "../hooks/use-active-assessment";
+import { Loader2, FileDown, Plus } from "lucide-react";
 
 interface ReportVersion {
   id: string;
@@ -16,8 +17,7 @@ interface ReportVersion {
 }
 
 export function ReportsPage() {
-  const [searchParams] = useSearchParams();
-  const assessmentId = searchParams.get("assessment");
+  const { assessmentId } = useActiveAssessment();
 
   const [reports, setReports] = useState<ReportVersion[]>([]);
   const [loading, setLoading] = useState(false);
@@ -111,10 +111,7 @@ export function ReportsPage() {
       </PageHeader>
 
       {!assessmentId ? (
-        <div className="flex items-center gap-3 p-4 rounded-lg bg-warning/10 border border-warning/20 text-sm text-warning">
-          <AlertTriangle className="h-4 w-4 shrink-0" />
-          Select an assessment from the Assessments page to view or generate reports.
-        </div>
+        <AssessmentSelector label="Reports" />
       ) : (
         <Card className="border-border/60 shadow-none">
           <CardHeader className="pb-3">

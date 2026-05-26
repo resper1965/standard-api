@@ -34,14 +34,16 @@ export function AdminOrganizations() {
 
   const fetchOrgs = async () => {
     setLoading(true);
+    setError(null);
     try {
-      const res = await api<any>("/api/auth/organization/list", { method: "GET" }).catch(() => [
-        { id: "org_default", name: "Default Org", slug: "default", createdAt: new Date() }
-      ]);
+      const res = await api<any>("/api/auth/organization/list", { method: "GET" });
       const dataArray = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : []);
       setOrgs(dataArray);
-    } catch (e: any) {
-      setError(e.message || "Failed to fetch organizations");
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Failed to fetch organizations";
+      console.error("[AdminOrganizations] fetch error:", e);
+      setError(msg);
+      setOrgs([]);
     } finally {
       setLoading(false);
     }
