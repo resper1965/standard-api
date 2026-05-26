@@ -7,7 +7,7 @@
 
 Standard is a compliance assessment REST API. You call it to run security assessments against 231+ frameworks (SOC 2, ISO 27001, HIPAA, NIST, etc.).
 
-**Base URL:** `https://standard-api-gateway-production.ness.workers.dev`
+**Base URL:** `https://standard-api.bekaa.eu`
 **Auth:** `Authorization: ApiKey <key>` header on every request
 **Prefix:** All endpoints start with `/api/v1`
 
@@ -225,9 +225,9 @@ For mutating operations, include: `Idempotency-Key: <unique-key>`
 
 ## Full Documentation
 
-- OpenAPI spec: https://standard-api-gateway-production.ness.workers.dev/docs/openapi.json
-- Interactive docs: https://standard-api-gateway-production.ness.workers.dev/docs
-- Full LLM context: https://standard-api-gateway-production.ness.workers.dev/llms-full.txt
+- OpenAPI spec: https://standard-api.bekaa.eu/docs/openapi.json
+- Interactive docs: https://standard-api.bekaa.eu/docs
+- Full LLM context: https://standard-api.bekaa.eu/llms-full.txt
 
 ## Integration Rules
 

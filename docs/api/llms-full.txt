@@ -42,7 +42,7 @@ x-standard-tenant-id: <organization_id>
 curl -H "Authorization: Bearer standard_live_abc123" \
      -H "x-standard-tenant-id: org_456" \
      -H "Content-Type: application/json" \
-     https://standard-api-gateway-production.ness.workers.dev/api/v1/assessments
+     https://standard-api.bekaa.eu/api/v1/assessments
 ```
 
 ---
@@ -50,7 +50,7 @@ curl -H "Authorization: Bearer standard_live_abc123" \
 ## Base URL
 
 ```
-https://standard-api-gateway-production.ness.workers.dev
+https://standard-api.bekaa.eu
 ```
 
 All endpoints are prefixed with `/api/v1`.

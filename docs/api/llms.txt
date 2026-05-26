@@ -4,15 +4,15 @@
 
 ## Docs
 
-- [Functional Guide](https://standard-api-gateway-production.ness.workers.dev/docs/api/GUIDE.md): Architecture, concepts, assessment lifecycle, AI agents
-- [API Reference](https://standard-api-gateway-production.ness.workers.dev/docs/api/API_REFERENCE.md): Full endpoint documentation with auth, errors, rate limits
-- [Full Context for LLMs](https://standard-api-gateway-production.ness.workers.dev/llms-full.txt): Complete API context in a single file
-- [OpenAPI Spec (JSON)](https://standard-api-gateway-production.ness.workers.dev/docs/openapi.json): Machine-readable OpenAPI 3.0 specification
-- [Interactive Docs](https://standard-api-gateway-production.ness.workers.dev/docs): Scalar API explorer with try-it-out
+- [Functional Guide](https://standard-api.bekaa.eu/docs/api/GUIDE.md): Architecture, concepts, assessment lifecycle, AI agents
+- [API Reference](https://standard-api.bekaa.eu/docs/api/API_REFERENCE.md): Full endpoint documentation with auth, errors, rate limits
+- [Full Context for LLMs](https://standard-api.bekaa.eu/llms-full.txt): Complete API context in a single file
+- [OpenAPI Spec (JSON)](https://standard-api.bekaa.eu/docs/openapi.json): Machine-readable OpenAPI 3.0 specification
+- [Interactive Docs](https://standard-api.bekaa.eu/docs): Scalar API explorer with try-it-out
 
 ## API
 
-Base URL: `https://standard-api-gateway-production.ness.workers.dev`
+Base URL: `https://standard-api.bekaa.eu`
 Auth: Bearer API key (`standard_live_...`) or session cookie
 Tenant: `x-standard-tenant-id` header (required for all protected endpoints)
 
@@ -36,8 +36,8 @@ Tenant: `x-standard-tenant-id` header (required for all protected endpoints)
 
 ## Optional
 
-- [B2B Integration Guide](https://standard-api-gateway-production.ness.workers.dev/docs/api/B2B_INTEGRATION_GUIDE.md): Tenant provisioning, SSO, white-label
-- [Privacy SDK Guide](https://standard-api-gateway-production.ness.workers.dev/docs/api/privacy-ropa-sdk.md): RoPA, DPIA, vendor scanning
+- [B2B Integration Guide](https://standard-api.bekaa.eu/docs/api/B2B_INTEGRATION_GUIDE.md): Tenant provisioning, SSO, white-label
+- [Privacy SDK Guide](https://standard-api.bekaa.eu/docs/api/privacy-ropa-sdk.md): RoPA, DPIA, vendor scanning
 
 ## MCP Integration
 

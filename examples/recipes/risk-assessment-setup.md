@@ -6,7 +6,7 @@
 ## Step 1: Choose a Risk Methodology
 
 ```bash
-export API_URL="https://standard-api-gateway-production.ness.workers.dev"
+export API_URL="https://standard-api.bekaa.eu"
 export API_KEY="sk-your-api-key"
 
 # List available methodologies
@@ -76,7 +76,7 @@ Each KRI includes:
 ## TypeScript: Auto-Configure Risk Dashboard
 
 ```typescript
-const BASE = "https://standard-api-gateway-production.ness.workers.dev";
+const BASE = "https://standard-api.bekaa.eu";
 const headers = { "Authorization": `ApiKey ${process.env.STANDARD_API_KEY}` };
 
 // Get methodology for risk matrix configuration

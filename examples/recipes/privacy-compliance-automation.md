@@ -6,7 +6,7 @@
 ## Available Regulations
 
 ```bash
-export API_URL="https://standard-api-gateway-production.ness.workers.dev"
+export API_URL="https://standard-api.bekaa.eu"
 export API_KEY="sk-your-api-key"
 
 # List all available regulations
@@ -81,7 +81,7 @@ curl -s -H "Authorization: ApiKey $API_KEY" \
 ## TypeScript Example
 
 ```typescript
-const BASE = "https://standard-api-gateway-production.ness.workers.dev";
+const BASE = "https://standard-api.bekaa.eu";
 const headers = { "Authorization": `ApiKey ${process.env.STANDARD_API_KEY}` };
 
 // Get all LGPD legal bases for ROPA form
@@ -104,7 +104,7 @@ console.log(`Notify ${breachRules.data.authority_name} within ${breachRules.data
 import httpx, os
 
 client = httpx.Client(
-    base_url="https://standard-api-gateway-production.ness.workers.dev",
+    base_url="https://standard-api.bekaa.eu",
     headers={"Authorization": f"ApiKey {os.getenv('STANDARD_API_KEY')}"}
 )
 

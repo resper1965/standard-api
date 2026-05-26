@@ -11,7 +11,7 @@ HIPAA → ISO 27001 — any combination.
 ## Step 1: Get Framework IDs
 
 ```bash
-export API_URL="https://standard-api-gateway-production.ness.workers.dev"
+export API_URL="https://standard-api.bekaa.eu"
 export API_KEY="sk-your-api-key"
 
 # List all 231 frameworks
@@ -88,7 +88,7 @@ curl -s -H "Authorization: ApiKey $API_KEY" \
 ## TypeScript
 
 ```typescript
-const BASE = "https://standard-api-gateway-production.ness.workers.dev";
+const BASE = "https://standard-api.bekaa.eu";
 const headers = { "Authorization": `ApiKey ${process.env.STANDARD_API_KEY}` };
 
 // Compare ISO 27001 vs SOC 2

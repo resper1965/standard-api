@@ -6,13 +6,13 @@
 
 - Standard API key with `*` scope (full access)
 - `curl` and `jq` installed
-- API base URL (production: `https://standard-api-gateway-production.ness.workers.dev`)
+- API base URL (production: `https://standard-api.bekaa.eu`)
 
 ```bash
 # Set these once
 export API_KEY="standard_live_..."
 export TENANT_ID="your-tenant-uuid"
-export BASE="https://standard-api-gateway-production.ness.workers.dev/api/v1"
+export BASE="https://standard-api.bekaa.eu/api/v1"
 export AUTH="-H 'Authorization: Bearer $API_KEY' -H 'x-standard-tenant-id: $TENANT_ID'"
 ```
 

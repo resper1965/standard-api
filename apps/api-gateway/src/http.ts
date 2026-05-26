@@ -1,4 +1,5 @@
 import type { z } from "zod";
+import type { Env } from "./types/env";
 import type { RouteConfig } from "@asteasolutions/zod-to-openapi";
 import type { AgentRuntimeDependencies } from "@standard/agent-runtime";
 import type { ObservabilityDependencies } from "@standard/observability";
@@ -92,8 +93,22 @@ export type ApiKeyRecord = {
   updatedAt: Date;
 };
 
+/** Input shape for creating a new API key (server generates id, timestamps). */
+export type ApiKeyCreateInput = {
+  tenantId: string;
+  organizationId: string;
+  name: string;
+  keyHash: string;
+  maskedKey: string;
+  scopes?: string[];
+  /** Optional expiry — absent means the key never expires.
+   * Typed as `Date | undefined` (not just `Date`) so exactOptionalPropertyTypes
+   * allows the call site to pass `expiresAt: condition ? new Date(...) : undefined`. */
+  expiresAt?: Date | undefined;
+};
+
 export type ApiKeysRepositoryAdapter = {
-  create(input: any): Promise<ApiKeyRecord>;
+  create(input: ApiKeyCreateInput): Promise<ApiKeyRecord>;
   verifyKey(keyHash: string): Promise<ApiKeyRecord | null>;
   markUsed(id: string): Promise<void>;
   revokeKey(id: string, organizationId: string): Promise<boolean>;
@@ -221,9 +236,11 @@ export type RequestContext = {
   /** Pre-validated request body (populated when route defines bodySchema) */
   validatedBody?: unknown;
   /** Cloudflare native execution context for background tasks */
-  execCtx?: any;
-  /** Cloudflare Worker Environment variables and bindings */
-  env?: any;
+  execCtx?: ExecutionContext;
+  /** Cloudflare Worker Environment variables and bindings.
+   * Typed as Partial<Env> because the app is initialised with a partial env
+   * in dev/test mode (see createApp signature in app.ts). */
+  env?: Partial<Env>;
 };
 
 export type RouteHandler = (context: RequestContext) => Promise<Response> | Response;
