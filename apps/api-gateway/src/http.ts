@@ -234,7 +234,22 @@ export type RequestContext = {
   auth?: AuthContext | undefined;
   securityTenant?: SecurityTenantContext | undefined;
   /** Better Auth session (user + session data) */
-  session?: { user: { id: string; email: string; name: string; role?: string | null | undefined; [key: string]: unknown }; session: { id: string; activeOrganizationId?: string | null | undefined; [key: string]: unknown } } | null;
+  session?: {
+    user: {
+      id: string;
+      email: string;
+      name: string;
+      role?: string | null | undefined;
+      /** Bekaa operator flag — cross-tenant access. Populated from platform_admin DB column. */
+      platformAdmin?: boolean;
+      [key: string]: unknown;
+    };
+    session: {
+      id: string;
+      activeOrganizationId?: string | null | undefined;
+      [key: string]: unknown;
+    };
+  } | null;
   deps: AppDependencies;
   /** Pre-validated request body (populated when route defines bodySchema) */
   validatedBody?: unknown;

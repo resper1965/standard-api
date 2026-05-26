@@ -45,9 +45,11 @@ export class IntelligenceService {
       }
     }
 
-    if (mask === "iso27001") {
-      ["GOV-01", "GOV-02", "POL-01", "POL-02", "RSK-01", "RSK-02"].forEach(c => reqControls.add(c));
-    }
+    // NOTE: Frameworks like iso27001, nist800-53, fedramp, soc2, etc. are NOT handled here.
+    // Their SCF control mappings live in the database (seeded SCF XLSX 2026.1.1).
+    // Use getControlsForFramework() (instance method) for DB-backed resolution.
+    // RULE (AGENTS.md §8): Never infer mapping if not in the structured SCF base.
+    //                       Returning an empty set is correct — do not invent crosswalks.
 
     return reqControls;
   }
