@@ -157,7 +157,9 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
 
     // ── CORS ────────────────────────────────────────────────
     const isDevMode = env?.STANDARD_ENV === "development" || env?.STANDARD_ENV === "test";
-    const allowedOrigins = [
+    // ALLOWED_ORIGINS env var overrides hardcoded list (comma-separated)
+    const envOrigins = env?.ALLOWED_ORIGINS?.split(",").map((o: string) => o.trim()).filter(Boolean) ?? [];
+    const allowedOrigins = envOrigins.length > 0 ? envOrigins : [
       "https://standard.bekaa.eu",
       "https://standard-web.pages.dev",
       "https://production.standard-web.pages.dev",

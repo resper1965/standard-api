@@ -5,7 +5,7 @@
  * Better Auth sessions are resolved from cookies (browser) or API keys (programmatic).
  * The active organization in the session maps to the Standard tenant_id.
  */
-import type { StandardAuth } from "@standard/auth";
+import type { StandardAuth, StandardUser, StandardSession } from "@standard/auth";
 import { StructuredLogger } from "@standard/observability";
 import { ApiError } from "../errors/api-error";
 import type { RequestContext } from "../http";
@@ -99,16 +99,16 @@ export const resolveAuthContext = async (
           id: session.user.id,
           email: session.user.email,
           name: session.user.name,
-          role: (session.user as any).role || "viewer"
+          role: (session.user as StandardUser).role || "viewer"
         },
         session: {
           id: session.session.id,
-          activeOrganizationId: (session.session as any).activeOrganizationId
+          activeOrganizationId: (session.session as StandardSession).activeOrganizationId
         }
       };
       
       // Better Auth organization plugin stores active org in session
-      const activeOrgId = (session.session as any).activeOrganizationId;
+      const activeOrgId = (session.session as StandardSession).activeOrganizationId;
       if (activeOrgId) {
         context.tenantId = activeOrgId;
         context.organizationId = activeOrgId;
@@ -126,7 +126,7 @@ export const resolveAuthContext = async (
           actor_id: session.user.id,
           session_id: session.session.id,
           active_org_id: activeOrgId ?? null,
-          role: (session.user as any).role || "viewer"
+          role: (session.user as StandardUser).role || "viewer"
         }
       });
     }

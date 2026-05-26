@@ -58,7 +58,7 @@ const buildKey = (tenantId: string | undefined, actorId: string | undefined, rou
 /**
  * In-memory rate limit counters.
  * Eliminates 2x KV round-trips from the hot path.
- * Counters are synced to KV periodically (non-blocking).
+ * Counters are synced to KV every SYNC_BATCH_SIZE increments (non-blocking).
  *
  * Trade-off: counters are per-isolate, so in multi-isolate deployments
  * a tenant could briefly exceed the limit across isolates. This is
@@ -66,7 +66,7 @@ const buildKey = (tenantId: string | undefined, actorId: string | undefined, rou
  */
 const counters = new Map<string, { count: number; windowStart: number }>();
 
-const SYNC_INTERVAL_MS = 5_000;
+/** Sync KV every N in-memory increments (batch-based, not time-based). */
 const SYNC_BATCH_SIZE = 10;
 
 const getOrCreateCounter = (key: string, windowSeconds: number): { count: number; windowStart: number } => {

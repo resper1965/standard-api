@@ -27,8 +27,9 @@ jobs:
           cache: pnpm
 
       - name: Install
-        run: pnpm install --no-frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
+      # Non-blocking: ESLint config is not yet finalized. Track in backlog.
       - name: Lint
         run: pnpm lint || true
 
@@ -52,17 +53,18 @@ jobs:
           cache: pnpm
 
       - name: Install
-        run: pnpm install --no-frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       - name: Unit Tests
         run: pnpm test:unit
 
-      # Contract tests import api-gateway which uses cloudflare: scheme.
-      # These run properly only in wrangler/miniflare environment.
-      # Keeping as non-blocking until a proper cf-test environment is set up.
+      # Non-blocking: contract tests require wrangler/miniflare CF environment.
+      # See: https://github.com/resper1965/standard-api/issues/TBD
       - name: Contract Tests
         run: pnpm test:contracts || true
 
+  # Note: test-heavy steps are non-blocking until CF test environment is set up.
+  # security, regression, evaluations and synthetic-e2e require wrangler/miniflare.
   test-heavy:
     name: Regression, Ev & E2E
     runs-on: ubuntu-latest
@@ -81,7 +83,7 @@ jobs:
           cache: pnpm
 
       - name: Install
-        run: pnpm install --no-frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       - name: Security Tests
         run: pnpm test:security || true
@@ -113,10 +115,10 @@ jobs:
           cache: pnpm
 
       - name: Install
-        run: pnpm install --no-frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       - name: Security Audit
-        run: pnpm audit --audit-level=high || true
+        run: pnpm audit --audit-level=high
 
       - name: Build
         run: pnpm build
