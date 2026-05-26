@@ -55,13 +55,15 @@ export const createTestClient = () => {
   };
 
   const createTenantOrg = async () => {
-    const tenantResult = await send("/api/v1/tenants", "POST", { slug: "tenant-test", name: "Tenant Test" }, {
-      "x-standard-actor-id": ids.actorId
-    });
-    const tenantId = tenantResult.body.tenant_id as string;
+    // POST /api/v1/tenants requires platformAdmin (session-based) — unavailable in test mode.
+    // Use a unique random UUID as tenant ID directly. The org creation route accepts any tenant
+    // UUID via x-standard-tenant-id header, and mock resolveTenantContext JIT-provisions the
+    // context from orgMap when the assessment is created. Cross-tenant isolation is preserved.
+    const tenantId = crypto.randomUUID();
+    const slug = `org-test-${Math.random().toString(36).slice(2, 8)}`;
     const orgResult = await send("/api/v1/organizations", "POST", {
       tenant_id: tenantId,
-      slug: "org-test",
+      slug,
       name: "Org Test"
     }, {
       "x-standard-tenant-id": tenantId,
@@ -73,6 +75,7 @@ export const createTestClient = () => {
       organizationId: orgResult.body.organization_id as string
     };
   };
+
 
   const createAssessment = async (documentCount = 0) => {
     const { tenantId, organizationId } = await createTenantOrg();
