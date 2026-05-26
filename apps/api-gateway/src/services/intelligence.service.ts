@@ -137,21 +137,21 @@ export class IntelligenceService {
 
     try {
       const controlSet = new Set<string>();
-      // Query SCF service for controls mapped to this framework
-      // ScfCoreServices exposes deps.scf.getControlsByFramework or similar
-      // Use the frameworks service to get controls
-      for (const frameworkId of frameworkIds) {
-        const data = await this.deps.scf.frameworks?.getControlsByFrameworkId?.(frameworkId);
-        if (Array.isArray(data)) {
-          for (const c of data) {
-            const code = typeof c === 'string' ? c : (c as Record<string,unknown>).control_code as string;
-            if (code) controlSet.add(code);
-          }
+      // Look up each framework by its code and collect requirement codes
+      // (e.g., ISO 27002:2022 requirements like 'A.5.1', 'A.8.2')
+      const allFrameworks = await this.deps.scf.frameworks.listFrameworks();
+      for (const frameworkCode of frameworkIds) {
+        const fw = allFrameworks.find(f => f.framework_code === frameworkCode);
+        if (!fw) continue;
+        const reqs = await this.deps.scf.frameworks.listRequirements(fw.id);
+        for (const req of reqs) {
+          if (req.requirement_code) controlSet.add(req.requirement_code);
         }
       }
       if (controlSet.size > 0) {
         return controlSet;
       }
+
     } catch (err) {
       console.warn('[IntelligenceService] SCF DB lookup failed, falling back to static:', err instanceof Error ? err.message : String(err));
     }
