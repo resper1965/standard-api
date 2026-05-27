@@ -220,6 +220,27 @@
   .animate-spin-slow {
     animation: spin-slow 3s linear infinite;
   }
+
+  .glass-premium {
+    @apply bg-card/70 backdrop-blur-2xl border border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] dark:bg-card/40 dark:border-white/10 transition-all duration-300;
+  }
+
+  .glass-panel {
+    @apply bg-white/40 dark:bg-black/30 backdrop-blur-lg border border-white/30 dark:border-white/10 shadow-lg transition-all duration-300;
+  }
+  
+  .text-gradient-premium {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary via-blue-400 to-indigo-500 dark:from-primary dark:via-sky-300 dark:to-primary/80;
+  }
+
+  @keyframes auraPulse {
+    0%, 100% { box-shadow: 0 0 0 0px hsl(var(--primary) / 0.1), 0 0 10px 0px hsl(var(--primary) / 0.1); }
+    50% { box-shadow: 0 0 0 10px hsl(var(--primary) / 0), 0 0 25px 5px hsl(var(--primary) / 0.3); }
+  }
+  .animate-aura {
+    animation: auraPulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
 }
 
 /* ── Legacy variables (Login.css compat) ───────────────────── */
