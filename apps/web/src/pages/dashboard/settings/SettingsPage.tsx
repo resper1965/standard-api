@@ -18,8 +18,19 @@ import {
   DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog"
+import { Badge } from "@/components/ui/badge"
 
 import { API_URL } from "@/lib/config"
+
+const AVAILABLE_SCOPES = [
+  "assessment:read", "assessment:write", "assessment:transition",
+  "document:read", "document:write", "document:delete",
+  "scf:read", "soa:read", "soa:write", "gap:read", "gap:write",
+  "poam:read", "poam:write", "report:read", "report:write", "report:export",
+  "kb:read", "kb:search", "agent:read", "agent:run", "integration:analyze",
+  "audit:read", "metrics:read", "usage:read", "workflow:read", "workflow:write",
+  "workflow:signal", "artifact:read", "artifact:write", "approval:read"
+]
 
 // ─── API Reference Data ─────────────────────────────────────
 type Endpoint = {
@@ -451,6 +462,10 @@ export function SettingsPage() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [expandedGroup, setExpandedGroup] = useState<string | null>("Assessments")
   const [keyName, setKeyName] = useState("External System Key")
+  const [selectedScopes, setSelectedScopes] = useState<string[]>([])
+  const [isRevoking, setIsRevoking] = useState<string | null>(null)
+  const [keyToRevoke, setKeyToRevoke] = useState<any>(null)
+  const [isRevokeDialogOpen, setIsRevokeDialogOpen] = useState(false)
 
   // Org settings and faturamento states
   const [orgName, setOrgName] = useState("")
@@ -664,15 +679,48 @@ export function SettingsPage() {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-standard-tenant-id": activeOrg.id },
         credentials: "include",
-        body: JSON.stringify({ name: keyName })
+        body: JSON.stringify({
+          name: keyName,
+          scopes: selectedScopes.length > 0 ? selectedScopes : undefined
+        })
       })
       if (res.ok) {
         const json = await res.json()
         setNewKey(json.data.key)
+        setSelectedScopes([])
         await loadApiKeys(activeOrg.id)
+      } else {
+        const err = await res.json()
+        toast({ title: "Generation failed", description: err.error?.message || "Failed to generate key." })
       }
     } catch (e) { console.error(e) }
     finally { setIsGenerating(false) }
+  }
+
+  const handleRevokeKey = async () => {
+    if (!activeOrg?.id || !keyToRevoke) return
+    setIsRevoking(keyToRevoke.id)
+    try {
+      const res = await fetch(`${API_URL}/api/v1/organizations/${activeOrg.id}/api-keys/${keyToRevoke.id}`, {
+        method: "DELETE",
+        headers: { "x-standard-tenant-id": activeOrg.id },
+        credentials: "include"
+      })
+      if (res.ok) {
+        toast({ title: "API Key revoked", description: `The key "${keyToRevoke.name}" has been permanently revoked.` })
+        setIsRevokeDialogOpen(false)
+        setKeyToRevoke(null)
+        await loadApiKeys(activeOrg.id)
+      } else {
+        const err = await res.json()
+        toast({ title: "Revocation failed", description: err.error?.message || "Failed to revoke key." })
+      }
+    } catch (e) { console.error(e) }
+    finally { setIsRevoking(null) }
+  }
+
+  const toggleScope = (scope: string) => {
+    setSelectedScopes(prev => prev.includes(scope) ? prev.filter(s => s !== scope) : [...prev, scope])
   }
 
   if (!hasActiveOrg) {
@@ -921,6 +969,23 @@ export function SettingsPage() {
                 </Button>
               </div>
 
+              <div className="space-y-2">
+                <Label className="text-muted-foreground text-xs font-semibold">Scopes (Optional)</Label>
+                <div className="flex flex-wrap gap-1.5 p-3 border border-border/50 rounded-lg bg-muted/20">
+                  {AVAILABLE_SCOPES.map(scope => (
+                    <Badge 
+                      key={scope} 
+                      variant={selectedScopes.includes(scope) ? "default" : "outline"}
+                      className="cursor-pointer hover:bg-primary/20"
+                      onClick={() => toggleScope(scope)}
+                    >
+                      {scope}
+                    </Badge>
+                  ))}
+                  {selectedScopes.length === 0 && <span className="text-xs text-muted-foreground ml-2 my-auto">Leave empty for full access.</span>}
+                </div>
+              </div>
+
               {newKey && (
                 <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-lg space-y-2">
                   <div className="text-sm font-semibold text-emerald-600 flex items-center justify-between">
@@ -937,6 +1002,7 @@ export function SettingsPage() {
                     <TableRow>
                       <TableHead>Name</TableHead>
                       <TableHead>Key</TableHead>
+                      <TableHead>Scopes</TableHead>
                       <TableHead>Expires</TableHead>
                       <TableHead className="w-12"></TableHead>
                     </TableRow>
@@ -946,9 +1012,23 @@ export function SettingsPage() {
                       <TableRow key={k.id}>
                         <TableCell className="font-medium text-sm">{k.name}</TableCell>
                         <TableCell className="font-mono text-xs text-muted-foreground">{k.maskedKey}</TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap gap-1 max-w-[200px]">
+                            {k.scopes && k.scopes.length > 0 ? (
+                              k.scopes.map((s: string) => <Badge key={s} variant="outline" className="text-[9px] px-1 py-0">{s}</Badge>)
+                            ) : (
+                              <Badge variant="success" className="text-[9px] px-1 py-0">Admin / All Access</Badge>
+                            )}
+                          </div>
+                        </TableCell>
                         <TableCell className="text-xs text-muted-foreground">{k.expiresAt ? new Date(k.expiresAt).toLocaleDateString() : "Never"}</TableCell>
                         <TableCell>
-                          <Button variant="ghost" size="icon" className="text-destructive/60 hover:text-destructive" disabled>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="text-destructive/60 hover:text-destructive" 
+                            onClick={() => { setKeyToRevoke(k); setIsRevokeDialogOpen(true); }}
+                          >
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </TableCell>
@@ -960,6 +1040,25 @@ export function SettingsPage() {
               {apiKeys.length === 0 && !newKey && (
                 <div className="text-center text-muted-foreground text-sm py-8 border border-dashed rounded-md">No API keys generated yet.</div>
               )}
+
+              <Dialog open={isRevokeDialogOpen} onOpenChange={setIsRevokeDialogOpen}>
+                <DialogContent className="sm:max-w-[425px] border-border bg-card/95 backdrop-blur-md">
+                  <DialogHeader>
+                    <DialogTitle>Revoke API Key</DialogTitle>
+                    <DialogDescription>
+                      Are you sure you want to permanently revoke the key "{keyToRevoke?.name}"? Any systems using this key will immediately lose access.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <DialogFooter className="pt-4">
+                    <DialogClose asChild>
+                      <Button type="button" variant="outline">Cancel</Button>
+                    </DialogClose>
+                    <Button type="button" onClick={handleRevokeKey} disabled={!!isRevoking} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                      {isRevoking ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Revoking...</> : "Yes, Revoke Key"}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </CardContent>
           </Card>
         </TabsContent>
