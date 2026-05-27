@@ -71,29 +71,29 @@ export function CreateAssessmentModal({ onClose, onCreated }: { onClose: () => v
   };
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal-content" onClick={e => e.stopPropagation()}>
-        <h2>New Assessment</h2>
-        {error && <div style={{ color: "#ef4444", marginBottom: "16px" }}>{error}</div>}
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-          <div>
-            <label style={{ display: "block", marginBottom: "8px" }}>Assessment Name</label>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
+      <div className="glass-panel w-full max-w-md mx-4 rounded-xl p-6 relative overflow-hidden" onClick={e => e.stopPropagation()}>
+        <h2 className="text-xl font-bold font-brand tracking-tight mb-6">New Assessment</h2>
+        {error && <div className="p-3 mb-4 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg">{error}</div>}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Assessment Name</label>
             <input 
               type="text" 
               required 
               value={name} 
               onChange={e => setName(e.target.value)} 
               placeholder="e.g. Q3 Compliance Audit"
-              style={{ width: "100%", padding: "10px", borderRadius: "6px", border: "1px solid var(--border)", background: "var(--bg)", color: "white" }}
+              className="w-full h-10 px-3 rounded-lg border border-border/50 bg-background/50 text-foreground text-sm focus:ring-2 focus:ring-primary focus:outline-none transition-all"
             />
           </div>
-          <div>
-            <label style={{ display: "block", marginBottom: "8px" }}>Framework Version</label>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">SCF Version</label>
             <select 
               value={scfVersionId} 
               onChange={e => setScfVersionId(e.target.value)}
               disabled={loadingVersions}
-              style={{ width: "100%", padding: "10px", borderRadius: "6px", border: "1px solid var(--border)", background: "var(--bg)", color: "white" }}
+              className="w-full h-10 px-3 rounded-lg border border-border/50 bg-background/50 text-foreground text-sm focus:ring-2 focus:ring-primary focus:outline-none transition-all disabled:opacity-50"
             >
               {loadingVersions ? (
                 <option value="">Loading versions...</option>
@@ -106,10 +106,10 @@ export function CreateAssessmentModal({ onClose, onCreated }: { onClose: () => v
               )}
             </select>
           </div>
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "16px" }}>
-            <button type="button" className="btn" onClick={onClose} disabled={loading}>Cancel</button>
-            <button type="submit" className="btn btn-primary" disabled={loading || loadingVersions || !scfVersionId}>
-              {loading ? "Creating..." : "Create"}
+          <div className="flex justify-end gap-3 mt-8">
+            <button type="button" className="px-4 py-2 text-sm font-medium rounded-lg hover:bg-muted/50 transition-colors" onClick={onClose} disabled={loading}>Cancel</button>
+            <button type="submit" className="px-4 py-2 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50" disabled={loading || loadingVersions || !scfVersionId}>
+              {loading ? "Creating..." : "Create Assessment"}
             </button>
           </div>
         </form>

@@ -63,7 +63,7 @@ export function Sidebar() {
   return (
     <aside className="sidebar">
       <div className="sidebar-logo !pl-4 py-6">
-        <h1 className="text-2xl font-brand tracking-tighter">
+        <h1 className="text-2xl tracking-tighter">
           <span className="brand-logo">standard<span className="brand-logo-dot">.</span></span>
         </h1>
       </div>

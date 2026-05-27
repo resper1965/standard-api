@@ -8,7 +8,7 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from ".
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
-import { Loader2, Plus, CheckCircle2 } from "lucide-react";
+import { Loader2, Plus, CheckCircle2, Trash2 } from "lucide-react";
 
 type Organization = {
   id: string;
@@ -31,6 +31,7 @@ export function AdminOrganizations() {
   const [newOrgSlug, setNewOrgSlug] = useState("");
   const [creating, setCreating] = useState(false);
   const [activating, setActivating] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   const fetchOrgs = async () => {
     setLoading(true);
@@ -79,6 +80,19 @@ export function AdminOrganizations() {
       alert("Error: " + e.message);
     } finally {
       setCreating(false);
+    }
+  };
+
+  const handleDelete = async (orgId: string) => {
+    if (!window.confirm("Are you sure you want to delete this organization? This action cannot be undone.")) return;
+    setDeleting(orgId);
+    try {
+      await authClient.organization.delete({ organizationId: orgId });
+      await fetchOrgs();
+    } catch (e: any) {
+      alert("Failed to delete organization: " + e.message);
+    } finally {
+      setDeleting(null);
     }
   };
 
@@ -133,7 +147,7 @@ export function AdminOrganizations() {
                               variant="outline"
                               size="sm"
                               onClick={() => handleActivate(o.id)}
-                              disabled={activating === o.id}
+                              disabled={activating === o.id || deleting === o.id}
                             >
                               {activating === o.id ? (
                                 <><Loader2 className="h-3 w-3 animate-spin mr-1.5" />Activating...</>
@@ -143,6 +157,17 @@ export function AdminOrganizations() {
                             </Button>
                           )}
                           <Button variant="ghost" size="sm" disabled>Edit</Button>
+                          {!isActive && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                              onClick={() => handleDelete(o.id)}
+                              disabled={deleting === o.id || activating === o.id}
+                            >
+                              {deleting === o.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>

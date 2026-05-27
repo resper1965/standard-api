@@ -117,8 +117,7 @@ export function DocumentsPage() {
 
   return (
     <div className="space-y-6 animate-slide-up">
-      <div className="flex items-center justify-between">
-        <PageHeader title="Documents" description="Upload, manage, and track compliance evidence files" />
+      <PageHeader title="Documents" description="Upload, manage, and track compliance evidence files">
         <button
           onClick={copyAsMarkdown}
           className="btn flex items-center gap-2 text-sm"
@@ -127,7 +126,7 @@ export function DocumentsPage() {
           <ClipboardCopy className="h-4 w-4" />
           {copied ? "Copied!" : "Copy as MD"}
         </button>
-      </div>
+      </PageHeader>
       {!assessmentId && (
         <AssessmentSelector label="Documents" />
       )}
