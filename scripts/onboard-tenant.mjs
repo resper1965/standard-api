@@ -125,8 +125,8 @@ try {
   // ── 2. Create tenant ──────────────────────────────────────────────────────
   console.log("\n[2/5] Creating tenant...");
   const tenantResult = await step(
-    `POST /api/v1/admin/tenants`,
-    () => api("POST", "/api/v1/admin/tenants", {
+    `POST /api/v1/tenants`,
+    () => api("POST", "/api/v1/tenants", {
       name: TENANT_NAME,
       slug: TENANT_SLUG,
     })
