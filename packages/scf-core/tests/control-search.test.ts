@@ -16,7 +16,7 @@ import {
   SYNTHETIC_GOV_DOMAIN_ID,
   SYNTHETIC_IAC_DOMAIN_ID,
   SYNTHETIC_GOV_001_CONTROL_ID,
-} from "../../src/index";
+} from "../src/index";
 
 describe("ScfControlService — control lookup and search", () => {
   let scf: ReturnType<typeof createInMemoryScfCore>;
@@ -104,7 +104,7 @@ describe("ScfControlService — control lookup and search", () => {
       q: "governance",
     });
     expect(controls.length).toBeGreaterThanOrEqual(1);
-    expect(controls[0].control_code.startsWith("GOV")).toBe(true);
+    expect(controls[0]!.control_code.startsWith("GOV")).toBe(true);
   });
 
   it("searchControls with domain_code filter scopes results", async () => {
@@ -120,7 +120,7 @@ describe("ScfControlService — control lookup and search", () => {
     // Latest version is the synthetic one; should still return results
     const controls = await scf.controls.searchControls({ control_code: "GOV-001" });
     expect(controls).toHaveLength(1);
-    expect(controls[0].control_code).toBe("GOV-001");
+    expect(controls[0]!.control_code).toBe("GOV-001");
   });
 
   it("searchControls with unknown control_code returns empty array", async () => {

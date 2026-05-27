@@ -185,7 +185,7 @@ export function OverviewPage() {
                         {assessment.name}
                       </span>
                       <span className="text-muted-foreground text-xs mt-0.5">
-                        Created {new Date(assessment.created_at || Date.now()).toLocaleDateString()}
+                        Created {assessment.created_at ? new Date(assessment.created_at).toLocaleDateString() : "-"}
                       </span>
                     </div>
                     <Badge variant={stateVariant[assessment.state] || "muted"}>
