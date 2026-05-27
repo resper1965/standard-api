@@ -218,6 +218,23 @@ export class AssessmentLifecycleOrchestrator {
     let currentAssessment = clone(assessment);
     currentRun.status = "running";
 
+    // Re-fetch assessment from DB to get authoritative documentCount.
+    // The snapshot passed at workflow start() may be stale if documents
+    // were uploaded between snapshot creation and workflow execution.
+    // AGENTS.md §9: absence of evidence != absence of implementation.
+    if (currentAssessment.id && currentAssessment.tenantId) {
+      try {
+        const freshCount = await this.deps.assessments?.getDocumentCount(currentAssessment.id);
+        if (typeof freshCount === "number") {
+          currentAssessment = { ...currentAssessment, documentCount: freshCount };
+        }
+      } catch (err) {
+        // If re-fetch fails, proceed with snapshot value.
+        // Better to continue with potentially stale data than to block the workflow.
+        console.warn("[Workflow] progressFromStart: failed to re-fetch documentCount, using snapshot value", err);
+      }
+    }
+
     if (currentAssessment.state === "draft" && currentAssessment.documentCount > 0) {
       const progressed = await this.transitionSequence(currentRun, currentAssessment, ["documents_uploaded"], input.requested_by, `${input.idempotency_key}:documents_uploaded`, input.trace_id);
       currentRun = progressed.run;
