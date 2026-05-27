@@ -222,6 +222,8 @@ export class AssessmentLifecycleOrchestrator {
     // The snapshot passed at workflow start() may be stale if documents
     // were uploaded between snapshot creation and workflow execution.
     // AGENTS.md §9: absence of evidence != absence of implementation.
+    // NOTE: AssessmentDocumentCountAdapter contract requires MUST NOT throw —
+    // the try/catch here is a last-resort defence against non-conformant impls.
     if (currentAssessment.id && currentAssessment.tenantId) {
       try {
         const freshCount = await this.deps.assessments?.getDocumentCount(currentAssessment.id);
@@ -229,11 +231,27 @@ export class AssessmentLifecycleOrchestrator {
           currentAssessment = { ...currentAssessment, documentCount: freshCount };
         }
       } catch (err) {
-        // If re-fetch fails, proceed with snapshot value.
-        // Better to continue with potentially stale data than to block the workflow.
-        console.warn("[Workflow] progressFromStart: failed to re-fetch documentCount, using snapshot value", err);
+        // Adapter violated the "never throw" contract. Proceed with snapshot value
+        // and emit a structured audit event for observability — NOT console.warn.
+        await this.deps.audit.record({
+          event_type: "lifecycle_workflow_step_started",
+          tenant_id: currentRun.state.tenant_id,
+          organization_id: currentRun.state.organization_id,
+          assessment_id: currentRun.state.assessment_id,
+          workflow_run_id: currentRun.workflow_run_id,
+          step_name: "refetch_document_count",
+          system_actor: "workflow_engine",
+          trace_id: currentRun.state.trace_id,
+          timestamp: now(),
+          metadata: {
+            warning: "documentCount_refetch_failed_using_snapshot",
+            error_message: err instanceof Error ? err.message : String(err),
+            snapshot_document_count: currentAssessment.documentCount,
+          },
+        });
       }
     }
+
 
     if (currentAssessment.state === "draft" && currentAssessment.documentCount > 0) {
       const progressed = await this.transitionSequence(currentRun, currentAssessment, ["documents_uploaded"], input.requested_by, `${input.idempotency_key}:documents_uploaded`, input.trace_id);
