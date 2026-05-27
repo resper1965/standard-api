@@ -9,7 +9,7 @@ export function cn(...inputs: (string | undefined | null | false)[]) {
   return twMerge(clsx(inputs));
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
+ 
 export type CustomNodeData = {
   label: string;
   description?: string;

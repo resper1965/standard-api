@@ -26,7 +26,7 @@ import {
 import { Badge } from "../components/ui/badge";
 import { useNavigate } from "react-router-dom";
 
-// eslint-disable-next-line react-refresh/only-export-components
+ 
 export interface Assessment {
   assessment_id: string;
   name: string;

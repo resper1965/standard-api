@@ -16,7 +16,7 @@ import {
   SYNTHETIC_IAC_001_CONTROL_ID,
   SYNTHETIC_REQ_1_1_ID,
   SYNTHETIC_REQ_1_2_ID,
-} from "../../src/index";
+} from "../src/index";
 
 describe("ScfMappingService — mapping integrity", () => {
   let scf: ReturnType<typeof createInMemoryScfCore>;
@@ -66,7 +66,7 @@ describe("ScfMappingService — mapping integrity", () => {
       SYNTHETIC_SCF_VERSION_ID
     );
     expect(mappings).toHaveLength(1);
-    expect(mappings[0].scf_control_id).toBe(SYNTHETIC_GOV_001_CONTROL_ID);
+    expect(mappings[0]!.scf_control_id).toBe(SYNTHETIC_GOV_001_CONTROL_ID);
   });
 
   it("getMappingsForControl with frameworkId filter narrows results", async () => {
@@ -95,8 +95,8 @@ describe("ScfMappingService — mapping integrity", () => {
       SYNTHETIC_SCF_VERSION_ID
     );
     expect(mappings).toHaveLength(1);
-    expect(mappings[0].scf_framework_requirement_id).toBe(SYNTHETIC_REQ_1_1_ID);
-    expect(mappings[0].scf_control_id).toBe(SYNTHETIC_GOV_001_CONTROL_ID);
+    expect(mappings[0]!.scf_framework_requirement_id).toBe(SYNTHETIC_REQ_1_1_ID);
+    expect(mappings[0]!.scf_control_id).toBe(SYNTHETIC_GOV_001_CONTROL_ID);
   });
 
   it("getMappingsForRequirement returns 1 mapping for SYNTH-1.2", async () => {
@@ -105,7 +105,7 @@ describe("ScfMappingService — mapping integrity", () => {
       SYNTHETIC_SCF_VERSION_ID
     );
     expect(mappings).toHaveLength(1);
-    expect(mappings[0].scf_control_id).toBe(SYNTHETIC_IAC_001_CONTROL_ID);
+    expect(mappings[0]!.scf_control_id).toBe(SYNTHETIC_IAC_001_CONTROL_ID);
   });
 
   // ─── getCoverageSummary ───────────────────────────────────────────────────

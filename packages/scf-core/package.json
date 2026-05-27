@@ -7,7 +7,7 @@
   "types": "src/index.ts",
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "pnpx vitest run",
     "test:legacy": "tsx tests/run-tests.ts",
     "test:coverage": "vitest run --coverage"
   },
