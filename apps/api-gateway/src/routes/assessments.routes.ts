@@ -8,6 +8,12 @@ import { z } from "zod";
 /**
  * Asserts that the fetched resource belongs to the request's resolved tenant.
  * Prevents IDOR attacks across tenant boundaries.
+ *
+ * Behaviour:
+ * - If resourceTenantId is absent/null/empty → FORBIDDEN (data anomaly, never trust)
+ * - If resourceTenantId !== resolvedTenantId → FORBIDDEN (cross-tenant access)
+ * - If they match → pass
+ *
  * AGENTS.md §13: Tenant isolation must be enforced at every resource access.
  */
 function assertTenantOwnership(
@@ -15,7 +21,9 @@ function assertTenantOwnership(
   resolvedTenantId: string,
   resourceType = "Assessment"
 ): void {
-  if (resourceTenantId && resourceTenantId !== resolvedTenantId) {
+  // !resourceTenantId covers undefined, null and empty string —
+  // all are treated as FORBIDDEN (corrupted data must never pass the guard).
+  if (!resourceTenantId || resourceTenantId !== resolvedTenantId) {
     throw new ApiError(
       "FORBIDDEN",
       `${resourceType} does not belong to the current tenant.`,
