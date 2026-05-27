@@ -3,6 +3,7 @@ import { useSession } from "../lib/auth-client";
 import { Link } from "react-router-dom";
 import { api } from "../lib/api";
 import { TrendingUp, ClipboardCheck, AlertCircle, Clock } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface AssessmentSummary {
   id: string;
@@ -33,84 +34,115 @@ export function DashboardPage() {
 
   const greeting = getGreeting();
 
-  return (
-    <div className="space-y-8">
-      {/* Welcome banner */}
-      <div className="rounded-xl bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/10 p-6">
-        <p className="text-lg font-medium text-foreground">
-          {greeting}, {session?.user?.name?.split(" ")[0] ?? "User"} 👋
-        </p>
-        <p className="text-sm text-muted-foreground mt-1">
-          Here's an overview of your security posture
-        </p>
-      </div>
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
 
-      {/* Stats grid — full width */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <StatCard icon={<ClipboardCheck className="h-5 w-5" />} label="Total Assessments" value={stats.total} color="primary" />
-        <StatCard icon={<Clock className="h-5 w-5" />} label="In Progress" value={stats.inProgress} color="warning" />
-        <StatCard icon={<TrendingUp className="h-5 w-5" />} label="Approved" value={stats.approved} color="success" />
-        <StatCard icon={<AlertCircle className="h-5 w-5" />} label="Pending Review" value={stats.pending} color="info" />
-      </div>
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
+  };
+
+  return (
+    <motion.div 
+      className="space-y-8"
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
+    >
+      {/* Welcome banner */}
+      <motion.div variants={itemVariants} className="rounded-2xl glass-premium p-8 relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-primary/10 to-transparent pointer-events-none" />
+        <div className="relative z-10">
+          <h1 className="text-2xl font-brand font-bold text-foreground">
+            {greeting}, <span className="text-gradient-premium">{session?.user?.name?.split(" ")[0] ?? "User"}</span> 👋
+          </h1>
+          <p className="text-sm text-muted-foreground mt-2 max-w-lg">
+            Welcome to your Standard compliance control center. Here's an overview of your security posture across the organization.
+          </p>
+        </div>
+      </motion.div>
+
+      {/* Bento Grid Stats */}
+      <motion.div variants={itemVariants} className="bento-grid">
+        <StatCard icon={<ClipboardCheck className="h-6 w-6" />} label="Total Assessments" value={stats.total} color="primary" />
+        <StatCard icon={<Clock className="h-6 w-6" />} label="In Progress" value={stats.inProgress} color="warning" />
+        <StatCard icon={<TrendingUp className="h-6 w-6" />} label="Approved" value={stats.approved} color="success" />
+        <StatCard icon={<AlertCircle className="h-6 w-6" />} label="Pending Review" value={stats.pending} color="info" />
+      </motion.div>
 
       {/* Recent assessments */}
-      <div className="rounded-xl border border-border/60 bg-card shadow-sm">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border/40">
-          <h2 className="text-base font-semibold text-foreground">Recent Assessments</h2>
-          <Link to="/assessments" className="text-sm text-primary hover:text-primary/80 transition-colors font-medium">
+      <motion.div variants={itemVariants} className="rounded-2xl glass-panel overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-white/5 dark:border-white/10 bg-white/5">
+          <h2 className="text-lg font-brand font-semibold text-foreground">Recent Assessments</h2>
+          <Link to="/assessments" className="text-sm text-primary hover:text-primary/80 transition-colors font-medium hover-lift inline-block">
             View All →
           </Link>
         </div>
 
-        <div className="p-6">
-          {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
-            </div>
-          ) : assessments.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="text-4xl mb-4">📋</div>
-              <h3 className="text-base font-medium text-foreground mb-1">No assessments yet</h3>
-              <p className="text-sm text-muted-foreground mb-6">Create your first security assessment to get started</p>
-              <Link to="/assessments" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors">
-                + New Assessment
-              </Link>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-muted-foreground">
-                    <th className="pb-3 font-medium">Name</th>
-                    <th className="pb-3 font-medium">Framework</th>
-                    <th className="pb-3 font-medium">State</th>
-                    <th className="pb-3 font-medium">Created</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border/40">
-                  {assessments.slice(0, 8).map((a) => (
-                    <tr key={a.id} className="group hover:bg-muted/30 transition-colors">
-                      <td className="py-3 pr-4 font-medium text-foreground">
-                        <Link to={`/assessments/${a.id}`} className="hover:text-primary transition-colors">
-                          {a.name}
-                        </Link>
-                      </td>
-                      <td className="py-3 pr-4 text-muted-foreground">{a.framework_id}</td>
-                      <td className="py-3 pr-4">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${stateStyle(a.state)}`}>
-                          {a.state.replace(/_/g, " ")}
-                        </span>
-                      </td>
-                      <td className="py-3 text-muted-foreground">{new Date(a.created_at).toLocaleDateString()}</td>
+        <div className="p-0">
+          <AnimatePresence mode="wait">
+            {loading ? (
+              <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center justify-center py-16">
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
+              </motion.div>
+            ) : assessments.length === 0 ? (
+              <motion.div key="empty" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center justify-center py-16 text-center px-4">
+                <div className="text-5xl mb-4 animate-bounce">📋</div>
+                <h3 className="text-lg font-medium text-foreground mb-2">No assessments yet</h3>
+                <p className="text-sm text-muted-foreground mb-6 max-w-sm">Create your first security assessment to begin your compliance journey.</p>
+                <Link to="/assessments" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:shadow-[0_0_20px_rgba(14,165,233,0.4)] transition-all hover:-translate-y-0.5">
+                  + New Assessment
+                </Link>
+              </motion.div>
+            ) : (
+              <motion.div key="table" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-muted-foreground text-xs uppercase tracking-wider bg-black/5 dark:bg-white/5">
+                      <th className="px-6 py-4 font-medium">Name</th>
+                      <th className="px-6 py-4 font-medium">Framework</th>
+                      <th className="px-6 py-4 font-medium">State</th>
+                      <th className="px-6 py-4 font-medium">Created</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                  </thead>
+                  <tbody className="divide-y divide-border/20">
+                    {assessments.slice(0, 8).map((a, i) => (
+                      <motion.tr 
+                        key={a.id} 
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.05 }}
+                        className="group hover:bg-white/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
+                      >
+                        <td className="px-6 py-4 font-medium text-foreground">
+                          <Link to={`/assessments/${a.id}`} className="group-hover:text-primary transition-colors block">
+                            {a.name}
+                          </Link>
+                        </td>
+                        <td className="px-6 py-4 text-muted-foreground">{a.framework_id}</td>
+                        <td className="px-6 py-4">
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wide uppercase ${stateStyle(a.state)}`}>
+                            {a.state.replace(/_/g, " ")}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-muted-foreground">{new Date(a.created_at).toLocaleDateString()}</td>
+                      </motion.tr>
+                    ))}
+                  </tbody>
+                </table>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -128,30 +160,35 @@ function StatCard({
   color: "primary" | "warning" | "success" | "info";
 }) {
   const colorMap: Record<string, string> = {
-    primary: "bg-primary/10 text-primary",
-    warning: "bg-warning/10 text-warning",
-    success: "bg-success/10 text-success",
-    info: "bg-info/10 text-info",
+    primary: "bg-primary/20 text-primary dark:bg-primary/10",
+    warning: "bg-warning/20 text-warning dark:bg-warning/10",
+    success: "bg-success/20 text-success dark:bg-success/10",
+    info: "bg-info/20 text-info dark:bg-info/10",
   };
 
   return (
-    <div className="rounded-xl border border-border/60 bg-card p-5 shadow-sm hover:shadow-md transition-shadow">
-      <div className="flex items-center gap-3 mb-3">
-        <div className={`flex items-center justify-center w-9 h-9 rounded-lg ${colorMap[color]}`}>
+    <motion.div 
+      whileHover={{ y: -5, scale: 1.02 }}
+      transition={{ type: "spring", stiffness: 400, damping: 17 }}
+      className="bento-card group"
+    >
+      <div className="absolute -right-6 -top-6 w-24 h-24 bg-gradient-to-br from-current to-transparent opacity-10 rounded-full group-hover:scale-150 transition-transform duration-500" style={{ color: `var(--${color})` }} />
+      <div className="flex items-center gap-4 mb-4 relative z-10">
+        <div className={`flex items-center justify-center w-12 h-12 rounded-xl backdrop-blur-md border border-white/10 ${colorMap[color]}`}>
           {icon}
         </div>
-        <span className="text-sm text-muted-foreground">{label}</span>
+        <span className="text-sm font-medium text-muted-foreground">{label}</span>
       </div>
-      <span className="text-3xl font-bold tracking-tight text-foreground">{value}</span>
-    </div>
+      <span className="text-4xl font-brand font-bold tracking-tight text-foreground relative z-10">{value}</span>
+    </motion.div>
   );
 }
 
 function stateStyle(state: string): string {
-  if (state.includes("approved") || state === "closed") return "bg-success/10 text-success";
-  if (state.includes("review")) return "bg-warning/10 text-warning";
-  if (state === "failed" || state === "cancelled") return "bg-destructive/10 text-destructive";
-  return "bg-info/10 text-info";
+  if (state.includes("approved") || state === "closed") return "bg-success/10 text-success border border-success/20";
+  if (state.includes("review")) return "bg-warning/10 text-warning border border-warning/20";
+  if (state === "failed" || state === "cancelled") return "bg-destructive/10 text-destructive border border-destructive/20";
+  return "bg-info/10 text-info border border-info/20";
 }
 
 function getGreeting(): string {
