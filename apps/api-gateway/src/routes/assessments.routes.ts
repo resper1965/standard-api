@@ -5,6 +5,25 @@ import { json, newId, parseJson, routeParam } from "../http";
 import { assessmentResponse, lifecycleEventResponse } from "../presenters";
 import { z } from "zod";
 
+/**
+ * Asserts that the fetched resource belongs to the request's resolved tenant.
+ * Prevents IDOR attacks across tenant boundaries.
+ * AGENTS.md §13: Tenant isolation must be enforced at every resource access.
+ */
+function assertTenantOwnership(
+  resourceTenantId: string | undefined | null,
+  resolvedTenantId: string,
+  resourceType = "Assessment"
+): void {
+  if (resourceTenantId && resourceTenantId !== resolvedTenantId) {
+    throw new ApiError(
+      "FORBIDDEN",
+      `${resourceType} does not belong to the current tenant.`,
+      403
+    );
+  }
+}
+
 const AssessmentAutomationConfigSchema = z.object({
   agents_enabled: z.array(z.string()).optional(),
   auto_remediation: z.boolean().optional(),
@@ -64,6 +83,7 @@ export const assessmentsRoutes: RouteDefinition[] = [
       const tenantDb = deps.assessments.withTenant(resolvedTenantId);
       const assessment = await tenantDb.get(routeParam(params, "assessmentId"));
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
+      assertTenantOwnership(assessment.tenant_id, resolvedTenantId);
       return json(assessmentResponse(assessment));
     }
   },
@@ -114,6 +134,7 @@ export const assessmentsRoutes: RouteDefinition[] = [
       const tenantDb = deps.assessments.withTenant(resolvedTenantId);
       const assessment = await tenantDb.get(routeParam(params, "assessmentId"));
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
+      assertTenantOwnership(assessment.tenant_id, resolvedTenantId);
 
       const updated = { ...assessment, name: body.name ?? assessment.name };
       await tenantDb.save(updated);
@@ -130,6 +151,7 @@ export const assessmentsRoutes: RouteDefinition[] = [
       const tenantDb = deps.assessments.withTenant(resolvedTenantId);
       const assessment = await tenantDb.get(routeParam(params, "assessmentId"));
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
+      assertTenantOwnership(assessment.tenant_id, resolvedTenantId);
       return json({
         assessment_id: assessment.assessment_id,
         tenant_id: assessment.tenant_id,
@@ -150,6 +172,7 @@ export const assessmentsRoutes: RouteDefinition[] = [
       const tenantDb = deps.assessments.withTenant(resolvedTenantId);
       const assessment = await tenantDb.get(assessmentId);
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
+      assertTenantOwnership(assessment.tenant_id, resolvedTenantId);
       const events = await deps.lifecycleEvents.listByAssessment(assessmentId, resolvedTenantId);
       return json({
         assessment_id: assessment.assessment_id,
@@ -171,6 +194,7 @@ export const assessmentsRoutes: RouteDefinition[] = [
       const tenantDb = deps.assessments.withTenant(resolvedTenantId);
       const assessment = await tenantDb.get(assessmentId);
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
+      assertTenantOwnership(assessment.tenant_id, resolvedTenantId);
 
       // Find latest approved gap analysis version
       const versions = await deps.gapAnalysis.repositories.gapVersions.listByAssessment(assessmentId, resolvedTenantId);
@@ -269,6 +293,7 @@ export const assessmentsRoutes: RouteDefinition[] = [
       if (!assessment) {
         throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
       }
+      assertTenantOwnership(assessment.tenant_id, resolvedTenantId);
 
       // Instead of changing the schema natively, we'll embed the config in snapshot.automation_config
       // to keep it within the existing AssessmentRecord bounds without schema migrations
