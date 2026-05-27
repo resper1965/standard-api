@@ -33,7 +33,9 @@ export default {
         const db = createDb(env.DATABASE_URL!);
         cachedDeps = {
           ...createDrizzleRepositories(db, env),
-          email: env.EMAIL ? (env.EMAIL as SendEmail) : undefined,
+          // Cloudflare Email binding type does not overlap with SendEmail interface —
+          // double cast via unknown is required and intentional (CF Workers limitation).
+          email: env.EMAIL ? (env.EMAIL as unknown as SendEmail) : undefined,
           AGENT_RUN_QUEUE: env.AGENT_RUN_QUEUE ?? undefined,
           SOC_TRIAGE_QUEUE: env.SOC_TRIAGE_QUEUE ?? undefined,
           banUser: async (userId: string, reason?: string) => {
