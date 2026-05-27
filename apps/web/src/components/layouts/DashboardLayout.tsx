@@ -193,7 +193,7 @@ export function DashboardLayout() {
         <div className="flex h-14 items-center px-6 border-b border-border/50 shrink-0">
           <Link to="/dashboard" className="flex items-center gap-2">
             <span className="text-[1.46rem] font-brand">
-              standard<span className="brand-dot text-primary">.</span>
+              <span className="brand-logo">standard<span className="brand-logo-dot">.</span></span>
             </span>
           </Link>
         </div>
@@ -216,7 +216,7 @@ export function DashboardLayout() {
       >
         <div className="flex h-14 items-center justify-between px-5 border-b border-border/50">
           <span className="text-[1.46rem] font-brand">
-            standard<span className="brand-dot text-primary">.</span>
+            <span className="brand-logo">standard<span className="brand-logo-dot">.</span></span>
           </span>
           <Button variant="ghost" size="icon" onClick={closeMobile} className="h-8 w-8">
             <X className="h-4 w-4" />
@@ -234,7 +234,7 @@ export function DashboardLayout() {
             <Menu className="h-5 w-5" />
           </Button>
           <span className="text-[1.3rem] font-brand">
-            standard<span className="brand-dot text-primary">.</span>
+            <span className="brand-logo">standard<span className="brand-logo-dot">.</span></span>
           </span>
           <div className="h-7 w-7 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground text-[10px] font-bold">
             {userInitial}

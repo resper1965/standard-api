@@ -26,7 +26,7 @@ export function LandingPage() {
         <div className="container mx-auto px-6 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="font-brand text-2xl tracking-tighter">
-              standard<span className="text-primary brand-dot">.</span>
+              <span className="brand-logo">standard<span className="brand-logo-dot">.</span></span>
             </span>
           </div>
           
@@ -194,7 +194,7 @@ export function LandingPage() {
         <div className="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">
           <div className="flex items-center gap-2">
             <span className="font-brand text-xl tracking-tighter">
-              standard<span className="text-primary">.</span>
+              <span className="brand-logo">standard<span className="brand-logo-dot">.</span></span>
             </span>
           </div>
           <p className="text-muted-foreground text-sm">

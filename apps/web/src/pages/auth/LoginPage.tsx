@@ -63,7 +63,7 @@ export function LoginPage() {
         <div className="login-header">
           <div className="login-logo">
             <span className="login-logo-text font-brand">
-              standard<span className="text-primary brand-dot">.</span>
+              <span className="brand-logo">standard<span className="brand-logo-dot">.</span></span>
             </span>
           </div>
           <p className="login-subtitle">
