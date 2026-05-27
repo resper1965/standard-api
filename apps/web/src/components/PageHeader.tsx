@@ -1,25 +1,24 @@
-import { useEffect, type ReactNode } from "react"
-import { usePageHeader } from "./layouts/PageHeaderContext"
+import { type ReactNode } from "react"
 
 type PageHeaderProps = {
-  title: string          // kept for backward compat (title lives in topbar via routeTitles)
+  title: string
   description?: string
-  children?: ReactNode   // action buttons rendered in the sticky topbar
+  children?: ReactNode
 }
 
 /**
- * Page header bridge — pushes description + action buttons to the
- * sticky topbar in DashboardLayout via context.
- * Renders nothing in the page body itself.
+ * Beautiful page header rendered inline at the top of page components.
  */
-export function PageHeader({ description, children }: PageHeaderProps) {
-  const { setHeader, clear } = usePageHeader()
-
-  useEffect(() => {
-    setHeader({ description, actions: children })
-    return () => clear()
-  }, [description, children, setHeader, clear])
-
-  // Nothing rendered inline — everything lives in the sticky header
-  return null
+export function PageHeader({ title, description, children }: PageHeaderProps) {
+  return (
+    <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-8">
+      <div>
+        <h1 className="text-3xl font-brand font-bold text-foreground tracking-tight">{title}</h1>
+        {description && <p className="text-muted-foreground mt-1 text-base">{description}</p>}
+      </div>
+      <div className="flex items-center gap-3">
+        {children}
+      </div>
+    </div>
+  )
 }

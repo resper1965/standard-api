@@ -9,14 +9,18 @@ export function ErrorPage() {
   console.error(error);
 
   let status = "Unexpected Error";
-  let title = "Oauth, something went wrong";
-  let message = "An unexpected error occurred in Standard. context layer.";
+  let title = "Oops, something went wrong";
+  let message: string = "An unexpected error occurred in Standard. context layer.";
   let isChunkError = false;
 
   if (isRouteErrorResponse(error)) {
     status = error.status.toString();
     title = error.statusText;
-    message = error.data?.message || message;
+    message = typeof error.data?.message === "string" 
+      ? error.data.message 
+      : error.data?.message 
+        ? JSON.stringify(error.data.message) 
+        : message;
   } else if (error instanceof Error) {
     message = error.message;
     // Detect "Failed to fetch dynamically imported module" or "Loading chunk failed"
