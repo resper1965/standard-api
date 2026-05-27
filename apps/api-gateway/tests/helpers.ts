@@ -46,7 +46,7 @@ const wrapError = (resBody: any) => {
 };
 
 export const createTestClient = () => {
-  const app = createApp();
+  const app = createApp(undefined, { STANDARD_ENV: "test" } as any);
 
   const send = async (path: string, method = "GET", body?: unknown, headers: Record<string, string> = {}) => {
     const response = await app.fetch(jsonRequest(path, method, body, headers));
