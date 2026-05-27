@@ -24,6 +24,29 @@ export const expect = <T>(actual: T) => ({
     if (actual === undefined || actual === null) {
       throw new Error("Expected value to be defined");
     }
+  },
+  toBeLessThan(expected: number): void {
+    if (typeof actual !== "number" || actual >= (expected as unknown as number)) {
+      throw new Error(`Expected ${String(actual)} to be less than ${String(expected)}`);
+    }
+  },
+  toBeGreaterThanOrEqual(expected: number): void {
+    if (typeof actual !== "number" || actual < (expected as unknown as number)) {
+      throw new Error(`Expected ${String(actual)} to be >= ${String(expected)}`);
+    }
+  },
+  toContain(expected: unknown): void {
+    if (Array.isArray(actual)) {
+      if (!actual.includes(expected)) {
+        throw new Error(`Expected array to contain ${String(expected)}, got: ${JSON.stringify(actual)}`);
+      }
+    } else if (typeof actual === "string") {
+      if (!actual.includes(expected as string)) {
+        throw new Error(`Expected string to contain "${String(expected)}", got: "${actual}"`);
+      }
+    } else {
+      throw new Error(`toContain called on non-array/non-string: ${typeof actual}`);
+    }
   }
 });
 
