@@ -1,6 +1,9 @@
 import { useRouteError, isRouteErrorResponse } from "react-router-dom";
 import { AlertTriangle, RefreshCw, Home, ShieldAlert } from "lucide-react";
 
+// Generated once per page load, keeping the render function pure
+const traceId = Math.random().toString(36).substring(7).toUpperCase();
+
 export function ErrorPage() {
   const error = useRouteError();
   console.error(error);
@@ -74,7 +77,7 @@ export function ErrorPage() {
 
           <div className="pt-4 border-t border-white/5">
             <p className="text-[10px] text-zinc-600 font-mono">
-              Trace ID: {Math.random().toString(36).substring(7).toUpperCase()}
+              Trace ID: {traceId}
             </p>
           </div>
         </div>

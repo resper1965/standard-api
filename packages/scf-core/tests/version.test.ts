@@ -10,7 +10,7 @@ import {
   SYNTHETIC_SCF_VERSION_ID,
   SYNTHETIC_SCF_VERSION_LABEL,
   SYNTHETIC_SOURCE_HASH,
-} from "../../src/index";
+} from "../src/index";
 
 describe("ScfVersionService — synthetic fixture invariants", () => {
   let scf: ReturnType<typeof createInMemoryScfCore>;
@@ -25,7 +25,8 @@ describe("ScfVersionService — synthetic fixture invariants", () => {
   });
 
   it("listVersions version has correct id and label", async () => {
-    const [v] = await scf.versions.listVersions();
+    const versions = await scf.versions.listVersions();
+    const v = versions[0]!;
     expect(v.id).toBe(SYNTHETIC_SCF_VERSION_ID);
     expect(v.version_label).toBe(SYNTHETIC_SCF_VERSION_LABEL);
     expect(v.source_hash).toBe(SYNTHETIC_SOURCE_HASH);

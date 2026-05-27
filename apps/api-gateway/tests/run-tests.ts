@@ -18,6 +18,7 @@ import "./auth.test";
 import "./rate-limit.test";
 import "./intelligence.test";
 import "./organizations-mgmt.test";
+import "./critical.test"; // adversarial: tenant isolation, concurrency, security, contracts
 import { runTests } from "./test-kit";
 
 await runTests();

@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { redirect, Navigate } from "react-router-dom"
 import { AuthLayout } from "./components/layouts/AuthLayout"
 import { DashboardLayout } from "./components/layouts/DashboardLayout"

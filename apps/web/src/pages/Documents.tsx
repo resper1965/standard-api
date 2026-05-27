@@ -58,7 +58,7 @@ export function DocumentsPage() {
       lines.push(`| # | Title | Status | Uploaded |`);
       lines.push(`|---|-------|--------|----------|`);
       documents.forEach((doc, i) => {
-        const date = new Date(doc.uploaded_at || Date.now()).toLocaleDateString();
+        const date = doc.uploaded_at ? new Date(doc.uploaded_at).toLocaleDateString() : "-";
         lines.push(`| ${i + 1} | ${doc.title} | ${doc.status} | ${date} |`);
       });
       lines.push(``);
@@ -197,7 +197,7 @@ export function DocumentsPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-muted-foreground text-sm">
-                      {new Date(doc.uploaded_at || Date.now()).toLocaleDateString()}
+                      {doc.uploaded_at ? new Date(doc.uploaded_at).toLocaleDateString() : "-"}
                     </TableCell>
                   </TableRow>
                 ))}
