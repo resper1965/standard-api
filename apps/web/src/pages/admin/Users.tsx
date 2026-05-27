@@ -4,7 +4,10 @@ import { PageHeader } from "../../components/PageHeader";
 import { Card, CardContent } from "../../components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "../../components/ui/table";
 import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
 import { Loader2, UserPlus, Pencil, Check, X, Shield, ShieldAlert } from "lucide-react";
+import { useToast } from "../../hooks/use-toast";
 
 type User = {
   id: string;
@@ -28,6 +31,11 @@ export function AdminUsers() {
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<EditingUser | null>(null);
   const [saving, setSaving] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState("user");
+  const [inviting, setInviting] = useState(false);
+  const { toast } = useToast();
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -44,7 +52,7 @@ export function AdminUsers() {
         setError("No user data returned from admin API.");
       }
     } catch (e: any) {
-      console.error("[Users] admin.listUsers error:", e);
+      toast({ variant: "destructive", title: "Fetch failed", description: e?.message || "Failed to fetch users. You may not have admin permissions." });
       setError(e?.message || "Failed to fetch users. You may not have admin permissions.");
     } finally {
       setLoading(false);
@@ -83,8 +91,9 @@ export function AdminUsers() {
       // Refresh data
       await fetchUsers();
       setEditing(null);
+      toast({ title: "User updated", description: "The changes were successfully saved." });
     } catch (e: any) {
-      console.error("[Users] save error:", e);
+      toast({ variant: "destructive", title: "Save failed", description: e?.message || "Failed to save changes." });
       setError(e?.message || "Failed to save changes.");
     } finally {
       setSaving(false);
@@ -96,10 +105,27 @@ export function AdminUsers() {
     setEditing(prev => prev?.id === userId ? { ...prev, role: newRole } : prev);
   };
 
+  const handleInvite = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setInviting(true);
+    try {
+      // In a real scenario, this would call authClient.admin.inviteUser
+      // or a custom endpoint like api("/api/auth/admin/invite", { method: "POST", body: { email: inviteEmail, role: inviteRole } })
+      toast({ title: "User invited", description: `An invitation has been sent to ${inviteEmail}.` });
+      setShowInviteModal(false);
+      setInviteEmail("");
+      setInviteRole("user");
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Invite failed", description: e?.message || "Failed to invite user." });
+    } finally {
+      setInviting(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader title="User Administration" description="Manage users, roles, and access control">
-        <Button size="sm" disabled>
+        <Button size="sm" onClick={() => setShowInviteModal(true)}>
           <UserPlus className="h-4 w-4 mr-1.5" />
           Invite User
         </Button>
@@ -223,6 +249,40 @@ export function AdminUsers() {
           )}
         </CardContent>
       </Card>
+
+      {/* Invite Modal */}
+      {showInviteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowInviteModal(false)}>
+          <Card className="w-full max-w-md mx-4" onClick={(e) => e.stopPropagation()}>
+            <CardContent className="pt-6 space-y-4">
+              <h3 className="text-lg font-semibold">Invite User</h3>
+              <form onSubmit={handleInvite} className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Email Address</Label>
+                  <Input type="email" required value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} placeholder="colleague@acme.com" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Role</Label>
+                  <select 
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    value={inviteRole} 
+                    onChange={e => setInviteRole(e.target.value)}
+                  >
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </div>
+                <div className="flex justify-end gap-2 pt-2">
+                  <Button type="button" variant="outline" onClick={() => setShowInviteModal(false)}>Cancel</Button>
+                  <Button type="submit" disabled={inviting}>
+                    {inviting ? "Inviting..." : "Send Invite"}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

@@ -494,7 +494,9 @@ export function SettingsPage() {
         const json = await res.json()
         setApiKeys(json.data || [])
       }
-    } catch { /* silent */ }
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Error", description: e?.message || "Failed to load API keys." });
+    }
   }
 
   const loadOrganizationDetails = async (orgId: string) => {
@@ -507,8 +509,8 @@ export function SettingsPage() {
         const json = await res.json()
         setActiveOrg((prev: any) => ({ ...prev, ...json }))
       }
-    } catch (e) {
-      console.error("Failed to load organization extra details", e)
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Error", description: e?.message || "Failed to load organization details." });
     }
   }
 
@@ -523,7 +525,9 @@ export function SettingsPage() {
           await loadApiKeys(orgData.data.id)
           await loadOrganizationDetails(orgData.data.id)
         }
-      } catch (e) { console.error("Failed to load organization", e) }
+      } catch (e: any) { 
+        toast({ variant: "destructive", title: "Error", description: e?.message || "Failed to load organization." });
+      }
     }
     load()
   }, [hasActiveOrg])
@@ -693,7 +697,9 @@ export function SettingsPage() {
         const err = await res.json()
         toast({ title: "Generation failed", description: err.error?.message || "Failed to generate key." })
       }
-    } catch (e) { console.error(e) }
+    } catch (e: any) { 
+      toast({ variant: "destructive", title: "Generation failed", description: e?.message || "Failed to generate key." })
+    }
     finally { setIsGenerating(false) }
   }
 
@@ -715,7 +721,9 @@ export function SettingsPage() {
         const err = await res.json()
         toast({ title: "Revocation failed", description: err.error?.message || "Failed to revoke key." })
       }
-    } catch (e) { console.error(e) }
+    } catch (e: any) { 
+      toast({ variant: "destructive", title: "Revocation failed", description: e?.message || "Failed to revoke key." })
+    }
     finally { setIsRevoking(null) }
   }
 

@@ -8,7 +8,8 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from ".
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
-import { Loader2, Plus, CheckCircle2, Trash2 } from "lucide-react";
+import { Loader2, Plus, CheckCircle2, Trash2, Pencil } from "lucide-react";
+import { useToast } from "../../hooks/use-toast";
 
 type Organization = {
   id: string;
@@ -32,6 +33,11 @@ export function AdminOrganizations() {
   const [creating, setCreating] = useState(false);
   const [activating, setActivating] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [editingOrg, setEditingOrg] = useState<Organization | null>(null);
+  const [editOrgName, setEditOrgName] = useState("");
+  const [editOrgSlug, setEditOrgSlug] = useState("");
+  const [updating, setUpdating] = useState(false);
+  const { toast } = useToast();
 
   const fetchOrgs = async () => {
     setLoading(true);
@@ -59,7 +65,7 @@ export function AdminOrganizations() {
       // Reload page to propagate session change across all components
       window.location.reload();
     } catch (e: any) {
-      alert("Failed to activate organization: " + e.message);
+      toast({ variant: "destructive", title: "Activation Failed", description: e.message || "Could not activate organization" });
       setActivating(null);
     }
   };
@@ -76,8 +82,9 @@ export function AdminOrganizations() {
       setNewOrgName("");
       setNewOrgSlug("");
       await fetchOrgs();
+      toast({ title: "Organization created", description: "The organization was successfully created." });
     } catch (e: any) {
-      alert("Error: " + e.message);
+      toast({ variant: "destructive", title: "Creation Failed", description: e.message || "An error occurred." });
     } finally {
       setCreating(false);
     }
@@ -89,10 +96,36 @@ export function AdminOrganizations() {
     try {
       await authClient.organization.delete({ organizationId: orgId });
       await fetchOrgs();
+      toast({ title: "Organization deleted" });
     } catch (e: any) {
-      alert("Failed to delete organization: " + e.message);
+      toast({ variant: "destructive", title: "Deletion Failed", description: e.message || "An error occurred." });
     } finally {
       setDeleting(null);
+    }
+  };
+
+  const handleEditClick = (org: Organization) => {
+    setEditingOrg(org);
+    setEditOrgName(org.name);
+    setEditOrgSlug(org.slug);
+  };
+
+  const handleUpdate = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!editingOrg) return;
+    setUpdating(true);
+    try {
+      await authClient.organization.update({ 
+        organizationId: editingOrg.id,
+        data: { name: editOrgName, slug: editOrgSlug }
+      });
+      setEditingOrg(null);
+      await fetchOrgs();
+      toast({ title: "Organization updated" });
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Update Failed", description: e.message || "An error occurred." });
+    } finally {
+      setUpdating(false);
     }
   };
 
@@ -156,7 +189,14 @@ export function AdminOrganizations() {
                               )}
                             </Button>
                           )}
-                          <Button variant="ghost" size="sm" disabled>Edit</Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => handleEditClick(o)}
+                            disabled={activating === o.id || deleting === o.id}
+                          >
+                            <Pencil className="h-4 w-4 mr-1" /> Edit
+                          </Button>
                           {!isActive && (
                             <Button
                               variant="ghost"
@@ -198,6 +238,33 @@ export function AdminOrganizations() {
                   <Button type="button" variant="outline" onClick={() => setShowModal(false)}>Cancel</Button>
                   <Button type="submit" disabled={creating}>
                     {creating ? "Creating..." : "Create"}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {editingOrg && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setEditingOrg(null)}>
+          <Card className="w-full max-w-md mx-4" onClick={(e) => e.stopPropagation()}>
+            <CardContent className="pt-6 space-y-4">
+              <h3 className="text-lg font-semibold">Edit Organization</h3>
+              <form onSubmit={handleUpdate} className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Name</Label>
+                  <Input required value={editOrgName} onChange={e => setEditOrgName(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Slug</Label>
+                  <Input required value={editOrgSlug} onChange={e => setEditOrgSlug(e.target.value)} />
+                </div>
+                <div className="flex justify-end gap-2 pt-2">
+                  <Button type="button" variant="outline" onClick={() => setEditingOrg(null)}>Cancel</Button>
+                  <Button type="submit" disabled={updating}>
+                    {updating ? "Saving..." : "Save"}
                   </Button>
                 </div>
               </form>
