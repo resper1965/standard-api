@@ -173,6 +173,7 @@ export const workflowRoutes: RouteDefinition[] = [
       const tenantApprovalsDb = deps.approvals.withTenant(tenantId!);
       const approvalEvent = body.approval_event_id && gate ? await tenantApprovalsDb.getForGate(body.approval_event_id, gate) : undefined;
 
+      const stepStartMs = Date.now();
       try {
         const result = await orchestrator.signal(routeParam(params, "workflowRunId"), {
           ...body,
@@ -197,7 +198,7 @@ export const workflowRoutes: RouteDefinition[] = [
           assessment_id: assessment.assessment_id,
           metric_name: "workflow_step_duration_ms",
           metric_type: "histogram",
-          metric_value: 0,
+          metric_value: Date.now() - stepStartMs,
           unit: "ms",
           dimensions: { signal_type: body.signal_type },
           trace_id: traceId
