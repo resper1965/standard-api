@@ -8,7 +8,7 @@ import {
   Bell, Network
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { PageHeaderProvider, usePageHeader } from "./PageHeaderContext"
+import { motion, AnimatePresence } from "framer-motion"
 
 type NavItem = {
   name: string
@@ -186,13 +186,12 @@ export function DashboardLayout() {
   )
 
   return (
-    <PageHeaderProvider>
     <div className="flex min-h-screen w-full bg-background text-foreground">
       {/* ── Desktop Sidebar ───────────────────────────── */}
       <aside className="w-[260px] flex-col border-r border-border/60 bg-card hidden md:flex h-screen sticky top-0">
         <div className="flex h-14 items-center px-6 border-b border-border/50 shrink-0">
           <Link to="/dashboard" className="flex items-center gap-2">
-            <span className="text-[1.46rem] font-brand">
+            <span className="text-[1.46rem] tracking-tighter">
               <span className="brand-logo">standard<span className="brand-logo-dot">.</span></span>
             </span>
           </Link>
@@ -215,7 +214,7 @@ export function DashboardLayout() {
         }`}
       >
         <div className="flex h-14 items-center justify-between px-5 border-b border-border/50">
-          <span className="text-[1.46rem] font-brand">
+          <span className="text-[1.46rem] tracking-tighter">
             <span className="brand-logo">standard<span className="brand-logo-dot">.</span></span>
           </span>
           <Button variant="ghost" size="icon" onClick={closeMobile} className="h-8 w-8">
@@ -233,7 +232,7 @@ export function DashboardLayout() {
           <Button variant="ghost" size="icon" onClick={() => setMobileOpen(true)} className="h-9 w-9" aria-label="Open navigation">
             <Menu className="h-5 w-5" />
           </Button>
-          <span className="text-[1.3rem] font-brand">
+          <span className="text-[1.3rem] tracking-tighter">
             <span className="brand-logo">standard<span className="brand-logo-dot">.</span></span>
           </span>
           <div className="h-7 w-7 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground text-[10px] font-bold">
@@ -241,47 +240,44 @@ export function DashboardLayout() {
           </div>
         </header>
 
-        {/* Desktop sticky topbar with page title + description + actions */}
-        <DesktopTopbar pageTitle={pageTitle} userInitial={userInitial} />
+        {/* Desktop sticky topbar with global actions */}
+        <DesktopTopbar userInitial={userInitial} />
 
         <div className="flex-1 px-6 md:px-8 py-6 overflow-auto">
-          <Outlet />
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={location.pathname}
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              className="h-full"
+            >
+              <Outlet />
+            </motion.div>
+          </AnimatePresence>
         </div>
       </main>
     </div>
-    </PageHeaderProvider>
   )
 }
 
-/** Sticky desktop topbar — receives page-level description + actions via context */
-function DesktopTopbar({ pageTitle, userInitial }: { pageTitle: string; userInitial: string }) {
-  const { state } = usePageHeader()
-  const hasExtra = !!(state.description || state.actions)
-
+/** Sticky desktop topbar for global actions */
+function DesktopTopbar({ userInitial }: { userInitial: string }) {
   return (
-    <header className={`hidden md:block border-b border-border/50 bg-card/80 backdrop-blur-sm px-8 sticky top-0 z-30 transition-all duration-200 ${
-      hasExtra ? 'py-3' : ''
-    }`}>
-      <div className={`flex items-center justify-between ${hasExtra ? '' : 'h-12'}`}>
-        <div className="min-w-0">
-          <h1 className="text-[15px] font-semibold tracking-tight text-foreground">
-            {pageTitle}
-          </h1>
-          {state.description && (
-            <p className="text-[13px] text-muted-foreground mt-0.5 leading-snug">
-              {state.description}
-            </p>
-          )}
+    <header className="hidden md:flex border-b border-border/50 bg-card/80 backdrop-blur-sm px-8 sticky top-0 z-30 h-14 items-center justify-between transition-all duration-200">
+      <div className="flex-1">
+        <div className="topbar-search-compact hidden max-w-sm relative">
+          {/* Optional global search can go here */}
         </div>
-        <div className="flex items-center gap-3 shrink-0">
-          {state.actions}
-          <button className="bell-spell relative h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors">
-            <Bell className="h-4 w-4" />
-            <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-primary" />
-          </button>
-          <div className="avatar-glow h-7 w-7 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground text-[10px] font-bold cursor-pointer hover:scale-105 transition-transform">
-            {userInitial}
-          </div>
+      </div>
+      <div className="flex items-center gap-3 shrink-0">
+        <button className="bell-spell relative h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors">
+          <Bell className="h-4 w-4" />
+          <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-primary" />
+        </button>
+        <div className="avatar-glow h-7 w-7 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground text-[10px] font-bold cursor-pointer hover:scale-105 transition-transform">
+          {userInitial}
         </div>
       </div>
     </header>
