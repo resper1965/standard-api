@@ -38,8 +38,13 @@ export function OrganizationSettingsTab() {
         setName(res.name);
         setSlug(res.slug);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      toast({
+        variant: "destructive",
+        title: "Load Failed",
+        description: err.message || "Failed to load organization settings.",
+      });
     } finally {
       setLoading(false);
     }
