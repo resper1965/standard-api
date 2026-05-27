@@ -55,11 +55,15 @@ import { jobsRoutes } from "./routes/jobs.routes";
 import { dataSubjectRoutes } from "./routes/data-subject.routes";
 import { mcpRoutes } from "./routes/mcp.routes";
 import { mcpDocsRoutes } from "./routes/mcp-docs.routes";
+import { flowTemplateRoutes } from "./routes/flow-templates.routes";
+import { governanceRefRoutes } from "./routes/governance-ref.routes";
+import { ropaRoutes } from "./routes/ropa.routes";
+import { tpraRoutes } from "./routes/tpra.routes";
 
 export const routes: RouteDefinition[] = [
   ...openapiRoutes,
-  ...mcpRoutes,       // MCP server — /mcp
-  ...mcpDocsRoutes,   // MCP guide  — /docs/mcp
+  ...mcpRoutes,           // MCP server — /mcp
+  ...mcpDocsRoutes,       // MCP guide  — /docs/mcp
   ...jobsRoutes,
   ...healthRoutes,
   ...tenantsRoutes,
@@ -85,7 +89,7 @@ export const routes: RouteDefinition[] = [
   ...integrationRoutes,
   ...webhookRoutes,
   ...privacyRoutes,
-  ...dataSubjectRoutes,  // LGPD/GDPR data subject rights: /me/data-export, /me/account
+  ...dataSubjectRoutes,   // LGPD/GDPR data subject rights: /me/data-export, /me/account
   ...socRoutes,
   ...executiveRoutes,
   ...dashboardRoutes,
@@ -97,7 +101,12 @@ export const routes: RouteDefinition[] = [
   ...assessmentsTemplatesRoutes,
   ...workflowsTemplatesRoutes,
   ...referenceDataRoutes,
-  ...intelligenceRoutes
+  ...intelligenceRoutes,
+  // ── Reference data routes (static, no DB) ──────────────────────
+  ...flowTemplateRoutes,    // /api/v1/flow-templates
+  ...governanceRefRoutes,   // /api/v1/governance/{maturity-levels,bg-check-types,...}
+  ...ropaRoutes,            // /api/v1/ropa/{data-subjects,data-categories,...}
+  ...tpraRoutes,            // /api/v1/tpra/{questionnaires,tiers,score,...}
 ];
 
 const matchRoute = (routePath: string, actualPath: string): Record<string, string> | null => {
@@ -159,7 +168,21 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
     const isDevMode = env?.STANDARD_ENV === "development" || env?.STANDARD_ENV === "test";
     // ALLOWED_ORIGINS env var overrides hardcoded list (comma-separated)
     const envOrigins = env?.ALLOWED_ORIGINS?.split(",").map((o: string) => o.trim()).filter(Boolean) ?? [];
-    const allowedOrigins = envOrigins.length > 0 ? envOrigins : [
+    // Validate that no wildcard or malformed origins are in the list
+    const validatedOrigins = envOrigins.filter((o: string) => {
+      if (o === "*") {
+        console.warn("[SECURITY] ALLOWED_ORIGINS contains wildcard '*' — ignoring");
+        return false;
+      }
+      try {
+        const url = new URL(o);
+        return url.origin === o;
+      } catch {
+        console.warn(`[SECURITY] ALLOWED_ORIGINS contains invalid origin: ${o} — ignoring`);
+        return false;
+      }
+    });
+    const allowedOrigins = validatedOrigins.length > 0 ? validatedOrigins : [
       "https://standard.bekaa.eu",
       "https://standard-web.pages.dev",
       "https://production.standard-web.pages.dev",
@@ -228,7 +251,7 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
       const authRequired = route.authRequired ?? (Boolean(route.protected) || Boolean(route.requireActor) || Boolean(route.permissions?.length));
       if (auth) {
         await resolveAuthContext(context, auth, authRequired);
-      } else if (env?.STANDARD_ENV !== "production") {
+      } else if (env?.STANDARD_ENV === "local" || env?.STANDARD_ENV === "development" || env?.STANDARD_ENV === "test") {
         // Legacy header fallback — ONLY available in dev/test mode
         const legacyActor = request.headers.get("x-standard-actor-id") ?? undefined;
         if (legacyActor) {

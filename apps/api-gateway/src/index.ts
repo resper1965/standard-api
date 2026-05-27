@@ -33,7 +33,7 @@ export default {
         const db = createDb(env.DATABASE_URL!);
         cachedDeps = {
           ...createDrizzleRepositories(db, env),
-          email: (env.EMAIL as unknown as SendEmail) ?? undefined,
+          email: env.EMAIL ? (env.EMAIL as SendEmail) : undefined,
           AGENT_RUN_QUEUE: env.AGENT_RUN_QUEUE ?? undefined,
           SOC_TRIAGE_QUEUE: env.SOC_TRIAGE_QUEUE ?? undefined,
           banUser: async (userId: string, reason?: string) => {
@@ -42,7 +42,8 @@ export default {
             // per data-retention-policy.md.
             if (cachedAuth) {
               try {
-                await (cachedAuth as any).api.banUser({
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                await (cachedAuth as any).api.banUser({ // Better Auth admin API type not yet exported
                   body: {
                     userId,
                     banReason: reason ?? 'User-initiated account deletion (LGPD art. 18)',
