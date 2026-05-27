@@ -1,3 +1,4 @@
+// eslint-disable-next-line react-refresh/only-export-components
 export interface GapFinding {
   control_id: string;
   status: "compliant" | "partial" | "non_compliant" | "not_assessed";
