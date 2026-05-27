@@ -89,9 +89,13 @@ export type AssessmentEngineAdapter = {
  * Minimal adapter to fetch the authoritative documentCount from persistent
  * storage. Used by the workflow to avoid relying on a potentially stale
  * snapshot that was captured before documents were uploaded.
+ *
+ * Contract (MUST be respected by all implementations):
+ * - Returns `null` if the assessment is not found.
+ * - Returns `null` on any internal/DB error — MUST NOT throw.
+ * - Callers rely on null-return for graceful fallback; rejection breaks the workflow.
  */
 export type AssessmentDocumentCountAdapter = {
-  /** Returns null if the assessment cannot be found or the fetch fails. */
   getDocumentCount(assessmentId: string): Promise<number | null>;
 };
 
@@ -99,8 +103,16 @@ export type TenantScopedWorkflowDependencies = {
   workflows: TenantScopedWorkflowRepository;
   audit: WorkflowAuditAdapter;
   assessmentEngine: AssessmentEngineAdapter;
-  /** Optional — when provided, progressFromStart re-fetches documentCount from
-   *  DB to avoid acting on a stale snapshot. AGENTS.md §9. */
+  /**
+   * Optional adapter to re-fetch documentCount from DB before snapshot-based
+   * decisions in progressFromStart. When omitted, the workflow falls back to
+   * the snapshot value (pre-fix behaviour).
+   *
+   * PRODUCTION DI REQUIREMENT: must be injected in all non-test environments.
+   * If omitted, the workflow silently uses a potentially stale documentCount.
+   * For test contexts without DB, inject a NullAssessmentDocumentCountAdapter
+   * that always returns null rather than relying on the field being absent.
+   */
   assessments?: AssessmentDocumentCountAdapter | undefined;
 };
 
