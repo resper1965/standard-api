@@ -136,6 +136,17 @@
     letter-spacing: -0.03em;
   }
 
+  
+  .brand-logo {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    color: #ffffff;
+    text-transform: lowercase;
+  }
+  .brand-logo-dot {
+    color: #00ade8;
+  }
+
   .font-brand {
     font-family: "Outfit", sans-serif;
     font-weight: 700;

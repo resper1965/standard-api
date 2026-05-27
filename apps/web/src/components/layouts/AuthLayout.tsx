@@ -10,7 +10,7 @@ export function AuthLayout() {
       <div className="z-10 w-full max-w-[420px] px-6">
         <div className="mb-10 flex flex-col items-center text-center">
           <h1 className="text-2xl font-brand mt-4">
-            standard<span className="text-primary">.</span>
+            <span className="brand-logo">standard<span className="brand-logo-dot">.</span></span>
           </h1>
           <p className="text-sm text-muted-foreground mt-2">
             Authenticate to access the platform
