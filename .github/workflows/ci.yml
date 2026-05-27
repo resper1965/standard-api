@@ -33,11 +33,9 @@ jobs:
       - name: Lint — API Gateway (blocking)
         run: pnpm --filter @standard/api-gateway lint
 
-      # Non-blocking: 103 known react-refresh errors in web app (tracked: backlog 3.x).
-      # Remove continue-on-error once web lint errors are resolved.
-      - name: Lint — Web (non-blocking, known errors)
+      # Blocking: react-refresh lint errors resolved (line-level suppresses applied).
+      - name: Lint — Web (blocking)
         run: pnpm --filter @standard/web lint
-        continue-on-error: true
 
       - name: Typecheck
         run: pnpm typecheck

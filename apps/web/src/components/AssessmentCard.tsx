@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 
+// eslint-disable-next-line react-refresh/only-export-components
 export interface Assessment {
   assessment_id: string;
   tenant_id: string;
