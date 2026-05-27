@@ -1,4 +1,4 @@
-import { createBrowserRouter, redirect, Navigate } from "react-router-dom"
+import { redirect, Navigate } from "react-router-dom"
 import { AuthLayout } from "./components/layouts/AuthLayout"
 import { DashboardLayout } from "./components/layouts/DashboardLayout"
 import { LoginPage } from "./pages/auth/LoginPage"
@@ -61,7 +61,7 @@ const SuspenseWrap = ({ children }: { children: React.ReactNode }) => (
     <Suspense fallback={<PageLoader />}>{children}</Suspense>
 )
 
-export const router = createBrowserRouter([
+export const routes = [
     {
         path: "/",
         errorElement: <ErrorPage />,
@@ -104,4 +104,4 @@ export const router = createBrowserRouter([
             }
         ]
     }
-])
+]
