@@ -85,10 +85,23 @@ export type AssessmentEngineAdapter = {
   transitions: AssessmentState[];
 };
 
+/**
+ * Minimal adapter to fetch the authoritative documentCount from persistent
+ * storage. Used by the workflow to avoid relying on a potentially stale
+ * snapshot that was captured before documents were uploaded.
+ */
+export type AssessmentDocumentCountAdapter = {
+  /** Returns null if the assessment cannot be found or the fetch fails. */
+  getDocumentCount(assessmentId: string): Promise<number | null>;
+};
+
 export type TenantScopedWorkflowDependencies = {
   workflows: TenantScopedWorkflowRepository;
   audit: WorkflowAuditAdapter;
   assessmentEngine: AssessmentEngineAdapter;
+  /** Optional — when provided, progressFromStart re-fetches documentCount from
+   *  DB to avoid acting on a stale snapshot. AGENTS.md §9. */
+  assessments?: AssessmentDocumentCountAdapter | undefined;
 };
 
 export type WorkflowDependencies = {
