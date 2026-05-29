@@ -36,13 +36,9 @@ jobs:
         if: ${{ steps.release.outputs.release_created }}
         run: npm install -g pnpm@9.0.0
 
-      - name: Install @cyclonedx/cyclonedx-npm
-        if: ${{ steps.release.outputs.release_created }}
-        run: npm install -g @cyclonedx/cyclonedx-npm
-
       - name: Generate SBOM
         if: ${{ steps.release.outputs.release_created }}
-        run: cyclonedx-npm --output-format json --output-file bom.json
+        run: npx @appthreat/cdxgen -o bom.json -t javascript
 
       - name: Upload SBOM to Release
         if: ${{ steps.release.outputs.release_created }}
