@@ -10,7 +10,22 @@ import type {
   ScfVersion
 } from "../types";
 
+export type ScfCrossMappingItem = {
+  framework: string;
+  control_id: string;
+  control_title: string;
+  control_description: string;
+  mapping_type: string;
+};
+
+export type ScfControlCrossMapping = {
+  scf_control_id: string;
+  scf_control_title: string;
+  mappings: ScfCrossMappingItem[];
+};
+
 export type ScfRepository = {
+  getControlCrossMappings(versionId: string, controlCode: string, frameworkFilter?: string): Promise<ScfControlCrossMapping | null>;
   listVersions(): Promise<ScfVersion[]>;
   getVersion(id: string): Promise<ScfVersion | null>;
   getLatestVersion(): Promise<ScfVersion | null>;
@@ -92,6 +107,49 @@ export const createInMemoryScfRepository = (initial: ScfDataset): ScfRepository 
       [...mappings.values()].filter((item) => item.scf_version_id === versionId && item.scf_control_id === controlId),
     listMappingsByFramework: async (frameworkId, versionId) =>
       [...mappings.values()].filter((item) => item.scf_version_id === versionId && item.scf_framework_id === frameworkId),
+    getControlCrossMappings: async (versionId, controlCode, frameworkFilter) => {
+      const control = [...controls.values()].find(
+        (c) => c.scf_version_id === versionId && c.control_code.toLowerCase() === controlCode.toLowerCase()
+      );
+      if (!control) return null;
+
+      const list = [...mappings.values()].filter(
+        (m) => m.scf_version_id === versionId && m.scf_control_id === control.id
+      );
+
+      const items: ScfCrossMappingItem[] = [];
+      for (const m of list) {
+        const req = requirements.get(m.scf_framework_requirement_id);
+        if (!req) continue;
+        const fw = frameworks.get(req.scf_framework_id);
+        if (!fw) continue;
+
+        items.push({
+          framework: fw.framework_name,
+          control_id: req.requirement_code,
+          control_title: req.requirement_title,
+          control_description: req.requirement_text ?? "",
+          mapping_type: m.relationship_type
+        });
+      }
+
+      let filtered = items;
+      if (frameworkFilter) {
+        const filterLower = frameworkFilter.toLowerCase();
+        filtered = items.filter(i => {
+          const req = [...requirements.values()].find(r => r.requirement_code === i.control_id);
+          const fw = req ? frameworks.get(req.scf_framework_id) : null;
+          return i.framework.toLowerCase().includes(filterLower) || 
+            (fw && fw.framework_code.toLowerCase().includes(filterLower));
+        });
+      }
+
+      return {
+        scf_control_id: control.control_code,
+        scf_control_title: control.control_title,
+        mappings: filtered
+      };
+    },
     listStrmRelationships: async () => [...strmRelationships.values()],
     createImportRun: async (run) => {
       importRuns.set(run.id, run);

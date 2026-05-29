@@ -1,4 +1,4 @@
-import type { ScfRepository } from "../repositories/scf.repository";
+import type { ScfRepository, ScfControlCrossMapping } from "../repositories/scf.repository";
 import type { ScfControl, ScfControlSearchQuery } from "../types";
 
 export class ScfControlService {
@@ -23,5 +23,9 @@ export class ScfControlService {
     if (!query.scf_version_id) return [];
     
     return this.repository.searchControls(query);
+  }
+
+  getControlCrossMappings(versionId: string, controlCode: string, frameworkFilter?: string): Promise<ScfControlCrossMapping | null> {
+    return this.repository.getControlCrossMappings(versionId, controlCode, frameworkFilter);
   }
 }

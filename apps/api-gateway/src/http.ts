@@ -50,6 +50,9 @@ export type AssessmentRecord = {
   scf_version_id: string;
   snapshot: AssessmentSnapshot;
   trace_id: string;
+  created_at?: string;
+  updated_at?: string;
+  scf_version_label?: string;
 };
 
 export type ApprovalRecord = ApprovalEvent & {
@@ -216,6 +219,8 @@ export type AppDependencies = {
   webhooks?: WebhookRepositoryAdapter | undefined;
   /** Resolves Better Auth org ID → Standard domain UUIDs (JIT provisioning) */
   resolveTenantContext?: (betterAuthOrgId: string) => Promise<ResolvedTenantContext | null>;
+  /** Resolves Better Auth user email → Standard domain users UUID (JIT provisioning) */
+  resolveUserContext?: (email: string, displayName: string) => Promise<{ id: string }>;
   /** Bans/flags a user for deletion via Better Auth admin API (optional — delegates to cachedAuth) */
   banUser?: (userId: string, reason?: string) => Promise<void>;
 };

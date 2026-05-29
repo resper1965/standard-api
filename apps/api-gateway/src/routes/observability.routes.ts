@@ -133,6 +133,75 @@ export const observabilityRoutes: RouteDefinition[] = [
       const agent_usage = await deps.observability.agentUsage.list({ tenant_id: tenantId, limit: query.limit });
       return json({ usage, agent_usage, trace_id: traceId });
     }
+  },
+  {
+    method: "GET",
+    path: "/api/v1/observability/audit-logs",
+    protected: true,
+    permissions: ["audit:read"],
+    handler: async ({ request, deps, tenantId, traceId }) => {
+      const query = parseQuery(request, AuditLogQuerySchema);
+      const data = await deps.observability.auditEvents.list({ tenant_id: tenantId, limit: query.limit });
+      return json({ data, trace_id: traceId });
+    }
+  },
+  {
+    method: "GET",
+    path: "/api/v1/observability/audit",
+    protected: true,
+    permissions: ["audit:read"],
+    handler: async ({ request, deps, tenantId, traceId }) => {
+      const query = parseQuery(request, AuditLogQuerySchema);
+      const data = await deps.observability.auditEvents.list({ tenant_id: tenantId, limit: query.limit });
+      return json({ data, trace_id: traceId });
+    }
+  },
+  {
+    method: "GET",
+    path: "/api/observability/audit",
+    protected: true,
+    permissions: ["audit:read"],
+    handler: async ({ request, deps, tenantId, traceId }) => {
+      const query = parseQuery(request, AuditLogQuerySchema);
+      const data = await deps.observability.auditEvents.list({ tenant_id: tenantId, limit: query.limit });
+      return json({ data, trace_id: traceId });
+    }
+  },
+  {
+    method: "GET",
+    path: "/api/v1/observability/metrics",
+    protected: true,
+    permissions: ["admin:read"],
+    handler: async ({ request, deps, tenantId, traceId }) => {
+      const query = parseQuery(request, MetricsQuerySchema);
+      const data = await deps.observability.metrics.list({ tenant_id: tenantId, limit: query.limit });
+      return json({ data, trace_id: traceId });
+    }
+  },
+  {
+    method: "GET",
+    path: "/api/v1/observability/security-events",
+    protected: true,
+    permissions: ["admin:read"],
+    handler: async ({ request, deps, tenantId, traceId }) => {
+      const query = parseQuery(request, SecurityEventQuerySchema);
+      const data = await deps.observability.securityEvents.list({ tenant_id: tenantId, limit: query.limit });
+      return json({ data, trace_id: traceId });
+    }
+  },
+  {
+    method: "GET",
+    path: "/api/v1/observability/usage",
+    protected: true,
+    permissions: ["tenant:read"],
+    handler: async ({ request, deps, tenantId, traceId }) => {
+      const query = parseQuery(request, UsageQuerySchema);
+      const usage = await deps.observability.usage.list({ tenant_id: tenantId, limit: query.limit });
+      const agent_usage = await deps.observability.agentUsage.list({ tenant_id: tenantId, limit: query.limit });
+      return json({ usage, agent_usage, trace_id: traceId });
+    }
   }
 ];
+
+
 

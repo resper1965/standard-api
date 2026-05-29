@@ -78,6 +78,8 @@ export const apiKeysRoutes: RouteDefinition[] = [
           scopes: k.scopes,
           lastUsedAt: k.lastUsedAt,
           expiresAt: k.expiresAt,
+          revokedAt: k.revokedAt ?? null,
+          isRevoked: !!k.revokedAt,
           createdAt: k.createdAt,
         })),
         trace_id: context.traceId,

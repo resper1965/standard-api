@@ -21,7 +21,8 @@ export const STANDARD_PERMISSIONS = {
   report: ["read", "generate", "export"] as const,
   agent: ["run", "read"] as const,
   organization: ["read", "update", "manage_members"] as const,
-  admin: ["manage_users", "manage_orgs", "impersonate"] as const,
+  admin: ["manage_users", "manage_orgs", "impersonate", "read"] as const,
+  membership: ["manage"] as const,
   // Platform-level: only platform_admin (cross-tenant operators) can use these.
   platform: ["manage_tenants", "read_all"] as const,
 } as const;
@@ -46,7 +47,8 @@ export const STANDARD_ROLE_PERMISSIONS = {
     report: ["read", "generate", "export"],
     agent: ["run", "read"],
     organization: ["read", "update", "manage_members"],
-    admin: ["manage_users", "manage_orgs", "impersonate"],
+    admin: ["manage_users", "manage_orgs", "impersonate", "read"],
+    membership: ["manage"],
   },
   admin: {
     assessment: ["read", "create", "update", "approve", "run_workflow", "cancel"],
@@ -59,7 +61,8 @@ export const STANDARD_ROLE_PERMISSIONS = {
     report: ["read", "generate", "export"],
     agent: ["run", "read"],
     organization: ["read", "update", "manage_members"],
-    admin: ["manage_users", "manage_orgs"],
+    admin: ["manage_users", "manage_orgs", "read"],
+    membership: ["manage"],
   },
   member: {
     assessment: ["read", "create", "update", "run_workflow"],

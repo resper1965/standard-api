@@ -242,9 +242,48 @@ export const scfRoutes: RouteDefinition[] = [
     method: "GET",
     path: "/api/v1/scf/controls/:controlId/mappings",
     protected: true,
-    handler: async ({ deps, params, request, traceId }) => {
+    handler: async ({ deps, params, request, traceId, tenantId }) => {
+      const controlId = routeParam(params, "controlId");
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(controlId);
+
+      if (!isUuid) {
+        if (!tenantId) {
+          throw new ApiError("TENANT_CONTEXT_REQUIRED", "Tenant context is required.", 400);
+        }
+
+        const url = new URL(request.url);
+        const frameworkFilter = url.searchParams.get("framework") ?? undefined;
+        const versionQuery = url.searchParams.get("version") ?? undefined;
+
+        let versionId: string;
+        if (versionQuery) {
+          versionId = versionQuery;
+        } else {
+          const latestVersion = await deps.scf.versions.getLatestVersion();
+          if (!latestVersion) {
+            throw new ApiError("NOT_FOUND", "No SCF versions found in database.", 404);
+          }
+          versionId = latestVersion.id;
+        }
+
+        const result = await deps.scf.controls.getControlCrossMappings(
+          versionId,
+          controlId,
+          frameworkFilter
+        );
+
+        if (!result) {
+          throw new ApiError("NOT_FOUND", `SCF control '${controlId}' not found.`, 404);
+        }
+
+        return json({
+          ...result,
+          trace_id: traceId
+        });
+      }
+
       const url = new URL(request.url);
-      const control = await deps.scf.controls.getControl(routeParam(params, "controlId"));
+      const control = await deps.scf.controls.getControl(controlId);
       if (!control) throw new ApiError("NOT_FOUND", "SCF control not found.", 404);
       const mappings = await deps.scf.mappings.getMappingsForControl(control.id, control.scf_version_id, url.searchParams.get("framework") ?? undefined);
       return json({ data: await deps.scf.mappings.enrichMappings(mappings), scf_version_id: control.scf_version_id, trace_id: traceId });

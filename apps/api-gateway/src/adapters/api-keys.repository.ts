@@ -12,6 +12,8 @@ export type ApiKeyRecord = {
   scopes: string[];
   expiresAt: Date | null;
   lastUsedAt: Date | null;
+  /** Null means active. Set to a timestamp when revoked (soft-delete). */
+  revokedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -55,18 +57,24 @@ export const createDrizzleApiKeysRepository = (db: DbClient): ApiKeysRepositoryA
     async verifyKey(keyHash) {
       const [record] = await db.select().from(apiKeys).where(eq(apiKeys.keyHash, keyHash));
       if (!record) return null;
+      // Reject expired keys
       if (record.expiresAt && record.expiresAt < new Date()) return null;
+      // Reject soft-deleted (revoked) keys
+      if (record.revokedAt) return null;
       return record;
     },
     async markUsed(id) {
       await db.update(apiKeys).set({ lastUsedAt: new Date() }).where(eq(apiKeys.id, id));
     },
     async revokeKey(id, organizationId) {
-      const [deleted] = await db
-        .delete(apiKeys)
+      // Soft-delete: set revokedAt instead of deleting the row,
+      // so the key remains visible in the list with status "revoked".
+      const [updated] = await db
+        .update(apiKeys)
+        .set({ revokedAt: new Date() })
         .where(and(eq(apiKeys.id, id), eq(apiKeys.organizationId, organizationId)))
         .returning({ id: apiKeys.id });
-      return !!deleted;
+      return !!updated;
     },
     async listByOrganization(organizationId) {
       return db.select().from(apiKeys).where(eq(apiKeys.organizationId, organizationId));
@@ -88,6 +96,7 @@ export const createMockApiKeysRepository = (): ApiKeysRepositoryAdapter => {
         scopes: input.scopes ?? [],
         expiresAt: input.expiresAt ?? null,
         lastUsedAt: null,
+        revokedAt: null,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -98,6 +107,7 @@ export const createMockApiKeysRepository = (): ApiKeysRepositoryAdapter => {
       const record = Object.values(store).find(k => k.keyHash === keyHash);
       if (!record) return null;
       if (record.expiresAt && record.expiresAt < new Date()) return null;
+      if (record.revokedAt) return null;
       return record;
     },
     async markUsed(id) {
@@ -106,7 +116,7 @@ export const createMockApiKeysRepository = (): ApiKeysRepositoryAdapter => {
     async revokeKey(id, orgId) {
       const exist = store[id];
       if (exist && exist.organizationId === orgId) {
-        delete store[id];
+        exist.revokedAt = new Date();
         return true;
       }
       return false;

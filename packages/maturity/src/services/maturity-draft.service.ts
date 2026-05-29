@@ -52,17 +52,49 @@ export const createMaturityDraft = async (
   const scorableFindings = gapResult.findings.filter(f => f.scf_control_id != null);
 
   const scores: MaturityScore[] = scorableFindings.map(finding => {
+    const status = finding.assessment_status;
+    const type = finding.gap_type;
+
+    let evidenceStrength: "strong" | "partial" | "weak" | "absent" | "conflicting" | "not_checked" = "absent";
+    let evidenceCoverage = 0.0;
+    let hasDocumentation = false;
+    let hasProcess = false;
+    let hasMeasurement = false;
+    let hasContinuousImprovement = false;
+
+    if (status === "met") {
+      evidenceStrength = "strong";
+      evidenceCoverage = 1.0;
+      hasDocumentation = true;
+      hasProcess = true;
+      if (type === "no_gap") {
+        hasMeasurement = true;
+        hasContinuousImprovement = true;
+      }
+    } else if (status === "partially_met") {
+      evidenceStrength = "partial";
+      evidenceCoverage = 0.5;
+      hasProcess = true;
+      if (type !== "documentation_gap") {
+        hasDocumentation = true;
+      }
+    } else if (status === "requires_validation") {
+      evidenceStrength = "weak";
+      evidenceCoverage = 0.25;
+    }
+
     const result = classifyMaturity({
       scfControlId: finding.scf_control_id!,
       controlCode: finding.gap_code,
       controlTitle: finding.gap_code,
-      gapStatus: finding.assessment_status,
-      gapType: finding.gap_type,
-      evidenceCoverage: 0.5, // TODO: derive from evidence findings
-      hasDocumentation: false, // TODO: derive from KB analysis
-      hasProcess: false,
-      hasMeasurement: false,
-      hasContinuousImprovement: false
+      gapStatus: status,
+      gapType: type,
+      evidenceStrength,
+      evidenceCoverage,
+      hasDocumentation,
+      hasProcess,
+      hasMeasurement,
+      hasContinuousImprovement
     });
 
     return {
@@ -75,7 +107,7 @@ export const createMaturityDraft = async (
       score: result.score,
       confidenceScore: result.confidenceScore,
       rationale: result.rationale,
-      evidenceCoverage: 0.5
+      evidenceCoverage
     };
   });
 

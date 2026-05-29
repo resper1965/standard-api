@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
 import { api } from "../lib/api";
-import { PageHeader } from "../components/PageHeader";
 import { Loader2, Bot, CheckCircle2, XCircle, Clock, Eye, Activity } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -124,10 +123,6 @@ export function AgentRunsPage() {
       initial="hidden"
       animate="show"
     >
-      <PageHeader
-        title="Agent Runs"
-        description="Monitor AI agent execution across all assessments"
-      />
 
       {/* Stats */}
       <motion.div variants={itemVariants} className="grid grid-cols-2 md:grid-cols-5 gap-4">

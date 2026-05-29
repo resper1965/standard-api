@@ -235,11 +235,14 @@ export const apiKeys = pgTable("api_keys", {
   scopes: jsonb("scopes").$type<string[]>().default([]).notNull(),
   expiresAt: timestamp("expires_at", { withTimezone: true }),
   lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
+  /** Soft-delete: set when key is revoked. Null means active. */
+  revokedAt: timestamp("revoked_at", { withTimezone: true }),
   ...timestamps()
 }, (table) => [
   index("api_keys_org_idx").on(table.organizationId),
   uniqueIndex("api_keys_hash_uidx").on(table.keyHash)
 ]);
+
 
 export const scfVersions = pgTable("scf_versions", {
   id: uuid("id").defaultRandom().primaryKey(),

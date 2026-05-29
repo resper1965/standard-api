@@ -308,7 +308,7 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
 
       // Tenant is now derived from session.activeOrganizationId or legacy header
       const tenantRequired = route.tenantRequired ?? (Boolean(route.protected) && !route.path.startsWith("/api/v1/scf") && !route.path.startsWith("/api/v1/admin/scf"));
-      resolveTenantContext(context, tenantRequired);
+      await resolveTenantContext(context, tenantRequired);
 
       await assertRbac(context, route.permissions);
       assertApiKeyScopes(context, route.path, request.method);

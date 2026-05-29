@@ -164,6 +164,8 @@ export const ScfStructuredMappingSchema = z.object({
 export const ScfMappingResponseSchema = ScfStructuredMappingSchema.extend({
   control_code: z.string().optional(),
   requirement_code: z.string().optional(),
+  framework_code: z.string().optional(),
+  framework_name: z.string().optional(),
   trace_id: z.string().optional()
 });
 

@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { api } from "../lib/api";
 import { GapTable } from "../components/GapTable";
 import type { GapFinding } from "../components/GapTable";
-import { PageHeader } from "../components/PageHeader";
 import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { AssessmentSelector } from "../components/AssessmentSelector";
@@ -69,17 +68,6 @@ export function GapAnalysisPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Gap Analysis"
-        description={versionLabel}
-      >
-        {assessmentId && (
-          <Button size="sm" onClick={runGapAnalysis} disabled={running || loading}>
-            <Play className="h-3.5 w-3.5 mr-1.5" />
-            {running ? "Running..." : "Run Gap Analysis"}
-          </Button>
-        )}
-      </PageHeader>
 
       {!assessmentId ? (
         <AssessmentSelector label="Gap Analysis" />

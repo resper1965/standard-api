@@ -351,6 +351,57 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
     return row ? mapImportRun(row) : null;
   },
 
+  getControlCrossMappings: async (versionId, controlCode, frameworkFilter) => {
+    const [control] = await db.select()
+      .from(scfControls)
+      .where(and(
+        eq(scfControls.scfVersionId, versionId),
+        eq(sql`LOWER(${scfControls.controlCode})`, controlCode.toLowerCase())
+      ))
+      .limit(1);
+
+    if (!control) return null;
+
+    const rows = await db.select({
+      frameworkName: scfFrameworks.name,
+      frameworkId: scfFrameworks.frameworkId,
+      requirementCode: scfFrameworkRequirements.requirementCode,
+      requirementTitle: scfFrameworkRequirements.title,
+      requirementDescription: scfFrameworkRequirements.description,
+      relationshipType: scfMappings.relationshipType
+    })
+    .from(scfMappings)
+    .innerJoin(scfFrameworkRequirements, eq(scfMappings.scfFrameworkRequirementId, scfFrameworkRequirements.id))
+    .innerJoin(scfFrameworks, eq(scfFrameworkRequirements.scfFrameworkId, scfFrameworks.id))
+    .where(and(
+      eq(scfMappings.scfControlId, control.id),
+      eq(scfMappings.scfVersionId, versionId)
+    ));
+
+    let mappings = rows.map(r => ({
+      framework: r.frameworkName,
+      control_id: r.requirementCode,
+      control_title: r.requirementTitle,
+      control_description: r.requirementDescription ?? "",
+      mapping_type: r.relationshipType
+    }));
+
+    if (frameworkFilter) {
+      const filterLower = frameworkFilter.toLowerCase();
+      mappings = mappings.filter((m, index) => {
+        const originalRow = rows[index]!;
+        return m.framework.toLowerCase().includes(filterLower) ||
+          originalRow.frameworkId.toLowerCase().includes(filterLower);
+      });
+    }
+
+    return {
+      scf_control_id: control.controlCode,
+      scf_control_title: control.title,
+      mappings
+    };
+  },
+
   // ─── Dataset Bulk Operation ──────────────────────────────
   replaceDataset: async (dataset) => {
     // Upsert in dependency order: versions → domains → controls → frameworks → requirements → mappings

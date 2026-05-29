@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../lib/api";
 import { API_URL } from "../lib/config";
-import { PageHeader } from "../components/PageHeader";
 import { FileUpload } from "../components/FileUpload";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "../components/ui/table";
@@ -117,16 +116,6 @@ export function DocumentsPage() {
 
   return (
     <div className="space-y-6 animate-slide-up">
-      <PageHeader title="Documents" description="Upload, manage, and track compliance evidence files">
-        <button
-          onClick={copyAsMarkdown}
-          className="btn flex items-center gap-2 text-sm"
-          title="Copy page as Markdown to clipboard"
-        >
-          <ClipboardCopy className="h-4 w-4" />
-          {copied ? "Copied!" : "Copy as MD"}
-        </button>
-      </PageHeader>
       {!assessmentId && (
         <AssessmentSelector label="Documents" />
       )}

@@ -18,6 +18,10 @@ import type { RequestContext } from "../http";
 
 const logger = new StructuredLogger();
 
+const isUuid = (val?: string): boolean =>
+  val ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val) : false;
+
+
 /**
  * Typed session field extraction.
  *
@@ -108,8 +112,8 @@ export const resolveAuthContext = async (
             module: "auth",
             environment: "production",
             trace_id: context.traceId,
-            tenant_id: context.tenantId,
-            metadata: { actor_id: rawSession.user.id }
+            tenant_id: isUuid(context.tenantId) ? context.tenantId : undefined,
+            metadata: { actor_id: rawSession.user.id, raw_tenant_id: context.tenantId }
           });
           throw new ApiError("UNAUTHORIZED", "Token has been revoked.", 401);
         }
@@ -118,7 +122,28 @@ export const resolveAuthContext = async (
       // Extract typed fields at the single cast boundary
       const { user, session } = resolveSessionFields(rawSession);
 
-      context.actorId = user.id;
+      let resolvedActorId = user.id;
+      if (context.deps.resolveUserContext) {
+        try {
+          const resolvedUser = await context.deps.resolveUserContext(user.email, user.name);
+          resolvedActorId = resolvedUser.id;
+        } catch (err) {
+          logger.log({
+            level: "error",
+            message: "user_context_resolution_failed",
+            service: "api-gateway",
+            module: "auth",
+            environment: "production",
+            trace_id: context.traceId,
+            metadata: { 
+              error: err instanceof Error ? err.message : String(err),
+              email: user.email 
+            }
+          });
+        }
+      }
+
+      context.actorId = resolvedActorId;
 
       // Restore context.session so RBAC and Audit middlewares remain healthy.
       // All fields are typed — no `as any` needed here.
@@ -150,7 +175,7 @@ export const resolveAuthContext = async (
         module: "auth",
         environment: "production",
         trace_id: context.traceId,
-        tenant_id: context.tenantId,
+        tenant_id: isUuid(context.tenantId) ? context.tenantId : undefined,
         metadata: {
           actor_id: user.id,
           session_id: session.id,
@@ -170,8 +195,11 @@ export const resolveAuthContext = async (
       module: "auth",
       environment: "production",
       trace_id: context.traceId,
-      tenant_id: context.tenantId,
-      metadata: { error: err instanceof Error ? err.message : String(err) }
+      tenant_id: isUuid(context.tenantId) ? context.tenantId : undefined,
+      metadata: { 
+        error: err instanceof Error ? err.message : String(err),
+        raw_tenant_id: context.tenantId
+      }
     });
   }
 

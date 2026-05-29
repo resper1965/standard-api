@@ -732,3 +732,58 @@ test("[CONSISTENCY] UUID validation: malformed IDs return 400 not 500", async ()
     expectOneOf(result.response.status, [400, 404, 422], `malformed ID: "${badId.slice(0,30)}"`);
   }
 });
+
+test("[SECURITY] API Key lifecycle: create, list, and revoke works", async () => {
+  const client = createTestClient();
+  const { tenantId, organizationId } = await client.createTenantOrg();
+  const headers = {
+    "x-standard-tenant-id": tenantId,
+    "x-standard-actor-id": ids.actorId
+  };
+
+  // 1. Create API key
+  const createRes = await client.send(
+    `/api/v1/organizations/${organizationId}/api-keys`,
+    "POST",
+    { name: "Test Key" },
+    headers
+  );
+  expect(createRes.response.status).toBe(201);
+  const keyId = createRes.body.data.id;
+  expect(keyId).toBeDefined();
+
+  // 2. List API keys
+  const listRes = await client.send(
+    `/api/v1/organizations/${organizationId}/api-keys`,
+    "GET",
+    undefined,
+    headers
+  );
+  expect(listRes.response.status).toBe(200);
+  const found = listRes.body.data.find((k: any) => k.id === keyId);
+  expect(found).toBeDefined();
+  expect(found.name).toBe("Test Key");
+
+  // 3. Revoke API key
+  const deleteRes = await client.send(
+    `/api/v1/organizations/${organizationId}/api-keys/${keyId}`,
+    "DELETE",
+    undefined,
+    headers
+  );
+  expect(deleteRes.response.status).toBe(200);
+  expect(deleteRes.body.ok).toBe(true);
+
+  // 4. Verify API key is revoked (returned in list as revoked)
+  const listRes2 = await client.send(
+    `/api/v1/organizations/${organizationId}/api-keys`,
+    "GET",
+    undefined,
+    headers
+  );
+  expect(listRes2.response.status).toBe(200);
+  const found2 = listRes2.body.data.find((k: any) => k.id === keyId);
+  expect(found2).toBeDefined();
+  expect(found2.isRevoked).toBe(true);
+});
+
