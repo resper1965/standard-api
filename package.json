@@ -54,7 +54,7 @@
     "lint-staged": "^15.2.2",
     "tsx": "^4.19.4",
     "typescript": "^6.0.3",
-    "wrangler": "3.107.0"
+    "wrangler": "^3.114.17"
   },
   "dependencies": {
     "dotenv": "^17.4.2",
@@ -63,7 +63,9 @@
   "pnpm": {
     "overrides": {
       "better-auth": "1.6.11",
-      "@better-auth/api-key": "1.6.11"
+      "@better-auth/api-key": "1.6.11",
+      "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.2/xlsx-0.20.2.tgz",
+      "undici": ">=6.24.0"
     }
   }
 }
