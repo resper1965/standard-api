@@ -13,12 +13,12 @@
  *   const controls = await client.scf.controls.list(versionId, { limit: 50 });
  */
 
-export { StandardClient, type StandardClientConfig } from "./client";
-export { StandardError, type StandardErrorResponse } from "./errors";
+export { StandardClient, type StandardClientConfig } from "./client.js";
+export { StandardError, type StandardErrorResponse } from "./errors.js";
 export type {
   RequestOptions,
   PaginatedResponse,
   StandardResponse,
   ListQuery,
-} from "./types";
-export type * from "./models";
+} from "./types.js";
+export type * from "./models.js";
