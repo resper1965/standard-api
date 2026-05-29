@@ -169,49 +169,49 @@ export function ScfCatalogPage() {
                 placeholder="Search controls..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-9"
+                className="pl-9 h-11 bg-white/5 border-white/10 text-foreground rounded-xl focus-visible:ring-primary/50"
               />
             </div>
             <select
               value={activeDomain ?? ""}
               onChange={(e) => setActiveDomain(e.target.value || null)}
-              className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              className="h-11 rounded-xl border border-white/10 bg-black/20 px-4 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 backdrop-blur-md"
             >
-              <option value="">All Domains ({domains.length})</option>
+              <option value="" className="bg-background">All Domains ({domains.length})</option>
               {domains.map((d) => (
-                <option key={d.id} value={d.domain_code}>
+                <option key={d.id} value={d.domain_code} className="bg-background">
                   {d.domain_code} — {d.domain_name}
                 </option>
               ))}
             </select>
           </div>
 
-          <Card className="border-border/60 shadow-none">
-            <CardContent className="p-0">
+          <div className="glass-premium rounded-3xl overflow-hidden border-border/20">
+            <div className="p-0 overflow-x-auto">
               <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[140px]">Code</TableHead>
-                    <TableHead>Title</TableHead>
-                    <TableHead className="w-[100px]">Status</TableHead>
+                <TableHeader className="bg-black/5 dark:bg-white/5 border-b border-white/5">
+                  <TableRow className="hover:bg-transparent border-none">
+                    <TableHead className="w-[140px] py-4 px-6 font-semibold uppercase tracking-wider text-xs">Code</TableHead>
+                    <TableHead className="font-semibold uppercase tracking-wider text-xs">Title</TableHead>
+                    <TableHead className="w-[100px] font-semibold uppercase tracking-wider text-xs">Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {paginatedControls.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={3} className="text-center text-muted-foreground h-24">
+                      <TableCell colSpan={3} className="text-center text-muted-foreground h-32">
                         No controls found.
                       </TableCell>
                     </TableRow>
                   ) : (
                     paginatedControls.map((c) => (
-                      <TableRow key={c.control_id}>
-                        <TableCell>
+                      <TableRow key={c.control_id} className="group hover:bg-white/5 dark:hover:bg-white/5 border-b border-white/5 transition-colors">
+                        <TableCell className="py-4 px-6">
                           <CopyCode code={c.control_code} />
                         </TableCell>
-                        <TableCell className="text-sm">{c.control_title}</TableCell>
-                        <TableCell>
-                          <Badge variant="success">{c.status}</Badge>
+                        <TableCell className="text-sm py-4">{c.control_title}</TableCell>
+                        <TableCell className="py-4">
+                          <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20">{c.status}</Badge>
                         </TableCell>
                       </TableRow>
                     ))
@@ -219,7 +219,7 @@ export function ScfCatalogPage() {
                 </TableBody>
               </Table>
               {filtered.length > PAGE_SIZE && (
-                <div className="px-4 pb-4">
+                <div className="px-6 py-4 border-t border-white/5">
                   <Pagination
                     currentPage={controlPage}
                     totalPages={controlTotalPages}
@@ -229,21 +229,21 @@ export function ScfCatalogPage() {
                   />
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </>
       )}
 
       {tab === "frameworks" && (
-        <Card className="border-border/60 shadow-none">
-          <CardContent className="p-0">
+        <div className="glass-premium rounded-3xl overflow-hidden border-border/20">
+          <div className="p-0 overflow-x-auto">
             <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[160px]">Code</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Publisher</TableHead>
-                  <TableHead className="w-[100px]">Status</TableHead>
+              <TableHeader className="bg-black/5 dark:bg-white/5 border-b border-white/5">
+                <TableRow className="hover:bg-transparent border-none">
+                  <TableHead className="w-[160px] py-4 px-6 font-semibold uppercase tracking-wider text-xs">Code</TableHead>
+                  <TableHead className="font-semibold uppercase tracking-wider text-xs">Name</TableHead>
+                  <TableHead className="font-semibold uppercase tracking-wider text-xs">Publisher</TableHead>
+                  <TableHead className="w-[100px] font-semibold uppercase tracking-wider text-xs">Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -270,7 +270,7 @@ export function ScfCatalogPage() {
               </TableBody>
             </Table>
             {frameworks.length > PAGE_SIZE && (
-              <div className="px-4 pb-4">
+              <div className="px-6 py-4 border-t border-white/5">
                 <Pagination
                   currentPage={frameworkPage}
                   totalPages={frameworkTotalPages}
@@ -280,9 +280,10 @@ export function ScfCatalogPage() {
                 />
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
     </div>
   );
 }
+
