@@ -132,7 +132,7 @@ jobs:
 
       - name: Health check — API Gateway (Authoritative)
         run: |
-          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://standard-api.bekaa.eu/health)
+          HTTP_STATUS=$(curl -A "standard-api-ci/1.0" -s -o /dev/null -w "%{http_code}" https://standard-api.bekaa.eu/health)
           echo "standard-api.bekaa.eu /health returned: $HTTP_STATUS"
           if [ "$HTTP_STATUS" -ne 200 ]; then
             echo "::error::API Gateway Smoke test FAILED — standard-api.bekaa.eu not healthy"
@@ -145,7 +145,7 @@ jobs:
         # A 503 here means Better Auth cannot reach the database — logins will fail.
         # Never bypass this gate for production deploys.
         run: |
-          AUTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://standard-api.bekaa.eu/api/health/auth)
+          AUTH_STATUS=$(curl -A "standard-api-ci/1.0" -s -o /dev/null -w "%{http_code}" https://standard-api.bekaa.eu/api/health/auth)
           echo "/api/health/auth returned: $AUTH_STATUS"
           if [ "$AUTH_STATUS" -ne 200 ]; then
             echo "::error::Auth stack health check FAILED (status=$AUTH_STATUS) — logins may be broken"
