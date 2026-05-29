@@ -34,14 +34,14 @@ function IconUser() {
 
 function IconEye({ off }: { off?: boolean }) {
   return off ? (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" width="17" height="17">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
       <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
       <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
       <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
       <line x1="2" x2="22" y1="2" y2="22" />
     </svg>
   ) : (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" width="17" height="17">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
       <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
       <circle cx="12" cy="12" r="3" />
     </svg>
@@ -60,16 +60,15 @@ function IconAlertCircle() {
 
 function IconShield() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="24" height="24">
       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
     </svg>
   );
 }
 
-// ── Google Logo ──────────────────────────────────────────────────
 function GoogleLogo() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24">
+    <svg width="20" height="20" viewBox="0 0 24 24">
       <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
       <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
       <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
@@ -137,138 +136,178 @@ export function LoginPage() {
 
   return (
     <div className="login-root">
-      <div className="login-container">
+      
+      {/* ── Left Panel (Branding / Hero) ── */}
+      <div className="login-left">
+        <div className="login-left-bg-pattern"></div>
+        <div className="login-left-glow"></div>
         
-        {/* Brand Header */}
-        <div className="login-header">
-          <div className="login-logo">
-            <IconShield />
-            <span>Standard</span>
+        <div className="login-left-content">
+          <div className="login-logo-large">
+            <div className="login-logo-icon">
+              <IconShield />
+            </div>
+            <span>Standard GRC</span>
           </div>
-          <h1 className="login-title">
-            {mode === "login" ? "Welcome back" : "Create your account"}
+          
+          <h1 className="login-headline">
+            Automate Compliance with <span className="text-gradient">Agentic AI.</span>
           </h1>
-          <p className="login-subtitle">
-            {mode === "login"
-              ? "Enter your details to access your workspace."
-              : "Start automating your compliance journey today."}
+          <p className="login-subheadline">
+            The unified platform for SOC 2, ISO 27001, HIPAA, and 231+ frameworks. Let AI handle the heavy lifting of evidence mapping and gap analysis.
           </p>
+
+          <div className="login-stats">
+            <div className="stat-box">
+              <span className="stat-number">15k+</span>
+              <span className="stat-label">Crosswalks</span>
+            </div>
+            <div className="stat-box">
+              <span className="stat-number">231</span>
+              <span className="stat-label">Frameworks</span>
+            </div>
+            <div className="stat-box">
+              <span className="stat-number">10x</span>
+              <span className="stat-label">Faster Audits</span>
+            </div>
+          </div>
         </div>
+      </div>
 
-        {/* Card */}
-        <div className="login-card">
-          <button
-            className="login-btn-google"
-            onClick={handleGoogle}
-            type="button"
-          >
-            <GoogleLogo />
-            <span>Continue with Google</span>
-          </button>
-
-          <div className="login-divider">
-            <span className="login-divider-line" />
-            <span className="login-divider-text">OR</span>
-            <span className="login-divider-line" />
+      {/* ── Right Panel (Auth Form) ── */}
+      <div className="login-right">
+        <div className="login-right-inner">
+          
+          <div className="login-right-header">
+            <h2 className="login-title">
+              {mode === "login" ? "Welcome back" : "Create an account"}
+            </h2>
+            <p className="login-subtitle">
+              {mode === "login"
+                ? "Sign in to access your security workspace."
+                : "Join the future of automated compliance."}
+            </p>
           </div>
 
-          <form className="login-form" onSubmit={handleSubmit}>
-            {mode === "signup" && (
+          <div className="login-card">
+            <button
+              className="login-btn-google"
+              onClick={handleGoogle}
+              type="button"
+            >
+              <GoogleLogo />
+              <span>Continue with Google</span>
+            </button>
+
+            <div className="login-divider">
+              <span className="login-divider-line" />
+              <span className="login-divider-text">or continue with email</span>
+              <span className="login-divider-line" />
+            </div>
+
+            <form className="login-form" onSubmit={handleSubmit}>
+              {mode === "signup" && (
+                <div className="login-field">
+                  <label className="login-label" htmlFor="name">Full Name</label>
+                  <div className="login-input-group">
+                    <div className="login-input-icon-wrap"><IconUser /></div>
+                    <input
+                      id="name"
+                      className="login-input"
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Jane Doe"
+                      required
+                      autoComplete="name"
+                    />
+                  </div>
+                </div>
+              )}
+
               <div className="login-field">
-                <label className="login-label" htmlFor="name">Full Name</label>
+                <label className="login-label" htmlFor="email">Email Address</label>
                 <div className="login-input-group">
-                  <div className="login-input-icon-wrap"><IconUser /></div>
+                  <div className="login-input-icon-wrap"><IconMail /></div>
                   <input
-                    id="name"
+                    id="email"
                     className="login-input"
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Ricardo Esper"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="jane@company.com"
                     required
-                    autoComplete="name"
+                    autoComplete="email"
                   />
                 </div>
               </div>
-            )}
 
-            <div className="login-field">
-              <label className="login-label" htmlFor="email">Email address</label>
-              <div className="login-input-group">
-                <div className="login-input-icon-wrap"><IconMail /></div>
-                <input
-                  id="email"
-                  className="login-input"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@company.com"
-                  required
-                  autoComplete="email"
-                />
+              <div className="login-field">
+                <div className="login-label-row">
+                  <label className="login-label" htmlFor="password">Password</label>
+                  {mode === "login" && (
+                    <a href="#" className="login-forgot-link">Forgot password?</a>
+                  )}
+                </div>
+                <div className="login-input-group">
+                  <div className="login-input-icon-wrap"><IconLock /></div>
+                  <input
+                    id="password"
+                    className="login-input"
+                    type={showPw ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    required
+                    minLength={8}
+                    autoComplete={mode === "login" ? "current-password" : "new-password"}
+                  />
+                  <button
+                    type="button"
+                    className="login-pw-toggle"
+                    onClick={() => setShowPw(!showPw)}
+                    aria-label={showPw ? "Hide password" : "Show password"}
+                  >
+                    <IconEye off={showPw} />
+                  </button>
+                </div>
               </div>
-            </div>
 
-            <div className="login-field">
-              <label className="login-label" htmlFor="password">Password</label>
-              <div className="login-input-group">
-                <div className="login-input-icon-wrap"><IconLock /></div>
-                <input
-                  id="password"
-                  className="login-input"
-                  type={showPw ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                  minLength={8}
-                  autoComplete={mode === "login" ? "current-password" : "new-password"}
-                />
-                <button
-                  type="button"
-                  className="login-pw-toggle"
-                  onClick={() => setShowPw(!showPw)}
-                  aria-label={showPw ? "Hide password" : "Show password"}
-                >
-                  <IconEye off={showPw} />
-                </button>
-              </div>
-            </div>
-
-            {error && (
-              <div className="login-error" role="alert">
-                <IconAlertCircle />
-                <span>{error}</span>
-              </div>
-            )}
-
-            <button
-              className="login-btn-submit"
-              type="submit"
-              disabled={loading}
-            >
-              {loading ? (
-                <span className="login-spinner" />
-              ) : mode === "login" ? (
-                "Sign In"
-              ) : (
-                "Create Account"
+              {error && (
+                <div className="login-error" role="alert">
+                  <IconAlertCircle />
+                  <span>{error}</span>
+                </div>
               )}
-            </button>
-          </form>
-        </div>
 
-        {/* Footer */}
-        <div className="login-footer">
-          <p>
-            {mode === "login" ? "Don't have an account?" : "Already have an account?"}{" "}
-            <button className="login-toggle-btn" onClick={() => switchMode(mode === "login" ? "signup" : "login")} type="button">
-              {mode === "login" ? "Sign up" : "Sign in"}
-            </button>
-          </p>
+              <button
+                className="login-btn-submit"
+                type="submit"
+                disabled={loading}
+              >
+                {loading ? (
+                  <span className="login-spinner" />
+                ) : mode === "login" ? (
+                  "Sign In"
+                ) : (
+                  "Create Account"
+                )}
+              </button>
+            </form>
+          </div>
+
+          <div className="login-footer">
+            <p>
+              {mode === "login" ? "Don't have an account?" : "Already have an account?"}{" "}
+              <button className="login-toggle-btn" onClick={() => switchMode(mode === "login" ? "signup" : "login")} type="button">
+                {mode === "login" ? "Sign up" : "Sign in"}
+              </button>
+            </p>
+          </div>
+          
         </div>
-        
       </div>
+
     </div>
   );
 }
