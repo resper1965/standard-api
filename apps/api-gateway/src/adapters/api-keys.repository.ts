@@ -1,4 +1,4 @@
-import { apiKeys } from "@standard/schemas";
+import { apiKeys, organizations } from "@standard/schemas";
 import { eq, and } from "drizzle-orm";
 import type { DbClient } from "./db";
 
@@ -55,12 +55,26 @@ export const createDrizzleApiKeysRepository = (db: DbClient): ApiKeysRepositoryA
       return record;
     },
     async verifyKey(keyHash) {
-      const [record] = await db.select().from(apiKeys).where(eq(apiKeys.keyHash, keyHash));
-      if (!record) return null;
+      const records = await db
+        .select({
+          apiKey: apiKeys,
+          orgStatus: organizations.status
+        })
+        .from(apiKeys)
+        .innerJoin(organizations, eq(apiKeys.organizationId, organizations.id))
+        .where(eq(apiKeys.keyHash, keyHash));
+
+      if (records.length === 0) return null;
+      const { apiKey: record, orgStatus } = records[0];
+
+      // Reject if organization is not active
+      if (orgStatus !== "active") return null;
+
       // Reject expired keys
       if (record.expiresAt && record.expiresAt < new Date()) return null;
       // Reject soft-deleted (revoked) keys
       if (record.revokedAt) return null;
+      
       return record;
     },
     async markUsed(id) {
