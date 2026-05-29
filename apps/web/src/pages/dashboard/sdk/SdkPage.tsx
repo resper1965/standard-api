@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useSession } from "../../../lib/auth-client";
 import { Link } from "react-router-dom";
-import { ExternalLink, Terminal, Code2, Bot, Key } from "lucide-react";
+import { ExternalLink, Terminal, Code2, Bot, Key, Copy, Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import "./SdkPage.css";
 
 import { API_URL } from "@/lib/config";
@@ -27,14 +28,35 @@ function CodeBlock({ code, language = "typescript" }: { code: string; language?:
 export function SdkPage() {
   const { data: session } = useSession();
   const tenantId = session?.session?.activeOrganizationId || "<your-tenant-id>";
+  const [copiedAiPrompt, setCopiedAiPrompt] = useState(false);
+
+  const handleCopyAiPrompt = () => {
+    const aiPrompt = `I am configuring an integration with the Standard GRC platform.
+
+My configuration:
+- Base API URL: ${API_URL}/api/v1
+- Tenant ID: ${tenantId}
+
+Please use the platform context to configure your API calls.
+You can fetch the full context map at: ${API_URL}/llms.txt`;
+
+    navigator.clipboard.writeText(aiPrompt);
+    setCopiedAiPrompt(true);
+    setTimeout(() => setCopiedAiPrompt(false), 2000);
+  };
 
   return (
     <div className="space-y-8 pb-10">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Developer Portal</h1>
-        <p className="text-muted-foreground mt-2">
-          Integrate the Standard GRC platform with your applications, AI assistants, and CI/CD pipelines.
-        </p>
+      <div className="flex justify-between items-start">
+        <div>
+          <p className="text-muted-foreground">
+            Integrate the Standard GRC platform with your applications, AI assistants, and CI/CD pipelines.
+          </p>
+        </div>
+        <Button onClick={handleCopyAiPrompt} className="shrink-0" variant="secondary">
+          {copiedAiPrompt ? <Check className="w-4 h-4 mr-2 text-emerald-500" /> : <Copy className="w-4 h-4 mr-2" />}
+          {copiedAiPrompt ? "Copied!" : "Copy AI Setup Prompt"}
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

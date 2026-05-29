@@ -15,7 +15,8 @@ import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "../../components/ui/alert";
-import { Loader2, Plus, Copy, Check, AlertTriangle } from "lucide-react";
+import { Loader2, Plus, Copy, Check, AlertTriangle, Building2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 
 type LicenseKey = {
   id: string;
@@ -36,6 +37,8 @@ export function AdminLicenses() {
   const [generating, setGenerating] = useState(false);
   const [generatedKey, setGeneratedKey] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [orgs, setOrgs] = useState<any[]>([]);
+  const [selectedOrgId, setSelectedOrgId] = useState<string>("");
 
   const getOrgId = () =>
     (session?.session as Record<string, unknown>)?.activeOrganizationId as
@@ -57,6 +60,18 @@ export function AdminLicenses() {
         { method: "GET" }
       );
       setLicenses(res?.data ?? []);
+
+      // Also fetch all organizations for the dropdown
+      try {
+        const orgsRes = await api<any>("/api/auth/organization/list", { method: "GET" });
+        const orgsArray = Array.isArray(orgsRes) ? orgsRes : (Array.isArray(orgsRes?.data) ? orgsRes.data : []);
+        setOrgs(orgsArray);
+        if (!selectedOrgId) {
+          setSelectedOrgId(orgId);
+        }
+      } catch (err) {
+        console.error("Failed to load orgs for dropdown", err);
+      }
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Failed to fetch API keys";
       setError(msg);
@@ -79,11 +94,11 @@ export function AdminLicenses() {
     setError(null);
 
     try {
-      const orgId = getOrgId();
-      if (!orgId) throw new Error("No active organization in session.");
+      const targetOrg = selectedOrgId || getOrgId();
+      if (!targetOrg) throw new Error("No organization selected.");
 
       const res = await api<{ data: { id: string; name: string; key: string; createdAt: string } }>(
-        `/api/v1/organizations/${orgId}/api-keys`,
+        `/api/v1/organizations/${targetOrg}/api-keys`,
         {
           method: "POST",
           body: JSON.stringify({ name: newKeyName.trim() }),
@@ -245,6 +260,24 @@ export function AdminLicenses() {
                 </div>
               ) : (
                 <form onSubmit={handleGenerate} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Organization</Label>
+                    <Select value={selectedOrgId} onValueChange={setSelectedOrgId}>
+                      <SelectTrigger className="w-full">
+                        <div className="flex items-center gap-2">
+                          <Building2 className="h-4 w-4 opacity-50" />
+                          <SelectValue placeholder="Select an organization" />
+                        </div>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {orgs.map((org) => (
+                          <SelectItem key={org.id} value={org.id}>
+                            {org.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                   <div className="space-y-2">
                     <Label>Key Name</Label>
                     <Input

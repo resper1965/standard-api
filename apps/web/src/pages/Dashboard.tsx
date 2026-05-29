@@ -61,9 +61,9 @@ export function DashboardPage() {
       <motion.div variants={itemVariants} className="rounded-2xl glass-premium p-8 relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-primary/10 to-transparent pointer-events-none" />
         <div className="relative z-10">
-          <h1 className="text-2xl font-brand font-bold text-foreground">
+          <h2 className="text-2xl font-brand font-bold text-foreground">
             {greeting}, <span className="text-gradient-premium">{session?.user?.name?.split(" ")[0] ?? "User"}</span> 👋
-          </h1>
+          </h2>
           <p className="text-sm text-muted-foreground mt-2 max-w-lg">
             Welcome to your Standard compliance control center. Here's an overview of your security posture across the organization.
           </p>
