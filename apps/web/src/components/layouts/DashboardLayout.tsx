@@ -9,6 +9,8 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { motion, AnimatePresence } from "framer-motion"
+import { api } from "@/lib/api"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 type NavItem = {
   name: string
@@ -132,12 +134,41 @@ export function DashboardLayout() {
 
   // Resolve current page title from route map
   const pageTitle = useMemo(() => {
-
     const path = location.pathname
     return routeTitles[path]
       ?? Object.entries(routeTitles).find(([p]) => path.startsWith(p + "/"))?.[1]
       ?? ""
   }, [location.pathname])
+
+  const activeOrgId = (session?.session as any)?.activeOrganizationId ?? null
+  const [orgs, setOrgs] = useState<any[]>([])
+  const [orgsLoading, setOrgsLoading] = useState(false)
+
+  useEffect(() => {
+    if (!session) return
+    let mounted = true
+    setOrgsLoading(true)
+    api<any>("/api/auth/organization/list", { method: "GET" })
+      .then(res => {
+        if (!mounted) return
+        const dataArray = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : [])
+        setOrgs(dataArray)
+      })
+      .catch(console.error)
+      .finally(() => {
+        if (mounted) setOrgsLoading(false)
+      })
+    return () => { mounted = false }
+  }, [session])
+
+  const handleOrgChange = async (orgId: string) => {
+    try {
+      await authClient.organization.setActive({ organizationId: orgId })
+      window.location.reload()
+    } catch (e) {
+      console.error("Failed to activate organization", e)
+    }
+  }
 
   if (isPending) {
     return (
@@ -255,16 +286,23 @@ export function DashboardLayout() {
           <Button variant="ghost" size="icon" onClick={() => setMobileOpen(true)} className="h-9 w-9" aria-label="Open navigation">
             <Menu className="h-5 w-5" />
           </Button>
-          <span className="text-[1.3rem] tracking-tighter">
-            <span className="brand-logo">standard<span className="brand-logo-dot">.</span></span>
+          <span className="text-[1.1rem] font-brand font-semibold tracking-tight truncate px-2 text-foreground">
+            {pageTitle || <span className="brand-logo">standard<span className="brand-logo-dot">.</span></span>}
           </span>
-          <div className="h-7 w-7 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground text-[10px] font-bold">
+          <div className="h-7 w-7 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground text-[10px] font-bold shrink-0">
             {userInitial}
           </div>
         </header>
 
         {/* Desktop sticky topbar with global actions */}
-        <DesktopTopbar userInitial={userInitial} />
+        <DesktopTopbar 
+          userInitial={userInitial} 
+          title={pageTitle} 
+          activeOrgId={activeOrgId} 
+          orgs={orgs} 
+          orgsLoading={orgsLoading} 
+          onOrgChange={handleOrgChange} 
+        />
 
         <div className="flex-1 px-6 md:px-8 py-6 overflow-auto">
           <AnimatePresence mode="wait">
@@ -286,15 +324,49 @@ export function DashboardLayout() {
 }
 
 /** Sticky desktop topbar for global actions */
-function DesktopTopbar({ userInitial }: { userInitial: string }) {
+function DesktopTopbar({ 
+  userInitial, 
+  title,
+  activeOrgId,
+  orgs,
+  orgsLoading,
+  onOrgChange
+}: { 
+  userInitial: string
+  title: string
+  activeOrgId: string | null
+  orgs: any[]
+  orgsLoading: boolean
+  onOrgChange: (orgId: string) => void
+}) {
   return (
     <header className="hidden md:flex border-b border-border/50 bg-card/80 backdrop-blur-sm px-8 sticky top-0 z-30 h-14 items-center justify-between transition-all duration-200">
-      <div className="flex-1">
-        <div className="topbar-search-compact hidden max-w-sm relative">
-          {/* Optional global search can go here */}
-        </div>
+      <div className="flex-1 flex items-center">
+        {title && <h1 className="text-xl font-brand font-semibold tracking-tight">{title}</h1>}
       </div>
-      <div className="flex items-center gap-3 shrink-0">
+      <div className="flex items-center gap-4 shrink-0">
+        {/* Organization Selector */}
+        <div className="w-[200px]">
+          <Select value={activeOrgId || undefined} onValueChange={onOrgChange}>
+            <SelectTrigger className="h-9 bg-transparent border-border/50 hover:bg-muted/50 transition-colors">
+              <div className="flex items-center gap-2 text-sm text-foreground">
+                <Building2 className="h-4 w-4 opacity-70" />
+                <SelectValue placeholder={orgsLoading ? "Loading..." : "Select Organization"} />
+              </div>
+            </SelectTrigger>
+            <SelectContent>
+              {orgs.map(org => (
+                <SelectItem key={org.id} value={org.id}>
+                  {org.name}
+                </SelectItem>
+              ))}
+              {orgs.length === 0 && !orgsLoading && (
+                <div className="px-2 py-2 text-sm text-muted-foreground">No organizations</div>
+              )}
+            </SelectContent>
+          </Select>
+        </div>
+
         <button className="bell-spell relative h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors">
           <Bell className="h-4 w-4" />
           <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-primary" />
