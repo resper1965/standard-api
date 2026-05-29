@@ -65,7 +65,9 @@ export const createDrizzleApiKeysRepository = (db: DbClient): ApiKeysRepositoryA
         .where(eq(apiKeys.keyHash, keyHash));
 
       if (records.length === 0) return null;
-      const { apiKey: record, orgStatus } = records[0];
+      const firstRecord = records[0];
+      if (!firstRecord) return null;
+      const { apiKey: record, orgStatus } = firstRecord;
 
       // Reject if organization is not active
       if (orgStatus !== "active") return null;
