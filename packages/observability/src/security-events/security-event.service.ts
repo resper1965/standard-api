@@ -20,6 +20,9 @@ export type RecordSecurityEventInput = {
   metadata_safe?: Record<string, unknown> | undefined;
 };
 
+const isUuid = (val?: string): boolean =>
+  val ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val) : false;
+
 export class SecurityEventService {
   constructor(private readonly deps: Pick<ObservabilityDependencies, "securityEvents">) {}
 
@@ -28,6 +31,9 @@ export class SecurityEventService {
     return this.deps.securityEvents.create(SecurityEventRecordSchema.parse({
       id: crypto.randomUUID(),
       ...input,
+      tenant_id: input.tenant_id && isUuid(input.tenant_id) ? input.tenant_id : undefined,
+      organization_id: input.organization_id && isUuid(input.organization_id) ? input.organization_id : undefined,
+      assessment_id: input.assessment_id && isUuid(input.assessment_id) ? input.assessment_id : undefined,
       metadata_safe: input.metadata_safe ?? {},
       created_at: new Date().toISOString()
     }));

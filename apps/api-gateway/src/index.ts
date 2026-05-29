@@ -29,47 +29,57 @@ export default {
           'Configure it with: wrangler secret put DATABASE_URL --env production'
         );
       }
-      if (hasDb) {
-        const db = createDb(env.DATABASE_URL!);
-        cachedDeps = {
-          ...createDrizzleRepositories(db, env),
-          // Cloudflare Email binding type does not overlap with SendEmail interface —
-          // double cast via unknown is required and intentional (CF Workers limitation).
-          email: env.EMAIL ? (env.EMAIL as unknown as SendEmail) : undefined,
-          AGENT_RUN_QUEUE: env.AGENT_RUN_QUEUE ?? undefined,
-          SOC_TRIAGE_QUEUE: env.SOC_TRIAGE_QUEUE ?? undefined,
-          banUser: async (userId: string, reason?: string) => {
-            // Delegate to Better Auth's admin ban API — marks user as banned and
-            // invalidates all active sessions. Hard purge happens within 30 days
-            // per data-retention-policy.md.
-            if (cachedAuth) {
-              try {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                await (cachedAuth as any).api.banUser({ // Better Auth admin API type not yet exported
-                  body: {
-                    userId,
-                    banReason: reason ?? 'User-initiated account deletion (LGPD art. 18)',
-                  },
-                });
-              } catch (err) {
-                console.warn('[standard:banUser] Better Auth banUser failed:', err instanceof Error ? err.message : String(err));
-              }
-            }
-          },
-        };
 
-        // Initialize Better Auth — self-hosted, no JWKS dependency
-        cachedAuth = createAuth({
-          DATABASE_URL: env.DATABASE_URL!,
-          BETTER_AUTH_SECRET: env.BETTER_AUTH_SECRET,
-          ...(env.BETTER_AUTH_URL !== undefined ? { BETTER_AUTH_URL: env.BETTER_AUTH_URL } : {}),
-        }, db);
-        console.log('[standard:init] Better Auth self-hosted initialized.');
-      } else {
-        console.warn('[standard:init] No DATABASE_URL — using MOCK repositories. SCF data will be synthetic.');
-        cachedDeps = createMockRepositories();
+      try {
+        if (hasDb) {
+          const db = createDb(env.DATABASE_URL!);
+          cachedDeps = {
+            ...createDrizzleRepositories(db, env),
+            // Cloudflare Email binding type does not overlap with SendEmail interface —
+            // double cast via unknown is required and intentional (CF Workers limitation).
+            email: env.EMAIL ? (env.EMAIL as unknown as SendEmail) : undefined,
+            AGENT_RUN_QUEUE: env.AGENT_RUN_QUEUE ?? undefined,
+            SOC_TRIAGE_QUEUE: env.SOC_TRIAGE_QUEUE ?? undefined,
+            banUser: async (userId: string, reason?: string) => {
+              // Delegate to Better Auth's admin ban API — marks user as banned and
+              // invalidates all active sessions. Hard purge happens within 30 days
+              // per data-retention-policy.md.
+              if (cachedAuth) {
+                try {
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  await (cachedAuth as any).api.banUser({ // Better Auth admin API type not yet exported
+                    body: {
+                      userId,
+                      banReason: reason ?? 'User-initiated account deletion (LGPD art. 18)',
+                    },
+                  });
+                } catch (err) {
+                  console.warn('[standard:banUser] Better Auth banUser failed:', err instanceof Error ? err.message : String(err));
+                }
+              }
+            },
+          };
+
+          // Initialize Better Auth — self-hosted, no JWKS dependency
+          cachedAuth = createAuth({
+            DATABASE_URL: env.DATABASE_URL!,
+            BETTER_AUTH_SECRET: env.BETTER_AUTH_SECRET,
+            ...(env.BETTER_AUTH_URL !== undefined ? { BETTER_AUTH_URL: env.BETTER_AUTH_URL } : {}),
+          }, db);
+          console.log('[standard:init] Better Auth self-hosted initialized.');
+        } else {
+          console.warn('[standard:init] No DATABASE_URL — using MOCK repositories. SCF data will be synthetic.');
+          cachedDeps = createMockRepositories();
+        }
+        cachedApp = createApp(cachedDeps, env, cachedAuth ?? undefined);
+        console.log('[standard:init] App initialized successfully.');
+      } catch (initErr) {
+        const msg = initErr instanceof Error ? initErr.message : String(initErr);
+        const stack = initErr instanceof Error ? initErr.stack : '';
+        console.error('[standard:init] FATAL — app initialization failed:', msg, stack);
+        // Re-throw so Cloudflare logs it as a Worker exception
+        throw initErr;
       }
-      cachedApp = createApp(cachedDeps, env, cachedAuth ?? undefined);
     }
 
     // ── Better Auth route handler ────────────────────────────

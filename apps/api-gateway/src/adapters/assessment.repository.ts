@@ -93,6 +93,8 @@ export const createDrizzleAssessmentRepository = (db: DbClient): AssessmentRepos
         name: inserted!.name,
         scf_version_id: inserted!.scfVersionId,
         trace_id: inserted!.traceId,
+        created_at: inserted!.createdAt.toISOString(),
+        updated_at: inserted!.updatedAt.toISOString(),
         snapshot: buildDefaultSnapshot(inserted!.id, inserted!.tenantId, inserted!.organizationId, input.documentCount)
       };
     },
@@ -115,6 +117,8 @@ export const createDrizzleAssessmentRepository = (db: DbClient): AssessmentRepos
         name: found.name,
         scf_version_id: found.scfVersionId,
         trace_id: found.traceId,
+        created_at: found.createdAt.toISOString(),
+        updated_at: found.updatedAt.toISOString(),
         snapshot: buildDefaultSnapshot(found.id, found.tenantId, found.organizationId, 0)
       };
     },
@@ -134,6 +138,8 @@ export const createDrizzleAssessmentRepository = (db: DbClient): AssessmentRepos
         name: found.name,
         scf_version_id: found.scfVersionId,
         trace_id: found.traceId,
+        created_at: found.createdAt.toISOString(),
+        updated_at: found.updatedAt.toISOString(),
         snapshot: buildDefaultSnapshot(found.id, found.tenantId, found.organizationId, 0)
       }));
     },
@@ -148,6 +154,8 @@ export const createDrizzleAssessmentRepository = (db: DbClient): AssessmentRepos
         name: found.name,
         scf_version_id: found.scfVersionId,
         trace_id: found.traceId,
+        created_at: found.createdAt.toISOString(),
+        updated_at: found.updatedAt.toISOString(),
         snapshot: buildDefaultSnapshot(found.id, found.tenantId, found.organizationId, 0)
       }));
     },

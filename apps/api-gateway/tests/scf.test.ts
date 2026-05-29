@@ -76,4 +76,87 @@ test("SCF admin import-xlsx rejeita arquivo sem assinatura ZIP", async () => {
   expect(result.body.error.message).toBe("Invalid XLSX file: missing ZIP file signature.");
 });
 
+test("SCF cross-mappings endpoint - Success: returns mappings for existing control", async () => {
+  const client = createTestClient();
+  const result = await client.send(
+    `/api/v1/scf/controls/GOV-001/mappings?version=${SYNTHETIC_SCF_VERSION_ID}`,
+    "GET",
+    undefined,
+    {
+      "x-standard-actor-id": ids.actorId,
+      "x-standard-tenant-id": ids.tenantId
+    }
+  );
+
+  expect(result.response.status).toBe(200);
+  expect(result.body.scf_control_id).toBe("GOV-001");
+  expect(result.body.scf_control_title).toBeDefined();
+  expect(Array.isArray(result.body.mappings)).toBe(true);
+  expect(result.body.mappings.length).toBeGreaterThanOrEqual(1);
+  expect(result.body.mappings[0].framework).toBeDefined();
+  expect(result.body.mappings[0].control_id).toBeDefined();
+});
+
+test("SCF cross-mappings endpoint - Success: filters by framework query parameter", async () => {
+  const client = createTestClient();
+  const result = await client.send(
+    `/api/v1/scf/controls/GOV-001/mappings?version=${SYNTHETIC_SCF_VERSION_ID}&framework=synthetic`,
+    "GET",
+    undefined,
+    {
+      "x-standard-actor-id": ids.actorId,
+      "x-standard-tenant-id": ids.tenantId
+    }
+  );
+
+  expect(result.response.status).toBe(200);
+  expect(result.body.mappings.every((m: any) => m.framework.toLowerCase().includes("synthetic"))).toBe(true);
+});
+
+test("SCF cross-mappings endpoint - Error: returns 404 for non-existent control code", async () => {
+  const client = createTestClient();
+  const result = await client.send(
+    `/api/v1/scf/controls/INVALID-999/mappings?version=${SYNTHETIC_SCF_VERSION_ID}`,
+    "GET",
+    undefined,
+    {
+      "x-standard-actor-id": ids.actorId,
+      "x-standard-tenant-id": ids.tenantId
+    }
+  );
+
+  expect(result.response.status).toBe(404);
+  expect(result.body.error.code).toBe("NOT_FOUND");
+});
+
+test("SCF cross-mappings endpoint - Error: returns 401 for unauthenticated requests", async () => {
+  const client = createTestClient();
+  const result = await client.send(
+    `/api/v1/scf/controls/GOV-001/mappings?version=${SYNTHETIC_SCF_VERSION_ID}`,
+    "GET",
+    undefined,
+    {
+      "x-standard-tenant-id": ids.tenantId
+    }
+  );
+
+  expect(result.response.status).toBe(401);
+});
+
+test("SCF cross-mappings endpoint - Error: returns 400 when tenant context is missing", async () => {
+  const client = createTestClient();
+  const result = await client.send(
+    `/api/v1/scf/controls/GOV-001/mappings?version=${SYNTHETIC_SCF_VERSION_ID}`,
+    "GET",
+    undefined,
+    {
+      "x-standard-actor-id": ids.actorId
+    }
+  );
+
+  expect(result.response.status).toBe(400);
+  expect(result.body.error.code).toBe("TENANT_CONTEXT_REQUIRED");
+});
+
+
 

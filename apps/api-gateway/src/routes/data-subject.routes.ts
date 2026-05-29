@@ -105,7 +105,7 @@ export const dataSubjectRoutes: RouteDefinition[] = [
 
       // Audit the export request itself (LGPD requires this)
       await context.deps.audit.record("data_subject.export_requested", {
-        actor_id: userId,
+        actor_id: context.actorId!,
         tenant_id: context.tenantId,
         trace_id: context.traceId,
         export_scope: "personal_data",
@@ -161,7 +161,7 @@ export const dataSubjectRoutes: RouteDefinition[] = [
 
       // Audit the deletion request (LGPD regulatory requirement)
       await context.deps.audit.record("data_subject.account_deletion_requested", {
-        actor_id: userId,
+        actor_id: context.actorId!,
         email_redacted: userEmail
           ? `${userEmail.slice(0, 3)}***@${userEmail.split("@")[1]}`
           : null,

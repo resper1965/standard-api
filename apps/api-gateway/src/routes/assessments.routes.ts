@@ -73,7 +73,11 @@ export const assessmentsRoutes: RouteDefinition[] = [
         trace_id: traceId
       });
 
-      return json(assessmentResponse(assessment), { status: 201 });
+      const version = await deps.scf.versions.getVersion(assessment.scf_version_id);
+      const res = assessmentResponse(assessment);
+      if (version) res.scf_version_label = version.version_label;
+
+      return json(res, { status: 201 });
     }
   },
   {
@@ -92,7 +96,12 @@ export const assessmentsRoutes: RouteDefinition[] = [
       const assessment = await tenantDb.get(routeParam(params, "assessmentId"));
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
       assertTenantOwnership(assessment.tenant_id, resolvedTenantId);
-      return json(assessmentResponse(assessment));
+
+      const version = await deps.scf.versions.getVersion(assessment.scf_version_id);
+      const res = assessmentResponse(assessment);
+      if (version) res.scf_version_label = version.version_label;
+
+      return json(res);
     }
   },
   {
@@ -109,7 +118,15 @@ export const assessmentsRoutes: RouteDefinition[] = [
 
       const tenantDb = deps.assessments.withTenant(resolvedTenantId);
       const assessments = await tenantDb.listAll();
-      return json({ data: assessments.map(assessmentResponse), trace_id: traceId });
+      const versions = await deps.scf.versions.listVersions();
+      const versionMap = new Map(versions.map(v => [v.id, v.version_label]));
+      const enriched = assessments.map(a => {
+        const res = assessmentResponse(a);
+        const label = versionMap.get(a.scf_version_id);
+        if (label) res.scf_version_label = label;
+        return res;
+      });
+      return json({ data: enriched, trace_id: traceId });
     }
   },
   {
@@ -126,7 +143,15 @@ export const assessmentsRoutes: RouteDefinition[] = [
 
       const tenantDb = deps.assessments.withTenant(resolvedTenantId);
       const assessments = await tenantDb.listByOrganization(routeParam(params, "organizationId"));
-      return json({ data: assessments.map(assessmentResponse), trace_id: traceId });
+      const versions = await deps.scf.versions.listVersions();
+      const versionMap = new Map(versions.map(v => [v.id, v.version_label]));
+      const enriched = assessments.map(a => {
+        const res = assessmentResponse(a);
+        const label = versionMap.get(a.scf_version_id);
+        if (label) res.scf_version_label = label;
+        return res;
+      });
+      return json({ data: enriched, trace_id: traceId });
     }
   },
   {
@@ -146,7 +171,12 @@ export const assessmentsRoutes: RouteDefinition[] = [
 
       const updated = { ...assessment, name: body.name ?? assessment.name };
       await tenantDb.save(updated);
-      return json(assessmentResponse(updated));
+      
+      const version = await deps.scf.versions.getVersion(updated.scf_version_id);
+      const res = assessmentResponse(updated);
+      if (version) res.scf_version_label = version.version_label;
+
+      return json(res);
     }
   },
   {

@@ -20,7 +20,9 @@ export async function apiClient<T = unknown>(endpoint: string, options: RequestI
     headers.set('Content-Type', 'application/json')
   }
   
-  if (tenantIdHeader) {
+  // Only add tenant header to /api/v1/* routes — better-auth routes (/api/auth/*) 
+  // don't allow this custom header and it causes CORS preflight failures
+  if (tenantIdHeader && !endpoint.includes('/api/auth/')) {
      headers.set('x-standard-tenant-id', tenantIdHeader)
   }
 

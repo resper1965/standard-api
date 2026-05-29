@@ -2,13 +2,12 @@ import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { api } from "../../lib/api";
 import { authClient, useSession } from "../../lib/auth-client";
-import { PageHeader } from "../../components/PageHeader";
 import { Card, CardContent } from "../../components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "../../components/ui/table";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
-import { Loader2, Plus, CheckCircle2, Trash2, Pencil } from "lucide-react";
+import { Loader2, Plus, CheckCircle2, Trash2, Pencil, LogOut } from "lucide-react";
 import { useToast } from "../../hooks/use-toast";
 
 type Organization = {
@@ -32,6 +31,7 @@ export function AdminOrganizations() {
   const [newOrgSlug, setNewOrgSlug] = useState("");
   const [creating, setCreating] = useState(false);
   const [activating, setActivating] = useState<string | null>(null);
+  const [deactivating, setDeactivating] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [editingOrg, setEditingOrg] = useState<Organization | null>(null);
   const [editOrgName, setEditOrgName] = useState("");
@@ -62,11 +62,35 @@ export function AdminOrganizations() {
     setActivating(orgId);
     try {
       await authClient.organization.setActive({ organizationId: orgId });
-      // Reload page to propagate session change across all components
       window.location.reload();
     } catch (e: any) {
       toast({ variant: "destructive", title: "Activation Failed", description: e.message || "Could not activate organization" });
       setActivating(null);
+    }
+  };
+
+  /**
+   * Deactivate = set active org to null.
+   * Better Auth doesn't have an explicit "deactivate" — we achieve it
+   * by setting active org to null/empty and reloading.
+   */
+  const handleDeactivate = async () => {
+    setDeactivating(true);
+    try {
+      // setActive with null clears the active org in the session
+      await authClient.organization.setActive({ organizationId: null as unknown as string });
+      toast({ title: "Organization deactivated", description: "No organization is now active." });
+      window.location.reload();
+    } catch (e: any) {
+      // Fallback: try empty string
+      try {
+        await (authClient.organization as any).setActive({ organizationId: "" });
+        window.location.reload();
+      } catch {
+        toast({ variant: "destructive", title: "Deactivation Failed", description: e.message || "Could not deactivate organization" });
+      }
+    } finally {
+      setDeactivating(false);
     }
   };
 
@@ -90,8 +114,8 @@ export function AdminOrganizations() {
     }
   };
 
-  const handleDelete = async (orgId: string) => {
-    if (!window.confirm("Are you sure you want to delete this organization? This action cannot be undone.")) return;
+  const handleDelete = async (orgId: string, orgName: string) => {
+    if (!window.confirm(`Delete "${orgName}"? This action cannot be undone.`)) return;
     setDeleting(orgId);
     try {
       await authClient.organization.delete({ organizationId: orgId });
@@ -115,7 +139,7 @@ export function AdminOrganizations() {
     if (!editingOrg) return;
     setUpdating(true);
     try {
-      await authClient.organization.update({ 
+      await authClient.organization.update({
         organizationId: editingOrg.id,
         data: { name: editOrgName, slug: editOrgSlug }
       });
@@ -131,12 +155,12 @@ export function AdminOrganizations() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Organizations" description="Manage tenant organizations and access">
+      <div className="flex justify-end">
         <Button size="sm" onClick={() => setShowModal(true)}>
           <Plus className="h-4 w-4 mr-1.5" />
           Create Organization
         </Button>
-      </PageHeader>
+      </div>
 
       <Card className="border-border/60 shadow-none">
         <CardContent className="p-0">
@@ -156,7 +180,13 @@ export function AdminOrganizations() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {orgs.map((o) => {
+                {orgs.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center text-muted-foreground text-sm py-10">
+                      No organizations found.
+                    </TableCell>
+                  </TableRow>
+                ) : orgs.map((o) => {
                   const isActive = activeOrgId === o.id;
                   return (
                     <TableRow key={o.id} className={isActive ? "bg-emerald-500/5" : ""}>
@@ -175,39 +205,66 @@ export function AdminOrganizations() {
                       <TableCell className="text-muted-foreground text-sm">{new Date(o.createdAt).toLocaleDateString()}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
+                          {/* Activate — only shown for inactive orgs */}
                           {!isActive && (
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => handleActivate(o.id)}
-                              disabled={activating === o.id || deleting === o.id}
+                              disabled={activating === o.id || !!deleting}
                             >
                               {activating === o.id ? (
                                 <><Loader2 className="h-3 w-3 animate-spin mr-1.5" />Activating...</>
+                              ) : "Activate"}
+                            </Button>
+                          )}
+
+                          {/* Deactivate — only shown for the active org */}
+                          {isActive && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={handleDeactivate}
+                              disabled={deactivating}
+                              className="text-amber-500 border-amber-500/30 hover:bg-amber-500/10 hover:text-amber-600"
+                            >
+                              {deactivating ? (
+                                <><Loader2 className="h-3 w-3 animate-spin mr-1.5" />Deactivating...</>
                               ) : (
-                                "Activate"
+                                <><LogOut className="h-3 w-3 mr-1.5" />Deactivate</>
                               )}
                             </Button>
                           )}
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
+
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => handleEditClick(o)}
-                            disabled={activating === o.id || deleting === o.id}
+                            disabled={activating === o.id || !!deleting}
                           >
                             <Pencil className="h-4 w-4 mr-1" /> Edit
                           </Button>
-                          {!isActive && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                              onClick={() => handleDelete(o.id)}
-                              disabled={deleting === o.id || activating === o.id}
-                            >
-                              {deleting === o.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                            </Button>
-                          )}
+
+                          {/* Delete — shown for ALL orgs; active org must be deactivated first */}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                            onClick={() => {
+                              if (isActive) {
+                                toast({
+                                  variant: "destructive",
+                                  title: "Cannot delete active organization",
+                                  description: "Deactivate this organization before deleting it."
+                                });
+                                return;
+                              }
+                              handleDelete(o.id, o.name);
+                            }}
+                            disabled={deleting === o.id || activating === o.id}
+                          >
+                            {deleting === o.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -237,7 +294,7 @@ export function AdminOrganizations() {
                 <div className="flex justify-end gap-2 pt-2">
                   <Button type="button" variant="outline" onClick={() => setShowModal(false)}>Cancel</Button>
                   <Button type="submit" disabled={creating}>
-                    {creating ? "Creating..." : "Create"}
+                    {creating ? <><Loader2 className="h-4 w-4 mr-1.5 animate-spin" />Creating...</> : "Create"}
                   </Button>
                 </div>
               </form>

@@ -39,10 +39,12 @@ export class ScfMappingService {
       mappings.map(async (mapping) => {
         const control = await this.repository.getControl(mapping.scf_control_id);
         const requirement = await this.repository.getRequirement(mapping.scf_framework_requirement_id);
+        const framework = await this.repository.getFramework(mapping.scf_framework_id);
         return {
           ...mapping,
           ...(control ? { control_code: control.control_code } : {}),
-          ...(requirement ? { requirement_code: requirement.requirement_code } : {})
+          ...(requirement ? { requirement_code: requirement.requirement_code } : {}),
+          ...(framework ? { framework_code: framework.framework_code, framework_name: framework.framework_name } : {})
         };
       })
     );

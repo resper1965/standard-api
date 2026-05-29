@@ -1,11 +1,11 @@
 import { useState, useCallback, useEffect, useMemo } from "react"
 import { Outlet, Link, useLocation } from "react-router-dom"
-import { useSession, signOut } from "@/lib/auth-client"
+import { useSession, signOut, authClient } from "@/lib/auth-client"
 import {
   LayoutDashboard, Settings, LogOut, Loader2, FileText, Search,
   BarChart3, Shield, Puzzle, ClipboardList, Menu, X,
   Building2, Key, Users, ScrollText, HeartPulse, ChevronRight,
-  Bell, Network
+  Bell
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { motion, AnimatePresence } from "framer-motion"
@@ -24,7 +24,6 @@ const navItems: NavItem[] = [
   { name: "Gap Analysis", path: "/dashboard/gap-analysis", icon: Search },
   { name: "Reports", path: "/dashboard/reports", icon: BarChart3 },
   { name: "SCF Catalog", path: "/dashboard/scf-catalog", icon: Shield },
-  { name: "Reflection Graph", path: "/dashboard/knowledge-graph", icon: Network },
   { name: "SDK & Docs", path: "/dashboard/sdk", icon: Puzzle },
 ]
 
@@ -44,7 +43,6 @@ const routeTitles: Record<string, string> = {
   "/dashboard/gap-analysis": "Gap Analysis",
   "/dashboard/reports": "Reports",
   "/dashboard/scf-catalog": "SCF Catalog",
-  "/dashboard/knowledge-graph": "Reflection Graph",
   "/dashboard/agent-runs": "Agent Runs",
   "/dashboard/sdk": "SDK & Docs",
   "/dashboard/settings": "Settings",
@@ -108,8 +106,33 @@ export function DashboardLayout() {
 
   const closeMobile = useCallback(() => setMobileOpen(false), [])
 
+  // Auto-activate the first organization if none is active.
+  // This resolves 400 TENANT_CONTEXT_REQUIRED errors on all API calls.
+  useEffect(() => {
+    async function autoActivateOrg() {
+      if (isPending || session?.session?.activeOrganizationId) return
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/auth/organization/list`, {
+          credentials: "include",
+        })
+        if (!res.ok) return
+        const data = await res.json()
+        const orgs: Array<{ id: string }> = Array.isArray(data) ? data : (data?.data ?? [])
+        if (orgs.length > 0) {
+          await authClient.organization.setActive({ organizationId: orgs[0].id })
+          // Force session refresh so API calls pick up the new tenant header
+          window.location.reload()
+        }
+      } catch {
+        // silently ignore — user can activate org manually in Settings
+      }
+    }
+    autoActivateOrg()
+  }, [isPending, session?.session?.activeOrganizationId])
+
   // Resolve current page title from route map
   const pageTitle = useMemo(() => {
+
     const path = location.pathname
     return routeTitles[path]
       ?? Object.entries(routeTitles).find(([p]) => path.startsWith(p + "/"))?.[1]
