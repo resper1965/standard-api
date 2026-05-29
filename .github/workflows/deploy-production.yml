@@ -130,32 +130,22 @@ jobs:
       - name: Wait for propagation
         run: sleep 30
 
-      - name: Health check — API Gateway (Custom Domain)
+      - name: Health check — API Gateway (Authoritative)
         run: |
           HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://standard-api.bekaa.eu/health)
           echo "standard-api.bekaa.eu /health returned: $HTTP_STATUS"
           if [ "$HTTP_STATUS" -ne 200 ]; then
-            echo "::warning::Custom Domain smoke test FAILED — standard-api.bekaa.eu not healthy (may be DNS propagation)"
-          else
-            echo "✅ Custom Domain is healthy"
-          fi
-
-      - name: Health check — Worker Domain (authoritative)
-        run: |
-          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://standard-api-gateway-production.ness.workers.dev/health)
-          echo "Worker domain /health returned: $HTTP_STATUS"
-          if [ "$HTTP_STATUS" -ne 200 ]; then
-            echo "::error::Worker Domain Smoke test FAILED — pipeline blocked"
+            echo "::error::API Gateway Smoke test FAILED — standard-api.bekaa.eu not healthy"
             exit 1
           fi
-          echo "✅ Worker domain is healthy"
+          echo "✅ Custom Domain is healthy"
 
       - name: Auth stack health check — /api/health/auth
         # ADR-AUTH-001: This gate verifies DB connectivity for the Better Auth stack.
         # A 503 here means Better Auth cannot reach the database — logins will fail.
         # Never bypass this gate for production deploys.
         run: |
-          AUTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://standard-api-gateway-production.ness.workers.dev/api/health/auth)
+          AUTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://standard-api.bekaa.eu/api/health/auth)
           echo "/api/health/auth returned: $AUTH_STATUS"
           if [ "$AUTH_STATUS" -ne 200 ]; then
             echo "::error::Auth stack health check FAILED (status=$AUTH_STATUS) — logins may be broken"
