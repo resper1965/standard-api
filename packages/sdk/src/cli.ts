@@ -13,7 +13,7 @@
  *   STANDARD_API_URL   — Base URL (optional, defaults to production)
  */
 
-import { StandardClient, type StandardClientConfig } from "./client";
+import { StandardClient, type StandardClientConfig } from "./client.js";
 
 // ── Helpers ─────────────────────────────────────────────────
 
