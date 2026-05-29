@@ -9,7 +9,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 const envContent = readFileSync(".env", "utf-8");
-const match = envContent.match(/DATABASE_URL="([^"]+)"/);
+const match = envContent.match(/DATABASE_URL="?([^"\s]+)"?/);
 if (!match) { console.error("❌ No DATABASE_URL found in .env"); process.exit(1); }
 const sql = neon(match[1]);
 

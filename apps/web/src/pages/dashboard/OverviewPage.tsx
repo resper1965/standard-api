@@ -188,8 +188,10 @@ export function OverviewPage() {
                         Created {assessment.created_at ? new Date(assessment.created_at).toLocaleDateString() : "-"}
                       </span>
                     </div>
-                    <Badge variant={stateVariant[assessment.state] || "muted"}>
-                      {assessment.state?.replace(/_/g, ' ')}
+                    <Badge variant={stateVariant[(assessment.state as string)] || "muted"}>
+                      {typeof assessment.state === "object" && assessment.state !== null
+                        ? ((assessment.state as Record<string,string>).en ?? (assessment.state as Record<string,string>).pt ?? String(assessment.state))
+                        : String(assessment.state ?? "").replace(/_/g, ' ')}
                     </Badge>
                   </Link>
                 ))}

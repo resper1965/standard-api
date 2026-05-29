@@ -1,6 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
 import { api } from "../lib/api";
-import { PageHeader } from "../components/PageHeader";
 import { Card, CardContent } from "../components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "../components/ui/table";
 import { Button } from "../components/ui/button";
@@ -136,12 +135,6 @@ export function ScfCatalogPage() {
 
   return (
     <div className="space-y-6 animate-slide-up">
-      <PageHeader
-        title="SCF Catalog"
-        description={version
-          ? `Version ${version.version_label} · ${controls.length.toLocaleString()} controls · ${frameworks.length} frameworks · ${domains.length} domains`
-          : "No SCF version loaded"}
-      />
 
       {/* Tab bar */}
       <div className="flex gap-1 p-1 bg-muted/50 rounded-lg w-fit">

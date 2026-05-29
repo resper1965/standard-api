@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { api } from "../lib/api";
-import { PageHeader } from "../components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "../components/ui/table";
 import { Button } from "../components/ui/button";
@@ -98,17 +97,6 @@ export function ReportsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Reports"
-        description="Generate and download assessment reports"
-      >
-        {assessmentId && (
-          <Button size="sm" onClick={generateReport} disabled={generating || loading}>
-            <Plus className="h-4 w-4 mr-1.5" />
-            {generating ? "Generating..." : "Generate Report"}
-          </Button>
-        )}
-      </PageHeader>
 
       {!assessmentId ? (
         <AssessmentSelector label="Reports" />

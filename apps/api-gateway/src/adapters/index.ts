@@ -44,6 +44,9 @@ import { createMockApiKeysRepository, createDrizzleApiKeysRepository } from "./a
 import { createInMemoryWebhookRepository, createDrizzleWebhookRepository } from "./webhook.repository";
 import { createDrizzleMembershipRepository, createMockMembershipRepository } from "./membership.repository";
 import { resolveTenantContext } from "./tenant-mapping";
+import { users } from "@standard/schemas";
+import { eq } from "drizzle-orm";
+
 
 /**
  * Type bridge: NeonHttpDatabase (edge) ↔ PostgresJsDatabase (packages).
@@ -107,7 +110,11 @@ export const createMockRepositories = (): AppDependencies => {
       };
     }
     // JIT provision mock tenant + organization
-    const newTenant = await tenants.create({ name: `Tenant ${baOrgId}`, slug: baOrgId });
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(baOrgId);
+    const tenantPayload = isUuid
+      ? { tenant_id: baOrgId, name: `Tenant ${baOrgId}`, slug: baOrgId }
+      : { name: `Tenant ${baOrgId}`, slug: baOrgId };
+    const newTenant = await tenants.create(tenantPayload);
     const newOrg = await orgsBase.create({ tenant_id: newTenant.tenant_id, name: `Org ${baOrgId}`, slug: baOrgId });
     orgMap.set(newOrg.organization_id, newOrg);
     return {
@@ -141,7 +148,8 @@ export const createMockRepositories = (): AppDependencies => {
     alerts: new AlertService(new SecurityEventService(createInMemoryObservabilityDependencies())),
     privacy: createInMemoryPrivacyDependencies(),
     webhooks: createInMemoryWebhookRepository(),
-    resolveTenantContext
+    resolveTenantContext,
+    resolveUserContext: async (email: string, displayName: string) => ({ id: crypto.randomUUID() })
   };
 };
 
@@ -189,6 +197,16 @@ export const createDrizzleRepositories = (db: DbClient, env?: Env): AppDependenc
     alerts,
     privacy: { repositories: createDrizzlePrivacyRepositories(db) },
     webhooks: createDrizzleWebhookRepository(db),
-    resolveTenantContext: (baOrgId: string) => resolveTenantContext(db, baOrgId)
+    resolveTenantContext: (baOrgId: string) => resolveTenantContext(db, baOrgId),
+    resolveUserContext: async (email: string, displayName: string) => {
+      const [existing] = await db.select().from(users).where(eq(users.email, email)).limit(1);
+      if (existing) return { id: existing.id };
+
+      const [inserted] = await db.insert(users).values({
+        email,
+        displayName,
+      }).returning();
+      return { id: inserted!.id };
+    }
   };
 };

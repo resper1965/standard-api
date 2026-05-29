@@ -27,6 +27,34 @@ export async function resolveTenantContext(
   db: DbClient,
   orgId: string
 ): Promise<ResolvedTenantContext | null> {
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orgId);
+
+  if (isUuid) {
+    const [existingTenant] = await db
+      .select()
+      .from(tenants)
+      .where(eq(tenants.id, orgId))
+      .limit(1);
+
+    if (existingTenant) {
+      const [existingOrg] = await db
+        .select()
+        .from(organizations)
+        .where(eq(organizations.tenantId, existingTenant.id))
+        .limit(1);
+
+      if (existingOrg) {
+        return {
+          tenant_id: existingTenant.id,
+          organization_id: existingOrg.id,
+          ba_org_id: existingOrg.slug,
+          org_name: existingOrg.name,
+        };
+      }
+    }
+    return null;
+  }
+
   const slug = orgId;
   const name = `Org ${orgId.substring(0, 8)}`;
 

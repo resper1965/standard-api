@@ -493,6 +493,8 @@ export function SettingsPage() {
       if (res.ok) {
         const json = await res.json()
         setApiKeys(json.data || [])
+      } else {
+        console.warn("[loadApiKeys] non-ok response", res.status)
       }
     } catch (e: any) {
       toast({ variant: "destructive", title: "Error", description: e?.message || "Failed to load API keys." });
@@ -1010,38 +1012,55 @@ export function SettingsPage() {
                     <TableRow>
                       <TableHead>Name</TableHead>
                       <TableHead>Key</TableHead>
+                      <TableHead>Status</TableHead>
                       <TableHead>Scopes</TableHead>
                       <TableHead>Expires</TableHead>
                       <TableHead className="w-12"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {apiKeys.map(k => (
-                      <TableRow key={k.id}>
-                        <TableCell className="font-medium text-sm">{k.name}</TableCell>
-                        <TableCell className="font-mono text-xs text-muted-foreground">{k.maskedKey}</TableCell>
-                        <TableCell>
-                          <div className="flex flex-wrap gap-1 max-w-[200px]">
-                            {k.scopes && k.scopes.length > 0 ? (
-                              k.scopes.map((s: string) => <Badge key={s} variant="outline" className="text-[9px] px-1 py-0">{s}</Badge>)
+                    {apiKeys.map(k => {
+                      const isRevoked = !!(k.isRevoked || k.revokedAt);
+                      return (
+                        <TableRow key={k.id} className={isRevoked ? "opacity-50" : ""}>
+                          <TableCell className="font-medium text-sm">{k.name}</TableCell>
+                          <TableCell className="font-mono text-xs text-muted-foreground">{k.maskedKey}</TableCell>
+                          <TableCell>
+                            {isRevoked ? (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-destructive/10 text-destructive">
+                                revoked
+                              </span>
                             ) : (
-                              <Badge variant="success" className="text-[9px] px-1 py-0">Admin / All Access</Badge>
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-500">
+                                active
+                              </span>
                             )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-xs text-muted-foreground">{k.expiresAt ? new Date(k.expiresAt).toLocaleDateString() : "Never"}</TableCell>
-                        <TableCell>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="text-destructive/60 hover:text-destructive" 
-                            onClick={() => { setKeyToRevoke(k); setIsRevokeDialogOpen(true); }}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-wrap gap-1 max-w-[200px]">
+                              {k.scopes && k.scopes.length > 0 ? (
+                                k.scopes.map((s: string) => <Badge key={s} variant="outline" className="text-[9px] px-1 py-0">{s}</Badge>)
+                              ) : (
+                                <Badge variant="success" className="text-[9px] px-1 py-0">Admin / All Access</Badge>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-xs text-muted-foreground">{k.expiresAt ? new Date(k.expiresAt).toLocaleDateString() : "Never"}</TableCell>
+                          <TableCell>
+                            {!isRevoked && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="text-destructive/60 hover:text-destructive"
+                                onClick={() => { setKeyToRevoke(k); setIsRevokeDialogOpen(true); }}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               )}

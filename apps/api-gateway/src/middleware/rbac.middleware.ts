@@ -78,8 +78,15 @@ export const assertRbac = async (context: RequestContext, requiredPermissions: P
       }
     }
   } else if (context.session) {
-    // Better Auth session (production) — use role-based permission check
-    const role = (context.session.user?.role as StandardRole) || "viewer";
+    // Better Auth session (production) — use role-based permission check.
+    // Better Auth `admin` plugin uses "admin" | "user" — map "user" → "member"
+    // so it aligns with STANDARD_ROLE_PERMISSIONS keys.
+    const rawRole = context.session.user?.role;
+    const role: StandardRole =
+      rawRole === "admin" ? "admin"
+      : rawRole === "owner" ? "owner"
+      : rawRole === "viewer" ? "viewer"
+      : "member"; // "user" and anything unknown → member
     for (const reqPerm of requiredPermissions) {
       const [resource, action] = reqPerm.split(":") as [StandardResource, string];
       if (!roleHasPermission(role, resource, action)) {

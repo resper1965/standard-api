@@ -33,7 +33,10 @@ export const assessmentResponse = (record: AssessmentRecord) => {
     state: record.snapshot.state,  // Kept for backward compatibility
     progress,
     scf_version_id: record.scf_version_id,
-    trace_id: record.trace_id
+    trace_id: record.trace_id,
+    created_at: record.created_at || new Date().toISOString(),
+    updated_at: record.updated_at || new Date().toISOString(),
+    ...(record.scf_version_label ? { scf_version_label: record.scf_version_label } : {})
   };
 };
 

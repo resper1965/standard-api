@@ -3,15 +3,15 @@ import { TenantResolver } from "@standard/security";
 import { ApiError } from "../errors/api-error";
 import type { RequestContext } from "../http";
 
-export const resolveTenantContext = (context: RequestContext, protectedRoute: boolean): void => {
+export const resolveTenantContext = async (context: RequestContext, protectedRoute: boolean): Promise<void> => {
   const pathTenantId = context.params.tenantId;
   const headerTenantId =
     context.request.headers.get("x-standard-tenant-id") ??
     context.request.headers.get("x-tenant-id") ??
     undefined;
-  const resolvedTenantId = headerTenantId ?? pathTenantId ?? context.tenantId;
+  const rawTenantId = headerTenantId ?? pathTenantId ?? context.tenantId;
 
-  if (protectedRoute && !resolvedTenantId) {
+  if (protectedRoute && !rawTenantId) {
     // Only enforce tenant requirement when there IS an authenticated actor.
     // If the request is unauthenticated, auth middleware will throw 401 first —
     // returning 400 here would leak that the route exists and confuse clients.
@@ -26,6 +26,21 @@ export const resolveTenantContext = (context: RequestContext, protectedRoute: bo
       trace_id: context.traceId
     });
     throw new ApiError("TENANT_CONTEXT_REQUIRED", "Tenant context is required.", 400);
+  }
+
+  // Resolve Better Auth Org text ID to standard UUID if resolver is available
+  let resolvedTenantId = rawTenantId;
+  let resolvedOrgId = context.params.organizationId;
+  if (context.deps.resolveTenantContext && rawTenantId) {
+    try {
+      const resolved = await context.deps.resolveTenantContext(rawTenantId);
+      if (resolved) {
+        resolvedTenantId = resolved.tenant_id;
+        resolvedOrgId = resolved.organization_id;
+      }
+    } catch (e) {
+      console.error("[standard:tenant-middleware] Failed to resolve tenant context:", e);
+    }
   }
 
   if (pathTenantId && headerTenantId && pathTenantId !== headerTenantId) {
@@ -72,11 +87,15 @@ export const resolveTenantContext = (context: RequestContext, protectedRoute: bo
   }
 
   context.tenantId = resolvedTenantId;
+  if (resolvedOrgId) {
+    context.organizationId = resolvedOrgId;
+  }
+
   context.securityTenant = new TenantResolver().resolve({
-    ...(headerTenantId ? { headerTenantId } : {}),
-    ...(pathTenantId ? { pathTenantId } : {}),
+    ...(headerTenantId ? { headerTenantId: resolvedTenantId } : {}),
+    ...(pathTenantId ? { pathTenantId: resolvedTenantId } : {}),
     ...(context.actorId?.startsWith("m2m:") ? { apiKeyTenantId: resolvedTenantId } : { sessionTenantId: resolvedTenantId }),
-    ...(context.params.organizationId ? { organizationId: context.params.organizationId } : {}),
+    ...(context.params.organizationId ? { organizationId: resolvedOrgId } : {}),
     ...(context.params.assessmentId ? { assessmentId: context.params.assessmentId } : {}),
     hostname: new URL(context.request.url).hostname,
     traceId: context.traceId

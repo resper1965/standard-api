@@ -162,6 +162,13 @@
       "when": 1779816120831,
       "tag": "0022_empty_grandmaster",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1780002659383,
+      "tag": "0023_stale_senator_kelly",
+      "breakpoints": true
     }
   ]
 }

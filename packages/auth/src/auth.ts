@@ -56,7 +56,11 @@ export const createAuth = (env: AuthEnv, db: any) => {
       "https://standard.bekaa.eu",
       "https://standard-web.pages.dev",
       "https://production.standard-web.pages.dev",
+      "https://standard-web-production.pages.dev",
+      // Preview deploys (hash-prefixed wildcard)
+      "https://*.standard-web-production.pages.dev",
       "http://localhost:5173",
+      "http://localhost:5200",
       "http://localhost:3000",
     ],
 

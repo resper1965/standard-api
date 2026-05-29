@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { api } from "../../lib/api";
 import { useSession } from "../../lib/auth-client";
-import { PageHeader } from "../../components/PageHeader";
 import { Card, CardContent } from "../../components/ui/card";
 import {
   Table,
@@ -49,17 +48,8 @@ export function AdminLicenses() {
     try {
       const orgId = getOrgId();
       if (!orgId) {
-        // Fallback: tentar endpoint admin de listagem
-        const res = await api<{ data: LicenseKey[] }>(
-          "/api/auth/admin/list-licenses",
-          { method: "GET" }
-        );
-        const dataArray = Array.isArray(res)
-          ? res
-          : Array.isArray(res?.data)
-            ? res.data
-            : [];
-        setLicenses(dataArray);
+        setLicenses([]);
+        setError("No active organization. Activate one in Organizations to manage API keys.");
         return;
       }
       const res = await api<{ data: LicenseKey[] }>(
@@ -121,7 +111,7 @@ export function AdminLicenses() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="API Keys" description="Generate and manage API access keys">
+      <div className="flex justify-end">
         <Button
           size="sm"
           onClick={() => {
@@ -133,7 +123,7 @@ export function AdminLicenses() {
           <Plus className="h-4 w-4 mr-1.5" />
           Generate Key
         </Button>
-      </PageHeader>
+      </div>
 
       {error && (
         <div className="rounded-md border border-destructive/50 bg-destructive/10 p-4 text-sm text-destructive">

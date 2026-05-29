@@ -14,6 +14,9 @@ export type LogInput = {
   metadata?: Record<string, unknown> | undefined;
 };
 
+const isUuid = (val?: string): boolean =>
+  val ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val) : false;
+
 export class StructuredLogger {
   entries: StructuredLogEntry[] = [];
 
@@ -26,9 +29,9 @@ export class StructuredLogger {
       service: input.service,
       ...(input.module ? { module: input.module } : {}),
       environment: input.environment,
-      ...(input.tenant_id ? { tenant_id: input.tenant_id } : {}),
-      ...(input.organization_id ? { organization_id: input.organization_id } : {}),
-      ...(input.assessment_id ? { assessment_id: input.assessment_id } : {}),
+      ...(input.tenant_id && isUuid(input.tenant_id) ? { tenant_id: input.tenant_id } : {}),
+      ...(input.organization_id && isUuid(input.organization_id) ? { organization_id: input.organization_id } : {}),
+      ...(input.assessment_id && isUuid(input.assessment_id) ? { assessment_id: input.assessment_id } : {}),
       metadata_safe: redactValue(input.metadata ?? {})
     });
     this.entries.push(entry);

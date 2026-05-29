@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { api } from "../lib/api";
-import { PageHeader } from "../components/PageHeader";
 import { CreateAssessmentModal } from "../components/CreateAssessmentModal";
 import { Button } from "../components/ui/button";
 import { EmptyState } from "../components/ui/empty-state";
@@ -30,12 +29,25 @@ import { useNavigate } from "react-router-dom";
  
 export interface Assessment {
   assessment_id: string;
-  name: string;
-  scf_version_id: string;
-  status: "draft" | "in_review" | "completed";
+  name: string | Record<string, string>;
+  scf_version_id: string | Record<string, string>;
+  scf_version_label?: string;
+  status: string;
   progress: number;
   last_updated: string;
 }
+
+/** Safely renders an i18n field ({pt, en}) or plain string as text */
+function str(v: unknown): string {
+  if (!v) return "";
+  if (typeof v === "string") return v;
+  if (typeof v === "object" && v !== null) {
+    const o = v as Record<string, string>;
+    return o.en ?? o.pt ?? Object.values(o)[0] ?? "";
+  }
+  return String(v);
+}
+
 
 export function AssessmentsPage() {
   const [assessments, setAssessments] = useState<Assessment[]>([]);
@@ -87,21 +99,6 @@ export function AssessmentsPage() {
       initial="hidden"
       animate="show"
     >
-      <PageHeader
-        title="Assessments"
-        description="Unified compliance tracking and security control assessments across your organization."
-      >
-        <div className="flex gap-3">
-          <Button variant="outline" size="sm" className="glass-panel h-9 border-white/10 hover:bg-white/5 transition-all">
-            <Filter className="h-4 w-4 mr-2" />
-            Filter
-          </Button>
-          <Button size="sm" className="h-9 shadow-[0_4px_14px_0_hsl(var(--primary)/39%)] hover:shadow-[0_6px_20px_rgba(14,165,233,0.23)] hover:-translate-y-0.5 transition-all" onClick={() => setShowModal(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            New Assessment
-          </Button>
-        </div>
-      </PageHeader>
 
       {/* Summary Stats */}
       <AnimatePresence>
@@ -202,7 +199,7 @@ export function AssessmentsPage() {
                         <TableCell className="py-5 px-6">
                           <div className="flex flex-col">
                             <span className="font-bold text-base group-hover:text-primary transition-colors">
-                              {assessment.name}
+                              {str(assessment.name)}
                             </span>
                             <span className="text-xs text-muted-foreground mt-0.5">
                               ID: {assessment.assessment_id.slice(0, 8)}...
@@ -211,12 +208,12 @@ export function AssessmentsPage() {
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline" className="bg-muted/50 border-border/50 font-medium">
-                            {assessment.scf_version_id}
+                            {str(assessment.scf_version_label || assessment.scf_version_id)}
                           </Badge>
                         </TableCell>
                         <TableCell>
                           <Badge className={`border uppercase text-[10px] tracking-wider px-2 py-0.5 ${getStatusColor(assessment.status)}`}>
-                            {assessment.status?.replace('_', ' ')}
+                            {str(assessment.status)?.replace('_', ' ')}
                           </Badge>
                         </TableCell>
                         <TableCell>

@@ -6,10 +6,11 @@ import { TrendingUp, ClipboardCheck, AlertCircle, Clock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface AssessmentSummary {
-  id: string;
+  assessment_id: string;
   name: string;
   state: string;
-  framework_id: string;
+  scf_version_id: string;
+  scf_version_label?: string;
   created_at: string;
 }
 
@@ -115,18 +116,18 @@ export function DashboardPage() {
                   <tbody className="divide-y divide-border/20">
                     {assessments.slice(0, 8).map((a, i) => (
                       <motion.tr 
-                        key={a.id} 
+                        key={a.assessment_id} 
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: i * 0.05 }}
                         className="group hover:bg-white/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
                       >
                         <td className="px-6 py-4 font-medium text-foreground">
-                          <Link to={`/assessments/${a.id}`} className="group-hover:text-primary transition-colors block">
+                          <Link to={`/assessments/${a.assessment_id}`} className="group-hover:text-primary transition-colors block">
                             {a.name}
                           </Link>
                         </td>
-                        <td className="px-6 py-4 text-muted-foreground">{a.framework_id}</td>
+                        <td className="px-6 py-4 text-muted-foreground">{a.scf_version_label || a.scf_version_id}</td>
                         <td className="px-6 py-4">
                           <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wide uppercase ${stateStyle(a.state)}`}>
                             {a.state.replace(/_/g, " ")}

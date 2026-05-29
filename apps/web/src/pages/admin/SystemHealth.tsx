@@ -1,5 +1,4 @@
 import { useEffect, useState, useRef } from "react";
-import { PageHeader } from "../../components/PageHeader";
 import { Card, CardContent } from "../../components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "../../components/ui/table";
 import { Button } from "../../components/ui/button";
@@ -135,12 +134,6 @@ export function AdminSystemHealth() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="System Health" description="Monitor infrastructure and service status">
-        <Button variant="outline" size="sm" onClick={fetchHealth} disabled={loading}>
-          <RefreshCw className={`h-4 w-4 mr-1.5 ${loading ? "animate-spin" : ""}`} />
-          Refresh
-        </Button>
-      </PageHeader>
 
       {error && (
         <div className="p-4 text-sm text-destructive bg-destructive/5 border border-destructive/20 rounded-lg flex items-center gap-3">
