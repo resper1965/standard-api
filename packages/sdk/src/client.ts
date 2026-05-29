@@ -4,8 +4,8 @@
  * Zero dependencies. Uses native fetch.
  * Works in Node.js 18+, Deno, Bun, Cloudflare Workers, and browsers.
  */
-import { StandardError, type StandardErrorResponse } from "./errors";
-import type { RequestOptions, PaginatedResponse, StandardResponse, ListQuery } from "./types";
+import { StandardError, type StandardErrorResponse } from "./errors.js";
+import type { RequestOptions, PaginatedResponse, StandardResponse, ListQuery } from "./types.js";
 import type {
   Assessment, Document, DocumentChunk, IngestionJob,
   ScfVersion, ScfDomain, ScfControl, ScfFramework, ScfMapping, ScfRequirement, ScfCoverage,
@@ -20,7 +20,7 @@ import type {
   Organization, ApiKey, ApiKeyCreated,
   ComplianceGate, ExportJob,
   AssessmentSummary, OrganizationDashboard, AuditLogEntry, Membership,
-} from "./models";
+} from "./models.js";
 
 export type StandardClientConfig = {
   /** API key (starts with "standard_live_") */
