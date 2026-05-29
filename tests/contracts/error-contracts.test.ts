@@ -3,7 +3,7 @@ import { expect, test } from "../test-kit";
 
 test("public API error contains trace_id and not stack trace", async () => {
   const app = createApp();
-  const response = await app.fetch(new Request("https://api.test/api/v1/assessments/missing/status", {
+  const response = await app.fetch(new Request("https://api.test/api/v1/this/endpoint/does/not/exist/at/all", {
     headers: {
       "x-trace-id": "trace-error-contract-0001",
       "x-standard-tenant-id": "10000000-0000-4000-8000-000000000001",
