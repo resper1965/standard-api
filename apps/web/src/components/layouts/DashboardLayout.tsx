@@ -221,7 +221,10 @@ export function DashboardLayout() {
             variant="ghost"
             size="sm"
             className="flex-1 justify-start text-muted-foreground hover:text-destructive hover:bg-destructive/10 text-xs cursor-pointer"
-            onClick={() => signOut()}
+            onClick={async () => {
+              await signOut();
+              window.location.href = "/login";
+            }}
             aria-label="Sign out"
           >
             <LogOut className="mr-2 h-3.5 w-3.5" />
