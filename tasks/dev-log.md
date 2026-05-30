@@ -58,3 +58,22 @@ Este arquivo registra aprendizados relevantes, testes importantes, contexto não
   - `docs/context/pendencias.md`, `docs/releases/post-mvp-backlog.md`, `docs/releases/roadmap-to-production.md`
   - `docs/plans/*` (status headers)
 - Pendências: Fase 1 (estabilização técnica) pode iniciar após validação do usuário.
+
+### 2026-05-30 - Integração de SoA no MCP & Hotfix de Deploy
+
+- Contexto: Exposição do ciclo de vida de Statement of Applicability (SoA) no Model Context Protocol (MCP) com 6 novas tools (totalizando 33 no gateway).
+- O que foi aprendido:
+  - Identificada e corrigida a ausência do arquivo `wrangler.queues-worker.toml` no diretório `infra/cloudflare`, que quebrava a matriz de deployment do GitHub Actions para o `queues-worker`.
+  - Mapeado o erro de deploy do `queues-worker` devido a consumidores associados a filas que não existiam no painel do Cloudflare (`standard-soc-triage-prod` e `standard-soc-triage-dlq-prod`).
+- Ações executadas:
+  - Criadas as 6 novas tools de SoA (`list-soa-versions`, `get-soa-version`, `list-soa-items`, `get-soa-item`, `validate-soa`, `get-soa-summary`).
+  - Atualizadas as rotas HTML e guias markdown de integração MCP.
+  - Criado o arquivo `infra/cloudflare/wrangler.queues-worker.toml` com os mappings relativos corretos.
+  - Usuário provisionou as filas pendentes no Cloudflare.
+- Arquivos relacionados:
+  - `apps/api-gateway/src/mcp/server.ts`
+  - `apps/api-gateway/src/mcp/tools/soa.tools.ts`
+  - `docs/api/mcp-integration-guide.md`
+  - `infra/cloudflare/wrangler.queues-worker.toml`
+- Pendências: Monitorar nova execução do pipeline de deploy.
+
