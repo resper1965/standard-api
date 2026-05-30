@@ -13,8 +13,8 @@
 ## API
 
 Base URL: `https://standard-api.bekaa.eu`
-Auth: Bearer API key (`standard_live_...`) or session cookie
-Tenant: `x-standard-tenant-id` header (required for all protected endpoints)
+Auth: Bearer API key (`standard_live_...`) or session cookie. The API Key automatically resolves to your Root Tenant.
+Tenant: Implicitly resolved via API Key. Use `organization_id` in paths for Sub-Tenant isolation.
 
 ## Sections
 

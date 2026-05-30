@@ -34,8 +34,9 @@ If you discover a security vulnerability within Standard API, please report it r
 
 Standard API implements defense-in-depth:
 
-- **Authentication**: Better Auth with session caching on Cloudflare KV
-- **Authorization**: Custom GRC ABAC middleware with tenant-aware RBAC
+- **Data at Rest**: Neon PostgreSQL (AES-256) and Cloudflare R2 encryption
+- **Authentication**: Standard Native Auth with token revocation caching on Cloudflare KV
+- **Access Control**: Role-Based Access Control (RBAC) at the route and service level
 - **Tenant Isolation**: All queries scoped by `tenant_id` — no cross-tenant data leakage
 - **Input Validation**: Zod schema validation on all API boundaries
 - **Upload Security**: Anti-malware scanning, file type validation, size limits

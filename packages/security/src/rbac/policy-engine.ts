@@ -1,7 +1,7 @@
 import type { AccessDecision, Permission, PolicyInput } from "@standard/schemas";
 
 /**
- * @deprecated Use `@standard/auth` permissions (Better Auth Access Control) instead.
+ * @deprecated Use `@standard/auth` permissions (Standard Native Auth Access Control) instead.
  * This engine will be removed in v0.3.0.
  */
 export class PolicyEngine {

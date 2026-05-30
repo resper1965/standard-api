@@ -1,8 +1,8 @@
-# Better Auth — Auditoria e Hardening
+# Standard Native Auth — Auditoria e Hardening
 
 **Data:** 2026-05-25  
 **Status:** Aprovado  
-**Contexto:** Após 2 semanas de instabilidade em produção com dois bugs críticos descobertos em runtime (double-mapping Drizzle adapter, additionalFields obrigatórios por default), foi decidido executar auditoria completa e hardening do Better Auth v1.6.x em vez de substituição.
+**Contexto:** Após 2 semanas de instabilidade em produção com dois bugs críticos descobertos em runtime (double-mapping Drizzle adapter, additionalFields obrigatórios por default), foi decidido executar auditoria completa e hardening do Standard Native Auth v1.6.x em vez de substituição.
 
 ---
 
@@ -18,13 +18,13 @@
 ### Padrão observado no histórico
 
 ```
-Neon Auth → Better Auth → pin 1.2.10 (crash) → Neon Auth → revert →
-Better Auth 1.6.x → double-mapping bug → optional fields bug
+Neon Auth → Standard Native Auth → pin 1.2.10 (crash) → Neon Auth → revert →
+Standard Native Auth 1.6.x → double-mapping bug → optional fields bug
 ```
 
 ### Decisão
 
-Auditoria + Hardening do Better Auth atual. Não reescrever agora. Tornar o comportamento previsível, testado e monitorado.
+Auditoria + Hardening do Standard Native Auth atual. Não reescrever agora. Tornar o comportamento previsível, testado e monitorado.
 
 ---
 
@@ -35,8 +35,8 @@ Auditoria + Hardening do Better Auth atual. Não reescrever agora. Tornar o comp
 | Área | Arquivo | Risco atual |
 |------|---------|-------------|
 | Drizzle adapter + schema | `packages/auth/src/auth.ts` | ⚠️ Alto |
-| Plugin `organization` | `auth.ts` → Better Auth internal | ⚠️ Alto |
-| Plugin `admin` | `auth.ts` → Better Auth internal | 🟡 Médio |
+| Plugin `organization` | `auth.ts` → Standard Native Auth internal | ⚠️ Alto |
+| Plugin `admin` | `auth.ts` → Standard Native Auth internal | 🟡 Médio |
 | `additionalFields` user | `auth.ts` | 🟡 Médio |
 | Session cookie em Workers | `apps/api-gateway/src/index.ts` | 🟡 Médio |
 | Trusted origins | `auth.ts` | 🟢 Baixo |
@@ -44,7 +44,7 @@ Auditoria + Hardening do Better Auth atual. Não reescrever agora. Tornar o comp
 
 ### 2. Documentação de Comportamentos
 
-Criar `docs/decisions/adr-auth-better-auth-behaviors.md` com cada comportamento não-óbvio descoberto.
+Criar `docs/decisions/adr-auth-standard-native-auth-behaviors.md` com cada comportamento não-óbvio descoberto.
 
 **Regras já documentadas:**
 
@@ -54,7 +54,7 @@ Criar `docs/decisions/adr-auth-better-auth-behaviors.md` com cada comportamento 
 - ✅ Usar `additionalFields` com `fieldName` para campos custom.
 
 **additionalFields**
-- ❌ NUNCA declarar `type: "string"` sem `required: false` para campos opcionais. Better Auth trata como obrigatório por default.
+- ❌ NUNCA declarar `type: "string"` sem `required: false` para campos opcionais. Standard Native Auth trata como obrigatório por default.
 - ✅ Sempre declarar `required: false` para campos que não são coletados na criação.
 - Tipos disponíveis: `"string" | "number" | "boolean" | "date"`
 
@@ -119,16 +119,16 @@ auth-integration-tests:
 
 **Package.json — versão exata:**
 ```json
-"better-auth": "1.6.11"   // sem ^ ou ~ — nunca permitir update automático
+"standard-native-auth": "1.6.11"   // sem ^ ou ~ — nunca permitir update automático
 ```
 
 **Processo obrigatório para qualquer update:**
-1. Branch isolada: `feature/better-auth-X.Y.Z`
+1. Branch isolada: `feature/standard-native-auth-X.Y.Z`
 2. Neon branch isolado para teste
 3. Ler CHANGELOG entre versões — foco em adapters, plugins, schema, validators
 4. Atualizar e rodar suite de testes auth — qualquer falha = não avança
 5. Deploy em staging → smoke test manual (sign-in, org create, get-session)
-6. Atualizar `docs/decisions/adr-auth-better-auth-behaviors.md`
+6. Atualizar `docs/decisions/adr-auth-standard-native-auth-behaviors.md`
 7. PR com evidência dos testes → merge → production
 
 **Runbook de rotação do BETTER_AUTH_SECRET:**
@@ -167,7 +167,7 @@ logger.auth("sign-in.failed", {
 ```
 GET /api/health/auth
 → verifica conexão Neon
-→ verifica que Better Auth responde
+→ verifica que Standard Native Auth responde
 → sem detalhes internos expostos
 → usado pelo CI antes de marcar deploy como saudável
 ```
@@ -190,7 +190,7 @@ GET /api/health/auth
 
 | # | Entregável | Onde |
 |---|-----------|------|
-| 1 | ADR de comportamentos Better Auth | `docs/decisions/adr-auth-better-auth-behaviors.md` |
+| 1 | ADR de comportamentos Standard Native Auth | `docs/decisions/adr-auth-standard-native-auth-behaviors.md` |
 | 2 | Suite de testes auth (6 arquivos) | `apps/api-gateway/tests/auth/` |
 | 3 | Version lock em package.json | `packages/auth/package.json` |
 | 4 | Runbook de rotação de secret | `docs/runbooks/auth-secret-rotation.md` |
@@ -202,6 +202,6 @@ GET /api/health/auth
 ## Critério de Sucesso
 
 - Nenhum bug de auth chega a produção sem ser detectado pelos testes primeiro.
-- Qualquer update do Better Auth passa pelo processo de update documentado.
+- Qualquer update do Standard Native Auth passa pelo processo de update documentado.
 - Erros em `/api/auth/*` geram alerta antes do usuário relatar.
 - O comportamento de cada plugin está documentado e testado.

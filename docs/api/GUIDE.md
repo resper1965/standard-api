@@ -76,7 +76,7 @@ Two methods:
 
 | Method | Use Case | How |
 |--------|----------|-----|
-| **Session** | Browser/interactive | Cookie-based via Better Auth |
+| **Session** | Browser/interactive | Cookie-based via Standard Native Auth |
 | **API Key** | Machine-to-machine | `Authorization: Bearer standard_live_...` |
 
 ### Tenant Context

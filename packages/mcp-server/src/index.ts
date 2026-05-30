@@ -90,8 +90,7 @@ const Tools = {
           type: "array", 
           items: { type: "string" }, 
           description: "List of SCF control IDs already implemented by the organization"
-        },
-        tenant_id: { type: "string", description: "The tenant ID context" }
+        }
       },
       required: ["framework_mask", "scf_controls_implemented"],
     }
@@ -104,7 +103,6 @@ const Tools = {
       properties: {
         assessment_id: { type: "string", description: "The UUID of the assessment" },
         target_framework_id: { type: "string", description: "The UUID of the target framework" },
-        tenant_id: { type: "string", description: "The tenant ID context" },
         input: { 
           type: "object", 
           description: "Key-value input map containing the context (e.g. { \"context\": \"incident details\" })",
@@ -125,8 +123,7 @@ const Tools = {
     schema: {
       type: "object",
       properties: {
-        job_id: { type: "string", description: "The job ID returned from dispatch_grc_council" },
-        tenant_id: { type: "string", description: "The tenant ID context for authorization" }
+        job_id: { type: "string", description: "The job ID returned from dispatch_grc_council" }
       },
       required: ["job_id"],
     }
@@ -160,14 +157,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
       }
 
       case "run_gap_analysis": {
-        const { framework_mask, scf_controls_implemented, tenant_id } = request.params.arguments as any;
+        const { framework_mask, scf_controls_implemented } = request.params.arguments as any;
         
         const response = await fetch(`${API_URL}/api/v1/intelligence/gap-analysis`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${API_TOKEN}`,
-            ...(tenant_id ? { "x-standard-tenant-id": tenant_id } : {})
+            "Authorization": `Bearer ${API_TOKEN}`
           },
           body: JSON.stringify({ framework_mask, scf_controls_implemented }),
         });
@@ -179,14 +175,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
       }
 
       case "dispatch_grc_council": {
-        const { assessment_id, target_framework_id, agents, input, tenant_id } = request.params.arguments as any;
+        const { assessment_id, target_framework_id, agents, input } = request.params.arguments as any;
         
         const response = await fetch(`${API_URL}/api/v1/intelligence/council`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${API_TOKEN}`,
-            ...(tenant_id ? { "x-standard-tenant-id": tenant_id } : {})
+            "Authorization": `Bearer ${API_TOKEN}`
           },
           body: JSON.stringify({ assessment_id, target_framework_id, agents, input }),
         });
@@ -203,14 +198,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
       }
 
       case "poll_job_status": {
-        const { job_id, tenant_id } = request.params.arguments as any;
+        const { job_id } = request.params.arguments as any;
         
         const response = await fetch(`${API_URL}/api/v1/jobs/${job_id}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${API_TOKEN}`,
-            ...(tenant_id ? { "x-standard-tenant-id": tenant_id } : {})
+            "Authorization": `Bearer ${API_TOKEN}`
           }
         });
 

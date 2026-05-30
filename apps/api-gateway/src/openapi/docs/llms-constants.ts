@@ -59,8 +59,8 @@ x-standard-tenant-id: org_pa5khl
 \\\`\\\`\\\`
 
 - **Bearer API Key**: Machine-to-machine key from the dashboard (prefix: \\\`standard_live_\\\` or \\\`standard_test_\\\`)
-- **Session Cookie**: Alternative — set by Better Auth after \\\`POST /api/auth/sign-in/email\\\`
-- **Tenant Header**: Your organization ID from Better Auth (format: \\\`org_xxxxx\\\`, required for all data-scoped endpoints)
+- **Session Cookie**: Alternative — set by Standard Native Auth after \\\`POST /api/auth/sign-in/email\\\`
+- **Tenant Header**: Your organization ID from Standard Native Auth (format: \\\`org_xxxxx\\\`, required for all data-scoped endpoints)
 
 ## Internationalization (i18n)
 

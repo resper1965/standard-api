@@ -1,11 +1,11 @@
 /**
  * @module auth-schema
- * @description Better Auth database tables for Drizzle ORM.
+ * @description Standard Native Auth database tables for Drizzle ORM.
  *
- * Generated based on Better Auth v1.2+ with plugins: admin, organization, apiKey.
- * These tables are managed by Better Auth at runtime.
+ * Generated based on Standard Native Auth v1.2+ with plugins: admin, organization, apiKey.
+ * These tables are managed by Standard Native Auth at runtime.
  *
- * Reference: https://better-auth.com/docs/concepts/database
+ * Reference: https://standard-native-auth.com/docs/concepts/database
  */
 import {
   boolean,
@@ -16,7 +16,7 @@ import {
   timestamp,
 } from "drizzle-orm/pg-core";
 
-// ── Core Better Auth Tables ───────────────────────────────────────────
+// ── Core Standard Native Auth Tables ───────────────────────────────────────────
 
 export const baUser = pgTable("user", {
   id: text("id").primaryKey(),

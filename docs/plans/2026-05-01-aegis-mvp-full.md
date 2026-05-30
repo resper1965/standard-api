@@ -9,9 +9,9 @@
 
 **Goal:** Build the complete Standard MVP — corporate frontend + remaining backend gaps — in a single execution flow.
 
-**Architecture:** Vite+React SPA on Cloudflare Pages consuming the API Gateway on Workers. Auth via Better Auth client SDK. Two role-based areas (user/admin). Backend gaps filled by connecting remaining in-memory repos to Neon/Drizzle and provisioning Cloudflare resources.
+**Architecture:** Vite+React SPA on Cloudflare Pages consuming the API Gateway on Workers. Auth via Standard Native Auth client SDK. Two role-based areas (user/admin). Backend gaps filled by connecting remaining in-memory repos to Neon/Drizzle and provisioning Cloudflare resources.
 
-**Tech Stack:** Vite, React 19, TypeScript, Vanilla CSS, Better Auth Client, Cloudflare Pages, Drizzle ORM, Neon PostgreSQL.
+**Tech Stack:** Vite, React 19, TypeScript, Vanilla CSS, Standard Native Auth Client, Cloudflare Pages, Drizzle ORM, Neon PostgreSQL.
 
 ---
 
@@ -35,7 +35,7 @@ npx -y create-vite@latest ./ --template react-ts
 
 **Step 2:** Install dependencies
 ```bash
-pnpm add @better-auth/react
+pnpm add @standard-native-auth/react
 pnpm add -D @types/react @types/react-dom
 ```
 
@@ -55,7 +55,7 @@ pnpm dev:web  # should show Vite splash
 **Step 5:** Commit
 ```bash
 git add apps/web
-git commit -m "feat(web): scaffold Vite+React app with Better Auth client"
+git commit -m "feat(web): scaffold Vite+React app with Standard Native Auth client"
 ```
 
 ---
@@ -101,9 +101,9 @@ git commit -m "feat(web): scaffold Vite+React app with Better Auth client"
 - Create: `apps/web/src/pages/Login.css`
 - Create: `apps/web/src/hooks/useSession.ts`
 
-**Step 1:** Configure Better Auth client
+**Step 1:** Configure Standard Native Auth client
 ```ts
-import { createAuthClient } from "@better-auth/react";
+import { createAuthClient } from "@standard-native-auth/react";
 export const authClient = createAuthClient({ baseURL: "/api/auth" });
 ```
 
@@ -240,7 +240,7 @@ export const useSession = () => authClient.useSession();
 **Step 1:** Profile edit: name, avatar
 **Step 2:** Password change form
 **Step 3:** Active sessions list
-**Step 4:** Connect to Better Auth user endpoints
+**Step 4:** Connect to Standard Native Auth user endpoints
 **Step 5:** Commit
 
 ---
@@ -255,7 +255,7 @@ export const useSession = () => authClient.useSession();
 
 **Step 1:** Organizations table: name, slug, member count, created
 **Step 2:** Create organization modal
-**Step 3:** Connect to Better Auth organization endpoints
+**Step 3:** Connect to Standard Native Auth organization endpoints
 **Step 4:** Commit
 
 ---
@@ -267,7 +267,7 @@ export const useSession = () => authClient.useSession();
 
 **Step 1:** Users table: name, email, role, status, last login
 **Step 2:** Actions: ban, unban, change role, impersonate
-**Step 3:** Connect to Better Auth admin endpoints
+**Step 3:** Connect to Standard Native Auth admin endpoints
 **Step 4:** Commit
 
 ---
@@ -281,7 +281,7 @@ export const useSession = () => authClient.useSession();
 **Step 1:** License keys table: name, org, plan, status, expires
 **Step 2:** Generate key modal: org, plan tier, expiry, rate limits
 **Step 3:** Revoke action with confirmation
-**Step 4:** Connect to Better Auth API key endpoints
+**Step 4:** Connect to Standard Native Auth API key endpoints
 **Step 5:** Commit
 
 ---

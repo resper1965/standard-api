@@ -371,7 +371,7 @@ git commit -m "feat(db): create 11 missing tables from Drizzle schema"
 ---
 
 ## Phase 3: Identity Bridge
-> **Epic: Connect Better Auth identity with domain users**
+> **Epic: Connect Standard Native Auth identity with domain users**
 > **Risk: HIGH — Audit trails and RBAC depend on this linkage**
 
 ### Task 3.1: Create Identity Bridge
@@ -407,7 +407,7 @@ Add `baUserId: text("ba_user_id")` to the `users` table definition.
 
 **Step 5: Commit**
 ```bash
-git commit -m "feat(db): bridge Better Auth identity with domain users table"
+git commit -m "feat(db): bridge Standard Native Auth identity with domain users table"
 ```
 
 ---

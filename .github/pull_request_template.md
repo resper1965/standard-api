@@ -24,7 +24,7 @@ Quais documentos, decisões, prompts, regras ou informações de branch são rel
 - [ ] `CONTEXT.md`, se necessário.
 - [ ] `docs/context/`, se necessário.
 - [ ] `DECISIONS.md` ou `adr/`, se necessário.
-- [ ] `prompts/`, `.cursor/rules/` ou docs de agentes, se necessário.
+- [ ] `prompts/`, `.agent/` ou docs de agentes, se necessário.
 - [ ] `tasks/branch-context/`, se necessário.
 
 Se nenhum contexto mudou, incluir `[no-context-change]` no título ou descrição do PR e justificar aqui:

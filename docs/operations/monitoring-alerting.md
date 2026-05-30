@@ -33,7 +33,7 @@
 | Cross-tenant access blocked | Security events API | Qualquer ocorrência |
 | Approval bypass blocked | Security events API | Qualquer ocorrência |
 | Rate limit hits | Cloudflare WAF | > 50 do mesmo IP em 1min |
-| Auth failures | Better Auth logs | > 20 para mesmo email em 5min |
+| Auth failures | Standard Native Auth logs | > 20 para mesmo email em 5min |
 
 ## 4. Métricas de Infraestrutura
 

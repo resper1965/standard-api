@@ -19,8 +19,8 @@ registry.registerComponent("securitySchemes", "BearerApiKey", {
 registry.registerComponent("securitySchemes", "CookieSession", {
   type: "apiKey",
   in: "cookie",
-  name: "better-auth.session_token",
-  description: "Session cookie set by Better Auth after login."
+  name: "standard-native-auth.session_token",
+  description: "Session cookie set by Standard Native Auth after login."
 });
 
 // ==========================================

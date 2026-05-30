@@ -641,9 +641,12 @@ const MCP_GUIDE_HTML = `<!DOCTYPE html>
       <div class="sidebar-heading">Tools</div>
       <a class="sidebar-link" href="#assessments">Assessment Management</a>
       <a class="sidebar-link" href="#scf">SCF Catalog</a>
-      <a class="sidebar-link" href="#gap">Gap Analysis &amp; Findings</a>
+      <a class="sidebar-link" href="#intelligence">Intelligence Engine</a>
+      <a class="sidebar-link" href="#kb">KB & Evidence AI</a>
+      <a class="sidebar-link" href="#soa">SoA Lifecycle</a>
+      <a class="sidebar-link" href="#gap">Gap Analysis & Findings</a>
       <a class="sidebar-link" href="#platform">Platform Status</a>
-      <a class="sidebar-link" href="#all-tools">All 12 Tools</a>
+      <a class="sidebar-link" href="#all-tools">All 33 Tools</a>
     </div>
     <div class="sidebar-section">
       <div class="sidebar-heading">Reference</div>
@@ -839,6 +842,201 @@ const MCP_GUIDE_HTML = `<!DOCTYPE html>
           </div>
           <div class="tool-args">no required args</div>
         </div>
+        <div class="tool-card">
+          <div>
+            <div class="tool-name">list-scf-domains</div>
+            <div class="tool-desc">Lists all 33 SCF security domains (Access Control, Cryptography, Governance, etc.).</div>
+          </div>
+          <div class="tool-args">no required args</div>
+        </div>
+        <div class="tool-card">
+          <div>
+            <div class="tool-name">list-framework-requirements</div>
+            <div class="tool-desc">Lists the requirements/clauses of a compliance framework.</div>
+          </div>
+          <div class="tool-args">framework_id</div>
+        </div>
+        <div class="tool-card">
+          <div>
+            <div class="tool-name">get-framework-coverage</div>
+            <div class="tool-desc">Shows how many SCF controls a framework covers and how many requirements are mapped.</div>
+          </div>
+          <div class="tool-args">framework_id</div>
+        </div>
+        <div class="tool-card">
+          <div>
+            <div class="tool-name">get-control-mappings</div>
+            <div class="tool-desc">Gets all framework requirements that map to a specific SCF control (crosswalk).</div>
+          </div>
+          <div class="tool-args">control_id</div>
+        </div>
+        <div class="tool-card">
+          <div>
+            <div class="tool-name">cross-framework-mapping</div>
+            <div class="tool-desc">Compares two frameworks through shared SCF controls, showing overlap percentage.</div>
+          </div>
+          <div class="tool-args">framework_a, framework_b</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Intelligence Engine ── -->
+    <section class="section" id="intelligence">
+      <h2><span class="section-icon">⚡</span> Intelligence Engine</h2>
+      <p>Run compliance calculations, risk analysis, and decision-support queries powered by the Standard Intelligence Engine. These tools are <strong>stateless</strong> — they compute results from the SCF data layer.</p>
+
+      <h3>Example queries</h3>
+      <div class="query-list">
+        <div class="query-item">"What's the blast radius if control CRY-03 fails?"</div>
+        <div class="query-item">"Top 5 controls for maximum ROI toward ISO 27001"</div>
+        <div class="query-item">"What's my compliance score against LGPD?"</div>
+        <div class="query-item">"Do I need a DPIA for processing health data under GDPR?"</div>
+        <div class="query-item">"What's the breach notification SLA for LGPD at critical severity?"</div>
+      </div>
+
+      <h3>Tools</h3>
+      <div class="tool-grid">
+        <div class="tool-card">
+          <div>
+            <div class="tool-name">calculate-blast-radius</div>
+            <div class="tool-desc">Impact topology: which risks, regulations, and data retention rules are compromised if a control fails.</div>
+          </div>
+          <div class="tool-args">control_id</div>
+        </div>
+        <div class="tool-card">
+          <div>
+            <div class="tool-name">calculate-roi-path</div>
+            <div class="tool-desc">Finds the top N controls that mitigate the most global risks simultaneously.</div>
+          </div>
+          <div class="tool-args">target_framework, scf_controls_implemented</div>
+        </div>
+        <div class="tool-card">
+          <div>
+            <div class="tool-name">calculate-compliance-score</div>
+            <div class="tool-desc">Calculates compliance score against a regulation based on implemented SCF controls.</div>
+          </div>
+          <div class="tool-args">regulation_id, scf_controls_implemented</div>
+        </div>
+        <div class="tool-card">
+          <div>
+            <div class="tool-name">calculate-dpia-score</div>
+            <div class="tool-desc">DPIA risk assessment considering data categories, volume scale, and mitigating controls.</div>
+          </div>
+          <div class="tool-args">regulation_id</div>
+        </div>
+        <div class="tool-card">
+          <div>
+            <div class="tool-name">check-breach-sla</div>
+            <div class="tool-desc">Breach notification SLA: authority deadlines, notification requirements, and controls to activate.</div>
+          </div>
+          <div class="tool-args">regulation_id, severity</div>
+        </div>
+        <div class="tool-card">
+          <div>
+            <div class="tool-name">calculate-cross-coverage</div>
+            <div class="tool-desc">Calculates how much of a target framework is covered by controls implemented for a source framework.</div>
+          </div>
+          <div class="tool-args">source_framework, target_framework, scf_controls_implemented</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── KB & Evidence AI ── -->
+    <section class="section" id="kb">
+      <h2><span class="section-icon">🧠</span> KB &amp; Evidence AI</h2>
+      <p>Search your assessment's knowledge base and use AI-assisted evaluation to assess evidence coverage against controls.</p>
+
+      <h3>Example queries</h3>
+      <div class="query-list">
+        <div class="query-item">"Search the KB for 'access control policy' in assessment &lt;id&gt;"</div>
+        <div class="query-item">"Evaluate if my firewall docs cover the encryption requirement"</div>
+        <div class="query-item">"Design a remediation plan for the missing MFA gap"</div>
+      </div>
+
+      <h3>Tools</h3>
+      <div class="tool-grid">
+        <div class="tool-card">
+          <div>
+            <div class="tool-name">search-kb</div>
+            <div class="tool-desc">Semantic search over the assessment's knowledge base. Finds evidence documents relevant to a query.</div>
+          </div>
+          <div class="tool-args">assessment_id, query</div>
+        </div>
+        <div class="tool-card">
+          <div>
+            <div class="tool-name">evaluate-evidence</div>
+            <div class="tool-desc">AI-assisted evidence evaluation. Returns a structured schema for assessing control coverage.</div>
+          </div>
+          <div class="tool-args">control_requirement, evidence_description</div>
+        </div>
+        <div class="tool-card">
+          <div>
+            <div class="tool-name">architect-remediation</div>
+            <div class="tool-desc">AI-assisted remediation planning. Returns a structured schema for designing action items.</div>
+          </div>
+          <div class="tool-args">evidence_context</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── SoA Lifecycle ── -->
+    <section class="section" id="soa">
+      <h2><span class="section-icon">📋</span> SoA Lifecycle</h2>
+      <p>Manage the full Statement of Applicability lifecycle: list versions, inspect items, validate readiness for review, and get summary statistics across the SoA.</p>
+
+      <h3>Example queries</h3>
+      <div class="query-list">
+        <div class="query-item">"List all SoA versions for assessment a1b2c3d4"</div>
+        <div class="query-item">"Show me items marked as not_applicable in the latest SoA"</div>
+        <div class="query-item">"How many controls are requires_validation vs applicable?"</div>
+        <div class="query-item">"Is the SoA ready for review submission?"</div>
+        <div class="query-item">"Give me a summary breakdown of the SoA"</div>
+      </div>
+
+      <h3>Tools</h3>
+      <div class="tool-grid">
+        <div class="tool-card">
+          <div>
+            <div class="tool-name">list-soa-versions</div>
+            <div class="tool-desc">Lists all SoA versions for an assessment with status, framework, approval info and version number.</div>
+          </div>
+          <div class="tool-args">assessment_id</div>
+        </div>
+        <div class="tool-card">
+          <div>
+            <div class="tool-name">get-soa-version</div>
+            <div class="tool-desc">Full details for a specific SoA version: status, framework, scope, approval tracking, metadata.</div>
+          </div>
+          <div class="tool-args">soa_version_id</div>
+        </div>
+        <div class="tool-card">
+          <div>
+            <div class="tool-name">list-soa-items</div>
+            <div class="tool-desc">Lists SoA items (control applicability decisions). Filter by applicability_status, implementation_status, or evidence_coverage.</div>
+          </div>
+          <div class="tool-args">soa_version_id</div>
+        </div>
+        <div class="tool-card">
+          <div>
+            <div class="tool-name">get-soa-item</div>
+            <div class="tool-desc">Full details of a SoA item: applicability, implementation, evidence, mapping info, rationale, validation notes.</div>
+          </div>
+          <div class="tool-args">soa_item_id</div>
+        </div>
+        <div class="tool-card">
+          <div>
+            <div class="tool-name">validate-soa</div>
+            <div class="tool-desc">Validates a SoA for review readiness: checks for to_be_defined items, missing rationales, unchecked evidence.</div>
+          </div>
+          <div class="tool-args">soa_version_id, assessment_id</div>
+        </div>
+        <div class="tool-card">
+          <div>
+            <div class="tool-name">get-soa-summary</div>
+            <div class="tool-desc">Aggregated statistics: applicability breakdown, implementation breakdown, evidence coverage, pending validations.</div>
+          </div>
+          <div class="tool-args">assessment_id</div>
+        </div>
       </div>
     </section>
 
@@ -913,78 +1111,50 @@ const MCP_GUIDE_HTML = `<!DOCTYPE html>
 
     <!-- ── All Tools ── -->
     <section class="section" id="all-tools">
-      <h2><span class="section-icon">🔧</span> Available Tools</h2>
-      <p>Complete reference for all 12 MCP tools exposed by the Standard GRC Platform.</p>
+      <h2><span class="section-icon">🔧</span> All 33 Tools</h2>
+      <p>Complete reference for all MCP tools exposed by the Standard GRC Platform.</p>
 
       <table class="tools-table">
         <thead>
           <tr>
             <th>Tool</th>
-            <th>Description</th>
+            <th>Category</th>
             <th>Required Args</th>
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td class="t-name">list-assessments</td>
-            <td class="t-desc">List assessments for the authenticated organization</td>
-            <td class="t-args">—</td>
-          </tr>
-          <tr>
-            <td class="t-name">get-assessment</td>
-            <td class="t-desc">Get full assessment details</td>
-            <td class="t-args">assessment_id</td>
-          </tr>
-          <tr>
-            <td class="t-name">get-assessment-status</td>
-            <td class="t-desc">Get current lifecycle state of an assessment</td>
-            <td class="t-args">assessment_id</td>
-          </tr>
-          <tr>
-            <td class="t-name">list-assessment-documents</td>
-            <td class="t-desc">List evidence documents for an assessment</td>
-            <td class="t-args">assessment_id</td>
-          </tr>
-          <tr>
-            <td class="t-name">search-scf-controls</td>
-            <td class="t-desc">Search SCF controls by keyword or domain</td>
-            <td class="t-args">query</td>
-          </tr>
-          <tr>
-            <td class="t-name">get-scf-control</td>
-            <td class="t-desc">Get full details for a single SCF control</td>
-            <td class="t-args">control_id</td>
-          </tr>
-          <tr>
-            <td class="t-name">list-scf-frameworks</td>
-            <td class="t-desc">List all SCF-supported compliance frameworks</td>
-            <td class="t-args">—</td>
-          </tr>
-          <tr>
-            <td class="t-name">get-gap-analysis</td>
-            <td class="t-desc">Get approved gap analysis for an assessment</td>
-            <td class="t-args">assessment_id</td>
-          </tr>
-          <tr>
-            <td class="t-name">list-findings</td>
-            <td class="t-desc">List findings for an assessment</td>
-            <td class="t-args">assessment_id</td>
-          </tr>
-          <tr>
-            <td class="t-name">get-finding</td>
-            <td class="t-desc">Get full details for a single finding</td>
-            <td class="t-args">finding_id</td>
-          </tr>
-          <tr>
-            <td class="t-name">get-platform-health</td>
-            <td class="t-desc">Get real-time platform health status</td>
-            <td class="t-args">—</td>
-          </tr>
-          <tr>
-            <td class="t-name">list-soc-alerts</td>
-            <td class="t-desc">List active SOC alerts (admin + soc:read scope)</td>
-            <td class="t-args">—</td>
-          </tr>
+          <tr><td class="t-name">list-assessments</td><td class="t-desc">Assessment</td><td class="t-args">—</td></tr>
+          <tr><td class="t-name">get-assessment</td><td class="t-desc">Assessment</td><td class="t-args">assessment_id</td></tr>
+          <tr><td class="t-name">get-assessment-status</td><td class="t-desc">Assessment</td><td class="t-args">assessment_id</td></tr>
+          <tr><td class="t-name">list-assessment-documents</td><td class="t-desc">Assessment</td><td class="t-args">assessment_id</td></tr>
+          <tr><td class="t-name">search-scf-controls</td><td class="t-desc">SCF</td><td class="t-args">query</td></tr>
+          <tr><td class="t-name">get-scf-control</td><td class="t-desc">SCF</td><td class="t-args">control_id</td></tr>
+          <tr><td class="t-name">list-scf-frameworks</td><td class="t-desc">SCF</td><td class="t-args">—</td></tr>
+          <tr><td class="t-name">list-scf-domains</td><td class="t-desc">SCF</td><td class="t-args">—</td></tr>
+          <tr><td class="t-name">list-framework-requirements</td><td class="t-desc">SCF</td><td class="t-args">framework_id</td></tr>
+          <tr><td class="t-name">get-framework-coverage</td><td class="t-desc">SCF</td><td class="t-args">framework_id</td></tr>
+          <tr><td class="t-name">get-control-mappings</td><td class="t-desc">SCF</td><td class="t-args">control_id</td></tr>
+          <tr><td class="t-name">cross-framework-mapping</td><td class="t-desc">SCF</td><td class="t-args">framework_a, framework_b</td></tr>
+          <tr><td class="t-name">calculate-blast-radius</td><td class="t-desc">Intelligence</td><td class="t-args">control_id</td></tr>
+          <tr><td class="t-name">calculate-roi-path</td><td class="t-desc">Intelligence</td><td class="t-args">target_framework, scf_controls_implemented</td></tr>
+          <tr><td class="t-name">calculate-compliance-score</td><td class="t-desc">Intelligence</td><td class="t-args">regulation_id, scf_controls_implemented</td></tr>
+          <tr><td class="t-name">calculate-dpia-score</td><td class="t-desc">Intelligence</td><td class="t-args">regulation_id</td></tr>
+          <tr><td class="t-name">check-breach-sla</td><td class="t-desc">Intelligence</td><td class="t-args">regulation_id, severity</td></tr>
+          <tr><td class="t-name">calculate-cross-coverage</td><td class="t-desc">Intelligence</td><td class="t-args">source_framework, target_framework, scf_controls_implemented</td></tr>
+          <tr><td class="t-name">search-kb</td><td class="t-desc">KB & AI</td><td class="t-args">assessment_id, query</td></tr>
+          <tr><td class="t-name">evaluate-evidence</td><td class="t-desc">KB & AI</td><td class="t-args">control_requirement, evidence_description</td></tr>
+          <tr><td class="t-name">architect-remediation</td><td class="t-desc">KB & AI</td><td class="t-args">evidence_context</td></tr>
+          <tr><td class="t-name">get-gap-analysis</td><td class="t-desc">Gap</td><td class="t-args">assessment_id</td></tr>
+          <tr><td class="t-name">list-findings</td><td class="t-desc">Gap</td><td class="t-args">assessment_id</td></tr>
+          <tr><td class="t-name">get-finding</td><td class="t-desc">Gap</td><td class="t-args">finding_id</td></tr>
+          <tr><td class="t-name">list-soa-versions</td><td class="t-desc">SoA</td><td class="t-args">assessment_id</td></tr>
+          <tr><td class="t-name">get-soa-version</td><td class="t-desc">SoA</td><td class="t-args">soa_version_id</td></tr>
+          <tr><td class="t-name">list-soa-items</td><td class="t-desc">SoA</td><td class="t-args">soa_version_id</td></tr>
+          <tr><td class="t-name">get-soa-item</td><td class="t-desc">SoA</td><td class="t-args">soa_item_id</td></tr>
+          <tr><td class="t-name">validate-soa</td><td class="t-desc">SoA</td><td class="t-args">soa_version_id, assessment_id</td></tr>
+          <tr><td class="t-name">get-soa-summary</td><td class="t-desc">SoA</td><td class="t-args">assessment_id</td></tr>
+          <tr><td class="t-name">get-platform-health</td><td class="t-desc">Platform</td><td class="t-args">—</td></tr>
+          <tr><td class="t-name">list-soc-alerts</td><td class="t-desc">Platform</td><td class="t-args">—</td></tr>
         </tbody>
       </table>
     </section>

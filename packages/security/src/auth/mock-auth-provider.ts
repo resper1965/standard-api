@@ -8,7 +8,7 @@ export type SecurityRuntimeEnvironment = "development" | "test" | "staging" | "p
 const unique = <T>(items: T[]): T[] => [...new Set(items)];
 
 /**
- * @deprecated Use `@standard/auth` (Better Auth) instead.
+ * @deprecated Use `@standard/auth` (Standard Native Auth) instead.
  * This provider will be removed in v0.3.0.
  */
 export class MockAuthProvider implements AuthProvider {

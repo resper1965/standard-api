@@ -2,7 +2,7 @@
  * Auth Smoke Tests — Sign-in e Session
  * 
  * Testes HTTP diretos contra a API de produção/staging.
- * Cobrem regressão dos bugs de 2026-05-25 e comportamentos críticos do Better Auth.
+ * Cobrem regressão dos bugs de 2026-05-25 e comportamentos críticos do Standard Native Auth.
  * 
  * Uso:
  *   TEST_BASE_URL=https://standard-api.bekaa.eu \
@@ -76,8 +76,8 @@ await test("login com credenciais válidas retorna 200 + session cookie", async 
 
   const setCookie = res.headers.get("set-cookie") ?? "";
   assert(
-    setCookie.includes("better-auth.session_token"),
-    `Cookie 'better-auth.session_token' não encontrado no header Set-Cookie`
+    setCookie.includes("standard-native-auth.session_token"),
+    `Cookie 'standard-native-auth.session_token' não encontrado no header Set-Cookie`
   );
 
   const body = await res.json() as any;
@@ -119,7 +119,7 @@ await test("login com body não-JSON retorna 4xx (415 ou 400)", async () => {
     body: "nao-e-json",
   });
 
-  // Comportamento auditado: Better Auth retorna 415 Unsupported Media Type
+  // Comportamento auditado: Standard Native Auth retorna 415 Unsupported Media Type
   // para Content-Type não suportado — não 400. Documentado em ADR-AUTH-001.
   assert(
     res.status === 415 || res.status === 400,
@@ -145,7 +145,7 @@ await test("get-session sem cookie retorna 200 com body null (comportamento audi
   const res = await authGet("/api/auth/get-session");
   const text = await res.text();
 
-  // Comportamento auditado: Better Auth retorna 200 com body `null` (não {session:null})
+  // Comportamento auditado: Standard Native Auth retorna 200 com body `null` (não {session:null})
   // quando não há cookie. Documentado em ADR-AUTH-001 Regra 8.
   const isNullBody = text === "null" || text === "";
   const isNullSession = (() => {

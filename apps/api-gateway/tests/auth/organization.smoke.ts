@@ -1,7 +1,7 @@
 /**
  * Auth Smoke Tests — Organization Creation
  *
- * Testa criação de organizações via Better Auth plugin.
+ * Testa criação de organizações via Standard Native Auth plugin.
  * Cobre regressão do bug 2026-05-25: additionalFields sem required:false
  * causava 400 em todos os campos billing/contact.
  *
@@ -104,7 +104,7 @@ await test("cria org COM todos os campos opcionais", async () => {
     `Esperado 200, recebeu ${res.status}`
   );
 
-  // Better Auth pode retornar body vazio ou JSON para criação de org
+  // Standard Native Auth pode retornar body vazio ou JSON para criação de org
   const text = await res.text();
   const body = text ? (() => { try { return JSON.parse(text); } catch { return null; } })() : null;
   console.log(`     → slug=${slug}, taxId=${body?.taxId ?? "(não retornado no body)"}`);

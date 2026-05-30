@@ -217,12 +217,15 @@ export type AppDependencies = {
   SOC_TRIAGE_QUEUE?: Queue | undefined;
   /** Webhook endpoint management (optional — requires storage adapter) */
   webhooks?: WebhookRepositoryAdapter | undefined;
-  /** Resolves Better Auth org ID → Standard domain UUIDs (JIT provisioning) */
-  resolveTenantContext?: (betterAuthOrgId: string) => Promise<ResolvedTenantContext | null>;
-  /** Resolves Better Auth user email → Standard domain users UUID (JIT provisioning) */
+  /** Resolves Standard Native Auth org ID → Standard domain UUIDs (JIT provisioning) */
+  resolveTenantContext?: (standardAuthOrgId: string) => Promise<ResolvedTenantContext | null>;
+  /** Resolves Standard Native Auth user email → Standard domain users UUID (JIT provisioning) */
   resolveUserContext?: (email: string, displayName: string) => Promise<{ id: string }>;
-  /** Bans/flags a user for deletion via Better Auth admin API (optional — delegates to cachedAuth) */
+  /** Bans/flags a user for deletion via Standard Native Auth admin API (optional — delegates to cachedAuth) */
   banUser?: (userId: string, reason?: string) => Promise<void>;
+  /** Raw Drizzle DB client — internal escape hatch for admin routes that query auth tables directly.
+   *  Prefer domain-specific repository adapters for all tenant-scoped data access. */
+  _db?: import("./adapters/db").DbClient | undefined;
 };
 
 export type RequestContext = {
@@ -238,7 +241,7 @@ export type RequestContext = {
   /** @deprecated Use `session` instead — legacy auth context */
   auth?: AuthContext | undefined;
   securityTenant?: SecurityTenantContext | undefined;
-  /** Better Auth session (user + session data) */
+  /** Standard Native Auth session (user + session data) */
   session?: {
     user: {
       id: string;

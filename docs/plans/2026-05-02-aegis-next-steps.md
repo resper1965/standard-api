@@ -11,7 +11,7 @@
 
 **Architecture:** The SCF API is already fully built (`/api/v1/scf/*`). The Drizzle repositories handle CRUD for tenants/orgs/assessments/approvals/lifecycle/audit. The SCF catalog runs in-memory from a synthetic fixture in production — the XLSX importer exists as a stub. The frontend uses vanilla CSS with Apple HIG tokens and the `api()` helper for cross-domain production calls.
 
-**Tech Stack:** React 19 + Vite, Vanilla CSS (Apple HIG tokens), Better Auth, Cloudflare Workers + Pages, Drizzle ORM + Neon PostgreSQL, `packages/scf-core`
+**Tech Stack:** React 19 + Vite, Vanilla CSS (Apple HIG tokens), Standard Native Auth, Cloudflare Workers + Pages, Drizzle ORM + Neon PostgreSQL, `packages/scf-core`
 
 ---
 

@@ -1,9 +1,9 @@
-# ADR-AUTH-001: Better Auth — Comportamentos e Regras Operacionais
+# ADR-AUTH-001: Standard Native Auth — Comportamentos e Regras Operacionais
 
 **Status:** Ativo  
 **Data:** 2026-05-25  
-**Versão Better Auth:** 1.6.11  
-**Contexto:** Dois bugs críticos em produção revelaram defaults não-documentados do Better Auth v1.6.x. Este documento é a fonte canônica de regras para usar o Better Auth corretamente neste projeto. Atualizar a cada bug descoberto ou update de versão.
+**Versão Standard Native Auth:** 1.6.11  
+**Contexto:** Dois bugs críticos em produção revelaram defaults não-documentados do Standard Native Auth v1.6.x. Este documento é a fonte canônica de regras para usar o Standard Native Auth corretamente neste projeto. Atualizar a cada bug descoberto ou update de versão.
 
 ---
 
@@ -11,26 +11,26 @@
 
 **Comportamento observado (bug 2026-05-25):**
 ```
-BetterAuthError: The field "user_id" does not exist in the schema for the model "account"
+StandardAuthError: The field "user_id" does not exist in the schema for the model "account"
 ```
 
 **Causa:** O Drizzle adapter lê column metadata diretamente do schema Drizzle
 (`accountId: text("account_id")`). Ao também declarar `account.fields.userId: "user_id"`
-no `betterAuth()`, o Better Auth aplica um double-mapping que quebra as queries de join.
+no `standardAuth()`, o Standard Native Auth aplica um double-mapping que quebra as queries de join.
 O adapter já faz a conversão camelCase→snake_case automaticamente via os nomes de coluna
 definidos no schema Drizzle.
 
 **Regra:**
 - ❌ NUNCA declarar blocos `fields` para modelos `account`, `session`, `verification`, `user` quando o schema Drizzle já define as colunas snake_case.
 - ✅ O Drizzle adapter mapeia camelCase→snake_case automaticamente via column names.
-- ✅ Usar `additionalFields` com `fieldName` APENAS para campos custom que não existem no schema padrão do Better Auth.
+- ✅ Usar `additionalFields` com `fieldName` APENAS para campos custom que não existem no schema padrão do Standard Native Auth.
 
 **Modelos afetados:** `account`, `session`, `verification` — todos têm schema Drizzle completo em `packages/schemas/src/db/auth-schema.ts`.
 
 **Exemplo correto:**
 ```typescript
 // ✅ CORRETO — sem fields, com additionalFields para campos custom
-betterAuth({
+standardAuth({
   database: drizzleAdapter(db, { provider: "pg", schema }),
   user: {
     additionalFields: {
@@ -44,7 +44,7 @@ betterAuth({
 **Exemplo incorreto:**
 ```typescript
 // ❌ ERRADO — double-mapping com o Drizzle adapter
-betterAuth({
+standardAuth({
   account: {
     fields: { userId: "user_id" }  // já está no schema Drizzle
   }
@@ -62,7 +62,7 @@ betterAuth({
 ... (10 campos)
 ```
 
-**Causa:** Better Auth trata `additionalFields` com `type: "string"` como **obrigatórios por default**. Sem `required: false`, o plugin `organization` gera um schema de validação que rejeita qualquer requisição que não envie todos os campos.
+**Causa:** Standard Native Auth trata `additionalFields` com `type: "string"` como **obrigatórios por default**. Sem `required: false`, o plugin `organization` gera um schema de validação que rejeita qualquer requisição que não envie todos os campos.
 
 **Regra:**
 - ❌ NUNCA declarar `additionalFields` sem `required: false` se o campo não for coletado na criação.
@@ -114,19 +114,19 @@ taxId: { type: "string", fieldName: "tax_id", required: false }
 
 ---
 
-## Regra 3 — Version lock: nunca usar ^ ou ~ na versão do better-auth
+## Regra 3 — Version lock: nunca usar ^ ou ~ na versão do standard-native-auth
 
 **Comportamento observado (histórico git):**
 ```
-fix: pin better-auth to 1.2.10 — fixes dashboard TypeError crash
+fix: pin standard-native-auth to 1.2.10 — fixes dashboard TypeError crash
 ```
 
-**Causa:** Minor versions do Better Auth introduzem breaking changes silenciosos nos adapters e plugins. Historicamente: `1.2.x → TypeError crash`, `1.6.x → double-mapping bug`.
+**Causa:** Minor versions do Standard Native Auth introduzem breaking changes silenciosos nos adapters e plugins. Historicamente: `1.2.x → TypeError crash`, `1.6.x → double-mapping bug`.
 
 **Regra:**
-- ❌ NUNCA usar `"better-auth": "^1.6.11"` — permite minor updates automáticos sem revisão.
-- ✅ Sempre usar versão exata: `"better-auth": "1.6.11"`.
-- ✅ Qualquer update segue o processo documentado em `docs/runbooks/better-auth-update-process.md`.
+- ❌ NUNCA usar `"standard-native-auth": "^1.6.11"` — permite minor updates automáticos sem revisão.
+- ✅ Sempre usar versão exata: `"standard-native-auth": "1.6.11"`.
+- ✅ Qualquer update segue o processo documentado em `docs/runbooks/standard-native-auth-update-process.md`.
 
 ---
 
@@ -164,7 +164,7 @@ fix: pin better-auth to 1.2.10 — fixes dashboard TypeError crash
 
 **Regra:**
 - ✅ `admin/list-users` exige sessão válida com role `admin` — retorna 401 sem cookie.
-- ❌ `admin/list-sessions` não existe em Better Auth 1.6.11.
+- ❌ `admin/list-sessions` não existe em Standard Native Auth 1.6.11.
 - [ ] `ban/unban` — ainda não auditado.
 - [ ] Impersonation — ainda não auditado.
 
@@ -186,12 +186,12 @@ fix: pin better-auth to 1.2.10 — fixes dashboard TypeError crash
 **Comportamento confirmado (auditado em 2026-05-25 via smoke test):**
 
 ```
-Set-Cookie: __Secure-better-auth.session_token=...; Max-Age=604800; Path=/; HttpOnly; Secure; SameSite=Lax
+Set-Cookie: __Secure-standard-native-auth.session_token=...; Max-Age=604800; Path=/; HttpOnly; Secure; SameSite=Lax
 ```
 
 | Atributo | Valor | Segurança |
 |---|---|---|
-| Nome | `__Secure-better-auth.session_token` | Prefixo `__Secure-` exige HTTPS |
+| Nome | `__Secure-standard-native-auth.session_token` | Prefixo `__Secure-` exige HTTPS |
 | Max-Age | **604800s (7 dias)** | Sessão persistente |
 | HttpOnly | ✅ Presente | Protege contra XSS |
 | Secure | ✅ Presente | Só envia em HTTPS |
@@ -201,7 +201,7 @@ Set-Cookie: __Secure-better-auth.session_token=...; Max-Age=604800; Path=/; Http
 ```
 GET /api/auth/get-session sem cookie → 200 com body literal: null
 ```
-Better Auth retorna HTTP 200 com body `null` (não `{ session: null }`, não 401).
+Standard Native Auth retorna HTTP 200 com body `null` (não `{ session: null }`, não 401).
 
 **Regras:**
 - ✅ Sempre verificar `if (!session)` no frontend — não `if (!session.user)`.

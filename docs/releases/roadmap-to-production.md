@@ -9,9 +9,9 @@
 *Foco primário antes da abertura orgânica do tráfego*
 
 - [x] **Estratégia Final de Storage Físico:** R2 provisionado com buckets `standard-documents-prod` e `standard-exports-prod`. Backup script `scripts/backup-r2.mjs` operacional.
-- [x] **Estratégia de PostgreSQL Gerenciado:** Neon PostgreSQL com drizzle-orm, 8 tabelas Better Auth + domain tables + 4 tabelas observability migradas.
+- [x] **Estratégia de PostgreSQL Gerenciado:** Neon PostgreSQL com drizzle-orm, 8 tabelas Standard Native Auth + domain tables + 4 tabelas observability migradas.
 - [ ] **Cloudflare Assíncrono Real:** Provisionar filas reais (Queues), Vectorize Workspaces separados por Tenant/Subdomain e aplicar o Workflow durável via nuvem em vez do simulador dev.
-- [x] **Provedor de Auth (Staging/Production):** Better Auth integrado com session cookies, Google OAuth, API keys e organization-based tenancy.
+- [x] **Provedor de Auth (Staging/Production):** Standard Native Auth integrado com session cookies, Google OAuth, API keys e organization-based tenancy.
 
 ## Trilha 2: Core Funcional & Assessments (Standard Lifecycle)
 *Adições mandatórias que faltam no produto-base SaaS*

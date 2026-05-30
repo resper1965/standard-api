@@ -8,18 +8,15 @@
  * const authClient = createStandardAuthClient("http://localhost:8787");
  * const { data } = authClient.useSession();
  * ```
+ *
+ * No plugins — user/org management via /api/v1/admin/* and /api/v1/users/me/*
  */
 import { createAuthClient } from "better-auth/react";
-import { organizationClient, adminClient } from "better-auth/client/plugins";
 
 export const createStandardAuthClient = (baseURL: string) =>
   createAuthClient({
     baseURL,
-    plugins: [
-      organizationClient(),
-      adminClient(),
-    ],
+    // No plugins — our own API routes handle user/org management
   });
 
 export type StandardAuthClient = ReturnType<typeof createStandardAuthClient>;
-

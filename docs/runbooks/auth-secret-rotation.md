@@ -79,7 +79,7 @@ curl -s https://standard-api.bekaa.eu/api/health/auth | jq .
 
 Esperado:
 ```json
-{ "status": "ok", "auth": "better-auth@1.6.11", "db": "connected" }
+{ "status": "ok", "auth": "standard-native-auth@1.6.11", "db": "connected" }
 ```
 
 Se retornar `"degraded"` ou erro: verificar logs via `npx wrangler tail standard-api-gateway-production`.
@@ -114,5 +114,5 @@ Se o novo secret apresentar problema, gerar um terceiro secret e repetir o proce
 
 ## Referências
 
-- [ADR-AUTH-001 — Regra 4](../decisions/adr-auth-better-auth-behaviors.md)
-- [Processo de Update do Better Auth](./better-auth-update-process.md)
+- [ADR-AUTH-001 — Regra 4](../decisions/adr-auth-standard-native-auth-behaviors.md)
+- [Processo de Update do Standard Native Auth](./standard-native-auth-update-process.md)

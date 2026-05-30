@@ -1,7 +1,7 @@
 /**
  * Seed script: Create the "Bekaa" organization in production DB.
  * 
- * This creates the organization in the Better Auth `organization` table
+ * This creates the organization in the Standard Native Auth `organization` table
  * and adds the admin user (resper@bekaa.eu) as an owner member.
  * 
  * Usage: npx tsx scripts/seed-bekaa-org.ts

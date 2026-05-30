@@ -241,6 +241,75 @@
     animation: auraPulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 
+  /* ── Premium Mono Font ─────────────────────────────────────── */
+  .font-mono-premium {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  }
+
+  /* ── Glow Utilities ────────────────────────────────────────── */
+  .glow-primary {
+    box-shadow: 0 0 12px -2px hsl(var(--primary) / 0.25), 0 0 4px -1px hsl(var(--primary) / 0.15);
+  }
+  .glow-success {
+    box-shadow: 0 0 12px -2px hsl(var(--success) / 0.25), 0 0 4px -1px hsl(var(--success) / 0.15);
+  }
+  .glow-warning {
+    box-shadow: 0 0 12px -2px hsl(var(--warning) / 0.25), 0 0 4px -1px hsl(var(--warning) / 0.15);
+  }
+
+  /* ── Card Interactive — hover-lift + border glow + pointer ── */
+  .card-interactive {
+    @apply transition-all duration-300 cursor-pointer;
+  }
+  .card-interactive:hover {
+    @apply -translate-y-0.5 shadow-lg;
+    box-shadow: 0 4px 24px -4px hsl(var(--primary) / 0.1), 0 0 0 1px hsl(var(--primary) / 0.15);
+  }
+
+  /* ── Stat Number Typography ────────────────────────────────── */
+  .stat-number {
+    font-family: 'Outfit', sans-serif;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    font-weight: 600;
+  }
+
+  /* ── Badge Glow — subtle background pulse ──────────────────── */
+  @keyframes badgePulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.75; }
+  }
+  .badge-glow {
+    animation: badgePulse 3s ease-in-out infinite;
+  }
+
+  /* ── Page Enter Animation ──────────────────────────────────── */
+  @keyframes pageEnter {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .animate-page-enter {
+    animation: pageEnter 400ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  /* ── Premium Scrollbar (opt-in) ────────────────────────────── */
+  .scrollbar-premium::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+  .scrollbar-premium::-webkit-scrollbar-track {
+    background: hsl(var(--background));
+    border-radius: 999px;
+  }
+  .scrollbar-premium::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.15);
+    border-radius: 999px;
+    transition: background 200ms;
+  }
+  .scrollbar-premium::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.3);
+  }
+
 }
 
 /* ── Legacy variables (Login.css compat) ───────────────────── */
@@ -498,10 +567,37 @@
   font-size: var(--text-base);
 }
 
-/* ── Table row hover ───────────────────────────────────────── */
+/* ── Table row hover + zebra striping ─────────────────────── */
 table tbody tr {
   transition: background-color 150ms ease;
 }
+table tbody tr:nth-child(even) {
+  background-color: hsl(var(--muted) / 0.15);
+}
 table tbody tr:hover {
   background-color: hsl(var(--muted) / 0.4);
+}
+
+/* ── Prefers Reduced Motion ───────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .brand-dot,
+  .bell-spell:hover svg,
+  .animate-aura,
+  .badge-glow,
+  .animate-spin-slow,
+  .animate-stagger > *,
+  .card-spell,
+  .animate-slide-up,
+  .animate-count-up,
+  .animate-page-enter {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }

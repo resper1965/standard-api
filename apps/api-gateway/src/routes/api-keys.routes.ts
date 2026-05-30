@@ -18,7 +18,7 @@ const updateApiKeyInput = z.object({
   expiresAt: z.string().datetime().nullable().optional(),
 });
 
-/** Shared helper: resolve Better Auth orgId → Standard UUIDs and block M2M self-management */
+/** Shared helper: resolve Standard Native Auth orgId → Standard UUIDs and block M2M self-management */
 async function resolveOrgCtx(context: any, organizationId: string) {
   if (context.actorId?.startsWith("m2m:")) {
     throw new ApiError("FORBIDDEN", "M2M agents cannot manage API keys.", 403);
@@ -306,7 +306,7 @@ export const apiKeysRoutes: RouteDefinition[] = [
           key_id: keyId,
           name: key.name,
           last_used_at: key.lastUsedAt ?? null,
-          // requestCount is tracked in the apikey table (Better Auth)
+          // requestCount is tracked in the apikey table (Standard Native Auth)
           request_count: (key as any).requestCount ?? null,
           remaining: (key as any).remaining ?? null,
           expires_at: key.expiresAt ?? null,

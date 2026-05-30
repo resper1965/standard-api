@@ -9,7 +9,7 @@
 | Frontend (SPA) | Cloudflare Pages | `https://apistandard.bekaa.eu` |
 | API Gateway | Cloudflare Worker | `https://standard-api.bekaa.eu` |
 | Database | Neon PostgreSQL | Managed external |
-| Auth | Better Auth (SSO via Google) | Embedded in Worker |
+| Auth | Standard Native Auth (SSO via Google) | Embedded in Worker |
 
 ---
 
@@ -38,7 +38,7 @@ Set via `npx wrangler secret put <NAME> --env production`:
 | Secret | Description |
 |---|---|
 | `DATABASE_URL` | Neon PostgreSQL connection string (pooled) |
-| `BETTER_AUTH_SECRET` | JWT signing secret for Better Auth sessions |
+| `BETTER_AUTH_SECRET` | JWT signing secret for Standard Native Auth sessions |
 | `GOOGLE_CLIENT_ID` | Google OAuth 2.0 client ID |
 | `GOOGLE_CLIENT_SECRET` | Google OAuth 2.0 client secret |
 
@@ -117,7 +117,7 @@ pnpm db:migrate
 | Aspect | Development | Production |
 |---|---|---|
 | Worker name | `standard-api-standard-api-gateway` | `standard-api-standard-api-gateway-production` |
-| Auth mode | MockAuthProvider (legacy headers) | Better Auth (sessions + RBAC) |
+| Auth mode | MockAuthProvider (legacy headers) | Standard Native Auth (sessions + RBAC) |
 | Database | Neon dev branch | Neon production branch |
 | `STANDARD_ENV` | `development` | `production` |
 | Custom domain | — | `standard-api.bekaa.eu` |

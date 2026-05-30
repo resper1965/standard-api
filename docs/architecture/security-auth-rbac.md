@@ -29,7 +29,7 @@ Auth methods modelados:
 - `service_token`
 - `mock_dev`
 
-No MVP, integramos o provedor definitivo usando o **Better Auth Plugin**, que assume JWT, Auth Session, Database Persistence (Drizzle) e a hierarquia oficial do sistema, além da gestão madura via o plugin API Keys.
+No MVP, integramos o provedor definitivo usando o **Standard Native Auth Plugin**, que assume JWT, Auth Session, Database Persistence (Drizzle) e a hierarquia oficial do sistema, além da gestão madura via o plugin API Keys.
 
 ## Tenant Resolution
 
@@ -157,8 +157,8 @@ Não logar documento completo, chunks completos, prompt completo, tokens, secret
 
 ## Maturidade do MVP Enterprise-Grade
 
-- **Auth real (Session e DB Persistence):** Utiliza Better Auth (`@better-auth/api-key` encapsulados no PostgreSQL pelo Schema Drizzle).
-- **Membership context:** Better Auth provê multi-tenant assignment e organizações associadas nas claims.
+- **Auth real (Session e DB Persistence):** Utiliza Standard Native Auth (`@standard-native-auth/api-key` encapsulados no PostgreSQL pelo Schema Drizzle).
+- **Membership context:** Standard Native Auth provê multi-tenant assignment e organizações associadas nas claims.
 - **RBAC Ativo:** Funcionalidades seguras integradas via `rbac.middleware.ts` para checar `context.auth.roles`.
 - **API Keys / Revogações:** Plugin nativo que interage com as tabelas na DB garantindo segurança transacional.
 - Toda lógica in-memory simulada foi deprecada na fase Enterprise-Grade e desativada nas rotas de produção operando na porta 3000 do Gateway.

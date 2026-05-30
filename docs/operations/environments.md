@@ -18,7 +18,7 @@
 - Web: `pnpm dev:web` → Vite dev server (localhost:5173)
 - PostgreSQL: Docker Compose (`infra/docker/docker-compose.yml`)
 - Workers: Wrangler dev com bindings simulados
-- Auth: Better Auth com Google OAuth (localhost redirect)
+- Auth: Standard Native Auth com Google OAuth (localhost redirect)
 
 ### Configuração
 - `.dev.vars` no API Gateway (não versionado)

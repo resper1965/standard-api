@@ -1,4 +1,4 @@
-# Documento de Arquitetura de Software (Arc42) — Standard GRC
+# Documento de Arquitetura de Software (Arc42) — Standard
 
 Este documento descreve a arquitetura da plataforma **Standard**, um sistema SaaS API-first para assessments de conformidade e maturidade baseados no Secure Controls Framework (SCF).
 
@@ -35,13 +35,16 @@ O desenho arquitetural do Standard é governado por restrições operacionais e 
 - **Integridade de Tipagem (UUID)**: Chaves estrangeiras que ligam logs de auditoria, eventos e assessments a usuários e tenants exigem estritamente o formato de ID `UUID`.
 
 ### 2.3 Restrições de Identidade
-- **Better Auth**: Gerencia a autenticação e hierarquia de organizações. Possui tabelas e IDs próprios baseados em strings alfanuméricas de texto. Há a necessidade de uma camada de mapeamento (JIT Provisioning) para converter IDs de texto do Better Auth em UUIDs do GRC Standard.
+- **Modelo Dual de Autenticação (Standard Native Auth v1.6.11)**: A plataforma adota um modelo dual de autenticação gerenciado pelo Standard Native Auth (better-auth v1.6.11) com Drizzle adapter no Neon PostgreSQL:
+  - **Sessões (Platform Console)**: Autenticação de usuários humanos via email/password e Google OAuth, com sessões persistidas em banco e cookies seguros. Usado pelo Platform Console (`apps/web`) para gestão de organizations, users e API keys.
+  - **M2M API Keys (SDK/MCP/Integrações)**: Acesso programático via header `Authorization: ApiKey <key>`. O gateway de API realiza validação do hash `SHA-256` na borda (Web Crypto API) e valida no Neon PostgreSQL, garantindo latência mínima e resolução implícita da hierarquia de *Root Tenants* e *Sub-Tenants*.
+  - Ambos os canais são gerenciados nativamente pelo Standard Native Auth, com tabelas de autenticação (user, session, account, verification, activeOrganization) no Neon PostgreSQL. O plugin `@standard-native-auth/api-key` provisiona e controla M2M/API Keys integradas às contas de organizações.
 
 ---
 
 ## 3. Escopo e Contexto
 
-O escopo e contexto delimitam as fronteiras do sistema **Standard GRC**, identificando os atores (usuários humanos) e sistemas externos com os quais a plataforma se integra.
+O escopo e contexto delimitam as fronteiras do sistema **Standard**, identificando os atores (usuários humanos) e sistemas externos com os quais a plataforma se integra.
 
 ### 3.1 Contexto de Negócio e Técnico (C4 Context Diagram)
 
@@ -55,23 +58,21 @@ graph TB
     admin["Bekaa Operator / Admin<br>(Usuário)"]
 
     %% Sistema Principal
-    standard["Standard GRC System<br>(System under study)"]
+    standard["Standard Assessment Engine<br>(System under study)"]
 
     %% Sistemas Externos
-    ba["Better Auth<br>(Serviço de Identidade/Auth)"]
-    db["Neon PostgreSQL<br>(Banco Relacional)"]
+    db["Neon PostgreSQL<br>(Banco Relacional e Root Tenants)"]
     r2["Cloudflare R2 Bucket<br>(Armazenamento de Arquivos)"]
     vectorize["Cloudflare Vectorize<br>(Índice de Embeddings RAG)"]
     email["Serviço de Email (CF Email/Resend)<br>(Notificações)"]
 
     %% Relações de Atores para o Sistema
-    ciso -->|"Gerencia escopo, SoA e POA&M"| standard
-    assessor -->|"Envia evidências, avalia gaps"| standard
-    admin -->|"Gerencia tenants, importa SCF"| standard
+    ciso -->|"Gerencia escopo, SoA e POA&M via API Clients"| standard
+    assessor -->|"Envia evidências via integrações M2M"| standard
+    admin -->|"Acessa Developer Console para gerenciar tenants e API Keys"| standard
 
     %% Relações do Sistema para Sistemas Externos
-    standard -->|"Valida cookies, sessões e permissões"| ba
-    standard -->|"Persiste tenants, assessments e audit"| db
+    standard -->|"Autentica M2M, persiste tenants e audit"| db
     standard -->|"Armazena arquivos de evidência e relatórios"| r2
     standard -->|"Consulta e indexa chunks de KB"| vectorize
     standard -->|"Dispara notificações e convites"| email
@@ -82,7 +83,7 @@ graph TB
 
     class ciso,assessor,admin actor;
     class standard system;
-    class ba,db,r2,vectorize,email external;
+    class db,r2,vectorize,email external;
 ```
 
 ---
@@ -94,7 +95,7 @@ Para satisfazer os objetivos de negócio e contornar as restrições do Edge, a 
 ### 4.1 Desacoplamento Monorepo (pnpm Workspaces)
 O código está estruturado como um monorepo para garantir reuso máximo e separação de interesses:
 - **`apps/api-gateway`**: Gateway Hono leve que roda nos Workers da Cloudflare. É o ponto de entrada da API.
-- **`apps/web`**: Aplicação SPA React moderna (Vite) hospedada no Cloudflare Pages.
+- **`apps/web`**: Platform Console (SPA React/Vite) para gestão de organizations, users, API keys e observabilidade, hospedado no Cloudflare Pages. Não é dashboard GRC — consome a API REST para operações de plataforma.
 - **`packages/*`**: Bibliotecas utilitárias e lógica de domínio pura (ex: `packages/scf-core` para a lógica do SCF, `packages/assessment-engine` para transições de estado de ciclo de vida).
 
 ### 4.2 Separação de Processamento Assíncrono (Queues & Workflows)
@@ -103,7 +104,7 @@ Operações que excedem as restrições de tempo de CPU dos Workers (como downlo
 - **Cloudflare Workflows**: Orquestração de workflows duráveis com persistência de checkpoints e portões de aprovação humana.
 
 ### 4.3 Camada de Cache em Memória Edge (Cloudflare KV)
-Uso de KV/Durable Objects na borda como cache de revogação de tokens JWT (Blacklist) rápida sem a necessidade de efetuar consultas ao banco Neon centralizado em cada requisição.
+Uso de KV na borda como cache de revogação de API keys e sessões comprometidas. A validação primária de sessões é feita via banco (Standard Native Auth); o KV armazena status de revogação para evitar consultas redundantes ao Neon PostgreSQL em cada requisição, otimizando latência no gateway.
 
 ---
 
@@ -118,7 +119,7 @@ O diagrama a seguir descreve a decomposição interna da aplicação:
 ```mermaid
 graph TB
     subgraph apps["Aplicações (Apps)"]
-        web["Web App<br>(Vite / React / Tailwind)<br>SPA client no navegador"]
+        web["API Developer Console<br>(Vite / React / Tailwind)<br>SPA client para gestão de API Keys"]
         gateway["API Gateway<br>(Hono / Cloudflare Worker)<br>Entrypoint da API e RBAC"]
         wfWorker["Workflows Worker<br>(Cloudflare Workflows)<br>Orquestração durável do Lifecycle"]
         ingestionWorker["Ingestion Worker<br>(CF Queue Consumer)<br>Ingestão e OCR assíncrono"]
@@ -188,8 +189,7 @@ O fluxo a seguir ilustra a ingestão assíncrona de arquivos de evidência de co
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Assessor as Assessor / Auditor
-    participant Web as Web App (React)
+    actor Assessor as API Client / Integração
     participant GW as API Gateway (Hono)
     participant R2 as Cloudflare R2 Bucket
     participant Queue as Ingestion Queue
@@ -198,13 +198,12 @@ sequenceDiagram
     participant DB as Neon PostgreSQL
     participant Vec as Vectorize Index
 
-    Assessor->>Web: Seleciona e envia arquivo de evidência
-    Web->>GW: POST /api/v1/organizations/:id/documents (Multipart)
+    Assessor->>GW: POST /api/v1/organizations/:id/documents (Multipart) com API Key
     GW->>R2: Salva arquivo bruto com chave isolada por tenant
     R2-->>GW: Retorna URI/Etag do arquivo
     GW->>DB: Cria registro do documento (status: 'uploaded')
     GW->>Queue: Envia job de processamento de documento
-    GW-->>Web: Retorna HTTP 202 Accepted (Documento Recebido)
+    GW-->>Assessor: Retorna HTTP 202 Accepted (Documento Recebido)
     
     Note over Worker: Ingestion Worker consome job assincronamente
     Queue->>Worker: Despacha mensagem do job
@@ -224,26 +223,23 @@ O fluxo a seguir ilustra o controle durável do ciclo de vida usando Cloudflare 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor CISO
-    participant Web as Web App (React)
+    actor CISO as API Client (CISO)
     participant GW as API Gateway (Hono)
     participant WF as Cloudflare Workflows
     participant DB as Neon PostgreSQL
-    actor Admin as Auditor / Aprovador
+    actor Admin as API Client (Aprovador)
 
-    CISO->>Web: Solicita revisão do escopo SoA
-    Web->>GW: POST /api/v1/assessments/:id/submit-soa
+    CISO->>GW: POST /api/v1/assessments/:id/submit-soa (via API Key)
     GW->>DB: Cria evento de ciclo de vida (antigo -> novo)
     GW->>WF: Dispara instância do Workflow de aprovação
-    GW-->>Web: Retorna HTTP 200 OK (Solicitação recebida)
+    GW-->>CISO: Retorna HTTP 200 OK (Solicitação recebida)
     
     Note over WF: Workflow inicia a orquestração durável
     WF->>DB: Atualiza estado da tabela assessments para 'soa_under_review'
     WF->>WF: Cria portão de espera (Approval Gate)
     
-    Note over Admin: Admin revisa a declaração de aplicabilidade
-    Admin->>Web: Registra decisão (Aprovado / Rejeitado)
-    Web->>GW: POST /api/v1/assessments/:id/approvals
+    Note over Admin: Admin revisa a declaração de aplicabilidade e envia decisão
+    Admin->>GW: POST /api/v1/assessments/:id/approvals (Aprovado)
     GW->>WF: Envia sinal de aprovação para a instância em execução
     WF->>WF: Libera portão de aprovação
     WF->>DB: Registra evento na 'approval_events'
@@ -274,12 +270,12 @@ graph TD
         
         workers["Cloudflare Workers & Workflows<br>(Serverless Compute)"]
         subgraph compute["Edge Workers"]
-            gateway["standard-api-gateway<br>(Hono REST API)"]
+            gateway["standard-api-gateway<br>(Hono REST API & Auth Edge-Hash)"]
             workflow["standard-workflows-production<br>(Workflow Orchestrator)"]
             ingestion["standard-ingestion-production<br>(Ingestion Queue Consumer)"]
         end
 
-        kv["Workers KV<br>(JWT Blacklist & Settings Cache)"]
+        kv["Workers KV<br>(Revocation Cache & Settings)"]
         r2_doc["R2 Bucket: standard-documents-prod<br>(Evidências e Documentos brutos)"]
         r2_report["R2 Bucket: standard-reports-prod<br>(Relatórios Gerados)"]
         vectorize["Vectorize: standard-kb-prod<br>(Índice Vetorial RAG)"]
@@ -291,7 +287,7 @@ graph TD
     end
 
     %% Rotas de Tráfego
-    client -->|"Acessa a UI (HTTPS)"| pages
+    client -->|"Acessa o Developer Console (HTTPS)"| pages
     client -->|"Consome rotas da API (HTTPS)"| gateway
     
     %% Relações do Gateway no Edge
@@ -356,9 +352,10 @@ Isso oculta stack traces brutos em ambiente de produção, preservando a seguran
 
 Documentamos e referenciamos as principais decisões arquiteturais tomadas ao longo do projeto:
 
-- **ADR-001 (Identidade - Better Auth)**: Escolha do Better Auth auto-hospedado para gestão de credenciais e roles. Decisão de usar uma camada de mapeamento Just-In-Time (`resolveUserContext`) para converter IDs alfanuméricos do Better Auth em UUIDs transacionais padrão Postgres.
+- **ADR-001 (Identidade M2M Edge Hash)**: ~~Superseded by ADR-0005.~~ Originalmente adotou arquitetura M2M proprietária (*Bearer Token -> Edge Hash -> Neon DB*). Com o ADR-0005, a validação M2M Edge Hash passou a ser **um canal** dentro do modelo dual de autenticação do Standard Native Auth, não mais o mecanismo único. Sessões de usuário são gerenciadas via Standard Native Auth (cookies/banco) e API Keys via hash SHA-256 na borda.
 - **ADR-002 (Edge - Drizzle Database Adapter)**: Utilização do driver de banco de dados serverless do Neon com suporte a pool de conexões edge-safe via WebSockets, evitando exaustão de conexões no Postgres durante picos de concorrência.
-- **ADR-003 (Performance - JWT Edge Cache)**: Implementação de cache de revogação de tokens JWT no Workers KV com TTL de 5 minutos, minimizando o impacto de latência nas chamadas de gateway repetitivas.
+- **ADR-003 (Performance - Revocation Cache)**: Implementação de cache de revogação de API keys e sessões comprometidas no Workers KV com TTL de 5 minutos, minimizando o impacto de latência nas chamadas de gateway repetitivas. Não é blacklist de JWT — a validação de sessões é baseada em banco via Standard Native Auth.
+- **ADR-0005 (Standard Native Auth)**: Decisão canônica de autenticação. Adota Standard Native Auth (better-auth v1.6.11) como provedor oficial de identidade com modelo dual: sessões baseadas em cookies para Platform Console e M2M API Keys com SHA-256 hash para acesso programático (SDK/MCP). Veja `docs/decisions/0005-standard-native-auth-identity-provider.md`.
 
 ---
 
@@ -384,6 +381,7 @@ Identificamos os riscos e trade-offs assumidos na arquitetura:
 
 - **Dependência do Ecossistema Cloudflare (Vendor Lock-in)**: O gateway utiliza bindings nativos (Queues, R2, Vectorize, Workflows). Embora o código javascript rode sobre o padrão WinterCG, migrar a infraestrutura para AWS ou GCP exigiria reescrever os adapters de persistência e orquestração.
 - **Cold Starts de Workers**: À medida que mais pacotes de domínio são incluídos no build do `api-gateway`, o tamanho do bundle compilado aumenta. Controlamos o tamanho do bundle desativando imports pesados e mantendo as dependências de roteamento leves (Hono).
+- **Scope Creep no Developer Console**: Como optamos por manter uma interface Web (`apps/web`) atuando como Painel do Desenvolvedor (gestão de API Keys e Tenants), existe a tentação e o risco de lógica de negócios GRC acabar vazando para o frontend. Exigirá disciplina arquitetural rigorosa para manter o frontend estritamente como um "console burro".
 
 ---
 

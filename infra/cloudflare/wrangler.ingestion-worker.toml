@@ -13,6 +13,7 @@ AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT
 queue = "standard-document-ingestion-dev"
 max_batch_size = 10
 max_batch_timeout = 30
+max_retries = 3
 dead_letter_queue = "standard-dead-letter-dev"
 
 [[r2_buckets]]
@@ -31,6 +32,7 @@ vars = { STANDARD_ENV = "staging", LOG_LEVEL = "info", AI_GATEWAY_NAME = "standa
 queue = "standard-document-ingestion-staging"
 max_batch_size = 10
 max_batch_timeout = 30
+max_retries = 3
 dead_letter_queue = "standard-dead-letter-staging"
 
 [[env.staging.r2_buckets]]
@@ -49,6 +51,7 @@ vars = { STANDARD_ENV = "production", LOG_LEVEL = "warn", AI_GATEWAY_NAME = "sta
 queue = "standard-document-ingestion-prod"
 max_batch_size = 10
 max_batch_timeout = 30
+max_retries = 3
 dead_letter_queue = "standard-dead-letter-prod"
 
 [[env.production.r2_buckets]]

@@ -49,16 +49,16 @@ export const assessmentsRoutes: RouteDefinition[] = [
     handler: async ({ validatedBody, deps, tenantId, traceId }) => {
       const body = validatedBody as import("@standard/schemas").CreateAssessmentRequest;
 
-      // Bridge Better Auth text ID → Standard domain UUID context
-      const betterAuthOrgId = body.organization_id ?? tenantId!;
+      // Bridge Standard Native Auth text ID → Standard domain UUID context
+      const standardAuthOrgId = body.organization_id ?? tenantId!;
       if (!deps.resolveTenantContext) {
         throw new ApiError("INTERNAL_ERROR", "Tenant mapping not configured.", 500);
       }
-      const ctx = await deps.resolveTenantContext(betterAuthOrgId);
+      const ctx = await deps.resolveTenantContext(standardAuthOrgId);
       if (!ctx) {
         throw new ApiError(
           "NOT_FOUND",
-          `Organization "${betterAuthOrgId}" not found in Better Auth. Please create an organization first.`,
+          `Organization "${standardAuthOrgId}" not found in Standard Native Auth. Please create an organization first.`,
           404
         );
       }
@@ -85,7 +85,7 @@ export const assessmentsRoutes: RouteDefinition[] = [
     path: "/api/v1/assessments/:assessmentId",
     protected: true,
     handler: async ({ deps, params, tenantId }) => {
-      // Resolve Better Auth org ID → Standard domain UUID
+      // Resolve Standard Native Auth org ID → Standard domain UUID
       let resolvedTenantId = tenantId!;
       try {
         const ctx = await deps.resolveTenantContext?.(tenantId!);
@@ -109,7 +109,7 @@ export const assessmentsRoutes: RouteDefinition[] = [
     path: "/api/v1/assessments",
     protected: true,
     handler: async ({ deps, tenantId, traceId }) => {
-      // Resolve Better Auth org ID → Standard domain UUID
+      // Resolve Standard Native Auth org ID → Standard domain UUID
       let resolvedTenantId = tenantId!;
       try {
         const ctx = await deps.resolveTenantContext?.(tenantId!);
@@ -134,7 +134,7 @@ export const assessmentsRoutes: RouteDefinition[] = [
     path: "/api/v1/organizations/:organizationId/assessments",
     protected: true,
     handler: async ({ deps, params, tenantId, traceId }) => {
-      // Resolve Better Auth org ID → Standard domain UUID
+      // Resolve Standard Native Auth org ID → Standard domain UUID
       let resolvedTenantId = tenantId!;
       try {
         const ctx = await deps.resolveTenantContext?.(tenantId!);
@@ -318,7 +318,7 @@ export const assessmentsRoutes: RouteDefinition[] = [
     requireActor: true,
     bodySchema: AssessmentAutomationConfigSchema,
     handler: async ({ validatedBody, deps, params, tenantId, traceId }) => {
-      // Resolve Better Auth org ID → Standard domain UUID
+      // Resolve Standard Native Auth org ID → Standard domain UUID
       let resolvedTenantId = tenantId!;
       try {
         const ctx = await deps.resolveTenantContext?.(tenantId!);

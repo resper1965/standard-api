@@ -7,11 +7,11 @@
 
 > **For Antigravity:** REQUIRED WORKFLOW: Use `.agent/workflows/execute-plan.md` to execute this plan in single-flow mode.
 
-**Goal:** Resolver sistematicamente todos os itens pendentes após a integração do Better Auth — cleanup, deploy staging, secrets, frontend auth e deprecação do legado.
+**Goal:** Resolver sistematicamente todos os itens pendentes após a integração do Standard Native Auth — cleanup, deploy staging, secrets, frontend auth e deprecação do legado.
 
 **Architecture:** 5 fases sequenciais de maturidade crescente. Cada fase é atômica: pode ser commitada e deployada independentemente. Não há dependência circular entre fases.
 
-**Tech Stack:** Cloudflare Workers, Better Auth, Drizzle ORM, Neon PostgreSQL, Wrangler CLI, pnpm monorepo
+**Tech Stack:** Cloudflare Workers, Standard Native Auth, Drizzle ORM, Neon PostgreSQL, Wrangler CLI, pnpm monorepo
 
 ---
 
@@ -120,7 +120,7 @@ for (const worker of workers) {
 **Step 2: Commit**
 ```bash
 git add scripts/put-secrets.mjs
-git commit -m "chore(secrets): update put-secrets script for Better Auth and Google OAuth
+git commit -m "chore(secrets): update put-secrets script for Standard Native Auth and Google OAuth
 
 Co-Authored-By: Google Antigravity <antigravity@google.com>"
 ```
@@ -141,7 +141,7 @@ echo "<GOOGLE_CLIENT_SECRET>" | npx wrangler secret put GOOGLE_CLIENT_SECRET --n
 ---
 
 ## Fase 3: Deploy Staging no Cloudflare
-*Deployar o API Gateway com Better Auth na Cloudflare.*
+*Deployar o API Gateway com Standard Native Auth na Cloudflare.*
 
 ### Task 3.1: Deploy do API Gateway
 
@@ -236,7 +236,7 @@ curl https://<deployed-url>/api/auth/session \
 Exemplo para cada arquivo:
 ```typescript
 /**
- * @deprecated Use `@standard/auth` (Better Auth) instead.
+ * @deprecated Use `@standard/auth` (Standard Native Auth) instead.
  * This provider will be removed in v0.3.0.
  */
 ```
@@ -256,8 +256,8 @@ Co-Authored-By: Google Antigravity <antigravity@google.com>"
 
 **Step 1: Marcar items resolvidos**
 ```markdown
-- [x] **Provedor de Auth (Staging/Production):** ~~Mudar os MockAuthProviders locais para JWT~~ → Better Auth integrado com session cookies, Google OAuth e API keys.
-- [x] **Estratégia de PostgreSQL Gerenciado:** ~~Avaliar provedores~~ → Neon PostgreSQL com drizzle-orm e 8 tabelas Better Auth migradas.
+- [x] **Provedor de Auth (Staging/Production):** ~~Mudar os MockAuthProviders locais para JWT~~ → Standard Native Auth integrado com session cookies, Google OAuth e API keys.
+- [x] **Estratégia de PostgreSQL Gerenciado:** ~~Avaliar provedores~~ → Neon PostgreSQL com drizzle-orm e 8 tabelas Standard Native Auth migradas.
 ```
 
 **Step 2: Commit**
@@ -276,7 +276,7 @@ Co-Authored-By: Google Antigravity <antigravity@google.com>"
 |---|---|---|---|
 | 1. Cleanup | 1.1, 1.2 | Housekeeping | Baixo |
 | 2. Secrets | 2.1, 2.2 | Infra | Médio (requer Cloudflare auth) |
-| 3. Deploy | 3.1, 3.2 | Infra | Médio (primeiro deploy com Better Auth) |
+| 3. Deploy | 3.1, 3.2 | Infra | Médio (primeiro deploy com Standard Native Auth) |
 | 4. Seed | 4.1, 4.2 | Validação | Baixo |
 | 5. Deprecar | 5.1, 5.2 | Housekeeping | Baixo |
 

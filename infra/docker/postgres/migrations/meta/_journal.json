@@ -169,6 +169,13 @@
       "when": 1780002659383,
       "tag": "0023_stale_senator_kelly",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1780081240508,
+      "tag": "0024_tough_grey_gargoyle",
+      "breakpoints": true
     }
   ]
 }

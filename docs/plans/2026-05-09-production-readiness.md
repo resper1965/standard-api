@@ -9,7 +9,7 @@
 
 **Architecture:** Cloudflare Workers (API Gateway, Ingestion, KB, Reporting, Workflows) + PostgreSQL (Neon) + R2 (documents) + Vectorize (KB) + Queues (async agent execution) + AI Gateway (LLM observability)
 
-**Tech Stack:** TypeScript strict, Hono, Drizzle ORM, Vercel AI SDK, Cloudflare Workers, HMAC-SHA256 webhooks, Better Auth
+**Tech Stack:** TypeScript strict, Hono, Drizzle ORM, Vercel AI SDK, Cloudflare Workers, HMAC-SHA256 webhooks, Standard Native Auth
 
 ---
 

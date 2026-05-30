@@ -58,6 +58,6 @@ Login → Google OAuth or Email/Password
 ## Tech Stack
 - Vite + React 19 + TypeScript
 - Vanilla CSS (design tokens)
-- Better Auth client SDK
+- Standard Native Auth client SDK
 - Deployed on Cloudflare Pages
 
