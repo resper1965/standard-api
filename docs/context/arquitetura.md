@@ -20,7 +20,7 @@ O Standard é API-first, SaaS-ready, multi-tenant e Cloudflare-oriented. O backe
 
 ## MCP Server
 
-A plataforma expõe um servidor MCP remoto em `POST /mcp` (Streamable HTTP, JSON-RPC 2.0). AI assistants conectam via API Key Bearer e têm acesso a 12 tools cobrindo assessments, SCF, gap analysis e status da plataforma. Ver [`docs/context/mcp.md`](mcp.md).
+A plataforma expõe um servidor MCP remoto em `POST /mcp` (Streamable HTTP, JSON-RPC 2.0). AI assistants conectam via API Key Bearer e têm acesso a 32 tools cobrindo assessments, SCF, gap analysis, inteligência regulatória e status da plataforma. Ver [`docs/context/mcp.md`](mcp.md).
 
 ## Referências
 
