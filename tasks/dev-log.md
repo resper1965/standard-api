@@ -37,7 +37,7 @@ Este arquivo registra aprendizados relevantes, testes importantes, contexto não
 - O que foi aprendido:
   - O backlog estava espalhado em `pendencias.md`, `post-mvp-backlog.md` e `roadmap-to-production.md` — nenhum era fonte de verdade.
   - 13 planos em `docs/plans/` e `docs/superpowers/plans/` sem indicação de status.
-  - Decisões críticas (Better Auth, Drizzle, Design System, SCF XLSX, Superpowers SDLC) não tinham ADR formal.
+  - Decisões críticas (Standard Native Auth, Drizzle, Design System, SCF XLSX, Superpowers SDLC) não tinham ADR formal.
   - `docs/context/produto.md` tinha 6 linhas; sem visão, personas ou modelo de negócio.
   - Templates de branch context e dev log existiam mas nunca foram usados.
 - Ações executadas:

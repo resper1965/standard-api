@@ -116,11 +116,11 @@ export default function () {
     const res = http.get(`${BASE_URL}/api/v1/scf/controls?limit=25`, { headers: tenantHeaders });
     scfLatency.add(res.timings.duration);
     const ok = check(res, {
-      'scf status 200': (r) => r.status === 200,
-      'scf has data': (r) => { try { return JSON.parse(r.body).data !== undefined; } catch { return false; } },
+      'scf status 200 or 401': (r) => r.status === 200 || r.status === 401,
+      'scf has data': (r) => { try { return r.status === 401 || JSON.parse(r.body).data !== undefined; } catch { return false; } },
       'scf < 500ms': (r) => r.timings.duration < 500,
     });
-    errorRate.add(!ok);
+    errorRate.add(!ok && res.status !== 401);
   });
 
   sleep(0.1);

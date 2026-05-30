@@ -29,18 +29,14 @@ All protected endpoints require authentication via one of:
 | Method | Header | Format |
 |--------|--------|--------|
 | API Key (M2M) | `Authorization` | `Bearer standard_live_<key>` |
-| Browser Session | Cookie | `better-auth.session_token=<token>` |
+| Browser Session | Cookie | `standard-native-auth.session_token=<token>` |
 
-**Tenant context** is required for all data endpoints:
-```
-x-standard-tenant-id: <organization_id>
-```
+**Tenant context** is natively derived from your M2M API Key. To target a specific organization within your Root Tenant, pass the `organization_id` in the URL or query where applicable.
 
 ### Example: Authenticated Request
 
 ```bash
 curl -H "Authorization: Bearer standard_live_abc123" \
-     -H "x-standard-tenant-id: org_456" \
      -H "Content-Type: application/json" \
      https://standard-api.bekaa.eu/api/v1/assessments
 ```
@@ -125,7 +121,7 @@ All endpoints are prefixed with `/api/v1`.
 
 ### Audit Trail
 - `GET /api/v1/assessments/{id}/audit-logs` — Assessment-level audit events
-- `GET /api/v1/tenants/{id}/audit-logs` — Tenant-wide audit events. Query: `?action=&actor_id=&resource_type=&since=&until=&limit=`
+- `GET /api/v1/audit-logs` — Root Tenant-wide audit events. Query: `?action=&actor_id=&resource_type=&since=&until=&limit=`
 - `GET /api/v1/organizations/{id}/audit-logs` — Org-level audit events. Same query params.
 
 ### Member Management (RBAC)
@@ -252,7 +248,6 @@ All errors follow:
 | `FORBIDDEN` | 403 | Insufficient permissions |
 | `NOT_FOUND` | 404 | Resource does not exist |
 | `CONFLICT` | 409 | Duplicate or conflicting state |
-| `TENANT_CONTEXT_REQUIRED` | 400 | Missing `x-standard-tenant-id` header |
 | `VALIDATION_ERROR` | 400 | Invalid request body |
 | `INVALID_STATE_TRANSITION` | 409 | Lifecycle state doesn't allow this action |
 | `RATE_LIMIT_EXCEEDED` | 429 | Too many requests |

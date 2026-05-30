@@ -1,7 +1,7 @@
 /**
  * JWT Tenant Resolver — extracts tenant context from JWT claims.
  *
- * Supports Better Auth session tokens and standard JWT payloads.
+ * Supports Standard Native Auth session tokens and standard JWT payloads.
  * Decodes the JWT payload (without verification — verification is done
  * by the auth middleware) and extracts tenant/org claims.
  */

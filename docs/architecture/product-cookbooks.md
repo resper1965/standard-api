@@ -248,7 +248,7 @@ Todos os cookbooks acima são consumíveis de **3 formas**:
 | Canal | Como |
 |---|---|
 | **API REST** | Integração direta, automação, pipelines |
-| **Web App** | Interface visual para analistas e gestores |
+| **Platform Console** | Gestão de organizations, users, API keys e observabilidade (não consome cookbooks GRC diretamente) |
 | **MCP Server** | Agentes de IA consomem via Model Context Protocol — um Claude/GPT pode executar assessments autonomamente |
 
 O MCP Server é o diferencial competitivo: **nenhuma plataforma GRC hoje oferece assessment agentic-native**.

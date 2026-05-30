@@ -1,7 +1,7 @@
 /**
  * Auth Smoke Tests — Admin Plugin Audit
  *
- * Auditoria ativa dos endpoints do plugin admin do Better Auth.
+ * Auditoria ativa dos endpoints do plugin admin do Standard Native Auth.
  * Documenta comportamentos reais para o ADR-AUTH-001.
  *
  * Uso:

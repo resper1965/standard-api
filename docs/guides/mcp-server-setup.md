@@ -67,7 +67,7 @@ Adicione a configuração no arquivo `claude_desktop_config.json` (geralmente lo
     "standard-grc": {
       "command": "node",
       "args": [
-        "C:/Users/SEU_USUARIO/OneDrive/Área de Trabalho/aegis-api/packages/mcp-server/dist/index.js",
+        "C:/Users/SEU_USUARIO/OneDrive/Área de Trabalho/standard-api/packages/mcp-server/dist/index.js",
         "--url", "http://127.0.0.1:8787",
         "--token", "sk-seu-token-aqui"
       ]
@@ -85,7 +85,7 @@ Adicione a configuração no arquivo `claude_desktop_config.json` (geralmente lo
 4. Configure:
    - **Name**: `standard-grc`
    - **Type**: `command`
-   - **Command**: `node C:/caminho/para/aegis-api/packages/mcp-server/dist/index.js --url http://127.0.0.1:8787 --token sk-seu-token-aqui`
+   - **Command**: `node C:/caminho/para/standard-api/packages/mcp-server/dist/index.js --url http://127.0.0.1:8787 --token sk-seu-token-aqui`
 
 ---
 

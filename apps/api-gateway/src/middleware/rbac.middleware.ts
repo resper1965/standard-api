@@ -12,7 +12,7 @@ import type { RequestContext } from "../http";
  */
 export const isPlatformAdmin = (context: RequestContext): boolean => {
   // platformAdmin is explicitly typed in RequestContext.session.user (http.ts)
-  // and populated by auth.middleware.ts from the Better Auth `additionalFields.platformAdmin`.
+  // and populated by auth.middleware.ts from the Standard Native Auth `additionalFields.platformAdmin`.
   return context.session?.user?.platformAdmin === true;
 };
 
@@ -78,15 +78,17 @@ export const assertRbac = async (context: RequestContext, requiredPermissions: P
       }
     }
   } else if (context.session) {
-    // Better Auth session (production) — use role-based permission check.
-    // Better Auth `admin` plugin uses "admin" | "user" — map "user" → "member"
-    // so it aligns with STANDARD_ROLE_PERMISSIONS keys.
-    const rawRole = context.session.user?.role;
+    // Standard Native Auth session (production) — use role-based permission check.
+    // API access roles: owner, admin, member, viewer.
+    // Better Auth default "user" → "member". Unknown → "viewer" (least privilege).
+    const rawRole = context.session.user?.role ?? "viewer";
     const role: StandardRole =
-      rawRole === "admin" ? "admin"
-      : rawRole === "owner" ? "owner"
+      rawRole === "owner" ? "owner"
+      : rawRole === "admin" ? "admin"
+      : rawRole === "member" || rawRole === "user" ? "member"
       : rawRole === "viewer" ? "viewer"
-      : "member"; // "user" and anything unknown → member
+      : "viewer"; // Unknown → least privilege
+
     for (const reqPerm of requiredPermissions) {
       const [resource, action] = reqPerm.split(":") as [StandardResource, string];
       if (!roleHasPermission(role, resource, action)) {

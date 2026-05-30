@@ -8,32 +8,33 @@ LOG_LEVEL = "info"
 AI_GATEWAY_NAME = "standard-dev"
 AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/standard-dev"
 
-# Data retention purge: every Sunday at 02:00 UTC
-[triggers]
-crons = ["0 2 * * 0"]
 
 [[queues.consumers]]
 queue = "standard-kb-embedding-dev"
 max_batch_size = 10
 max_batch_timeout = 30
+max_retries = 3
 dead_letter_queue = "standard-dead-letter-dev"
 
 [[queues.consumers]]
 queue = "standard-report-export-dev"
 max_batch_size = 5
 max_batch_timeout = 30
+max_retries = 3
 dead_letter_queue = "standard-dead-letter-dev"
 
 [[queues.consumers]]
 queue = "standard-agent-run-dev"
 max_batch_size = 5
 max_batch_timeout = 60
+max_retries = 5
 dead_letter_queue = "standard-dead-letter-dev"
 
 [[queues.consumers]]
 queue = "standard-document-ingestion-dev"
 max_batch_size = 10
 max_batch_timeout = 30
+max_retries = 3
 dead_letter_queue = "standard-dead-letter-dev"
 
 [[queues.consumers]]
@@ -81,32 +82,33 @@ LOG_LEVEL = "info"
 AI_GATEWAY_NAME = "standard-prod"
 AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/standard-prod"
 
-# Data retention purge: every Sunday at 02:00 UTC
-[env.production.triggers]
-crons = ["0 2 * * 0"]
 
 [[env.production.queues.consumers]]
 queue = "standard-kb-embedding-prod"
 max_batch_size = 10
 max_batch_timeout = 30
+max_retries = 3
 dead_letter_queue = "standard-dead-letter-prod"
 
 [[env.production.queues.consumers]]
 queue = "standard-document-ingestion-prod"
 max_batch_size = 10
 max_batch_timeout = 30
+max_retries = 3
 dead_letter_queue = "standard-dead-letter-prod"
 
 [[env.production.queues.consumers]]
 queue = "standard-report-export-prod"
 max_batch_size = 5
 max_batch_timeout = 30
+max_retries = 3
 dead_letter_queue = "standard-dead-letter-prod"
 
 [[env.production.queues.consumers]]
 queue = "standard-agent-run-prod"
 max_batch_size = 5
 max_batch_timeout = 60
+max_retries = 5
 dead_letter_queue = "standard-dead-letter-prod"
 
 [[env.production.queues.consumers]]

@@ -9,7 +9,7 @@
 
 | Gate | Status | Evidência | Data |
 |------|--------|-----------|------|
-| P0 Auth & RBAC | ✅ PASS | Better Auth ativo, RBAC session-based, approvals por gate | 2026-05-26 |
+| P0 Auth & RBAC | ✅ PASS | Standard Native Auth ativo, RBAC session-based, approvals por gate | 2026-05-26 |
 | P0 Tenant Isolation | ✅ PASS | Todos os repos filtram por tenant_id | 2026-05-26 |
 | P0 Approval Gates | ✅ PASS | SoA/Gap/Maturity/POA&M exigem approval gate | 2026-05-26 |
 | P0 Secrets | ✅ PASS | Nenhum secret no repo; .env no .gitignore | 2026-05-25 |
@@ -38,7 +38,7 @@
 
 | Item | Status | Evidência |
 |------|--------|-----------|
-| Better Auth ativo em produção | ✅ | `index.ts` — auth.handler() ativo |
+| Standard Native Auth ativo em produção | ✅ | `index.ts` — auth.handler() ativo |
 | MockAuthProvider desabilitado | ✅ | `index.ts` — sem MOCK_AUTH flag; DB obrigatório |
 | RBAC por endpoint crítico revisado | ✅ | `approvals.routes.ts` — `gateRoleMap` session-based |
 | API keys escopadas por tenant | ✅ | `api-keys.routes.ts` — todas as rotas filtram por `organizationId` |

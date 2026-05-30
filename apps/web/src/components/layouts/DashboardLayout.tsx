@@ -1,15 +1,15 @@
 import { useState, useCallback, useEffect, useMemo } from "react"
 import { Outlet, Link, useLocation } from "react-router-dom"
-import { useSession, signOut, authClient } from "@/lib/auth-client"
+import { useSession, signOut } from "@/lib/auth-client"
 import {
-  LayoutDashboard, Settings, LogOut, Loader2, FileText, Search,
-  BarChart3, Shield, Puzzle, ClipboardList, Menu, X,
+  LayoutDashboard, Settings, LogOut, Loader2, Puzzle, Menu, X,
   Building2, Key, Users, ScrollText, HeartPulse, ChevronRight,
   Bell
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { motion, AnimatePresence } from "framer-motion"
 import { api } from "@/lib/api"
+import { API_URL } from "@/lib/config"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 type NavItem = {
@@ -21,17 +21,12 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   { name: "Overview", path: "/dashboard", icon: LayoutDashboard, end: true },
-  { name: "Assessments", path: "/dashboard/assessments", icon: ClipboardList },
-  { name: "Documents", path: "/dashboard/documents", icon: FileText },
-  { name: "Gap Analysis", path: "/dashboard/gap-analysis", icon: Search },
-  { name: "Reports", path: "/dashboard/reports", icon: BarChart3 },
-  { name: "SCF Catalog", path: "/dashboard/scf-catalog", icon: Shield },
   { name: "SDK & Docs", path: "/dashboard/sdk", icon: Puzzle },
 ]
 
 const adminItems: NavItem[] = [
   { name: "Organizations", path: "/dashboard/organizations", icon: Building2 },
-  { name: "API Keys", path: "/dashboard/licenses", icon: Key },
+  { name: "API Keys", path: "/dashboard/api-keys", icon: Key },
   { name: "Users", path: "/dashboard/users", icon: Users },
   { name: "Audit Logs", path: "/dashboard/audit-logs", icon: ScrollText },
   { name: "System Health", path: "/dashboard/system-health", icon: HeartPulse },
@@ -40,16 +35,10 @@ const adminItems: NavItem[] = [
 /** Maps route paths to page titles for the sticky topbar */
 const routeTitles: Record<string, string> = {
   "/dashboard": "Overview",
-  "/dashboard/assessments": "Assessments",
-  "/dashboard/documents": "Documents",
-  "/dashboard/gap-analysis": "Gap Analysis",
-  "/dashboard/reports": "Reports",
-  "/dashboard/scf-catalog": "SCF Catalog",
-  "/dashboard/agent-runs": "Agent Runs",
   "/dashboard/sdk": "SDK & Docs",
   "/dashboard/settings": "Settings",
   "/dashboard/organizations": "Organizations",
-  "/dashboard/licenses": "API Keys",
+  "/dashboard/api-keys": "API Keys",
   "/dashboard/users": "Users",
   "/dashboard/audit-logs": "Audit Logs",
   "/dashboard/system-health": "System Health",
@@ -70,7 +59,7 @@ function NavLinks({ items, currentPath, onNavigate }: {
         return (
           <Link key={item.name} to={item.path} onClick={onNavigate}>
             <div
-              className={`nav-magnetic group flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-medium transition-all duration-150 ${
+              className={`nav-magnetic group flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-medium transition-all duration-150 cursor-pointer ${
                 isActive
                   ? "nav-active-pill bg-primary/10 text-primary"
                   : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
@@ -114,14 +103,14 @@ export function DashboardLayout() {
     async function autoActivateOrg() {
       if (isPending || session?.session?.activeOrganizationId) return
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/auth/organization/list`, {
+        const res = await fetch(`${API_URL}/api/v1/users/me/organizations`, {
           credentials: "include",
         })
         if (!res.ok) return
         const data = await res.json()
-        const orgs: Array<{ id: string }> = Array.isArray(data) ? data : (data?.data ?? [])
+        const orgs: Array<{ id: string }> = Array.isArray(data?.data) ? data.data : []
         if (orgs.length > 0) {
-          await authClient.organization.setActive({ organizationId: orgs[0].id })
+          await api(`/api/v1/users/me/organizations/${orgs[0].id}/activate`, { method: "POST" })
           // Force session refresh so API calls pick up the new tenant header
           window.location.reload()
         }
@@ -148,10 +137,10 @@ export function DashboardLayout() {
     if (!session) return
     let mounted = true
     setOrgsLoading(true)
-    api<any>("/api/auth/organization/list", { method: "GET" })
+    api<any>("/api/v1/users/me/organizations", { method: "GET" })
       .then(res => {
         if (!mounted) return
-        const dataArray = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : [])
+        const dataArray = Array.isArray(res?.data) ? res.data : []
         setOrgs(dataArray)
       })
       .catch(console.error)
@@ -163,7 +152,7 @@ export function DashboardLayout() {
 
   const handleOrgChange = async (orgId: string) => {
     try {
-      await authClient.organization.setActive({ organizationId: orgId })
+      await api(`/api/v1/users/me/organizations/${orgId}/activate`, { method: "POST" })
       window.location.reload()
     } catch (e) {
       console.error("Failed to activate organization", e)
@@ -181,7 +170,9 @@ export function DashboardLayout() {
   if (!session?.user) return null
 
   const userInitial = session.user.name?.charAt(0).toUpperCase() || "?"
-  const userRole = (session.user as any).role || "member"
+  const userRole = (session.user as any).platformAdmin
+    ? "Platform Admin"
+    : (session.user as any).role || "member"
 
   const sidebarContent = (
     <>
@@ -229,8 +220,9 @@ export function DashboardLayout() {
           <Button
             variant="ghost"
             size="sm"
-            className="text-muted-foreground hover:text-destructive text-xs"
+            className="text-muted-foreground hover:text-destructive text-xs cursor-pointer"
             onClick={() => signOut()}
+            aria-label="Sign out"
           >
             <LogOut className="h-3.5 w-3.5" />
           </Button>
@@ -340,7 +332,7 @@ function DesktopTopbar({
   onOrgChange: (orgId: string) => void
 }) {
   return (
-    <header className="hidden md:flex border-b border-border/50 bg-card/80 backdrop-blur-sm px-8 sticky top-0 z-30 h-14 items-center justify-between transition-all duration-200">
+    <header className="hidden md:flex border-b border-border/50 bg-card/80 backdrop-blur-xl px-8 sticky top-0 z-30 h-14 items-center justify-between transition-all duration-200">
       <div className="flex-1 flex items-center">
         {title && <h1 className="text-xl font-brand font-semibold tracking-tight">{title}</h1>}
       </div>
@@ -348,7 +340,7 @@ function DesktopTopbar({
         {/* Organization Selector */}
         <div className="w-[200px]">
           <Select value={activeOrgId || undefined} onValueChange={onOrgChange}>
-            <SelectTrigger className="h-9 bg-transparent border-border/50 hover:bg-muted/50 transition-colors">
+            <SelectTrigger className="h-9 bg-transparent border-border/50 hover:bg-muted/50 transition-colors cursor-pointer">
               <div className="flex items-center gap-2 text-sm text-foreground">
                 <Building2 className="h-4 w-4 opacity-70" />
                 <SelectValue placeholder={orgsLoading ? "Loading..." : "Select Organization"} />
@@ -367,11 +359,11 @@ function DesktopTopbar({
           </Select>
         </div>
 
-        <button className="bell-spell relative h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors">
+        <button className="bell-spell relative h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors cursor-pointer" aria-label="Notifications">
           <Bell className="h-4 w-4" />
           <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-primary" />
         </button>
-        <div className="avatar-glow h-7 w-7 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground text-[10px] font-bold cursor-pointer hover:scale-105 transition-transform">
+        <div className="avatar-glow h-7 w-7 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground text-[10px] font-bold transition-all" aria-label={`User avatar: ${userInitial}`}>
           {userInitial}
         </div>
       </div>

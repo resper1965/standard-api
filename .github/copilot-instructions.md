@@ -8,8 +8,9 @@ Standard is an API-first agentic GRC platform. Monorepo with TypeScript, Cloudfl
 - **Language**: TypeScript strict mode
 - **Build**: pnpm workspaces, turbo
 - **Validation**: Zod schemas (`@standard/schemas`)
-- **Database**: Drizzle ORM + Neon PostgreSQL
-- **Auth**: Better Auth + custom RBAC
+- **Database**: Drizzle ORM + Neon PostgreSQL (Serverless)
+- **Auth**: Standard Native Auth (Edge Hash) + custom RBAC
+- **Styling**: Tailwind CSS v4 + PostCSS
 - **AI**: OpenAI gpt-4o via Cloudflare AI Gateway
 
 ## Project Structure

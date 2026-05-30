@@ -17,7 +17,7 @@ export function TenantSubscriptionTab() {
 
   useEffect(() => {
     async function fetchTenant() {
-      // The active Organization in Better Auth maps directly to the Tenant in our unified SaaS schema
+      // The active Organization in Standard Native Auth maps directly to the Tenant in our unified SaaS schema
       const orgId = (session?.session as any)?.activeOrganizationId;
       if (!orgId) {
         setLoading(false);

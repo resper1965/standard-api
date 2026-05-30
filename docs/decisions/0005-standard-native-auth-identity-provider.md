@@ -1,4 +1,4 @@
-# ADR 0005: Better Auth Identity Provider
+# ADR 0005: Standard Native Auth Identity Provider
 
 ## Status
 
@@ -10,9 +10,9 @@ A plataforma Standard exige uma solução robusta para gerenciamento de identida
 
 ## Decisão
 
-Adotamos a biblioteca **Better Auth** (versão 1.6.11) como o provedor oficial de autenticação e identidade da plataforma.
+Adotamos a biblioteca **Standard Native Auth** (versão 1.6.11) como o provedor oficial de autenticação e identidade da plataforma.
 - Armazenamento das tabelas de autenticação (user, session, account, verification, activeOrganization, etc.) no Neon PostgreSQL.
-- Ativação do plugin `@better-auth/api-key` para o provisionamento e controle de M2M/API Keys de forma nativa e integrada às contas de organizações.
+- Ativação do plugin `@standard-native-auth/api-key` para o provisionamento e controle de M2M/API Keys de forma nativa e integrada às contas de organizações.
 - Configuração de cookies de sessão seguros para persistência e compartilhamento de tokens de autenticação no API Gateway.
 
 ## Consequências

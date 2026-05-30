@@ -22,7 +22,7 @@ Todo comportamento de valor está na API. O frontend é apenas um consumidor. In
 | Camada | Tecnologia |
 |---|---|
 | API Gateway | Cloudflare Workers (roteamento via `RouteDefinition`) |
-| Auth | Better Auth 1.6.11 — Drizzle adapter, plugin `organization`, plugin `admin` |
+| Auth | Standard Native Auth 1.6.11 — Drizzle adapter, plugin `organization`, plugin `admin` |
 | Banco transacional | Neon PostgreSQL via Drizzle ORM |
 | Storage | Cloudflare R2 (documentos de cliente, evidências, artefatos, relatórios) |
 | Filas | Cloudflare Queues (processamento assíncrono, ingestão, fan-out) |
@@ -37,7 +37,7 @@ Todo comportamento de valor está na API. O frontend é apenas um consumidor. In
 
 ## Endpoints Principais
 
-Todos os endpoints de aplicação seguem o prefixo `/api/v1`. O Better Auth opera em `/api/auth/*`.
+Todos os endpoints de aplicação seguem o prefixo `/api/v1`. O Standard Native Auth opera em `/api/auth/*`.
 
 ### Health
 
@@ -45,13 +45,13 @@ Todos os endpoints de aplicação seguem o prefixo `/api/v1`. O Better Auth oper
 |---|---|---|
 | `GET` | `/health` | Saúde básica com DB probe |
 | `GET` | `/api/v1/health` | Saúde operacional com métricas (janela 1h) |
-| `GET` | `/api/health/auth` | Saúde do stack Better Auth (DB + latência) — retorna 200 ou 503 |
+| `GET` | `/api/health/auth` | Saúde do stack Standard Native Auth (DB + latência) — retorna 200 ou 503 |
 
 ### Auth
 
 | Prefixo | Descrição |
 |---|---|
-| `/api/auth/*` | Better Auth — sign-in, sign-up, session, organization, admin |
+| `/api/auth/*` | Standard Native Auth — sign-in, sign-up, session, organization, admin |
 
 ### Assessments e Lifecycle
 

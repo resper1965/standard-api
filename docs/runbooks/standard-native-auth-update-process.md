@@ -1,8 +1,8 @@
-# Runbook: Processo de Update do Better Auth
+# Runbook: Processo de Update do Standard Native Auth
 
-**Regra:** Nunca atualizar o `better-auth` sem seguir este processo.  
+**Regra:** Nunca atualizar o `standard-native-auth` sem seguir este processo.  
 **Motivo:** Minor versions introduzem breaking changes silenciosos em adapters e plugins.  
-**Referência:** [ADR-AUTH-001 — Regra 3](../decisions/adr-auth-better-auth-behaviors.md)
+**Referência:** [ADR-AUTH-001 — Regra 3](../decisions/adr-auth-standard-native-auth-behaviors.md)
 
 ---
 
@@ -19,14 +19,14 @@
 ### Passo 1 — Criar branch isolada
 
 ```bash
-git checkout -b chore/better-auth-X.Y.Z
+git checkout -b chore/standard-native-auth-X.Y.Z
 ```
 
 **Nunca fazer update direto na `main`.**
 
 ### Passo 2 — Ler o CHANGELOG antes de qualquer mudança
 
-Acessar: https://github.com/better-auth/better-auth/releases
+Acessar: https://github.com/standard-native-auth/standard-native-auth/releases
 
 Focar em mudanças que afetam:
 - `adapters/drizzle` — especialmente field mapping, schema parsing
@@ -42,7 +42,7 @@ Se houver breaking change relevante: discutir com o time antes de prosseguir.
 
 Via Neon Console ou CLI:
 ```bash
-neon branches create --name test/better-auth-X.Y.Z --project-id <PROJECT_ID>
+neon branches create --name test/standard-native-auth-X.Y.Z --project-id <PROJECT_ID>
 ```
 
 Anotar a `DATABASE_URL` do branch criado.
@@ -53,7 +53,7 @@ Em `packages/auth/package.json`:
 ```json
 {
   "dependencies": {
-    "better-auth": "X.Y.Z"
+    "standard-native-auth": "X.Y.Z"
   }
 }
 ```
@@ -80,7 +80,7 @@ pnpm test --filter=apps/api-gateway -- tests/auth/
 ```
 
 **Qualquer falha = parar aqui.** Investigar a causa antes de prosseguir.  
-Se a causa for um breaking change do Better Auth:
+Se a causa for um breaking change do Standard Native Auth:
 1. Documentar no ADR
 2. Aplicar o fix
 3. Rodar os testes novamente
@@ -104,7 +104,7 @@ npx wrangler deploy -c infra/cloudflare/wrangler.api-gateway.toml -e staging
 ### Passo 9 — Atualizar o ADR com novos comportamentos descobertos
 
 Se qualquer comportamento novo foi descoberto durante o update:
-1. Abrir `docs/decisions/adr-auth-better-auth-behaviors.md`
+1. Abrir `docs/decisions/adr-auth-standard-native-auth-behaviors.md`
 2. Adicionar como nova regra documentada
 3. Atualizar a tabela "Histórico de Atualizações"
 
@@ -113,7 +113,7 @@ Se qualquer comportamento novo foi descoberto durante o update:
 ```bash
 git add packages/auth/package.json pnpm-lock.yaml
 # + quaisquer fixes para breaking changes
-git commit -m "chore(auth): update better-auth from A.B.C to X.Y.Z
+git commit -m "chore(auth): update standard-native-auth from A.B.C to X.Y.Z
 
 CHANGELOG highlights:
 - [item relevante 1]
@@ -144,7 +144,7 @@ Verificar `GET /api/health/auth` em production após o deploy.
 
 Via Neon Console ou CLI:
 ```bash
-neon branches delete test/better-auth-X.Y.Z --project-id <PROJECT_ID>
+neon branches delete test/standard-native-auth-X.Y.Z --project-id <PROJECT_ID>
 ```
 
 ### Passo 13 — Registrar no histórico
@@ -155,6 +155,6 @@ Atualizar a tabela "Histórico de Updates" acima com data, versões, responsáve
 
 ## Referências
 
-- [ADR-AUTH-001](../decisions/adr-auth-better-auth-behaviors.md)
+- [ADR-AUTH-001](../decisions/adr-auth-standard-native-auth-behaviors.md)
 - [Runbook de Rotação de Secret](./auth-secret-rotation.md)
-- [Better Auth Releases](https://github.com/better-auth/better-auth/releases)
+- [Standard Native Auth Releases](https://github.com/standard-native-auth/standard-native-auth/releases)

@@ -6,7 +6,7 @@ This guide details how external applications (such as independent Privacy System
 
 The Standard API assumes secure external B2B integration using **API Keys**. It is strictly a Machine-to-Machine (M2M) flow, meaning there are no interactive login prompts or redirect flows required.
 
-1.  **Obtain a Key:** Generates an API key via the dashboard (`Settings > Developers > API Keys`) or using the core `/api/v1/organizations/:orgId/api-keys` route with a valid interactive Administrator token.
+1.  **Obtain a Key:** Generates an API key via the Developer Console (`Settings > Developers > API Keys`) or using the core `/api/v1/api-keys` route with a valid interactive Administrator token.
 2.  **Pass the Token:** External systems must pass the token precisely in the `Authorization` header as a Bearer token.
     *   *Example prefix:* `Bearer standard_live_...`
 
@@ -80,7 +80,7 @@ POST /api/v1/tenants
 ```
 
 ### 2. Issuing an Organization
-Organizations group assessments beneath a Tenant. M2M API Keys are issued bound to a specific Organization.
+Organizations (Sub-Tenants) group assessments beneath your Root Tenant. M2M API Keys are issued globally to your Root Tenant, but assessments are bound to specific Organizations.
 ```http
 POST /api/v1/organizations
 {
@@ -91,11 +91,11 @@ POST /api/v1/organizations
 ```
 
 ### 3. Key Governance
-Administrators can programmatically list, issue, and revoke keys (the "Chaves") mapped to organizations. M2M endpoints themselves are forbidden from creating new keys to prevent privilege escalation.
+Administrators can programmatically list, issue, and revoke keys mapped to their Root Tenant. M2M endpoints themselves are forbidden from creating new keys to prevent privilege escalation.
 ```http
-GET    /api/v1/organizations/:orgId/api-keys
-POST   /api/v1/organizations/:orgId/api-keys
-DELETE /api/v1/organizations/:orgId/api-keys/:keyId
+GET    /api/v1/api-keys
+POST   /api/v1/api-keys
+DELETE /api/v1/api-keys/:keyId
 ```
 
 ## RBAC Levels & Security Borders

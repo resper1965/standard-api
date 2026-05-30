@@ -28,7 +28,7 @@ export const resolveTenantContext = async (context: RequestContext, protectedRou
     throw new ApiError("TENANT_CONTEXT_REQUIRED", "Tenant context is required.", 400);
   }
 
-  // Resolve Better Auth Org text ID to standard UUID if resolver is available
+  // Resolve Standard Native Auth Org text ID to standard UUID if resolver is available
   let resolvedTenantId = rawTenantId;
   let resolvedOrgId = context.params.organizationId;
   if (context.deps.resolveTenantContext && rawTenantId) {

@@ -3,7 +3,7 @@ import { jwtVerify, createRemoteJWKSet, importSPKI, type JWTPayload } from "jose
 import type { AuthenticateInput, AuthProvider } from "./auth-provider";
 
 /**
- * @deprecated Use `@standard/auth` (Better Auth) instead.
+ * @deprecated Use `@standard/auth` (Standard Native Auth) instead.
  * This provider will be removed in v0.3.0.
  *
  * JWT Auth Provider configuration.

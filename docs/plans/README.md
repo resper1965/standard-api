@@ -9,8 +9,8 @@
 
 | Arquivo | Descrição | Status |
 |---------|-----------|--------|
-| [2026-05-25-better-auth-audit-hardening.md](./2026-05-25-better-auth-audit-hardening.md) | Auditoria e Hardening do Better Auth — 9 tasks | ✅ Concluído (2026-05-25) |
-| [2026-05-25-better-auth-audit-hardening-design.md](./2026-05-25-better-auth-audit-hardening-design.md) | Design document do plano de auditoria Better Auth | ✅ Concluído (2026-05-25) |
+| [2026-05-25-standard-native-auth-audit-hardening.md](./2026-05-25-standard-native-auth-audit-hardening.md) | Auditoria e Hardening do Standard Native Auth — 9 tasks | ✅ Concluído (2026-05-25) |
+| [2026-05-25-standard-native-auth-audit-hardening-design.md](./2026-05-25-standard-native-auth-audit-hardening-design.md) | Design document do plano de auditoria Standard Native Auth | ✅ Concluído (2026-05-25) |
 
 ---
 

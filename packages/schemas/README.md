@@ -38,7 +38,7 @@ pnpm add @standard/schemas
 | `./reporting` | Report generation request/response |
 | `./webhooks` | Outbound webhook payload shapes |
 | `./db/schema` | Drizzle ORM table definitions (PostgreSQL) |
-| `./db/auth-schema` | Better Auth table definitions |
+| `./db/auth-schema` | Standard Native Auth table definitions |
 
 ## Rules
 

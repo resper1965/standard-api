@@ -32,21 +32,20 @@ Artefatos suportam `scope`, `soa`, `gap_analysis`, `maturity_assessment`, `poam`
 
 Toda request recebe ou reutiliza `x-trace-id`. Erros, responses críticas, lifecycle events, approvals e artifact versions carregam `trace_id`. O audit log real ainda é placeholder, mas a interface de audit já existe.
 
-## Placeholders
+## Decisões Implementadas
 
-- Auth real, JWT/API key e hostname-based tenancy.
-- RBAC/ABAC real por membership/role.
-- Persistência PostgreSQL real nos adapters.
+- Auth implementado via Standard Native Auth v1.6.11 (ADR 0005) com modelo dual: sessões (cookies) para Platform Console e M2M API Keys (SHA-256 hash) para acesso programático.
+- RBAC/ABAC baseado em roles (owner/admin/member/viewer) com permissions por recurso.
+- Persistência PostgreSQL via Drizzle ORM (ADR 0006).
 - Rate limiting/quota por tenant.
-- SCF real e parser SCF.
-- Ingestão real de documentos.
+- SCF real e parser SCF integrado.
 - OpenAPI gerado automaticamente a partir de schemas.
 
 ## Decisões em Aberto
 
-- Escolher se o API gateway adotará Hono/itty-router ou manterá roteador Fetch nativo.
-- Definir política de autenticação oficial e claims obrigatórias.
+- ~~Escolher se o API gateway adotará Hono/itty-router ou manterá roteador Fetch nativo.~~ **Decidido:** Hono como framework do API gateway.
+- ~~Definir política de autenticação oficial e claims obrigatórias.~~ **Decidido:** Standard Native Auth v1.6.11 (ADR 0005).
 - Definir granularidade de RBAC para approvals, transitions e artifacts.
-- Substituir mocks por repositories PostgreSQL com transações.
+- Substituir mocks restantes por repositories PostgreSQL com transações.
 - Gerar OpenAPI completo a partir de Zod ou manter documentação manual nesta fase.
 
