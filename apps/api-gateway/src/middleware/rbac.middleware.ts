@@ -13,7 +13,10 @@ import type { RequestContext } from "../http";
 export const isPlatformAdmin = (context: RequestContext): boolean => {
   // platformAdmin is explicitly typed in RequestContext.session.user (http.ts)
   // and populated by auth.middleware.ts from the Standard Native Auth `additionalFields.platformAdmin`.
-  return context.session?.user?.platformAdmin === true;
+  return (
+    context.session?.user?.platformAdmin === true ||
+    (context.session?.user as any)?.platform_admin === true
+  );
 };
 
 /**

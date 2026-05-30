@@ -153,7 +153,7 @@ export const resolveAuthContext = async (
           email: user.email,
           name: user.name,
           role: user.role ?? "viewer",
-          platformAdmin: user.platformAdmin ?? false,
+          platformAdmin: user.platformAdmin ?? (user as any).platform_admin ?? false,
         },
         session: {
           id: session.id,
