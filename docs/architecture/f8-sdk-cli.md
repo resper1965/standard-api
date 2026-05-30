@@ -1,6 +1,6 @@
 ---
 title: "F8: SDK + CLI"
-description: "TypeScript SDK and CLI for programmatic consumption of the Standard GRC API"
+description: "TypeScript SDK and CLI for programmatic consumption of the Standard API"
 ---
 
 # F8: SDK + CLI

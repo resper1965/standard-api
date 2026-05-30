@@ -10,18 +10,11 @@ import { lazy, Suspense } from "react"
 import { ErrorPage } from "./components/ErrorPage"
 
 // Lazy-load heavy pages
-const Assessments = lazy(() => import("./pages/Assessments").then(m => ({ default: m.AssessmentsPage })))
-const AssessmentDetail = lazy(() => import("./pages/AssessmentDetail").then(m => ({ default: m.AssessmentDetail })))
-const Documents = lazy(() => import("./pages/Documents").then(m => ({ default: m.DocumentsPage })))
-const GapAnalysis = lazy(() => import("./pages/GapAnalysis").then(m => ({ default: m.GapAnalysisPage })))
-const Reports = lazy(() => import("./pages/Reports").then(m => ({ default: m.ReportsPage })))
-const ScfCatalog = lazy(() => import("./pages/ScfCatalog").then(m => ({ default: m.ScfCatalogPage })))
 const SdkPage = lazy(() => import("./pages/dashboard/sdk/SdkPage").then(m => ({ default: m.SdkPage })))
-const AgentRuns = lazy(() => import("./pages/AgentRuns").then(m => ({ default: m.AgentRunsPage })))
+const ApiKeysPage = lazy(() => import("./pages/dashboard/api-keys/ApiKeysPage").then(m => ({ default: m.ApiKeysPage })))
 
 // Admin pages
 const AdminOrganizations = lazy(() => import("./pages/admin/Organizations").then(m => ({ default: m.AdminOrganizations })))
-const AdminLicenses = lazy(() => import("./pages/admin/Licenses").then(m => ({ default: m.AdminLicenses })))
 const AdminUsers = lazy(() => import("./pages/admin/Users").then(m => ({ default: m.AdminUsers })))
 const AdminAuditLogs = lazy(() => import("./pages/admin/AuditLogs").then(m => ({ default: m.AdminAuditLogs })))
 const AdminSystemHealth = lazy(() => import("./pages/admin/SystemHealth").then(m => ({ default: m.AdminSystemHealth })))
@@ -79,19 +72,12 @@ export const routes = [
                 loader: requireAuth,
                 children: [
                     { index: true, element: <OverviewPage /> },
-                    { path: "assessments", element: <SuspenseWrap><Assessments /></SuspenseWrap> },
-                    { path: "assessments/:assessmentId", element: <SuspenseWrap><AssessmentDetail /></SuspenseWrap> },
-                    { path: "documents", element: <SuspenseWrap><Documents /></SuspenseWrap> },
-                    { path: "gap-analysis", element: <SuspenseWrap><GapAnalysis /></SuspenseWrap> },
-                    { path: "reports", element: <SuspenseWrap><Reports /></SuspenseWrap> },
-                    { path: "scf-catalog", element: <SuspenseWrap><ScfCatalog /></SuspenseWrap> },
-                    { path: "agent-runs", element: <SuspenseWrap><AgentRuns /></SuspenseWrap> },
+                    { path: "api-keys", element: <SuspenseWrap><ApiKeysPage /></SuspenseWrap> },
                     { path: "sdk", element: <SuspenseWrap><SdkPage /></SuspenseWrap> },
 
                     { path: "settings", element: <SettingsPage /> },
                     // Admin
                     { path: "organizations", element: <SuspenseWrap><AdminOrganizations /></SuspenseWrap> },
-                    { path: "licenses", element: <SuspenseWrap><AdminLicenses /></SuspenseWrap> },
                     { path: "users", element: <SuspenseWrap><AdminUsers /></SuspenseWrap> },
                     { path: "audit-logs", element: <SuspenseWrap><AdminAuditLogs /></SuspenseWrap> },
                     { path: "system-health", element: <SuspenseWrap><AdminSystemHealth /></SuspenseWrap> },

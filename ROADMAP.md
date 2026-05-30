@@ -27,9 +27,9 @@
 
 **Critérios de saída**:
 - [ ] `pnpm lint` + `pnpm typecheck` sem erros
-- [ ] `pnpm test` todos passando
-- [ ] Auth real (Better Auth) validado em staging Cloudflare
-- [ ] Rate limiting real implementado (não placeholder)
+- [ ] Drizzle ORM conectado ao Neon (driver `@neondatabase/serverless`)
+- [ ] Auth real (Standard Native Auth) validado em staging Cloudflare
+- [ ] Mapeamento GRC (Tenants e Orgs) estabelecido (não placeholder)
 - [ ] Cloudflare resources staging separados (R2, Queues, Vectorize)
 - [ ] Backup/restore PostgreSQL documentado e testado
 - [ ] `feature/architecture-refactoring` avaliada (merge ou descarte)

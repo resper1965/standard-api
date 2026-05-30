@@ -175,6 +175,7 @@ export const createDrizzleRepositories = (db: DbClient, env?: Env): AppDependenc
   const reporting = { repositories: reportRepositories, soa, gapAnalysis, poam, scf };
 
   return {
+    _db: db,
     tenants: createDrizzleTenantRepository(db),
     organizations: createDrizzleOrganizationRepository(db),
     members: createDrizzleMembershipRepository(db),
@@ -207,6 +208,6 @@ export const createDrizzleRepositories = (db: DbClient, env?: Env): AppDependenc
         displayName,
       }).returning();
       return { id: inserted!.id };
-    }
+    },
   };
 };

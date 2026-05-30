@@ -59,6 +59,8 @@ import { flowTemplateRoutes } from "./routes/flow-templates.routes";
 import { governanceRefRoutes } from "./routes/governance-ref.routes";
 import { ropaRoutes } from "./routes/ropa.routes";
 import { tpraRoutes } from "./routes/tpra.routes";
+import { userOrgsRoutes } from "./routes/user-orgs.routes";
+import { adminUsersRoutes } from "./routes/admin-users.routes";
 
 export const routes: RouteDefinition[] = [
   ...openapiRoutes,
@@ -90,6 +92,7 @@ export const routes: RouteDefinition[] = [
   ...webhookRoutes,
   ...privacyRoutes,
   ...dataSubjectRoutes,   // LGPD/GDPR data subject rights: /me/data-export, /me/account
+  ...userOrgsRoutes,       // User-scoped org listing & activation: /users/me/organizations
   ...socRoutes,
   ...executiveRoutes,
   ...dashboardRoutes,
@@ -107,6 +110,7 @@ export const routes: RouteDefinition[] = [
   ...governanceRefRoutes,   // /api/v1/governance/{maturity-levels,bg-check-types,...}
   ...ropaRoutes,            // /api/v1/ropa/{data-subjects,data-categories,...}
   ...tpraRoutes,            // /api/v1/tpra/{questionnaires,tiers,score,...}
+  ...adminUsersRoutes,      // /api/v1/admin/users — platform admin user management
 ];
 
 const matchRoute = (routePath: string, actualPath: string): Record<string, string> | null => {
@@ -247,7 +251,7 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
       const startedAt = Date.now();
 
       // ── Auth context resolution ──────────────────────────────
-      // Use Better Auth session if available, fallback to legacy headers
+      // Use Standard Native Auth session if available, fallback to legacy headers
       const authRequired = route.authRequired ?? (Boolean(route.protected) || Boolean(route.requireActor) || Boolean(route.permissions?.length));
       if (auth) {
         await resolveAuthContext(context, auth, authRequired);
@@ -266,32 +270,23 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
           if (authCtx) context.auth = authCtx;
           // Populate a minimal mock session so session.user.role RBAC checks work in dev/test.
           // Priority: x-standard-mock-role header > role from Bearer header > "admin" default.
-          // We map security-package roles to auth-package roles (approval gateRoleMap uses owner/admin/member).
           const overrideRole = request.headers.get("x-standard-mock-role");
           const authRoles = authCtx?.roles ?? [];
           const firstAuthRole = authRoles[0] as string | undefined;
-          const securityToSessionRole: Record<string, string> = {
-            platform_admin: "platform_admin",
-            tenant_admin: "admin",
-            organization_admin: "admin",
-            assessment_owner: "owner",
-            assessor: "member",
-            reviewer: "viewer",
-            approver: "viewer",
-            auditor_readonly: "viewer",
-            integration_service: "viewer",
-            support_readonly: "viewer",
-            system: "platform_admin"
-          };
-          const mockRole = overrideRole
-            ?? (firstAuthRole ? (securityToSessionRole[firstAuthRole] ?? firstAuthRole) : "admin");
+          // We pass security-package roles through directly — they match
+          // STANDARD_ROLE_PERMISSIONS keys in permissions.ts (GRC roles).
+          // Only "system" maps to special handling (platform_admin flag).
+          const isPlatAdmin = authRoles.includes("platform_admin" as any)
+            || authRoles.includes("system" as any)
+            || overrideRole === "platform_admin";
+          const mockRole = overrideRole ?? firstAuthRole ?? "admin";
           context.session = {
             user: {
               id: legacyActor,
               email: `${legacyActor}@mock.test`,
               name: "Mock Test Actor",
               role: mockRole,
-              platformAdmin: authRoles.includes("platform_admin" as any) || mockRole === "platform_admin"
+              platformAdmin: isPlatAdmin
             },
             session: { id: `mock-session-${legacyActor}` }
           };
@@ -300,14 +295,14 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
           throw new ApiError("UNAUTHORIZED", "Authentication is required for this operation.", 401);
         }
       } else {
-        // Production without Better Auth = always reject
+        // Production without Standard Native Auth = always reject
         if (authRequired) {
           throw new ApiError("UNAUTHORIZED", "Authentication provider is not configured.", 401);
         }
       }
 
       // Tenant is now derived from session.activeOrganizationId or legacy header
-      const tenantRequired = route.tenantRequired ?? (Boolean(route.protected) && !route.path.startsWith("/api/v1/scf") && !route.path.startsWith("/api/v1/admin/scf"));
+      const tenantRequired = route.tenantRequired ?? (Boolean(route.protected) && !route.path.startsWith("/api/v1/scf") && !route.path.startsWith("/api/v1/admin/scf") && !route.path.startsWith("/api/v1/admin/users") && !route.path.startsWith("/api/v1/admin/security") && !route.path.startsWith("/api/v1/admin/metrics") && !route.path.startsWith("/api/v1/admin/usage") && !route.path.startsWith("/api/v1/users/me"));
       await resolveTenantContext(context, tenantRequired);
 
       await assertRbac(context, route.permissions);

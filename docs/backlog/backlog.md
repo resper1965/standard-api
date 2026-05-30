@@ -70,7 +70,7 @@
 | 3.3 | API Keys Self-Service (criação, revogação, monitoramento) | P1 | pendente | pendencias |
 | 3.4 | Billing/Plans dashboard | P2 | concluído | plano novo |
 | 3.5 | Onboarding wizard | P2 | pendente | plano novo |
-| 3.6 | Separação Master Admin vs Tenant Admin vs User | P0 | concluído \| 2026-05-25 | Better Auth: admin() plugin (platform) + organization roles (tenant) |
+| 3.6 | Separação Master Admin vs Tenant Admin vs User | P0 | concluído \| 2026-05-25 | Standard Native Auth: admin() plugin (platform) + organization roles (tenant) |
 | 3.7 | Backend endpoints faltantes (org update, invites, billing) | P1 | concluído | analysis |
 
 ---
@@ -99,7 +99,7 @@
 | Monorepo TypeScript com packages reutilizáveis | — | MVP |
 | API Gateway com rotas versionadas `/api/v1` | — | MVP |
 | State machine do lifecycle com approval gates | — | MVP |
-| Better Auth como identity provider | 1 | 2026-05 |
+| Standard Native Auth como identity provider | 1 | 2026-05 |
 | Neon PostgreSQL com Drizzle ORM | 1 | 2026-05 |
 | SCF official XLSX 2026.1.1 importado | 2 | 2026-05 |
 | QNRCS 2019 seed integrado | 2 | 2026-05 |
@@ -121,14 +121,14 @@
 | Artifact rejection com rastreabilidade completa | 2 | 2026-05-08 |
 | Immutability enforcement (já existente: assertVersionEditable) | 2 | 2026-05-08 |
 | LLM provider via AI Gateway (já existente: CloudflareAiGatewayAdapter) | 2 | 2026-05-08 |
-| **Better Auth Hardening** | | |
-| ADR-AUTH-001 — 8 regras comportamentais Better Auth documentadas | 1 | 2026-05-25 |
+| **Standard Native Auth Hardening** | | |
+| ADR-AUTH-001 — 8 regras comportamentais Standard Native Auth documentadas | 1 | 2026-05-25 |
 | fix: remover field mappings duplicados no Drizzle adapter (Bug 2) | 1 | 2026-05-25 |
 | fix: `required: false` em todos os `additionalFields` (Bug 1) | 1 | 2026-05-25 |
 | fix: remover `fieldName` de campos multi-palavra no org plugin (Bug 3) | 1 | 2026-05-25 |
-| Runbooks: rotação de secret + processo de update do Better Auth | 1 | 2026-05-25 |
+| Runbooks: rotação de secret + processo de update do Standard Native Auth | 1 | 2026-05-25 |
 | Smoke tests de auth: sign-in, session, org (13 campos), admin (15/15 ✅) | 1 | 2026-05-25 |
-| `/api/health/auth` — probe de DB do Better Auth (200/503) | 1 | 2026-05-25 |
+| `/api/health/auth` — probe de DB do Standard Native Auth (200/503) | 1 | 2026-05-25 |
 | CI gate em `deploy-production.yml` — bloqueia deploy se auth stack degradado | 1 | 2026-05-25 |
 | Logs estruturados de auth: 4 eventos com StructuredLogger (sem PII) | 1 | 2026-05-25 |
 | docs(context): STANDARD_API.md reescrito (removido Aegis/V2/Prisma) | 0 | 2026-05-25 |
@@ -143,7 +143,7 @@
 | feat: API Playground Scalar (/docs) com links para /docs/mcp | 2 | 2026-05-25 |
 | infra: custom domain standard-api.bekaa.eu configurado e deployado | 4 | 2026-05-25 |
 | ops: 3 monitores UptimeRobot criados (health, auth, docs) | 4 | 2026-05-25 |
-| P0: RBAC platform_admin (plugin admin Better Auth) | 0 | 2026-05-25 |
+| P0: RBAC platform_admin (plugin admin Standard Native Auth) | 0 | 2026-05-25 |
 | P0: Data retention cron job implementado | 1 | 2026-05-25 |
 | P0: Legal docs criados (privacy-policy, terms-of-service, dpa-template) | 4 | 2026-05-25 |
 | P0: Seed platform_admin (resper@bekaa.eu) | 0 | 2026-05-25 |

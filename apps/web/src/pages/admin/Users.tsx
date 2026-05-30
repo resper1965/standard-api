@@ -1,12 +1,29 @@
-import { useEffect, useState } from "react";
-import { authClient } from "../../lib/auth-client";
-import { Card, CardContent } from "../../components/ui/card";
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "../../components/ui/table";
+import { useEffect, useState, useMemo, useCallback } from "react";
+import { api } from "../../lib/api";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../components/ui/card";
+import {
+  Table, TableHeader, TableRow, TableHead, TableBody, TableCell,
+} from "../../components/ui/table";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
-import { Loader2, UserPlus, Pencil, Check, X, Shield, ShieldAlert, Ban, Trash2, UserCheck } from "lucide-react";
+import { Badge } from "../../components/ui/badge";
+import { Skeleton } from "../../components/ui/skeleton";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from "../../components/ui/dialog";
+import {
+  Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
+} from "../../components/ui/select";
+import {
+  Loader2, UserPlus, Pencil, ShieldAlert, Shield, Ban, Trash2, UserCheck,
+  Search, AlertTriangle, Users, RefreshCw, ShieldOff, Eye, EyeOff,
+} from "lucide-react";
 import { useToast } from "../../hooks/use-toast";
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
 
 type User = {
   id: string;
@@ -18,169 +35,444 @@ type User = {
   image?: string;
 };
 
-type EditingUser = {
-  id: string;
-  name: string;
-  role: string;
-};
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+/** Relative time formatter – e.g. "3 days ago", "just now" */
+function relativeTime(dateStr: string): string {
+  const now = Date.now();
+  const then = new Date(dateStr).getTime();
+  if (Number.isNaN(then)) return "—";
+  const diffMs = now - then;
+  const seconds = Math.floor(diffMs / 1_000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+  const months = Math.floor(days / 30);
+  const years = Math.floor(days / 365);
+
+  if (seconds < 60) return "just now";
+  if (minutes < 60) return `${minutes}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  if (days < 30) return `${days}d ago`;
+  if (months < 12) return `${months}mo ago`;
+  return `${years}y ago`;
+}
+
+/** Extract initials from a name string */
+function getInitials(name: string | undefined | null): string {
+  if (!name) return "?";
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  return (parts[0]?.[0] ?? "?").toUpperCase();
+}
+
+/** Score password strength 0-4 */
+function passwordStrength(pw: string): { score: number; label: string; color: string } {
+  let score = 0;
+  if (pw.length >= 8) score++;
+  if (pw.length >= 12) score++;
+  if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) score++;
+  if (/\d/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  score = Math.min(score, 4);
+  const labels: Record<number, { label: string; color: string }> = {
+    0: { label: "Too weak", color: "bg-destructive" },
+    1: { label: "Weak", color: "bg-destructive" },
+    2: { label: "Fair", color: "bg-amber-500" },
+    3: { label: "Good", color: "bg-emerald-500" },
+    4: { label: "Strong", color: "bg-emerald-500" },
+  };
+  return { score, ...labels[score] };
+}
+
+// ---------------------------------------------------------------------------
+// Sub-components
+// ---------------------------------------------------------------------------
+
+/** Avatar placeholder with initials */
+function UserAvatar({ name, banned }: { name?: string; banned?: boolean }) {
+  return (
+    <div
+      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold transition-colors duration-200 ${
+        banned
+          ? "bg-destructive/10 text-destructive"
+          : "bg-primary/10 text-primary"
+      }`}
+    >
+      {getInitials(name)}
+    </div>
+  );
+}
+
+/** Skeleton rows for loading state */
+function TableSkeleton({ rows = 6 }: { rows?: number }) {
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead className="w-[260px]">User</TableHead>
+          <TableHead>Role</TableHead>
+          <TableHead>Status</TableHead>
+          <TableHead>Joined</TableHead>
+          <TableHead className="text-right">Actions</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {Array.from({ length: rows }).map((_, i) => (
+          <TableRow key={i}>
+            <TableCell>
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-8 w-8 rounded-full" />
+                <div className="space-y-1.5">
+                  <Skeleton className="h-3.5 w-28" />
+                  <Skeleton className="h-3 w-36" />
+                </div>
+              </div>
+            </TableCell>
+            <TableCell><Skeleton className="h-5 w-16 rounded-full" /></TableCell>
+            <TableCell><Skeleton className="h-5 w-14 rounded-full" /></TableCell>
+            <TableCell><Skeleton className="h-3.5 w-16" /></TableCell>
+            <TableCell className="text-right">
+              <div className="flex justify-end gap-1">
+                <Skeleton className="h-7 w-7 rounded-md" />
+                <Skeleton className="h-7 w-7 rounded-md" />
+                <Skeleton className="h-7 w-7 rounded-md" />
+              </div>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
+}
+
+/** Password strength bar */
+function PasswordStrengthBar({ password }: { password: string }) {
+  const { score, label, color } = passwordStrength(password);
+  if (!password) return null;
+  return (
+    <div className="space-y-1.5 pt-1">
+      <div className="flex gap-1">
+        {[0, 1, 2, 3].map((i) => (
+          <div
+            key={i}
+            className={`h-1 flex-1 rounded-full transition-all duration-300 ${
+              i < score ? color : "bg-muted"
+            }`}
+          />
+        ))}
+      </div>
+      <p className="text-[11px] text-muted-foreground">{label}</p>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Main Component
+// ---------------------------------------------------------------------------
 
 export function AdminUsers() {
+  // ---- Data state ----------------------------------------------------------
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [editing, setEditing] = useState<EditingUser | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [insufficientPermissions, setInsufficientPermissions] = useState(false);
 
-  // Create user form
+  // ---- Search --------------------------------------------------------------
+  const [search, setSearch] = useState("");
+
+  // ---- Create modal --------------------------------------------------------
+  const [showCreate, setShowCreate] = useState(false);
   const [createName, setCreateName] = useState("");
   const [createEmail, setCreateEmail] = useState("");
   const [createPassword, setCreatePassword] = useState("");
   const [createRole, setCreateRole] = useState("user");
   const [creating, setCreating] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  // ---- Edit modal ----------------------------------------------------------
+  const [editUser, setEditUser] = useState<User | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editRole, setEditRole] = useState("user");
+  const [saving, setSaving] = useState(false);
+
+  // ---- Confirm dialog ------------------------------------------------------
+  const [confirmAction, setConfirmAction] = useState<{
+    type: "ban" | "unban" | "delete";
+    user: User;
+  } | null>(null);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+
+  // ---- General action loading (row-level) -----------------------------------
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   const { toast } = useToast();
 
-  const fetchUsers = async () => {
+  // ---- Data fetching -------------------------------------------------------
+
+  const fetchUsers = useCallback(async () => {
     setLoading(true);
     setError(null);
+    setInsufficientPermissions(false);
     try {
-      const res = await authClient.admin.listUsers({ query: { limit: 100 } });
-      if (res?.data?.users) {
-        setUsers(res.data.users as unknown as User[]);
-      } else if (res?.error) {
-        setError(res.error.message || "Admin API returned an error.");
+      const res = await api<{ data: User[]; total: number }>("/api/v1/admin/users?limit=200");
+      if (res?.data) {
+        setUsers(res.data);
       } else {
         setError("No user data returned from admin API.");
       }
     } catch (e: any) {
-      toast({ variant: "destructive", title: "Fetch failed", description: e?.message || "Failed to fetch users." });
-      setError(e?.message || "Failed to fetch users.");
+      const msg = e?.message || "Failed to fetch users.";
+      if (
+        msg.toLowerCase().includes("unauthorized") ||
+        msg.toLowerCase().includes("forbidden") ||
+        msg.toLowerCase().includes("permission")
+      ) {
+        setInsufficientPermissions(true);
+      }
+      setError(msg);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  useEffect(() => { fetchUsers(); }, []);
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
-  const startEdit = (u: User) => {
-    setEditing({ id: u.id, name: u.name || "", role: u.role || "user" });
-  };
+  // ---- Filtered list -------------------------------------------------------
 
-  const cancelEdit = () => setEditing(null);
+  const filteredUsers = useMemo(() => {
+    if (!search.trim()) return users;
+    const q = search.toLowerCase();
+    return users.filter(
+      (u) =>
+        (u.name || "").toLowerCase().includes(q) ||
+        (u.email || "").toLowerCase().includes(q),
+    );
+  }, [users, search]);
 
-  const saveEdit = async () => {
-    if (!editing) return;
-    setSaving(true);
-    try {
-      const currentUser = users.find(u => u.id === editing.id);
-      if (currentUser && editing.name !== currentUser.name) {
-        await authClient.admin.updateUser({ userId: editing.id, data: { name: editing.name } });
-      }
-      if (currentUser && editing.role !== currentUser.role) {
-        await authClient.admin.setRole({ userId: editing.id, role: editing.role });
-      }
-      await fetchUsers();
-      setEditing(null);
-      toast({ title: "User updated", description: "Changes saved successfully." });
-    } catch (e: any) {
-      toast({ variant: "destructive", title: "Save failed", description: e?.message || "Failed to save changes." });
-    } finally {
-      setSaving(false);
-    }
-  };
+  // ---- Handlers: Create ----------------------------------------------------
 
-  const toggleRole = (userId: string, currentRole: string) => {
-    const newRole = currentRole === "admin" ? "user" : "admin";
-    setEditing(prev => prev?.id === userId ? { ...prev, role: newRole } : prev);
+  const resetCreateForm = () => {
+    setCreateName("");
+    setCreateEmail("");
+    setCreatePassword("");
+    setCreateRole("user");
+    setShowPassword(false);
   };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setCreating(true);
     try {
-      const res = await authClient.admin.createUser({
-        name: createName,
-        email: createEmail,
-        password: createPassword,
-        role: createRole,
+      const res = await api<{ data: User }>("/api/v1/admin/users", {
+        method: "POST",
+        body: JSON.stringify({
+          name: createName,
+          email: createEmail,
+          password: createPassword,
+          role: createRole,
+        }),
       });
-      if (res?.error) {
-        toast({ variant: "destructive", title: "Creation failed", description: res.error.message || "Failed to create user." });
-      } else {
+      if (res?.data) {
         toast({ title: "User created", description: `${createEmail} was added successfully.` });
-        setShowCreateModal(false);
-        setCreateName(""); setCreateEmail(""); setCreatePassword(""); setCreateRole("user");
+        setShowCreate(false);
+        resetCreateForm();
         await fetchUsers();
       }
     } catch (e: any) {
-      toast({ variant: "destructive", title: "Creation failed", description: e?.message || "Failed to create user." });
+      toast({
+        variant: "destructive",
+        title: "Creation failed",
+        description: e?.message || "Failed to create user.",
+      });
     } finally {
       setCreating(false);
     }
   };
 
-  const handleBanToggle = async (u: User) => {
-    setActionLoading(u.id + ":ban");
+  // ---- Handlers: Edit ------------------------------------------------------
+
+  const openEdit = (u: User) => {
+    setEditUser(u);
+    setEditName(u.name || "");
+    setEditRole(u.role || "user");
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editUser) return;
+    setSaving(true);
     try {
-      if (u.banned) {
-        await authClient.admin.unbanUser({ userId: u.id });
-        toast({ title: "User unbanned", description: `${u.email} can now log in.` });
-      } else {
-        await authClient.admin.banUser({ userId: u.id, banReason: "Banned by admin" });
-        toast({ title: "User banned", description: `${u.email} has been banned.` });
-      }
+      // Update name and role in one PATCH call
+      await api(`/api/v1/admin/users/${editUser.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          ...(editName !== editUser.name ? { name: editName } : {}),
+          ...(editRole !== editUser.role ? { role: editRole } : {}),
+        }),
+      });
+      toast({ title: "User updated", description: "Changes saved successfully." });
+      setEditUser(null);
       await fetchUsers();
     } catch (e: any) {
-      toast({ variant: "destructive", title: u.banned ? "Unban failed" : "Ban failed", description: e?.message });
+      toast({
+        variant: "destructive",
+        title: "Save failed",
+        description: e?.message || "Failed to save changes.",
+      });
     } finally {
-      setActionLoading(null);
+      setSaving(false);
     }
   };
 
-  const handleDelete = async (u: User) => {
-    if (!window.confirm(`Delete user ${u.email}? This action cannot be undone.`)) return;
-    setActionLoading(u.id + ":delete");
+  // ---- Handlers: Confirm actions (ban / delete) ----------------------------
+
+  const executeConfirmAction = async () => {
+    if (!confirmAction) return;
+    const { type, user } = confirmAction;
+    setConfirmLoading(true);
     try {
-      await authClient.admin.deleteUser({ userId: u.id });
-      toast({ title: "User deleted", description: `${u.email} was permanently removed.` });
+      if (type === "ban") {
+        await api(`/api/v1/admin/users/${user.id}/ban`, {
+          method: "POST",
+          body: JSON.stringify({ reason: "Banned by admin" }),
+        });
+        toast({ title: "User banned", description: `${user.email} has been banned.` });
+      } else if (type === "unban") {
+        await api(`/api/v1/admin/users/${user.id}/unban`, { method: "POST" });
+        toast({ title: "User unbanned", description: `${user.email} can now log in.` });
+      } else if (type === "delete") {
+        await api(`/api/v1/admin/users/${user.id}`, { method: "DELETE" });
+        toast({ title: "User deleted", description: `${user.email} was permanently removed.` });
+      }
+      setConfirmAction(null);
       await fetchUsers();
     } catch (e: any) {
-      toast({ variant: "destructive", title: "Delete failed", description: e?.message || "Failed to delete user." });
+      toast({
+        variant: "destructive",
+        title: `${type.charAt(0).toUpperCase() + type.slice(1)} failed`,
+        description: e?.message || `Failed to ${type} user.`,
+      });
     } finally {
-      setActionLoading(null);
+      setConfirmLoading(false);
     }
   };
+
+  // ---- Insufficient permissions state --------------------------------------
+
+  if (insufficientPermissions) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Card className="border-border/60 shadow-none max-w-md w-full">
+          <CardContent className="pt-8 pb-8 flex flex-col items-center text-center space-y-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10">
+              <ShieldOff className="h-6 w-6 text-amber-500" />
+            </div>
+            <div className="space-y-1.5">
+              <h3 className="text-lg font-semibold">Insufficient Permissions</h3>
+              <p className="text-sm text-muted-foreground max-w-[320px]">
+                You don't have admin privileges to view user management. Contact your administrator for access.
+              </p>
+            </div>
+            <Button variant="outline" size="sm" onClick={fetchUsers} className="cursor-pointer">
+              <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // ---- Render --------------------------------------------------------------
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
-        <Button size="sm" onClick={() => setShowCreateModal(true)}>
-          <UserPlus className="h-4 w-4 mr-1.5" />
-          Create User
-        </Button>
+      {/* Header bar */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        {/* Search */}
+        <div className="relative w-full sm:max-w-xs">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+          <Input
+            placeholder="Search users…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9 h-9 bg-background"
+          />
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={fetchUsers}
+            disabled={loading}
+            className="cursor-pointer"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${loading ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
+          <Button size="sm" onClick={() => setShowCreate(true)} className="cursor-pointer">
+            <UserPlus className="h-4 w-4 mr-1.5" />
+            Create User
+          </Button>
+        </div>
       </div>
 
-      <Card className="border-border/60 shadow-none">
+      {/* Main table card */}
+      <Card className="border-border/60 shadow-none overflow-hidden">
         <CardContent className="p-0">
-          {error && (
-            <div className="p-4 text-sm text-destructive bg-destructive/5 border-b border-border/60">{error}</div>
-          )}
-          {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          {/* Error banner */}
+          {error && !insufficientPermissions && (
+            <div className="flex items-center gap-2 px-4 py-3 text-sm bg-destructive/5 border-b border-border/60">
+              <AlertTriangle className="h-4 w-4 text-destructive shrink-0" />
+              <span className="text-destructive flex-1">{error}</span>
+              <Button variant="ghost" size="sm" onClick={fetchUsers} className="cursor-pointer shrink-0">
+                <RefreshCw className="h-3.5 w-3.5 mr-1" />
+                Retry
+              </Button>
             </div>
-          ) : users.length === 0 && !error ? (
-            <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
-              No users found.
+          )}
+
+          {/* Loading state */}
+          {loading ? (
+            <TableSkeleton rows={6} />
+          ) : filteredUsers.length === 0 && !error ? (
+            /* Empty state */
+            <div className="flex flex-col items-center justify-center py-16 space-y-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                <Users className="h-6 w-6 text-muted-foreground" />
+              </div>
+              <div className="text-center space-y-1">
+                <p className="text-sm font-medium">
+                  {search ? "No users match your search" : "No users found"}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {search
+                    ? "Try adjusting your search query."
+                    : "Create your first user to get started."}
+                </p>
+              </div>
+              {search && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSearch("")}
+                  className="cursor-pointer"
+                >
+                  Clear search
+                </Button>
+              )}
             </div>
           ) : (
+            /* Data table */
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
+                  <TableHead className="w-[280px]">User</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Joined</TableHead>
@@ -188,101 +480,116 @@ export function AdminUsers() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users.map((u) => {
-                  const isEditing = editing?.id === u.id;
-                  const isBanLoading = actionLoading === u.id + ":ban";
-                  const isDeleteLoading = actionLoading === u.id + ":delete";
-
+                {filteredUsers.map((u) => {
+                  const isBusy = actionLoading === u.id;
                   return (
-                    <TableRow key={u.id} className={u.banned ? "opacity-60" : ""}>
-                      <TableCell className="font-medium">
-                        {isEditing ? (
-                          <input
-                            className="bg-background border border-border rounded px-2 py-1 text-sm w-full max-w-[180px]"
-                            value={editing.name}
-                            onChange={(e) => setEditing({ ...editing, name: e.target.value })}
-                          />
-                        ) : (
-                          u.name || "—"
-                        )}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">{u.email}</TableCell>
+                    <TableRow
+                      key={u.id}
+                      className={`transition-colors duration-150 ${
+                        u.banned ? "opacity-60" : "hover:bg-muted/40"
+                      }`}
+                    >
+                      {/* User cell: avatar + name + email */}
                       <TableCell>
-                        {isEditing ? (
-                          <button
-                            onClick={() => toggleRole(u.id, editing.role)}
-                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold cursor-pointer transition-colors ${
-                              editing.role === "admin"
-                                ? "bg-primary/10 text-primary hover:bg-primary/20"
-                                : "bg-muted text-muted-foreground hover:bg-muted/80"
-                            }`}
-                          >
-                            {editing.role === "admin" ? <ShieldAlert className="h-3 w-3" /> : <Shield className="h-3 w-3" />}
-                            {editing.role}
-                            <span className="text-[9px] opacity-60 ml-0.5">click to toggle</span>
-                          </button>
-                        ) : (
-                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${
-                            u.role === "admin" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
-                          }`}>
-                            {u.role === "admin" ? <ShieldAlert className="h-3 w-3" /> : <Shield className="h-3 w-3" />}
-                            {u.role || "user"}
-                          </span>
-                        )}
+                        <div className="flex items-center gap-3">
+                          <UserAvatar name={u.name} banned={u.banned} />
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium truncate">
+                              {u.name || "—"}
+                            </p>
+                            <p className="text-xs text-muted-foreground truncate">
+                              {u.email}
+                            </p>
+                          </div>
+                        </div>
                       </TableCell>
+
+                      {/* Role badge */}
                       <TableCell>
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${
-                          u.banned ? "bg-destructive/10 text-destructive" : "bg-emerald-500/10 text-emerald-500"
-                        }`}>
-                          {u.banned ? "banned" : "active"}
+                        <Badge
+                          variant={u.role === "admin" ? "default" : "muted"}
+                          className="gap-1"
+                        >
+                          {u.role === "admin" ? (
+                            <ShieldAlert className="h-3 w-3" />
+                          ) : (
+                            <Shield className="h-3 w-3" />
+                          )}
+                          {u.role || "user"}
+                        </Badge>
+                      </TableCell>
+
+                      {/* Status badge */}
+                      <TableCell>
+                        <Badge variant={u.banned ? "destructive" : "success"}>
+                          {u.banned ? "Banned" : "Active"}
+                        </Badge>
+                      </TableCell>
+
+                      {/* Joined */}
+                      <TableCell>
+                        <span
+                          className="text-sm text-muted-foreground"
+                          title={u.createdAt ? new Date(u.createdAt).toLocaleString() : ""}
+                        >
+                          {u.createdAt ? relativeTime(u.createdAt) : "—"}
                         </span>
                       </TableCell>
-                      <TableCell className="text-muted-foreground text-sm">
-                        {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "—"}
-                      </TableCell>
+
+                      {/* Actions */}
                       <TableCell className="text-right">
-                        {isEditing ? (
-                          <div className="flex items-center justify-end gap-1">
-                            <Button variant="ghost" size="sm" onClick={saveEdit} disabled={saving} className="text-emerald-500 hover:text-emerald-600">
-                              {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
-                              Save
-                            </Button>
-                            <Button variant="ghost" size="sm" onClick={cancelEdit} disabled={saving}>
-                              <X className="h-3.5 w-3.5" />
-                            </Button>
-                          </div>
-                        ) : (
-                          <div className="flex items-center justify-end gap-1">
-                            <Button variant="ghost" size="sm" onClick={() => startEdit(u)} disabled={!!actionLoading}>
-                              <Pencil className="h-3.5 w-3.5 mr-1" />
-                              Edit
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleBanToggle(u)}
-                              disabled={!!actionLoading}
-                              className={u.banned
+                        <div className="flex items-center justify-end gap-0.5">
+                          {/* Edit */}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openEdit(u)}
+                            disabled={isBusy}
+                            className="h-8 w-8 p-0 cursor-pointer"
+                            title="Edit user"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+
+                          {/* Ban / Unban */}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() =>
+                              setConfirmAction({
+                                type: u.banned ? "unban" : "ban",
+                                user: u,
+                              })
+                            }
+                            disabled={isBusy}
+                            className={`h-8 w-8 p-0 cursor-pointer ${
+                              u.banned
                                 ? "text-emerald-500 hover:text-emerald-600 hover:bg-emerald-500/10"
-                                : "text-amber-500 hover:text-amber-600 hover:bg-amber-500/10"}
-                            >
-                              {isBanLoading
-                                ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                : u.banned
-                                  ? <UserCheck className="h-3.5 w-3.5" />
-                                  : <Ban className="h-3.5 w-3.5" />}
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDelete(u)}
-                              disabled={!!actionLoading}
-                              className="text-destructive/60 hover:text-destructive hover:bg-destructive/10"
-                            >
-                              {isDeleteLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
-                            </Button>
-                          </div>
-                        )}
+                                : "text-amber-500 hover:text-amber-600 hover:bg-amber-500/10"
+                            }`}
+                            title={u.banned ? "Unban user" : "Ban user"}
+                          >
+                            {u.banned ? (
+                              <UserCheck className="h-3.5 w-3.5" />
+                            ) : (
+                              <Ban className="h-3.5 w-3.5" />
+                            )}
+                          </Button>
+
+                          {/* Delete */}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() =>
+                              setConfirmAction({ type: "delete", user: u })
+                            }
+                            disabled={isBusy}
+                            className="h-8 w-8 p-0 cursor-pointer text-destructive/60 hover:text-destructive hover:bg-destructive/10"
+                            title="Delete user"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
@@ -290,50 +597,297 @@ export function AdminUsers() {
               </TableBody>
             </Table>
           )}
+
+          {/* Result count footer */}
+          {!loading && !error && users.length > 0 && (
+            <div className="flex items-center justify-between px-4 py-2.5 border-t border-border/60 text-xs text-muted-foreground">
+              <span>
+                {search
+                  ? `${filteredUsers.length} of ${users.length} users`
+                  : `${users.length} user${users.length !== 1 ? "s" : ""}`}
+              </span>
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* Create User Modal */}
-      {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowCreateModal(false)}>
-          <Card className="w-full max-w-md mx-4" onClick={(e) => e.stopPropagation()}>
-            <CardContent className="pt-6 space-y-4">
-              <h3 className="text-lg font-semibold">Create User</h3>
-              <form onSubmit={handleCreate} className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Full Name</Label>
-                  <Input required value={createName} onChange={e => setCreateName(e.target.value)} placeholder="Jane Doe" />
+      {/* ================================================================== */}
+      {/* Create User Dialog                                                  */}
+      {/* ================================================================== */}
+      <Dialog open={showCreate} onOpenChange={(open) => { if (!open) { resetCreateForm(); } setShowCreate(open); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Create User</DialogTitle>
+            <DialogDescription>Add a new user to the platform.</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleCreate} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="create-name">Full Name</Label>
+              <Input
+                id="create-name"
+                required
+                value={createName}
+                onChange={(e) => setCreateName(e.target.value)}
+                placeholder="Jane Doe"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="create-email">Email Address</Label>
+              <Input
+                id="create-email"
+                type="email"
+                required
+                value={createEmail}
+                onChange={(e) => setCreateEmail(e.target.value)}
+                placeholder="jane@acme.com"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="create-password">Password</Label>
+              <div className="relative">
+                <Input
+                  id="create-password"
+                  type={showPassword ? "text" : "password"}
+                  required
+                  minLength={8}
+                  value={createPassword}
+                  onChange={(e) => setCreatePassword(e.target.value)}
+                  placeholder="Min. 8 characters"
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              <PasswordStrengthBar password={createPassword} />
+            </div>
+            <div className="space-y-2">
+              <Label>Role</Label>
+              <Select value={createRole} onValueChange={setCreateRole}>
+                <SelectTrigger className="cursor-pointer">
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="user">
+                    <span className="flex items-center gap-2">
+                      <Shield className="h-3.5 w-3.5 text-muted-foreground" />
+                      User
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="admin">
+                    <span className="flex items-center gap-2">
+                      <ShieldAlert className="h-3.5 w-3.5 text-primary" />
+                      Admin
+                    </span>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <DialogFooter className="pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => { resetCreateForm(); setShowCreate(false); }}
+                className="cursor-pointer"
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={creating} className="cursor-pointer">
+                {creating ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+                    Creating…
+                  </>
+                ) : (
+                  "Create User"
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* ================================================================== */}
+      {/* Edit User Dialog                                                    */}
+      {/* ================================================================== */}
+      <Dialog open={!!editUser} onOpenChange={(open) => { if (!open) setEditUser(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit User</DialogTitle>
+            <DialogDescription>
+              {editUser?.email ? (
+                <span className="font-mono text-xs">{editUser.email}</span>
+              ) : (
+                "Update user details."
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          {editUser && (
+            <div className="space-y-4">
+              {/* Avatar preview */}
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-border/40">
+                <UserAvatar name={editName || editUser.name} banned={editUser.banned} />
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate">{editName || editUser.name || "—"}</p>
+                  <p className="text-xs text-muted-foreground truncate">{editUser.email}</p>
                 </div>
-                <div className="space-y-2">
-                  <Label>Email Address</Label>
-                  <Input type="email" required value={createEmail} onChange={e => setCreateEmail(e.target.value)} placeholder="jane@acme.com" />
-                </div>
-                <div className="space-y-2">
-                  <Label>Password</Label>
-                  <Input type="password" required minLength={8} value={createPassword} onChange={e => setCreatePassword(e.target.value)} placeholder="Min. 8 characters" />
-                </div>
-                <div className="space-y-2">
-                  <Label>Role</Label>
-                  <select
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    value={createRole}
-                    onChange={e => setCreateRole(e.target.value)}
-                  >
-                    <option value="user">User</option>
-                    <option value="admin">Admin</option>
-                  </select>
-                </div>
-                <div className="flex justify-end gap-2 pt-2">
-                  <Button type="button" variant="outline" onClick={() => setShowCreateModal(false)}>Cancel</Button>
-                  <Button type="submit" disabled={creating}>
-                    {creating ? <><Loader2 className="h-4 w-4 mr-1.5 animate-spin" />Creating...</> : "Create User"}
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+                {editUser.banned && (
+                  <Badge variant="destructive" className="ml-auto shrink-0">
+                    Banned
+                  </Badge>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-name">Full Name</Label>
+                <Input
+                  id="edit-name"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  placeholder="Full name"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Role</Label>
+                <Select value={editRole} onValueChange={setEditRole}>
+                  <SelectTrigger className="cursor-pointer">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="user">
+                      <span className="flex items-center gap-2">
+                        <Shield className="h-3.5 w-3.5 text-muted-foreground" />
+                        User
+                      </span>
+                    </SelectItem>
+                    <SelectItem value="admin">
+                      <span className="flex items-center gap-2">
+                        <ShieldAlert className="h-3.5 w-3.5 text-primary" />
+                        Admin
+                      </span>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="rounded-lg bg-muted/20 border border-border/40 p-3 space-y-1">
+                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+                  User ID
+                </p>
+                <p className="font-mono text-xs text-muted-foreground break-all select-all">
+                  {editUser.id}
+                </p>
+              </div>
+
+              <DialogFooter className="pt-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setEditUser(null)}
+                  className="cursor-pointer"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSaveEdit}
+                  disabled={saving}
+                  className="cursor-pointer"
+                >
+                  {saving ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+                      Saving…
+                    </>
+                  ) : (
+                    "Save Changes"
+                  )}
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* ================================================================== */}
+      {/* Confirmation Dialog (Ban / Unban / Delete)                          */}
+      {/* ================================================================== */}
+      <Dialog open={!!confirmAction} onOpenChange={(open) => { if (!open) setConfirmAction(null); }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {confirmAction?.type === "delete" && (
+                <Trash2 className="h-5 w-5 text-destructive" />
+              )}
+              {confirmAction?.type === "ban" && (
+                <Ban className="h-5 w-5 text-amber-500" />
+              )}
+              {confirmAction?.type === "unban" && (
+                <UserCheck className="h-5 w-5 text-emerald-500" />
+              )}
+              {confirmAction?.type === "delete"
+                ? "Delete User"
+                : confirmAction?.type === "ban"
+                  ? "Ban User"
+                  : "Unban User"}
+            </DialogTitle>
+            <DialogDescription>
+              {confirmAction?.type === "delete" && (
+                <>
+                  This will permanently delete{" "}
+                  <span className="font-medium text-foreground">{confirmAction.user.email}</span>.
+                  This action cannot be undone.
+                </>
+              )}
+              {confirmAction?.type === "ban" && (
+                <>
+                  <span className="font-medium text-foreground">{confirmAction.user.email}</span>{" "}
+                  will be banned and unable to log in.
+                </>
+              )}
+              {confirmAction?.type === "unban" && (
+                <>
+                  <span className="font-medium text-foreground">{confirmAction.user.email}</span>{" "}
+                  will be unbanned and able to log in again.
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="pt-2">
+            <Button
+              variant="outline"
+              onClick={() => setConfirmAction(null)}
+              disabled={confirmLoading}
+              className="cursor-pointer"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant={confirmAction?.type === "delete" ? "destructive" : "default"}
+              onClick={executeConfirmAction}
+              disabled={confirmLoading}
+              className="cursor-pointer"
+            >
+              {confirmLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+                  Processing…
+                </>
+              ) : confirmAction?.type === "delete" ? (
+                "Delete"
+              ) : confirmAction?.type === "ban" ? (
+                "Ban User"
+              ) : (
+                "Unban User"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -111,7 +111,7 @@ paths:
       tags: [Health]
       summary: Auth stack health — DB connectivity probe
       description: |
-        Probes Better Auth database connectivity.
+        Probes Standard Native Auth database connectivity.
         Returns HTTP 200 when the auth DB is reachable, HTTP 503 when not.
         Used as a CI gate in `deploy-production.yml` (see ADR-AUTH-001).
         A 503 here means logins will fail for all users.
@@ -126,7 +126,7 @@ paths:
                 type: object
                 properties:
                   status: { type: string, example: "ok" }
-                  auth: { type: string, example: "better-auth@1.6.11" }
+                  auth: { type: string, example: "standard-native-auth@1.6.11" }
                   db: { type: string, example: "connected" }
                   latency_ms: { type: number, example: 42 }
                   trace_id: { type: string }
@@ -138,7 +138,7 @@ paths:
                 type: object
                 properties:
                   status: { type: string, example: "degraded" }
-                  auth: { type: string, example: "better-auth@1.6.11" }
+                  auth: { type: string, example: "standard-native-auth@1.6.11" }
                   db: { type: string, example: "unreachable" }
                   latency_ms: { type: number }
                   trace_id: { type: string }
@@ -1377,22 +1377,18 @@ paths:
           description: Organization detail
 
   # ── API Keys ────────────────────────────────────────────
-  /api/v1/organizations/{organizationId}/api-keys:
+  /api/v1/api-keys:
     get:
       tags: [API Keys]
-      summary: List API keys (masked)
+      summary: List API keys (masked) for your Root Tenant
       operationId: listApiKeys
-      parameters:
-        - $ref: "#/components/parameters/OrganizationId"
       responses:
         "200":
           description: API key list (secrets are masked)
     post:
       tags: [API Keys]
-      summary: Generate a new API key
+      summary: Generate a new API key for your Root Tenant
       operationId: createApiKey
-      parameters:
-        - $ref: "#/components/parameters/OrganizationId"
       requestBody:
         required: true
         content:
@@ -1420,13 +1416,12 @@ paths:
                       maskedKey: { type: string }
                       expiresAt: { type: string, format: date-time }
 
-  /api/v1/organizations/{organizationId}/api-keys/{keyId}:
+  /api/v1/api-keys/{keyId}:
     delete:
       tags: [API Keys]
       summary: Revoke an API key
       operationId: revokeApiKey
       parameters:
-        - $ref: "#/components/parameters/OrganizationId"
         - name: keyId
           in: path
           required: true

@@ -65,9 +65,7 @@ jobs:
       - name: Build Frontend
         run: pnpm --filter @standard/web build
         env:
-          VITE_NEON_AUTH_URL: https://ep-blue-breeze-anyfua57.neonauth.c-6.us-east-1.aws.neon.tech/neondb/auth
-          VITE_API_URL: https://standard-api-gateway-production.ness.workers.dev
-          VITE_NEON_DATA_API_URL: https://ep-blue-breeze-anyfua57.apirest.c-6.us-east-1.aws.neon.tech/neondb/rest/v1
+          VITE_API_URL: ${{ vars.VITE_API_URL }}
 
       - name: Deploy Preview to Cloudflare Pages
         id: cf_deploy

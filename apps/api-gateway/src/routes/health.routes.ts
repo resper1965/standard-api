@@ -82,7 +82,7 @@ export const healthRoutes: RouteDefinition[] = [
     method: "GET",
     path: "/api/health/auth",
     handler: async ({ traceId, deps }) => {
-      // Verifies Better Auth stack health:
+      // Verifies Standard Native Auth stack health:
       // 1. DB connectivity (same lightweight probe as /health)
       // 2. Reports auth version for monitoring dashboards
       // Used by: CI deploy gate, external uptime monitoring, runbooks
@@ -103,7 +103,7 @@ export const healthRoutes: RouteDefinition[] = [
       return json(
         {
           status: isHealthy ? "ok" : "degraded",
-          auth: "better-auth@1.6.11",
+          auth: "standard-native-auth@1.6.11",
           db: dbStatus,
           latency_ms: latencyMs,
           trace_id: traceId,

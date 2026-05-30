@@ -21,6 +21,7 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "drizzle-kit"
         update-types: ["version-update:semver-major"]
+      # Standard Native Auth — npm package is 'better-auth', block major bumps
       - dependency-name: "better-auth"
         update-types: ["version-update:semver-major"]
       - dependency-name: "@hono/*"
@@ -37,7 +38,7 @@ updates:
         exclude-patterns:
           - "zod"
           - "drizzle-*"
-          - "better-auth"
+          - "better-auth"  # Standard Native Auth — npm package name
       development-dependencies:
         dependency-type: "development"
 

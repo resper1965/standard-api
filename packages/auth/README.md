@@ -4,7 +4,7 @@ Status: stable | Layer: infrastructure | Runtime: Cloudflare Workers
 
 ## Overview
 
-Better Auth server adapter for the Standard platform. Provides email/password
+Standard Native Auth server adapter for the Standard platform. Provides email/password
 authentication, organization-based multi-tenancy, RBAC/ABAC permission helpers,
 and API key management. The server instance is created once at Worker startup
 and reused across requests.
@@ -38,12 +38,12 @@ app.all("/api/auth/*", (c) => auth.handler(c.req.raw));
 
 | Plugin | Purpose |
 |--------|---------|
-| `organization` | Maps Better Auth orgs to Standard tenants/organizations |
+| `organization` | Maps Standard Native Auth orgs to Standard tenants/organizations |
 | `admin` | Platform-level admin flag (`platform_admin`); set only via SQL, never via API |
 
 ## Drizzle Adapter
 
-Uses `better-auth/adapters/drizzle` with the `pg` provider. Schema tables are
+Uses `standard-native-auth/adapters/drizzle` with the `pg` provider. Schema tables are
 imported from `@standard/schemas`:
 
 `baUser`, `baSession`, `baAccount`, `baVerification`, `baOrganization`,
@@ -62,7 +62,7 @@ imported from `@standard/schemas`:
 | Export | Purpose |
 |--------|---------|
 | `createAuth(env, db)` | Factory — returns a `StandardAuth` instance |
-| `StandardAuth` | Type of the Better Auth server instance |
+| `StandardAuth` | Type of the Standard Native Auth server instance |
 | `AuthEnv` | Environment variables shape |
 | `STANDARD_PERMISSIONS` | Full permission registry |
 | `STANDARD_ROLE_PERMISSIONS` | Default permissions per role |

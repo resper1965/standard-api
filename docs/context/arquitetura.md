@@ -9,7 +9,7 @@ O Standard é API-first, SaaS-ready, multi-tenant e Cloudflare-oriented. O backe
 - API Gateway: endpoints versionados, auth, RBAC, tenant guard e validação.
 - Assessment Engine: state machine, transitions, approval gates e invariantes.
 - Packages: schemas, domain, contracts, SCF core, SCF catalog, KB, SoA, Gap, POA&M, Reporting, Security, Observability e Agent Runtime.
-- Data Layer: Dependência fixa em PostgreSQL transacional (via Drizzle ORM) para Lifecycle artifacts, Better Auth, persistência de Orquestração, Logs de Auditoria e Estado de Agent Runs. O armazenamento de docs usa R2, e KB apoia-se em Vectorize.
+- Data Layer: Dependência fixa em PostgreSQL transacional (via Drizzle ORM) para Lifecycle artifacts, Standard Native Auth, persistência de Orquestração, Logs de Auditoria e Estado de Agent Runs. O armazenamento de docs usa R2, e KB apoia-se em Vectorize.
 ## Princípios
 
 - SCF estruturado é fonte normativa.

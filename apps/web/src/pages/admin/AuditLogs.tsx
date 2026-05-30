@@ -3,7 +3,8 @@ import { api } from "../../lib/api";
 import { Card, CardContent } from "../../components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "../../components/ui/table";
 import { Button } from "../../components/ui/button";
-import { Loader2, RefreshCw, ShieldAlert } from "lucide-react";
+import { Loader2, RefreshCw, ShieldAlert, ScrollText } from "lucide-react";
+import { Skeleton } from "../../components/ui/skeleton";
 
 type AuditLog = {
   id: string;
@@ -46,7 +47,7 @@ export function AdminAuditLogs() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <Button variant="outline" size="sm" onClick={fetchLogs} disabled={loading}>
+        <Button variant="outline" size="sm" onClick={fetchLogs} disabled={loading} className="cursor-pointer">
           <RefreshCw className={`h-4 w-4 mr-1.5 ${loading ? "animate-spin" : ""}`} />
           Refresh
         </Button>
@@ -66,9 +67,26 @@ export function AdminAuditLogs() {
           )}
           {error && <div className="p-4 text-sm text-destructive">{error}</div>}
           {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Timestamp</TableHead>
+                  <TableHead>Action</TableHead>
+                  <TableHead>Actor</TableHead>
+                  <TableHead>Target</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-28 rounded" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-36" /></TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           ) : !forbidden && (
             <Table>
               <TableHeader>
@@ -82,15 +100,23 @@ export function AdminAuditLogs() {
               <TableBody>
                 {logs.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground text-sm py-10">
-                      No security events found.
+                    <TableCell colSpan={4} className="py-0">
+                      <div className="flex flex-col items-center justify-center py-14 space-y-3">
+                        <div className="h-12 w-12 rounded-full bg-muted/60 flex items-center justify-center text-muted-foreground">
+                          <ScrollText className="h-6 w-6" />
+                        </div>
+                        <div className="text-center space-y-1">
+                          <p className="text-sm font-medium text-foreground">No security events found</p>
+                          <p className="text-xs text-muted-foreground">Events will appear here as actions are performed on the platform.</p>
+                        </div>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ) : logs.map((l) => (
                   <TableRow key={l.id}>
                     <TableCell className="text-muted-foreground text-sm">{new Date(l.createdAt).toLocaleString()}</TableCell>
-                    <TableCell><code className="text-xs bg-muted/50 px-1.5 py-0.5 rounded">{l.action}</code></TableCell>
-                    <TableCell className="text-sm">{l.actorId}</TableCell>
+                    <TableCell><code className="font-mono-premium text-xs bg-muted/50 px-1.5 py-0.5 rounded">{l.action}</code></TableCell>
+                    <TableCell className="text-sm font-mono-premium text-xs">{l.actorId}</TableCell>
                     <TableCell className="text-muted-foreground text-sm">{l.targetType}: {l.targetId}</TableCell>
                   </TableRow>
                 ))}

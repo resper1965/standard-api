@@ -159,12 +159,14 @@ export const controlImplementationStatusEnum = pgEnum("control_implementation_st
 
 export const tenants = pgTable("tenants", {
   id: uuid("id").defaultRandom().primaryKey(),
+  parentId: uuid("parent_id"),
   slug: text("slug").notNull(),
   name: text("name").notNull(),
   status: text("status").default("active").notNull(),
   ...timestamps()
 }, (table) => [
-  uniqueIndex("tenants_slug_uidx").on(table.slug)
+  uniqueIndex("tenants_slug_uidx").on(table.slug),
+  index("tenants_parent_idx").on(table.parentId)
 ]);
 
 export const organizations = pgTable("organizations", {

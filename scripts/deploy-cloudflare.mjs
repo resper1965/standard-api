@@ -11,6 +11,7 @@ if (!allowedEnvironments.has(environment)) {
 const configs = [
   "infra/cloudflare/wrangler.workflows.toml",
   "infra/cloudflare/wrangler.api-gateway.toml",
+  "workers/queues/wrangler.toml",
   "infra/cloudflare/wrangler.ingestion-worker.toml",
   "infra/cloudflare/wrangler.kb-worker.toml",
   "infra/cloudflare/wrangler.reporting-worker.toml"

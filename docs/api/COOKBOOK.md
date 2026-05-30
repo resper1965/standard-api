@@ -1,250 +1,333 @@
 # Standard API — Cookbook
 
-> End-to-end recipes for common GRC workflows. Copy-paste ready TypeScript using `@standard/sdk`.
+> **Base URL:** `https://standard-api.bekaa.eu`
+> **Auth:** Cookie session (browser) ou `Authorization: Bearer standard_live_...` (M2M)
 
 ---
 
-## Recipe 1: ISO 27001 Assessment (End-to-End)
+## 🔐 Autenticação
 
-```typescript
-import { StandardClient } from "@standard/sdk";
+### Login (email/password)
+```bash
+curl -X POST https://standard-api.bekaa.eu/api/auth/sign-in/email \
+  -H "Content-Type: application/json" \
+  -d '{"email": "user@example.com", "password": "s3cur3!"}'
+```
 
-const client = new StandardClient({
-  apiKey: "standard_live_...",
-  tenantId: "your-tenant-uuid",
-});
-
-// 1. Get SCF version
-const { data: scfVersion } = await client.scf.versions.latest();
-
-// 2. Create assessment
-const { data: assessment } = await client.assessments.create({
-  organization_id: "org-uuid",
-  name: "ISO 27001 - Q3 2026",
-  scf_version_id: scfVersion.scf_version_id,
-});
-const id = assessment.assessment_id;
-
-// 3. Upload evidence documents
-const files = ["security-policy.pdf", "access-control.docx", "bcp-plan.pdf"];
-for (const filename of files) {
-  const file = new File([await Deno.readFile(filename)], filename);
-  await client.documents.upload(id, file, filename);
-}
-
-// 4. Transition to documents_uploaded
-await client.lifecycle.transition(id, { next_state: "documents_uploaded" });
-
-// 5. Wait for ingestion (poll or webhook)
-// ... documents_ingested → scf_pre_analysis_ready → framework_selected
-
-// 6. Define scope
-await client.assessments.createScope(id, {
-  title: "Corporate IT",
-  business_units: ["IT", "Engineering"],
-  systems: ["ERP", "CRM", "AD"],
-});
-
-// 7. Draft SoA — AI maps 93 ISO requirements → SCF controls
-const { data: soa } = await client.soa.draft(id, {
-  framework_id: "iso-27001-uuid",
-  scf_version_id: scfVersion.scf_version_id,
-});
-
-// 8. Review AI results
-const { data: items } = await client.soa.items(soa.soa_version_id);
-console.log(`Total controls: ${items.length}`);
-console.log(`Implemented: ${items.filter(i => i.implementation_status === "implemented").length}`);
-
-// 9. Gap analysis
-const { data: gap } = await client.gapAnalysis.draft(id, {
-  soa_version_id: soa.soa_version_id,
-});
-const { data: findings } = await client.gapAnalysis.findings(gap.gap_analysis_version_id);
-console.log(`Critical gaps: ${findings.filter(f => f.severity === "critical").length}`);
-
-// 10. Generate remediation plan
-const { data: poam } = await client.poam.draft(id, {
-  gap_analysis_version_id: gap.gap_analysis_version_id,
-});
-
-// 11. Get final KPIs
-const { data: summary } = await client.assessments.summary(id);
-console.log(`Compliance: ${summary.compliance_pct}%`);
-console.log(`Open POAMs: ${summary.open_poam_items}`);
-
-// 12. Export audit package
-const { data: pkg } = await client.reports.generateAuditPackage(id);
+### Verificar sessão
+```bash
+curl https://standard-api.bekaa.eu/api/auth/get-session \
+  -H "Cookie: standard-native-auth.session_token=..."
 ```
 
 ---
 
-## Recipe 2: Organization Dashboard
+## 🏢 Organizações (Tenants)
 
-```typescript
-// Get org-wide KPIs (no client-side calculation needed)
-const { data: dashboard } = await client.organizations.dashboard("org-uuid");
+### Listar minhas organizações
+```bash
+curl https://standard-api.bekaa.eu/api/v1/users/me/organizations \
+  -H "Cookie: ..."
+```
 
-console.log(`Total assessments: ${dashboard.total_assessments}`);
-console.log(`Avg compliance: ${dashboard.compliance_avg_pct}%`);
-console.log(`Open POAMs: ${dashboard.total_open_poams}`);
-console.log(`Critical findings: ${dashboard.total_critical_findings}`);
-console.log(`By state:`, dashboard.assessments_by_state);
+### Ativar uma organização
+```bash
+curl -X POST https://standard-api.bekaa.eu/api/v1/users/me/orgs/{orgId}/activate \
+  -H "Cookie: ..."
+```
+
+### Dashboard da organização
+```bash
+curl https://standard-api.bekaa.eu/api/v1/organizations/{orgId}/dashboard \
+  -H "Cookie: ..." \
+  -H "x-standard-tenant-id: {orgId}"
 ```
 
 ---
 
-## Recipe 3: Audit Trail Query
+## 🛡️ SCF — Secure Controls Framework
 
-```typescript
-// Tenant-wide: who did what last 30 days
-const { data: logs } = await client.assessments.auditLogs("tenant-uuid", {
-  since: "2026-04-13T00:00:00Z",
-  limit: 100,
-});
+### Listar domínios SCF
+```bash
+curl https://standard-api.bekaa.eu/api/v1/scf/domains \
+  -H "Cookie: ..." \
+  -H "x-standard-tenant-id: {orgId}"
+```
 
-// Org-level: filter by action
-const { data: orgLogs } = await client.organizations.auditLogs("org-uuid", {
-  action: "assessment_created",
-  limit: 50,
-});
+### Buscar controles por domínio
+```bash
+curl "https://standard-api.bekaa.eu/api/v1/scf/controls?domain=ACC" \
+  -H "Cookie: ..." \
+  -H "x-standard-tenant-id: {orgId}"
+```
 
-for (const log of orgLogs) {
-  console.log(`${log.timestamp} | ${log.actor_id} | ${log.action} | ${log.resource_type}`);
-}
+### Buscar controles de um framework (ex: ISO 27001)
+```bash
+curl "https://standard-api.bekaa.eu/api/v1/scf/controls?framework=ISO+27001" \
+  -H "Cookie: ..." \
+  -H "x-standard-tenant-id: {orgId}"
+```
+
+### Controle específico
+```bash
+curl https://standard-api.bekaa.eu/api/v1/scf/controls/{controlId} \
+  -H "Cookie: ..." \
+  -H "x-standard-tenant-id: {orgId}"
+```
+
+### Frameworks disponíveis
+```bash
+curl https://standard-api.bekaa.eu/api/v1/scf/frameworks \
+  -H "Cookie: ..." \
+  -H "x-standard-tenant-id: {orgId}"
+```
+
+### Crosswalks (mappings entre frameworks)
+```bash
+curl "https://standard-api.bekaa.eu/api/v1/scf/crosswalks?framework=ISO+27001" \
+  -H "Cookie: ..." \
+  -H "x-standard-tenant-id: {orgId}"
 ```
 
 ---
 
-## Recipe 4: Member Management
+## 📋 Assessments
 
-```typescript
-// Invite a new auditor
-await client.organizations.inviteMember("org-uuid", {
-  email: "external-auditor@kpmg.com",
-  role: "auditor_readonly",
-  display_name: "Maria Souza",
-});
+### Criar
+```bash
+curl -X POST https://standard-api.bekaa.eu/api/v1/assessments \
+  -H "Content-Type: application/json" \
+  -H "Cookie: ..." \
+  -H "x-standard-tenant-id: {orgId}" \
+  -d '{"name": "ISO 27001 Q3", "framework_id": "iso-27001"}'
+```
 
-// List all members
-const { data: members } = await client.organizations.listMembers("org-uuid");
-console.table(members.map(m => ({ email: m.email, role: m.role, status: m.status })));
+### Listar
+```bash
+curl https://standard-api.bekaa.eu/api/v1/assessments \
+  -H "Cookie: ..." -H "x-standard-tenant-id: {orgId}"
+```
 
-// Promote to admin
-await client.organizations.updateMemberRole("member-uuid", { role: "admin" });
+### Detalhe
+```bash
+curl https://standard-api.bekaa.eu/api/v1/assessments/{id} \
+  -H "Cookie: ..." -H "x-standard-tenant-id: {orgId}"
+```
 
-// Remove member
-await client.organizations.removeMember("member-uuid");
+### Status
+```bash
+curl https://standard-api.bekaa.eu/api/v1/assessments/{id}/status \
+  -H "Cookie: ..." -H "x-standard-tenant-id: {orgId}"
+```
+
+### Resumo (dashboard)
+```bash
+curl https://standard-api.bekaa.eu/api/v1/assessments/{id}/summary \
+  -H "Cookie: ..." -H "x-standard-tenant-id: {orgId}"
+```
+
+### Timeline
+```bash
+curl https://standard-api.bekaa.eu/api/v1/assessments/{id}/timeline \
+  -H "Cookie: ..." -H "x-standard-tenant-id: {orgId}"
 ```
 
 ---
 
-## Recipe 5: CI/CD Compliance Gate
+## 📄 Documentos
 
-```typescript
-// In your GitHub Action or pipeline:
-const { data: gate } = await client.assessments.complianceGate("assessment-uuid");
-
-if (gate.status === "fail") {
-  console.error(`❌ Compliance gate FAILED: ${gate.critical_findings} critical findings`);
-  process.exit(1);
-}
-
-console.log("✅ Compliance gate passed");
+### Upload
+```bash
+curl -X POST https://standard-api.bekaa.eu/api/v1/assessments/{id}/documents \
+  -H "Cookie: ..." -H "x-standard-tenant-id: {orgId}" \
+  -F "file=@policy.pdf" -F "category=policy"
 ```
 
-```yaml
-# .github/workflows/compliance-gate.yml
-name: Compliance Gate
-on: [push]
-jobs:
-  compliance:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check compliance
-        run: npx standard gate --assessment-id ${{ vars.ASSESSMENT_ID }}
-        env:
-          STANDARD_API_KEY: ${{ secrets.STANDARD_API_KEY }}
+### Listar
+```bash
+curl https://standard-api.bekaa.eu/api/v1/assessments/{id}/documents \
+  -H "Cookie: ..." -H "x-standard-tenant-id: {orgId}"
 ```
 
----
+### Chunks (pós-ingestão)
+```bash
+curl https://standard-api.bekaa.eu/api/v1/documents/{docId}/chunks \
+  -H "Cookie: ..." -H "x-standard-tenant-id: {orgId}"
+```
 
-## Recipe 6: Async Multi-Agent Council Dispatch
-
-```typescript
-// Define multiple specialized agents for complex analysis
-const agents = ["poam_architect", "evidence_evaluator", "board_translator"];
-const context = "Architecture document showing new ephemeral cloud deployment strategies.";
-
-// 1. Dispatch the job asynchronously
-const { data: council } = await client.intelligence.dispatchCouncil({
-  tenant_id: "tenant-uuid",
-  context: context,
-  agents: agents
-});
-console.log(`Job Dispatched. ID: ${council.job_id}`);
-
-// 2. Poll the job status via the Jobs API
-let jobStatus = "pending";
-let output = null;
-
-while (jobStatus === "pending" || jobStatus === "running") {
-  // Wait 2 seconds before polling
-  await new Promise(resolve => setTimeout(resolve, 2000));
-  
-  const { data: job } = await client.jobs.getStatus(council.job_id);
-  jobStatus = job.status;
-  output = job.output;
-  console.log(`Polling... Current Status: ${jobStatus}`);
-}
-
-if (jobStatus === "completed") {
-  console.log("Council completed evaluation!");
-  console.log(output);
-} else {
-  console.error("Council job failed", output);
-}
+### Reprocessar
+```bash
+curl -X POST https://standard-api.bekaa.eu/api/v1/documents/{docId}/reprocess \
+  -H "Cookie: ..." -H "x-standard-tenant-id: {orgId}"
 ```
 
 ---
 
-## Lifecycle State Machine
+## 🔍 Knowledge Base (KB)
 
+### Busca semântica
+```bash
+curl -X POST https://standard-api.bekaa.eu/api/v1/kb/search \
+  -H "Content-Type: application/json" \
+  -H "Cookie: ..." -H "x-standard-tenant-id: {orgId}" \
+  -d '{"query": "access control policy for privileged accounts", "assessment_id": "{id}", "top_k": 10}'
 ```
-draft → documents_uploaded → documents_ingested → scf_pre_analysis_ready →
-framework_selected → scope_drafted → soa_drafted → soa_under_review →
-soa_approved → soa_ingested → evidence_analysis_ready →
-gap_analysis_drafted → gap_analysis_under_review → gap_analysis_approved →
-maturity_assessed → maturity_under_review → maturity_approved →
-poam_drafted → poam_under_review → poam_approved →
-report_generated → closed
-```
-
-**Approval gates** (require human decision): SoA, Gap Analysis, Maturity, POA&M.
 
 ---
 
-## Error Handling Pattern
+## 📊 Gap Analysis
 
-```typescript
-import { StandardError } from "@standard/sdk";
-
-try {
-  const { data } = await client.assessments.summary("invalid-id");
-} catch (error) {
-  if (error instanceof StandardError) {
-    switch (error.code) {
-      case "NOT_FOUND":
-        console.error("Assessment not found");
-        break;
-      case "FORBIDDEN":
-        console.error("No permission — check your role");
-        break;
-      case "INVALID_STATE_TRANSITION":
-        console.error("Assessment is not in the right state for this action");
-        break;
-    }
-    console.error(`Trace: ${error.traceId}`); // Send to support
-  }
-}
+### Listar gaps
+```bash
+curl https://standard-api.bekaa.eu/api/v1/assessments/{id}/gaps \
+  -H "Cookie: ..." -H "x-standard-tenant-id: {orgId}"
 ```
+
+### Criar gap
+```bash
+curl -X POST https://standard-api.bekaa.eu/api/v1/assessments/{id}/gaps \
+  -H "Content-Type: application/json" \
+  -H "Cookie: ..." -H "x-standard-tenant-id: {orgId}" \
+  -d '{"control_id": "ACC-01", "status": "not_implemented", "severity": "high"}'
+```
+
+---
+
+## ✅ SoA / 📈 POA&M / 📝 Reports
+
+### SoA
+```bash
+curl https://standard-api.bekaa.eu/api/v1/assessments/{id}/soa \
+  -H "Cookie: ..." -H "x-standard-tenant-id: {orgId}"
+```
+
+### POA&M
+```bash
+curl https://standard-api.bekaa.eu/api/v1/assessments/{id}/poam \
+  -H "Cookie: ..." -H "x-standard-tenant-id: {orgId}"
+```
+
+### Gerar relatório
+```bash
+curl -X POST https://standard-api.bekaa.eu/api/v1/assessments/{id}/reports \
+  -H "Content-Type: application/json" \
+  -H "Cookie: ..." -H "x-standard-tenant-id: {orgId}" \
+  -d '{"format": "pdf", "template": "executive_summary"}'
+```
+
+---
+
+## 🤖 Agents / ⚙️ Workflows
+
+### Listar agentes
+```bash
+curl https://standard-api.bekaa.eu/api/v1/agent-runtime/agents \
+  -H "Cookie: ..." -H "x-standard-tenant-id: {orgId}"
+```
+
+### Executar agente
+```bash
+curl -X POST https://standard-api.bekaa.eu/api/v1/assessments/{id}/agent-runs \
+  -H "Content-Type: application/json" \
+  -H "Cookie: ..." -H "x-standard-tenant-id: {orgId}" \
+  -d '{"agent_id": "standard-gap-analyst"}'
+```
+
+### Iniciar workflow
+```bash
+curl -X POST https://standard-api.bekaa.eu/api/v1/assessments/{id}/workflows \
+  -H "Content-Type: application/json" \
+  -H "Cookie: ..." -H "x-standard-tenant-id: {orgId}" \
+  -d '{"workflow_type": "full_assessment"}'
+```
+
+### Transição de lifecycle
+```bash
+curl -X POST https://standard-api.bekaa.eu/api/v1/assessments/{id}/lifecycle/transition \
+  -H "Content-Type: application/json" \
+  -H "Cookie: ..." -H "x-standard-tenant-id: {orgId}" \
+  -d '{"target_state": "documents_uploaded"}'
+```
+
+---
+
+## 👥 Membros / 🔑 API Keys
+
+### Listar membros
+```bash
+curl https://standard-api.bekaa.eu/api/v1/organizations/{orgId}/members \
+  -H "Cookie: ..." -H "x-standard-tenant-id: {orgId}"
+```
+
+### Convidar membro
+```bash
+curl -X POST https://standard-api.bekaa.eu/api/v1/organizations/{orgId}/members/invite \
+  -H "Content-Type: application/json" \
+  -H "Cookie: ..." -H "x-standard-tenant-id: {orgId}" \
+  -d '{"email": "analyst@co.com", "role": "member"}'
+```
+
+### Criar API key
+```bash
+curl -X POST https://standard-api.bekaa.eu/api/v1/organizations/{orgId}/api-keys \
+  -H "Content-Type: application/json" \
+  -H "Cookie: ..." -H "x-standard-tenant-id: {orgId}" \
+  -d '{"name": "CI Pipeline", "scopes": ["assessment:read", "scf:read"]}'
+```
+
+---
+
+## 🏥 Health
+
+```bash
+# Público
+curl https://standard-api.bekaa.eu/api/v1/health
+
+# Detalhado (requer auth)
+curl https://standard-api.bekaa.eu/api/v1/health/detailed \
+  -H "Cookie: ..."
+```
+
+---
+
+## 🛡️ Admin (requer platform_admin)
+
+```bash
+# Listar usuários
+curl https://standard-api.bekaa.eu/api/v1/admin/users -H "Cookie: ..."
+
+# Listar tenants
+curl https://standard-api.bekaa.eu/api/v1/tenants -H "Cookie: ..."
+
+# Banir usuário
+curl -X POST https://standard-api.bekaa.eu/api/v1/admin/users/{userId}/ban \
+  -H "Content-Type: application/json" -H "Cookie: ..." \
+  -d '{"reason": "Policy violation"}'
+```
+
+---
+
+## 📡 Headers
+
+| Header | Quando | Valor |
+|--------|--------|-------|
+| `Cookie` | Browser | `standard-native-auth.session_token=...` |
+| `Authorization` | M2M | `Bearer standard_live_...` |
+| `x-standard-tenant-id` | Rotas tenant-scoped | UUID da org ativa |
+| `Content-Type` | POST/PUT/PATCH | `application/json` |
+
+## ⚠️ Erros
+
+```json
+{"error": {"code": "NOT_FOUND", "message": "Resource not found.", "trace_id": "abc-123"}}
+```
+
+| HTTP | Código | Significado |
+|------|--------|-------------|
+| 401 | UNAUTHORIZED | Sessão expirada |
+| 403 | FORBIDDEN | Sem permissão |
+| 404 | NOT_FOUND | Recurso não existe |
+| 409 | CONFLICT | Estado inválido |
+| 422 | VALIDATION_ERROR | Input inválido |
+| 429 | RATE_LIMITED | Rate limit |
+| 500 | INTERNAL_ERROR | Erro interno |

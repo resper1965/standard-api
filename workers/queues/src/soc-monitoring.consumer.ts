@@ -102,6 +102,69 @@ export async function processDlqAlert(
       // Non-fatal — log is already emitted above
       console.warn(`[soc:dlq] Failed to persist security event: ${(dbErr as Error).message}`);
     }
+
+    // ── DLQ Reconciliation ─────────────────────────────────────────────────
+    // Update the source entity status so it doesn't remain orphaned forever.
+    // Documents stuck in 'queued_for_extraction'/'extracting' → 'failed'
+    // Agent runs stuck in 'queued'/'running' → 'poisoned_dlq'
+    try {
+      const sql = neon(env.DATABASE_URL);
+      const queue = body.original_queue ?? "";
+      const msg = body.original_message as Record<string, unknown> | undefined;
+
+      if (queue.includes("document-ingestion") && msg?.document_id) {
+        await sql`
+          UPDATE documents
+          SET scan_status = 'error',
+              updated_at = NOW()
+          WHERE id = ${String(msg.document_id)}
+            AND tenant_id = ${body.tenant_id}
+            AND scan_status IN ('pending')
+        `;
+        // Also mark extraction job as failed
+        if (msg.job_id) {
+          await sql`
+            UPDATE document_extraction_jobs
+            SET status = 'failed',
+                error_code = 'DLQ_EXHAUSTED_RETRIES',
+                error_message = ${`Message exhausted retries on queue ${queue}`},
+                completed_at = NOW()
+            WHERE id = ${String(msg.job_id)}
+          `;
+        }
+        console.warn(`[soc:dlq:reconcile] Document ${msg.document_id} marked as failed (DLQ reconciliation)`);
+      }
+
+      if (queue.includes("agent-run") && (body.agent_run_id || msg?.agent_run_id)) {
+        const runId = body.agent_run_id ?? String(msg?.agent_run_id);
+        await sql`
+          UPDATE agent_runs
+          SET status = 'poisoned_dlq',
+              error_message = ${`Agent run exhausted retries on queue ${queue}`},
+              completed_at = NOW()
+          WHERE id = ${runId}
+            AND tenant_id = ${body.tenant_id}
+            AND status IN ('queued', 'running')
+        `;
+        console.warn(`[soc:dlq:reconcile] Agent run ${runId} marked as poisoned_dlq (DLQ reconciliation)`);
+      }
+
+      if (queue.includes("kb-embedding") && msg?.document_chunk_id) {
+        await sql`
+          UPDATE kb_embedding_jobs
+          SET status = 'failed',
+              error_code = 'DLQ_EXHAUSTED_RETRIES',
+              error_message_safe = ${`Embedding job exhausted retries on queue ${queue}`},
+              completed_at = NOW()
+          WHERE id = ${String(msg.job_id ?? msg.document_chunk_id)}
+            AND tenant_id = ${body.tenant_id}
+        `;
+        console.warn(`[soc:dlq:reconcile] KB embedding job marked as failed (DLQ reconciliation)`);
+      }
+    } catch (reconcileErr) {
+      // Non-fatal — the security event was already persisted above
+      console.warn(`[soc:dlq:reconcile] Reconciliation failed: ${(reconcileErr as Error).message}`);
+    }
   }
 }
 

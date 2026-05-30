@@ -91,6 +91,7 @@ jobs:
         worker:
           - workflows
           - api-gateway
+          - queues-worker
           - ingestion-worker
           - kb-worker
           - reporting-worker
@@ -141,8 +142,8 @@ jobs:
           echo "✅ Custom Domain is healthy"
 
       - name: Auth stack health check — /api/health/auth
-        # ADR-AUTH-001: This gate verifies DB connectivity for the Better Auth stack.
-        # A 503 here means Better Auth cannot reach the database — logins will fail.
+        # ADR-AUTH-001: This gate verifies DB connectivity for the Standard Native Auth stack.
+        # A 503 here means the auth layer cannot reach the database — logins will fail.
         # Never bypass this gate for production deploys.
         run: |
           AUTH_STATUS=$(curl -A "standard-api-ci/1.0" -s -o /dev/null -w "%{http_code}" https://standard-api.bekaa.eu/api/health/auth)

@@ -1,29 +1,51 @@
 /**
  * @module @standard/auth/permissions
- * @description Standard Access Control definitions.
+ * @description Standard API Access Control.
  *
- * Maps Standard domain resources to granular permissions.
- * Used by Better Auth's organization plugin for RBAC enforcement.
+ * API-first RBAC: roles define what API endpoints a consumer can call.
+ * GRC workflow semantics (who drafts vs who approves) are business logic
+ * handled by the assessment engine — NOT by API RBAC.
+ *
+ * Roles are API access levels, not GRC workflow participants:
+ *   owner  — full org API access
+ *   admin  — manage org, settings, members + all operational endpoints
+ *   member — standard API access (create, read, update, submit, run)
+ *   viewer — read-only API access
+ *
+ * Source of truth for the Permission enum: packages/schemas/src/security.ts
  */
 
 /**
- * Standard permission resources and their allowed operations.
- * These are checked via `auth.api.hasPermission()` in middleware.
+ * API permission resources and their allowed operations.
+ * Every permission declared in route definitions MUST exist here.
  */
 export const STANDARD_PERMISSIONS = {
-  assessment: ["read", "create", "update", "delete", "approve", "run_workflow", "cancel"] as const,
-  document: ["read", "upload", "delete"] as const,
-  kb: ["read", "search"] as const,
-  soa: ["read", "create", "approve", "submit_review"] as const,
-  gap_analysis: ["read", "create", "approve", "submit_review"] as const,
-  maturity: ["read", "create", "approve", "submit_review"] as const,
-  poam: ["read", "create", "approve", "submit_review"] as const,
-  report: ["read", "generate", "export"] as const,
-  agent: ["run", "read"] as const,
-  organization: ["read", "update", "manage_members"] as const,
-  admin: ["manage_users", "manage_orgs", "impersonate", "read"] as const,
+  // --- Tenant & Organization ---
+  tenant: ["read", "update"] as const,
+  organization: ["create", "read", "update"] as const,
   membership: ["manage"] as const,
-  // Platform-level: only platform_admin (cross-tenant operators) can use these.
+
+  // --- Assessment Lifecycle ---
+  assessment: ["create", "read", "update", "delete", "run_workflow", "close", "cancel"] as const,
+  document: ["upload", "read", "delete", "reprocess"] as const,
+  kb: ["index", "search"] as const,
+  scf: ["read", "import", "admin"] as const,
+  scope: ["create", "update", "approve"] as const,
+  soa: ["create", "update", "submit_review", "approve", "read"] as const,
+  evidence: ["run", "read"] as const,
+  gap: ["create", "update", "submit_review", "approve", "read"] as const,
+  maturity: ["create", "update", "submit_review", "approve", "read"] as const,
+  poam: ["create", "update", "submit_review", "approve", "read"] as const,
+  report: ["create", "render", "approve", "read", "download"] as const,
+
+  // --- Agent Runtime ---
+  agent: ["run", "dry_run", "read_runs", "admin"] as const,
+
+  // --- Administration & Audit ---
+  admin: ["read", "write"] as const,
+  audit: ["read"] as const,
+
+  // --- Platform (cross-tenant, platform_admin only) ---
   platform: ["manage_tenants", "read_all"] as const,
 } as const;
 
@@ -32,68 +54,95 @@ export type StandardPermission<R extends StandardResource = StandardResource> =
   `${R}:${(typeof STANDARD_PERMISSIONS)[R][number]}`;
 
 /**
- * Role-permission mapping for the Standard platform.
- * Better Auth uses these to enforce access control via organization plugin.
+ * API access roles and their permission mappings.
+ *
+ * These are API access levels — not GRC workflow roles.
+ * GRC concepts like "who approves a SoA" are assessment-engine
+ * business logic, enforced per-assessment, not per-API-role.
  */
 export const STANDARD_ROLE_PERMISSIONS = {
+  /** Organization owner — full API access */
   owner: {
-    assessment: ["read", "create", "update", "delete", "approve", "run_workflow", "cancel"],
-    document: ["read", "upload", "delete"],
-    kb: ["read", "search"],
-    soa: ["read", "create", "approve", "submit_review"],
-    gap_analysis: ["read", "create", "approve", "submit_review"],
-    maturity: ["read", "create", "approve", "submit_review"],
-    poam: ["read", "create", "approve", "submit_review"],
-    report: ["read", "generate", "export"],
-    agent: ["run", "read"],
-    organization: ["read", "update", "manage_members"],
-    admin: ["manage_users", "manage_orgs", "impersonate", "read"],
+    tenant: ["read", "update"],
+    organization: ["create", "read", "update"],
     membership: ["manage"],
+    assessment: ["create", "read", "update", "delete", "run_workflow", "close", "cancel"],
+    document: ["upload", "read", "delete", "reprocess"],
+    kb: ["index", "search"],
+    scf: ["read", "import", "admin"],
+    scope: ["create", "update", "approve"],
+    soa: ["create", "update", "submit_review", "approve", "read"],
+    evidence: ["run", "read"],
+    gap: ["create", "update", "submit_review", "approve", "read"],
+    maturity: ["create", "update", "submit_review", "approve", "read"],
+    poam: ["create", "update", "submit_review", "approve", "read"],
+    report: ["create", "render", "approve", "read", "download"],
+    agent: ["run", "dry_run", "read_runs", "admin"],
+    admin: ["read", "write"],
+    audit: ["read"],
   },
+
+  /** Organization admin — manage org + all operational endpoints */
   admin: {
-    assessment: ["read", "create", "update", "approve", "run_workflow", "cancel"],
-    document: ["read", "upload", "delete"],
-    kb: ["read", "search"],
-    soa: ["read", "create", "approve", "submit_review"],
-    gap_analysis: ["read", "create", "approve", "submit_review"],
-    maturity: ["read", "create", "approve", "submit_review"],
-    poam: ["read", "create", "approve", "submit_review"],
-    report: ["read", "generate", "export"],
-    agent: ["run", "read"],
-    organization: ["read", "update", "manage_members"],
-    admin: ["manage_users", "manage_orgs", "read"],
+    tenant: ["read"],
+    organization: ["read", "update"],
     membership: ["manage"],
+    assessment: ["create", "read", "update", "run_workflow", "close", "cancel"],
+    document: ["upload", "read", "delete", "reprocess"],
+    kb: ["index", "search"],
+    scf: ["read", "import"],
+    scope: ["create", "update", "approve"],
+    soa: ["create", "update", "submit_review", "approve", "read"],
+    evidence: ["run", "read"],
+    gap: ["create", "update", "submit_review", "approve", "read"],
+    maturity: ["create", "update", "submit_review", "approve", "read"],
+    poam: ["create", "update", "submit_review", "approve", "read"],
+    report: ["create", "render", "approve", "read", "download"],
+    agent: ["run", "dry_run", "read_runs", "admin"],
+    admin: ["read", "write"],
+    audit: ["read"],
   },
+
+  /** Standard API consumer — create, read, update, submit, run */
   member: {
-    assessment: ["read", "create", "update", "run_workflow"],
-    document: ["read", "upload"],
-    kb: ["read", "search"],
-    soa: ["read", "create"],
-    gap_analysis: ["read", "create"],
-    maturity: ["read", "create"],
-    poam: ["read", "create"],
-    report: ["read"],
-    agent: ["read"],
     organization: ["read"],
+    assessment: ["create", "read", "update", "run_workflow"],
+    document: ["upload", "read", "reprocess"],
+    kb: ["index", "search"],
+    scf: ["read"],
+    scope: ["create", "update"],
+    soa: ["create", "update", "submit_review", "read"],
+    evidence: ["run", "read"],
+    gap: ["create", "update", "submit_review", "read"],
+    maturity: ["create", "update", "submit_review", "read"],
+    poam: ["create", "update", "submit_review", "read"],
+    report: ["create", "read", "download"],
+    agent: ["run", "read_runs"],
+    audit: ["read"],
   },
+
+  /** Read-only API access */
   viewer: {
+    organization: ["read"],
     assessment: ["read"],
     document: ["read"],
-    kb: ["read", "search"],
+    kb: ["search"],
+    scf: ["read"],
     soa: ["read"],
-    gap_analysis: ["read"],
+    evidence: ["read"],
+    gap: ["read"],
     maturity: ["read"],
     poam: ["read"],
-    report: ["read"],
-    agent: ["read"],
-    organization: ["read"],
+    report: ["read", "download"],
+    agent: ["read_runs"],
+    audit: ["read"],
   },
 } as const;
 
 export type StandardRole = keyof typeof STANDARD_ROLE_PERMISSIONS;
 
 /**
- * Check if a role has a specific permission.
+ * Check if an API role has a specific permission.
  */
 export const roleHasPermission = (
   role: StandardRole,
@@ -106,4 +155,3 @@ export const roleHasPermission = (
   if (!resourcePerms) return false;
   return resourcePerms.includes(action);
 };
-

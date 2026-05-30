@@ -170,7 +170,7 @@ export const dataSubjectRoutes: RouteDefinition[] = [
         note: "User-initiated deletion request. Hard-delete follows retention schedule (max 30d).",
       });
 
-      // Immediately ban the user via Better Auth (invalidates all sessions).
+      // Immediately ban the user via Standard Native Auth (invalidates all sessions).
       // Hard purge of personal data happens within 30 days per data-retention-policy.md.
       if (context.deps.banUser) {
         await context.deps.banUser(userId, "User-initiated account deletion (LGPD art. 18)");

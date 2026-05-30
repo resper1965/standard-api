@@ -5,6 +5,7 @@
 - **Base Architecture:** Cloudflare-native monorepo with Neon PostgreSQL.
 - **Key Modules:**
     - `api-gateway`: Stabilized v1 interface.
+    - `apps/web`: Platform Console para gestão de orgs, users e API keys.
     - `assessment-workflow`: Implemented durable states.
     - `ingestion-worker`: RAG pipeline with R2 + Vectorize + Neon Data API.
     - `scf-core`: Normative SCF catalog integrated.
@@ -24,3 +25,5 @@
 - Use Cloudflare Workflows for both long-running Assessment Lifecycle and fast Agent Council loops.
 - Adopt Neon for DB Branching to enable high-fidelity preview environments.
 - Enforce strict tenancy isolation at the API Gateway level.
+- Standard Native Auth v1.6.11 como provedor de autenticação (ADR 0005).
+- apps/web definido como Platform Console, não GRC dashboard.

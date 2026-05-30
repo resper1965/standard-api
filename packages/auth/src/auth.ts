@@ -1,22 +1,22 @@
 /**
  * @module @standard/auth
- * @description Standard Auth Server — Self-hosted Better Auth.
+ * @description Standard Auth Server — Self-hosted Standard Native Auth.
  *
  * Runs inside the API Gateway (Cloudflare Worker).
  * Uses email/password authentication with organization-based tenancy.
  */
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { organization, admin } from "better-auth/plugins";
+// Plugins removed — user/org management handled by our own API routes
 import {
   baUser,
   baSession,
   baAccount,
   baVerification,
+  baApikey,
   baOrganization,
   baMember,
-  baInvitation,
-  baApikey
+  baInvitation
 } from "@standard/schemas";
 
 export type AuthEnv = {
@@ -26,7 +26,7 @@ export type AuthEnv = {
 };
 
 /**
- * Creates the Better Auth server instance.
+ * Creates the Standard Native Auth server instance.
  * Call once at Worker startup and reuse across requests.
  */
 export const createAuth = (env: AuthEnv, db: any) => {
@@ -38,10 +38,10 @@ export const createAuth = (env: AuthEnv, db: any) => {
         session: baSession,
         account: baAccount,
         verification: baVerification,
+        apikey: baApikey,
         organization: baOrganization,
         member: baMember,
-        invitation: baInvitation,
-        apikey: baApikey
+        invitation: baInvitation
       }
     }),
     secret: env.BETTER_AUTH_SECRET,
@@ -79,6 +79,18 @@ export const createAuth = (env: AuthEnv, db: any) => {
           fieldName: "metadata",
         },
         /**
+         * API access role.
+         * Returned in session so the frontend can display it.
+         * Settable only via admin API (input: false on public endpoints).
+         */
+        role: {
+          type: "string",
+          fieldName: "role",
+          defaultValue: "member",
+          returned: true,
+          input: false,
+        },
+        /**
          * Platform-level admin flag.
          * When true, the user has cross-tenant access (Bekaa operator).
          * - Never settable via public API (input: false).
@@ -97,6 +109,19 @@ export const createAuth = (env: AuthEnv, db: any) => {
 
     advanced: {
       useSecureCookies: true,
+      generateId: () => crypto.randomUUID(),
+      // Cross-subdomain cookies: share session between
+      // standard.bekaa.eu (frontend) and standard-api.bekaa.eu (API gateway)
+      crossSubDomainCookies: {
+        enabled: true,
+        domain: ".bekaa.eu",
+      },
+      defaultCookieAttributes: {
+        sameSite: "none",   // Required for cross-origin credentials
+        secure: true,       // Required when sameSite=none
+        httpOnly: true,
+        path: "/",
+      },
     },
 
     session: {
@@ -106,68 +131,7 @@ export const createAuth = (env: AuthEnv, db: any) => {
       },
     },
 
-    plugins: [
-      organization({
-        schema: {
-          organization: {
-            additionalFields: {
-              // ADR-AUTH-001 Rule 1 (org plugin edition):
-              // Do NOT specify fieldName for multi-word camelCase fields.
-              // The Drizzle adapter converts camelCase→snake_case automatically.
-              // Specifying fieldName causes double-mapping → 500 error.
-              // Fields that pass: phone, address, city, state, country, industry (single-word or exact match)
-              // Fields that fail with fieldName: taxId, billingEmail, postalCode, employeeCount (multi-word)
-              taxId: {
-                type: "string",
-                required: false,
-                // fieldName: "tax_id" ← REMOVED: causes double-mapping 500
-              },
-              billingEmail: {
-                type: "string",
-                required: false,
-                // fieldName: "billing_email" ← REMOVED: causes double-mapping 500
-              },
-              phone: {
-                type: "string",
-                required: false,
-                // fieldName not needed: single word, matches automatically
-              },
-              address: {
-                type: "string",
-                required: false,
-              },
-              city: {
-                type: "string",
-                required: false,
-              },
-              state: {
-                type: "string",
-                required: false,
-              },
-              country: {
-                type: "string",
-                required: false,
-              },
-              postalCode: {
-                type: "string",
-                required: false,
-                // fieldName: "postal_code" ← REMOVED: causes double-mapping 500
-              },
-              industry: {
-                type: "string",
-                required: false,
-              },
-              employeeCount: {
-                type: "string",
-                required: false,
-                // fieldName: "employee_count" ← REMOVED: causes double-mapping 500
-              },
-            },
-          },
-        },
-      }),
-      admin(),
-    ],
+    // No plugins — user/org management via /api/v1/admin/* and /api/v1/users/me/*
   });
 };
 

@@ -8,7 +8,7 @@
 
 A branch `feature/architecture-refactoring` contém 5 commits que implementam:
 1. Isolamento do `scf-core` e remoção de dependências zumbi
-2. Configuração de Better Auth KV secondary storage
+2. Configuração de Standard Native Auth KV secondary storage
 3. Middleware GRC ABAC + abstrações CQRS
 4. Bump do SCF seed gen para 2026.1.1
 5. Mapping ISO/IEC 42001:2023 AI Management

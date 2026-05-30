@@ -32,7 +32,7 @@ function buildDownState(connectionError: boolean): HealthState {
     services: [
       { name: "API Gateway", status: "down" },
       { name: "Database", status: "down" },
-      { name: "Auth (Better Auth)", status: "down" },
+      { name: "Auth (Standard Native Auth)", status: "down" },
       { name: "Storage (R2)", status: "down" },
     ],
     connectionError,
@@ -80,7 +80,7 @@ export function AdminSystemHealth() {
       const services: ServiceStatus[] = [
         { name: "API Gateway", status: gatewayUp ? "operational" : "down" },
         { name: "Database", status: dbUp ? "operational" : "down" },
-        { name: "Auth (Better Auth)", status: gatewayUp ? "operational" : "down" },
+        { name: "Auth (Standard Native Auth)", status: gatewayUp ? "operational" : "down" },
         { name: "Storage (R2)", status: "operational" },
       ];
 
@@ -173,19 +173,19 @@ export function AdminSystemHealth() {
             <Card className="border-border/60 shadow-none">
               <CardContent className="py-4">
                 <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">API Version</p>
-                <p className="text-xl font-bold">{health.version}</p>
+                <p className="text-xl font-bold stat-number">{health.version}</p>
               </CardContent>
             </Card>
             <Card className="border-border/60 shadow-none">
               <CardContent className="py-4">
                 <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Uptime</p>
-                <p className="text-xl font-bold">{health.overall === "down" ? "—" : "99.9%"}</p>
+                <p className="text-xl font-bold stat-number">{health.overall === "down" ? "\u2014" : "99.9%"}</p>
               </CardContent>
             </Card>
             <Card className="border-border/60 shadow-none">
               <CardContent className="py-4">
                 <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Avg Latency</p>
-                <p className="text-xl font-bold">{health.operational ? `${health.operational.avg_latency_ms}ms` : "—"}</p>
+                <p className="text-xl font-bold stat-number">{health.operational ? `${health.operational.avg_latency_ms}ms` : "\u2014"}</p>
               </CardContent>
             </Card>
           </div>
@@ -217,21 +217,21 @@ export function AdminSystemHealth() {
                 <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-border/40">
                   <div className="px-4 py-4">
                     <p className="text-xs text-muted-foreground">Requests</p>
-                    <p className="text-lg font-bold mt-0.5">{health.operational.total_requests}</p>
+                    <p className="text-lg font-bold stat-number mt-0.5">{health.operational.total_requests}</p>
                   </div>
                   <div className="px-4 py-4">
                     <p className="text-xs text-muted-foreground">Errors</p>
-                    <p className={`text-lg font-bold mt-0.5 ${health.operational.total_errors > 0 ? "text-destructive" : ""}`}>
+                    <p className={`text-lg font-bold stat-number mt-0.5 ${health.operational.total_errors > 0 ? "text-destructive" : ""}`}>
                       {health.operational.total_errors}
                     </p>
                   </div>
                   <div className="px-4 py-4">
                     <p className="text-xs text-muted-foreground">Scans Blocked</p>
-                    <p className="text-lg font-bold mt-0.5">{health.operational.scan_blocked_count}</p>
+                    <p className="text-lg font-bold stat-number mt-0.5">{health.operational.scan_blocked_count}</p>
                   </div>
                   <div className="px-4 py-4">
                     <p className="text-xs text-muted-foreground">DLQ Events</p>
-                    <p className={`text-lg font-bold mt-0.5 ${health.operational.dlq_count > 0 ? "text-warning" : ""}`}>
+                    <p className={`text-lg font-bold stat-number mt-0.5 ${health.operational.dlq_count > 0 ? "text-warning" : ""}`}>
                       {health.operational.dlq_count}
                     </p>
                   </div>

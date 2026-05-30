@@ -1,44 +1,44 @@
-# Better Auth — Auditoria e Hardening — Implementation Plan
+# Standard Native Auth — Auditoria e Hardening — Implementation Plan
 
 > **For Antigravity:** REQUIRED WORKFLOW: Use `.agent/workflows/execute-plan.md` to execute this plan in single-flow mode.
 
-**Goal:** Tornar o Better Auth previsível, testado e monitorado — eliminando a categoria de bugs que custou 2 semanas de instabilidade em produção.
+**Goal:** Tornar o Standard Native Auth previsível, testado e monitorado — eliminando a categoria de bugs que custou 2 semanas de instabilidade em produção.
 
 **Architecture:** Cinco camadas independentes e ordenadas: (1) ADR de comportamentos documentados, (2) version lock e processo de update, (3) runbook de rotação de secret, (4) suite de testes de integração com gate no CI, (5) observabilidade com logs estruturados e health check. Cada camada é um commit atômico e verificável.
 
-**Tech Stack:** Better Auth v1.6.11, Drizzle ORM, Neon PostgreSQL, Cloudflare Workers, Vitest, GitHub Actions.
+**Tech Stack:** Standard Native Auth v1.6.11, Drizzle ORM, Neon PostgreSQL, Cloudflare Workers, Vitest, GitHub Actions.
 
 ---
 
-## Task 1: ADR — Comportamentos Better Auth (documentação)
+## Task 1: ADR — Comportamentos Standard Native Auth (documentação)
 
 **Files:**
-- Create: `docs/decisions/adr-auth-better-auth-behaviors.md`
+- Create: `docs/decisions/adr-auth-standard-native-auth-behaviors.md`
 
 **Step 1: Criar o arquivo ADR**
 
 ```markdown
-# ADR-AUTH-001: Better Auth — Comportamentos e Regras Operacionais
+# ADR-AUTH-001: Standard Native Auth — Comportamentos e Regras Operacionais
 
 **Status:** Ativo  
 **Data:** 2026-05-25  
-**Contexto:** Dois bugs críticos em produção revelaram defaults não-documentados do Better Auth v1.6.x. Este documento é a fonte canônica de regras para usar o Better Auth corretamente neste projeto.
+**Contexto:** Dois bugs críticos em produção revelaram defaults não-documentados do Standard Native Auth v1.6.x. Este documento é a fonte canônica de regras para usar o Standard Native Auth corretamente neste projeto.
 
 ---
 
 ## Regra 1 — Drizzle Adapter: nunca duplicar field mappings
 
 **Comportamento observado (bug 2026-05-25):**
-`BetterAuthError: The field "user_id" does not exist in the schema for the model "account"`
+`StandardAuthError: The field "user_id" does not exist in the schema for the model "account"`
 
 **Causa:** O Drizzle adapter lê column metadata diretamente do schema Drizzle
 (`accountId: text("account_id")`). Ao também declarar `account.fields.userId: "user_id"`
-no `betterAuth()`, o Better Auth aplica um double-mapping que quebra as queries de join.
+no `standardAuth()`, o Standard Native Auth aplica um double-mapping que quebra as queries de join.
 
 **Regra:**
 - ❌ NUNCA declarar `fields` mappings para modelos cujo schema Drizzle já define as colunas snake_case.
 - ✅ O Drizzle adapter mapeia camelCase→snake_case automaticamente via column names.
-- ✅ Usar `additionalFields` com `fieldName` para campos custom que não existem no schema padrão do Better Auth.
+- ✅ Usar `additionalFields` com `fieldName` para campos custom que não existem no schema padrão do Standard Native Auth.
 
 **Modelos afetados:** `account`, `session`, `verification` — todos já têm schema Drizzle completo.
 
@@ -49,7 +49,7 @@ no `betterAuth()`, o Better Auth aplica um double-mapping que quebra as queries 
 **Comportamento observado (bug 2026-05-25):**
 `[body.taxId] Invalid input: expected string, received undefined`
 
-**Causa:** Better Auth trata `additionalFields` com `type: "string"` como obrigatórios por default.
+**Causa:** Standard Native Auth trata `additionalFields` com `type: "string"` como obrigatórios por default.
 
 **Regra:**
 - ❌ NUNCA declarar `additionalFields` sem `required: false` se o campo for opcional.
@@ -58,17 +58,17 @@ no `betterAuth()`, o Better Auth aplica um double-mapping que quebra as queries 
 
 ---
 
-## Regra 3 — Version lock: nunca usar ^ ou ~ na versão do better-auth
+## Regra 3 — Version lock: nunca usar ^ ou ~ na versão do standard-native-auth
 
 **Comportamento observado (histórico):**
-`fix: pin better-auth to 1.2.10 — fixes dashboard TypeError crash`
+`fix: pin standard-native-auth to 1.2.10 — fixes dashboard TypeError crash`
 
-**Causa:** Minor versions do Better Auth introduzem breaking changes silenciosos nos adapters e plugins.
+**Causa:** Minor versions do Standard Native Auth introduzem breaking changes silenciosos nos adapters e plugins.
 
 **Regra:**
-- ❌ NUNCA usar `"better-auth": "^1.6.11"` — permite minor updates automáticos.
-- ✅ Sempre usar versão exata: `"better-auth": "1.6.11"`.
-- ✅ Qualquer update segue o processo documentado em `docs/runbooks/better-auth-update-process.md`.
+- ❌ NUNCA usar `"standard-native-auth": "^1.6.11"` — permite minor updates automáticos.
+- ✅ Sempre usar versão exata: `"standard-native-auth": "1.6.11"`.
+- ✅ Qualquer update segue o processo documentado em `docs/runbooks/standard-native-auth-update-process.md`.
 
 ---
 
@@ -93,7 +93,7 @@ Os itens abaixo precisam ser verificados com testes de integração:
 - [ ] `ban/unban` — invalida sessões existentes imediatamente?
 - [ ] Impersonation — funciona em Cloudflare Workers?
 - [ ] `emailVerified` — default false; como o fluxo de verificação funciona se `requireEmailVerification: false`?
-- [ ] Cookie `better-auth.session_token` — qual é o tempo de expiração default?
+- [ ] Cookie `standard-native-auth.session_token` — qual é o tempo de expiração default?
 
 Cada item verificado deve ser adicionado como regra documentada neste arquivo.
 ```
@@ -101,7 +101,7 @@ Cada item verificado deve ser adicionado como regra documentada neste arquivo.
 **Step 2: Verificar que o arquivo foi criado**
 
 ```bash
-ls docs/decisions/adr-auth-better-auth-behaviors.md
+ls docs/decisions/adr-auth-standard-native-auth-behaviors.md
 ```
 
 Esperado: arquivo presente.
@@ -109,8 +109,8 @@ Esperado: arquivo presente.
 **Step 3: Commit**
 
 ```bash
-git add docs/decisions/adr-auth-better-auth-behaviors.md
-git commit -m "docs(adr): add Better Auth behavioral rules and audit backlog
+git add docs/decisions/adr-auth-standard-native-auth-behaviors.md
+git commit -m "docs(adr): add Standard Native Auth behavioral rules and audit backlog
 
 Documents two production bugs from 2026-05-25 as formal rules:
 - Rule 1: never duplicate Drizzle adapter field mappings
@@ -131,10 +131,10 @@ Co-Authored-By: Antigravity (Google DeepMind Advanced Agentic Coding)"
 **Step 1: Verificar versão atual**
 
 ```bash
-cat packages/auth/package.json | grep better-auth
+cat packages/auth/package.json | grep standard-native-auth
 ```
 
-Esperado: linha com `"better-auth": "1.6.11"` (com ou sem `^`).
+Esperado: linha com `"standard-native-auth": "1.6.11"` (com ou sem `^`).
 
 **Step 2: Remover o `^` se presente**
 
@@ -143,7 +143,7 @@ Em `packages/auth/package.json`, garantir:
 ```json
 {
   "dependencies": {
-    "better-auth": "1.6.11"
+    "standard-native-auth": "1.6.11"
   }
 }
 ```
@@ -153,19 +153,19 @@ Em `packages/auth/package.json`, garantir:
 **Step 3: Verificar que o lock file reflete a versão exata**
 
 ```bash
-grep "better-auth" pnpm-lock.yaml | head -5
+grep "standard-native-auth" pnpm-lock.yaml | head -5
 ```
 
-Esperado: `better-auth 1.6.11` sem range.
+Esperado: `standard-native-auth 1.6.11` sem range.
 
 **Step 4: Commit**
 
 ```bash
 git add packages/auth/package.json pnpm-lock.yaml
-git commit -m "chore(auth): pin better-auth to exact version 1.6.11
+git commit -m "chore(auth): pin standard-native-auth to exact version 1.6.11
 
 Prevent silent breaking changes from minor version updates.
-Better Auth has history of adapter/plugin breaking changes in minor versions.
+Standard Native Auth has history of adapter/plugin breaking changes in minor versions.
 
 Co-Authored-By: Antigravity (Google DeepMind Advanced Agentic Coding)"
 ```
@@ -176,7 +176,7 @@ Co-Authored-By: Antigravity (Google DeepMind Advanced Agentic Coding)"
 
 **Files:**
 - Create: `docs/runbooks/auth-secret-rotation.md`
-- Create: `docs/runbooks/better-auth-update-process.md`
+- Create: `docs/runbooks/standard-native-auth-update-process.md`
 
 **Step 1: Criar runbook de rotação de secret**
 
@@ -249,12 +249,12 @@ Dashboard → remover `BETTER_AUTH_SECRET_NEW` e renomear `BETTER_AUTH_SECRET` p
 Atualizar a tabela "Histórico de Rotações" acima com data e responsável.
 ```
 
-**Step 2: Criar runbook de update do Better Auth**
+**Step 2: Criar runbook de update do Standard Native Auth**
 
 ```markdown
-# Runbook: Processo de Update do Better Auth
+# Runbook: Processo de Update do Standard Native Auth
 
-**Regra:** Nunca atualizar o better-auth sem seguir este processo.
+**Regra:** Nunca atualizar o standard-native-auth sem seguir este processo.
 **Motivo:** Minor versions introduzem breaking changes silenciosos em adapters e plugins.
 
 ## Processo
@@ -262,19 +262,19 @@ Atualizar a tabela "Histórico de Rotações" acima com data e responsável.
 ### 1. Criar branch isolada
 
 ```bash
-git checkout -b feature/better-auth-X.Y.Z
+git checkout -b feature/standard-native-auth-X.Y.Z
 ```
 
 ### 2. Criar Neon branch para teste
 
 ```bash
 # Via Cloudflare Neon integration ou CLI
-neon branches create --name test/better-auth-update
+neon branches create --name test/standard-native-auth-update
 ```
 
 ### 3. Ler o CHANGELOG
 
-Acessar: https://github.com/better-auth/better-auth/releases
+Acessar: https://github.com/standard-native-auth/standard-native-auth/releases
 
 Focar em mudanças em:
 - `adapters/` — especialmente Drizzle
@@ -288,7 +288,7 @@ Documentar qualquer breaking change encontrado antes de prosseguir.
 
 ```bash
 # packages/auth/package.json
-"better-auth": "X.Y.Z"   # versão exata, sem ^ ou ~
+"standard-native-auth": "X.Y.Z"   # versão exata, sem ^ ou ~
 
 pnpm install
 ```
@@ -318,13 +318,13 @@ npx wrangler deploy -c infra/cloudflare/wrangler.api-gateway.toml -e staging
 ### 8. Atualizar o ADR
 
 Adicionar qualquer novo comportamento descoberto em:
-`docs/decisions/adr-auth-better-auth-behaviors.md`
+`docs/decisions/adr-auth-standard-native-auth-behaviors.md`
 
 ### 9. PR e deploy em production
 
 ```bash
 git add .
-git commit -m "chore(auth): update better-auth to X.Y.Z
+git commit -m "chore(auth): update standard-native-auth to X.Y.Z
 
 Changes: [resumo do CHANGELOG relevante]
 Tests: all auth integration tests passing
@@ -338,7 +338,7 @@ Staging: smoke tested manually"
 
 ```bash
 git add docs/runbooks/
-git commit -m "docs(runbooks): add auth secret rotation and better-auth update process
+git commit -m "docs(runbooks): add auth secret rotation and standard-native-auth update process
 
 Formal runbooks for two critical operational procedures that had no
 documented process. Secret rotation without process = security risk.
@@ -355,7 +355,7 @@ Co-Authored-By: Antigravity (Google DeepMind Advanced Agentic Coding)"
 - Create: `apps/api-gateway/tests/auth/sign-in.test.ts`
 - Create: `apps/api-gateway/tests/auth/session.test.ts`
 
-**Contexto:** O Worker usa Better Auth como handler direto. Os testes chamam o handler via `fetch` local ou via `Miniflare` em ambiente de teste. Verificar como o projeto atual configura testes de integração:
+**Contexto:** O Worker usa Standard Native Auth como handler direto. Os testes chamam o handler via `fetch` local ou via `Miniflare` em ambiente de teste. Verificar como o projeto atual configura testes de integração:
 
 ```bash
 cat apps/api-gateway/vitest.config.ts
@@ -384,7 +384,7 @@ describe("POST /api/auth/sign-in/email", () => {
       password: process.env.TEST_USER_PASSWORD!,
     });
     expect(res.status).toBe(200);
-    expect(res.headers.get("set-cookie")).toContain("better-auth.session_token");
+    expect(res.headers.get("set-cookie")).toContain("standard-native-auth.session_token");
     const body = await res.json();
     expect(body.user.email).toBe(process.env.TEST_USER_EMAIL);
   });
@@ -614,7 +614,7 @@ Co-Authored-By: Antigravity (Google DeepMind Advanced Agentic Coding)"
 import { describe, it, expect, beforeAll } from "vitest";
 import { createTestClient } from "../helpers/test-client";
 
-describe("Better Auth admin plugin — audit", () => {
+describe("Standard Native Auth admin plugin — audit", () => {
   let client: ReturnType<typeof createTestClient>;
   let adminCookie: string;
 
@@ -652,7 +652,7 @@ describe("Better Auth admin plugin — audit", () => {
 pnpm test --filter=apps/api-gateway -- tests/auth/admin.test.ts --reporter=verbose
 ```
 
-Para cada comportamento inesperado encontrado: adicionar como regra em `docs/decisions/adr-auth-better-auth-behaviors.md`.
+Para cada comportamento inesperado encontrado: adicionar como regra em `docs/decisions/adr-auth-standard-native-auth-behaviors.md`.
 
 **Step 3: Commit**
 
@@ -688,7 +688,7 @@ cat apps/api-gateway/src/routes/health.routes.ts
   protected: false,
   handler: async ({ deps }) => {
     try {
-      // Verifica que o banco está acessível via Better Auth
+      // Verifica que o banco está acessível via Standard Native Auth
       // (query leve — não expõe dados)
       const start = Date.now();
       await deps.db.execute(sql`SELECT 1`);
@@ -696,14 +696,14 @@ cat apps/api-gateway/src/routes/health.routes.ts
 
       return json({
         status: "ok",
-        auth: "better-auth@1.6.11",
+        auth: "standard-native-auth@1.6.11",
         db: "connected",
         latency_ms: latencyMs,
       });
     } catch (error) {
       return json({
         status: "degraded",
-        auth: "better-auth@1.6.11",
+        auth: "standard-native-auth@1.6.11",
         db: "unreachable",
       }, { status: 503 });
     }
@@ -719,7 +719,7 @@ curl -s https://standard-api.bekaa.eu/api/health/auth | jq .
 
 Esperado:
 ```json
-{ "status": "ok", "auth": "better-auth@1.6.11", "db": "connected", "latency_ms": 12 }
+{ "status": "ok", "auth": "standard-native-auth@1.6.11", "db": "connected", "latency_ms": 12 }
 ```
 
 **Step 4: Commit**
@@ -895,10 +895,10 @@ Co-Authored-By: Antigravity (Google DeepMind Advanced Agentic Coding)"
 
 Após completar todas as tasks:
 
-- [ ] `docs/decisions/adr-auth-better-auth-behaviors.md` existe e tem as 4 regras
-- [ ] `packages/auth/package.json` tem `"better-auth": "1.6.11"` sem `^`
+- [ ] `docs/decisions/adr-auth-standard-native-auth-behaviors.md` existe e tem as 4 regras
+- [ ] `packages/auth/package.json` tem `"standard-native-auth": "1.6.11"` sem `^`
 - [ ] `docs/runbooks/auth-secret-rotation.md` existe com processo completo
-- [ ] `docs/runbooks/better-auth-update-process.md` existe com processo completo
+- [ ] `docs/runbooks/standard-native-auth-update-process.md` existe com processo completo
 - [ ] `apps/api-gateway/tests/auth/` tem 4 arquivos de teste
 - [ ] `pnpm test --filter=apps/api-gateway -- tests/auth/` passa 100%
 - [ ] `GET /api/health/auth` retorna `{ "status": "ok" }`

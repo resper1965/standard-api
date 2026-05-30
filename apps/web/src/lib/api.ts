@@ -16,11 +16,14 @@ export async function apiClient<T = unknown>(endpoint: string, options: RequestI
 
   const headers = new Headers(options.headers || {})
   
-  if (!headers.has('Content-Type')) {
+  // Only set Content-Type on requests with a body (POST/PUT/PATCH).
+  // Setting it on GET triggers an avoidable CORS preflight.
+  const method = (options.method || "GET").toUpperCase();
+  if (!headers.has('Content-Type') && method !== "GET" && method !== "HEAD") {
     headers.set('Content-Type', 'application/json')
   }
   
-  // Only add tenant header to /api/v1/* routes — better-auth routes (/api/auth/*) 
+  // Only add tenant header to /api/v1/* routes — standard-native-auth routes (/api/auth/*) 
   // don't allow this custom header and it causes CORS preflight failures
   if (tenantIdHeader && !endpoint.includes('/api/auth/')) {
      headers.set('x-standard-tenant-id', tenantIdHeader)

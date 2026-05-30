@@ -23,11 +23,11 @@
 
 ### Authentication
 
-All protected endpoints require a valid session. Authentication is handled via **Better Auth** session cookies or **API Keys (M2M)**.
+All protected endpoints require a valid session. Authentication is handled via **Standard Native Auth** session cookies or **API Keys (M2M)**.
 
 | Method | Header | Format |
 |--------|--------|--------|
-| Browser Session | Cookie | `better-auth.session_token=<token>` |
+| Browser Session | Cookie | `standard-native-auth.session_token=<token>` |
 | API Key (M2M) | `Authorization` | `Bearer standard_live_<key>` |
 
 ### Tenant Context

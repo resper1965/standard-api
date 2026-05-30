@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react"
-import { useSession, authClient } from "@/lib/auth-client"
+import { useSession } from "@/lib/auth-client"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Copy, Plus, Users, Building, Key, Check, BookOpen, Trash2, ChevronDown, ChevronRight, ExternalLink, Loader2 } from "lucide-react"
+import { Copy, Plus, Users, Building, Key, Check, BookOpen, Trash2, ChevronDown, ChevronRight, ExternalLink, Loader2, AlertTriangle } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import {
   Dialog,
@@ -519,13 +519,29 @@ export function SettingsPage() {
   useEffect(() => {
     async function load() {
       if (!hasActiveOrg) return
+      const orgId = session?.session?.activeOrganizationId
+      if (!orgId) return
       try {
-        const orgData = await authClient.organization.getFullOrganization()
-        if (orgData.data) {
-          setActiveOrg(orgData.data)
-          setMembers(orgData.data.members || [])
-          await loadApiKeys(orgData.data.id)
-          await loadOrganizationDetails(orgData.data.id)
+        // Load org details + members from our own API
+        const orgRes = await fetch(`${API_URL}/api/v1/organizations/${orgId}`, {
+          headers: { "x-standard-tenant-id": orgId },
+          credentials: "include"
+        })
+        if (orgRes.ok) {
+          const orgData = await orgRes.json()
+          setActiveOrg(orgData)
+          // Load members separately
+          try {
+            const membersRes = await fetch(`${API_URL}/api/v1/organizations/${orgId}/members`, {
+              headers: { "x-standard-tenant-id": orgId },
+              credentials: "include"
+            })
+            if (membersRes.ok) {
+              const membersData = await membersRes.json()
+              setMembers(membersData.data || [])
+            }
+          } catch { /* no members endpoint yet */ }
+          await loadApiKeys(orgId)
         }
       } catch (e: any) { 
         toast({ variant: "destructive", title: "Error", description: e?.message || "Failed to load organization." });
@@ -651,12 +667,17 @@ export function SettingsPage() {
           title: "Member invited",
           description: `Invitation sent to ${inviteEmail}.`
         })
-        const orgData = await authClient.organization.getFullOrganization()
-        if (orgData.data) {
-          setActiveOrg(orgData.data)
-          setMembers(orgData.data.members || [])
-          await loadOrganizationDetails(orgData.data.id)
-        }
+        // Reload members
+        try {
+          const membersRes = await fetch(`${API_URL}/api/v1/organizations/${activeOrg.id}/members`, {
+            headers: { "x-standard-tenant-id": activeOrg.id },
+            credentials: "include"
+          })
+          if (membersRes.ok) {
+            const membersData = await membersRes.json()
+            setMembers(membersData.data || [])
+          }
+        } catch { /* no members endpoint yet */ }
         setInviteEmail("")
         setInviteName("")
         setInviteRole("member")
@@ -999,7 +1020,7 @@ export function SettingsPage() {
               {newKey && (
                 <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-lg space-y-2">
                   <div className="text-sm font-semibold text-emerald-600 flex items-center justify-between">
-                    <span>⚠ Save this key now — it won't be shown again.</span>
+                    <span><AlertTriangle className="h-4 w-4 inline mr-1 align-text-bottom" /> Save this key now — it won't be shown again.</span>
                     {renderCopyBtn(newKey, "newkey", "sm")}
                   </div>
                   <code className="text-sm font-mono break-all bg-emerald-500/5 px-2 py-1 rounded block">{newKey}</code>

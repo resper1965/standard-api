@@ -63,8 +63,27 @@ export class CouncilOrchestrationWorkflow extends WorkflowEntrypoint<Env, Counci
     // Initialize state into KV before starting agent steps
     const stateKey = `council:runs:${runId}:payload`;
     await step.do("initialize-run-state", async () => {
-        await this.env.STANDARD_CACHE.put(stateKey, JSON.stringify(inputData), { expirationTtl: 86400 });
-        return { executed: true };
+        const serialized = JSON.stringify(inputData);
+        const payloadSizeKB = Math.round(serialized.length / 1024);
+
+        // Hard limit: reject payloads > 512KB to prevent KV degradation
+        if (serialized.length > 512 * 1024) {
+            throw new Error(
+                `Council payload too large (${payloadSizeKB}KB). Max allowed: 512KB. ` +
+                `Use R2 references instead of inline document content.`
+            );
+        }
+
+        // Soft warning: payloads > 256KB indicate potential design issues
+        if (serialized.length > 256 * 1024) {
+            console.warn(
+                `[council:workflow] Large payload detected: ${payloadSizeKB}KB for run ${runId}. ` +
+                `Consider using R2 references to reduce payload size.`
+            );
+        }
+
+        await this.env.STANDARD_CACHE.put(stateKey, serialized, { expirationTtl: 86400 });
+        return { executed: true, payload_size_kb: payloadSizeKB };
     });
 
     let finalSummary = "Council durable execution completed.";

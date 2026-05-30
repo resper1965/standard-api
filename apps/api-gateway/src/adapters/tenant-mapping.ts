@@ -1,11 +1,11 @@
 /**
  * @module tenant-mapping
- * @description Bridge between Better Auth identity (text IDs) and Standard domain (UUID IDs).
+ * @description Bridge between Standard Native Auth identity (text IDs) and Standard domain (UUID IDs).
  *
- * Better Auth creates organizations with text IDs (e.g. "org_pa5khl").
+ * Standard Native Auth creates organizations with text IDs (e.g. "org_pa5khl").
  * The Standard domain schema uses UUID columns with FK relationships.
  *
- * This module resolves the active Better Auth organization into valid
+ * This module resolves the active Standard Native Auth organization into valid
  * Standard tenant + organization UUIDs, creating them on-demand if needed
  * (lazy provisioning / "just-in-time" tenant setup).
  */

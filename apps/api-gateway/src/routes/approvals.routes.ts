@@ -27,7 +27,7 @@ export const approvalsRoutes: RouteDefinition[] = [
         report: "report:approve"
       } as const;
       const requiredPermission = permissionByGate[body.gate];
-      // Use Better Auth session role for RBAC check
+      // Use Standard Native Auth session role for RBAC check
       const sessionRole = (session?.user?.role as string | undefined) ?? 'viewer';
       // Map gate-specific permissions to role capability
       const gateRoleMap: Record<string, string[]> = {

@@ -3,7 +3,7 @@
  * @description Public API for the Standard auth package.
  */
 
-// Core auth — Better Auth server
+// Core auth — Standard Native Auth server
 export { createAuth } from "./auth";
 export type { StandardAuth, AuthEnv } from "./auth";
 

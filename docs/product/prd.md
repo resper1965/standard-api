@@ -183,7 +183,7 @@ standard-api/
 | **Vector DB** | Cloudflare Vectorize | Semantic search (bge-base-en) |
 | **AI Gateway** | Cloudflare AI Gateway | LLM observability, rate limiting |
 | **LLM** | OpenAI GPT-4o | Agent intelligence |
-| **Auth** | Neon Auth (JWKS) | Identity, sessions, Google OAuth |
+| **Auth** | Standard Native Auth (better-auth v1.6.11) | Identity, sessions, API keys |
 | **Validation** | Zod | Schema validation across all layers |
 | **Language** | TypeScript (strict) | End-to-end type safety |
 | **Package Manager** | pnpm 9 | Monorepo workspace management |
@@ -300,7 +300,7 @@ Upload → Validation → R2 Storage → Chunking → KB Indexing → Vector Emb
 
 **Auth Methods:**
 - API Key authentication (SHA-256 hash + timing-safe comparison)
-- JWT sessions via Neon Auth (Google OAuth supported)
+- JWT sessions via Standard Native Auth (Google OAuth supported)
 - Per-tenant rate limiting (sliding window)
 
 ### 6.2 Core Assessment Flow
@@ -394,8 +394,8 @@ Every critical data flow carries:
 ### 8.1 Authentication
 
 - **API Keys:** SHA-256 hashed storage, timing-safe comparison
-- **Sessions:** Neon Auth with JWT validation via JWKS
-- **OAuth:** Google OAuth via Neon Auth
+- **Sessions:** Standard Native Auth with session-based validation via database
+- **OAuth:** Google OAuth via Standard Native Auth
 - **Rate Limiting:** Per-tenant sliding window algorithm
 
 ### 8.2 Authorization (RBAC)
@@ -637,7 +637,7 @@ graph LR
 | ADR-0002 | Neon PostgreSQL as managed transactional database |
 | ADR-0003 | Cloudflare infrastructure automation |
 | ADR-0004 | SCF structured data as normative source of truth |
-| ADR-0005 | Neon Auth as identity provider |
+| ADR-0005 | Standard Native Auth as identity provider |
 | ADR-0006 | Drizzle ORM for PostgreSQL |
 | ADR-0007 | "Trust & Authority" design system |
 | ADR-0008 | SCF Official XLSX 2026.1.1 as data source |

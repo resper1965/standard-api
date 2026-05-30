@@ -7,15 +7,15 @@
 
 > **For Antigravity:** REQUIRED WORKFLOW: Use `.agent/workflows/execute-plan.md` to execute this plan in single-flow mode.
 
-**Goal:** Refactor Standard API to decouple GRC ABAC from Better Auth, cache sessions at the Edge (KV), prepare CQRS Queues for Assessment Engine, and sever bad package coupling.
+**Goal:** Refactor Standard API to decouple GRC ABAC from Standard Native Auth, cache sessions at the Edge (KV), prepare CQRS Queues for Assessment Engine, and sever bad package coupling.
 
 **Architecture:** 
-1. Better Auth serves only Identity & Sessions, cached via Cloudflare KV to eliminate N+1 DB latency.
+1. Standard Native Auth serves only Identity & Sessions, cached via Cloudflare KV to eliminate N+1 DB latency.
 2. A custom GRC ABAC middleware in the API Gateway handles complex authorization rules against Drizzle.
 3. Heavy endpoints return 202 Accepted and push jobs to Cloudflare Queues for async processing via Workflows.
 4. `scf-core` and other domain packages are stripped of external framework dependencies (strict isolation).
 
-**Tech Stack:** Cloudflare Workers, Better Auth (Secondary Storage), Cloudflare KV, Cloudflare Queues, Drizzle ORM, Zod.
+**Tech Stack:** Cloudflare Workers, Standard Native Auth (Secondary Storage), Cloudflare KV, Cloudflare Queues, Drizzle ORM, Zod.
 
 ---
 
@@ -32,7 +32,7 @@ Expected: Knip identifies unused or wrongly coupled dependencies (e.g. drizzle i
 
 **Step 2: Write minimal implementation (Prune Dependencies)**
 
-Remove any `drizzle-orm` or `better-auth` references from pure TS packages like `packages/scf-core`. Clean zombie dependencies from `apps/api-gateway`.
+Remove any `drizzle-orm` or `standard-native-auth` references from pure TS packages like `packages/scf-core`. Clean zombie dependencies from `apps/api-gateway`.
 
 **Step 3: Run test to verify it passes**
 
@@ -48,7 +48,7 @@ git commit -m "chore: isolate scf-core and remove zombie dependencies"
 
 ---
 
-### Task 2: Configure Better Auth Secondary Storage (KV Cache)
+### Task 2: Configure Standard Native Auth Secondary Storage (KV Cache)
 
 **Files:**
 - Modify: `apps/api-gateway/wrangler.toml`
@@ -73,9 +73,9 @@ id = "<will-be-assigned>"
 
 Update `packages/auth/src/auth.ts`:
 ```typescript
-import { betterAuth } from "better-auth";
+import { standardAuth } from "standard-native-auth";
 // Inside your auth definition:
-export const auth = betterAuth({
+export const auth = standardAuth({
     // ...other config
     secondaryStorage: {
         get: async (key) => {
@@ -103,7 +103,7 @@ Expected: PASS without type errors on KV interfaces.
 
 ```bash
 git add apps/api-gateway/wrangler.toml packages/auth/src/auth.ts
-git commit -m "feat: configure better-auth KV secondary storage for edge sessions"
+git commit -m "feat: configure standard-native-auth KV secondary storage for edge sessions"
 ```
 
 ---
@@ -135,7 +135,7 @@ Expected: FAIL, file does not exist.
 `abac.middleware.ts`:
 ```typescript
 import { createMiddleware } from 'hono/factory';
-// Drizzle query checking relationship between user and assessment bypassing better-auth roles
+// Drizzle query checking relationship between user and assessment bypassing standard-native-auth roles
 
 export const requireAssessmentAccess = (requiredRole: str) => createMiddleware(async (c, next) => {
     const session = c.get('session');
@@ -159,7 +159,7 @@ Expected: PASS
 
 ```bash
 git add apps/api-gateway/src/middleware/abac.middleware.ts
-git commit -m "feat: implement native GRC ABAC middleware avoiding better-auth dynamic roles"
+git commit -m "feat: implement native GRC ABAC middleware avoiding standard-native-auth dynamic roles"
 ```
 
 ---

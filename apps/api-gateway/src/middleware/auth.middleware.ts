@@ -1,8 +1,8 @@
 /**
  * @module auth.middleware
- * @description Resolves authentication context from Better Auth session.
+ * @description Resolves authentication context from Standard Native Auth session.
  *
- * Better Auth sessions are resolved from cookies (browser) or API keys (programmatic).
+ * Standard Native Auth sessions are resolved from cookies (browser) or API keys (programmatic).
  * The active organization in the session maps to the Standard tenant_id.
  *
  * Type safety contract:
@@ -25,7 +25,7 @@ const isUuid = (val?: string): boolean =>
 /**
  * Typed session field extraction.
  *
- * Better Auth's `getSession()` returns an opaque inferred type that does not expose
+ * Standard Native Auth's `getSession()` returns an opaque inferred type that does not expose
  * plugin-injected fields (role, activeOrganizationId, platformAdmin) in the base TS type.
  * We perform a single cast here at the boundary — all callers receive typed objects.
  */
@@ -33,7 +33,7 @@ function resolveSessionFields(rawSession: { user: unknown; session: unknown }): 
   user: StandardUser;
   session: StandardSession;
 } {
-  // Single cast boundary: Better Auth returns plugin-augmented objects at runtime.
+  // Single cast boundary: Standard Native Auth returns plugin-augmented objects at runtime.
   // StandardUser and StandardSession in @standard/auth/types include all plugin fields.
   const user = rawSession.user as StandardUser;
   const session = rawSession.session as StandardSession;
@@ -41,7 +41,7 @@ function resolveSessionFields(rawSession: { user: unknown; session: unknown }): 
 }
 
 /**
- * Resolve auth context from Better Auth session.
+ * Resolve auth context from Standard Native Auth session.
  *
  * Sets `context.actorId`, `context.tenantId`, and `context.session`.
  * If `requireAuth` is true and no valid session exists, throws 401.
@@ -95,7 +95,7 @@ export const resolveAuthContext = async (
       }
     }
 
-    // Interactive Session (Better Auth cookie-based session)
+    // Interactive Session (Standard Native Auth cookie-based session)
     const rawSession = await auth.api.getSession({
       headers: context.request.headers,
     });
@@ -161,7 +161,7 @@ export const resolveAuthContext = async (
         }
       };
 
-      // Better Auth organization plugin stores active org in session
+      // Standard Native Auth organization plugin stores active org in session
       const activeOrgId = session.activeOrganizationId;
       if (activeOrgId) {
         context.tenantId = activeOrgId;

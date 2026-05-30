@@ -44,6 +44,6 @@ A string de conexão (`DATABASE_URL`) é injetada como secret nos Workers via `w
 ## Alternativas Consideradas
 
 - **Cloudflare D1**: descartado por não suportar PKs sequenciais, JOINs complexos, transações ACID completas e escala enterprise necessária para compliance.
-- **Supabase Postgres**: descartado pela complexidade de auth/API camada adicional desnecessária.
+- **Edge Auth Postgres**: descartado pela complexidade de auth/API camada adicional desnecessária.
 - **RDS Aurora Serverless**: descartado pelo custo de operação e latência adicional fora do ecossistema escolhido.
 
