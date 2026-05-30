@@ -111,6 +111,17 @@ export const healthRoutes: RouteDefinition[] = [
         { status: isHealthy ? 200 : 503 }
       );
     }
+  },
+  {
+    method: "GET",
+    path: "/api/v1/auth/debug",
+    handler: async (context) => {
+      return json({
+        session: context.session ?? null,
+        actorId: context.actorId ?? null,
+        m2mScopes: context.m2mScopes ?? null,
+      });
+    }
   }
 ];
 
