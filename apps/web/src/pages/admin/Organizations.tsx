@@ -342,7 +342,7 @@ export function AdminOrganizations() {
     e.preventDefault();
     setCreating(true);
     try {
-      await api("/api/v1/organizations", {
+      await api("/api/v1/users/me/organizations", {
         method: "POST",
         body: JSON.stringify({ name: newOrgName, slug: newOrgSlug }),
       });

@@ -42,6 +42,12 @@ export type MembershipRepositoryAdapter = {
   getById(membershipId: string, tenantId: string): Promise<MembershipRecord | null>;
   updateRole(membershipId: string, tenantId: string, role: string): Promise<MembershipRecord | null>;
   remove(membershipId: string, tenantId: string): Promise<boolean>;
+  /**
+   * Counts the number of active org memberships for a user in the Standard domain.
+   * Used to enforce the one-org-per-non-admin rule.
+   * @param userId - Standard domain user UUID
+   */
+  countActiveOrgsByUser(userId: string): Promise<number>;
 };
 
 export function createDrizzleMembershipRepository(db: DbClient): MembershipRepositoryAdapter {
@@ -128,6 +134,21 @@ export function createDrizzleMembershipRepository(db: DbClient): MembershipRepos
       const list = (rows as any).rows ?? rows as any;
       return Array.isArray(list) && list.length > 0;
     },
+
+    async countActiveOrgsByUser(userId): Promise<number> {
+      // Count active, non-removed memberships for the user across all orgs.
+      // Excludes 'removed' status entries.
+      const rows = await db.execute(
+        sql`SELECT COUNT(*)::int AS count
+            FROM memberships
+            WHERE user_id = ${userId}::uuid
+              AND status != 'removed'
+              AND deleted_at IS NULL`
+      );
+      const list = (rows as any).rows ?? rows as any;
+      const first = Array.isArray(list) ? list[0] : null;
+      return Number(first?.count ?? 0);
+    },
   };
 }
 
@@ -192,6 +213,11 @@ export function createMockMembershipRepository(): MembershipRepositoryAdapter {
       m.status = 'removed'; m.updated_at = new Date().toISOString();
       store.set(id, m);
       return true;
+    },
+    async countActiveOrgsByUser(userId) {
+      return [...store.values()].filter(
+        m => m.user_id === userId && m.status !== 'removed'
+      ).length;
     },
   };
 }

@@ -49,12 +49,13 @@
     "@cloudflare/workers-types": "^4.20260426.1",
     "@commitlint/cli": "^19.3.0",
     "@commitlint/config-conventional": "^19.2.2",
+    "@fastify/busboy": "^3.0.0",
     "@types/node": "^25.7.0",
     "husky": "^9.0.11",
     "lint-staged": "^15.2.2",
     "tsx": "^4.19.4",
     "typescript": "^6.0.3",
-    "wrangler": "^3.114.17"
+    "wrangler": "^4.95.0"
   },
   "dependencies": {
     "dotenv": "^17.4.2",

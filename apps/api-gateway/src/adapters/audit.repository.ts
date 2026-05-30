@@ -1,4 +1,4 @@
-import { auditLogs } from "@standard/schemas";
+import { auditLogs, AUDIT_METADATA_ALLOWLIST } from "@standard/schemas";
 import type { AuditRepositoryAdapter } from "../http";
 import type { DbClient } from "./db";
 
@@ -43,8 +43,13 @@ export const createDrizzleAuditRepository = (db: DbClient): AuditRepositoryAdapt
       const ipAddress = typeof metadata.ip_address === "string" ? metadata.ip_address : undefined;
       const userAgent = typeof metadata.user_agent === "string" ? metadata.user_agent : undefined;
 
-      // Sanitize metadata: strip sensitive content per AGENTS.md §13
-      const safeMeta = { ...metadata };
+      // Sanitize metadata: only copy allowlisted keys, then delete columns
+      const safeMeta: Record<string, unknown> = {};
+      for (const key of Object.keys(metadata)) {
+        if (AUDIT_METADATA_ALLOWLIST.includes(key as any)) {
+          safeMeta[key] = metadata[key];
+        }
+      }
       if (tenantId) delete safeMeta.tenant_id;
       if (organizationId) delete safeMeta.organization_id;
       if (actorId) delete safeMeta.actor_id;

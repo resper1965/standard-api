@@ -51,7 +51,7 @@ export const createDrizzleScopeRepository = (db: DbClient): ScopeRepository => (
       assumptions: scope.assumptions,
       constraints: scope.constraints,
       updatedAt: new Date(),
-    }).where(eq(assessmentScope.id, scope.scope_id));
+    }).where(and(eq(assessmentScope.id, scope.scope_id), eq(assessmentScope.tenantId, scope.tenant_id)));
   },
   async get(scopeId, tenantId) {
     const [row] = await db.select().from(assessmentScope)
@@ -95,7 +95,7 @@ export const createDrizzleSoaVersionRepository = (db: DbClient): SoaVersionRepos
       supersededBy: version.superseded_by,
       metadata: version.metadata ?? {},
       updatedAt: new Date(),
-    }).where(eq(soaVersions.id, version.soa_version_id));
+    }).where(and(eq(soaVersions.id, version.soa_version_id), eq(soaVersions.tenantId, version.tenant_id)));
   },
   async get(soaVersionId, tenantId) {
     const [row] = await db.select().from(soaVersions)
@@ -155,7 +155,7 @@ export const createDrizzleSoaItemRepository = (db: DbClient): SoaItemRepository 
       requiresUserValidation: item.requires_user_validation,
       validationNotes: item.validation_notes,
       updatedAt: new Date(),
-    }).where(eq(soaItems.id, item.soa_item_id));
+    }).where(and(eq(soaItems.id, item.soa_item_id), eq(soaItems.tenantId, item.tenant_id)));
   },
   async get(soaItemId, tenantId) {
     const [row] = await db.select().from(soaItems)

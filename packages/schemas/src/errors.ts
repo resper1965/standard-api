@@ -66,6 +66,11 @@ export const ApiErrorCodeSchema = z.enum([
   "REPORT_APPROVAL_BLOCKED",
   "REPORT_FORMAT_NOT_IMPLEMENTED",
   "EXPORT_JOB_FAILED",
+  // Organization membership
+  /** User tried to join/create a 2nd org when they already belong to one. */
+  "SINGLE_ORG_LIMIT",
+  /** Route requires an active organization context but none was resolved. */
+  "ORGANIZATION_REQUIRED",
 ]);
 
 export const ApiErrorSchema = z.object({

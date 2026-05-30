@@ -38,4 +38,10 @@ export interface Env {
   /** ClamAV REST API endpoint for anti-malware scanning of uploaded documents (optional). */
   CLAMAV_API_URL?: string;
   /** Cloudflare Email Service binding for transactional emails */
+  /**
+   * Better Auth organization slug for the platform-admin (Bekaa operator) org.
+   * Platform admins who have no active org in their session are automatically
+   * scoped to this org. Defaults to "bekaa" if not set.
+   */
+  PLATFORM_ADMIN_ORG_SLUG?: string;
 }
