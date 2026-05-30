@@ -209,7 +209,7 @@ export function DashboardLayout() {
           <Button
             variant="ghost"
             size="sm"
-            className="flex-1 justify-start text-muted-foreground hover:text-foreground text-xs"
+            className="flex-1 justify-start text-muted-foreground hover:text-foreground text-xs cursor-pointer"
             asChild
           >
             <Link to="/dashboard/settings">
@@ -220,11 +220,12 @@ export function DashboardLayout() {
           <Button
             variant="ghost"
             size="sm"
-            className="text-muted-foreground hover:text-destructive text-xs cursor-pointer"
+            className="flex-1 justify-start text-muted-foreground hover:text-destructive hover:bg-destructive/10 text-xs cursor-pointer"
             onClick={() => signOut()}
             aria-label="Sign out"
           >
-            <LogOut className="h-3.5 w-3.5" />
+            <LogOut className="mr-2 h-3.5 w-3.5" />
+            Sign Out
           </Button>
         </div>
       </div>
@@ -281,9 +282,7 @@ export function DashboardLayout() {
           <span className="text-[1.1rem] font-brand font-semibold tracking-tight truncate px-2 text-foreground">
             {pageTitle || <span className="brand-logo">standard<span className="brand-logo-dot">.</span></span>}
           </span>
-          <div className="h-7 w-7 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground text-[10px] font-bold shrink-0">
-            {userInitial}
-          </div>
+          <div className="w-9 h-9 shrink-0" />
         </header>
 
         {/* Desktop sticky topbar with global actions */}
@@ -363,9 +362,6 @@ function DesktopTopbar({
           <Bell className="h-4 w-4" />
           <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-primary" />
         </button>
-        <div className="avatar-glow h-7 w-7 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground text-[10px] font-bold transition-all" aria-label={`User avatar: ${userInitial}`}>
-          {userInitial}
-        </div>
       </div>
     </header>
   )
