@@ -32,7 +32,7 @@ O desenho arquitetural do Standard é governado por restrições operacionais e 
 
 ### 2.2 Restrições de Banco de Dados e Dados
 - **PostgreSQL transacional (Neon)**: Os dados relacionais de tenancy, logs de auditoria e status de assessments exigem transações íntegras (Acid). A persistência é gerenciada via Neon PostgreSQL com adapter de pool de conexões edge-safe.
-- **Integridade de Tipagem (UUID)**: Chaves estrangeiras que ligam logs de auditoria, eventos e assessments a usuários e tenants exigem estritamente o formato de ID `UUID`.
+- **Integridade de Tipagem (UUID) e Identity Bridge**: Chaves estrangeiras que ligam logs de auditoria, eventos e assessments a usuários e tenants exigem estritamente o formato de ID `UUID`. Como a autenticação (Better-Auth) gera identificadores de organizações e sessões baseados em strings/slugs (ex: `org_pa5khl`), o gateway resolve essa diferença de tipagem aplicando um validador de formato UUID. IDs incompatíveis são setados como `null` nas colunas indexadas físicas e armazenados intactos dentro de metadados JSONB, eliminando a possibilidade de falhas de tipagem referencial ou de conversão SQL (erros 500) sem perder rastreabilidade.
 
 ### 2.3 Restrições de Identidade
 - **Modelo Dual de Autenticação (Standard Native Auth v1.6.11)**: A plataforma adota um modelo dual de autenticação gerenciado pelo Standard Native Auth (better-auth v1.6.11) com Drizzle adapter no Neon PostgreSQL:
@@ -324,7 +324,7 @@ O Standard é um sistema multi-tenant por design. Para evitar o vazamento de dad
 - **Camada Vetorial (Vectorize)**: Os índices vetoriais utilizam namespaces dedicados (ou partições via metadados contendo o `tenant_id`) para garantir isolamento durante a recuperação semântica do RAG.
 
 ### 8.2 Logs de Auditoria e Eventos de Segurança (SOC 2 & ISO 27001)
-- **Logs de Auditoria**: O middleware `recordAuditEvent` intercepta todas as requisições autenticadas e cria um registro na tabela `audit_logs` contendo data, ação, IP, User-Agent, ID do ator (`actor_id`) e ID do tenant (`tenant_id`).
+- **Logs de Auditoria**: O middleware `recordAuditEvent` intercepta todas as requisições autenticadas e cria um registro na tabela `audit_logs` contendo data, ação, IP, User-Agent, ID do ator (`actor_id`) e ID do tenant (`tenant_id`). Para garantir a robustez contra erros 500 causados por falhas de tipo de dados SQL, o repositório aplica validação de formato UUID antes de preencher as colunas do banco. Caso IDs textuais (como chaves de organização do Better-Auth do tipo `"org_pa5khl"`) sejam passados, eles são inseridos como `null` nas chaves estrangeiras físicas, e a string original é salva de forma íntegra na coluna de metadados JSONB (`metadata`), assegurando a rastreabilidade total do SOC sem comprometer a estabilidade do gateway.
 - **Triagem de Incidentes (SOC)**: Eventos de segurança graves (como tentativas de injeção de SQL, violações de RBAC ou estouros de limites de cota) disparam eventos assíncronos enviados à fila `SOC_TRIAGE_QUEUE`. O gateway também grava incidentes na tabela `security_events` com níveis de severidade.
 
 ### 8.3 Defesa Contra Prompt Injection
