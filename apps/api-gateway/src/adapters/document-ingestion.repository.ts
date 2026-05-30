@@ -283,20 +283,31 @@ export const createDrizzleIngestionVectorRefRepository = (db: DbClient): VectorR
 
 // ---------- Audit Sink ----------
 
-export const createDrizzleIngestionAuditSink = (db: DbClient): AuditSink => ({
-  async record(event: string, metadata: Record<string, unknown>) {
-    await db.insert(auditLogs).values({
-      tenantId: (metadata.tenant_id as string) ?? "system",
-      organizationId: (metadata.organization_id as string) ?? undefined,
-      actorId: (metadata.actor_id as string) ?? undefined,
-      action: event,
-      resourceType: "document",
-      resourceId: (metadata.document_id as string) ?? undefined,
-      traceId: (metadata.trace_id as string) ?? crypto.randomUUID(),
-      metadata: metadata,
-    });
-  },
-});
+export const createDrizzleIngestionAuditSink = (db: DbClient): AuditSink => {
+  const isUuid = (val: string): boolean => {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+  };
+
+  return {
+    async record(event: string, metadata: Record<string, unknown>) {
+      const tenantId = typeof metadata.tenant_id === "string" && isUuid(metadata.tenant_id) ? metadata.tenant_id : null;
+      const organizationId = typeof metadata.organization_id === "string" && isUuid(metadata.organization_id) ? metadata.organization_id : null;
+      const actorId = typeof metadata.actor_id === "string" && isUuid(metadata.actor_id) ? metadata.actor_id : null;
+      const resourceId = typeof metadata.document_id === "string" && isUuid(metadata.document_id) ? metadata.document_id : null;
+
+      await db.insert(auditLogs).values({
+        tenantId,
+        organizationId,
+        actorId,
+        action: event,
+        resourceType: "document",
+        resourceId,
+        traceId: (metadata.trace_id as string) ?? crypto.randomUUID(),
+        metadata: metadata,
+      });
+    },
+  };
+};
 
 // ---------- Factory ----------
 
