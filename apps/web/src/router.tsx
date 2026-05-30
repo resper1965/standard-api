@@ -37,9 +37,9 @@ const requireNoAuth = async () => {
     return null
 }
 
-const LoadingFallback = () => (
-    <div style={{ display: 'flex', width: '100vw', height: '100vh', alignItems: 'center', justifyContent: 'center' }}>
-        <p style={{ color: '#475569', fontFamily: 'Montserrat, sans-serif' }}>Carregando Standard Platform...</p>
+export const LoadingFallback = () => (
+    <div style={{ display: 'flex', width: '100vw', height: '100vh', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0B0F19' }}>
+        <p style={{ color: '#94a3b8', fontFamily: 'Montserrat, sans-serif' }}>Carregando Standard Platform...</p>
     </div>
 );
 

@@ -28,24 +28,28 @@ export const createAuditRepository = (): AuditRepositoryAdapter => {
  *   - metadata -> metadata jsonb + extracted keys for indexed columns
  */
 export const createDrizzleAuditRepository = (db: DbClient): AuditRepositoryAdapter => {
+  const isUuid = (val: string): boolean => {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+  };
+
   return {
     async record(event, metadata) {
-      const tenantId = typeof metadata.tenant_id === "string" ? metadata.tenant_id : undefined;
-      const organizationId = typeof metadata.organization_id === "string" ? metadata.organization_id : undefined;
-      const actorId = typeof metadata.actor_id === "string" ? metadata.actor_id : undefined;
+      const tenantId = typeof metadata.tenant_id === "string" && isUuid(metadata.tenant_id) ? metadata.tenant_id : undefined;
+      const organizationId = typeof metadata.organization_id === "string" && isUuid(metadata.organization_id) ? metadata.organization_id : undefined;
+      const actorId = typeof metadata.actor_id === "string" && isUuid(metadata.actor_id) ? metadata.actor_id : undefined;
       const resourceType = typeof metadata.resource_type === "string" ? metadata.resource_type : event;
-      const resourceId = typeof metadata.resource_id === "string" ? metadata.resource_id : undefined;
+      const resourceId = typeof metadata.resource_id === "string" && isUuid(metadata.resource_id) ? metadata.resource_id : undefined;
       const traceId = typeof metadata.trace_id === "string" ? metadata.trace_id : undefined;
       const ipAddress = typeof metadata.ip_address === "string" ? metadata.ip_address : undefined;
       const userAgent = typeof metadata.user_agent === "string" ? metadata.user_agent : undefined;
 
       // Sanitize metadata: strip sensitive content per AGENTS.md §13
       const safeMeta = { ...metadata };
-      delete safeMeta.tenant_id;
-      delete safeMeta.organization_id;
-      delete safeMeta.actor_id;
+      if (tenantId) delete safeMeta.tenant_id;
+      if (organizationId) delete safeMeta.organization_id;
+      if (actorId) delete safeMeta.actor_id;
+      if (resourceId) delete safeMeta.resource_id;
       delete safeMeta.resource_type;
-      delete safeMeta.resource_id;
       delete safeMeta.trace_id;
       delete safeMeta.ip_address;
       delete safeMeta.user_agent;
