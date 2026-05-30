@@ -100,9 +100,16 @@ export function DashboardLayout() {
 
   // Auto-activate the first organization if none is active.
   // This resolves 400 TENANT_CONTEXT_REQUIRED errors on all API calls.
+  // Platform admins are always auto-scoped server-side — skip this entirely.
   useEffect(() => {
     async function autoActivateOrg() {
-      if (isPending || session?.session?.activeOrganizationId) return
+      if (isPending) return
+      // Platform admins always have their org resolved server-side (Bekaa org).
+      // Never redirect them to /onboarding.
+      const isPlatformAdmin = (session?.user as any)?.platformAdmin === true
+        || (session?.user as any)?.platform_admin === true
+      if (isPlatformAdmin) return
+      if (session?.session?.activeOrganizationId) return
       try {
         const res = await fetch(`${API_URL}/api/v1/users/me/organizations`, {
           credentials: "include",
@@ -122,7 +129,7 @@ export function DashboardLayout() {
       }
     }
     autoActivateOrg()
-  }, [isPending, session?.session?.activeOrganizationId, location.pathname, navigate])
+  }, [isPending, session?.user, session?.session?.activeOrganizationId, location.pathname, navigate])
 
   // Resolve current page title from route map
   const pageTitle = useMemo(() => {
@@ -138,6 +145,10 @@ export function DashboardLayout() {
 
   useEffect(() => {
     if (!session) return
+    // Platform admins always have their org resolved server-side — skip onboarding check.
+    const isPlatformAdmin = (session?.user as any)?.platformAdmin === true
+      || (session?.user as any)?.platform_admin === true
+    if (isPlatformAdmin) return
     let mounted = true
     setOrgsLoading(true)
     api<any>("/api/v1/users/me/organizations", { method: "GET" })
