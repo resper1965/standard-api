@@ -135,7 +135,7 @@ await client.organizations.inviteMember("org-id", { email: "x@y.com", role: "ass
 ## Commands
 
 ```bash
-pnpm -r run typecheck    # Type check all 23 packages
+pnpm -r run typecheck    # Type check all packages in the monorepo
 pnpm run dev             # Start local dev server
 pnpm run deploy          # Deploy to Cloudflare Workers
 ```
