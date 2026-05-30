@@ -129,7 +129,13 @@ export const organizationsMgmtRoutes: RouteDefinition[] = [
         trace_id: context.traceId
       });
 
-      return json(membership, { status: 201, headers: { "x-trace-id": context.traceId } });
+      return json(membership, {
+        status: 201,
+        headers: {
+          "x-trace-id": context.traceId,
+          "Warning": '299 - "This endpoint is deprecated. Use POST /api/v1/organizations/:organizationId/members instead."'
+        }
+      });
     }
   }
 ];

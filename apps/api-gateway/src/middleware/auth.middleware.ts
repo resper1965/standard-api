@@ -161,11 +161,79 @@ export const resolveAuthContext = async (
         }
       };
 
-      // Standard Native Auth organization plugin stores active org in session
+      // ── Organization context resolution ───────────────────────────────────────
+      // Standard Native Auth stores the active org in the session.
+      // ALL users (including platform admins) must be scoped to an organization.
       const activeOrgId = session.activeOrganizationId;
-      if (activeOrgId) {
-        context.tenantId = activeOrgId;
-        context.organizationId = activeOrgId;
+      const isPlatformAdminUser = user.platformAdmin === true || (user as any).platform_admin === true;
+
+      let resolvedOrgId: string | undefined = activeOrgId ?? undefined;
+
+      if (!resolvedOrgId && isPlatformAdminUser) {
+        // Platform admin without an active org → auto-scope to the Bekaa operator org.
+        // The slug is driven by PLATFORM_ADMIN_ORG_SLUG env var (default: "bekaa").
+        const platformOrgSlug = context.env?.PLATFORM_ADMIN_ORG_SLUG ?? "bekaa";
+        resolvedOrgId = platformOrgSlug;
+
+        logger.log({
+          level: "info",
+          message: "platform_admin_org_auto_scoped",
+          service: "api-gateway",
+          module: "auth",
+          environment: "production",
+          trace_id: context.traceId,
+          metadata: {
+            actor_id: user.id,
+            platform_org_slug: platformOrgSlug,
+          },
+        });
+      }
+
+      if (resolvedOrgId) {
+        context.tenantId = resolvedOrgId;
+        context.organizationId = resolvedOrgId;
+
+        // JIT resolve Better-Auth string ID / slug to database UUIDs
+        if (context.deps.resolveTenantContext) {
+          try {
+            const resolved = await context.deps.resolveTenantContext(resolvedOrgId);
+            if (resolved) {
+              context.tenantId = resolved.tenant_id;
+              context.organizationId = resolved.organization_id;
+            }
+          } catch (e) {
+            logger.log({
+              level: "error",
+              message: "auth_tenant_resolution_failed",
+              service: "api-gateway",
+              module: "auth",
+              environment: "production",
+              trace_id: context.traceId,
+              metadata: {
+                error: e instanceof Error ? e.message : String(e),
+                resolved_org_id: resolvedOrgId,
+              },
+            });
+          }
+        }
+      } else {
+        // No active organization and not a platform admin.
+        // We do NOT throw here — the 403 is deferred to the `requireAuth` check
+        // or to an explicit `requireOrganizationContext` guard so that public /auth
+        // routes still work. We log a warning for observability.
+        logger.log({
+          level: "warn",
+          message: "session_missing_organization",
+          service: "api-gateway",
+          module: "auth",
+          environment: "production",
+          trace_id: context.traceId,
+          metadata: {
+            actor_id: user.id,
+            session_id: session.id,
+            platform_admin: isPlatformAdminUser,
+          },
+        });
       }
 
       logger.log({
@@ -179,9 +247,9 @@ export const resolveAuthContext = async (
         metadata: {
           actor_id: user.id,
           session_id: session.id,
-          active_org_id: activeOrgId ?? null,
+          active_org_id: resolvedOrgId ?? null,
           role: user.role ?? "viewer",
-          platform_admin: user.platformAdmin ?? false,
+          platform_admin: isPlatformAdminUser,
         }
       });
     }

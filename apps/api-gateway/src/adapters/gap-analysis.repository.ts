@@ -39,7 +39,7 @@ export const createDrizzleEvidenceFindingRepository = (db: DbClient): EvidenceFi
       evidenceLimitations: finding.evidence_limitations,
       confidenceScore: String(finding.confidence_score),
       updatedAt: new Date(),
-    }).where(eq(evidenceFindings.id, finding.evidence_finding_id));
+    }).where(and(eq(evidenceFindings.id, finding.evidence_finding_id), eq(evidenceFindings.tenantId, finding.tenant_id)));
   },
   async get(evidenceFindingId, tenantId) {
     const [row] = await db.select().from(evidenceFindings)
@@ -131,7 +131,7 @@ export const createDrizzleGapAnalysisVersionRepository = (db: DbClient): GapAnal
       supersededBy: version.superseded_by,
       metadata: version.metadata ?? {},
       updatedAt: new Date(),
-    }).where(eq(gapAnalysisVersions.id, version.gap_analysis_version_id));
+    }).where(and(eq(gapAnalysisVersions.id, version.gap_analysis_version_id), eq(gapAnalysisVersions.tenantId, version.tenant_id)));
   },
   async get(gapAnalysisVersionId, tenantId) {
     const [row] = await db.select().from(gapAnalysisVersions)
@@ -196,7 +196,7 @@ export const createDrizzleGapFindingRepository = (db: DbClient): GapFindingRepos
       confidenceScore: String(finding.confidence_score),
       requiresUserValidation: finding.requires_user_validation,
       updatedAt: new Date(),
-    }).where(eq(gapFindings.id, finding.gap_finding_id));
+    }).where(and(eq(gapFindings.id, finding.gap_finding_id), eq(gapFindings.tenantId, finding.tenant_id)));
   },
   async get(gapFindingId, tenantId) {
     const [row] = await db.select().from(gapFindings)

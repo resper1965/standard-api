@@ -90,7 +90,7 @@ export const createDrizzleMaturityVersionRepository = (db: DbClient): MaturityVe
       status: record.status as "draft" | "under_review" | "approved" | "superseded" | "archived",
       approvalEventId: record.approval_event_id,
       updatedAt: new Date(),
-    }).where(eq(maturityAssessmentVersions.id, record.id));
+    }).where(and(eq(maturityAssessmentVersions.id, record.id), eq(maturityAssessmentVersions.tenantId, record.tenant_id)));
   },
 });
 

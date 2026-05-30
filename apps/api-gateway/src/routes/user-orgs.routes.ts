@@ -14,8 +14,10 @@ import { eq, and } from "drizzle-orm";
 import { baOrganization, baMember, baSession } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";
-import { json, routeParam } from "../http";
+import { json, routeParam, parseJson } from "../http";
 import type { DbClient } from "../adapters/db";
+import { z } from "zod";
+import { resolveTenantContext } from "../adapters/tenant-mapping";
 
 /**
  * Type-safe accessor for the raw Drizzle DB client on deps._db.
@@ -190,4 +192,90 @@ export const userOrgsRoutes: RouteDefinition[] = [
       );
     },
   },
+  // ── POST /api/v1/users/me/organizations ─────────────────────────────
+  {
+    method: "POST",
+    path: "/api/v1/users/me/organizations",
+    protected: true,
+    tenantRequired: false,
+    handler: async (context) => {
+      const userId = context.session?.user?.id;
+      if (!userId) {
+        throw new ApiError("UNAUTHORIZED", "Session required.", 401);
+      }
+
+      const isPlatformAdmin =
+        context.session?.user?.platformAdmin === true ||
+        (context.session?.user as any)?.platform_admin === true;
+
+      const body = await parseJson(context.request, z.object({
+        name: z.string().min(1),
+        slug: z.string().min(2)
+      }));
+
+      const db = getDb(context.deps);
+
+      // ── One-org-per-user enforcement ──────────────────────────────────
+      // Non-platform-admin users may only belong to a single organization.
+      // This check uses the Standard domain memberships table.
+      if (!isPlatformAdmin) {
+        const existingCount = await context.deps.members.countActiveOrgsByUser(
+          // countActiveOrgsByUser expects the Standard domain user UUID.
+          // context.actorId is set by auth.middleware to the resolved Standard UUID.
+          context.actorId ?? userId
+        );
+        if (existingCount > 0) {
+          throw new ApiError(
+            "SINGLE_ORG_LIMIT",
+            "Non-admin users may only belong to one organization. Leave your current organization before creating a new one.",
+            409,
+            [{ reason: "single_org_limit", current_membership_count: existingCount }]
+          );
+        }
+      }
+
+      // Create the organization in Standard Native Auth (baOrganization)
+      const orgId = crypto.randomUUID();
+      const [newOrg] = await db
+        .insert(baOrganization)
+        .values({
+          id: orgId,
+          name: body.name,
+          slug: body.slug,
+          createdAt: new Date()
+        })
+        .returning();
+
+      // Create the membership in baMember
+      await db
+        .insert(baMember)
+        .values({
+          id: crypto.randomUUID(),
+          organizationId: orgId,
+          userId: userId,
+          role: "owner",
+          createdAt: new Date()
+        });
+
+      // Also JIT provision the Standard domain tenant and organization
+      await resolveTenantContext(db, orgId);
+
+      // Audit the creation
+      await context.deps.audit.record("user_org.created", {
+        actor_id: userId,
+        organization_id: orgId,
+        trace_id: context.traceId,
+      });
+
+      return json(
+        {
+          organization_id: orgId,
+          name: newOrg!.name,
+          slug: newOrg!.slug,
+          trace_id: context.traceId
+        },
+        { status: 201, headers: { "x-trace-id": context.traceId } }
+      );
+    }
+  }
 ];

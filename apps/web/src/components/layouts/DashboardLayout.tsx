@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useMemo } from "react"
-import { Outlet, Link, useLocation } from "react-router-dom"
+import { Outlet, Link, useLocation, useNavigate } from "react-router-dom"
 import { useSession, signOut } from "@/lib/auth-client"
 import {
   LayoutDashboard, Settings, LogOut, Loader2, Puzzle, Menu, X,
@@ -21,12 +21,12 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   { name: "Overview", path: "/dashboard", icon: LayoutDashboard, end: true },
+  { name: "API Keys", path: "/dashboard/api-keys", icon: Key },
   { name: "SDK & Docs", path: "/dashboard/sdk", icon: Puzzle },
 ]
 
 const adminItems: NavItem[] = [
   { name: "Organizations", path: "/dashboard/organizations", icon: Building2 },
-  { name: "API Keys", path: "/dashboard/api-keys", icon: Key },
   { name: "Users", path: "/dashboard/users", icon: Users },
   { name: "Audit Logs", path: "/dashboard/audit-logs", icon: ScrollText },
   { name: "System Health", path: "/dashboard/system-health", icon: HeartPulse },
@@ -79,6 +79,7 @@ function NavLinks({ items, currentPath, onNavigate }: {
 export function DashboardLayout() {
   const { data: session, isPending } = useSession()
   const location = useLocation()
+  const navigate = useNavigate()
   const [mobileOpen, setMobileOpen] = useState(false)
 
   useEffect(() => { setMobileOpen(false) }, [location.pathname])
@@ -113,13 +114,15 @@ export function DashboardLayout() {
           await api(`/api/v1/users/me/organizations/${orgs[0].id}/activate`, { method: "POST" })
           // Force session refresh so API calls pick up the new tenant header
           window.location.reload()
+        } else if (location.pathname !== "/onboarding") {
+          navigate("/onboarding")
         }
       } catch {
         // silently ignore — user can activate org manually in Settings
       }
     }
     autoActivateOrg()
-  }, [isPending, session?.session?.activeOrganizationId])
+  }, [isPending, session?.session?.activeOrganizationId, location.pathname, navigate])
 
   // Resolve current page title from route map
   const pageTitle = useMemo(() => {
@@ -142,13 +145,16 @@ export function DashboardLayout() {
         if (!mounted) return
         const dataArray = Array.isArray(res?.data) ? res.data : []
         setOrgs(dataArray)
+        if (dataArray.length === 0 && location.pathname !== "/onboarding") {
+          navigate("/onboarding")
+        }
       })
       .catch(console.error)
       .finally(() => {
         if (mounted) setOrgsLoading(false)
       })
     return () => { mounted = false }
-  }, [session])
+  }, [session, location.pathname, navigate])
 
   const handleOrgChange = async (orgId: string) => {
     try {

@@ -1,5 +1,5 @@
 import { SecurityEventService } from "@standard/observability";
-import { roleHasPermission, type StandardRole, type StandardResource } from "@standard/auth";
+import { roleHasPermission, STANDARD_ROLE_PERMISSIONS, type StandardRole, type StandardResource } from "@standard/auth";
 import type { Permission } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RequestContext } from "../http";
@@ -85,12 +85,9 @@ export const assertRbac = async (context: RequestContext, requiredPermissions: P
     // API access roles: owner, admin, member, viewer.
     // Better Auth default "user" → "member". Unknown → "viewer" (least privilege).
     const rawRole = context.session.user?.role ?? "viewer";
-    const role: StandardRole =
-      rawRole === "owner" ? "owner"
-      : rawRole === "admin" ? "admin"
-      : rawRole === "member" || rawRole === "user" ? "member"
-      : rawRole === "viewer" ? "viewer"
-      : "viewer"; // Unknown → least privilege
+    const role: StandardRole = (rawRole in STANDARD_ROLE_PERMISSIONS)
+      ? (rawRole as StandardRole)
+      : (rawRole === "user" ? "member" : "viewer");
 
     for (const reqPerm of requiredPermissions) {
       const [resource, action] = reqPerm.split(":") as [StandardResource, string];
@@ -143,3 +140,36 @@ export const assertRbac = async (context: RequestContext, requiredPermissions: P
   }
 };
 
+/**
+ * Guards a route so only requests with a resolved organization context can proceed.
+ *
+ * This enforces the invariant that ALL users — including platform admins (Bekaa
+ * operators) — must be scoped to an organization. Platform admins are auto-scoped
+ * to the Bekaa operator org by auth.middleware.ts; this guard is the final check.
+ *
+ * Use on any route that writes or reads tenant-scoped data (assessments, KB, etc.).
+ */
+export const requireOrganizationContext = async (context: RequestContext): Promise<void> => {
+  if (context.organizationId && context.tenantId) return;
+
+  await new SecurityEventService(context.deps.observability).record({
+    tenant_id: context.tenantId,
+    actor_id: context.actorId,
+    event_type: "forbidden_access_attempt",
+    severity: "medium",
+    outcome: "denied",
+    source: "api-gateway",
+    resource_type: "organization_context",
+    resource_id: context.request.url,
+    message_safe: "Organization context required. Select or create an organization first.",
+    trace_id: context.traceId,
+    metadata_safe: { reason: "organization_context_missing" },
+  });
+
+  throw new ApiError(
+    "ORGANIZATION_REQUIRED",
+    "An active organization is required for this operation. Please select or create an organization.",
+    403,
+    [{ reason: "organization_context_missing" }]
+  );
+};

@@ -10,18 +10,9 @@ services:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
-      - ./postgres/migrations/0000_superb_meteorite.sql:/docker-entrypoint-initdb.d/001-initial.sql:ro
-      - ./postgres/migrations/0001_easy_agent_zero.sql:/docker-entrypoint-initdb.d/002-soa-agent-run-fk.sql:ro
-      - ./postgres/migrations/0002_shiny_masked_marvel.sql:/docker-entrypoint-initdb.d/003-assessment-engine-states.sql:ro
-      - ./postgres/migrations/0003_scf_import_runs.sql:/docker-entrypoint-initdb.d/004-scf-import-runs.sql:ro
-      - ./postgres/migrations/0004_kb_embedding_jobs.sql:/docker-entrypoint-initdb.d/005-kb-embedding-jobs.sql:ro
-      - ./postgres/migrations/0005_soa_workflow.sql:/docker-entrypoint-initdb.d/006-soa-workflow.sql:ro
-      - ./postgres/migrations/0006_gap_analysis_workflow.sql:/docker-entrypoint-initdb.d/007-gap-analysis-workflow.sql:ro
-      - ./postgres/migrations/0007_poam_workflow.sql:/docker-entrypoint-initdb.d/008-poam-workflow.sql:ro
-      - ./postgres/migrations/0008_reporting_export_workflow.sql:/docker-entrypoint-initdb.d/009-reporting-export-workflow.sql:ro
-      - ./postgres/migrations/0009_agent_runtime_tool_contracts.sql:/docker-entrypoint-initdb.d/010-agent-runtime-tool-contracts.sql:ro
-      - ./postgres/seeds/0001_synthetic_seed.sql:/docker-entrypoint-initdb.d/011-synthetic-seed.sql:ro
-      - ./postgres/seeds/0002_synthetic_scf_seed.sql:/docker-entrypoint-initdb.d/012-synthetic-scf-seed.sql:ro
+      - ./postgres/migrations:/docker-entrypoint-initdb.d:ro
+      - ./postgres/seeds/0001_synthetic_seed.sql:/docker-entrypoint-initdb.d/901_synthetic_seed.sql:ro
+      - ./postgres/seeds/0002_synthetic_scf_seed.sql:/docker-entrypoint-initdb.d/902_synthetic_scf_seed.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U standard -d standard"]
       interval: 10s

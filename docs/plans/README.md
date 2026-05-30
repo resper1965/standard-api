@@ -9,6 +9,9 @@
 
 | Arquivo | Descrição | Status |
 |---------|-----------|--------|
+| [2026-05-30-preparacao-producao-f3-f4.md](./2026-05-30-preparacao-producao-f3-f4.md) | Preparação para Produção: Fases, Épicos e Issues para API Keys, Onboarding, k6 e Go-Live Checklist | ✅ Concluído (2026-05-30) |
+| [2026-05-30-refatoracao-limpeza-geral.md](./2026-05-30-refatoracao-limpeza-geral.md) | Refatoração e Limpeza Geral: Fases, Épicos e Issues para Código Morto Frontend, Rotas Gateway, Docs e Docker | ✅ Concluído (2026-05-30) |
+| [2026-05-30-planejamento-hardening-grc.md](./2026-05-30-planejamento-hardening-grc.md) | Hardening de GRC: Fases, Épicos e Issues para Alinhamento de Identidades, RBAC, Multi-tenancy e Governança | ⚙️ Em Andamento |
 | [2026-05-25-standard-native-auth-audit-hardening.md](./2026-05-25-standard-native-auth-audit-hardening.md) | Auditoria e Hardening do Standard Native Auth — 9 tasks | ✅ Concluído (2026-05-25) |
 | [2026-05-25-standard-native-auth-audit-hardening-design.md](./2026-05-25-standard-native-auth-audit-hardening-design.md) | Design document do plano de auditoria Standard Native Auth | ✅ Concluído (2026-05-25) |
 

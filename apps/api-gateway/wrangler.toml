@@ -13,6 +13,9 @@ AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT
 BETTER_AUTH_URL = "https://standard-api.bekaa.eu"
 # Comma-separated allowed CORS origins — override via wrangler secret or env var
 ALLOWED_ORIGINS = "http://localhost:5173,http://localhost:3000"
+# Better Auth org slug for the platform-admin (Bekaa operator) org.
+# Platform admins without an active session org are auto-scoped to this org.
+PLATFORM_ADMIN_ORG_SLUG = "bekaa"
 
 [[r2_buckets]]
 binding = "STANDARD_DOCUMENTS_BUCKET"
@@ -85,7 +88,7 @@ script_name = "standard-workflows"
 # ─── Production environment ────────────────────────────────────
 [env.production]
 workers_dev = true
-vars = { STANDARD_ENV = "production", BETTER_AUTH_URL = "https://standard-api.bekaa.eu", LOG_LEVEL = "info", AI_GATEWAY_NAME = "standard-prod", AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/standard-prod", ALLOWED_ORIGINS = "https://standard.bekaa.eu,https://standard-web.pages.dev,https://production.standard-web.pages.dev" }
+vars = { STANDARD_ENV = "production", BETTER_AUTH_URL = "https://standard-api.bekaa.eu", LOG_LEVEL = "info", AI_GATEWAY_NAME = "standard-prod", AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/standard-prod", ALLOWED_ORIGINS = "https://standard.bekaa.eu,https://standard-web.pages.dev,https://production.standard-web.pages.dev", PLATFORM_ADMIN_ORG_SLUG = "bekaa" }
 routes = [{ pattern = "standard-api.bekaa.eu", custom_domain = true }]
 
 [[env.production.r2_buckets]]

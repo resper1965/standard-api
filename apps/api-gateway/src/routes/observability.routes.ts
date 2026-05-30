@@ -153,7 +153,14 @@ export const observabilityRoutes: RouteDefinition[] = [
     handler: async ({ request, deps, tenantId, traceId }) => {
       const query = parseQuery(request, AuditLogQuerySchema);
       const data = await deps.observability.auditEvents.list({ tenant_id: tenantId, limit: query.limit });
-      return json({ data, trace_id: traceId });
+      return json(
+        { data, trace_id: traceId },
+        {
+          headers: {
+            "Warning": '299 - "This endpoint is deprecated. Use /api/v1/observability/audit-logs instead."'
+          }
+        }
+      );
     }
   },
   {
@@ -164,7 +171,14 @@ export const observabilityRoutes: RouteDefinition[] = [
     handler: async ({ request, deps, tenantId, traceId }) => {
       const query = parseQuery(request, AuditLogQuerySchema);
       const data = await deps.observability.auditEvents.list({ tenant_id: tenantId, limit: query.limit });
-      return json({ data, trace_id: traceId });
+      return json(
+        { data, trace_id: traceId },
+        {
+          headers: {
+            "Warning": '299 - "This endpoint is deprecated. Use /api/v1/observability/audit-logs instead."'
+          }
+        }
+      );
     }
   },
   {
@@ -175,7 +189,14 @@ export const observabilityRoutes: RouteDefinition[] = [
     handler: async ({ request, deps, tenantId, traceId }) => {
       const query = parseQuery(request, MetricsQuerySchema);
       const data = await deps.observability.metrics.list({ tenant_id: tenantId, limit: query.limit });
-      return json({ data, trace_id: traceId });
+      return json(
+        { data, trace_id: traceId },
+        {
+          headers: {
+            "Warning": '299 - "This endpoint is deprecated. Use /api/v1/admin/metrics/operational instead."'
+          }
+        }
+      );
     }
   },
   {
@@ -186,7 +207,14 @@ export const observabilityRoutes: RouteDefinition[] = [
     handler: async ({ request, deps, tenantId, traceId }) => {
       const query = parseQuery(request, SecurityEventQuerySchema);
       const data = await deps.observability.securityEvents.list({ tenant_id: tenantId, limit: query.limit });
-      return json({ data, trace_id: traceId });
+      return json(
+        { data, trace_id: traceId },
+        {
+          headers: {
+            "Warning": '299 - "This endpoint is deprecated. Use /api/v1/admin/security-events instead."'
+          }
+        }
+      );
     }
   },
   {
@@ -198,7 +226,14 @@ export const observabilityRoutes: RouteDefinition[] = [
       const query = parseQuery(request, UsageQuerySchema);
       const usage = await deps.observability.usage.list({ tenant_id: tenantId, limit: query.limit });
       const agent_usage = await deps.observability.agentUsage.list({ tenant_id: tenantId, limit: query.limit });
-      return json({ usage, agent_usage, trace_id: traceId });
+      return json(
+        { usage, agent_usage, trace_id: traceId },
+        {
+          headers: {
+            "Warning": `299 - "This endpoint is deprecated. Use /api/v1/tenants/${tenantId}/usage instead."`
+          }
+        }
+      );
     }
   }
 ];

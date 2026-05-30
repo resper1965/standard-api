@@ -38,7 +38,7 @@ export const createDrizzlePoamVersionRepository = (db: DbClient): PoamVersionRep
       supersededBy: version.superseded_by,
       metadata: version.metadata,
       updatedAt: new Date(),
-    }).where(eq(poamVersions.id, version.poam_version_id));
+    }).where(and(eq(poamVersions.id, version.poam_version_id), eq(poamVersions.tenantId, version.tenant_id)));
   },
   async get(poamVersionId, tenantId) {
     const [row] = await db.select().from(poamVersions)
@@ -115,7 +115,7 @@ export const createDrizzlePoamItemRepository = (db: DbClient): PoamItemRepositor
       confidenceScore: String(item.confidence_score),
       requiresUserValidation: item.requires_user_validation,
       updatedAt: new Date(),
-    }).where(eq(poamItems.id, item.poam_item_id));
+    }).where(and(eq(poamItems.id, item.poam_item_id), eq(poamItems.tenantId, item.tenant_id)));
   },
   async get(poamItemId, tenantId) {
     const [row] = await db.select().from(poamItems)
@@ -180,7 +180,7 @@ export const createDrizzlePoamMilestoneRepository = (db: DbClient): PoamMileston
       status: milestone.status,
       acceptanceCriteria: milestone.acceptance_criteria,
       expectedEvidence: milestone.expected_evidence,
-    }).where(eq(poamMilestones.id, milestone.poam_milestone_id));
+    }).where(and(eq(poamMilestones.id, milestone.poam_milestone_id), eq(poamMilestones.tenantId, milestone.tenant_id)));
   },
   async get(milestoneId, tenantId) {
     const [row] = await db.select().from(poamMilestones)

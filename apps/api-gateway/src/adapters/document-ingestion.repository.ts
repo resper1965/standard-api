@@ -11,6 +11,7 @@ import {
   documentExtractionJobs,
   vectorReferences,
   auditLogs,
+  AUDIT_METADATA_ALLOWLIST,
 } from "@standard/schemas";
 import type {
   DocumentResponse,
@@ -73,7 +74,7 @@ export const createDrizzleDocumentRepository = (db: DbClient): DocumentRecordRep
         mimeType: doc.mime_type,
         fileSize: doc.file_size,
         updatedAt: new Date(),
-      }).where(eq(documents.id, doc.document_id));
+      }).where(and(eq(documents.id, doc.document_id), eq(documents.tenantId, doc.tenant_id)));
     },
 
     withTenant(tenantId: string) {
@@ -167,7 +168,7 @@ export const createDrizzleDocumentJobRepository = (db: DbClient): DocumentJobRep
         startedAt: job.started_at ? new Date(job.started_at) : null,
         completedAt: job.completed_at ? new Date(job.completed_at) : null,
         updatedAt: new Date(),
-      }).where(eq(documentExtractionJobs.id, job.job_id));
+      }).where(and(eq(documentExtractionJobs.id, job.job_id), eq(documentExtractionJobs.tenantId, job.tenant_id)));
     },
 
     withTenant(tenantId: string) {
@@ -295,6 +296,19 @@ export const createDrizzleIngestionAuditSink = (db: DbClient): AuditSink => {
       const actorId = typeof metadata.actor_id === "string" && isUuid(metadata.actor_id) ? metadata.actor_id : null;
       const resourceId = typeof metadata.document_id === "string" && isUuid(metadata.document_id) ? metadata.document_id : null;
 
+      // Sanitize metadata: only copy allowlisted keys, then delete columns
+      const safeMeta: Record<string, unknown> = {};
+      for (const key of Object.keys(metadata)) {
+        if (AUDIT_METADATA_ALLOWLIST.includes(key as any)) {
+          safeMeta[key] = metadata[key];
+        }
+      }
+      if (tenantId) delete safeMeta.tenant_id;
+      if (organizationId) delete safeMeta.organization_id;
+      if (actorId) delete safeMeta.actor_id;
+      if (resourceId) delete safeMeta.document_id;
+      delete safeMeta.trace_id;
+
       await db.insert(auditLogs).values({
         tenantId,
         organizationId,
@@ -303,7 +317,7 @@ export const createDrizzleIngestionAuditSink = (db: DbClient): AuditSink => {
         resourceType: "document",
         resourceId,
         traceId: (metadata.trace_id as string) ?? crypto.randomUUID(),
-        metadata: metadata,
+        metadata: safeMeta,
       });
     },
   };

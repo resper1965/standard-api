@@ -250,3 +250,28 @@ export type SecurityEventQuery = z.infer<typeof SecurityEventQuerySchema>;
 export type MetricsQuery = z.infer<typeof MetricsQuerySchema>;
 export type RedactionRule = z.infer<typeof RedactionRuleSchema>;
 export type SafeErrorResponse = z.infer<typeof SafeErrorResponseSchema>;
+
+export const AUDIT_METADATA_ALLOWLIST = [
+  "trace_id",
+  "actor_id",
+  "route",
+  "method",
+  "scf_version",
+  "framework_id",
+  "job_id",
+  "assessment_id",
+  "document_id",
+  "scope_id",
+  "soa_version_id",
+  "gap_version_id",
+  "poam_version_id",
+  "report_version_id",
+  "reason",
+  "required_permissions",
+  "config",
+  "ip_address",
+  "user_agent",
+  "status",
+  "details",
+  "error"
+] as const;
