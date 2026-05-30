@@ -68,15 +68,12 @@ export const createAuth = (env: AuthEnv, db: any) => {
       additionalFields: {
         jobTitle: {
           type: "string",
-          fieldName: "job_title",
         },
         phone: {
           type: "string",
-          fieldName: "phone",
         },
         metadata: {
           type: "string",
-          fieldName: "metadata",
         },
         /**
          * API access role.
@@ -85,7 +82,6 @@ export const createAuth = (env: AuthEnv, db: any) => {
          */
         role: {
           type: "string",
-          fieldName: "role",
           defaultValue: "member",
           returned: true,
           input: false,
@@ -99,7 +95,6 @@ export const createAuth = (env: AuthEnv, db: any) => {
          */
         platformAdmin: {
           type: "boolean",
-          fieldName: "platform_admin",
           defaultValue: false,
           returned: true,
           input: false,
