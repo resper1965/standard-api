@@ -2,17 +2,36 @@ import { authClient } from "./auth-client"
 
 import { API_URL } from "./config"
 
+let cachedTenantId: string | null = null;
+let sessionFetchPromise: Promise<string> | null = null;
+
+async function getOrFetchTenantId(): Promise<string> {
+  if (cachedTenantId !== null) {
+    return cachedTenantId;
+  }
+  if (sessionFetchPromise) {
+    return sessionFetchPromise;
+  }
+
+  sessionFetchPromise = (async () => {
+    try {
+      const session = await authClient.getSession();
+      const activeOrgId = session?.data?.session?.activeOrganizationId;
+      cachedTenantId = activeOrgId || "";
+      return cachedTenantId;
+    } catch (_e) {
+      return "";
+    } finally {
+      sessionFetchPromise = null;
+    }
+  })();
+
+  return sessionFetchPromise;
+}
+
 export async function apiClient<T = unknown>(endpoint: string, options: RequestInit = {}): Promise<T> {
   // Pull active organization for tenant header
-  let tenantIdHeader = "";
-  try {
-    const session = await authClient.getSession();
-    if (session?.data?.session?.activeOrganizationId) {
-        tenantIdHeader = session.data.session.activeOrganizationId;
-    }
-  } catch (_e) {
-    // silently continue
-  }
+  const tenantIdHeader = await getOrFetchTenantId();
 
   const headers = new Headers(options.headers || {})
   
