@@ -105,9 +105,12 @@ export function DashboardLayout() {
     async function autoActivateOrg() {
       if (isPending) return
       // Platform admins always have their org resolved server-side (Bekaa org).
-      // Never redirect them to /onboarding.
-      const isPlatformAdmin = (session?.user as any)?.platformAdmin === true
-        || (session?.user as any)?.platform_admin === true
+      // Detect via flag OR email domain as bulletproof fallback.
+      const user = session?.user as any
+      const isPlatformAdmin =
+        user?.platformAdmin === true ||
+        user?.platform_admin === true ||
+        (typeof user?.email === 'string' && user.email.endsWith('@bekaa.eu'))
       if (isPlatformAdmin) return
       if (session?.session?.activeOrganizationId) return
       try {
@@ -146,9 +149,17 @@ export function DashboardLayout() {
   useEffect(() => {
     if (!session) return
     // Platform admins always have their org resolved server-side — skip onboarding check.
-    const isPlatformAdmin = (session?.user as any)?.platformAdmin === true
-      || (session?.user as any)?.platform_admin === true
+    // Detect via flag OR email domain as bulletproof fallback.
+    const user = session?.user as any
+    const isPlatformAdmin =
+      user?.platformAdmin === true ||
+      user?.platform_admin === true ||
+      (typeof user?.email === 'string' && user.email.endsWith('@bekaa.eu'))
     if (isPlatformAdmin) return
+    // If the server already resolved an activeOrganizationId (e.g. auto-scoped),
+    // do NOT redirect to onboarding even if the client-side org list is empty.
+    const alreadyHasOrg = !!(session?.session as any)?.activeOrganizationId
+    if (alreadyHasOrg) return
     let mounted = true
     setOrgsLoading(true)
     api<any>("/api/v1/users/me/organizations", { method: "GET" })
