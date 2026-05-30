@@ -1,11 +1,10 @@
-# Task Tracker — Higienização & MCP (2026-05-25)
+# Task Tracker — Preparação para Produção (2026-05-30)
 
 | # | Task | Status |
 |---|------|--------|
-| 1 | getting-started.md: domínio antigo → standard-api.bekaa.eu | done |
-| 2 | next-server.ts: remover arquivo morto | done |
-| 3 | Backlog: corrigir 3.1 e 2.10 | done |
-| 4 | Aegis refs em código (llms-constants, ropa.routes) | done |
-| 5 | MCP Server (12 tools + /docs/mcp) | done |
-| 6 | Custom domain + UptimeRobot + CF Notifications | done |
-| 7 | Package READMEs (7 críticos) | done |
+| P3-1.1 | Mover API Keys para NavLinks do Tenant | done |
+| P3-2.1 | Registrar a Rota do Onboarding | done |
+| P3-2.2 | Desenvolver a Página `OnboardingPage.tsx` | done |
+| P3-2.3 | Redirecionar Automaticamente Usuários sem Organização | done |
+| P4-3.1 | Criar o Script `load-test.js` | done |
+| P4-4.1 | Escrever a Documentação do Checklist Operacional | done |

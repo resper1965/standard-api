@@ -85,12 +85,7 @@ export const assessmentsRoutes: RouteDefinition[] = [
     path: "/api/v1/assessments/:assessmentId",
     protected: true,
     handler: async ({ deps, params, tenantId }) => {
-      // Resolve Standard Native Auth org ID → Standard domain UUID
-      let resolvedTenantId = tenantId!;
-      try {
-        const ctx = await deps.resolveTenantContext?.(tenantId!);
-        if (ctx) resolvedTenantId = ctx.tenant_id;
-      } catch { /* use original tenantId if mapping fails */ }
+      const resolvedTenantId = tenantId!;
 
       const tenantDb = deps.assessments.withTenant(resolvedTenantId);
       const assessment = await tenantDb.get(routeParam(params, "assessmentId"));
@@ -109,12 +104,7 @@ export const assessmentsRoutes: RouteDefinition[] = [
     path: "/api/v1/assessments",
     protected: true,
     handler: async ({ deps, tenantId, traceId }) => {
-      // Resolve Standard Native Auth org ID → Standard domain UUID
-      let resolvedTenantId = tenantId!;
-      try {
-        const ctx = await deps.resolveTenantContext?.(tenantId!);
-        if (ctx) resolvedTenantId = ctx.tenant_id;
-      } catch { /* use original tenantId if mapping fails */ }
+      const resolvedTenantId = tenantId!;
 
       const tenantDb = deps.assessments.withTenant(resolvedTenantId);
       const assessments = await tenantDb.listAll();
@@ -134,12 +124,7 @@ export const assessmentsRoutes: RouteDefinition[] = [
     path: "/api/v1/organizations/:organizationId/assessments",
     protected: true,
     handler: async ({ deps, params, tenantId, traceId }) => {
-      // Resolve Standard Native Auth org ID → Standard domain UUID
-      let resolvedTenantId = tenantId!;
-      try {
-        const ctx = await deps.resolveTenantContext?.(tenantId!);
-        if (ctx) resolvedTenantId = ctx.tenant_id;
-      } catch { /* use original tenantId if mapping fails */ }
+      const resolvedTenantId = tenantId!;
 
       const tenantDb = deps.assessments.withTenant(resolvedTenantId);
       const assessments = await tenantDb.listByOrganization(routeParam(params, "organizationId"));
@@ -162,8 +147,7 @@ export const assessmentsRoutes: RouteDefinition[] = [
     bodySchema: UpdateAssessmentRequestSchema,
     handler: async ({ validatedBody, deps, params, tenantId }) => {
       const body = validatedBody as import("@standard/schemas").UpdateAssessmentRequest;
-      let resolvedTenantId = tenantId!;
-      try { const ctx = await deps.resolveTenantContext?.(tenantId!); if (ctx) resolvedTenantId = ctx.tenant_id; } catch {}
+      const resolvedTenantId = tenantId!;
       const tenantDb = deps.assessments.withTenant(resolvedTenantId);
       const assessment = await tenantDb.get(routeParam(params, "assessmentId"));
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
@@ -184,8 +168,7 @@ export const assessmentsRoutes: RouteDefinition[] = [
     path: "/api/v1/assessments/:assessmentId/status",
     protected: true,
     handler: async ({ deps, params, tenantId, traceId }) => {
-      let resolvedTenantId = tenantId!;
-      try { const ctx = await deps.resolveTenantContext?.(tenantId!); if (ctx) resolvedTenantId = ctx.tenant_id; } catch {}
+      const resolvedTenantId = tenantId!;
       const tenantDb = deps.assessments.withTenant(resolvedTenantId);
       const assessment = await tenantDb.get(routeParam(params, "assessmentId"));
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
@@ -204,8 +187,7 @@ export const assessmentsRoutes: RouteDefinition[] = [
     path: "/api/v1/assessments/:assessmentId/timeline",
     protected: true,
     handler: async ({ deps, params, tenantId, traceId }) => {
-      let resolvedTenantId = tenantId!;
-      try { const ctx = await deps.resolveTenantContext?.(tenantId!); if (ctx) resolvedTenantId = ctx.tenant_id; } catch {}
+      const resolvedTenantId = tenantId!;
       const assessmentId = routeParam(params, "assessmentId");
       const tenantDb = deps.assessments.withTenant(resolvedTenantId);
       const assessment = await tenantDb.get(assessmentId);
@@ -226,8 +208,7 @@ export const assessmentsRoutes: RouteDefinition[] = [
     path: "/api/v1/assessments/:assessmentId/compliance-gate",
     protected: true,
     handler: async ({ deps, params, tenantId, traceId }) => {
-      let resolvedTenantId = tenantId!;
-      try { const ctx = await deps.resolveTenantContext?.(tenantId!); if (ctx) resolvedTenantId = ctx.tenant_id; } catch {}
+      const resolvedTenantId = tenantId!;
       const assessmentId = routeParam(params, "assessmentId");
       const tenantDb = deps.assessments.withTenant(resolvedTenantId);
       const assessment = await tenantDb.get(assessmentId);
@@ -318,12 +299,7 @@ export const assessmentsRoutes: RouteDefinition[] = [
     requireActor: true,
     bodySchema: AssessmentAutomationConfigSchema,
     handler: async ({ validatedBody, deps, params, tenantId, traceId }) => {
-      // Resolve Standard Native Auth org ID → Standard domain UUID
-      let resolvedTenantId = tenantId!;
-      try {
-        const ctx = await deps.resolveTenantContext?.(tenantId!);
-        if (ctx) resolvedTenantId = ctx.tenant_id;
-      } catch { /* use original tenantId if mapping fails */ }
+      const resolvedTenantId = tenantId!;
 
       const assessmentId = routeParam(params, "assessmentId");
       const assessment = await deps.assessments.withTenant(resolvedTenantId).get(assessmentId);

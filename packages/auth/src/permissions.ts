@@ -137,6 +137,127 @@ export const STANDARD_ROLE_PERMISSIONS = {
     agent: ["read_runs"],
     audit: ["read"],
   },
+
+  // ─── GRC Roles Alignment ───────────────────────────────────────────
+  
+  platform_admin: {
+    tenant: ["read", "update"],
+    organization: ["create", "read", "update"],
+    membership: ["manage"],
+    assessment: ["create", "read", "update", "delete", "run_workflow", "close", "cancel"],
+    document: ["upload", "read", "delete", "reprocess"],
+    kb: ["index", "search"],
+    scf: ["read", "import", "admin"],
+    scope: ["create", "update", "approve"],
+    soa: ["create", "update", "submit_review", "approve", "read"],
+    evidence: ["run", "read"],
+    gap: ["create", "update", "submit_review", "approve", "read"],
+    maturity: ["create", "update", "submit_review", "approve", "read"],
+    poam: ["create", "update", "submit_review", "approve", "read"],
+    report: ["create", "render", "approve", "read", "download"],
+    agent: ["run", "dry_run", "read_runs", "admin"],
+    admin: ["read", "write"],
+    audit: ["read"],
+  },
+
+  tenant_admin: {
+    tenant: ["read", "update"],
+    organization: ["create", "read", "update"],
+    membership: ["manage"],
+    assessment: ["create", "read", "update"],
+    audit: ["read"],
+  },
+
+  organization_admin: {
+    organization: ["read", "update"],
+    assessment: ["create", "read", "update"],
+    document: ["upload", "read"],
+    kb: ["index", "search"],
+    soa: ["read"],
+    gap: ["read"],
+    poam: ["read"],
+    report: ["read"],
+  },
+
+  assessment_owner: {
+    assessment: ["read", "update", "run_workflow", "cancel"],
+    document: ["upload", "read", "reprocess"],
+    kb: ["index", "search"],
+    scope: ["create", "update"],
+    soa: ["create", "update", "submit_review", "read"],
+    evidence: ["run", "read"],
+    gap: ["create", "update", "submit_review", "read"],
+    maturity: ["create", "update", "submit_review", "read"],
+    poam: ["create", "update", "submit_review", "read"],
+    report: ["create", "render", "read", "download"],
+    agent: ["run", "read_runs"],
+  },
+
+  assessor: {
+    assessment: ["read"],
+    document: ["upload", "read", "reprocess"],
+    kb: ["index", "search"],
+    scope: ["create", "update"],
+    soa: ["create", "update", "submit_review", "read"],
+    evidence: ["run", "read"],
+    gap: ["create", "update", "submit_review", "read"],
+    poam: ["create", "update", "submit_review", "read"],
+    report: ["create", "render", "read"],
+    agent: ["run", "read_runs"],
+  },
+
+  reviewer: {
+    assessment: ["read"],
+    document: ["read"],
+    kb: ["search"],
+    soa: ["read"],
+    gap: ["read"],
+    maturity: ["read"],
+    poam: ["read"],
+    report: ["read"],
+  },
+
+  approver: {
+    assessment: ["read"],
+    document: ["read"],
+    kb: ["search"],
+    soa: ["read", "approve"],
+    gap: ["read", "approve"],
+    maturity: ["read", "approve"],
+    poam: ["read", "approve"],
+    report: ["read", "approve", "download"],
+  },
+
+  auditor_readonly: {
+    assessment: ["read"],
+    soa: ["read"],
+    gap: ["read"],
+    maturity: ["read"],
+    poam: ["read"],
+    report: ["read", "download"],
+    audit: ["read"],
+  },
+
+  integration_service: {
+    assessment: ["read"],
+    document: ["upload", "read"],
+    kb: ["index", "search"],
+    report: ["read"],
+  },
+
+  support_readonly: {
+    tenant: ["read"],
+    organization: ["read"],
+    assessment: ["read"],
+    audit: ["read"],
+  },
+
+  system: {
+    assessment: ["read", "update", "run_workflow"],
+    kb: ["index"],
+    agent: ["run", "read_runs"],
+    report: ["render"],
+  },
 } as const;
 
 export type StandardRole = keyof typeof STANDARD_ROLE_PERMISSIONS;

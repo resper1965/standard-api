@@ -1,344 +1,66 @@
-# Production Go-Live Checklist
+# Production Go-Live Checklist — Standard GRC
 
-## 1. Objetivo
+Este documento compila a lista de verificações operacionais e configurações críticas necessárias para realizar o deploy seguro e resiliente da plataforma **Standard** em ambiente de produção Cloudflare.
 
-Este checklist define os gates operacionais para liberar o `standard-api-standard` em produção real como API SaaS multi-tenant.
+---
 
-Ele complementa `docs/operations/production-readiness-checklist.md` e deve ser usado como checklist final de go-live.
+## 1. Banco de Dados (Neon PostgreSQL)
 
-## 2. Go-Live Status
+- [ ] **Rotação de Credenciais**: Garantir que as credenciais do Neon de desenvolvimento e homologação não estejam expostas e que a connection string de produção use credenciais com privilégios restritos (mínimo privilégio).
+- [ ] **Pooling de Conexões**: Configurar o `DATABASE_URL` em produção apontando para o endpoint do Neon Connection Pooler (geralmente porta `5432` com `-pooler` na URL) para evitar exaustão de conexões decorrente de chamadas simultâneas de Cloudflare Workers.
+- [ ] **Migrations de Schema**: Executar `pnpm db:migrate` no banco de produção a partir de um bastidor controlado e garantir que todas as migrações drizzle anteriores tenham sido aplicadas sem alterações destrutivas em tabelas vivas.
+- [ ] **Estratégia de Backups**: Validar que a retenção e snapshots automáticos diários estão habilitados no console do Neon.
 
-Status permitido:
+---
 
-- `not_ready`;
-- `ready_for_security_review`;
-- `ready_for_staging_validation`;
-- `ready_for_go_live_approval`;
-- `approved_for_production`;
-- `production_blocked`;
-- `production_live`.
+## 2. Autenticação e Sessões (Better Auth)
 
-Produção só pode avançar para `approved_for_production` quando todos os gates P0 estiverem concluídos e evidenciados.
+- [ ] **Chave Secreta (`BETTER_AUTH_SECRET`)**: Gerar uma chave criptográfica forte (mínimo 32 caracteres gerados via `openssl rand -hex 32`) e registrá-la como secret do Wrangler.
+- [ ] **URL Base (`BETTER_AUTH_URL`)**: Configurar a URL pública definitiva para o endpoint de autenticação (ex: `https://standard.bekaa.eu/api/auth`).
+- [ ] **Atributos de Cookies**:
+  - [ ] `useSecureCookies: true` ativado.
+  - [ ] `sameSite: "none"` configurado (necessário para autenticação cross-origin entre o frontend e a API gateway).
+  - [ ] `crossSubDomainCookies` ativado se o console e a API compartilharem domínios sob `.bekaa.eu`.
 
-## 3. Responsáveis
+---
 
-Papéis mínimos:
+## 3. Infraestrutura Cloudflare Worker & Gateway
 
-- engineering owner;
-- security owner;
-- operations owner;
-- product owner;
-- compliance/GRC reviewer;
-- incident commander inicial;
-- support owner.
+- [ ] **Domínios Customizados (Custom Domains)**: Associar o Worker do API Gateway à rota definitiva de produção (ex: `standard-api.bekaa.eu`).
+- [ ] **Políticas de CORS**:
+  - [ ] Limitar `Access-Control-Allow-Origin` aos domínios estritamente permitidos (`https://standard.bekaa.eu` e aliases autorizados).
+  - [ ] Bloquear wildcards (`*`) em cabeçalhos de CORS em produção.
+- [ ] **R2 Storage & Buckets**: Criar e associar os bindings dos buckets R2 definitivos no `wrangler.toml` do gateway para armazenamento isolado de evidências e documentos.
+- [ ] **AI Gateway & Vectorize**: Configurar os namespaces de produção separados por tenant e registrar chaves seguras para acesso às APIs de inferência LLM.
 
-Cada gate deve ter:
+---
 
-- owner;
-- evidência;
-- data;
-- decisão;
-- riscos aceitos, se houver.
+## 4. Observabilidade & SOC Incidents
 
-## 4. P0 Gates Obrigatórios
+- [ ] **Políticas de Logs**: Verificar que logs estruturados de auditoria são enviados para o serviço SOC de monitoramento sem vazar informações sensíveis (hashes de chaves de API, prompts com dados brutos ou senhas).
+- [ ] **Monitoramento de Integridade**: Registrar o endpoint `/health` da API em uma ferramenta de monitoramento externo (ex: UptimeRobot ou Better Uptime) para alertas instantâneos de indisponibilidade.
+- [ ] **SOC Monitoring Queue**: Validar que o binding `SOC_TRIAGE_QUEUE` e `AGENT_RUN_QUEUE` estão associados às filas (Cloudflare Queues) corretas no ambiente de produção.
 
-### Auth e RBAC
+---
 
-- Auth real ativo.
-- `MockAuthProvider` desabilitado.
-- RBAC revisado por endpoint crítico.
-- API keys/service accounts, se expostos, escopados por tenant.
-- Admin/internal protegido por Cloudflare Access / Zero Trust.
+## 5. Hardening de Segurança
 
-Evidência:
+- [ ] **Content Security Policy (CSP)**: Validar que cabeçalhos CSP estritos (`default-src 'none'; frame-ancestors 'none';`) são retornados pela API, exceto em rotas de documentação Scalar (que necessitam de scripts/estilos Inline controlados).
+- [ ] **Headers de Segurança Obrigatórios**: Garantir que as respostas incluam `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `X-XSS-Protection: 1; mode=block` e `Strict-Transport-Security`.
+- [ ] **Rate Limiting**: Habilitar regras de rate limit para prevenir ataques de força bruta no login e exaustão de cota no gateway de API.
 
-- testes positivos/negativos;
-- configuração staging/production;
-- security review aprovada.
+---
 
-### Tenant Isolation
+## 6. Comandos de Deploy (Produção)
 
-- Testes cross-tenant verdes.
-- Repositories filtram por tenant.
-- R2 keys usam tenant/org/assessment.
-- Vectorize usa namespace/metadados por tenant/assessment.
-- Audit logs incluem tenant.
+```bash
+# 1. Aplicar migrações ao banco de produção
+DATABASE_URL="postgresql://user:pass@ep-pooler.us-east-1.neon.tech/dbname" pnpm db:migrate
 
-No-Go:
+# 2. Configurar secrets no wrangler (Cloudflare)
+wrangler secret put DATABASE_URL --env production
+wrangler secret put BETTER_AUTH_SECRET --env production
 
-```text
-Qualquer falha cross-tenant bloqueia go-live.
+# 3. Deploy do Worker para o Cloudflare
+pnpm cf:deploy:production
 ```
-
-### Approval Gates
-
-- SoA exige approval.
-- Gap Analysis exige approval.
-- Maturity exige approval.
-- POA&M exige approval.
-- Report acceptance exige approval.
-- Agentes não aprovam artifacts.
-
-Evidência:
-
-- testes do Assessment Engine;
-- testes de workflow;
-- cenário API-first executado.
-
-### Secrets
-
-- Nenhum secret no repo.
-- Secrets configurados em ambiente seguro.
-- Rotação emergencial documentada.
-- Tokens Cloudflare/GitHub com menor privilégio.
-- DATABASE_URL real fora de logs.
-
-### WAF, Rate Limits e CORS
-
-- WAF habilitado para API pública.
-- Rate limits por tenant/key/endpoint configurados.
-- CORS sem wildcard em produção.
-- Admin/internal com proteção adicional.
-- Upload/report/agent run com quotas.
-
-### Audit e Observability
-
-- Audit logs persistentes.
-- Security events persistentes.
-- `trace_id` propagado.
-- Dashboards mínimos criados.
-- Alertas mínimos ativos.
-- Logs com redaction.
-
-### Backup/Restore
-
-- Backup PostgreSQL automatizado.
-- Restore drill executado.
-- R2 lifecycle configurado.
-- Vector index rebuild documentado.
-- RPO/RTO preliminares aprovados.
-
-### Incident Response
-
-- Runbook criado.
-- Severidades definidas.
-- Escalation path definido.
-- Processo de API key compromise.
-- Processo de cross-tenant alert.
-- Processo de approval bypass attempt.
-- Postmortem template definido.
-
-### API Documentation
-
-- OpenAPI publicado.
-- Public API guidelines publicados.
-- Erros documentados.
-- Auth documentada.
-- Rate limits documentados.
-- Idempotency documentada.
-- Webhooks documentados, se liberados.
-
-### Staging Validation
-
-- `pnpm test:ci` verde.
-- Smoke tests staging verdes.
-- API-first acceptance scenario executado com dados sintéticos.
-- Security tests verdes.
-- Evals e regression verdes.
-- Deploy rollback testado ou documentado.
-
-## 5. External API Readiness
-
-Antes de liberar API externa:
-
-- API keys implementadas e rotacionáveis.
-- Scopes por key definidos.
-- Sandbox environment disponível.
-- Rate limits por API key.
-- Idempotency em writes críticos.
-- Audit logs por integração.
-- Public API docs publicadas.
-- Changelog público definido.
-- Terms/privacy/legal review concluída.
-
-No-Go:
-
-- API pública sem idempotency em operações críticas;
-- API keys sem escopo de tenant;
-- tokens em logs;
-- ausência de throttling.
-
-## 6. Webhook Readiness
-
-Antes de liberar webhooks:
-
-- assinatura HMAC implementada;
-- event envelope versionado;
-- retry e DLQ definidos;
-- replay protection;
-- idempotency por `event_id`;
-- delivery logs;
-- secret rotation;
-- documentação de verificação;
-- sandbox para testes.
-
-No-Go:
-
-- webhook sem assinatura;
-- payload sensível excessivo;
-- ausência de retry/DLQ;
-- delivery sem audit trail.
-
-## 7. Data Governance
-
-Validar:
-
-- política de retenção para documentos;
-- política de retenção para chunks;
-- política de retenção para embeddings;
-- política de retenção para reports;
-- política de retenção para audit logs;
-- export permissions;
-- URL expiration;
-- download logging;
-- legal hold;
-- delete/export por tenant conforme contrato.
-
-## 8. Cost Governance
-
-Validar:
-
-- budgets por ambiente;
-- alertas de custo;
-- usage por tenant;
-- quotas por operação pesada;
-- AI Gateway cost tracking planejado/ativo quando LLM real entrar;
-- limits para agent runs;
-- limits para KB search;
-- limits para report render/export.
-
-## 9. Performance e Reliability
-
-Validar:
-
-- load test sintético mínimo;
-- API health monitorado;
-- queue depth monitorado;
-- DLQ monitorada;
-- workflow failure rate monitorado;
-- retries com limite;
-- backpressure definido;
-- report/export jobs não bloqueiam API.
-
-## 10. Security Sign-Off
-
-Checklist:
-
-- security review aprovada;
-- dependency/security scan revisado;
-- secrets scan limpo;
-- auth/RBAC validado;
-- tenant isolation validado;
-- WAF/rate limit validado;
-- admin access validado;
-- incident runbooks validados.
-
-Assinaturas:
-
-```text
-Engineering owner:
-Security owner:
-Operations owner:
-Compliance/GRC reviewer:
-Product owner:
-```
-
-## 11. Go-Live Execution Plan
-
-Sequência:
-
-1. Congelar release candidate.
-2. Rodar `pnpm test:ci`.
-3. Rodar smoke tests staging.
-4. Validar backups.
-5. Validar secrets production.
-6. Validar Cloudflare WAF/rate limits/Access.
-7. Confirmar incident roster.
-8. Executar deploy production manual.
-9. Rodar smoke tests production.
-10. Monitorar dashboards.
-11. Confirmar audit/security events.
-12. Declarar `production_live` ou rollback.
-
-## 12. Rollback Plan
-
-Rollback deve cobrir:
-
-- Worker deploy anterior;
-- workflow config;
-- queue consumers;
-- env vars/secrets;
-- API route exposure;
-- connector/webhook disablement;
-- report/export jobs;
-- database migrations.
-
-Regras:
-
-- migration irreversível exige plano específico;
-- rollback não pode apagar audit logs;
-- rollback deve preservar tenant isolation;
-- comunicação interna deve ser registrada.
-
-## 13. First 24 Hours Monitoring
-
-Monitorar:
-
-- 4xx/5xx;
-- auth failures;
-- tenant mismatch;
-- queue depth;
-- DLQ;
-- workflow failures;
-- report/export failures;
-- cost spikes;
-- security events;
-- latency;
-- webhook delivery, se ativo.
-
-Cadência:
-
-- primeira hora: acompanhamento contínuo;
-- primeiras 4 horas: revisão frequente;
-- primeiras 24 horas: checkpoints programados;
-- pós-go-live: review e backlog.
-
-## 14. No-Go Conditions
-
-Bloqueiam go-live:
-
-- tenant isolation falhando;
-- approval bypass possível;
-- mock auth ativo;
-- secrets no repo/log;
-- audit logs ausentes;
-- backup sem restore testado;
-- WAF/rate limiting ausente;
-- CORS wildcard em rota autenticada;
-- endpoint crítico sem permission;
-- production deploy sem aprovação manual;
-- API externa sem auth/escopo;
-- dados reais em fixture/teste.
-
-## 15. Resultado Esperado
-
-Ao concluir este checklist:
-
-- produção tem controles mínimos de segurança;
-- API pública tem contrato e proteção;
-- incident response está preparado;
-- backup/restore está validado;
-- observability está ativa;
-- tenant isolation está testado;
-- go-live é uma decisão auditável.
-
