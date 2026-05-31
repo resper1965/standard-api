@@ -1,3 +1,4 @@
+﻿import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useState, useEffect, useCallback } from "react"
 import { api, ApiError } from "@/lib/api"
 import { Button } from "@/components/ui/button"
@@ -91,6 +92,7 @@ const COMMON_ACTIONS = [
 ]
 
 export function AuditLogsPage() {
+  useDocumentTitle("Audit Logs");
   const [logs, setLogs] = useState<AuditLog[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)

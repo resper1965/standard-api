@@ -1,3 +1,4 @@
+﻿import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useEffect, useState, useRef } from "react";
 import { Card, CardContent } from "../../components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "../../components/ui/table";
@@ -41,6 +42,7 @@ function buildDownState(connectionError: boolean): HealthState {
 }
 
 export function AdminSystemHealth() {
+  useDocumentTitle("System Health");
   const [health, setHealth] = useState<HealthState | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

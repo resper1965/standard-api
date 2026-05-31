@@ -1,3 +1,4 @@
+﻿import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { api } from "../../lib/api";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../components/ui/card";
@@ -174,6 +175,7 @@ function PasswordStrengthBar({ password }: { password: string }) {
 // ---------------------------------------------------------------------------
 
 export function AdminUsers() {
+  useDocumentTitle("Users");
   // ---- Data state ----------------------------------------------------------
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
