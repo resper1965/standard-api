@@ -28,6 +28,7 @@ export type {
   StandardEmailBase,
   WelcomeEmailPayload,
   VerificationEmailPayload,
+  PasswordResetEmailPayload,
   ApprovalRequestEmailPayload,
   StateChangeEmailPayload,
   ReportReadyEmailPayload,
@@ -43,6 +44,7 @@ export { StandardEmailError } from "./types";
 export {
   renderWelcomeEmail,
   renderVerificationEmail,
+  renderPasswordResetEmail,
   renderApprovalRequestEmail,
   renderStateChangeEmail,
   renderReportReadyEmail,
