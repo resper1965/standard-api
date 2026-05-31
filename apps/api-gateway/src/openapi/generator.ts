@@ -2,11 +2,16 @@ import { OpenApiGeneratorV3 } from "@asteasolutions/zod-to-openapi";
 import { registry } from "./registry";
 import { routes } from "../app";
 
+let cachedSpec: any = null;
+
 /**
  * Dynamically generates the final OpenAPI specification JSON by aggregating 
  * all routes and schemas registered across the decentralized modules.
  */
 export function generateOpenApiSpec() {
+  if (cachedSpec) {
+    return cachedSpec;
+  }
   // Dynamically register modern API-First routes from Hono routes wrapper
   routes.forEach(route => {
     if (route.openapi) {
@@ -33,7 +38,7 @@ export function generateOpenApiSpec() {
 
   const fullDescription = [baseDescription, aiFirstNotice, cookbooks].join("\n\n---\n\n");
 
-  return generator.generateDocument({
+  cachedSpec = generator.generateDocument({
     openapi: "3.0.0",
     info: {
       title: "Standard GRC Platform — API Reference",
@@ -46,4 +51,6 @@ export function generateOpenApiSpec() {
     ],
     security: [{ BearerApiKey: [] }]
   });
+
+  return cachedSpec;
 }
