@@ -1,25 +1,30 @@
 import { authClient } from "./auth-client"
-
 import { API_URL } from "./config"
+
+// ─── Tenant cache ────────────────────────────────────────────────────────────
 
 let cachedTenantId: string | null = null;
 let sessionFetchPromise: Promise<string> | null = null;
 
+/** Call this immediately after switching or activating an organization. */
+export function invalidateTenantCache(): void {
+  cachedTenantId = null;
+  sessionFetchPromise = null;
+}
+
 async function getOrFetchTenantId(): Promise<string> {
-  if (cachedTenantId !== null) {
-    return cachedTenantId;
-  }
-  if (sessionFetchPromise) {
-    return sessionFetchPromise;
-  }
+  if (cachedTenantId !== null) return cachedTenantId;
+  if (sessionFetchPromise) return sessionFetchPromise;
 
   sessionFetchPromise = (async () => {
     try {
       const session = await authClient.getSession();
-      const activeOrgId = session?.data?.session?.activeOrganizationId;
-      cachedTenantId = activeOrgId || "";
+      const activeOrgId = (session?.data?.session as Record<string, unknown>)?.activeOrganizationId;
+      cachedTenantId = typeof activeOrgId === "string" ? activeOrgId : "";
       return cachedTenantId;
-    } catch (_e) {
+    } catch {
+      // Return empty — request will proceed without tenant header.
+      // The server will reject if the route requires tenant isolation.
       return "";
     } finally {
       sessionFetchPromise = null;
@@ -29,55 +34,99 @@ async function getOrFetchTenantId(): Promise<string> {
   return sessionFetchPromise;
 }
 
-export async function apiClient<T = unknown>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  // Pull active organization for tenant header
-  const tenantIdHeader = await getOrFetchTenantId();
+// ─── Structured API Error ────────────────────────────────────────────────────
 
-  const headers = new Headers(options.headers || {})
-  
-  // Only set Content-Type on requests with a body (POST/PUT/PATCH).
-  // Setting it on GET triggers an avoidable CORS preflight.
-  const method = (options.method || "GET").toUpperCase();
-  if (!headers.has('Content-Type') && method !== "GET" && method !== "HEAD") {
-    headers.set('Content-Type', 'application/json')
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public readonly status: number,
+    public readonly code?: string,
+    public readonly traceId?: string,
+  ) {
+    super(message);
+    this.name = "ApiError";
   }
-  
-  // Only add tenant header to /api/v1/* routes — standard-native-auth routes (/api/auth/*) 
-  // don't allow this custom header and it causes CORS preflight failures
-  if (tenantIdHeader && !endpoint.includes('/api/auth/')) {
-     headers.set('x-standard-tenant-id', tenantIdHeader)
+}
+
+// ─── Core client ─────────────────────────────────────────────────────────────
+
+const REQUEST_TIMEOUT_MS = 15_000;
+
+export async function api<T = unknown>(
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<T> {
+  const tenantId = await getOrFetchTenantId();
+
+  const headers = new Headers(options.headers ?? {});
+
+  // Only set Content-Type on mutation requests to avoid CORS preflight on GETs
+  const method = (options.method ?? "GET").toUpperCase();
+  if (!headers.has("Content-Type") && method !== "GET" && method !== "HEAD") {
+    headers.set("Content-Type", "application/json");
   }
 
-  // Resolve relative endpoints against API gateway
-  const fetchUrl = endpoint.startsWith('/') ? `${API_URL}${endpoint}` : endpoint;
+  // Inject tenant header only on API routes (not on auth routes)
+  if (tenantId && !endpoint.includes("/api/auth/")) {
+    headers.set("x-standard-tenant-id", tenantId);
+  }
 
-  const response = await fetch(fetchUrl, {
-    ...options,
-    headers,
-    credentials: 'include',
-  })
+  const fetchUrl = endpoint.startsWith("/") ? `${API_URL}${endpoint}` : endpoint;
+
+  // Abort after REQUEST_TIMEOUT_MS to prevent indefinite hangs
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+  let response: Response;
+  try {
+    response = await fetch(fetchUrl, {
+      ...options,
+      headers,
+      credentials: "include",
+      signal: controller.signal,
+    });
+  } catch (err) {
+    clearTimeout(timeoutId);
+    if (err instanceof DOMException && err.name === "AbortError") {
+      throw new ApiError("Request timed out", 408, "TIMEOUT");
+    }
+    throw new ApiError(
+      err instanceof Error ? err.message : "Network error",
+      0,
+      "NETWORK_ERROR"
+    );
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   // 401 → redirect to login
   if (response.status === 401) {
-    console.warn("API 401 Unauthorized - Re-auth required.")
+    invalidateTenantCache();
     window.location.href = "/login";
-    throw new Error("Unauthorized");
+    throw new ApiError("Unauthorized", 401, "UNAUTHORIZED");
   }
 
-  // Non-OK responses throw
+  // Parse error body for structured error details
   if (!response.ok) {
-    const errorBody = await response.text().catch(() => "");
-    throw new Error(`API ${response.status}: ${errorBody || response.statusText}`);
+    let code: string | undefined;
+    let traceId: string | undefined;
+    let message = response.statusText;
+
+    try {
+      const body = await response.json() as Record<string, unknown>;
+      if (typeof body.message === "string") message = body.message;
+      if (typeof body.code === "string") code = body.code;
+      if (typeof body.trace_id === "string") traceId = body.trace_id;
+    } catch {
+      message = await response.text().catch(() => response.statusText);
+    }
+
+    throw new ApiError(message, response.status, code, traceId);
   }
 
-  // Parse JSON (fallback to empty object for 204 no-content)
-  if (response.status === 204) {
-    return {} as T;
-  }
-
+  if (response.status === 204) return {} as T;
   return response.json() as Promise<T>;
 }
 
-// Alias used by page components
-export const api = apiClient;
-
+// Legacy alias — prefer importing `api` directly
+export const apiClient = api;
