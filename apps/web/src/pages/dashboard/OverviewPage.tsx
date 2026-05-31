@@ -41,7 +41,7 @@ interface Org {
 export function OverviewPage() {
   useDocumentTitle("Overview")
   const { data: session, isPending: sessionLoading } = useSession()
-  const { orgId, isPlatformAdmin } = useActiveOrg()
+  const { orgId } = useActiveOrg()
   const hasActiveOrg = !!orgId
 
   const [metrics, setMetrics] = useState<PlatformMetrics>({

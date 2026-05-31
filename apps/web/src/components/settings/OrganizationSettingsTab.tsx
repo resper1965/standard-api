@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { api } from "../../lib/api";
-import { useSession } from "../../lib/auth-client";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
@@ -9,6 +8,7 @@ import { Badge } from "../ui/badge";
 import { Skeleton } from "../ui/skeleton";
 import { Save, Building2, CheckCircle2 } from "lucide-react";
 import { useToast } from "../../hooks/use-toast";
+import { useActiveOrg } from "../../hooks/useActiveOrg";
 
 interface Organization {
   organization_id: string;
@@ -18,7 +18,7 @@ interface Organization {
 }
 
 export function OrganizationSettingsTab() {
-  const { data: session } = useSession();
+  const { orgId: activeOrgId } = useActiveOrg();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [org, setOrg] = useState<Organization | null>(null);
@@ -26,9 +26,7 @@ export function OrganizationSettingsTab() {
   const [slug, setSlug] = useState("");
   const { toast } = useToast();
 
-  const activeOrgId = (session?.session as any)?.activeOrganizationId;
-
-  const fetchOrg = async () => {
+  const fetchOrg = useCallback(async () => {
     if (!activeOrgId) return;
     setLoading(true);
     try {
@@ -38,21 +36,20 @@ export function OrganizationSettingsTab() {
         setName(res.name);
         setSlug(res.slug);
       }
-    } catch (err: any) {
-      console.error(err);
+    } catch (err) {
       toast({
         variant: "destructive",
         title: "Load Failed",
-        description: err.message || "Failed to load organization settings.",
+        description: err instanceof Error ? err.message : "Failed to load organization settings.",
       });
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeOrgId, toast]);
 
   useEffect(() => {
     fetchOrg();
-  }, [activeOrgId]);
+  }, [fetchOrg]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,10 +68,9 @@ export function OrganizationSettingsTab() {
         fetchOrg();
       }
     } catch (err) {
-      console.error(err);
       toast({
         title: "Error",
-        description: "Failed to update organization settings.",
+        description: err instanceof Error ? err.message : "Failed to update organization settings.",
         variant: "destructive",
       });
     } finally {
