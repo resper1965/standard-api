@@ -323,7 +323,10 @@ export function DashboardLayout() {
           activeOrgId={activeOrgId} 
           orgs={orgs} 
           orgsLoading={orgsLoading} 
-          onOrgChange={handleOrgChange} 
+          onOrgChange={handleOrgChange}
+          isPlatformAdmin={!!(session?.user as any)?.platformAdmin
+            || !!(session?.user as any)?.platform_admin
+            || (typeof (session?.user as any)?.email === 'string' && (session?.user as any)?.email?.endsWith('@bekaa.eu'))}
         />
 
         <div className="flex-1 px-6 md:px-8 py-6 overflow-auto">
@@ -352,7 +355,8 @@ function DesktopTopbar({
   activeOrgId,
   orgs,
   orgsLoading,
-  onOrgChange
+  onOrgChange,
+  isPlatformAdmin = false,
 }: { 
   userInitial: string
   title: string
@@ -360,6 +364,7 @@ function DesktopTopbar({
   orgs: any[]
   orgsLoading: boolean
   onOrgChange: (orgId: string) => void
+  isPlatformAdmin?: boolean
 }) {
   return (
     <header className="hidden md:flex border-b border-border/50 bg-card/80 backdrop-blur-xl px-8 sticky top-0 z-30 h-14 items-center justify-between transition-all duration-200">
@@ -367,27 +372,34 @@ function DesktopTopbar({
         {title && <h1 className="text-xl font-brand font-semibold tracking-tight">{title}</h1>}
       </div>
       <div className="flex items-center gap-4 shrink-0">
-        {/* Organization Selector */}
-        <div className="w-[200px]">
-          <Select value={activeOrgId || undefined} onValueChange={onOrgChange}>
-            <SelectTrigger className="h-9 bg-transparent border-border/50 hover:bg-muted/50 transition-colors cursor-pointer">
-              <div className="flex items-center gap-2 text-sm text-foreground">
-                <Building2 className="h-4 w-4 opacity-70" />
-                <SelectValue placeholder={orgsLoading ? "Loading..." : "Select Organization"} />
-              </div>
-            </SelectTrigger>
-            <SelectContent>
-              {orgs.map(org => (
-                <SelectItem key={org.id} value={org.id}>
-                  {org.name}
-                </SelectItem>
-              ))}
-              {orgs.length === 0 && !orgsLoading && (
-                <div className="px-2 py-2 text-sm text-muted-foreground">No organizations</div>
-              )}
-            </SelectContent>
-          </Select>
-        </div>
+        {/* Organization Selector — hidden for platform admins (always on Bekaa) */}
+        {isPlatformAdmin ? (
+          <div className="flex items-center gap-2 h-9 px-3 rounded-md border border-border/50 bg-transparent text-sm text-foreground">
+            <Building2 className="h-4 w-4 opacity-70" />
+            <span>Bekaa</span>
+          </div>
+        ) : (
+          <div className="w-[200px]">
+            <Select value={activeOrgId || undefined} onValueChange={onOrgChange}>
+              <SelectTrigger className="h-9 bg-transparent border-border/50 hover:bg-muted/50 transition-colors cursor-pointer">
+                <div className="flex items-center gap-2 text-sm text-foreground">
+                  <Building2 className="h-4 w-4 opacity-70" />
+                  <SelectValue placeholder={orgsLoading ? "Loading..." : "Select Organization"} />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                {orgs.map(org => (
+                  <SelectItem key={org.id} value={org.id}>
+                    {org.name}
+                  </SelectItem>
+                ))}
+                {orgs.length === 0 && !orgsLoading && (
+                  <div className="px-2 py-2 text-sm text-muted-foreground">No organizations</div>
+                )}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
         <button className="bell-spell relative h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors cursor-pointer" aria-label="Notifications">
           <Bell className="h-4 w-4" />
