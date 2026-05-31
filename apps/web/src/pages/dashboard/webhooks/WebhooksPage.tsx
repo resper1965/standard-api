@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSession } from "@/lib/auth-client";
 import { api, ApiError } from "@/lib/api";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { useActiveOrg } from "@/hooks/useActiveOrg";
 import {
   Plus, Trash2, RotateCcw, Send, ChevronDown, ChevronUp,
   Webhook, Copy, Check, AlertCircle, CircleCheck, Circle,
@@ -327,8 +329,8 @@ function WebhookRow({
 
 // ─── Main Page ───────────────────────────────────────────────────
 export function WebhooksPage() {
-  const { data: session } = useSession();
-  const orgId = ((session?.session as Record<string, unknown>)?.activeOrganizationId as string) ?? "";
+  useDocumentTitle("Webhooks");
+  const { orgId } = useActiveOrg();
 
   const [endpoints, setEndpoints] = useState<WebhookEndpoint[]>([]);
   const [loading, setLoading]     = useState(true);

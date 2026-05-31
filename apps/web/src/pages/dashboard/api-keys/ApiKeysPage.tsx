@@ -1,3 +1,4 @@
+﻿import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useState, useEffect, useCallback } from "react"
 import { useSession } from "@/lib/auth-client"
 import { api } from "@/lib/api"
@@ -422,6 +423,7 @@ function EditModal({ keyRecord, onSave, onCancel, loading }: {
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export function ApiKeysPage() {
+  useDocumentTitle("API Keys");
   const { data: session } = useSession()
   const orgId = (session?.session as any)?.activeOrganizationId
 

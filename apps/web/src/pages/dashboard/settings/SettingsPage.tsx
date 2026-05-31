@@ -1,3 +1,4 @@
+﻿import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useState, useEffect } from "react"
 import { useSession } from "@/lib/auth-client"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
@@ -450,6 +451,7 @@ assessment.created, document.ingested, kb.indexed, soa.approved, gap.approved, m
 
 // ─── Component ───────────────────────────────────────────────
 export function SettingsPage() {
+  useDocumentTitle("Settings");
   const { data: session } = useSession()
   const { toast } = useToast()
   const hasActiveOrg = !!session?.session?.activeOrganizationId
