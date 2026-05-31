@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from "react";
-import { useSession } from "@/lib/auth-client";
 import { api, ApiError } from "@/lib/api";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useActiveOrg } from "@/hooks/useActiveOrg";
