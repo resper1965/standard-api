@@ -2,7 +2,8 @@ import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Building2, Key, Users, Zap, ArrowUpRight, Activity, HeartPulse } from "lucide-react"
 import { useSession } from "@/lib/auth-client"
-import { apiClient } from "@/lib/api"
+import { api } from "@/lib/api"
+import { API_URL } from "@/lib/config"
 import { Link } from "react-router-dom"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
@@ -27,70 +28,52 @@ interface AgentUsage {
   total_calls: number
 }
 
+interface Org {
+  id: string
+  name: string
+  slug?: string
+  role?: string
+  status?: string
+}
+
 export function OverviewPage() {
   const { data: session, isPending: sessionLoading } = useSession()
-  const hasActiveOrg = !!(session?.session as any)?.activeOrganizationId
+  const orgId = ((session?.session as Record<string, unknown>)?.activeOrganizationId as string | null) ?? null
+  const hasActiveOrg = !!orgId
 
   const [metrics, setMetrics] = useState<PlatformMetrics>({
     totalOrgs: 0, totalUsers: 0, totalApiKeys: 0, apiHealth: "unknown"
   })
-  const [orgs, setOrgs] = useState<any[]>([])
+  const [orgs, setOrgs] = useState<Org[]>([])
   const [agentUsage, setAgentUsage] = useState<AgentUsage[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function fetchData() {
       if (!session) { setLoading(false); return }
-      const orgId = (session.session as any)?.activeOrganizationId
       setLoading(true)
       try {
-        // Fetch organizations via our API
-        let orgList: any[] = []
-        try {
-          const orgRes = await apiClient<{ data: any[] }>("/api/v1/users/me/organizations")
-          orgList = Array.isArray(orgRes?.data) ? orgRes.data : []
-        } catch { /* no orgs */ }
+        // Run all fetches in parallel — partial failures are tolerated
+        const [orgResult, usersResult, keysResult, healthResult, usageResult] =
+          await Promise.allSettled([
+            api<{ data: Org[] }>("/api/v1/users/me/organizations"),
+            api<{ data: unknown[]; total: number }>("/api/v1/admin/users?limit=1"),
+            orgId ? api<{ data: unknown[] }>(`/api/v1/organizations/${orgId}/api-keys`) : Promise.resolve(null),
+            fetch(`${API_URL}/health`).then(r => r.ok ? "operational" : "degraded").catch(() => "down"),
+            api<{ usage: unknown[]; agent_usage: AgentUsage[] }>("/api/v1/admin/usage"),
+          ])
+
+        const orgList: Org[] = orgResult.status === "fulfilled" && orgResult.value?.data
+          ? orgResult.value.data
+          : []
+        const userCount: number = usersResult.status === "fulfilled" ? (usersResult.value?.total ?? 0) : 0
+        const keyCount: number = keysResult.status === "fulfilled" && keysResult.value ? (keysResult.value.data?.length ?? 0) : 0
+        const health = (healthResult.status === "fulfilled" ? healthResult.value : "down") as PlatformMetrics["apiHealth"]
+        const usage: AgentUsage[] = usageResult.status === "fulfilled" ? (usageResult.value?.agent_usage ?? []) : []
+
         setOrgs(orgList)
-
-        // Fetch users count
-        let userCount = 0
-        try {
-          const usersRes = await apiClient<{ data: any[]; total: number }>("/api/v1/admin/users?limit=1")
-          userCount = usersRes?.total ?? 0
-        } catch { /* non-admin */ }
-
-        // Fetch API keys count for active org
-        let keyCount = 0
-        if (orgId) {
-          try {
-            const keysRes = await apiClient<{ data: any[] }>(`/api/v1/organizations/${orgId}/api-keys`)
-            keyCount = keysRes?.data?.length ?? 0
-          } catch { /* no keys yet */ }
-        }
-
-        // Fetch API health
-        let health: PlatformMetrics["apiHealth"] = "unknown"
-        try {
-          const healthRes = await fetch(
-            `${import.meta.env.VITE_API_URL || "https://standard-api.bekaa.eu"}/health`
-          )
-          health = healthRes.ok ? "operational" : "degraded"
-        } catch { health = "down" }
-
-        // Fetch agent usage (platform telemetry)
-        if (orgId) {
-          try {
-            const usageRes = await apiClient<{ usage: any[]; agent_usage: AgentUsage[] }>("/api/v1/admin/usage")
-            setAgentUsage(usageRes?.agent_usage ?? [])
-          } catch { /* no admin access or no usage */ }
-        }
-
-        setMetrics({
-          totalOrgs: orgList.length,
-          totalUsers: userCount,
-          totalApiKeys: keyCount,
-          apiHealth: health,
-        })
+        setAgentUsage(usage)
+        setMetrics({ totalOrgs: orgList.length, totalUsers: userCount, totalApiKeys: keyCount, apiHealth: health })
       } catch (err) {
         console.error("Failed to fetch platform data:", err)
       } finally {
@@ -211,7 +194,7 @@ export function OverviewPage() {
               </div>
             ) : (
               <div className="space-y-1">
-                {orgs.slice(0, 6).map((org: any) => (
+                {orgs.slice(0, 6).map((org: Org) => (
                   <div
                     key={org.id}
                     className="flex items-center justify-between py-2.5 px-3 rounded-lg text-sm transition-colors group"

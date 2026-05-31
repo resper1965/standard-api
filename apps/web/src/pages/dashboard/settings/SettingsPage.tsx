@@ -486,65 +486,43 @@ export function SettingsPage() {
 
   const loadApiKeys = async (orgId: string) => {
     try {
-      const res = await fetch(`${API_URL}/api/v1/organizations/${orgId}/api-keys`, {
-        headers: { "x-standard-tenant-id": orgId },
-        credentials: "include"
-      })
-      if (res.ok) {
-        const json = await res.json()
-        setApiKeys(json.data || [])
-      } else {
-        console.warn("[loadApiKeys] non-ok response", res.status)
-      }
-    } catch (e: any) {
-      toast({ variant: "destructive", title: "Error", description: e?.message || "Failed to load API keys." });
+      const json = await api<{ data: unknown[] }>(`/api/v1/organizations/${orgId}/api-keys`)
+      setApiKeys(json.data || [])
+    } catch (e) {
+      toast({ variant: "destructive", title: "Error", description: e instanceof Error ? e.message : "Failed to load API keys." });
     }
+  }
+
+  const loadMembers = async (orgId: string) => {
+    try {
+      const membersData = await api<{ data: unknown[] }>(`/api/v1/organizations/${orgId}/members`)
+      setMembers(membersData.data || [])
+    } catch { /* members endpoint may not exist yet */ }
   }
 
   const loadOrganizationDetails = async (orgId: string) => {
     try {
-      const res = await fetch(`${API_URL}/api/v1/organizations/${orgId}`, {
-        headers: { "x-standard-tenant-id": orgId },
-        credentials: "include"
-      })
-      if (res.ok) {
-        const json = await res.json()
-        setActiveOrg((prev: any) => ({ ...prev, ...json }))
-      }
-    } catch (e: any) {
-      toast({ variant: "destructive", title: "Error", description: e?.message || "Failed to load organization details." });
+      const json = await api<Record<string, unknown>>(`/api/v1/organizations/${orgId}`)
+      setActiveOrg((prev: unknown) => ({ ...(prev as object), ...json }))
+    } catch (e) {
+      toast({ variant: "destructive", title: "Error", description: e instanceof Error ? e.message : "Failed to load organization details." });
     }
   }
 
   useEffect(() => {
     async function load() {
       if (!hasActiveOrg) return
-      const orgId = session?.session?.activeOrganizationId
+      const orgId = (session?.session as Record<string, unknown>)?.activeOrganizationId as string | undefined
       if (!orgId) return
       try {
-        // Load org details + members from our own API
-        const orgRes = await fetch(`${API_URL}/api/v1/organizations/${orgId}`, {
-          headers: { "x-standard-tenant-id": orgId },
-          credentials: "include"
-        })
-        if (orgRes.ok) {
-          const orgData = await orgRes.json()
-          setActiveOrg(orgData)
-          // Load members separately
-          try {
-            const membersRes = await fetch(`${API_URL}/api/v1/organizations/${orgId}/members`, {
-              headers: { "x-standard-tenant-id": orgId },
-              credentials: "include"
-            })
-            if (membersRes.ok) {
-              const membersData = await membersRes.json()
-              setMembers(membersData.data || [])
-            }
-          } catch { /* no members endpoint yet */ }
-          await loadApiKeys(orgId)
-        }
-      } catch (e: any) { 
-        toast({ variant: "destructive", title: "Error", description: e?.message || "Failed to load organization." });
+        const orgData = await api<Record<string, unknown>>(`/api/v1/organizations/${orgId}`)
+        setActiveOrg(orgData)
+        await Promise.allSettled([
+          loadMembers(orgId),
+          loadApiKeys(orgId),
+        ])
+      } catch (e) {
+        toast({ variant: "destructive", title: "Error", description: e instanceof Error ? e.message : "Failed to load organization." });
       }
     }
     load()
@@ -575,33 +553,14 @@ export function SettingsPage() {
     if (!activeOrg?.id) return
     setIsUpdatingOrg(true)
     try {
-      const res = await fetch(`${API_URL}/api/v1/organizations/${activeOrg.id}`, {
+      const json = await api<Record<string, unknown>>(`/api/v1/organizations/${activeOrg.id}`, {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "x-standard-tenant-id": activeOrg.id
-        },
-        credentials: "include",
         body: JSON.stringify({ name: orgName, slug: orgSlug })
       })
-      const json = await res.json()
-      if (res.ok) {
-        toast({
-          title: "Organization updated",
-          description: "Your organization settings have been updated successfully."
-        })
-        setActiveOrg((prev: any) => ({ ...prev, name: json.name, slug: json.slug }))
-      } else {
-        toast({
-          title: "Update failed",
-          description: json.error?.message || "Failed to update organization details."
-        })
-      }
-    } catch (err) {
-      toast({
-        title: "Update failed",
-        description: "An error occurred while updating settings."
-      })
+      toast({ title: "Organization updated", description: "Your organization settings have been updated successfully." })
+      setActiveOrg((prev: unknown) => ({ ...(prev as object), name: json.name, slug: json.slug }))
+    } catch (e) {
+      toast({ title: "Update failed", description: e instanceof Error ? e.message : "Failed to update organization details." })
     } finally {
       setIsUpdatingOrg(false)
     }
@@ -611,33 +570,14 @@ export function SettingsPage() {
     if (!activeOrg?.id) return
     setIsUpdatingBilling(true)
     try {
-      const res = await fetch(`${API_URL}/api/v1/organizations/${activeOrg.id}/billing`, {
+      const json = await api<Record<string, unknown>>(`/api/v1/organizations/${activeOrg.id}/billing`, {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "x-standard-tenant-id": activeOrg.id
-        },
-        credentials: "include",
         body: JSON.stringify({ billing_tier: billingTier })
       })
-      const json = await res.json()
-      if (res.ok) {
-        toast({
-          title: "Plan updated",
-          description: `Organization billing plan updated to ${billingTier.toUpperCase()} successfully.`
-        })
-        setActiveOrg((prev: any) => ({ ...prev, billing_tier: json.billing_tier }))
-      } else {
-        toast({
-          title: "Update failed",
-          description: json.error?.message || "Failed to update billing tier."
-        })
-      }
-    } catch (err) {
-      toast({
-        title: "Update failed",
-        description: "An error occurred while updating the plan."
-      })
+      toast({ title: "Plan updated", description: `Organization billing plan updated to ${billingTier.toUpperCase()} successfully.` })
+      setActiveOrg((prev: unknown) => ({ ...(prev as object), billing_tier: json.billing_tier }))
+    } catch (e) {
+      toast({ title: "Update failed", description: e instanceof Error ? e.message : "Failed to update billing tier." })
     } finally {
       setIsUpdatingBilling(false)
     }
@@ -648,51 +588,22 @@ export function SettingsPage() {
     if (!activeOrg?.id) return
     setIsInviting(true)
     try {
-      const res = await fetch(`${API_URL}/api/v1/organizations/${activeOrg.id}/invites`, {
+      await api(`/api/v1/organizations/${activeOrg.id}/invites`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-standard-tenant-id": activeOrg.id
-        },
-        credentials: "include",
         body: JSON.stringify({
           email: inviteEmail,
           role: inviteRole,
           display_name: inviteName || undefined
         })
       })
-      const json = await res.json()
-      if (res.ok) {
-        toast({
-          title: "Member invited",
-          description: `Invitation sent to ${inviteEmail}.`
-        })
-        // Reload members
-        try {
-          const membersRes = await fetch(`${API_URL}/api/v1/organizations/${activeOrg.id}/members`, {
-            headers: { "x-standard-tenant-id": activeOrg.id },
-            credentials: "include"
-          })
-          if (membersRes.ok) {
-            const membersData = await membersRes.json()
-            setMembers(membersData.data || [])
-          }
-        } catch { /* no members endpoint yet */ }
-        setInviteEmail("")
-        setInviteName("")
-        setInviteRole("member")
-        setIsInviteDialogOpen(false)
-      } else {
-        toast({
-          title: "Invite failed",
-          description: json.error?.message || "Failed to invite member."
-        })
-      }
-    } catch (err) {
-      toast({
-        title: "Invite failed",
-        description: "An error occurred while sending the invite."
-      })
+      toast({ title: "Member invited", description: `Invitation sent to ${inviteEmail}.` })
+      await loadMembers(activeOrg.id)
+      setInviteEmail("")
+      setInviteName("")
+      setInviteRole("member")
+      setIsInviteDialogOpen(false)
+    } catch (e) {
+      toast({ title: "Invite failed", description: e instanceof Error ? e.message : "Failed to invite member." })
     } finally {
       setIsInviting(false)
     }
@@ -702,52 +613,37 @@ export function SettingsPage() {
     if (!activeOrg?.id) return
     setIsGenerating(true)
     try {
-      const res = await fetch(`${API_URL}/api/v1/organizations/${activeOrg.id}/api-keys`, {
+      const json = await api<{ data: { key: string } }>(`/api/v1/organizations/${activeOrg.id}/api-keys`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "x-standard-tenant-id": activeOrg.id },
-        credentials: "include",
         body: JSON.stringify({
           name: keyName,
           scopes: selectedScopes.length > 0 ? selectedScopes : undefined
         })
       })
-      if (res.ok) {
-        const json = await res.json()
-        setNewKey(json.data.key)
-        setSelectedScopes([])
-        await loadApiKeys(activeOrg.id)
-      } else {
-        const err = await res.json()
-        toast({ title: "Generation failed", description: err.error?.message || "Failed to generate key." })
-      }
-    } catch (e: any) { 
-      toast({ variant: "destructive", title: "Generation failed", description: e?.message || "Failed to generate key." })
+      setNewKey(json.data.key)
+      setSelectedScopes([])
+      await loadApiKeys(activeOrg.id)
+    } catch (e) {
+      toast({ title: "Generation failed", description: e instanceof Error ? e.message : "Failed to generate key." })
+    } finally {
+      setIsGenerating(false)
     }
-    finally { setIsGenerating(false) }
   }
 
   const handleRevokeKey = async () => {
     if (!activeOrg?.id || !keyToRevoke) return
     setIsRevoking(keyToRevoke.id)
     try {
-      const res = await fetch(`${API_URL}/api/v1/organizations/${activeOrg.id}/api-keys/${keyToRevoke.id}`, {
-        method: "DELETE",
-        headers: { "x-standard-tenant-id": activeOrg.id },
-        credentials: "include"
-      })
-      if (res.ok) {
-        toast({ title: "API Key revoked", description: `The key "${keyToRevoke.name}" has been permanently revoked.` })
-        setIsRevokeDialogOpen(false)
-        setKeyToRevoke(null)
-        await loadApiKeys(activeOrg.id)
-      } else {
-        const err = await res.json()
-        toast({ title: "Revocation failed", description: err.error?.message || "Failed to revoke key." })
-      }
-    } catch (e: any) { 
-      toast({ variant: "destructive", title: "Revocation failed", description: e?.message || "Failed to revoke key." })
+      await api(`/api/v1/organizations/${activeOrg.id}/api-keys/${keyToRevoke.id}`, { method: "DELETE" })
+      toast({ title: "API Key revoked", description: `The key "${keyToRevoke.name}" has been permanently revoked.` })
+      setIsRevokeDialogOpen(false)
+      setKeyToRevoke(null)
+      await loadApiKeys(activeOrg.id)
+    } catch (e) {
+      toast({ variant: "destructive", title: "Revocation failed", description: e instanceof Error ? e.message : "Failed to revoke key." })
+    } finally {
+      setIsRevoking(null)
     }
-    finally { setIsRevoking(null) }
   }
 
   const toggleScope = (scope: string) => {
@@ -974,7 +870,7 @@ export function SettingsPage() {
                     </TableRow>
                   ))}
                   {members.length === 0 && (
-                    <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground h-24">Loading members...</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground h-24">No members yet. Invite your team above.</TableCell></TableRow>
                   )}
                 </TableBody>
               </Table>

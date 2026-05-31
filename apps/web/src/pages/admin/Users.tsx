@@ -208,23 +208,34 @@ export function AdminUsers() {
   // ---- General action loading (row-level) -----------------------------------
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
+  // ---- Pagination -----------------------------------------------------------
+  const [page, setPage] = useState(0);
+  const PAGE_SIZE = 50;
+
+  // ---- Ban reason -----------------------------------------------------------
+  const [banReason, setBanReason] = useState("");
+
   const { toast } = useToast();
 
   // ---- Data fetching -------------------------------------------------------
 
-  const fetchUsers = useCallback(async () => {
+  const fetchUsers = useCallback(async (currentPage = 0) => {
     setLoading(true);
     setError(null);
     setInsufficientPermissions(false);
     try {
-      const res = await api<{ data: User[]; total: number }>("/api/v1/admin/users?limit=200");
+      const offset = currentPage * PAGE_SIZE;
+      const res = await api<{ data: User[]; total: number }>(
+        `/api/v1/admin/users?limit=${PAGE_SIZE + 1}&offset=${offset}`
+      );
       if (res?.data) {
-        setUsers(res.data);
+        setHasMore(res.data.length > PAGE_SIZE);
+        setUsers(res.data.slice(0, PAGE_SIZE));
       } else {
         setError("No user data returned from admin API.");
       }
-    } catch (e: any) {
-      const msg = e?.message || "Failed to fetch users.";
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Failed to fetch users.";
       if (
         msg.toLowerCase().includes("unauthorized") ||
         msg.toLowerCase().includes("forbidden") ||
@@ -238,8 +249,15 @@ export function AdminUsers() {
     }
   }, []);
 
+  const [hasMore, setHasMore] = useState(false);
+
+  const changePage = (newPage: number) => {
+    setPage(newPage);
+    fetchUsers(newPage);
+  };
+
   useEffect(() => {
-    fetchUsers();
+    fetchUsers(0);
   }, [fetchUsers]);
 
   // ---- Filtered list -------------------------------------------------------
@@ -281,13 +299,13 @@ export function AdminUsers() {
         toast({ title: "User created", description: `${createEmail} was added successfully.` });
         setShowCreate(false);
         resetCreateForm();
-        await fetchUsers();
+        await fetchUsers(page);
       }
-    } catch (e: any) {
+    } catch (e) {
       toast({
         variant: "destructive",
         title: "Creation failed",
-        description: e?.message || "Failed to create user.",
+        description: e instanceof Error ? e.message : "Failed to create user.",
       });
     } finally {
       setCreating(false);
@@ -306,7 +324,6 @@ export function AdminUsers() {
     if (!editUser) return;
     setSaving(true);
     try {
-      // Update name and role in one PATCH call
       await api(`/api/v1/admin/users/${editUser.id}`, {
         method: "PATCH",
         body: JSON.stringify({
@@ -316,12 +333,12 @@ export function AdminUsers() {
       });
       toast({ title: "User updated", description: "Changes saved successfully." });
       setEditUser(null);
-      await fetchUsers();
-    } catch (e: any) {
+      await fetchUsers(page);
+    } catch (e) {
       toast({
         variant: "destructive",
         title: "Save failed",
-        description: e?.message || "Failed to save changes.",
+        description: e instanceof Error ? e.message : "Failed to save changes.",
       });
     } finally {
       setSaving(false);
@@ -338,7 +355,7 @@ export function AdminUsers() {
       if (type === "ban") {
         await api(`/api/v1/admin/users/${user.id}/ban`, {
           method: "POST",
-          body: JSON.stringify({ reason: "Banned by admin" }),
+          body: JSON.stringify({ reason: banReason || "Banned by admin" }),
         });
         toast({ title: "User banned", description: `${user.email} has been banned.` });
       } else if (type === "unban") {
@@ -349,12 +366,13 @@ export function AdminUsers() {
         toast({ title: "User deleted", description: `${user.email} was permanently removed.` });
       }
       setConfirmAction(null);
-      await fetchUsers();
-    } catch (e: any) {
+      setBanReason("");
+      await fetchUsers(page);
+    } catch (e) {
       toast({
         variant: "destructive",
         title: `${type.charAt(0).toUpperCase() + type.slice(1)} failed`,
-        description: e?.message || `Failed to ${type} user.`,
+        description: e instanceof Error ? e.message : `Failed to ${type} user.`,
       });
     } finally {
       setConfirmLoading(false);
@@ -598,14 +616,34 @@ export function AdminUsers() {
             </Table>
           )}
 
-          {/* Result count footer */}
-          {!loading && !error && users.length > 0 && (
+          {/* Pagination footer */}
+          {!loading && !error && (
             <div className="flex items-center justify-between px-4 py-2.5 border-t border-border/60 text-xs text-muted-foreground">
               <span>
                 {search
-                  ? `${filteredUsers.length} of ${users.length} users`
-                  : `${users.length} user${users.length !== 1 ? "s" : ""}`}
+                  ? `${filteredUsers.length} of ${users.length} shown`
+                  : `${users.length} user${users.length !== 1 ? "s" : ""} · Page ${page + 1}`}
               </span>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => changePage(page - 1)}
+                  disabled={page === 0 || loading}
+                  className="h-7 px-2 cursor-pointer"
+                >
+                  ← Prev
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => changePage(page + 1)}
+                  disabled={!hasMore || loading}
+                  className="h-7 px-2 cursor-pointer"
+                >
+                  Next →
+                </Button>
+              </div>
             </div>
           )}
         </CardContent>
@@ -857,6 +895,21 @@ export function AdminUsers() {
               )}
             </DialogDescription>
           </DialogHeader>
+
+          {/* Ban reason field */}
+          {confirmAction?.type === "ban" && (
+            <div className="space-y-1.5">
+              <Label htmlFor="ban-reason" className="text-xs">Reason <span className="text-muted-foreground font-normal">(optional)</span></Label>
+              <textarea
+                id="ban-reason"
+                value={banReason}
+                onChange={e => setBanReason(e.target.value)}
+                placeholder="e.g. Violated terms of service"
+                rows={2}
+                className="w-full rounded-md border border-border/60 bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+            </div>
+          )}
           <DialogFooter className="pt-2">
             <Button
               variant="outline"
