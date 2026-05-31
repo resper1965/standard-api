@@ -7,15 +7,48 @@
  *   - Get SoA item details
  *   - Validate SoA readiness for review
  *   - Get SoA summary statistics
+ *
+ * Types flow from @standard/soa — no `as any` casts.
  */
 import type { RequestContext } from "../../http";
 import type { McpToolResult } from "./assessment.tools";
+import type { SoaItemResponse, SoaVersionResponse } from "@standard/soa";
 
 function ok(data: unknown): McpToolResult {
   return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
 }
-function err(message: string): McpToolResult {
+function fail(message: string): McpToolResult {
   return { content: [{ type: "text", text: `Error: ${message}` }], isError: true };
+}
+
+function mapVersion(v: SoaVersionResponse) {
+  return {
+    soa_version_id: v.soa_version_id,
+    version_number: v.version_number,
+    status: v.status,
+    source_framework_id: v.source_framework_id,
+    scf_version_id: v.scf_version_id,
+    created_by: v.created_by,
+    created_at: v.created_at,
+    approved_by: v.approved_by,
+    approved_at: v.approved_at,
+    superseded_by: v.superseded_by,
+  };
+}
+
+function mapItem(i: SoaItemResponse) {
+  return {
+    soa_item_id: i.soa_item_id,
+    framework_requirement_id: i.framework_requirement_id,
+    scf_control_id: i.scf_control_id,
+    applicability_status: i.applicability_status,
+    implementation_status: i.implementation_status,
+    evidence_coverage: i.evidence_coverage,
+    confidence_score: i.confidence_score,
+    requires_user_validation: i.requires_user_validation,
+    mapping_status: i.mapping_status,
+    validation_notes: i.validation_notes,
+  };
 }
 
 // ── list-soa-versions ───────────────────────────────────────────────────────
@@ -26,31 +59,16 @@ export async function handleListSoaVersions(
 ): Promise<McpToolResult> {
   try {
     const assessmentId = args["assessment_id"] as string;
-    if (!assessmentId) return err("assessment_id is required.");
+    if (!assessmentId) return fail("assessment_id is required.");
     const tenantId = ctx.tenantId;
-    if (!tenantId) return err("Tenant context required.");
+    if (!tenantId) return fail("Tenant context required.");
 
     const versions = await ctx.deps.soa.repositories.versions
       .listByAssessment(assessmentId, tenantId);
 
-    return ok({
-      assessment_id: assessmentId,
-      total: versions.length,
-      versions: versions.map((v: any) => ({
-        soa_version_id: v.soa_version_id,
-        version_number: v.version_number,
-        status: v.status,
-        source_framework_id: v.source_framework_id,
-        scf_version_id: v.scf_version_id,
-        created_by: v.created_by,
-        created_at: v.created_at,
-        approved_by: v.approved_by,
-        approved_at: v.approved_at,
-        superseded_by: v.superseded_by,
-      })),
-    });
+    return ok({ assessment_id: assessmentId, total: versions.length, versions: versions.map(mapVersion) });
   } catch (e) {
-    return err(e instanceof Error ? e.message : String(e));
+    return fail(e instanceof Error ? e.message : String(e));
   }
 }
 
@@ -62,17 +80,16 @@ export async function handleGetSoaVersion(
 ): Promise<McpToolResult> {
   try {
     const soaVersionId = args["soa_version_id"] as string;
-    if (!soaVersionId) return err("soa_version_id is required.");
+    if (!soaVersionId) return fail("soa_version_id is required.");
     const tenantId = ctx.tenantId;
-    if (!tenantId) return err("Tenant context required.");
+    if (!tenantId) return fail("Tenant context required.");
 
-    const version = await ctx.deps.soa.repositories.versions
-      .get(soaVersionId, tenantId);
-    if (!version) return err(`SoA version ${soaVersionId} not found.`);
+    const version = await ctx.deps.soa.repositories.versions.get(soaVersionId, tenantId);
+    if (!version) return fail(`SoA version ${soaVersionId} not found.`);
 
-    return ok(version);
+    return ok(mapVersion(version));
   } catch (e) {
-    return err(e instanceof Error ? e.message : String(e));
+    return fail(e instanceof Error ? e.message : String(e));
   }
 }
 
@@ -84,50 +101,27 @@ export async function handleListSoaItems(
 ): Promise<McpToolResult> {
   try {
     const soaVersionId = args["soa_version_id"] as string;
-    if (!soaVersionId) return err("soa_version_id is required.");
+    if (!soaVersionId) return fail("soa_version_id is required.");
     const tenantId = ctx.tenantId;
-    if (!tenantId) return err("Tenant context required.");
+    if (!tenantId) return fail("Tenant context required.");
 
     const applicabilityFilter = args["applicability_status"] as string | undefined;
     const implementationFilter = args["implementation_status"] as string | undefined;
     const evidenceFilter = args["evidence_coverage"] as string | undefined;
     const limit = Math.min(Number(args["limit"] ?? 50), 200);
 
-    let items = await ctx.deps.soa.repositories.items
+    let items: SoaItemResponse[] = await ctx.deps.soa.repositories.items
       .listByVersion(soaVersionId, tenantId);
 
-    if (applicabilityFilter) {
-      items = items.filter((i: any) => i.applicability_status === applicabilityFilter);
-    }
-    if (implementationFilter) {
-      items = items.filter((i: any) => i.implementation_status === implementationFilter);
-    }
-    if (evidenceFilter) {
-      items = items.filter((i: any) => i.evidence_coverage === evidenceFilter);
-    }
+    if (applicabilityFilter) items = items.filter((i) => i.applicability_status === applicabilityFilter);
+    if (implementationFilter) items = items.filter((i) => i.implementation_status === implementationFilter);
+    if (evidenceFilter) items = items.filter((i) => i.evidence_coverage === evidenceFilter);
 
-    const total = items.length;
     const page = items.slice(0, limit);
 
-    return ok({
-      soa_version_id: soaVersionId,
-      total,
-      showing: page.length,
-      items: page.map((i: any) => ({
-        soa_item_id: i.soa_item_id,
-        framework_requirement_id: i.framework_requirement_id,
-        scf_control_id: i.scf_control_id,
-        applicability_status: i.applicability_status,
-        implementation_status: i.implementation_status,
-        evidence_coverage: i.evidence_coverage,
-        confidence_score: i.confidence_score,
-        requires_user_validation: i.requires_user_validation,
-        mapping_status: i.mapping_status,
-        validation_notes: i.validation_notes,
-      })),
-    });
+    return ok({ soa_version_id: soaVersionId, total: items.length, showing: page.length, items: page.map(mapItem) });
   } catch (e) {
-    return err(e instanceof Error ? e.message : String(e));
+    return fail(e instanceof Error ? e.message : String(e));
   }
 }
 
@@ -139,17 +133,16 @@ export async function handleGetSoaItem(
 ): Promise<McpToolResult> {
   try {
     const soaItemId = args["soa_item_id"] as string;
-    if (!soaItemId) return err("soa_item_id is required.");
+    if (!soaItemId) return fail("soa_item_id is required.");
     const tenantId = ctx.tenantId;
-    if (!tenantId) return err("Tenant context required.");
+    if (!tenantId) return fail("Tenant context required.");
 
-    const item = await ctx.deps.soa.repositories.items
-      .get(soaItemId, tenantId);
-    if (!item) return err(`SoA item ${soaItemId} not found.`);
+    const item = await ctx.deps.soa.repositories.items.get(soaItemId, tenantId);
+    if (!item) return fail(`SoA item ${soaItemId} not found.`);
 
-    return ok(item);
+    return ok(mapItem(item));
   } catch (e) {
-    return err(e instanceof Error ? e.message : String(e));
+    return fail(e instanceof Error ? e.message : String(e));
   }
 }
 
@@ -161,14 +154,13 @@ export async function handleValidateSoa(
 ): Promise<McpToolResult> {
   try {
     const soaVersionId = args["soa_version_id"] as string;
-    if (!soaVersionId) return err("soa_version_id is required.");
+    if (!soaVersionId) return fail("soa_version_id is required.");
     const assessmentId = args["assessment_id"] as string;
-    if (!assessmentId) return err("assessment_id is required.");
+    if (!assessmentId) return fail("assessment_id is required.");
     const tenantId = ctx.tenantId;
     const organizationId = ctx.organizationId;
-    if (!tenantId || !organizationId) return err("Tenant and organization context required.");
+    if (!tenantId || !organizationId) return fail("Tenant and organization context required.");
 
-    // Use the SoaReviewService to validate
     const { SoaReviewService } = await import("@standard/soa");
     const reviewService = new SoaReviewService(ctx.deps.soa);
     const validation = await reviewService.validateSoaForReview(soaVersionId, {
@@ -188,7 +180,7 @@ export async function handleValidateSoa(
         : `${validation.blocking_errors.length} blocking error(s) must be resolved before review.`,
     });
   } catch (e) {
-    return err(e instanceof Error ? e.message : String(e));
+    return fail(e instanceof Error ? e.message : String(e));
   }
 }
 
@@ -200,27 +192,23 @@ export async function handleGetSoaSummary(
 ): Promise<McpToolResult> {
   try {
     const assessmentId = args["assessment_id"] as string;
-    if (!assessmentId) return err("assessment_id is required.");
+    if (!assessmentId) return fail("assessment_id is required.");
     const tenantId = ctx.tenantId;
-    if (!tenantId) return err("Tenant context required.");
+    if (!tenantId) return fail("Tenant context required.");
 
-    // Get the latest (or specified) SoA version
     const soaVersionId = args["soa_version_id"] as string | undefined;
-    let version: any;
+    let version: SoaVersionResponse | null | undefined;
 
     if (soaVersionId) {
       version = await ctx.deps.soa.repositories.versions.get(soaVersionId, tenantId);
     } else {
-      const versions = await ctx.deps.soa.repositories.versions
-        .listByAssessment(assessmentId, tenantId);
+      const versions = await ctx.deps.soa.repositories.versions.listByAssessment(assessmentId, tenantId);
       version = versions[versions.length - 1] ?? null;
     }
 
-    if (!version) return err(`No SoA found for assessment ${assessmentId}.`);
+    if (!version) return fail(`No SoA found for assessment ${assessmentId}.`);
 
-    // Get all items and compute statistics
-    const items = await ctx.deps.soa.repositories.items
-      .listByVersion(version.soa_version_id, tenantId);
+    const items = await ctx.deps.soa.repositories.items.listByVersion(version.soa_version_id, tenantId);
 
     const applicabilityCounts: Record<string, number> = {};
     const implementationCounts: Record<string, number> = {};
@@ -228,13 +216,13 @@ export async function handleGetSoaSummary(
     let pendingValidation = 0;
 
     for (const item of items) {
-      const app = (item as any).applicability_status ?? "unknown";
-      const impl = (item as any).implementation_status ?? "unknown";
-      const ev = (item as any).evidence_coverage ?? "unknown";
+      const app = item.applicability_status ?? "unknown";
+      const impl = item.implementation_status ?? "unknown";
+      const ev = item.evidence_coverage ?? "unknown";
       applicabilityCounts[app] = (applicabilityCounts[app] ?? 0) + 1;
       implementationCounts[impl] = (implementationCounts[impl] ?? 0) + 1;
       evidenceCounts[ev] = (evidenceCounts[ev] ?? 0) + 1;
-      if ((item as any).requires_user_validation) pendingValidation++;
+      if (item.requires_user_validation) pendingValidation++;
     }
 
     return ok({
@@ -252,6 +240,6 @@ export async function handleGetSoaSummary(
       approved_at: version.approved_at,
     });
   } catch (e) {
-    return err(e instanceof Error ? e.message : String(e));
+    return fail(e instanceof Error ? e.message : String(e));
   }
 }
