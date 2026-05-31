@@ -10,6 +10,9 @@
     "test": "tsx tests/run-tests.ts"
   },
   "dependencies": {
+    "@asteasolutions/zod-to-openapi": "^8.5.0",
+    "@better-auth/api-key": "1.6.11",
+    "@neondatabase/serverless": "^0.9.3",
     "@standard/agent-runtime": "workspace:*",
     "@standard/assessment-engine": "workspace:*",
     "@standard/auth": "workspace:*",
@@ -22,15 +25,12 @@
     "@standard/privacy": "workspace:*",
     "@standard/reporting": "workspace:*",
     "@standard/scf-core": "workspace:*",
+    "@standard/scf-data": "workspace:*",
     "@standard/schemas": "workspace:*",
     "@standard/security": "workspace:*",
     "@standard/soa": "workspace:*",
-    "@standard/scf-data": "workspace:*",
     "@standard/workflows": "workspace:*",
-    "@neondatabase/serverless": "^0.9.3",
-    "@asteasolutions/zod-to-openapi": "^7.3.0",
     "better-auth": "1.6.11",
-    "@better-auth/api-key": "1.6.11",
     "drizzle-orm": "^0.45.2",
     "zod": "^4.3.6"
   },
