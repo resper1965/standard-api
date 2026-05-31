@@ -106,8 +106,8 @@ export function OnboardingPage() {
 
       // 3. Force page reload and redirection to dashboard
       window.location.href = "/dashboard"
-    } catch (err: any) {
-      const msg = err?.message || "Failed to create organization. Please try again."
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to create organization. Please try again."
       setError(msg)
       setLoading(false)
     }

@@ -1,7 +1,7 @@
-﻿import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useState, useEffect, useCallback } from "react"
-import { useSession } from "@/lib/auth-client"
 import { api } from "@/lib/api"
+import { useActiveOrg } from "@/hooks/useActiveOrg"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -424,8 +424,7 @@ function EditModal({ keyRecord, onSave, onCancel, loading }: {
 
 export function ApiKeysPage() {
   useDocumentTitle("API Keys");
-  const { data: session } = useSession()
-  const orgId = (session?.session as any)?.activeOrganizationId
+  const { orgId } = useActiveOrg()
 
   const [keys, setKeys] = useState<ApiKeyRecord[]>([])
   const [loading, setLoading] = useState(true)
@@ -454,10 +453,10 @@ export function ApiKeysPage() {
     setLoading(true)
     setError(null)
     try {
-      const res = await api<any>(`/api/v1/organizations/${orgId}/api-keys`, { method: "GET" })
-      setKeys(res?.data || [])
-    } catch (e: any) {
-      setError(e.message || "Failed to load API keys")
+      const res = await api<{ data: ApiKeyRecord[] }>(`/api/v1/organizations/${orgId}/api-keys`)
+      setKeys(res?.data ?? [])
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Failed to load API keys")
     } finally {
       setLoading(false)
     }
@@ -472,19 +471,22 @@ export function ApiKeysPage() {
     try {
       const expiresAt = getExpiryDate(expiryOption, customDate)
       const scopes = fullAccess ? undefined : selectedScopes
-      const res = await api<any>(`/api/v1/organizations/${orgId}/api-keys`, {
-        method: "POST",
-        body: JSON.stringify({ name: newName, ...(expiresAt ? { expiresAt } : {}), ...(scopes ? { scopes } : {}) }),
-      })
-      setNewKey(res?.data?.key)
+      const res = await api<{ data: ApiKeyRecord & { key: string } }>(
+        `/api/v1/organizations/${orgId}/api-keys`,
+        {
+          method: "POST",
+          body: JSON.stringify({ name: newName, ...(expiresAt ? { expiresAt } : {}), ...(scopes ? { scopes } : {}) }),
+        }
+      )
+      setNewKey(res?.data?.key ?? null)
       setNewName("")
       setExpiryOption("never")
       setSelectedScopes([])
       setFullAccess(true)
       setIsCreating(false)
       loadKeys()
-    } catch (e: any) {
-      setError(e.message || "Failed to create API key")
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Failed to create API key")
     } finally {
       setCreating(false)
     }
@@ -497,8 +499,8 @@ export function ApiKeysPage() {
       await api(`/api/v1/organizations/${orgId}/api-keys/${revokeTarget.id}`, { method: "DELETE" })
       setRevokeTarget(null)
       loadKeys()
-    } catch (e: any) {
-      setError("Failed to revoke: " + e.message)
+    } catch (e: unknown) {
+      setError(e instanceof Error ? `Failed to revoke: ${e.message}` : "Failed to revoke key")
     } finally {
       setRevoking(false)
     }
@@ -514,8 +516,8 @@ export function ApiKeysPage() {
       })
       setEditTarget(null)
       loadKeys()
-    } catch (e: any) {
-      setError("Failed to update: " + e.message)
+    } catch (e: unknown) {
+      setError(e instanceof Error ? `Failed to update: ${e.message}` : "Failed to update key")
     } finally {
       setEditing(false)
     }
