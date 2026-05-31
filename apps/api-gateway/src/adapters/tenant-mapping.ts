@@ -30,6 +30,31 @@ export async function resolveTenantContext(
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orgId);
 
   if (isUuid) {
+    // 1. Try resolving by organization ID first (since routers often pass organization UUID)
+    const [existingOrg] = await db
+      .select()
+      .from(organizations)
+      .where(eq(organizations.id, orgId))
+      .limit(1);
+
+    if (existingOrg) {
+      const [existingTenant] = await db
+        .select()
+        .from(tenants)
+        .where(eq(tenants.id, existingOrg.tenantId))
+        .limit(1);
+
+      if (existingTenant) {
+        return {
+          tenant_id: existingTenant.id,
+          organization_id: existingOrg.id,
+          ba_org_id: existingOrg.slug,
+          org_name: existingOrg.name,
+        };
+      }
+    }
+
+    // 2. Fall back to resolving by tenant ID
     const [existingTenant] = await db
       .select()
       .from(tenants)
