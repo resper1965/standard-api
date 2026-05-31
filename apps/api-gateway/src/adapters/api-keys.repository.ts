@@ -28,12 +28,20 @@ export type CreateApiKeyInput = {
   expiresAt?: Date | undefined;
 };
 
+export type UpdateApiKeyPatch = {
+  name?: string;
+  expiresAt?: Date | null;
+  scopes?: string[];
+};
+
 export type ApiKeysRepositoryAdapter = {
   create(input: CreateApiKeyInput): Promise<ApiKeyRecord>;
+  getById(id: string, organizationId: string): Promise<ApiKeyRecord | null>;
+  update(id: string, organizationId: string, patch: UpdateApiKeyPatch): Promise<ApiKeyRecord | null>;
   verifyKey(keyHash: string): Promise<ApiKeyRecord | null>;
   markUsed(id: string): Promise<void>;
   revokeKey(id: string, organizationId: string): Promise<boolean>;
-  listByOrganization(organizationId: string): Promise<ApiKeyRecord[]>;
+  listByOrganization(organizationId: string, activeOnly?: boolean): Promise<ApiKeyRecord[]>;
 };
 
 export const createDrizzleApiKeysRepository = (db: DbClient): ApiKeysRepositoryAdapter => {
@@ -53,6 +61,26 @@ export const createDrizzleApiKeysRepository = (db: DbClient): ApiKeysRepositoryA
         .returning();
       if (!record) throw new Error("Failed to create API key");
       return record;
+    },
+    async getById(id, organizationId) {
+      const [record] = await db
+        .select()
+        .from(apiKeys)
+        .where(and(eq(apiKeys.id, id), eq(apiKeys.organizationId, organizationId)))
+        .limit(1);
+      return record ?? null;
+    },
+    async update(id, organizationId, patch) {
+      const set: Record<string, unknown> = { updatedAt: new Date() };
+      if (patch.name !== undefined) set.name = patch.name;
+      if ("expiresAt" in patch) set.expiresAt = patch.expiresAt ?? null;
+      if (patch.scopes !== undefined) set.scopes = patch.scopes;
+      const [updated] = await db
+        .update(apiKeys)
+        .set(set)
+        .where(and(eq(apiKeys.id, id), eq(apiKeys.organizationId, organizationId)))
+        .returning();
+      return updated ?? null;
     },
     async verifyKey(keyHash) {
       const records = await db
@@ -92,8 +120,9 @@ export const createDrizzleApiKeysRepository = (db: DbClient): ApiKeysRepositoryA
         .returning({ id: apiKeys.id });
       return !!updated;
     },
-    async listByOrganization(organizationId) {
-      return db.select().from(apiKeys).where(eq(apiKeys.organizationId, organizationId));
+    async listByOrganization(organizationId, activeOnly = false) {
+      const rows = await db.select().from(apiKeys).where(eq(apiKeys.organizationId, organizationId));
+      return activeOnly ? rows.filter(k => !k.revokedAt) : rows;
     }
   };
 };
@@ -119,6 +148,19 @@ export const createMockApiKeysRepository = (): ApiKeysRepositoryAdapter => {
       store[record.id] = record;
       return record;
     },
+    async getById(id, organizationId) {
+      const r = store[id];
+      return r && r.organizationId === organizationId ? r : null;
+    },
+    async update(id, organizationId, patch) {
+      const r = store[id];
+      if (!r || r.organizationId !== organizationId) return null;
+      if (patch.name !== undefined) r.name = patch.name;
+      if ("expiresAt" in patch) r.expiresAt = patch.expiresAt ?? null;
+      if (patch.scopes !== undefined) r.scopes = patch.scopes;
+      r.updatedAt = new Date();
+      return r;
+    },
     async verifyKey(keyHash) {
       const record = Object.values(store).find(k => k.keyHash === keyHash);
       if (!record) return null;
@@ -137,10 +179,9 @@ export const createMockApiKeysRepository = (): ApiKeysRepositoryAdapter => {
       }
       return false;
     },
-    async listByOrganization(organizationId) {
-      return Object.values(store).filter(k => k.organizationId === organizationId);
+    async listByOrganization(organizationId, activeOnly = false) {
+      const rows = Object.values(store).filter(k => k.organizationId === organizationId);
+      return activeOnly ? rows.filter(k => !k.revokedAt) : rows;
     }
   };
 };
-
-
