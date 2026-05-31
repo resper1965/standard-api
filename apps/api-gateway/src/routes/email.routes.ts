@@ -20,6 +20,7 @@ const testEmailSchema = z.object({
   type: z.enum([
     "welcome",
     "verification",
+    "password_reset",
     "approval_request",
     "state_change",
     "report_ready",
@@ -85,6 +86,14 @@ function buildTestPayload(to: string, type: StandardEmailType): StandardEmailPay
         timestamp: new Date().toISOString(),
         ipAddress: "127.0.0.1",
         auditUrl: `${baseUrl}/admin/audit`,
+      };
+    case "password_reset":
+      return {
+        type: "password_reset",
+        to,
+        firstName: "Test User",
+        resetUrl: `${baseUrl}/auth/reset-password?token=test-token-${Date.now()}`,
+        expiresIn: "1 hour",
       };
     default: {
       const _exhaustive: never = type;

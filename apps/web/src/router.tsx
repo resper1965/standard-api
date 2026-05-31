@@ -4,6 +4,7 @@ import { AuthLayout } from "./components/layouts/AuthLayout"
 import { DashboardLayout } from "./components/layouts/DashboardLayout"
 import { LoginPage } from "./pages/auth/LoginPage"
 import { OnboardingPage } from "./pages/auth/OnboardingPage"
+import { ResetPasswordPage } from "./pages/auth/ResetPasswordPage"
 import { OverviewPage } from "./pages/dashboard/OverviewPage"
 import { SettingsPage } from "./pages/dashboard/settings/SettingsPage"
 import { authClient } from "./lib/auth-client"
@@ -65,7 +66,8 @@ export const routes = [
                 loader: requireNoAuth,
                 children: [
                     { index: true, element: <Navigate to="/login" replace /> },
-                    { path: "login", element: <LoginPage /> }
+                    { path: "login", element: <LoginPage /> },
+                    { path: "auth/reset-password", element: <ResetPasswordPage /> }
                 ]
             },
             {

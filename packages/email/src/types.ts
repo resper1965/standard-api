@@ -81,6 +81,7 @@ export type CloudflareEmailErrorCode =
 export type StandardEmailType =
   | "welcome"
   | "verification"
+  | "password_reset"
   | "approval_request"
   | "state_change"
   | "report_ready"
@@ -109,6 +110,16 @@ export interface VerificationEmailPayload extends StandardEmailBase {
   firstName: string;
   /** Full verification URL with token embedded */
   verificationUrl: string;
+  /** Token expiry duration for display (e.g. "1 hour") */
+  expiresIn: string;
+}
+
+/** Password reset email with secure token */
+export interface PasswordResetEmailPayload extends StandardEmailBase {
+  type: "password_reset";
+  firstName: string;
+  /** Full reset URL with token embedded */
+  resetUrl: string;
   /** Token expiry duration for display (e.g. "1 hour") */
   expiresIn: string;
 }
@@ -171,6 +182,7 @@ export interface SecurityAlertEmailPayload extends StandardEmailBase {
 export type StandardEmailPayload =
   | WelcomeEmailPayload
   | VerificationEmailPayload
+  | PasswordResetEmailPayload
   | ApprovalRequestEmailPayload
   | StateChangeEmailPayload
   | ReportReadyEmailPayload

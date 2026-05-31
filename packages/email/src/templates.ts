@@ -11,6 +11,7 @@
 import type {
   WelcomeEmailPayload,
   VerificationEmailPayload,
+  PasswordResetEmailPayload,
   ApprovalRequestEmailPayload,
   StateChangeEmailPayload,
   ReportReadyEmailPayload,
@@ -152,6 +153,37 @@ export function renderVerificationEmail(payload: VerificationEmailPayload): Rend
     "Please verify your email address to activate your Standard account.",
     "",
     `Verify: ${payload.verificationUrl}`,
+    "",
+    `This link expires in ${payload.expiresIn}.`,
+    "",
+    "— Standard Platform",
+  ].join("\n");
+
+  return { subject, html, text };
+}
+
+export function renderPasswordResetEmail(payload: PasswordResetEmailPayload): RenderedEmail {
+  const subject = "Reset your password — Standard";
+
+  const html = wrapHtml(
+    subject,
+    [
+      heading("Reset Your Password"),
+      paragraph(`Hi ${payload.firstName}, you requested a password reset for your Standard account.`),
+      `<div style="text-align:center;">${btn(payload.resetUrl, "Reset Password", BRAND.danger)}</div>`,
+      divider(),
+      muted(`This link expires in ${payload.expiresIn}. If you did not request this, ignore this email.`),
+      muted("If the button doesn't work, copy and paste this URL into your browser:"),
+      `<p style="word-break:break-all;font-size:12px;color:${BRAND.color};">${payload.resetUrl}</p>`,
+    ].join("")
+  );
+
+  const text = [
+    `Hi ${payload.firstName},`,
+    "",
+    "You requested a password reset for your Standard account.",
+    "",
+    `Reset URL: ${payload.resetUrl}`,
     "",
     `This link expires in ${payload.expiresIn}.`,
     "",
@@ -315,6 +347,8 @@ export function renderEmail(payload: StandardEmailPayload): RenderedEmail {
       return renderWelcomeEmail(payload);
     case "verification":
       return renderVerificationEmail(payload);
+    case "password_reset":
+      return renderPasswordResetEmail(payload);
     case "approval_request":
       return renderApprovalRequestEmail(payload);
     case "state_change":
