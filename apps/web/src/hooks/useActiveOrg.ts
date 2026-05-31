@@ -7,17 +7,18 @@ import { useSession } from "@/lib/auth-client"
 export function useActiveOrg() {
   const { data: session } = useSession()
 
+  const isPlatformAdmin =
+    ((session?.user as Record<string, unknown> | undefined)
+      ?.platformAdmin as boolean | undefined) === true
+
   const orgId =
     ((session?.session as Record<string, unknown> | undefined)
-      ?.activeOrganizationId as string | null | undefined) ?? null
+      ?.activeOrganizationId as string | null | undefined)
+    || (isPlatformAdmin ? "bekaa" : null)
 
   const userId = session?.user?.id ?? null
   const userEmail = session?.user?.email ?? null
   const userName = session?.user?.name ?? null
-
-  const isPlatformAdmin =
-    ((session?.user as Record<string, unknown> | undefined)
-      ?.platformAdmin as boolean | undefined) === true
 
   const isAuthenticated = !!session?.user
 
