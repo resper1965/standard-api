@@ -13,6 +13,7 @@ import { ErrorPage } from "./components/ErrorPage"
 // Lazy-load heavy pages
 const SdkPage = lazy(() => import("./pages/dashboard/sdk/SdkPage").then(m => ({ default: m.SdkPage })))
 const ApiKeysPage = lazy(() => import("./pages/dashboard/api-keys/ApiKeysPage").then(m => ({ default: m.ApiKeysPage })))
+const WebhooksPage = lazy(() => import("./pages/dashboard/webhooks/WebhooksPage").then(m => ({ default: m.WebhooksPage })))
 
 // Admin pages
 const AdminOrganizations = lazy(() => import("./pages/admin/Organizations").then(m => ({ default: m.AdminOrganizations })))
@@ -79,6 +80,7 @@ export const routes = [
                 children: [
                     { index: true, element: <OverviewPage /> },
                     { path: "api-keys", element: <SuspenseWrap><ApiKeysPage /></SuspenseWrap> },
+                    { path: "webhooks", element: <SuspenseWrap><WebhooksPage /></SuspenseWrap> },
                     { path: "sdk", element: <SuspenseWrap><SdkPage /></SuspenseWrap> },
 
                     { path: "settings", element: <SettingsPage /> },

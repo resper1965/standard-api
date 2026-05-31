@@ -789,6 +789,33 @@
   border-radius: 2px;
 }
 
+/* ── Forgot password ──────────────────────────────────────── */
+.lp-forgot-wrap {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -0.5rem;
+}
+
+.lp-forgot-link {
+  font-size: 0.775rem;
+  font-weight: 500;
+  color: var(--lp-text-muted);
+  transition: color 0.15s ease;
+}
+
+.lp-forgot-link:hover {
+  color: var(--lp-blue-light);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.lp-forgot-sent {
+  font-size: 0.775rem;
+  color: #4ade80;
+  font-weight: 500;
+  animation: lp-field-in 0.3s var(--lp-ease-out) both;
+}
+
 /* ── Bottom brand strip ─────────────────────────────────────── */
 .lp-bottom-brand {
   position: absolute;

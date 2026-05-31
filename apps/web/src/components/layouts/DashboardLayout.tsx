@@ -4,7 +4,7 @@ import { useSession, signOut } from "@/lib/auth-client"
 import {
   LayoutDashboard, Settings, LogOut, Loader2, Puzzle, Menu, X,
   Building2, Key, Users, ScrollText, HeartPulse, ChevronRight,
-  Bell
+  Bell, Webhook
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { motion, AnimatePresence } from "framer-motion"
@@ -22,6 +22,7 @@ type NavItem = {
 const navItems: NavItem[] = [
   { name: "Overview", path: "/dashboard", icon: LayoutDashboard, end: true },
   { name: "API Keys", path: "/dashboard/api-keys", icon: Key },
+  { name: "Webhooks", path: "/dashboard/webhooks", icon: Webhook },
   { name: "SDK & Docs", path: "/dashboard/sdk", icon: Puzzle },
 ]
 
@@ -39,6 +40,7 @@ const routeTitles: Record<string, string> = {
   "/dashboard/settings": "Settings",
   "/dashboard/organizations": "Organizations",
   "/dashboard/api-keys": "API Keys",
+  "/dashboard/webhooks": "Webhooks",
   "/dashboard/users": "Users",
   "/dashboard/audit-logs": "Audit Logs",
   "/dashboard/system-health": "System Health",

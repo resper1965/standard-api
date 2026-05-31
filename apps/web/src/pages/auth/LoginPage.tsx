@@ -230,6 +230,7 @@ export function LoginPage() {
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const [formMounted, setFormMounted] = useState(false)
+  const [forgotSent, setForgotSent] = useState(false)
 
   useEffect(() => {
     const t = setTimeout(() => setFormMounted(true), 60)
@@ -264,8 +265,12 @@ export function LoginPage() {
         if (result.error) setError(result.error.message || "Sign up failed")
         else navigate("/dashboard")
       }
-    } catch (err: any) {
-      setError(err?.message || err?.error?.message || "An unexpected error occurred")
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error ? err.message :
+        (err as Record<string, unknown>)?.message as string ||
+        "An unexpected error occurred"
+      setError(msg)
     } finally {
       setLoading(false)
     }
@@ -273,6 +278,7 @@ export function LoginPage() {
 
   const switchMode = (m: "login" | "signup") => {
     setError("")
+    setForgotSent(false)
     setMode(m)
     setName("")
     setEmail("")
@@ -454,6 +460,32 @@ export function LoginPage() {
                 <div className="lp-error" role="alert" aria-live="assertive">
                   <span className="lp-error-icon"><IconAlert /></span>
                   <span>{error}</span>
+                </div>
+              )}
+
+              {/* Forgot password — login mode only */}
+              {isLogin && (
+                <div className="lp-forgot-wrap">
+                  {forgotSent ? (
+                    <p className="lp-forgot-sent" role="status">
+                      ✓ Contact your administrator to reset your password.
+                    </p>
+                  ) : (
+                    <button
+                      type="button"
+                      className="lp-link lp-forgot-link"
+                      onClick={() => {
+                        if (!email.trim()) {
+                          setError("Enter your email first, then click Forgot password.")
+                          return
+                        }
+                        setError("")
+                        setForgotSent(true)
+                      }}
+                    >
+                      Forgot password?
+                    </button>
+                  )}
                 </div>
               )}
 
