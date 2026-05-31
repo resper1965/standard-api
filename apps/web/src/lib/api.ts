@@ -20,7 +20,14 @@ async function getOrFetchTenantId(): Promise<string> {
     try {
       const session = await authClient.getSession();
       const activeOrgId = (session?.data?.session as Record<string, unknown>)?.activeOrganizationId;
-      cachedTenantId = typeof activeOrgId === "string" ? activeOrgId : "";
+      if (typeof activeOrgId === "string") {
+        cachedTenantId = activeOrgId;
+      } else {
+        const isPlatformAdmin =
+          ((session?.data?.user as Record<string, unknown> | undefined)
+            ?.platformAdmin as boolean | undefined) === true;
+        cachedTenantId = isPlatformAdmin ? "bekaa" : "";
+      }
       return cachedTenantId;
     } catch {
       // Return empty — request will proceed without tenant header.
