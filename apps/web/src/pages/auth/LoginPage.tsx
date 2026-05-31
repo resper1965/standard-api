@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react"
 import { useNavigate, Navigate } from "react-router-dom"
-import { signIn, signUp, useSession } from "@/lib/auth-client"
+import { signIn, signUp, useSession, authClient } from "@/lib/auth-client"
 import "./LoginPage.css"
 
 /* ─────────────────────────────────────────────
@@ -468,19 +468,34 @@ export function LoginPage() {
                 <div className="lp-forgot-wrap">
                   {forgotSent ? (
                     <p className="lp-forgot-sent" role="status">
-                      ✓ Contact your administrator to reset your password.
+                      ✓ Password reset link sent! Check your email inbox.
                     </p>
                   ) : (
                     <button
                       type="button"
                       className="lp-link lp-forgot-link"
-                      onClick={() => {
+                      onClick={async () => {
                         if (!email.trim()) {
                           setError("Enter your email first, then click Forgot password.")
                           return
                         }
                         setError("")
-                        setForgotSent(true)
+                        setLoading(true)
+                        try {
+                          const res = await authClient.requestPasswordReset({
+                            email,
+                            redirectTo: window.location.origin + "/auth/reset-password",
+                          })
+                          if (res.error) {
+                            setError(res.error.message || "Failed to send reset link.")
+                          } else {
+                            setForgotSent(true)
+                          }
+                        } catch (err: unknown) {
+                          setError(err instanceof Error ? err.message : "An unexpected error occurred.")
+                        } finally {
+                          setLoading(false)
+                        }
                       }}
                     >
                       Forgot password?

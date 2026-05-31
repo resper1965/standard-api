@@ -15,7 +15,8 @@
   "dependencies": {
     "better-auth": "1.6.11",
     "@neondatabase/serverless": "^0.9.3",
-    "@standard/schemas": "workspace:*"
+    "@standard/schemas": "workspace:*",
+    "@standard/email": "workspace:*"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260430.1",

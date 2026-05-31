@@ -18,11 +18,13 @@ import {
   baMember,
   baInvitation
 } from "@standard/schemas";
+import { sendStandardEmail, type SendEmail } from "@standard/email";
 
 export type AuthEnv = {
   DATABASE_URL: string;
   BETTER_AUTH_SECRET: string;
   BETTER_AUTH_URL?: string;
+  email?: SendEmail | undefined;
 };
 
 /**
@@ -50,6 +52,30 @@ export const createAuth = (env: AuthEnv, db: any) => {
     emailAndPassword: {
       enabled: true,
       requireEmailVerification: false,
+      sendResetPassword: async ({ user, url, token }, request) => {
+        const emailService = env.email;
+        if (emailService) {
+          try {
+            await sendStandardEmail(
+              emailService,
+              {
+                type: "password_reset",
+                to: user.email,
+                firstName: user.name || "User",
+                resetUrl: url,
+                expiresIn: "1 hour",
+              },
+              {
+                domain: "bekaa.eu",
+              }
+            );
+          } catch (err) {
+            console.error("[standard:auth] Failed to send password reset email:", err);
+          }
+        } else {
+          console.log(`[standard:auth:dev] Password reset requested for ${user.email}. Link: ${url}`);
+        }
+      },
     },
 
     trustedOrigins: [

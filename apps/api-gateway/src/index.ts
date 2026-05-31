@@ -68,6 +68,7 @@ export default {
             DATABASE_URL: env.DATABASE_URL!,
             BETTER_AUTH_SECRET: env.BETTER_AUTH_SECRET,
             ...(env.BETTER_AUTH_URL !== undefined ? { BETTER_AUTH_URL: env.BETTER_AUTH_URL } : {}),
+            email: cachedDeps.email,
           }, db);
           console.log('[standard:init] Standard Native Auth self-hosted initialized.');
         } else {
