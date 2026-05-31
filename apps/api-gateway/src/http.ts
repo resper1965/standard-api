@@ -92,6 +92,7 @@ export type ApiKeyRecord = {
   scopes: string[];
   expiresAt: Date | null;
   lastUsedAt: Date | null;
+  revokedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -112,10 +113,12 @@ export type ApiKeyCreateInput = {
 
 export type ApiKeysRepositoryAdapter = {
   create(input: ApiKeyCreateInput): Promise<ApiKeyRecord>;
+  getById(id: string, organizationId: string): Promise<ApiKeyRecord | null>;
+  update(id: string, organizationId: string, patch: { name?: string; expiresAt?: Date | null; scopes?: string[] }): Promise<ApiKeyRecord | null>;
   verifyKey(keyHash: string): Promise<ApiKeyRecord | null>;
   markUsed(id: string): Promise<void>;
   revokeKey(id: string, organizationId: string): Promise<boolean>;
-  listByOrganization(organizationId: string): Promise<ApiKeyRecord[]>;
+  listByOrganization(organizationId: string, activeOnly?: boolean): Promise<ApiKeyRecord[]>;
 };
 
 export type TenantRepositoryAdapter = {

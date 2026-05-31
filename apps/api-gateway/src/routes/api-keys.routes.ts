@@ -9,13 +9,14 @@ import { ApiError } from "../errors/api-error";
 const createApiKeyInput = z.object({
   name: z.string().min(1).max(100),
   expiresAt: z.string().datetime().optional(),
-  /** Optional M2M scopes — empty means wildcard (all access) */
-  scopes: M2mScopesArraySchema.optional()
+  /** Optional M2M scopes — empty array means wildcard (all access) */
+  scopes: M2mScopesArraySchema.optional(),
 });
 
 const updateApiKeyInput = z.object({
   name: z.string().min(1).max(100).optional(),
   expiresAt: z.string().datetime().nullable().optional(),
+  scopes: M2mScopesArraySchema.optional(),
 });
 
 /** Shared helper: resolve Standard Native Auth orgId → Standard UUIDs and block M2M self-management */
@@ -42,8 +43,11 @@ export const apiKeysRoutes: RouteDefinition[] = [
     permissions: ["organization:read"],
     openapi: {
       summary: "List API Keys",
-      description: "Returns all API keys for the authenticated organization (masked).",
-      request: { params: z.object({ organizationId: z.string() }) },
+      description: "Returns all API keys for the authenticated organization (masked). Use ?active=true to exclude revoked keys.",
+      request: {
+        params: z.object({ organizationId: z.string() }),
+        query: z.object({ active: z.enum(["true", "false"]).optional() }),
+      },
       responses: {
         200: {
           description: "API key list",
@@ -57,6 +61,9 @@ export const apiKeysRoutes: RouteDefinition[] = [
                   scopes: z.array(z.string()),
                   lastUsedAt: z.string().nullable(),
                   expiresAt: z.string().nullable(),
+                  revokedAt: z.string().nullable(),
+                  isRevoked: z.boolean(),
+                  status: z.enum(["active", "expired", "revoked"]),
                   createdAt: z.string(),
                 }))
               })
@@ -67,21 +74,29 @@ export const apiKeysRoutes: RouteDefinition[] = [
     },
     handler: async (context) => {
       const { organizationId } = context.params;
+      const activeOnly = new URL(context.request.url).searchParams.get("active") === "true";
       const tenantCtx = await resolveOrgCtx(context, organizationId!);
-      const keys = await context.deps.apiKeys.listByOrganization(tenantCtx.organization_id);
+      const keys = await context.deps.apiKeys.listByOrganization(tenantCtx.organization_id, activeOnly);
+      const now = new Date();
 
       return json({
-        data: keys.map((k: any) => ({
-          id: k.id,
-          name: k.name,
-          maskedKey: k.maskedKey,
-          scopes: k.scopes,
-          lastUsedAt: k.lastUsedAt,
-          expiresAt: k.expiresAt,
-          revokedAt: k.revokedAt ?? null,
-          isRevoked: !!k.revokedAt,
-          createdAt: k.createdAt,
-        })),
+        data: keys.map((k: any) => {
+          const isRevoked = !!k.revokedAt;
+          const isExpired = !isRevoked && k.expiresAt && new Date(k.expiresAt) < now;
+          const status = isRevoked ? "revoked" : isExpired ? "expired" : "active";
+          return {
+            id: k.id,
+            name: k.name,
+            maskedKey: k.maskedKey,
+            scopes: k.scopes,
+            lastUsedAt: k.lastUsedAt ?? null,
+            expiresAt: k.expiresAt ?? null,
+            revokedAt: k.revokedAt ?? null,
+            isRevoked,
+            status,
+            createdAt: k.createdAt,
+          };
+        }),
         trace_id: context.traceId,
       });
     }
@@ -156,6 +171,7 @@ export const apiKeysRoutes: RouteDefinition[] = [
         actor_id: context.actorId,
         key_id: record.id,
         key_name: input.name,
+        scopes: input.scopes ?? [],
         trace_id: context.traceId,
       });
 
@@ -166,7 +182,7 @@ export const apiKeysRoutes: RouteDefinition[] = [
           key: fullToken,   // ⚠️ Only returned ONCE — store securely
           maskedKey: record.maskedKey,
           scopes: record.scopes,
-          expiresAt: record.expiresAt,
+          expiresAt: record.expiresAt ?? null,
           createdAt: record.createdAt,
         },
         trace_id: context.traceId,
@@ -185,11 +201,13 @@ export const apiKeysRoutes: RouteDefinition[] = [
       const { organizationId, keyId } = context.params;
       const tenantCtx = await resolveOrgCtx(context, organizationId!);
 
-      // listByOrganization is the only available read method — filter by id
-      const keys = await context.deps.apiKeys.listByOrganization(tenantCtx.organization_id);
-      const key = keys.find((k: any) => k.id === keyId);
-
+      const key = await context.deps.apiKeys.getById(keyId!, tenantCtx.organization_id);
       if (!key) throw new ApiError("NOT_FOUND", "API key not found.", 404);
+
+      const now = new Date();
+      const isRevoked = !!key.revokedAt;
+      const isExpired = !isRevoked && key.expiresAt && new Date(key.expiresAt) < now;
+      const status = isRevoked ? "revoked" : isExpired ? "expired" : "active";
 
       return json({
         data: {
@@ -197,8 +215,11 @@ export const apiKeysRoutes: RouteDefinition[] = [
           name: key.name,
           maskedKey: key.maskedKey,
           scopes: key.scopes,
-          lastUsedAt: key.lastUsedAt,
-          expiresAt: key.expiresAt,
+          lastUsedAt: key.lastUsedAt ?? null,
+          expiresAt: key.expiresAt ?? null,
+          revokedAt: key.revokedAt ?? null,
+          isRevoked,
+          status,
           createdAt: key.createdAt,
         },
         trace_id: context.traceId,
@@ -207,7 +228,6 @@ export const apiKeysRoutes: RouteDefinition[] = [
   },
 
   // ── PATCH /organizations/:orgId/api-keys/:keyId ───────────────────────
-  // P1.3: rename and/or update expiry without revoking
   {
     method: "PATCH",
     path: "/api/v1/organizations/:organizationId/api-keys/:keyId",
@@ -215,45 +235,59 @@ export const apiKeysRoutes: RouteDefinition[] = [
     requireActor: true,
     permissions: ["organization:update"],
     bodySchema: updateApiKeyInput,
+    openapi: {
+      summary: "Update API Key",
+      description: "Update name, expiration date, and/or scopes of an existing API key.",
+      request: {
+        params: z.object({ organizationId: z.string(), keyId: z.string() }),
+        body: { content: { "application/json": { schema: updateApiKeyInput } } }
+      },
+      responses: {
+        200: { description: "API key updated" }
+      }
+    },
     handler: async (context) => {
       const { organizationId, keyId } = context.params;
       const input = context.validatedBody as z.infer<typeof updateApiKeyInput>;
       const tenantCtx = await resolveOrgCtx(context, organizationId!);
 
-      // Verify the key belongs to this org
-      const keys = await context.deps.apiKeys.listByOrganization(tenantCtx.organization_id);
-      const existing = keys.find((k: any) => k.id === keyId);
+      const existing = await context.deps.apiKeys.getById(keyId!, tenantCtx.organization_id);
       if (!existing) throw new ApiError("NOT_FOUND", "API key not found.", 404);
+      if (existing.revokedAt) throw new ApiError("CONFLICT", "Cannot update a revoked key.", 409);
 
-      // The repository doesn't expose an update method yet — revoke + recreate pattern
-      // is NOT acceptable here (would change the key secret). We patch only metadata
-      // by revoking and re-creating with the same scopes but a new name.
-      // TODO: add apiKeys.update(id, patch) to ApiKeysRepositoryAdapter for a cleaner path.
-      // For now, return 501 with a clear message rather than silently breaking the key.
-      if (!Object.keys(input).some(k => input[k as keyof typeof input] !== undefined)) {
+      // Build patch — only include fields that were explicitly provided
+      const patch: { name?: string; expiresAt?: Date | null; scopes?: string[] } = {};
+      if (input.name !== undefined) patch.name = input.name;
+      if (input.expiresAt !== undefined) patch.expiresAt = input.expiresAt ? new Date(input.expiresAt) : null;
+      if (input.scopes !== undefined) patch.scopes = input.scopes;
+
+      if (Object.keys(patch).length === 0) {
         return json({ message: "No fields to update.", trace_id: context.traceId });
       }
 
-      // Metadata-only update — name and expiry don't affect the secret
-      // Persist via audit log until the repository exposes an update method
-      await context.deps.audit.record("api_key.metadata_update_requested", {
+      const updated = await context.deps.apiKeys.update(keyId!, tenantCtx.organization_id, patch);
+      if (!updated) throw new ApiError("INTERNAL_ERROR", "Update failed.", 500);
+
+      await context.deps.audit.record("api_key.updated", {
         tenant_id: tenantCtx.tenant_id,
         organization_id: tenantCtx.organization_id,
         actor_id: context.actorId,
         key_id: keyId,
-        requested_changes: {
-          ...(input.name ? { name: input.name } : {}),
-          ...(input.expiresAt !== undefined ? { expiresAt: input.expiresAt } : {}),
-        },
-        note: "Repository update method pending — change audited, revoke+recreate if needed",
+        changes: patch,
         trace_id: context.traceId,
       });
 
       return json({
-        message: "API key metadata update recorded. Use revoke + recreate to apply changes immediately.",
-        key_id: keyId,
+        data: {
+          id: updated.id,
+          name: updated.name,
+          maskedKey: updated.maskedKey,
+          scopes: updated.scopes,
+          expiresAt: updated.expiresAt ?? null,
+          updatedAt: updated.updatedAt,
+        },
         trace_id: context.traceId,
-      }, { status: 202 });
+      });
     }
   },
 
@@ -284,7 +318,6 @@ export const apiKeysRoutes: RouteDefinition[] = [
   },
 
   // ── GET /organizations/:orgId/api-keys/:keyId/usage ──────────────────
-  // P1.3: usage metrics — last used timestamp + request count from audit log
   {
     method: "GET",
     path: "/api/v1/organizations/:organizationId/api-keys/:keyId/usage",
@@ -295,22 +328,19 @@ export const apiKeysRoutes: RouteDefinition[] = [
       const { organizationId, keyId } = context.params;
       const tenantCtx = await resolveOrgCtx(context, organizationId!);
 
-      // Fetch key metadata (verify ownership)
-      const keys = await context.deps.apiKeys.listByOrganization(tenantCtx.organization_id);
-      const key = keys.find((k: any) => k.id === keyId);
+      const key = await context.deps.apiKeys.getById(keyId!, tenantCtx.organization_id);
       if (!key) throw new ApiError("NOT_FOUND", "API key not found.", 404);
 
-      // Usage data comes from the key record itself (lastUsedAt, requestCount if tracked)
+      const now = new Date();
+      const isExpired = key.expiresAt && new Date(key.expiresAt) < now;
+
       return json({
         data: {
           key_id: keyId,
           name: key.name,
           last_used_at: key.lastUsedAt ?? null,
-          // requestCount is tracked in the apikey table (Standard Native Auth)
-          request_count: (key as any).requestCount ?? null,
-          remaining: (key as any).remaining ?? null,
           expires_at: key.expiresAt ?? null,
-          status: key.expiresAt && new Date(key.expiresAt) < new Date() ? "expired" : "active",
+          status: key.revokedAt ? "revoked" : isExpired ? "expired" : "active",
         },
         trace_id: context.traceId,
       });
