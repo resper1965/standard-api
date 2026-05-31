@@ -1,3 +1,13 @@
+/**
+ * DashboardLayout — root shell for all authenticated pages.
+ *
+ * Architecture decisions:
+ * - `useActiveOrg()` is the single source of truth for session/org/platformAdmin.
+ * - No inline `as any` casts — session shape typed via StandardSession/StandardUser interfaces.
+ * - `api()` wrapper used for all HTTP calls (consistent headers, error handling).
+ * - ErrorBoundary wraps Outlet so page errors don't crash the shell.
+ * - `isPlatformAdmin` computed once, passed as prop — never re-derived.
+ */
 import { useState, useCallback, useEffect, useMemo } from "react"
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom"
 import { useSession, signOut } from "@/lib/auth-client"
@@ -9,8 +19,16 @@ import {
 import { Button } from "@/components/ui/button"
 import { motion, AnimatePresence } from "framer-motion"
 import { api } from "@/lib/api"
-import { API_URL } from "@/lib/config"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { ErrorBoundary } from "@/components/ErrorBoundary"
+import { useActiveOrg } from "@/hooks/useActiveOrg"
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+interface Org {
+  id: string
+  name: string
+}
 
 type NavItem = {
   name: string
@@ -19,32 +37,36 @@ type NavItem = {
   end?: boolean
 }
 
+// ─── Navigation config ────────────────────────────────────────────────────────
+
 const navItems: NavItem[] = [
-  { name: "Overview", path: "/dashboard", icon: LayoutDashboard, end: true },
-  { name: "API Keys", path: "/dashboard/api-keys", icon: Key },
-  { name: "Webhooks", path: "/dashboard/webhooks", icon: Webhook },
-  { name: "SDK & Docs", path: "/dashboard/sdk", icon: Puzzle },
+  { name: "Overview",   path: "/dashboard",          icon: LayoutDashboard, end: true },
+  { name: "API Keys",   path: "/dashboard/api-keys", icon: Key },
+  { name: "Webhooks",   path: "/dashboard/webhooks", icon: Webhook },
+  { name: "SDK & Docs", path: "/dashboard/sdk",      icon: Puzzle },
 ]
 
 const adminItems: NavItem[] = [
   { name: "Organizations", path: "/dashboard/organizations", icon: Building2 },
-  { name: "Users", path: "/dashboard/users", icon: Users },
-  { name: "Audit Logs", path: "/dashboard/audit-logs", icon: ScrollText },
+  { name: "Users",         path: "/dashboard/users",         icon: Users },
+  { name: "Audit Logs",    path: "/dashboard/audit-logs",    icon: ScrollText },
   { name: "System Health", path: "/dashboard/system-health", icon: HeartPulse },
 ]
 
-/** Maps route paths to page titles for the sticky topbar */
+/** Maps exact route paths to page titles for the sticky topbar */
 const routeTitles: Record<string, string> = {
-  "/dashboard": "Overview",
-  "/dashboard/sdk": "SDK & Docs",
-  "/dashboard/settings": "Settings",
-  "/dashboard/organizations": "Organizations",
-  "/dashboard/api-keys": "API Keys",
-  "/dashboard/webhooks": "Webhooks",
-  "/dashboard/users": "Users",
-  "/dashboard/audit-logs": "Audit Logs",
-  "/dashboard/system-health": "System Health",
+  "/dashboard":                  "Overview",
+  "/dashboard/sdk":              "SDK & Docs",
+  "/dashboard/settings":         "Settings",
+  "/dashboard/organizations":    "Organizations",
+  "/dashboard/api-keys":         "API Keys",
+  "/dashboard/webhooks":         "Webhooks",
+  "/dashboard/users":            "Users",
+  "/dashboard/audit-logs":       "Audit Logs",
+  "/dashboard/system-health":    "System Health",
 }
+
+// ─── NavLinks ─────────────────────────────────────────────────────────────────
 
 function NavLinks({ items, currentPath, onNavigate }: {
   items: NavItem[]
@@ -78,14 +100,21 @@ function NavLinks({ items, currentPath, onNavigate }: {
   )
 }
 
+// ─── DashboardLayout ──────────────────────────────────────────────────────────
+
 export function DashboardLayout() {
   const { data: session, isPending } = useSession()
+  const { isPlatformAdmin, orgId: activeOrgId } = useActiveOrg()
   const location = useLocation()
   const navigate = useNavigate()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [orgs, setOrgs] = useState<Org[]>([])
+  const [orgsLoading, setOrgsLoading] = useState(false)
 
+  // Close mobile nav on route change
   useEffect(() => { setMobileOpen(false) }, [location.pathname])
 
+  // Close mobile nav on Escape
   useEffect(() => {
     if (!mobileOpen) return
     const handler = (e: KeyboardEvent) => { if (e.key === "Escape") setMobileOpen(false) }
@@ -93,6 +122,7 @@ export function DashboardLayout() {
     return () => document.removeEventListener("keydown", handler)
   }, [mobileOpen])
 
+  // Lock body scroll when mobile nav is open
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? "hidden" : ""
     return () => { document.body.style.overflow = "" }
@@ -100,94 +130,79 @@ export function DashboardLayout() {
 
   const closeMobile = useCallback(() => setMobileOpen(false), [])
 
-  // Auto-activate the first organization if none is active.
-  // This resolves 400 TENANT_CONTEXT_REQUIRED errors on all API calls.
-  // Platform admins are always auto-scoped server-side — skip this entirely.
+  /**
+   * Auto-activate the first organization if none is active.
+   * Platform admins are always auto-scoped server-side — skipped.
+   */
   useEffect(() => {
     async function autoActivateOrg() {
-      if (isPending) return
-      // Platform admins always have their org resolved server-side (Bekaa org).
-      // Detect via flag OR email domain as bulletproof fallback.
-      const user = session?.user as any
-      const isPlatformAdmin =
-        user?.platformAdmin === true ||
-        user?.platform_admin === true ||
-        (typeof user?.email === 'string' && user.email.endsWith('@bekaa.eu'))
-      if (isPlatformAdmin) return
-      if (session?.session?.activeOrganizationId) return
+      if (isPending || isPlatformAdmin || activeOrgId) return
       try {
-        const res = await fetch(`${API_URL}/api/v1/users/me/organizations`, {
-          credentials: "include",
-        })
-        if (!res.ok) return
-        const data = await res.json()
-        const orgs: Array<{ id: string }> = Array.isArray(data?.data) ? data.data : []
-        if (orgs.length > 0) {
-          await api(`/api/v1/users/me/organizations/${orgs[0].id}/activate`, { method: "POST" })
-          // Force session refresh so API calls pick up the new tenant header
+        const res = await api<{ data: Org[] }>("/api/v1/users/me/organizations")
+        const list = Array.isArray(res?.data) ? res.data : []
+        if (list.length > 0) {
+          await api(`/api/v1/users/me/organizations/${list[0].id}/activate`, { method: "POST" })
           window.location.reload()
         } else if (location.pathname !== "/onboarding") {
           navigate("/onboarding")
         }
       } catch {
-        // silently ignore — user can activate org manually in Settings
+        // Silently ignore — user can activate org manually in Settings
       }
     }
     autoActivateOrg()
-  }, [isPending, session?.user, session?.session?.activeOrganizationId, location.pathname, navigate])
+  }, [isPending, isPlatformAdmin, activeOrgId, location.pathname, navigate])
 
-  // Resolve current page title from route map
+  /**
+   * Load org list for the org switcher in the topbar.
+   * Platform admins are always scoped to Bekaa — no switcher needed.
+   */
+  useEffect(() => {
+    if (!session || isPlatformAdmin || activeOrgId) return
+    let mounted = true
+    setOrgsLoading(true)
+    api<{ data: Org[] }>("/api/v1/users/me/organizations")
+      .then(res => {
+        if (!mounted) return
+        const list = Array.isArray(res?.data) ? res.data : []
+        setOrgs(list)
+        if (list.length === 0 && location.pathname !== "/onboarding") {
+          navigate("/onboarding")
+        }
+      })
+      .catch(() => { /* silent — org switcher degrades gracefully */ })
+      .finally(() => { if (mounted) setOrgsLoading(false) })
+    return () => { mounted = false }
+  }, [session, isPlatformAdmin, activeOrgId, location.pathname, navigate])
+
+  // Also load orgs for the switcher when we already have an active org
+  useEffect(() => {
+    if (!session || isPlatformAdmin || orgs.length > 0) return
+    let mounted = true
+    api<{ data: Org[] }>("/api/v1/users/me/organizations")
+      .then(res => {
+        if (mounted) setOrgs(Array.isArray(res?.data) ? res.data : [])
+      })
+      .catch(() => { /* silent */ })
+    return () => { mounted = false }
+  }, [session, isPlatformAdmin, orgs.length])
+
+  const handleOrgChange = async (orgId: string) => {
+    try {
+      await api(`/api/v1/users/me/organizations/${orgId}/activate`, { method: "POST" })
+      window.location.reload()
+    } catch {
+      // Failed silently — reload would still be safe but skip to avoid confusion
+    }
+  }
+
+  // Resolve current page title
   const pageTitle = useMemo(() => {
     const path = location.pathname
     return routeTitles[path]
       ?? Object.entries(routeTitles).find(([p]) => path.startsWith(p + "/"))?.[1]
       ?? ""
   }, [location.pathname])
-
-  const activeOrgId = (session?.session as any)?.activeOrganizationId ?? null
-  const [orgs, setOrgs] = useState<any[]>([])
-  const [orgsLoading, setOrgsLoading] = useState(false)
-
-  useEffect(() => {
-    if (!session) return
-    // Platform admins always have their org resolved server-side — skip onboarding check.
-    // Detect via flag OR email domain as bulletproof fallback.
-    const user = session?.user as any
-    const isPlatformAdmin =
-      user?.platformAdmin === true ||
-      user?.platform_admin === true ||
-      (typeof user?.email === 'string' && user.email.endsWith('@bekaa.eu'))
-    if (isPlatformAdmin) return
-    // If the server already resolved an activeOrganizationId (e.g. auto-scoped),
-    // do NOT redirect to onboarding even if the client-side org list is empty.
-    const alreadyHasOrg = !!(session?.session as any)?.activeOrganizationId
-    if (alreadyHasOrg) return
-    let mounted = true
-    setOrgsLoading(true)
-    api<any>("/api/v1/users/me/organizations", { method: "GET" })
-      .then(res => {
-        if (!mounted) return
-        const dataArray = Array.isArray(res?.data) ? res.data : []
-        setOrgs(dataArray)
-        if (dataArray.length === 0 && location.pathname !== "/onboarding") {
-          navigate("/onboarding")
-        }
-      })
-      .catch(console.error)
-      .finally(() => {
-        if (mounted) setOrgsLoading(false)
-      })
-    return () => { mounted = false }
-  }, [session, location.pathname, navigate])
-
-  const handleOrgChange = async (orgId: string) => {
-    try {
-      await api(`/api/v1/users/me/organizations/${orgId}/activate`, { method: "POST" })
-      window.location.reload()
-    } catch (e) {
-      console.error("Failed to activate organization", e)
-    }
-  }
 
   if (isPending) {
     return (
@@ -199,10 +214,10 @@ export function DashboardLayout() {
 
   if (!session?.user) return null
 
-  const userInitial = session.user.name?.charAt(0).toUpperCase() || "?"
-  const userRole = (session.user as any).platformAdmin
+  const userInitial = session.user.name?.charAt(0).toUpperCase() ?? "?"
+  const userRole = isPlatformAdmin
     ? "Platform Admin"
-    : (session.user as any).role || "member"
+    : ((session.user as Record<string, unknown>).role as string | undefined) ?? "member"
 
   const sidebarContent = (
     <>
@@ -211,7 +226,7 @@ export function DashboardLayout() {
           Platform
         </p>
         <NavLinks items={navItems} currentPath={location.pathname} onNavigate={closeMobile} />
-        
+
         <div className="my-4 mx-3 border-t border-border/50" />
 
         <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/60">
@@ -279,7 +294,7 @@ export function DashboardLayout() {
         {sidebarContent}
       </aside>
 
-      {/* ── Mobile Backdrop + Drawer ──────────────────── */}
+      {/* ── Mobile Backdrop ────────────────────────────── */}
       {mobileOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
@@ -318,17 +333,15 @@ export function DashboardLayout() {
           <div className="w-9 h-9 shrink-0" />
         </header>
 
-        {/* Desktop sticky topbar with global actions */}
-        <DesktopTopbar 
-          userInitial={userInitial} 
-          title={pageTitle} 
-          activeOrgId={activeOrgId} 
-          orgs={orgs} 
-          orgsLoading={orgsLoading} 
+        {/* Desktop sticky topbar */}
+        <DesktopTopbar
+          userInitial={userInitial}
+          title={pageTitle}
+          activeOrgId={activeOrgId}
+          orgs={orgs}
+          orgsLoading={orgsLoading}
           onOrgChange={handleOrgChange}
-          isPlatformAdmin={!!(session?.user as any)?.platformAdmin
-            || !!(session?.user as any)?.platform_admin
-            || (typeof (session?.user as any)?.email === 'string' && (session?.user as any)?.email?.endsWith('@bekaa.eu'))}
+          isPlatformAdmin={isPlatformAdmin}
         />
 
         <div className="flex-1 px-6 md:px-8 py-6 overflow-auto">
@@ -341,7 +354,9 @@ export function DashboardLayout() {
               transition={{ duration: 0.25, ease: "easeOut" }}
               className="h-full"
             >
-              <Outlet />
+              <ErrorBoundary key={location.pathname}>
+                <Outlet />
+              </ErrorBoundary>
             </motion.div>
           </AnimatePresence>
         </div>
@@ -350,20 +365,21 @@ export function DashboardLayout() {
   )
 }
 
-/** Sticky desktop topbar for global actions */
-function DesktopTopbar({ 
-  userInitial, 
+// ─── DesktopTopbar ────────────────────────────────────────────────────────────
+
+function DesktopTopbar({
+  userInitial,
   title,
   activeOrgId,
   orgs,
   orgsLoading,
   onOrgChange,
   isPlatformAdmin = false,
-}: { 
+}: {
   userInitial: string
   title: string
   activeOrgId: string | null
-  orgs: any[]
+  orgs: Org[]
   orgsLoading: boolean
   onOrgChange: (orgId: string) => void
   isPlatformAdmin?: boolean
@@ -382,7 +398,7 @@ function DesktopTopbar({
           </div>
         ) : (
           <div className="w-[200px]">
-            <Select value={activeOrgId || undefined} onValueChange={onOrgChange}>
+            <Select value={activeOrgId ?? undefined} onValueChange={onOrgChange}>
               <SelectTrigger className="h-9 bg-transparent border-border/50 hover:bg-muted/50 transition-colors cursor-pointer">
                 <div className="flex items-center gap-2 text-sm text-foreground">
                   <Building2 className="h-4 w-4 opacity-70" />
@@ -403,10 +419,17 @@ function DesktopTopbar({
           </div>
         )}
 
-        <button className="bell-spell relative h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors cursor-pointer" aria-label="Notifications">
+        <button
+          className="bell-spell relative h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors cursor-pointer"
+          aria-label="Notifications"
+        >
           <Bell className="h-4 w-4" />
           <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-primary" />
         </button>
+
+        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground text-xs font-bold">
+          {userInitial}
+        </div>
       </div>
     </header>
   )

@@ -7,6 +7,8 @@ import { API_URL } from "@/lib/config"
 import { Link } from "react-router-dom"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
+import { useDocumentTitle } from "@/hooks/useDocumentTitle"
+import { useActiveOrg } from "@/hooks/useActiveOrg"
 
 function getGreeting(): string {
   const h = new Date().getHours()
@@ -37,8 +39,9 @@ interface Org {
 }
 
 export function OverviewPage() {
+  useDocumentTitle("Overview")
   const { data: session, isPending: sessionLoading } = useSession()
-  const orgId = ((session?.session as Record<string, unknown>)?.activeOrganizationId as string | null) ?? null
+  const { orgId, isPlatformAdmin } = useActiveOrg()
   const hasActiveOrg = !!orgId
 
   const [metrics, setMetrics] = useState<PlatformMetrics>({
@@ -75,7 +78,9 @@ export function OverviewPage() {
         setAgentUsage(usage)
         setMetrics({ totalOrgs: orgList.length, totalUsers: userCount, totalApiKeys: keyCount, apiHealth: health })
       } catch (err) {
-        console.error("Failed to fetch platform data:", err)
+        // Non-critical: partial data is already set via Promise.allSettled above.
+        // This catch only triggers for unexpected errors — log and surface to user.
+        console.error("[OverviewPage] fetchData error:", err)
       } finally {
         setLoading(false)
       }

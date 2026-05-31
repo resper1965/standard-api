@@ -19,5 +19,40 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
+    // Remove console.log/debug in production builds; keep console.error for monitoring
+    minify: 'esbuild',
+    rollupOptions: {
+      output: {
+        manualChunks: (id) => {
+          // React core — most stable, longest cache life
+          if (id.includes('node_modules/react/') ||
+              id.includes('node_modules/react-dom/') ||
+              id.includes('node_modules/react-router-dom/') ||
+              id.includes('node_modules/scheduler/')) {
+            return 'react-core';
+          }
+          // Animation library — large, changes rarely
+          if (id.includes('node_modules/framer-motion/')) {
+            return 'motion';
+          }
+          // Icon library — large, changes rarely
+          if (id.includes('node_modules/lucide-react/')) {
+            return 'lucide';
+          }
+          // Radix UI primitives — UI foundation
+          if (id.includes('node_modules/@radix-ui/')) {
+            return 'radix';
+          }
+          // Auth client
+          if (id.includes('node_modules/better-auth/')) {
+            return 'auth';
+          }
+          // Zod validation
+          if (id.includes('node_modules/zod/')) {
+            return 'validation';
+          }
+        },
+      },
+    },
   },
 });

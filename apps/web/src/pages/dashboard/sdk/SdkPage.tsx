@@ -1,3 +1,4 @@
+﻿import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useState } from "react";
 import { useSession } from "../../../lib/auth-client";
 import { Link } from "react-router-dom";
@@ -88,6 +89,7 @@ function Step({ n, title }: { n: number; title: string }) {
 
 // ─── Main ───────────────────────────────────────────────────────
 export function SdkPage() {
+  useDocumentTitle("SDK & Docs");
   const { data: session } = useSession();
   const tenantId =
     ((session?.session as Record<string, unknown>)?.activeOrganizationId as string) ||

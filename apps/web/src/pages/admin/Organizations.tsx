@@ -1,3 +1,4 @@
+﻿import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useEffect, useState, useMemo, useCallback } from "react";
 import type { FormEvent } from "react";
 import { useSession } from "../../lib/auth-client";
@@ -209,6 +210,7 @@ function MetadataPopover({ metadata }: { metadata?: Record<string, unknown> }) {
 // ---------------------------------------------------------------------------
 
 export function AdminOrganizations() {
+  useDocumentTitle("Organizations");
   const { data: session } = useSession();
   const activeOrgId =
     (session?.session as Record<string, unknown>)?.activeOrganizationId as string | null ?? null;
