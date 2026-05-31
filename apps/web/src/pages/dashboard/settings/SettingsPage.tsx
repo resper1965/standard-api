@@ -1,4 +1,4 @@
-﻿import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useState, useEffect } from "react"
 import { useSession } from "@/lib/auth-client"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
@@ -449,16 +449,44 @@ assessment.created, document.ingested, kb.indexed, soa.approved, gap.approved, m
   return prompt
 }
 
-// ─── Component ───────────────────────────────────────────────
+
+// --- Local Types ---
+interface OrgSummary {
+  id: string
+  name: string
+  slug: string
+  billing_tier: string
+  status?: string
+}
+interface Member {
+  userId?: string
+  user?: { id: string; name: string; email: string }
+  name?: string
+  email?: string
+  role: string
+  createdAt?: string
+}
+interface ApiKeySummary {
+  id: string
+  name: string
+  maskedKey?: string
+  scopes: string[]
+  createdAt: string
+  expiresAt?: string | null
+  revokedAt?: string | null
+  isRevoked?: boolean
+  status?: "active" | "expired" | "revoked"
+}
+// --- Component ---
 export function SettingsPage() {
   useDocumentTitle("Settings");
   const { data: session } = useSession()
   const { toast } = useToast()
   const hasActiveOrg = !!session?.session?.activeOrganizationId
 
-  const [activeOrg, setActiveOrg] = useState<any>(null)
-  const [members, setMembers] = useState<any[]>([])
-  const [apiKeys, setApiKeys] = useState<any[]>([])
+  const [activeOrg, setActiveOrg] = useState<OrgSummary | null>(null)
+  const [members, setMembers] = useState<Member[]>([])
+  const [apiKeys, setApiKeys] = useState<ApiKeySummary[]>([])
   const [newKey, setNewKey] = useState<string | null>(null)
   const [copiedId, setCopiedId] = useState("")
   const [isGenerating, setIsGenerating] = useState(false)
@@ -466,7 +494,7 @@ export function SettingsPage() {
   const [keyName, setKeyName] = useState("External System Key")
   const [selectedScopes, setSelectedScopes] = useState<string[]>([])
   const [isRevoking, setIsRevoking] = useState<string | null>(null)
-  const [keyToRevoke, setKeyToRevoke] = useState<any>(null)
+  const [keyToRevoke, setKeyToRevoke] = useState<ApiKeySummary | null>(null)
   const [isRevokeDialogOpen, setIsRevokeDialogOpen] = useState(false)
 
   // Org settings and faturamento states
