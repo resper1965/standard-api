@@ -13,8 +13,11 @@
  */
 import type { StandardAuth, StandardUser, StandardSession } from "@standard/auth";
 import { StructuredLogger } from "@standard/observability";
+import { baSession } from "@standard/schemas";
+import { eq } from "drizzle-orm";
 import { ApiError } from "../errors/api-error";
 import type { RequestContext } from "../http";
+import type { DbClient } from "../adapters/db";
 
 const logger = new StructuredLogger();
 
@@ -173,7 +176,41 @@ export const resolveAuthContext = async (
         // Platform admin without an active org → auto-scope to the Bekaa operator org.
         // The slug is driven by PLATFORM_ADMIN_ORG_SLUG env var (default: "bekaa").
         const platformOrgSlug = context.env?.PLATFORM_ADMIN_ORG_SLUG ?? "bekaa";
-        resolvedOrgId = platformOrgSlug;
+
+        // Resolve slug → real BA org UUID so we can persist it to the session
+        let bekaaOrgId: string = platformOrgSlug; // fallback: use slug if DB unavailable
+        if (context.deps._db) {
+          try {
+            const db = context.deps._db as DbClient;
+            const { baOrganization } = await import("@standard/schemas");
+            const [bekaaOrg] = await db
+              .select({ id: baOrganization.id })
+              .from(baOrganization)
+              .where(eq(baOrganization.slug, platformOrgSlug))
+              .limit(1);
+            if (bekaaOrg) {
+              bekaaOrgId = bekaaOrg.id;
+              // Persist activeOrganizationId to the BA session so getSession()
+              // returns it immediately on the next frontend call — stops the flicker.
+              await db
+                .update(baSession)
+                .set({ activeOrganizationId: bekaaOrgId })
+                .where(eq(baSession.id, session.id));
+            }
+          } catch (e) {
+            logger.log({
+              level: "warn",
+              message: "platform_admin_session_persist_failed",
+              service: "api-gateway",
+              module: "auth",
+              environment: "production",
+              trace_id: context.traceId,
+              metadata: { error: e instanceof Error ? e.message : String(e) },
+            });
+          }
+        }
+
+        resolvedOrgId = bekaaOrgId;
 
         logger.log({
           level: "info",
@@ -185,6 +222,7 @@ export const resolveAuthContext = async (
           metadata: {
             actor_id: user.id,
             platform_org_slug: platformOrgSlug,
+            bekaa_org_id: bekaaOrgId,
           },
         });
       }
