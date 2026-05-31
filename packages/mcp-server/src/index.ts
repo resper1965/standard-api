@@ -15,6 +15,7 @@ program
   .description("MCP server for Standard GRC Platform Intelligence")
   .option("-u, --url <url>", "Standard API base URL", process.env.STANDARD_API_URL || "http://127.0.0.1:8787")
   .option("-t, --token <token>", "Standard API Bearer token", process.env.STANDARD_API_KEY)
+  .option("--tenant-id <tenantId>", "Standard tenant/org UUID (x-standard-tenant-id)", process.env.STANDARD_TENANT_ID)
   .parse(process.argv);
 
 const options = program.opts();
@@ -25,25 +26,31 @@ if (!options.token) {
 }
 
 const API_URL = options.url.replace(/\/$/, "");
-const API_TOKEN = options.token;
+const API_TOKEN = options.token as string;
+const TENANT_ID = (options.tenantId as string | undefined) ?? "";
 
-async function fetchFromApi(path: string, method: string = "GET", body?: any) {
+async function fetchFromApi(path: string, method: string = "GET", body?: unknown) {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${API_TOKEN}`,
+  };
+  if (TENANT_ID) headers["x-standard-tenant-id"] = TENANT_ID;
+
   const response = await fetch(`${API_URL}${path}`, {
     method,
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${API_TOKEN}`,
-    },
+    headers,
     ...(body ? { body: JSON.stringify(body) } : {}),
   });
 
   if (!response.ok) {
     let errorText = await response.text();
     try {
-      const json = JSON.parse(errorText);
-      errorText = json.error || json.message || errorText;
-    } catch (e) {
-      // Keep raw
+      const json = JSON.parse(errorText) as Record<string, unknown>;
+      errorText = (typeof json.error === "string" ? json.error : null)
+        ?? (typeof json.message === "string" ? json.message : null)
+        ?? errorText;
+    } catch {
+      // Keep raw text
     }
     throw new McpError(
       ErrorCode.InternalError,
@@ -157,65 +164,45 @@ server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
       }
 
       case "run_gap_analysis": {
-        const { framework_mask, scf_controls_implemented } = request.params.arguments as any;
-        
-        const response = await fetch(`${API_URL}/api/v1/intelligence/gap-analysis`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${API_TOKEN}`
-          },
-          body: JSON.stringify({ framework_mask, scf_controls_implemented }),
+        const { framework_mask, scf_controls_implemented } = request.params.arguments as {
+          framework_mask: string;
+          scf_controls_implemented: string[];
+        };
+        const data = await fetchFromApi("/api/v1/intelligence/gap-analysis", "POST", {
+          framework_mask,
+          scf_controls_implemented,
         });
-        
-        const data = await response.json();
         return {
           content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
         };
       }
 
       case "dispatch_grc_council": {
-        const { assessment_id, target_framework_id, agents, input } = request.params.arguments as any;
-        
-        const response = await fetch(`${API_URL}/api/v1/intelligence/council`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${API_TOKEN}`
-          },
-          body: JSON.stringify({ assessment_id, target_framework_id, agents, input }),
-        });
-
-        const data = await response.json();
+        const { assessment_id, target_framework_id, agents, input } = request.params.arguments as {
+          assessment_id: string;
+          target_framework_id: string;
+          agents: string[];
+          input: Record<string, unknown>;
+        };
+        const data = await fetchFromApi("/api/v1/intelligence/council", "POST", {
+          assessment_id,
+          target_framework_id,
+          agents,
+          input,
+        }) as Record<string, unknown>;
         return {
-          content: [
-            {
-              type: "text",
-              text: `Council dispatched. Job ID: ${data.job_id}\nPlease use the 'poll_job_status' tool to check the output.`,
-            },
-          ],
+          content: [{
+            type: "text",
+            text: `Council dispatched. Job ID: ${data.job_id}\nUse 'poll_job_status' to check the output.`,
+          }],
         };
       }
 
       case "poll_job_status": {
-        const { job_id } = request.params.arguments as any;
-        
-        const response = await fetch(`${API_URL}/api/v1/jobs/${job_id}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${API_TOKEN}`
-          }
-        });
-
-        const data = await response.json();
+        const { job_id } = request.params.arguments as { job_id: string };
+        const data = await fetchFromApi(`/api/v1/jobs/${job_id}`);
         return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify(data, null, 2),
-            },
-          ],
+          content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
         };
       }
 

@@ -81,7 +81,8 @@ export function AdminSystemHealth() {
         { name: "API Gateway", status: gatewayUp ? "operational" : "down" },
         { name: "Database", status: dbUp ? "operational" : "down" },
         { name: "Auth (Standard Native Auth)", status: gatewayUp ? "operational" : "down" },
-        { name: "Storage (R2)", status: "operational" },
+        // R2 health is not checked by the /health endpoint — status cannot be confirmed
+        { name: "Storage (R2)", status: "unknown" as unknown as "degraded" },
       ];
 
       const hasDown = services.some(s => s.status === "down");
@@ -95,9 +96,10 @@ export function AdminSystemHealth() {
         connectionError: false,
         operational: detailed?.operational ?? null,
       });
-    } catch (e: any) {
+    } catch (e) {
       if (currentId !== fetchIdRef.current) return;
-      setError("Network error: Unable to connect to the API Gateway.");
+      const msg = e instanceof Error ? e.message : "Unknown error";
+      setError(`Network error: ${msg}`);
       setHealth(buildDownState(true));
     } finally {
       if (currentId === fetchIdRef.current) setLoading(false);
@@ -179,7 +181,7 @@ export function AdminSystemHealth() {
             <Card className="border-border/60 shadow-none">
               <CardContent className="py-4">
                 <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Uptime</p>
-                <p className="text-xl font-bold stat-number">{health.overall === "down" ? "\u2014" : "99.9%"}</p>
+                <p className="text-xl font-bold stat-number text-muted-foreground">Not tracked</p>
               </CardContent>
             </Card>
             <Card className="border-border/60 shadow-none">
@@ -263,8 +265,11 @@ export function AdminSystemHealth() {
                         }
                         {svc.name}
                       </TableCell>
-                      <TableCell className="text-right">
-                        {statusBadge(svc.status)}
+                    <TableCell className="text-right">
+                        {svc.status === ("unknown" as unknown as "degraded")
+                          ? <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-muted text-muted-foreground">Not monitored</span>
+                          : statusBadge(svc.status)
+                        }
                       </TableCell>
                     </TableRow>
                   ))}
