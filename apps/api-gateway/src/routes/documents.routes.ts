@@ -75,7 +75,7 @@ export const documentsRoutes: RouteDefinition[] = [
 
       // Anti-malware scan before persisting
       const fileBytes = new Uint8Array(await file.arrayBuffer());
-      const scanResult = await scanForMalware(fileBytes, file.name, env?.CLAMAV_API_URL);
+      const scanResult = await scanForMalware(fileBytes, file.name, env?.CLAMAV_API_URL, env?.STANDARD_ENV === "production");
       if (!scanResult.clean) {
         throw new ApiError(
           "MALWARE_DETECTED" as any,

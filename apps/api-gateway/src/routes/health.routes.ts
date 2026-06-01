@@ -1,5 +1,6 @@
 import type { RouteDefinition } from "../http";
 import { json } from "../http";
+import { ApiError } from "../errors/api-error";
 
 export const healthRoutes: RouteDefinition[] = [
   {
@@ -116,6 +117,9 @@ export const healthRoutes: RouteDefinition[] = [
     method: "GET",
     path: "/api/v1/auth/debug",
     handler: async (context) => {
+      if (context.env?.STANDARD_ENV === "production") {
+        throw new ApiError("FORBIDDEN", "Auth debug endpoint is disabled in production.", 403);
+      }
       return json({
         session: context.session ?? null,
         actorId: context.actorId ?? null,

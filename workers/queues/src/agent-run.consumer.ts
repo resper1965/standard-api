@@ -34,8 +34,14 @@ export const processAgentRunQueueMessage = async (messageBody: unknown, env: Env
       });
     } catch (e) {
       console.error("Failed to load @ai-sdk/openai dynamically", e);
+      if (env.STANDARD_ENV === "production") {
+        throw new Error(`Failed to load OpenAI SDK: ${e instanceof Error ? e.message : String(e)}`);
+      }
     }
   } else {
+    if (env.STANDARD_ENV === "production") {
+      throw new Error("Missing LLM credentials (OPENAI_API_KEY or AI_GATEWAY_BASE_URL) in production environment.");
+    }
     console.warn("OPENAI_API_KEY or AI_GATEWAY_BASE_URL missing inside Queue worker Env. Falling back to Mock.");
   }
 

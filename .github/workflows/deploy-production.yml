@@ -36,7 +36,7 @@ jobs:
         run: pnpm install --no-frozen-lockfile
 
       - name: Lint
-        run: pnpm lint || true
+        run: pnpm lint
 
       - name: Typecheck
         run: pnpm typecheck
@@ -45,7 +45,7 @@ jobs:
         run: pnpm test:unit && pnpm test:contracts
 
       - name: Security Audit
-        run: pnpm audit --audit-level=high || true
+        run: pnpm audit --audit-level=high
 
       - name: Build
         run: pnpm build
@@ -75,8 +75,8 @@ jobs:
       - name: Install
         run: pnpm install --no-frozen-lockfile
 
-      - name: Push Schema Changes
-        run: pnpm --filter @standard/schemas drizzle-kit push --config drizzle.config.ts --force
+      - name: Run Database Migrations
+        run: pnpm --filter @standard/schemas tsx migrate.ts
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 

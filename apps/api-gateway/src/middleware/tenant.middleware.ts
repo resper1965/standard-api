@@ -9,6 +9,38 @@ export const resolveTenantContext = async (context: RequestContext, protectedRou
     context.request.headers.get("x-standard-tenant-id") ??
     context.request.headers.get("x-tenant-id") ??
     undefined;
+
+  const isPlatformAdmin = context.session?.user?.platformAdmin === true;
+
+  // Enforce tenant isolation for authenticated requests
+  if (context.tenantId && !isPlatformAdmin) {
+    if (pathTenantId && pathTenantId !== context.tenantId) {
+      throw new ApiError("FORBIDDEN", "Tenant context mismatch.", 403);
+    }
+    if (headerTenantId && headerTenantId !== context.tenantId) {
+      throw new ApiError("FORBIDDEN", "Tenant context mismatch.", 403);
+    }
+  }
+
+  // Enforce organization isolation for authenticated requests
+  const pathOrgId = context.params.organizationId;
+  if (context.organizationId && pathOrgId && !isPlatformAdmin) {
+    let resolvedPathOrgId = pathOrgId;
+    if (context.deps.resolveTenantContext) {
+      try {
+        const resolved = await context.deps.resolveTenantContext(pathOrgId);
+        if (resolved) {
+          resolvedPathOrgId = resolved.organization_id;
+        }
+      } catch (e) {
+        // ignore resolution error
+      }
+    }
+    if (resolvedPathOrgId !== context.organizationId) {
+      throw new ApiError("FORBIDDEN", "Organization context mismatch.", 403);
+    }
+  }
+
   const rawTenantId = headerTenantId ?? pathTenantId ?? context.tenantId;
 
   if (protectedRoute && !rawTenantId) {

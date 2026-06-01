@@ -9,8 +9,8 @@ import { ApiError } from "../errors/api-error";
 const createApiKeyInput = z.object({
   name: z.string().min(1).max(100),
   expiresAt: z.string().datetime().optional(),
-  /** Optional M2M scopes — empty array means wildcard (all access) */
-  scopes: M2mScopesArraySchema.optional(),
+  /** M2M scopes — required for security */
+  scopes: M2mScopesArraySchema,
 });
 
 const updateApiKeyInput = z.object({

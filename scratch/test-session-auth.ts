@@ -13,7 +13,7 @@ import {
   baInvitation
 } from "../packages/schemas/src/db/auth-schema";
 
-const databaseUrl = "postgresql://neondb_owner:npg_T8MHv6EoDIGh@ep-blue-breeze-anyfua57.c-6.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
+const databaseUrl = "postgresql://neondb_owner:npg_REDACTED@ep-blue-breeze-anyfua57.c-6.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
 const db = createDb(databaseUrl);
 
 // Instantiate auth with useSecureCookies: false for local debug
