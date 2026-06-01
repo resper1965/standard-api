@@ -1,4 +1,4 @@
-﻿import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { api } from "../../lib/api";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../components/ui/card";
@@ -212,6 +212,7 @@ export function AdminUsers() {
 
   // ---- Pagination -----------------------------------------------------------
   const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
   const PAGE_SIZE = 50;
 
   // ---- Ban reason -----------------------------------------------------------
@@ -250,8 +251,6 @@ export function AdminUsers() {
       setLoading(false);
     }
   }, []);
-
-  const [hasMore, setHasMore] = useState(false);
 
   const changePage = (newPage: number) => {
     setPage(newPage);

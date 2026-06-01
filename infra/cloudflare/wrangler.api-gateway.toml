@@ -46,13 +46,19 @@ binding = "STANDARD_FEATURE_FLAGS_KV"
 id = "757b7c1c18f744a8ab8b8fcafa84bc9d"
 
 [[kv_namespaces]]
-binding = "STANDARD_CACHE_KV"
+binding = "STANDARD_CACHE"
 id = "094323d4e27d4b92994c89d412d27f74"
 
 [[workflows]]
 binding = "ASSESSMENT_WORKFLOW"
 name = "standard-assessment-lifecycle-dev"
 class_name = "AssessmentLifecycleWorkflow"
+script_name = "standard-workflows"
+
+[[workflows]]
+binding = "COUNCIL_WORKFLOW"
+name = "standard-council-orchestration-dev"
+class_name = "CouncilOrchestrationWorkflow"
 script_name = "standard-workflows"
 
 [env.staging]
@@ -102,13 +108,19 @@ binding = "STANDARD_FEATURE_FLAGS_KV"
 id = "757b7c1c18f744a8ab8b8fcafa84bc9d"
 
 [[env.staging.kv_namespaces]]
-binding = "STANDARD_CACHE_KV"
+binding = "STANDARD_CACHE"
 id = "094323d4e27d4b92994c89d412d27f74"
 
 [[env.staging.workflows]]
 binding = "ASSESSMENT_WORKFLOW"
 name = "standard-assessment-lifecycle-staging"
 class_name = "AssessmentLifecycleWorkflow"
+script_name = "standard-workflows-staging"
+
+[[env.staging.workflows]]
+binding = "COUNCIL_WORKFLOW"
+name = "standard-council-orchestration-staging"
+class_name = "CouncilOrchestrationWorkflow"
 script_name = "standard-workflows-staging"
 
 [env.production]
@@ -162,13 +174,19 @@ binding = "STANDARD_FEATURE_FLAGS_KV"
 id = "23e073ec707d4803a8957e13a4046810"
 
 [[env.production.kv_namespaces]]
-binding = "STANDARD_CACHE_KV"
+binding = "STANDARD_CACHE"
 id = "55f97abbf9794b0196bdf51e8c1dedec"
 
 [[env.production.workflows]]
 binding = "ASSESSMENT_WORKFLOW"
 name = "standard-assessment-lifecycle-prod"
 class_name = "AssessmentLifecycleWorkflow"
+script_name = "standard-workflows-production"
+
+[[env.production.workflows]]
+binding = "COUNCIL_WORKFLOW"
+name = "standard-council-orchestration-production"
+class_name = "CouncilOrchestrationWorkflow"
 script_name = "standard-workflows-production"
 
 

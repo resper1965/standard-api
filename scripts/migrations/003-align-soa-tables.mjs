@@ -1,6 +1,6 @@
 // Migration 003: Align soa_versions and soa_items with Drizzle schema
 const H = 'ep-blue-breeze-anyfua57.c-6.us-east-1.aws.neon.tech';
-const CS = 'postgresql://neondb_owner:npg_T8MHv6EoDIGh@' + H + '/neondb?sslmode=require';
+const CS = 'postgresql://neondb_owner:npg_REDACTED@' + H + '/neondb?sslmode=require';
 
 async function sql(text) {
   const r = await fetch('https://' + H + '/sql', {

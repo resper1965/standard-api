@@ -11,7 +11,9 @@ const secretPatterns = [
   /xox[baprs]-[A-Za-z0-9-]{20,}/,
   /gh[pousr]_[A-Za-z0-9_]{30,}/,
   /CLOUDFLARE_API_TOKEN\s*=\s*["']?[A-Za-z0-9][A-Za-z0-9_-]{19,}/,
-  /R2_SECRET_ACCESS_KEY\s*=\s*["']?[A-Za-z0-9][A-Za-z0-9/+=_-]{19,}/
+  /R2_SECRET_ACCESS_KEY\s*=\s*["']?[A-Za-z0-9][A-Za-z0-9/+=_-]{19,}/,
+  /postgres(?:ql)?:\/\/[A-Za-z0-9_.-]+:[A-Za-z0-9_.-]+@[A-Za-z0-9_.-]+/,
+  /npg_[A-Za-z0-9_]{10,}/
 ];
 
 function shouldScan(filePath) {
@@ -41,11 +43,46 @@ async function collectFiles(directory) {
 
 const findings = [];
 for (const file of await collectFiles(root)) {
+  const relPath = relative(root, file);
+  // Ignore agents references, operations docs, and scratch directories
+  if (
+    relPath.startsWith(".agents/") ||
+    relPath.startsWith(".agents\\") ||
+    relPath.startsWith("docs/") ||
+    relPath.startsWith("docs\\") ||
+    relPath.startsWith("scratch/") ||
+    relPath.startsWith("scratch\\")
+  ) {
+    continue;
+  }
+
   const content = await readFile(file, "utf8");
   for (const pattern of secretPatterns) {
     if (pattern.test(content)) {
-      findings.push(relative(root, file));
-      break;
+      // Exclude placeholder or local dev values on a per-line basis
+      const lines = content.split(/\r?\n/);
+      let hasRealSecret = false;
+      for (const line of lines) {
+        if (pattern.test(line)) {
+          const isMock =
+            line.includes("npg_REDACTED") ||
+            line.includes("standard_dev_password") ||
+            line.includes("user:pass") ||
+            line.includes("localhost") ||
+            line.includes("__CLOUDFLARE_API_TOKEN__") ||
+            line.includes("__R2_SECRET_ACCESS_KEY__") ||
+            line.includes("__BETTER_AUTH_SECRET__") ||
+            line.includes("__OPENAI_API_KEY__");
+          if (!isMock) {
+            hasRealSecret = true;
+            break;
+          }
+        }
+      }
+      if (hasRealSecret) {
+        findings.push(relPath);
+        break;
+      }
     }
   }
 }

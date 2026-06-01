@@ -359,7 +359,7 @@ function EditModal({ keyRecord, onSave, onCancel, loading }: {
     if (name !== keyRecord.name) patch.name = name
     const newExpiry = getExpiryDate(expiryOption, customDate) ?? null
     patch.expiresAt = newExpiry
-    patch.scopes = fullAccess ? [] : selectedScopes
+    patch.scopes = fullAccess ? ALL_SCOPES : selectedScopes
     onSave(patch)
   }
 
@@ -470,12 +470,12 @@ export function ApiKeysPage() {
     setError(null)
     try {
       const expiresAt = getExpiryDate(expiryOption, customDate)
-      const scopes = fullAccess ? undefined : selectedScopes
+      const scopes = fullAccess ? ALL_SCOPES : selectedScopes
       const res = await api<{ data: ApiKeyRecord & { key: string } }>(
         `/api/v1/organizations/${orgId}/api-keys`,
         {
           method: "POST",
-          body: JSON.stringify({ name: newName, ...(expiresAt ? { expiresAt } : {}), ...(scopes ? { scopes } : {}) }),
+          body: JSON.stringify({ name: newName, ...(expiresAt ? { expiresAt } : {}), scopes }),
         }
       )
       setNewKey(res?.data?.key ?? null)
@@ -536,8 +536,7 @@ export function ApiKeysPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-semibold tracking-tight">API Keys</h2>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-sm text-muted-foreground mt-0">
             Manage M2M credentials with granular scope control for programmatic access.
           </p>
         </div>

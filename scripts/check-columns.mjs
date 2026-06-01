@@ -1,6 +1,6 @@
 const NEON_HOST = "ep-blue-breeze-anyfua57.c-6.us-east-1.aws.neon.tech";
 const NEON_USER = "neondb_owner";
-const NEON_PASS = "npg_T8MHv6EoDIGh";
+const NEON_PASS = "npg_REDACTED";
 const NEON_DB = "neondb";
 const CONN_STR = `postgresql://${NEON_USER}:${NEON_PASS}@${NEON_HOST}/${NEON_DB}?sslmode=require`;
 

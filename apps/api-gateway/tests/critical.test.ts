@@ -745,7 +745,7 @@ test("[SECURITY] API Key lifecycle: create, list, and revoke works", async () =>
   const createRes = await client.send(
     `/api/v1/organizations/${organizationId}/api-keys`,
     "POST",
-    { name: "Test Key" },
+    { name: "Test Key", scopes: ["assessment:read"] },
     headers
   );
   expect(createRes.response.status).toBe(201);

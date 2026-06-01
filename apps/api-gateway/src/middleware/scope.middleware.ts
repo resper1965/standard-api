@@ -17,15 +17,25 @@ import type { RequestContext } from "../http";
 export const assertApiKeyScopes = (
   context: RequestContext,
   routePath: string,
-  method: string
+  method: string,
+  authRequired: boolean
 ): void => {
   // Only enforce for M2M agents (actorId begins with m2m:)
   if (!context.actorId?.startsWith("m2m:")) return;
 
   const requiredScopes = getRequiredScopesForRoute(method, routePath);
 
-  // No required scopes for this route = open access
-  if (requiredScopes.length === 0) return;
+  // Protected route with no mapped scopes = fail closed for M2M
+  if (requiredScopes.length === 0) {
+    if (authRequired) {
+      throw new ApiError(
+        "INSUFFICIENT_SCOPE",
+        `This route is protected but has no API key scopes configured. Access denied for machine-to-machine actors.`,
+        403
+      );
+    }
+    return;
+  }
 
   if (!hasRequiredScopes(context.m2mScopes as M2mScope[] | undefined, requiredScopes)) {
     throw new ApiError(
@@ -37,3 +47,4 @@ export const assertApiKeyScopes = (
     );
   }
 };
+

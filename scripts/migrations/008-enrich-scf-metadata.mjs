@@ -5,7 +5,7 @@ import { readFileSync } from 'fs';
 import { resolve } from 'path';
 
 const H = 'ep-blue-breeze-anyfua57.c-6.us-east-1.aws.neon.tech';
-const CS = 'postgresql://neondb_owner:npg_T8MHv6EoDIGh@' + H + '/neondb?sslmode=require';
+const CS = 'postgresql://neondb_owner:npg_REDACTED@' + H + '/neondb?sslmode=require';
 
 async function sql(text, params = []) {
   const body = params.length > 0 ? { query: text, params } : { query: text };
