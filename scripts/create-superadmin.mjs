@@ -11,7 +11,7 @@ import { neon } from "@neondatabase/serverless";
 const scryptAsync = promisify(scrypt);
 
 const DATABASE_URL =
-  "postgresql://neondb_owner:npg_REDACTED@ep-REDACTED-endpoint.c-6.us-east-1.aws.neon.tech/neondb?sslmode=require";
+  process.env.DATABASE_URL;
 
 const EMAIL = "resper@bekaa.eu";
 const PASSWORD = "Gordinh@29";

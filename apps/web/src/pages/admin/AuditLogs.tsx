@@ -1,4 +1,4 @@
-﻿import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useState, useEffect, useCallback } from "react"
 import { api, ApiError } from "@/lib/api"
 import { Button } from "@/components/ui/button"
@@ -121,10 +121,18 @@ export function AuditLogsPage() {
     if (filterTo) params.set("to", new Date(filterTo + "T23:59:59").toISOString())
 
     try {
-      const res = await api<{ data?: AuditLog[]; events?: AuditLog[] }>(
+      const res = await api<{ data?: any[]; events?: any[] }>(
         `/api/v1/admin/security-events?${params}`
       )
-      const items: AuditLog[] = (res?.data ?? res?.events ?? []) as AuditLog[]
+      const rawItems = res?.data ?? res?.events ?? []
+      const items: AuditLog[] = rawItems.map((item: any) => ({
+        id: item.id,
+        action: item.action ?? item.event_type ?? item.event ?? "unknown",
+        actorId: item.actor_id ?? item.actorId ?? "system",
+        targetId: item.target_id ?? item.targetId ?? item.resource_id ?? item.resourceId ?? "",
+        metadata: item.metadata_safe ?? item.metadata ?? {},
+        createdAt: item.created_at ?? item.createdAt ?? item.timestamp ?? new Date().toISOString(),
+      }))
       setHasMore(items.length > PAGE_SIZE)
       setLogs(items.slice(0, PAGE_SIZE))
     } catch (e) {
@@ -177,8 +185,7 @@ export function AuditLogsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-semibold tracking-tight">Audit Logs</h2>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-sm text-muted-foreground mt-0">
             Security events and system actions across your platform.
           </p>
         </div>

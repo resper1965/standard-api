@@ -1,5 +1,5 @@
 name = "standard-workflows"
-main = "../../workers/workflows/src/assessment-lifecycle.ts"
+main = "../../workers/workflows/src/index.ts"
 compatibility_date = "2026-04-28"
 compatibility_flags = [ "nodejs_compat" ]
 
@@ -12,6 +12,11 @@ binding = "ASSESSMENT_WORKFLOW"
 name = "standard-assessment-lifecycle-dev"
 class_name = "AssessmentLifecycleWorkflow"
 
+[[workflows]]
+binding = "COUNCIL_WORKFLOW"
+name = "standard-council-orchestration-dev"
+class_name = "CouncilOrchestrationWorkflow"
+
 [env.staging]
 name = "standard-workflows-staging"
 vars = { STANDARD_ENV = "staging", LOG_LEVEL = "info" }
@@ -21,6 +26,11 @@ binding = "ASSESSMENT_WORKFLOW"
 name = "standard-assessment-lifecycle-staging"
 class_name = "AssessmentLifecycleWorkflow"
 
+[[env.staging.workflows]]
+binding = "COUNCIL_WORKFLOW"
+name = "standard-council-orchestration-staging"
+class_name = "CouncilOrchestrationWorkflow"
+
 [env.production]
 name = "standard-workflows-production"
 vars = { STANDARD_ENV = "production", LOG_LEVEL = "warn" }
@@ -29,5 +39,10 @@ vars = { STANDARD_ENV = "production", LOG_LEVEL = "warn" }
 binding = "ASSESSMENT_WORKFLOW"
 name = "standard-assessment-lifecycle-prod"
 class_name = "AssessmentLifecycleWorkflow"
+
+[[env.production.workflows]]
+binding = "COUNCIL_WORKFLOW"
+name = "standard-council-orchestration-production"
+class_name = "CouncilOrchestrationWorkflow"
 
 

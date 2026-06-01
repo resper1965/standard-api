@@ -492,6 +492,56 @@ export const MCP_TOOLS = [
 
 type ToolName = typeof MCP_TOOLS[number]["name"];
 
+export const MCP_TOOL_SCOPES: Record<string, string[]> = {
+  // Assessment
+  "list-assessments": ["assessment:read"],
+  "get-assessment": ["assessment:read"],
+  "get-assessment-status": ["assessment:read"],
+  "list-assessment-documents": ["document:read"],
+
+  // SCF Core
+  "search-scf-controls": ["scf:read"],
+  "get-scf-control": ["scf:read"],
+  "list-scf-frameworks": ["scf:read"],
+
+  // SCF Extended (Phase 2)
+  "list-scf-domains": ["scf:read"],
+  "list-framework-requirements": ["scf:read"],
+  "get-framework-coverage": ["scf:read"],
+  "get-control-mappings": ["scf:read"],
+  "cross-framework-mapping": ["scf:read"],
+
+  // Intelligence Engine (Phase 1)
+  "calculate-blast-radius": ["intelligence:run"],
+  "calculate-roi-path": ["intelligence:run"],
+  "calculate-compliance-score": ["intelligence:run"],
+  "calculate-dpia-score": ["intelligence:run"],
+  "check-breach-sla": ["intelligence:run"],
+  "calculate-cross-coverage": ["intelligence:run"],
+
+  // KB & Evidence AI (Phase 1)
+  "search-kb": ["kb:search"],
+  "evaluate-evidence": ["agent:run"],
+  "architect-remediation": ["agent:run"],
+
+  // SoA Lifecycle
+  "list-soa-versions": ["soa:read"],
+  "get-soa-version": ["soa:read"],
+  "list-soa-items": ["soa:read"],
+  "get-soa-item": ["soa:read"],
+  "validate-soa": ["soa:read"],
+  "get-soa-summary": ["soa:read"],
+
+  // Gap Analysis
+  "get-gap-analysis": ["gap:read"],
+  "list-findings": ["gap:read"],
+  "get-finding": ["gap:read"],
+
+  // Platform
+  "get-platform-health": [],
+  "list-soc-alerts": ["audit:read"],
+};
+
 // ── Dispatcher ─────────────────────────────────────────────────────────────
 
 export async function dispatchMcpTool(
@@ -499,6 +549,59 @@ export async function dispatchMcpTool(
   args: Record<string, unknown>,
   ctx: RequestContext
 ): Promise<McpToolResult> {
+  // 1. Validate organization_id / org_id parameter if supplied
+  const argOrgId = (args["organization_id"] ?? args["org_id"] ?? args["organizationId"] ?? args["orgId"]) as string | undefined;
+  if (argOrgId && ctx.organizationId && argOrgId !== ctx.organizationId) {
+    return {
+      content: [{ type: "text", text: `Forbidden: Organization context mismatch. Requested org: ${argOrgId}, Key scope: ${ctx.organizationId}` }],
+      isError: true,
+    };
+  }
+
+  // 2. Validate assessment_id if supplied (ensuring organization alignment)
+  const argAssessmentId = (args["assessment_id"] ?? args["assessmentId"]) as string | undefined;
+  if (argAssessmentId && ctx.tenantId) {
+    try {
+      const assessment = await ctx.deps.assessments.get(argAssessmentId, ctx.tenantId);
+      if (!assessment) {
+        return {
+          content: [{ type: "text", text: `Assessment ${argAssessmentId} not found.` }],
+          isError: true,
+        };
+      }
+      if (ctx.organizationId && assessment.organization_id !== ctx.organizationId) {
+        return {
+          content: [{ type: "text", text: `Forbidden: Assessment does not belong to your organization.` }],
+          isError: true,
+        };
+      }
+    } catch (err) {
+      return {
+        content: [{ type: "text", text: `Error resolving assessment context: ${err instanceof Error ? err.message : String(err)}` }],
+        isError: true,
+      };
+    }
+  }
+
+  // 3. Validate M2M API key scopes
+  const requiredScopes = MCP_TOOL_SCOPES[name];
+  if (!requiredScopes) {
+    return {
+      content: [{ type: "text", text: `Forbidden: Tool has no configured scope policy.` }],
+      isError: true,
+    };
+  }
+
+  if (ctx.actorId?.startsWith("m2m:")) {
+    const hasScope = requiredScopes.length === 0 || requiredScopes.some(scope => ctx.m2mScopes?.includes(scope));
+    if (!hasScope) {
+      return {
+        content: [{ type: "text", text: `Forbidden: API key lacks required scope(s): ${requiredScopes.join(", ")}` }],
+        isError: true,
+      };
+    }
+  }
+
   switch (name as ToolName) {
     // Assessment
     case "list-assessments":             return handleListAssessments(args, ctx);

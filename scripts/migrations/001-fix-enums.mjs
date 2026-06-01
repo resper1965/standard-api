@@ -1,7 +1,11 @@
 // Migration 001: Fix all enum drift between Drizzle schema and production DB
 // Idempotent: safe to run multiple times
-const H = 'ep-REDACTED-endpoint.c-6.us-east-1.aws.neon.tech';
-const CS = 'postgresql://neondb_owner:npg_REDACTED@' + H + '/neondb?sslmode=require';
+const CS = process.env.DATABASE_URL;
+if (!CS) {
+  console.error("DATABASE_URL env var is required");
+  process.exit(1);
+}
+const H = new URL(CS).hostname;
 
 async function sql(text) {
   const r = await fetch('https://' + H + '/sql', {

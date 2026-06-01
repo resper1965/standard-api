@@ -71,9 +71,15 @@ index_name = "standard-kb-dev"
 [ai]
 binding = "AI"
 
+[triggers]
+crons = ["0 2 * * 0"]
+
 # ─── Production environment ────────────────────────────────────
 [env.production]
 name = "standard-queues-production"
+
+[env.production.triggers]
+crons = ["0 2 * * 0"]
 
 [env.production.vars]
 STANDARD_ENV = "production"

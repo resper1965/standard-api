@@ -156,6 +156,12 @@ export const ROUTE_SCOPE_MAP: Record<string, M2mScope[]> = {
   "GET:/api/v1/assessments/:assessmentId/audit-logs": ["audit:read"],
   "GET:/api/v1/assessments/:assessmentId/metrics": ["metrics:read"],
   "GET:/api/v1/assessments/:assessmentId/usage": ["usage:read"],
+
+  // GRC MCP Endpoint
+  "POST:/mcp": [
+    "assessment:read", "scf:read", "soa:read", "gap:read", "poam:read",
+    "report:read", "kb:read", "kb:search", "agent:run", "intelligence:run"
+  ],
 };
 
 /**
@@ -166,8 +172,8 @@ export function hasRequiredScopes(
   keyScopes: M2mScope[] | undefined | null,
   requiredScopes: M2mScope[]
 ): boolean {
-  // No scopes on key = wildcard (backward compatible)
-  if (!keyScopes || keyScopes.length === 0) return true;
+  // Empty keyScopes = no access (fail-closed)
+  if (!keyScopes || keyScopes.length === 0) return false;
   // No required scopes = open route
   if (requiredScopes.length === 0) return true;
   // At least one required scope must be present

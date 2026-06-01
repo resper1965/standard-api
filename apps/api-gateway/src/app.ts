@@ -306,7 +306,7 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
       await resolveTenantContext(context, tenantRequired);
 
       await assertRbac(context, route.permissions);
-      assertApiKeyScopes(context, route.path, request.method);
+      assertApiKeyScopes(context, route.path, request.method, authRequired);
       await assertRateLimit(context, route.path, env?.STANDARD_CACHE);
       await recordAuditEvent(context, route.path);
 
