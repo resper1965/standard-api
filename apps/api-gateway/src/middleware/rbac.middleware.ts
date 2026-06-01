@@ -10,7 +10,7 @@ import type { RequestContext } from "../http";
  * The flag is stored as `platform_admin` boolean on the user row —
  * never as a role string, to avoid confusion with org-scoped roles.
  */
-export const isPlatformAdmin = (context: RequestContext): boolean => {
+const isPlatformAdmin = (context: RequestContext): boolean => {
   // platformAdmin is explicitly typed in RequestContext.session.user (http.ts)
   // and populated by auth.middleware.ts from the Standard Native Auth `additionalFields.platformAdmin`.
   return (
@@ -149,7 +149,7 @@ export const assertRbac = async (context: RequestContext, requiredPermissions: P
  *
  * Use on any route that writes or reads tenant-scoped data (assessments, KB, etc.).
  */
-export const requireOrganizationContext = async (context: RequestContext): Promise<void> => {
+const requireOrganizationContext = async (context: RequestContext): Promise<void> => {
   if (context.organizationId && context.tenantId) return;
 
   await new SecurityEventService(context.deps.observability).record({
