@@ -157,29 +157,15 @@ export const controlImplementationStatusEnum = pgEnum("control_implementation_st
   "not_applicable"
 ]);
 
-export const tenants = pgTable("tenants", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  parentId: uuid("parent_id"),
-  slug: text("slug").notNull(),
-  name: text("name").notNull(),
-  status: text("status").default("active").notNull(),
-  ...timestamps()
-}, (table) => [
-  uniqueIndex("tenants_slug_uidx").on(table.slug),
-  index("tenants_parent_idx").on(table.parentId)
-]);
-
 export const organizations = pgTable("organizations", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
   slug: text("slug").notNull(),
   name: text("name").notNull(),
   status: text("status").default("active").notNull(),
   billingTier: text("billing_tier").default("free").notNull(),
   ...timestamps()
 }, (table) => [
-  index("organizations_tenant_idx").on(table.tenantId),
-  uniqueIndex("organizations_tenant_slug_uidx").on(table.tenantId, table.slug)
+  uniqueIndex("organizations_slug_uidx").on(table.slug)
 ]);
 
 export const users = pgTable("users", {
@@ -205,7 +191,6 @@ export const roles = pgTable("roles", {
 
 export const memberships = pgTable("memberships", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
   organizationId: uuid("organization_id").notNull().references(() => organizations.id),
   /** Nullable — user may not exist yet (invite-first flow) */
   userId: uuid("user_id").references(() => users.id),
@@ -221,14 +206,12 @@ export const memberships = pgTable("memberships", {
   acceptedAt: timestamp("accepted_at", { withTimezone: true }),
   ...timestamps()
 }, (table) => [
-  index("memberships_tenant_org_idx").on(table.tenantId, table.organizationId),
   index("memberships_org_user_idx").on(table.organizationId, table.userId),
   index("memberships_org_email_idx").on(table.organizationId, table.email),
 ]);
 
 export const apiKeys = pgTable("api_keys", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
   organizationId: uuid("organization_id").notNull().references(() => organizations.id),
   name: text("name").notNull(),
   keyHash: text("key_hash").notNull(),
@@ -248,7 +231,6 @@ export const apiKeys = pgTable("api_keys", {
 
 export const scfVersions = pgTable("scf_versions", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").references(() => tenants.id),
   organizationId: uuid("organization_id").references(() => organizations.id),
   version: text("version").notNull(),
   sourceUri: text("source_uri"),
@@ -258,7 +240,7 @@ export const scfVersions = pgTable("scf_versions", {
   publishedAt: timestamp("published_at", { withTimezone: true }),
   ...timestamps()
 }, (table) => [
-  uniqueIndex("scf_versions_version_uidx").on(table.tenantId, table.version)
+  uniqueIndex("scf_versions_version_uidx").on(table.version)
 ]);
 
 export const scfImportRuns = pgTable("scf_import_runs", {
@@ -283,7 +265,6 @@ export const scfImportRuns = pgTable("scf_import_runs", {
 
 export const scfDomains = pgTable("scf_domains", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").references(() => tenants.id),
   organizationId: uuid("organization_id").references(() => organizations.id),
   scfVersionId: uuid("scf_version_id").notNull().references(() => scfVersions.id),
   domainCode: text("domain_code").notNull(),
@@ -294,12 +275,11 @@ export const scfDomains = pgTable("scf_domains", {
   ...timestamps()
 }, (table) => [
   index("scf_domains_version_idx").on(table.scfVersionId),
-  uniqueIndex("scf_domains_version_code_uidx").on(table.tenantId, table.scfVersionId, table.domainCode)
+  uniqueIndex("scf_domains_version_code_uidx").on(table.scfVersionId, table.domainCode)
 ]);
 
 export const scfControls = pgTable("scf_controls", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").references(() => tenants.id),
   organizationId: uuid("organization_id").references(() => organizations.id),
   scfVersionId: uuid("scf_version_id").notNull().references(() => scfVersions.id),
   scfDomainId: uuid("scf_domain_id").notNull().references(() => scfDomains.id),
@@ -318,12 +298,11 @@ export const scfControls = pgTable("scf_controls", {
   ...timestamps()
 }, (table) => [
   index("scf_controls_version_domain_idx").on(table.scfVersionId, table.scfDomainId),
-  uniqueIndex("scf_controls_version_code_uidx").on(table.tenantId, table.scfVersionId, table.controlCode)
+  uniqueIndex("scf_controls_version_code_uidx").on(table.scfVersionId, table.controlCode)
 ]);
 
 export const scfFrameworks = pgTable("scf_frameworks", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").references(() => tenants.id),
   organizationId: uuid("organization_id").references(() => organizations.id),
   scfVersionId: uuid("scf_version_id").notNull().references(() => scfVersions.id),
   frameworkId: text("framework_id").notNull(),
@@ -338,12 +317,11 @@ export const scfFrameworks = pgTable("scf_frameworks", {
   ...timestamps()
 }, (table) => [
   index("scf_frameworks_version_idx").on(table.scfVersionId),
-  uniqueIndex("scf_frameworks_version_framework_uidx").on(table.tenantId, table.scfVersionId, table.frameworkId)
+  uniqueIndex("scf_frameworks_version_framework_uidx").on(table.scfVersionId, table.frameworkId)
 ]);
 
 export const scfFrameworkRequirements = pgTable("scf_framework_requirements", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").references(() => tenants.id),
   organizationId: uuid("organization_id").references(() => organizations.id),
   scfVersionId: uuid("scf_version_id").notNull().references(() => scfVersions.id),
   scfFrameworkId: uuid("scf_framework_id").notNull().references(() => scfFrameworks.id),
@@ -358,12 +336,11 @@ export const scfFrameworkRequirements = pgTable("scf_framework_requirements", {
   ...timestamps()
 }, (table) => [
   index("scf_requirements_framework_idx").on(table.scfFrameworkId),
-  uniqueIndex("scf_requirements_framework_code_uidx").on(table.tenantId, table.scfFrameworkId, table.requirementCode)
+  uniqueIndex("scf_requirements_framework_code_uidx").on(table.scfFrameworkId, table.requirementCode)
 ]);
 
 export const scfMappings = pgTable("scf_mappings", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").references(() => tenants.id),
   organizationId: uuid("organization_id").references(() => organizations.id),
   scfVersionId: uuid("scf_version_id").notNull().references(() => scfVersions.id),
   scfFrameworkRequirementId: uuid("scf_framework_requirement_id").notNull().references(() => scfFrameworkRequirements.id),
@@ -380,12 +357,11 @@ export const scfMappings = pgTable("scf_mappings", {
   index("scf_mappings_version_idx").on(table.scfVersionId),
   index("scf_mappings_requirement_idx").on(table.scfFrameworkRequirementId),
   index("scf_mappings_control_idx").on(table.scfControlId),
-  uniqueIndex("scf_mappings_requirement_control_uidx").on(table.tenantId, table.scfFrameworkRequirementId, table.scfControlId)
+  uniqueIndex("scf_mappings_requirement_control_uidx").on(table.scfFrameworkRequirementId, table.scfControlId)
 ]);
 
 export const scfStrmRelationships = pgTable("scf_strm_relationships", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").references(() => tenants.id),
   organizationId: uuid("organization_id").references(() => organizations.id),
   scfMappingId: uuid("scf_mapping_id").notNull().references(() => scfMappings.id),
   relationshipType: text("relationship_type").notNull(),
@@ -399,7 +375,6 @@ export const scfStrmRelationships = pgTable("scf_strm_relationships", {
 
 export const scfControlMetadata = pgTable("scf_control_metadata", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").references(() => tenants.id),
   organizationId: uuid("organization_id").references(() => organizations.id),
   scfVersionId: uuid("scf_version_id").notNull().references(() => scfVersions.id),
   scfControlId: uuid("scf_control_id").notNull().references(() => scfControls.id),
@@ -408,7 +383,7 @@ export const scfControlMetadata = pgTable("scf_control_metadata", {
   maturityGuidance: jsonb("maturity_guidance").$type<Record<string, unknown>>().default({}).notNull(),
   ...timestamps()
 }, (table) => [
-  uniqueIndex("scf_control_metadata_control_uidx").on(table.tenantId, table.scfControlId)
+  uniqueIndex("scf_control_metadata_control_uidx").on(table.scfControlId)
 ]);
 
 /**
@@ -421,7 +396,6 @@ export const scfControlMetadata = pgTable("scf_control_metadata", {
  */
 export const controlAssessmentStatus = pgTable("control_assessment_status", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
   organizationId: uuid("organization_id").notNull().references(() => organizations.id),
   assessmentId: uuid("assessment_id").notNull().references(() => assessments.id),
   scfVersionId: uuid("scf_version_id").notNull().references(() => scfVersions.id),
@@ -438,13 +412,12 @@ export const controlAssessmentStatus = pgTable("control_assessment_status", {
   ...timestamps()
 }, (table) => [
   uniqueIndex("control_assessment_status_assessment_control_uidx").on(table.assessmentId, table.scfControlId),
-  index("control_assessment_status_tenant_org_idx").on(table.tenantId, table.organizationId),
+  index("control_assessment_status_org_idx").on(table.organizationId),
   index("control_assessment_status_impl_status_idx").on(table.assessmentId, table.implementationStatus)
 ]);
 
 export const assessments = pgTable("assessments", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
   organizationId: uuid("organization_id").notNull().references(() => organizations.id),
   name: text("name").notNull(),
   state: assessmentStateEnum("state").default("draft").notNull(),
@@ -453,14 +426,13 @@ export const assessments = pgTable("assessments", {
   traceId: text("trace_id").notNull(),
   ...timestamps()
 }, (table) => [
-  index("assessments_tenant_org_idx").on(table.tenantId, table.organizationId),
+  index("assessments_tenant_org_idx").on(table.organizationId),
   index("assessments_state_idx").on(table.state),
   index("assessments_scf_version_idx").on(table.scfVersionId)
 ]);
 
 export const assessmentFrameworks = pgTable("assessment_frameworks", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
   organizationId: uuid("organization_id").notNull().references(() => organizations.id),
   assessmentId: uuid("assessment_id").notNull().references(() => assessments.id),
   scfFrameworkId: uuid("scf_framework_id").notNull().references(() => scfFrameworks.id),
@@ -469,13 +441,12 @@ export const assessmentFrameworks = pgTable("assessment_frameworks", {
   selectedAt: timestamp("selected_at", { withTimezone: true }),
   ...timestamps()
 }, (table) => [
-  index("assessment_frameworks_assessment_idx").on(table.tenantId, table.organizationId, table.assessmentId),
+  index("assessment_frameworks_assessment_idx").on(table.organizationId, table.assessmentId),
   uniqueIndex("assessment_frameworks_assessment_framework_uidx").on(table.assessmentId, table.scfFrameworkId)
 ]);
 
 export const assessmentEvents = pgTable("assessment_events", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
   organizationId: uuid("organization_id").notNull().references(() => organizations.id),
   assessmentId: uuid("assessment_id").notNull().references(() => assessments.id),
   previousState: assessmentStateEnum("previous_state"),
@@ -486,13 +457,12 @@ export const assessmentEvents = pgTable("assessment_events", {
   metadata: auditMetadata(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
 }, (table) => [
-  index("assessment_events_assessment_idx").on(table.tenantId, table.organizationId, table.assessmentId),
+  index("assessment_events_assessment_idx").on(table.organizationId, table.assessmentId),
   index("assessment_events_trace_idx").on(table.traceId)
 ]);
 
 export const approvalEvents = pgTable("approval_events", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
   organizationId: uuid("organization_id").notNull().references(() => organizations.id),
   assessmentId: uuid("assessment_id").notNull().references(() => assessments.id),
   gate: approvalGateEnum("gate").notNull(),
@@ -504,13 +474,12 @@ export const approvalEvents = pgTable("approval_events", {
   traceId: text("trace_id").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
 }, (table) => [
-  index("approval_events_assessment_gate_idx").on(table.tenantId, table.organizationId, table.assessmentId, table.gate),
+  index("approval_events_assessment_gate_idx").on(table.organizationId, table.assessmentId, table.gate),
   index("approval_events_artifact_idx").on(table.artifactType, table.artifactId)
 ]);
 
 export const documents = pgTable("documents", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
   organizationId: uuid("organization_id").notNull().references(() => organizations.id),
   assessmentId: uuid("assessment_id").references(() => assessments.id),
   originalFilename: text("original_filename").notNull(),
@@ -531,15 +500,14 @@ export const documents = pgTable("documents", {
   scannedAt: timestamp("scanned_at", { withTimezone: true }),
   ...timestamps()
 }, (table) => [
-  index("documents_tenant_org_assessment_idx").on(table.tenantId, table.organizationId, table.assessmentId),
+  index("documents_tenant_org_assessment_idx").on(table.organizationId, table.assessmentId),
   index("documents_scan_status_idx").on(table.scanStatus),
   uniqueIndex("documents_storage_key_uidx").on(table.storageProvider, table.storageKey),
-  uniqueIndex("documents_assessment_hash_uidx").on(table.tenantId, table.organizationId, table.assessmentId, table.contentHash)
+  uniqueIndex("documents_assessment_hash_uidx").on(table.organizationId, table.assessmentId, table.contentHash)
 ]);
 
 export const documentVersions = pgTable("document_versions", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
   organizationId: uuid("organization_id").notNull().references(() => organizations.id),
   assessmentId: uuid("assessment_id").references(() => assessments.id),
   documentId: uuid("document_id").notNull().references(() => documents.id),
@@ -559,7 +527,6 @@ export const documentVersions = pgTable("document_versions", {
 
 export const documentChunks = pgTable("document_chunks", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
   organizationId: uuid("organization_id").notNull().references(() => organizations.id),
   assessmentId: uuid("assessment_id").references(() => assessments.id),
   documentId: uuid("document_id").notNull().references(() => documents.id),
@@ -577,7 +544,6 @@ export const documentChunks = pgTable("document_chunks", {
 
 export const documentExtractionJobs = pgTable("document_extraction_jobs", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
   organizationId: uuid("organization_id").notNull().references(() => organizations.id),
   assessmentId: uuid("assessment_id").references(() => assessments.id),
   documentId: uuid("document_id").notNull().references(() => documents.id),
@@ -595,7 +561,6 @@ export const documentExtractionJobs = pgTable("document_extraction_jobs", {
 
 export const kbEntries = pgTable("kb_entries", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
   organizationId: uuid("organization_id").notNull().references(() => organizations.id),
   assessmentId: uuid("assessment_id").notNull().references(() => assessments.id),
   documentChunkId: uuid("document_chunk_id").references(() => documentChunks.id),
@@ -604,13 +569,12 @@ export const kbEntries = pgTable("kb_entries", {
   sourceSummary: text("source_summary"),
   ...timestamps()
 }, (table) => [
-  index("kb_entries_assessment_idx").on(table.tenantId, table.organizationId, table.assessmentId),
+  index("kb_entries_assessment_idx").on(table.organizationId, table.assessmentId),
   index("kb_entries_chunk_idx").on(table.documentChunkId)
 ]);
 
 export const vectorReferences = pgTable("vector_references", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
   organizationId: uuid("organization_id").notNull().references(() => organizations.id),
   assessmentId: uuid("assessment_id").notNull().references(() => assessments.id),
   kbEntryId: uuid("kb_entry_id").notNull().references(() => kbEntries.id),
@@ -620,13 +584,12 @@ export const vectorReferences = pgTable("vector_references", {
   metadata: auditMetadata(),
   ...timestamps()
 }, (table) => [
-  index("vector_refs_assessment_idx").on(table.tenantId, table.organizationId, table.assessmentId),
+  index("vector_refs_assessment_idx").on(table.organizationId, table.assessmentId),
   uniqueIndex("vector_refs_index_vector_uidx").on(table.vectorIndexName, table.vectorId)
 ]);
 
 export const kbEmbeddingJobs = pgTable("kb_embedding_jobs", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
   organizationId: uuid("organization_id").notNull().references(() => organizations.id),
   assessmentId: uuid("assessment_id").notNull().references(() => assessments.id),
   documentId: uuid("document_id").notNull().references(() => documents.id),
@@ -643,7 +606,7 @@ export const kbEmbeddingJobs = pgTable("kb_embedding_jobs", {
   metadata: auditMetadata(),
   ...timestamps()
 }, (table) => [
-  index("kb_embedding_jobs_assessment_idx").on(table.tenantId, table.organizationId, table.assessmentId),
+  index("kb_embedding_jobs_assessment_idx").on(table.organizationId, table.assessmentId),
   index("kb_embedding_jobs_document_idx").on(table.documentId),
   index("kb_embedding_jobs_status_idx").on(table.status),
   index("kb_embedding_jobs_trace_idx").on(table.traceId)
@@ -651,7 +614,6 @@ export const kbEmbeddingJobs = pgTable("kb_embedding_jobs", {
 
 export const kbSearchLogs = pgTable("kb_search_logs", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
   organizationId: uuid("organization_id").notNull().references(() => organizations.id),
   assessmentId: uuid("assessment_id").notNull().references(() => assessments.id),
   actorId: uuid("actor_id").references(() => users.id),
@@ -662,14 +624,13 @@ export const kbSearchLogs = pgTable("kb_search_logs", {
   traceId: text("trace_id").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
 }, (table) => [
-  index("kb_search_logs_assessment_idx").on(table.tenantId, table.organizationId, table.assessmentId),
+  index("kb_search_logs_assessment_idx").on(table.organizationId, table.assessmentId),
   index("kb_search_logs_trace_idx").on(table.traceId),
   index("kb_search_logs_query_hash_idx").on(table.queryHash)
 ]);
 
 export const assessmentScope = pgTable("assessment_scope", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
   organizationId: uuid("organization_id").notNull().references(() => organizations.id),
   assessmentId: uuid("assessment_id").notNull().references(() => assessments.id),
   status: artifactStatusEnum("status").default("draft").notNull(),
@@ -692,12 +653,11 @@ export const assessmentScope = pgTable("assessment_scope", {
   approvalEventId: uuid("approval_event_id").references(() => approvalEvents.id),
   ...timestamps()
 }, (table) => [
-  index("assessment_scope_assessment_idx").on(table.tenantId, table.organizationId, table.assessmentId)
+  index("assessment_scope_assessment_idx").on(table.organizationId, table.assessmentId)
 ]);
 
 export const soaVersions = pgTable("soa_versions", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
   organizationId: uuid("organization_id").notNull().references(() => organizations.id),
   assessmentId: uuid("assessment_id").notNull().references(() => assessments.id),
   versionNumber: integer("version_number").notNull(),
@@ -716,13 +676,12 @@ export const soaVersions = pgTable("soa_versions", {
   metadata: auditMetadata(),
   ...timestamps()
 }, (table) => [
-  index("soa_versions_assessment_idx").on(table.tenantId, table.organizationId, table.assessmentId),
+  index("soa_versions_assessment_idx").on(table.organizationId, table.assessmentId),
   uniqueIndex("soa_versions_assessment_version_uidx").on(table.assessmentId, table.versionNumber)
 ]);
 
 export const soaItems = pgTable("soa_items", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
   organizationId: uuid("organization_id").notNull().references(() => organizations.id),
   assessmentId: uuid("assessment_id").notNull().references(() => assessments.id),
   soaVersionId: uuid("soa_version_id").notNull().references(() => soaVersions.id),
@@ -756,7 +715,6 @@ export const soaItems = pgTable("soa_items", {
 
 export const agentRuns = pgTable("agent_runs", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
   organizationId: uuid("organization_id").notNull().references(() => organizations.id),
   assessmentId: uuid("assessment_id").references(() => assessments.id),
   agentName: text("agent_name").notNull(),
@@ -773,13 +731,12 @@ export const agentRuns = pgTable("agent_runs", {
   traceId: text("trace_id").notNull(),
   ...timestamps()
 }, (table) => [
-  index("agent_runs_assessment_idx").on(table.tenantId, table.organizationId, table.assessmentId),
+  index("agent_runs_assessment_idx").on(table.organizationId, table.assessmentId),
   index("agent_runs_trace_idx").on(table.traceId)
 ]);
 
 export const agentDecisions = pgTable("agent_decisions", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
   organizationId: uuid("organization_id").notNull().references(() => organizations.id),
   assessmentId: uuid("assessment_id").references(() => assessments.id),
   agentRunId: uuid("agent_run_id").notNull().references(() => agentRuns.id),
@@ -798,7 +755,6 @@ export const agentDecisions = pgTable("agent_decisions", {
 
 export const agentToolCalls = pgTable("agent_tool_calls", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
   organizationId: uuid("organization_id").notNull().references(() => organizations.id),
   assessmentId: uuid("assessment_id").notNull().references(() => assessments.id),
   agentRunId: uuid("agent_run_id").notNull().references(() => agentRuns.id),
@@ -812,13 +768,12 @@ export const agentToolCalls = pgTable("agent_tool_calls", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
 }, (table) => [
   index("agent_tool_calls_run_idx").on(table.agentRunId),
-  index("agent_tool_calls_assessment_idx").on(table.tenantId, table.organizationId, table.assessmentId),
+  index("agent_tool_calls_assessment_idx").on(table.organizationId, table.assessmentId),
   index("agent_tool_calls_trace_idx").on(table.traceId)
 ]);
 
 export const evidenceFindings = pgTable("evidence_findings", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
   organizationId: uuid("organization_id").notNull().references(() => organizations.id),
   assessmentId: uuid("assessment_id").notNull().references(() => assessments.id),
   soaVersionId: uuid("soa_version_id").notNull().references(() => soaVersions.id),
@@ -836,7 +791,7 @@ export const evidenceFindings = pgTable("evidence_findings", {
   traceId: text("trace_id").notNull(),
   ...timestamps()
 }, (table) => [
-  index("evidence_findings_assessment_idx").on(table.tenantId, table.organizationId, table.assessmentId),
+  index("evidence_findings_assessment_idx").on(table.organizationId, table.assessmentId),
   index("evidence_findings_soa_item_idx").on(table.soaItemId),
   index("evidence_findings_control_idx").on(table.scfControlId),
   index("evidence_findings_agent_idx").on(table.generatedByAgentRunId)
@@ -844,7 +799,6 @@ export const evidenceFindings = pgTable("evidence_findings", {
 
 export const evidenceSources = pgTable("evidence_sources", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
   organizationId: uuid("organization_id").notNull().references(() => organizations.id),
   assessmentId: uuid("assessment_id").notNull().references(() => assessments.id),
   evidenceFindingId: uuid("evidence_finding_id").notNull().references(() => evidenceFindings.id),
@@ -867,7 +821,6 @@ export const evidenceSources = pgTable("evidence_sources", {
 
 export const gapAnalysisVersions = pgTable("gap_analysis_versions", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
   organizationId: uuid("organization_id").notNull().references(() => organizations.id),
   assessmentId: uuid("assessment_id").notNull().references(() => assessments.id),
   versionNumber: integer("version_number").notNull(),
@@ -886,13 +839,12 @@ export const gapAnalysisVersions = pgTable("gap_analysis_versions", {
   metadata: auditMetadata(),
   ...timestamps()
 }, (table) => [
-  index("gap_versions_assessment_idx").on(table.tenantId, table.organizationId, table.assessmentId),
+  index("gap_versions_assessment_idx").on(table.organizationId, table.assessmentId),
   uniqueIndex("gap_versions_assessment_version_uidx").on(table.assessmentId, table.versionNumber)
 ]);
 
 export const gapFindings = pgTable("gap_findings", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
   organizationId: uuid("organization_id").notNull().references(() => organizations.id),
   assessmentId: uuid("assessment_id").notNull().references(() => assessments.id),
   gapAnalysisVersionId: uuid("gap_analysis_version_id").notNull().references(() => gapAnalysisVersions.id),
@@ -916,7 +868,7 @@ export const gapFindings = pgTable("gap_findings", {
   requiresUserValidation: boolean("requires_user_validation").default(true).notNull(),
   ...timestamps()
 }, (table) => [
-  index("gap_findings_assessment_idx").on(table.tenantId, table.organizationId, table.assessmentId),
+  index("gap_findings_assessment_idx").on(table.organizationId, table.assessmentId),
   index("gap_findings_control_idx").on(table.scfControlId),
   index("gap_findings_requirement_idx").on(table.frameworkRequirementId),
   uniqueIndex("gap_findings_version_code_uidx").on(table.gapAnalysisVersionId, table.gapCode)
@@ -924,7 +876,6 @@ export const gapFindings = pgTable("gap_findings", {
 
 export const maturityAssessmentVersions = pgTable("maturity_assessment_versions", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
   organizationId: uuid("organization_id").notNull().references(() => organizations.id),
   assessmentId: uuid("assessment_id").notNull().references(() => assessments.id),
   versionNumber: integer("version_number").notNull(),
@@ -933,13 +884,12 @@ export const maturityAssessmentVersions = pgTable("maturity_assessment_versions"
   createdByAgentRunId: uuid("created_by_agent_run_id").references(() => agentRuns.id),
   ...timestamps()
 }, (table) => [
-  index("maturity_versions_assessment_idx").on(table.tenantId, table.organizationId, table.assessmentId),
+  index("maturity_versions_assessment_idx").on(table.organizationId, table.assessmentId),
   uniqueIndex("maturity_versions_assessment_version_uidx").on(table.assessmentId, table.versionNumber)
 ]);
 
 export const maturityScores = pgTable("maturity_scores", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
   organizationId: uuid("organization_id").notNull().references(() => organizations.id),
   assessmentId: uuid("assessment_id").notNull().references(() => assessments.id),
   maturityAssessmentVersionId: uuid("maturity_assessment_version_id").notNull().references(() => maturityAssessmentVersions.id),
@@ -957,7 +907,6 @@ export const maturityScores = pgTable("maturity_scores", {
 
 export const poamVersions = pgTable("poam_versions", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
   organizationId: uuid("organization_id").notNull().references(() => organizations.id),
   assessmentId: uuid("assessment_id").notNull().references(() => assessments.id),
   versionNumber: integer("version_number").notNull(),
@@ -977,14 +926,13 @@ export const poamVersions = pgTable("poam_versions", {
   metadata: auditMetadata(),
   ...timestamps()
 }, (table) => [
-  index("poam_versions_assessment_idx").on(table.tenantId, table.organizationId, table.assessmentId),
+  index("poam_versions_assessment_idx").on(table.organizationId, table.assessmentId),
   index("poam_versions_gap_idx").on(table.sourceGapAnalysisVersionId),
   uniqueIndex("poam_versions_assessment_version_uidx").on(table.assessmentId, table.versionNumber)
 ]);
 
 export const poamItems = pgTable("poam_items", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
   organizationId: uuid("organization_id").notNull().references(() => organizations.id),
   assessmentId: uuid("assessment_id").notNull().references(() => assessments.id),
   poamVersionId: uuid("poam_version_id").notNull().references(() => poamVersions.id),
@@ -1024,7 +972,6 @@ export const poamItems = pgTable("poam_items", {
 
 export const poamMilestones = pgTable("poam_milestones", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
   organizationId: uuid("organization_id").notNull().references(() => organizations.id),
   assessmentId: uuid("assessment_id").notNull().references(() => assessments.id),
   poamItemId: uuid("poam_item_id").notNull().references(() => poamItems.id),
@@ -1043,7 +990,6 @@ export const poamMilestones = pgTable("poam_milestones", {
 
 export const poamDependencies = pgTable("poam_dependencies", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
   organizationId: uuid("organization_id").notNull().references(() => organizations.id),
   assessmentId: uuid("assessment_id").notNull().references(() => assessments.id),
   poamItemId: uuid("poam_item_id").notNull().references(() => poamItems.id),
@@ -1058,7 +1004,6 @@ export const poamDependencies = pgTable("poam_dependencies", {
 
 export const reportVersions = pgTable("report_versions", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
   organizationId: uuid("organization_id").notNull().references(() => organizations.id),
   assessmentId: uuid("assessment_id").notNull().references(() => assessments.id),
   versionNumber: integer("version_number").notNull(),
@@ -1083,14 +1028,13 @@ export const reportVersions = pgTable("report_versions", {
   metadata: jsonb("metadata").$type<Record<string, unknown>>().default({}).notNull(),
   ...timestamps()
 }, (table) => [
-  index("report_versions_assessment_idx").on(table.tenantId, table.organizationId, table.assessmentId),
+  index("report_versions_assessment_idx").on(table.organizationId, table.assessmentId),
   index("report_versions_sources_idx").on(table.sourceSoaVersionId, table.sourceGapAnalysisVersionId, table.sourcePoamVersionId),
   uniqueIndex("report_versions_assessment_type_version_uidx").on(table.assessmentId, table.reportType, table.versionNumber)
 ]);
 
 export const reportArtifacts = pgTable("report_artifacts", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
   organizationId: uuid("organization_id").notNull().references(() => organizations.id),
   assessmentId: uuid("assessment_id").notNull().references(() => assessments.id),
   reportVersionId: uuid("report_version_id").notNull().references(() => reportVersions.id),
@@ -1112,7 +1056,6 @@ export const reportArtifacts = pgTable("report_artifacts", {
 
 export const exportJobs = pgTable("export_jobs", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
   organizationId: uuid("organization_id").notNull().references(() => organizations.id),
   assessmentId: uuid("assessment_id").notNull().references(() => assessments.id),
   reportVersionId: uuid("report_version_id").references(() => reportVersions.id),
@@ -1128,14 +1071,13 @@ export const exportJobs = pgTable("export_jobs", {
   traceId: text("trace_id").notNull(),
   metadata: jsonb("metadata").$type<Record<string, unknown>>().default({}).notNull()
 }, (table) => [
-  index("export_jobs_assessment_idx").on(table.tenantId, table.organizationId, table.assessmentId),
+  index("export_jobs_assessment_idx").on(table.organizationId, table.assessmentId),
   index("export_jobs_report_idx").on(table.reportVersionId),
   index("export_jobs_status_idx").on(table.status)
 ]);
 
 export const traceabilityLinks = pgTable("traceability_links", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
   organizationId: uuid("organization_id").notNull().references(() => organizations.id),
   assessmentId: uuid("assessment_id").references(() => assessments.id),
   sourceType: text("source_type").notNull(),
@@ -1147,7 +1089,7 @@ export const traceabilityLinks = pgTable("traceability_links", {
   metadata: auditMetadata(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
 }, (table) => [
-  index("traceability_links_assessment_idx").on(table.tenantId, table.organizationId, table.assessmentId),
+  index("traceability_links_assessment_idx").on(table.organizationId, table.assessmentId),
   index("traceability_links_source_idx").on(table.sourceType, table.sourceId),
   index("traceability_links_target_idx").on(table.targetType, table.targetId),
   index("traceability_links_trace_idx").on(table.traceId)
@@ -1166,7 +1108,6 @@ export const workflowRunStatusEnum = pgEnum("workflow_run_status", [
 
 export const workflowRuns = pgTable("workflow_runs", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
   organizationId: uuid("organization_id").notNull().references(() => organizations.id),
   assessmentId: uuid("assessment_id").notNull().references(() => assessments.id),
   status: workflowRunStatusEnum("status").default("pending").notNull(),
@@ -1176,14 +1117,13 @@ export const workflowRuns = pgTable("workflow_runs", {
   stepIdempotencyKeys: jsonb("step_idempotency_keys").$type<string[]>().default([]).notNull(),
   ...timestamps()
 }, (table) => [
-  index("workflow_runs_assessment_idx").on(table.tenantId, table.organizationId, table.assessmentId),
+  index("workflow_runs_assessment_idx").on(table.organizationId, table.assessmentId),
   index("workflow_runs_status_idx").on(table.status),
   uniqueIndex("workflow_runs_idempotency_uidx").on(table.idempotencyKey)
 ]);
 
 export const workflowAuditEvents = pgTable("workflow_audit_events", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
   organizationId: uuid("organization_id").notNull().references(() => organizations.id),
   assessmentId: uuid("assessment_id").notNull().references(() => assessments.id),
   workflowRunId: uuid("workflow_run_id").notNull().references(() => workflowRuns.id),
@@ -1196,14 +1136,13 @@ export const workflowAuditEvents = pgTable("workflow_audit_events", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
 }, (table) => [
   index("workflow_audit_events_run_idx").on(table.workflowRunId),
-  index("workflow_audit_events_assessment_idx").on(table.tenantId, table.organizationId, table.assessmentId),
+  index("workflow_audit_events_assessment_idx").on(table.organizationId, table.assessmentId),
   index("workflow_audit_events_trace_idx").on(table.traceId)
 ]);
 
 export const auditLogs = pgTable("audit_logs", {
   id: uuid("id").defaultRandom().primaryKey(),
   actorId: uuid("actor_id").references(() => users.id),
-  tenantId: uuid("tenant_id").references(() => tenants.id),
   organizationId: uuid("organization_id").references(() => organizations.id),
   action: text("action").notNull(),
   resourceType: text("resource_type").notNull(),
@@ -1214,14 +1153,13 @@ export const auditLogs = pgTable("audit_logs", {
   metadata: auditMetadata(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
 }, (table) => [
-  index("audit_logs_tenant_org_idx").on(table.tenantId, table.organizationId),
+  index("audit_logs_tenant_org_idx").on(table.organizationId),
   index("audit_logs_resource_idx").on(table.resourceType, table.resourceId),
   index("audit_logs_created_idx").on(table.createdAt)
 ]);
 
 export const securityEvents = pgTable("security_events", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").references(() => tenants.id),
   organizationId: uuid("organization_id").references(() => organizations.id),
   assessmentId: uuid("assessment_id").references(() => assessments.id),
   actorId: uuid("actor_id").references(() => users.id),
@@ -1238,7 +1176,7 @@ export const securityEvents = pgTable("security_events", {
   metadataSafe: jsonb("metadata_safe").$type<Record<string, unknown>>().default({}).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
 }, (table) => [
-  index("security_events_tenant_idx").on(table.tenantId),
+  index("security_events_org_idx").on(table.organizationId),
   index("security_events_type_idx").on(table.eventType),
   index("security_events_severity_idx").on(table.severity),
   index("security_events_trace_idx").on(table.traceId),
@@ -1247,7 +1185,6 @@ export const securityEvents = pgTable("security_events", {
 
 export const operationalMetrics = pgTable("operational_metrics", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").references(() => tenants.id),
   organizationId: uuid("organization_id").references(() => organizations.id),
   assessmentId: uuid("assessment_id").references(() => assessments.id),
   metricName: text("metric_name").notNull(),
@@ -1259,7 +1196,7 @@ export const operationalMetrics = pgTable("operational_metrics", {
   traceId: text("trace_id").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
 }, (table) => [
-  index("operational_metrics_tenant_idx").on(table.tenantId),
+  index("operational_metrics_org_idx").on(table.organizationId),
   index("operational_metrics_name_idx").on(table.metricName),
   index("operational_metrics_trace_idx").on(table.traceId),
   index("operational_metrics_created_idx").on(table.createdAt)
@@ -1267,7 +1204,6 @@ export const operationalMetrics = pgTable("operational_metrics", {
 
 export const usageRecords = pgTable("usage_records", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").references(() => tenants.id),
   organizationId: uuid("organization_id").references(() => organizations.id),
   assessmentId: uuid("assessment_id").references(() => assessments.id),
   serviceName: text("service_name").notNull(),
@@ -1284,7 +1220,7 @@ export const usageRecords = pgTable("usage_records", {
   metadataSafe: jsonb("metadata_safe").$type<Record<string, unknown>>().default({}).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
 }, (table) => [
-  index("usage_records_tenant_idx").on(table.tenantId),
+  index("usage_records_org_idx").on(table.organizationId),
   index("usage_records_service_idx").on(table.serviceName),
   index("usage_records_trace_idx").on(table.traceId),
   index("usage_records_created_idx").on(table.createdAt)
@@ -1292,7 +1228,6 @@ export const usageRecords = pgTable("usage_records", {
 
 export const agentUsageRecords = pgTable("agent_usage_records", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
   organizationId: uuid("organization_id").notNull().references(() => organizations.id),
   assessmentId: uuid("assessment_id").notNull().references(() => assessments.id),
   agentRunId: uuid("agent_run_id").notNull().references(() => agentRuns.id),
@@ -1307,33 +1242,26 @@ export const agentUsageRecords = pgTable("agent_usage_records", {
   traceId: text("trace_id").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
 }, (table) => [
-  index("agent_usage_records_tenant_idx").on(table.tenantId),
+  index("agent_usage_records_org_idx").on(table.organizationId),
   index("agent_usage_records_assessment_idx").on(table.assessmentId),
   index("agent_usage_records_agent_run_idx").on(table.agentRunId),
   index("agent_usage_records_trace_idx").on(table.traceId),
   index("agent_usage_records_created_idx").on(table.createdAt)
 ]);
 
-export const tenantRelations = relations(tenants, ({ many }) => ({
-  organizations: many(organizations),
-  assessments: many(assessments)
-}));
 
 export const organizationRelations = relations(organizations, ({ one, many }) => ({
-  tenant: one(tenants, { fields: [organizations.tenantId], references: [tenants.id] }),
   memberships: many(memberships),
   assessments: many(assessments)
 }));
 
 export const assessmentRelations = relations(assessments, ({ one, many }) => ({
-  tenant: one(tenants, { fields: [assessments.tenantId], references: [tenants.id] }),
   organization: one(organizations, { fields: [assessments.organizationId], references: [organizations.id] }),
   events: many(assessmentEvents),
   documents: many(documents)
 }));
 
 export const documentRelations = relations(documents, ({ one, many }) => ({
-  tenant: one(tenants, { fields: [documents.tenantId], references: [tenants.id] }),
   organization: one(organizations, { fields: [documents.organizationId], references: [organizations.id] }),
   assessment: one(assessments, { fields: [documents.assessmentId], references: [assessments.id] }),
   versions: many(documentVersions),
@@ -1385,7 +1313,6 @@ export const webhookDeliveryStatusEnum = pgEnum("webhook_delivery_status", ["pen
 
 export const webhookEndpoints = pgTable("webhook_endpoints", {
   id: uuid("id").defaultRandom().primaryKey(),
-  tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
   organizationId: uuid("organization_id").notNull().references(() => organizations.id),
   url: text("url").notNull(),
   events: jsonb("events").$type<string[]>().default([]).notNull(),
@@ -1395,8 +1322,8 @@ export const webhookEndpoints = pgTable("webhook_endpoints", {
   signingSecretMasked: text("signing_secret_masked").notNull(),
   ...timestamps()
 }, (table) => [
-  index("webhook_endpoints_tenant_org_idx").on(table.tenantId, table.organizationId),
-  index("webhook_endpoints_tenant_idx").on(table.tenantId)
+  index("webhook_endpoints_tenant_org_idx").on(table.organizationId),
+  index("webhook_endpoints_org_idx").on(table.organizationId)
 ]);
 
 export const webhookDeliveries = pgTable("webhook_deliveries", {
