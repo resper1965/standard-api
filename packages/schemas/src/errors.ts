@@ -71,6 +71,8 @@ export const ApiErrorCodeSchema = z.enum([
   "SINGLE_ORG_LIMIT",
   /** Route requires an active organization context but none was resolved. */
   "ORGANIZATION_REQUIRED",
+  /** User account exists but has not been approved by a platform admin yet. */
+  "ACCOUNT_PENDING_APPROVAL",
 ]);
 
 export const ApiErrorSchema = z.object({

@@ -467,10 +467,14 @@ export function ApiKeysPage() {
       { name: newName, ...(expiresAt ? { expiresAt } : {}), scopes },
       {
         onSuccess: (res) => {
-          const raw = res as unknown as { data: ApiKeyRecord & { key?: string; raw_key?: string } }
-          setNewKey(raw?.data?.key ?? raw?.data?.raw_key ?? null)
+          // The backend returns data.key with the raw token (only on create)
+          const rawKey = (res as any)?.data?.key ?? null
+          setNewKey(rawKey)
           setNewName(""); setExpiryOption("never"); setSelectedScopes([]); setFullAccess(true)
           setIsCreating(false)
+        },
+        onError: (err) => {
+          console.error("[ApiKeysPage] Create API key failed:", err)
         },
       }
     )
