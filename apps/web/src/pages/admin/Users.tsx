@@ -1,7 +1,9 @@
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useState, useMemo } from "react";
 import { api } from "../../lib/api";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../components/ui/card";
+import { useAdminUsers, qk } from "../../lib/queries";
+import { useQueryClient } from "@tanstack/react-query";
+import { Card, CardContent } from "../../components/ui/card";
 import {
   Table, TableHeader, TableRow, TableHead, TableBody, TableCell,
 } from "../../components/ui/table";
@@ -40,7 +42,6 @@ type User = {
 // Helpers
 // ---------------------------------------------------------------------------
 
-/** Relative time formatter – e.g. "3 days ago", "just now" */
 function relativeTime(dateStr: string): string {
   const now = Date.now();
   const then = new Date(dateStr).getTime();
@@ -52,7 +53,6 @@ function relativeTime(dateStr: string): string {
   const days = Math.floor(hours / 24);
   const months = Math.floor(days / 30);
   const years = Math.floor(days / 365);
-
   if (seconds < 60) return "just now";
   if (minutes < 60) return `${minutes}m ago`;
   if (hours < 24) return `${hours}h ago`;
@@ -61,7 +61,6 @@ function relativeTime(dateStr: string): string {
   return `${years}y ago`;
 }
 
-/** Extract initials from a name string */
 function getInitials(name: string | undefined | null): string {
   if (!name) return "?";
   const parts = name.trim().split(/\s+/);
@@ -69,7 +68,6 @@ function getInitials(name: string | undefined | null): string {
   return (parts[0]?.[0] ?? "?").toUpperCase();
 }
 
-/** Score password strength 0-4 */
 function passwordStrength(pw: string): { score: number; label: string; color: string } {
   let score = 0;
   if (pw.length >= 8) score++;
@@ -92,7 +90,6 @@ function passwordStrength(pw: string): { score: number; label: string; color: st
 // Sub-components
 // ---------------------------------------------------------------------------
 
-/** Avatar placeholder with initials */
 function UserAvatar({ name, banned }: { name?: string; banned?: boolean }) {
   return (
     <div
@@ -107,7 +104,6 @@ function UserAvatar({ name, banned }: { name?: string; banned?: boolean }) {
   );
 }
 
-/** Skeleton rows for loading state */
 function TableSkeleton({ rows = 6 }: { rows?: number }) {
   return (
     <Table>
@@ -149,7 +145,6 @@ function TableSkeleton({ rows = 6 }: { rows?: number }) {
   );
 }
 
-/** Password strength bar */
 function PasswordStrengthBar({ password }: { password: string }) {
   const { score, label, color } = passwordStrength(password);
   if (!password) return null;
@@ -174,16 +169,41 @@ function PasswordStrengthBar({ password }: { password: string }) {
 // Main Component
 // ---------------------------------------------------------------------------
 
+const PAGE_SIZE = 25;
+
 export function AdminUsers() {
   useDocumentTitle("Users");
-  // ---- Data state ----------------------------------------------------------
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [insufficientPermissions, setInsufficientPermissions] = useState(false);
+  const qc = useQueryClient();
 
-  // ---- Search --------------------------------------------------------------
+  // ---- Search + pagination --------------------------------------------------
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(0);
+
+  const { data, isLoading, isFetching, error, refetch } = useAdminUsers(page, search);
+
+  const users = (data?.data ?? []) as User[];
+  const hasMore = users.length > PAGE_SIZE;
+  const visibleUsers = users.slice(0, PAGE_SIZE);
+
+  const forbidden = (error as { status?: number } | null)?.status === 403
+    || (error instanceof Error && (
+      error.message.toLowerCase().includes("unauthorized") ||
+      error.message.toLowerCase().includes("forbidden") ||
+      error.message.toLowerCase().includes("permission")
+    ));
+
+  // Client-side search filter (server search is also active, this is belt-and-suspenders)
+  const filteredUsers = useMemo(() => {
+    if (!search.trim()) return visibleUsers;
+    const q = search.toLowerCase();
+    return visibleUsers.filter(
+      (u) =>
+        (u.name || "").toLowerCase().includes(q) ||
+        (u.email || "").toLowerCase().includes(q)
+    );
+  }, [visibleUsers, search]);
+
+  const invalidate = () => qc.invalidateQueries({ queryKey: qk.adminUsers(page, search) });
 
   // ---- Create modal --------------------------------------------------------
   const [showCreate, setShowCreate] = useState(false);
@@ -206,81 +226,13 @@ export function AdminUsers() {
     user: User;
   } | null>(null);
   const [confirmLoading, setConfirmLoading] = useState(false);
-
-  // ---- General action loading (row-level) -----------------------------------
-  const [actionLoading, setActionLoading] = useState<string | null>(null);
-
-  // ---- Pagination -----------------------------------------------------------
-  const [page, setPage] = useState(0);
-  const [hasMore, setHasMore] = useState(false);
-  const PAGE_SIZE = 50;
-
-  // ---- Ban reason -----------------------------------------------------------
   const [banReason, setBanReason] = useState("");
 
   const { toast } = useToast();
 
-  // ---- Data fetching -------------------------------------------------------
-
-  const fetchUsers = useCallback(async (currentPage = 0) => {
-    setLoading(true);
-    setError(null);
-    setInsufficientPermissions(false);
-    try {
-      const offset = currentPage * PAGE_SIZE;
-      const res = await api<{ data: User[]; total: number }>(
-        `/api/v1/admin/users?limit=${PAGE_SIZE + 1}&offset=${offset}`
-      );
-      if (res?.data) {
-        setHasMore(res.data.length > PAGE_SIZE);
-        setUsers(res.data.slice(0, PAGE_SIZE));
-      } else {
-        setError("No user data returned from admin API.");
-      }
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : "Failed to fetch users.";
-      if (
-        msg.toLowerCase().includes("unauthorized") ||
-        msg.toLowerCase().includes("forbidden") ||
-        msg.toLowerCase().includes("permission")
-      ) {
-        setInsufficientPermissions(true);
-      }
-      setError(msg);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const changePage = (newPage: number) => {
-    setPage(newPage);
-    fetchUsers(newPage);
-  };
-
-  useEffect(() => {
-    fetchUsers(0);
-  }, [fetchUsers]);
-
-  // ---- Filtered list -------------------------------------------------------
-
-  const filteredUsers = useMemo(() => {
-    if (!search.trim()) return users;
-    const q = search.toLowerCase();
-    return users.filter(
-      (u) =>
-        (u.name || "").toLowerCase().includes(q) ||
-        (u.email || "").toLowerCase().includes(q),
-    );
-  }, [users, search]);
-
-  // ---- Handlers: Create ----------------------------------------------------
-
   const resetCreateForm = () => {
-    setCreateName("");
-    setCreateEmail("");
-    setCreatePassword("");
-    setCreateRole("user");
-    setShowPassword(false);
+    setCreateName(""); setCreateEmail(""); setCreatePassword("");
+    setCreateRole("user"); setShowPassword(false);
   };
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -289,36 +241,23 @@ export function AdminUsers() {
     try {
       const res = await api<{ data: User }>("/api/v1/admin/users", {
         method: "POST",
-        body: JSON.stringify({
-          name: createName,
-          email: createEmail,
-          password: createPassword,
-          role: createRole,
-        }),
+        body: JSON.stringify({ name: createName, email: createEmail, password: createPassword, role: createRole }),
       });
       if (res?.data) {
         toast({ title: "User created", description: `${createEmail} was added successfully.` });
         setShowCreate(false);
         resetCreateForm();
-        await fetchUsers(page);
+        invalidate();
       }
     } catch (e) {
-      toast({
-        variant: "destructive",
-        title: "Creation failed",
-        description: e instanceof Error ? e.message : "Failed to create user.",
-      });
+      toast({ variant: "destructive", title: "Creation failed", description: e instanceof Error ? e.message : "Failed to create user." });
     } finally {
       setCreating(false);
     }
   };
 
-  // ---- Handlers: Edit ------------------------------------------------------
-
   const openEdit = (u: User) => {
-    setEditUser(u);
-    setEditName(u.name || "");
-    setEditRole(u.role || "user");
+    setEditUser(u); setEditName(u.name || ""); setEditRole(u.role || "user");
   };
 
   const handleSaveEdit = async () => {
@@ -334,19 +273,13 @@ export function AdminUsers() {
       });
       toast({ title: "User updated", description: "Changes saved successfully." });
       setEditUser(null);
-      await fetchUsers(page);
+      invalidate();
     } catch (e) {
-      toast({
-        variant: "destructive",
-        title: "Save failed",
-        description: e instanceof Error ? e.message : "Failed to save changes.",
-      });
+      toast({ variant: "destructive", title: "Save failed", description: e instanceof Error ? e.message : "Failed to save changes." });
     } finally {
       setSaving(false);
     }
   };
-
-  // ---- Handlers: Confirm actions (ban / delete) ----------------------------
 
   const executeConfirmAction = async () => {
     if (!confirmAction) return;
@@ -354,10 +287,7 @@ export function AdminUsers() {
     setConfirmLoading(true);
     try {
       if (type === "ban") {
-        await api(`/api/v1/admin/users/${user.id}/ban`, {
-          method: "POST",
-          body: JSON.stringify({ reason: banReason || "Banned by admin" }),
-        });
+        await api(`/api/v1/admin/users/${user.id}/ban`, { method: "POST", body: JSON.stringify({ reason: banReason || "Banned by admin" }) });
         toast({ title: "User banned", description: `${user.email} has been banned.` });
       } else if (type === "unban") {
         await api(`/api/v1/admin/users/${user.id}/unban`, { method: "POST" });
@@ -368,21 +298,17 @@ export function AdminUsers() {
       }
       setConfirmAction(null);
       setBanReason("");
-      await fetchUsers(page);
+      invalidate();
     } catch (e) {
-      toast({
-        variant: "destructive",
-        title: `${type.charAt(0).toUpperCase() + type.slice(1)} failed`,
-        description: e instanceof Error ? e.message : `Failed to ${type} user.`,
-      });
+      toast({ variant: "destructive", title: `${type.charAt(0).toUpperCase() + type.slice(1)} failed`, description: e instanceof Error ? e.message : `Failed to ${type} user.` });
     } finally {
       setConfirmLoading(false);
     }
   };
 
-  // ---- Insufficient permissions state --------------------------------------
+  const loading = isLoading || isFetching;
 
-  if (insufficientPermissions) {
+  if (forbidden) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <Card className="border-border/60 shadow-none max-w-md w-full">
@@ -396,7 +322,7 @@ export function AdminUsers() {
                 You don't have admin privileges to view user management. Contact your administrator for access.
               </p>
             </div>
-            <Button variant="outline" size="sm" onClick={fetchUsers} className="cursor-pointer">
+            <Button variant="outline" size="sm" onClick={() => refetch()} className="cursor-pointer">
               <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
               Retry
             </Button>
@@ -406,31 +332,21 @@ export function AdminUsers() {
     );
   }
 
-  // ---- Render --------------------------------------------------------------
-
   return (
     <div className="space-y-6">
       {/* Header bar */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        {/* Search */}
         <div className="relative w-full sm:max-w-xs">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
           <Input
             placeholder="Search users…"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => { setSearch(e.target.value); setPage(0); }}
             className="pl-9 h-9 bg-background"
           />
         </div>
-
         <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={fetchUsers}
-            disabled={loading}
-            className="cursor-pointer"
-          >
+          <Button variant="ghost" size="sm" onClick={() => refetch()} disabled={loading} className="cursor-pointer">
             <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${loading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
@@ -445,22 +361,20 @@ export function AdminUsers() {
       <Card className="border-border/60 shadow-none overflow-hidden">
         <CardContent className="p-0">
           {/* Error banner */}
-          {error && !insufficientPermissions && (
+          {error && !forbidden && (
             <div className="flex items-center gap-2 px-4 py-3 text-sm bg-destructive/5 border-b border-border/60">
               <AlertTriangle className="h-4 w-4 text-destructive shrink-0" />
-              <span className="text-destructive flex-1">{error}</span>
-              <Button variant="ghost" size="sm" onClick={fetchUsers} className="cursor-pointer shrink-0">
+              <span className="text-destructive flex-1">{(error as Error).message ?? "Failed to fetch users."}</span>
+              <Button variant="ghost" size="sm" onClick={() => refetch()} className="cursor-pointer shrink-0">
                 <RefreshCw className="h-3.5 w-3.5 mr-1" />
                 Retry
               </Button>
             </div>
           )}
 
-          {/* Loading state */}
           {loading ? (
             <TableSkeleton rows={6} />
           ) : filteredUsers.length === 0 && !error ? (
-            /* Empty state */
             <div className="flex flex-col items-center justify-center py-16 space-y-3">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
                 <Users className="h-6 w-6 text-muted-foreground" />
@@ -470,24 +384,16 @@ export function AdminUsers() {
                   {search ? "No users match your search" : "No users found"}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {search
-                    ? "Try adjusting your search query."
-                    : "Create your first user to get started."}
+                  {search ? "Try adjusting your search query." : "Create your first user to get started."}
                 </p>
               </div>
               {search && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSearch("")}
-                  className="cursor-pointer"
-                >
+                <Button variant="outline" size="sm" onClick={() => setSearch("")} className="cursor-pointer">
                   Clear search
                 </Button>
               )}
             </div>
           ) : (
-            /* Data table */
             <Table>
               <TableHeader>
                 <TableRow>
@@ -499,120 +405,61 @@ export function AdminUsers() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredUsers.map((u) => {
-                  const isBusy = actionLoading === u.id;
-                  return (
-                    <TableRow
-                      key={u.id}
-                      className={`transition-colors duration-150 ${
-                        u.banned ? "opacity-60" : "hover:bg-muted/40"
-                      }`}
-                    >
-                      {/* User cell: avatar + name + email */}
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <UserAvatar name={u.name} banned={u.banned} />
-                          <div className="min-w-0">
-                            <p className="text-sm font-medium truncate">
-                              {u.name || "—"}
-                            </p>
-                            <p className="text-xs text-muted-foreground truncate">
-                              {u.email}
-                            </p>
-                          </div>
+                {filteredUsers.map((u) => (
+                  <TableRow
+                    key={u.id}
+                    className={`transition-colors duration-150 ${u.banned ? "opacity-60" : "hover:bg-muted/40"}`}
+                  >
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <UserAvatar name={u.name} banned={u.banned} />
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium truncate">{u.name || "—"}</p>
+                          <p className="text-xs text-muted-foreground truncate">{u.email}</p>
                         </div>
-                      </TableCell>
-
-                      {/* Role badge */}
-                      <TableCell>
-                        <Badge
-                          variant={u.role === "admin" ? "default" : "muted"}
-                          className="gap-1"
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={u.role === "admin" ? "default" : "muted"} className="gap-1">
+                        {u.role === "admin" ? <ShieldAlert className="h-3 w-3" /> : <Shield className="h-3 w-3" />}
+                        {u.role || "user"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={u.banned ? "destructive" : "success"}>
+                        {u.banned ? "Banned" : "Active"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm text-muted-foreground" title={u.createdAt ? new Date(u.createdAt).toLocaleString() : ""}>
+                        {u.createdAt ? relativeTime(u.createdAt) : "—"}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-0.5">
+                        <Button variant="ghost" size="sm" onClick={() => openEdit(u)} className="h-8 w-8 p-0 cursor-pointer" title="Edit user">
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost" size="sm"
+                          onClick={() => setConfirmAction({ type: u.banned ? "unban" : "ban", user: u })}
+                          className={`h-8 w-8 p-0 cursor-pointer ${u.banned ? "text-emerald-500 hover:text-emerald-600 hover:bg-emerald-500/10" : "text-amber-500 hover:text-amber-600 hover:bg-amber-500/10"}`}
+                          title={u.banned ? "Unban user" : "Ban user"}
                         >
-                          {u.role === "admin" ? (
-                            <ShieldAlert className="h-3 w-3" />
-                          ) : (
-                            <Shield className="h-3 w-3" />
-                          )}
-                          {u.role || "user"}
-                        </Badge>
-                      </TableCell>
-
-                      {/* Status badge */}
-                      <TableCell>
-                        <Badge variant={u.banned ? "destructive" : "success"}>
-                          {u.banned ? "Banned" : "Active"}
-                        </Badge>
-                      </TableCell>
-
-                      {/* Joined */}
-                      <TableCell>
-                        <span
-                          className="text-sm text-muted-foreground"
-                          title={u.createdAt ? new Date(u.createdAt).toLocaleString() : ""}
+                          {u.banned ? <UserCheck className="h-3.5 w-3.5" /> : <Ban className="h-3.5 w-3.5" />}
+                        </Button>
+                        <Button
+                          variant="ghost" size="sm"
+                          onClick={() => setConfirmAction({ type: "delete", user: u })}
+                          className="h-8 w-8 p-0 cursor-pointer text-destructive/60 hover:text-destructive hover:bg-destructive/10"
+                          title="Delete user"
                         >
-                          {u.createdAt ? relativeTime(u.createdAt) : "—"}
-                        </span>
-                      </TableCell>
-
-                      {/* Actions */}
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-0.5">
-                          {/* Edit */}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => openEdit(u)}
-                            disabled={isBusy}
-                            className="h-8 w-8 p-0 cursor-pointer"
-                            title="Edit user"
-                          >
-                            <Pencil className="h-3.5 w-3.5" />
-                          </Button>
-
-                          {/* Ban / Unban */}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() =>
-                              setConfirmAction({
-                                type: u.banned ? "unban" : "ban",
-                                user: u,
-                              })
-                            }
-                            disabled={isBusy}
-                            className={`h-8 w-8 p-0 cursor-pointer ${
-                              u.banned
-                                ? "text-emerald-500 hover:text-emerald-600 hover:bg-emerald-500/10"
-                                : "text-amber-500 hover:text-amber-600 hover:bg-amber-500/10"
-                            }`}
-                            title={u.banned ? "Unban user" : "Ban user"}
-                          >
-                            {u.banned ? (
-                              <UserCheck className="h-3.5 w-3.5" />
-                            ) : (
-                              <Ban className="h-3.5 w-3.5" />
-                            )}
-                          </Button>
-
-                          {/* Delete */}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() =>
-                              setConfirmAction({ type: "delete", user: u })
-                            }
-                            disabled={isBusy}
-                            className="h-8 w-8 p-0 cursor-pointer text-destructive/60 hover:text-destructive hover:bg-destructive/10"
-                            title="Delete user"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           )}
@@ -622,38 +469,20 @@ export function AdminUsers() {
             <div className="flex items-center justify-between px-4 py-2.5 border-t border-border/60 text-xs text-muted-foreground">
               <span>
                 {search
-                  ? `${filteredUsers.length} of ${users.length} shown`
-                  : `${users.length} user${users.length !== 1 ? "s" : ""} · Page ${page + 1}`}
+                  ? `${filteredUsers.length} shown`
+                  : `${filteredUsers.length} user${filteredUsers.length !== 1 ? "s" : ""} · Page ${page + 1}`}
               </span>
               <div className="flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => changePage(page - 1)}
-                  disabled={page === 0 || loading}
-                  className="h-7 px-2 cursor-pointer"
-                >
-                  ← Prev
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => changePage(page + 1)}
-                  disabled={!hasMore || loading}
-                  className="h-7 px-2 cursor-pointer"
-                >
-                  Next →
-                </Button>
+                <Button variant="ghost" size="sm" onClick={() => setPage(p => p - 1)} disabled={page === 0 || loading} className="h-7 px-2 cursor-pointer">← Prev</Button>
+                <Button variant="ghost" size="sm" onClick={() => setPage(p => p + 1)} disabled={!hasMore || loading} className="h-7 px-2 cursor-pointer">Next →</Button>
               </div>
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* ================================================================== */}
-      {/* Create User Dialog                                                  */}
-      {/* ================================================================== */}
-      <Dialog open={showCreate} onOpenChange={(open) => { if (!open) { resetCreateForm(); } setShowCreate(open); }}>
+      {/* Create User Dialog */}
+      <Dialog open={showCreate} onOpenChange={(open) => { if (!open) resetCreateForm(); setShowCreate(open); }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Create User</DialogTitle>
@@ -662,44 +491,17 @@ export function AdminUsers() {
           <form onSubmit={handleCreate} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="create-name">Full Name</Label>
-              <Input
-                id="create-name"
-                required
-                value={createName}
-                onChange={(e) => setCreateName(e.target.value)}
-                placeholder="Jane Doe"
-              />
+              <Input id="create-name" required value={createName} onChange={(e) => setCreateName(e.target.value)} placeholder="Jane Doe" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="create-email">Email Address</Label>
-              <Input
-                id="create-email"
-                type="email"
-                required
-                value={createEmail}
-                onChange={(e) => setCreateEmail(e.target.value)}
-                placeholder="jane@acme.com"
-              />
+              <Input id="create-email" type="email" required value={createEmail} onChange={(e) => setCreateEmail(e.target.value)} placeholder="jane@acme.com" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="create-password">Password</Label>
               <div className="relative">
-                <Input
-                  id="create-password"
-                  type={showPassword ? "text" : "password"}
-                  required
-                  minLength={8}
-                  value={createPassword}
-                  onChange={(e) => setCreatePassword(e.target.value)}
-                  placeholder="Min. 8 characters"
-                  className="pr-10"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                  tabIndex={-1}
-                >
+                <Input id="create-password" type={showPassword ? "text" : "password"} required minLength={8} value={createPassword} onChange={(e) => setCreatePassword(e.target.value)} placeholder="Min. 8 characters" className="pr-10" />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer" tabIndex={-1}>
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
@@ -708,143 +510,62 @@ export function AdminUsers() {
             <div className="space-y-2">
               <Label>Role</Label>
               <Select value={createRole} onValueChange={setCreateRole}>
-                <SelectTrigger className="cursor-pointer">
-                  <SelectValue placeholder="Select role" />
-                </SelectTrigger>
+                <SelectTrigger className="cursor-pointer"><SelectValue placeholder="Select role" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="user">
-                    <span className="flex items-center gap-2">
-                      <Shield className="h-3.5 w-3.5 text-muted-foreground" />
-                      User
-                    </span>
-                  </SelectItem>
-                  <SelectItem value="admin">
-                    <span className="flex items-center gap-2">
-                      <ShieldAlert className="h-3.5 w-3.5 text-primary" />
-                      Admin
-                    </span>
-                  </SelectItem>
+                  <SelectItem value="user"><span className="flex items-center gap-2"><Shield className="h-3.5 w-3.5 text-muted-foreground" />User</span></SelectItem>
+                  <SelectItem value="admin"><span className="flex items-center gap-2"><ShieldAlert className="h-3.5 w-3.5 text-primary" />Admin</span></SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <DialogFooter className="pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => { resetCreateForm(); setShowCreate(false); }}
-                className="cursor-pointer"
-              >
-                Cancel
-              </Button>
+              <Button type="button" variant="outline" onClick={() => { resetCreateForm(); setShowCreate(false); }} className="cursor-pointer">Cancel</Button>
               <Button type="submit" disabled={creating} className="cursor-pointer">
-                {creating ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
-                    Creating…
-                  </>
-                ) : (
-                  "Create User"
-                )}
+                {creating ? <><Loader2 className="h-4 w-4 mr-1.5 animate-spin" />Creating…</> : "Create User"}
               </Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
 
-      {/* ================================================================== */}
-      {/* Edit User Dialog                                                    */}
-      {/* ================================================================== */}
+      {/* Edit User Dialog */}
       <Dialog open={!!editUser} onOpenChange={(open) => { if (!open) setEditUser(null); }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Edit User</DialogTitle>
-            <DialogDescription>
-              {editUser?.email ? (
-                <span className="font-mono text-xs">{editUser.email}</span>
-              ) : (
-                "Update user details."
-              )}
-            </DialogDescription>
+            <DialogDescription>{editUser?.email ? <span className="font-mono text-xs">{editUser.email}</span> : "Update user details."}</DialogDescription>
           </DialogHeader>
           {editUser && (
             <div className="space-y-4">
-              {/* Avatar preview */}
               <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-border/40">
                 <UserAvatar name={editName || editUser.name} banned={editUser.banned} />
                 <div className="min-w-0">
                   <p className="text-sm font-medium truncate">{editName || editUser.name || "—"}</p>
                   <p className="text-xs text-muted-foreground truncate">{editUser.email}</p>
                 </div>
-                {editUser.banned && (
-                  <Badge variant="destructive" className="ml-auto shrink-0">
-                    Banned
-                  </Badge>
-                )}
+                {editUser.banned && <Badge variant="destructive" className="ml-auto shrink-0">Banned</Badge>}
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="edit-name">Full Name</Label>
-                <Input
-                  id="edit-name"
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  placeholder="Full name"
-                />
+                <Input id="edit-name" value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Full name" />
               </div>
-
               <div className="space-y-2">
                 <Label>Role</Label>
                 <Select value={editRole} onValueChange={setEditRole}>
-                  <SelectTrigger className="cursor-pointer">
-                    <SelectValue />
-                  </SelectTrigger>
+                  <SelectTrigger className="cursor-pointer"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="user">
-                      <span className="flex items-center gap-2">
-                        <Shield className="h-3.5 w-3.5 text-muted-foreground" />
-                        User
-                      </span>
-                    </SelectItem>
-                    <SelectItem value="admin">
-                      <span className="flex items-center gap-2">
-                        <ShieldAlert className="h-3.5 w-3.5 text-primary" />
-                        Admin
-                      </span>
-                    </SelectItem>
+                    <SelectItem value="user"><span className="flex items-center gap-2"><Shield className="h-3.5 w-3.5 text-muted-foreground" />User</span></SelectItem>
+                    <SelectItem value="admin"><span className="flex items-center gap-2"><ShieldAlert className="h-3.5 w-3.5 text-primary" />Admin</span></SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-
               <div className="rounded-lg bg-muted/20 border border-border/40 p-3 space-y-1">
-                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
-                  User ID
-                </p>
-                <p className="font-mono text-xs text-muted-foreground break-all select-all">
-                  {editUser.id}
-                </p>
+                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">User ID</p>
+                <p className="font-mono text-xs text-muted-foreground break-all select-all">{editUser.id}</p>
               </div>
-
               <DialogFooter className="pt-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setEditUser(null)}
-                  className="cursor-pointer"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleSaveEdit}
-                  disabled={saving}
-                  className="cursor-pointer"
-                >
-                  {saving ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
-                      Saving…
-                    </>
-                  ) : (
-                    "Save Changes"
-                  )}
+                <Button variant="outline" onClick={() => setEditUser(null)} className="cursor-pointer">Cancel</Button>
+                <Button onClick={handleSaveEdit} disabled={saving} className="cursor-pointer">
+                  {saving ? <><Loader2 className="h-4 w-4 mr-1.5 animate-spin" />Saving…</> : "Save Changes"}
                 </Button>
               </DialogFooter>
             </div>
@@ -852,92 +573,32 @@ export function AdminUsers() {
         </DialogContent>
       </Dialog>
 
-      {/* ================================================================== */}
-      {/* Confirmation Dialog (Ban / Unban / Delete)                          */}
-      {/* ================================================================== */}
+      {/* Confirm Dialog (Ban / Unban / Delete) */}
       <Dialog open={!!confirmAction} onOpenChange={(open) => { if (!open) setConfirmAction(null); }}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              {confirmAction?.type === "delete" && (
-                <Trash2 className="h-5 w-5 text-destructive" />
-              )}
-              {confirmAction?.type === "ban" && (
-                <Ban className="h-5 w-5 text-amber-500" />
-              )}
-              {confirmAction?.type === "unban" && (
-                <UserCheck className="h-5 w-5 text-emerald-500" />
-              )}
-              {confirmAction?.type === "delete"
-                ? "Delete User"
-                : confirmAction?.type === "ban"
-                  ? "Ban User"
-                  : "Unban User"}
+              {confirmAction?.type === "delete" && <Trash2 className="h-5 w-5 text-destructive" />}
+              {confirmAction?.type === "ban" && <Ban className="h-5 w-5 text-amber-500" />}
+              {confirmAction?.type === "unban" && <UserCheck className="h-5 w-5 text-emerald-500" />}
+              {confirmAction?.type === "delete" ? "Delete User" : confirmAction?.type === "ban" ? "Ban User" : "Unban User"}
             </DialogTitle>
             <DialogDescription>
-              {confirmAction?.type === "delete" && (
-                <>
-                  This will permanently delete{" "}
-                  <span className="font-medium text-foreground">{confirmAction.user.email}</span>.
-                  This action cannot be undone.
-                </>
-              )}
-              {confirmAction?.type === "ban" && (
-                <>
-                  <span className="font-medium text-foreground">{confirmAction.user.email}</span>{" "}
-                  will be banned and unable to log in.
-                </>
-              )}
-              {confirmAction?.type === "unban" && (
-                <>
-                  <span className="font-medium text-foreground">{confirmAction.user.email}</span>{" "}
-                  will be unbanned and able to log in again.
-                </>
-              )}
+              {confirmAction?.type === "delete" && <>This will permanently delete <span className="font-medium text-foreground">{confirmAction.user.email}</span>. This action cannot be undone.</>}
+              {confirmAction?.type === "ban" && <><span className="font-medium text-foreground">{confirmAction.user.email}</span> will be banned and unable to log in.</>}
+              {confirmAction?.type === "unban" && <><span className="font-medium text-foreground">{confirmAction.user.email}</span> will be unbanned and able to log in again.</>}
             </DialogDescription>
           </DialogHeader>
-
-          {/* Ban reason field */}
           {confirmAction?.type === "ban" && (
             <div className="space-y-1.5">
               <Label htmlFor="ban-reason" className="text-xs">Reason <span className="text-muted-foreground font-normal">(optional)</span></Label>
-              <textarea
-                id="ban-reason"
-                value={banReason}
-                onChange={e => setBanReason(e.target.value)}
-                placeholder="e.g. Violated terms of service"
-                rows={2}
-                className="w-full rounded-md border border-border/60 bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-primary"
-              />
+              <textarea id="ban-reason" value={banReason} onChange={e => setBanReason(e.target.value)} placeholder="e.g. Violated terms of service" rows={2} className="w-full rounded-md border border-border/60 bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-primary" />
             </div>
           )}
           <DialogFooter className="pt-2">
-            <Button
-              variant="outline"
-              onClick={() => setConfirmAction(null)}
-              disabled={confirmLoading}
-              className="cursor-pointer"
-            >
-              Cancel
-            </Button>
-            <Button
-              variant={confirmAction?.type === "delete" ? "destructive" : "default"}
-              onClick={executeConfirmAction}
-              disabled={confirmLoading}
-              className="cursor-pointer"
-            >
-              {confirmLoading ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
-                  Processing…
-                </>
-              ) : confirmAction?.type === "delete" ? (
-                "Delete"
-              ) : confirmAction?.type === "ban" ? (
-                "Ban User"
-              ) : (
-                "Unban User"
-              )}
+            <Button variant="outline" onClick={() => setConfirmAction(null)} disabled={confirmLoading} className="cursor-pointer">Cancel</Button>
+            <Button variant={confirmAction?.type === "delete" ? "destructive" : "default"} onClick={executeConfirmAction} disabled={confirmLoading} className="cursor-pointer">
+              {confirmLoading ? <><Loader2 className="h-4 w-4 mr-1.5 animate-spin" />Processing…</> : confirmAction?.type === "delete" ? "Delete" : confirmAction?.type === "ban" ? "Ban User" : "Unban User"}
             </Button>
           </DialogFooter>
         </DialogContent>
