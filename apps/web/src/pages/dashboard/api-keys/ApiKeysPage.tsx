@@ -188,19 +188,6 @@ function ScopeBadges({ scopes }: { scopes: string[] }) {
   )
 }
 
-function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false)
-  return (
-    <button
-      onClick={() => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000) }}
-      className="p-1.5 rounded hover:bg-muted/60 transition-colors cursor-pointer"
-      title="Copy"
-    >
-      {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5 text-muted-foreground" />}
-    </button>
-  )
-}
-
 function ScopeSelector({
   selectedScopes,
   onChange,
@@ -690,7 +677,6 @@ export function ApiKeysPage() {
                           <code className="rounded bg-muted px-2 py-1 font-mono text-[12px] text-muted-foreground">
                             {key.maskedKey}
                           </code>
-                          <CopyButton text={key.maskedKey} />
                         </div>
                       </td>
                       <td className="px-6 py-4 max-w-[180px]">
