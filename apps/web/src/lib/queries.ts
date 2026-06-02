@@ -29,6 +29,13 @@ export const qk = {
     ["audit-logs", orgId, page, filter] as const,
   health: () => ["health"] as const,
   userOrgs: () => ["user", "orgs"] as const,
+  scfLatestVersion: () => ["scf", "version", "latest"] as const,
+  scfDomains: (versionId: string) => ["scf", "domains", versionId] as const,
+  scfControls: (versionId: string, domain: string, q: string) =>
+    ["scf", "controls", versionId, domain, q] as const,
+  scfFrameworks: () => ["scf", "frameworks"] as const,
+  scfFrameworkCoverage: (frameworkId: string, versionId: string) =>
+    ["scf", "frameworks", frameworkId, "coverage", versionId] as const,
 } as const;
 
 // ─── Auth / Orgs ──────────────────────────────────────────────────────────────
@@ -280,7 +287,121 @@ export function useHealthStatus(apiUrl: string) {
   });
 }
 
+// ─── SCF Catalog ──────────────────────────────────────────────────────────────
+
+export function useScfLatestVersion() {
+  return useQuery<ScfVersionInfo>({
+    queryKey: qk.scfLatestVersion(),
+    queryFn: () => api<ScfVersionInfo>("/api/v1/scf/versions/latest"),
+    staleTime: 1000 * 60 * 30, // catalog is static — cache 30m
+  });
+}
+
+export function useScfDomains(versionId: string | undefined) {
+  return useQuery({
+    queryKey: qk.scfDomains(versionId ?? ""),
+    queryFn: () =>
+      api<{ data: ScfDomainItem[] }>(`/api/v1/scf/versions/${versionId}/domains`),
+    enabled: !!versionId,
+    staleTime: 1000 * 60 * 30,
+  });
+}
+
+export function useScfControls(
+  versionId: string | undefined,
+  filters: { domainCode?: string; q?: string }
+) {
+  const params = new URLSearchParams();
+  if (filters.domainCode) params.set("domain_code", filters.domainCode);
+  if (filters.q) params.set("q", filters.q);
+  const qs = params.toString();
+
+  return useQuery({
+    queryKey: qk.scfControls(versionId ?? "", filters.domainCode ?? "", filters.q ?? ""),
+    queryFn: () =>
+      api<{ data: ScfControlItem[] }>(
+        `/api/v1/scf/versions/${versionId}/controls${qs ? `?${qs}` : ""}`
+      ),
+    enabled: !!versionId,
+    placeholderData: (prev) => prev,
+    staleTime: 1000 * 60 * 10,
+  });
+}
+
+export function useScfFrameworks() {
+  return useQuery({
+    queryKey: qk.scfFrameworks(),
+    queryFn: () => api<{ data: ScfFrameworkItem[] }>("/api/v1/scf/frameworks"),
+    staleTime: 1000 * 60 * 30,
+  });
+}
+
+export function useScfFrameworkCoverage(
+  frameworkId: string | undefined,
+  versionId: string | undefined
+) {
+  return useQuery<ScfCoverage>({
+    queryKey: qk.scfFrameworkCoverage(frameworkId ?? "", versionId ?? ""),
+    queryFn: () =>
+      api<ScfCoverage>(
+        `/api/v1/scf/frameworks/${frameworkId}/coverage?scf_version=${versionId}`
+      ),
+    enabled: !!frameworkId && !!versionId,
+    staleTime: 1000 * 60 * 10,
+  });
+}
+
 // ─── Shared Types (local to this module) ──────────────────────────────────────
+
+type ScfVersionInfo = {
+  scf_version_id: string;
+  version_label: string;
+  release_date?: string;
+  import_status: string;
+  is_synthetic: boolean;
+};
+
+type ScfDomainItem = {
+  id: string;
+  domain_code: string;
+  domain_name: string;
+  description?: string;
+  sort_order?: number;
+};
+
+type ScfControlItem = {
+  control_id: string;
+  scf_version_id: string;
+  scf_domain_id: string;
+  control_code: string;
+  control_title: string;
+  control_description?: string;
+  status: string;
+  is_synthetic: boolean;
+};
+
+type ScfFrameworkItem = {
+  framework_id: string;
+  framework_code: string;
+  framework_name: string;
+  framework_version?: string;
+  publisher?: string;
+  jurisdiction?: string;
+  category?: string;
+  status: string;
+  is_synthetic: boolean;
+};
+
+type ScfCoverage = {
+  framework_id: string;
+  scf_version_id: string;
+  requirement_count: number;
+  mapped_requirement_count: number;
+  control_count: number;
+  official_mapping_count: number;
+  is_synthetic: boolean;
+};
+
 
 type OrgListItem = {
   id: string;
