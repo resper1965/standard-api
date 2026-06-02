@@ -134,6 +134,13 @@ function formatRelative(dateStr: string | null): string {
   return `${Math.floor(days / 365)} years ago`
 }
 
+/** A key is considered active if it was used within the last 30 days. */
+function isRecentlyActive(lastUsedAt: string | null): boolean {
+  if (!lastUsedAt) return false
+  const diff = Date.now() - new Date(lastUsedAt).getTime()
+  return diff < 30 * 86400000
+}
+
 function formatExpiry(dateStr: string | null): { label: string; expired: boolean } {
   if (!dateStr) return { label: "Never", expired: false }
   const date = new Date(dateStr)
@@ -164,6 +171,19 @@ function StatusBadge({ status }: { status: KeyStatus }) {
   return (
     <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-destructive/10 text-destructive border border-destructive/20">
       <ShieldOff className="h-3 w-3" /> Revoked
+    </span>
+  )
+}
+
+function ActivityBadge({ active }: { active: boolean }) {
+  if (active) return (
+    <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Active
+    </span>
+  )
+  return (
+    <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border/50">
+      <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50" /> Inactive
     </span>
   )
 }
@@ -646,6 +666,7 @@ export function ApiKeysPage() {
                 <th className="px-6 py-3.5 font-medium">Scopes</th>
                 <th className="px-6 py-3.5 font-medium">Expires</th>
                 <th className="px-6 py-3.5 font-medium">Last Used</th>
+                <th className="px-6 py-3.5 font-medium">Activity</th>
                 <th className="px-6 py-3.5 font-medium">Status</th>
                 <th className="px-6 py-3.5 font-medium text-right">Actions</th>
               </tr>
@@ -653,13 +674,13 @@ export function ApiKeysPage() {
             <tbody className="divide-y divide-border/40">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center text-muted-foreground">
+                  <td colSpan={8} className="px-6 py-8 text-center text-muted-foreground">
                     <Loader2 className="h-5 w-5 animate-spin mx-auto" />
                   </td>
                 </tr>
               ) : displayedKeys.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center text-muted-foreground">
+                  <td colSpan={8} className="px-6 py-8 text-center text-muted-foreground">
                     No API keys found. Generate one to get started.
                   </td>
                 </tr>
@@ -689,6 +710,9 @@ export function ApiKeysPage() {
                       </td>
                       <td className="px-6 py-4 text-muted-foreground text-[13px]">
                         {formatRelative(key.lastUsedAt)}
+                      </td>
+                      <td className="px-6 py-4">
+                        <ActivityBadge active={isRecentlyActive(key.lastUsedAt)} />
                       </td>
                       <td className="px-6 py-4">
                         <StatusBadge status={key.status} />
