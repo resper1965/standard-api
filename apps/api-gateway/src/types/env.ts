@@ -35,6 +35,13 @@ export interface Env {
   SOC_WEBHOOK_URL?: string;
   /** Comma-separated list of allowed CORS origins — overrides the hardcoded list when set. */
   ALLOWED_ORIGINS?: string;
+  /**
+   * Must be explicitly "true" (together with a dev STANDARD_ENV) to activate the
+   * legacy mock-auth headers (x-standard-actor-id, x-standard-mock-role).
+   * Fail-closed by default: omitting this var keeps mock-auth disabled even in
+   * dev/test environments.
+   */
+  ALLOW_MOCK_AUTH?: string;
   /** ClamAV REST API endpoint for anti-malware scanning of uploaded documents (optional). */
   CLAMAV_API_URL?: string;
   /** Cloudflare Email Service binding for transactional emails */

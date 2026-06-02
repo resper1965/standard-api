@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Building2, Key, Users, Zap, ArrowUpRight, Activity, HeartPulse } from "lucide-react"
 import { useSession } from "@/lib/auth-client"
@@ -9,6 +8,8 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
 import { useDocumentTitle } from "@/hooks/useDocumentTitle"
 import { useActiveOrg } from "@/hooks/useActiveOrg"
+import { useQuery } from "@tanstack/react-query"
+import { qk } from "@/lib/queries"
 
 function getGreeting(): string {
   const h = new Date().getHours()
@@ -17,20 +18,13 @@ function getGreeting(): string {
   return "Good evening"
 }
 
-interface PlatformMetrics {
-  totalOrgs: number
-  totalUsers: number
-  totalApiKeys: number
-  apiHealth: "operational" | "degraded" | "down" | "unknown"
-}
-
-interface AgentUsage {
+type AgentUsage = {
   agent_type: string
   total_tokens: number
   total_calls: number
 }
 
-interface Org {
+type Org = {
   id: string
   name: string
   slug?: string
@@ -44,53 +38,62 @@ export function OverviewPage() {
   const { orgId } = useActiveOrg()
   const hasActiveOrg = !!orgId
 
-  const [metrics, setMetrics] = useState<PlatformMetrics>({
-    totalOrgs: 0, totalUsers: 0, totalApiKeys: 0, apiHealth: "unknown"
+  const { data: orgsData, isLoading: orgsLoading } = useQuery({
+    queryKey: qk.userOrgs(),
+    queryFn: () => api<{ data: Org[] }>("/api/v1/users/me/organizations"),
+    enabled: !!session,
   })
-  const [orgs, setOrgs] = useState<Org[]>([])
-  const [agentUsage, setAgentUsage] = useState<AgentUsage[]>([])
-  const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    async function fetchData() {
-      if (!session) { setLoading(false); return }
-      setLoading(true)
-      try {
-        // Run all fetches in parallel — partial failures are tolerated
-        const [orgResult, usersResult, keysResult, healthResult, usageResult] =
-          await Promise.allSettled([
-            api<{ data: Org[] }>("/api/v1/users/me/organizations"),
-            api<{ data: unknown[]; total: number }>("/api/v1/admin/users?limit=1"),
-            orgId ? api<{ data: unknown[] }>(`/api/v1/organizations/${orgId}/api-keys`) : Promise.resolve(null),
-            fetch(`${API_URL}/health`).then(r => r.ok ? "operational" : "degraded").catch(() => "down"),
-            api<{ usage: unknown[]; agent_usage: AgentUsage[] }>("/api/v1/admin/usage"),
-          ])
+  const { data: usersData } = useQuery({
+    queryKey: qk.adminUsers(0, ""),
+    queryFn: () => api<{ data: unknown[]; total: number }>("/api/v1/admin/users?limit=1"),
+    enabled: !!session,
+  })
 
-        const orgList: Org[] = orgResult.status === "fulfilled" && orgResult.value?.data
-          ? orgResult.value.data
-          : []
-        const userCount: number = usersResult.status === "fulfilled" ? (usersResult.value?.total ?? 0) : 0
-        const keyCount: number = keysResult.status === "fulfilled" && keysResult.value ? (keysResult.value.data?.length ?? 0) : 0
-        const health = (healthResult.status === "fulfilled" ? healthResult.value : "down") as PlatformMetrics["apiHealth"]
-        const usage: AgentUsage[] = usageResult.status === "fulfilled" ? (usageResult.value?.agent_usage ?? []) : []
+  const { data: keysData } = useQuery({
+    queryKey: qk.orgApiKeys(orgId ?? ""),
+    queryFn: () => api<{ data: unknown[] }>(`/api/v1/organizations/${orgId}/api-keys`),
+    enabled: !!orgId,
+  })
 
-        setOrgs(orgList)
-        setAgentUsage(usage)
-        setMetrics({ totalOrgs: orgList.length, totalUsers: userCount, totalApiKeys: keyCount, apiHealth: health })
-      } catch (err) {
-        // Non-critical: partial data is already set via Promise.allSettled above.
-        // This catch only triggers for unexpected errors — log and surface to user.
-        console.error("[OverviewPage] fetchData error:", err)
-      } finally {
-        setLoading(false)
-      }
-    }
-    if (!sessionLoading) fetchData()
-  }, [session, sessionLoading])
+  const { data: healthData } = useQuery({
+    queryKey: qk.health(),
+    queryFn: () =>
+      fetch(`${API_URL}/health`)
+        .then((r) => (r.ok ? ("operational" as const) : ("degraded" as const)))
+        .catch(() => "down" as const),
+    refetchInterval: 30_000,
+  })
 
-  // greeting rendered inline in JSX with gradient name span
+  const { data: usageData } = useQuery({
+    queryKey: qk.adminUsage(),
+    queryFn: () => api<{ usage: unknown[]; agent_usage: AgentUsage[] }>("/api/v1/admin/usage"),
+    enabled: !!session,
+  })
 
-  if (loading || sessionLoading) {
+  const loading = sessionLoading || orgsLoading
+
+  const orgs: Org[] = orgsData?.data ?? []
+  const userCount = usersData?.total ?? 0
+  const keyCount = keysData?.data?.length ?? 0
+  const apiHealth = healthData ?? "unknown"
+  const agentUsage: AgentUsage[] = usageData?.agent_usage ?? []
+  const totalTokens = agentUsage.reduce((sum, a) => sum + (a.total_tokens || 0), 0)
+
+  const healthColor = {
+    operational: "text-emerald-500",
+    degraded: "text-amber-500",
+    down: "text-destructive",
+    unknown: "text-muted-foreground",
+  }
+  const healthLabel = {
+    operational: "Operational",
+    degraded: "Degraded",
+    down: "Down",
+    unknown: "Unknown",
+  }
+
+  if (loading) {
     return (
       <div className="space-y-8 animate-slide-up">
         <Skeleton className="h-5 w-64" />
@@ -116,27 +119,19 @@ export function OverviewPage() {
     )
   }
 
-  const healthColor = {
-    operational: "text-emerald-500",
-    degraded: "text-amber-500",
-    down: "text-destructive",
-    unknown: "text-muted-foreground",
-  }
-  const healthLabel = {
-    operational: "Operational",
-    degraded: "Degraded",
-    down: "Down",
-    unknown: "Unknown",
-  }
-
-  const totalTokens = agentUsage.reduce((sum, a) => sum + (a.total_tokens || 0), 0)
-
   return (
     <div className="space-y-8 animate-slide-up">
       {/* Greeting */}
       <div>
         <p className="text-sm text-muted-foreground">
-          {getGreeting()}, <span className="text-gradient-premium font-semibold">{session?.user?.name?.split(" ")[0] || "there"}</span>. {hasActiveOrg ? "Organization context active." : "No active organization \u2014 select one above."}
+          {getGreeting()},{" "}
+          <span className="text-gradient-premium font-semibold">
+            {session?.user?.name?.split(" ")[0] || "there"}
+          </span>
+          .{" "}
+          {hasActiveOrg
+            ? "Organization context active."
+            : "No active organization — select one above."}
         </p>
       </div>
 
@@ -144,32 +139,38 @@ export function OverviewPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 animate-stagger">
         <StatCard
           label="Organizations"
-          value={metrics.totalOrgs}
+          value={orgs.length}
           sub="Managed tenants"
           icon={<Building2 className="h-4 w-4" />}
           accent="primary"
         />
         <StatCard
           label="API Keys"
-          value={metrics.totalApiKeys}
+          value={keyCount}
           sub="Active in current org"
           icon={<Key className="h-4 w-4" />}
           accent="primary"
         />
         <StatCard
           label="Users"
-          value={metrics.totalUsers || "\u2014"}
+          value={userCount || "—"}
           sub="Platform accounts"
           icon={<Users className="h-4 w-4" />}
           accent="primary"
         />
         <StatCard
           label="API Status"
-          value={healthLabel[metrics.apiHealth]}
+          value={healthLabel[apiHealth]}
           sub="standard-api.bekaa.eu"
           icon={<HeartPulse className="h-4 w-4" />}
-          accent={metrics.apiHealth === "operational" ? "primary" : metrics.apiHealth === "down" ? "destructive" : "muted"}
-          showPulse={metrics.apiHealth === "operational"}
+          accent={
+            apiHealth === "operational"
+              ? "primary"
+              : apiHealth === "down"
+              ? "destructive"
+              : "muted"
+          }
+          showPulse={apiHealth === "operational"}
         />
       </div>
 
@@ -183,7 +184,10 @@ export function OverviewPage() {
                 <CardTitle className="text-base">Organizations</CardTitle>
                 <CardDescription className="mt-0.5">Your managed tenants</CardDescription>
               </div>
-              <Link to="/dashboard/organizations" className="text-xs text-primary hover:underline flex items-center gap-1">
+              <Link
+                to="/dashboard/organizations"
+                className="text-xs text-primary hover:underline flex items-center gap-1"
+              >
                 Manage <ArrowUpRight className="h-3 w-3" />
               </Link>
             </div>
@@ -195,7 +199,9 @@ export function OverviewPage() {
                   <Building2 className="h-5 w-5" />
                 </div>
                 <p className="text-sm font-medium text-foreground mb-1">No organizations yet</p>
-                <p className="text-xs text-muted-foreground">Create one to start managing API access</p>
+                <p className="text-xs text-muted-foreground">
+                  Create one to start managing API access
+                </p>
               </div>
             ) : (
               <div className="space-y-1">
@@ -210,7 +216,9 @@ export function OverviewPage() {
                       </div>
                       <div className="flex flex-col min-w-0">
                         <span className="font-medium text-foreground truncate">{org.name}</span>
-                        <span className="text-muted-foreground text-xs mt-0.5 truncate">{org.slug || org.id}</span>
+                        <span className="text-muted-foreground text-xs mt-0.5 truncate">
+                          {org.slug || org.id}
+                        </span>
                       </div>
                     </div>
                     <Badge variant="muted">{org.role || "owner"}</Badge>
@@ -234,7 +242,9 @@ export function OverviewPage() {
                   <Activity className="h-5 w-5 animate-pulse" />
                 </div>
                 <p className="text-sm font-medium text-foreground mb-1">No API usage yet</p>
-                <p className="text-xs text-muted-foreground">Metrics appear after API calls are made</p>
+                <p className="text-xs text-muted-foreground">
+                  Metrics appear after API calls are made
+                </p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -246,13 +256,20 @@ export function OverviewPage() {
                   </span>
                 </div>
                 {agentUsage.slice(0, 5).map((agent) => (
-                  <div key={agent.agent_type} className="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-muted/30 transition-colors">
+                  <div
+                    key={agent.agent_type}
+                    className="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-muted/30 transition-colors"
+                  >
                     <span className="text-xs text-foreground capitalize truncate max-w-[140px]">
-                      {agent.agent_type.replace(/_/g, ' ')}
+                      {agent.agent_type.replace(/_/g, " ")}
                     </span>
                     <div className="flex items-center gap-2 text-right">
-                      <span className="text-xs text-muted-foreground">{agent.total_calls} calls</span>
-                      <span className="text-xs font-medium text-foreground">{agent.total_tokens.toLocaleString()} tok</span>
+                      <span className="text-xs text-muted-foreground">
+                        {agent.total_calls} calls
+                      </span>
+                      <span className="text-xs font-medium text-foreground">
+                        {agent.total_tokens.toLocaleString()} tok
+                      </span>
                     </div>
                   </div>
                 ))}
@@ -309,7 +326,14 @@ export function OverviewPage() {
 }
 
 /* ── Stat Card ──────────────────────────────────────────────── */
-function StatCard({ label, value, sub, icon, accent, showPulse }: {
+function StatCard({
+  label,
+  value,
+  sub,
+  icon,
+  accent,
+  showPulse,
+}: {
   label: string
   value: number | string
   sub: string
@@ -320,24 +344,32 @@ function StatCard({ label, value, sub, icon, accent, showPulse }: {
   const colorMap = {
     primary: "text-primary",
     destructive: "text-destructive",
-    muted: "text-muted-foreground"
+    muted: "text-muted-foreground",
   }
   const bgMap = {
     primary: "bg-primary/10",
     destructive: "bg-destructive/10",
-    muted: "bg-muted/60"
+    muted: "bg-muted/60",
   }
   return (
     <Card className="border-border/60 bg-card shadow-none hover-lift group card-spell">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">{label}</CardTitle>
-        <div className={`h-8 w-8 rounded-full ${bgMap[accent]} flex items-center justify-center ${colorMap[accent]} opacity-70 group-hover:opacity-100 transition-opacity`}>
+        <div
+          className={`h-8 w-8 rounded-full ${bgMap[accent]} flex items-center justify-center ${colorMap[accent]} opacity-70 group-hover:opacity-100 transition-opacity`}
+        >
           {icon}
         </div>
       </CardHeader>
       <CardContent>
-        <div className={`text-2xl stat-number tracking-tight animate-count-up ${accent === "destructive" ? "text-destructive" : "text-foreground"}`}>
-          {showPulse && <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 mr-2 animate-pulse align-middle" />}
+        <div
+          className={`text-2xl stat-number tracking-tight animate-count-up ${
+            accent === "destructive" ? "text-destructive" : "text-foreground"
+          }`}
+        >
+          {showPulse && (
+            <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 mr-2 animate-pulse align-middle" />
+          )}
           {value}
         </div>
         <p className="text-xs text-muted-foreground mt-1">{sub}</p>
