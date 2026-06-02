@@ -71,8 +71,8 @@ export const resolveAuthContext = async (
       const apiKeyRecord = await context.deps.apiKeys.verifyKey(keyHash);
       if (apiKeyRecord) {
         context.actorId = `m2m:${apiKeyRecord.id}`;
-        context.tenantId = apiKeyRecord.tenantId;
         context.organizationId = apiKeyRecord.organizationId;
+        context.tenantId = apiKeyRecord.organizationId; // tenant_id === organization_id (ADR 0002 Phase 2/3)
 
         // Store scopes for downstream scope enforcement middleware
         context.m2mScopes = apiKeyRecord.scopes;
@@ -89,7 +89,7 @@ export const resolveAuthContext = async (
           module: "auth",
           environment: "production",
           trace_id: context.traceId,
-          tenant_id: apiKeyRecord.tenantId,
+          tenant_id: apiKeyRecord.organizationId,
           organization_id: apiKeyRecord.organizationId,
           metadata: { actor_id: `m2m:${apiKeyRecord.id}`, key_id: apiKeyRecord.id }
         });

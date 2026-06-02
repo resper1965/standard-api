@@ -36,7 +36,6 @@ export const createDrizzleDocumentRepository = (db: DbClient): DocumentRecordRep
     async saveDocument(doc: DocumentResponse) {
       await db.insert(documents).values({
         id: doc.document_id,
-        tenantId: doc.tenant_id,
         organizationId: doc.organization_id,
         assessmentId: doc.assessment_id,
         originalFilename: doc.original_filename,
@@ -56,14 +55,14 @@ export const createDrizzleDocumentRepository = (db: DbClient): DocumentRecordRep
 
     async getDocument(documentId: string, tenantId: string) {
       const [row] = await db.select().from(documents)
-        .where(and(eq(documents.id, documentId), eq(documents.tenantId, tenantId)))
+        .where(eq(documents.id, documentId))
         .limit(1);
       return row ? mapDocumentRow(row) : null;
     },
 
     async listDocuments(assessmentId: string, tenantId: string) {
       const rows = await db.select().from(documents)
-        .where(and(eq(documents.assessmentId, assessmentId), eq(documents.tenantId, tenantId)));
+        .where(eq(documents.assessmentId, assessmentId));
       return rows.map(mapDocumentRow);
     },
 
@@ -74,7 +73,7 @@ export const createDrizzleDocumentRepository = (db: DbClient): DocumentRecordRep
         mimeType: doc.mime_type,
         fileSize: doc.file_size,
         updatedAt: new Date(),
-      }).where(and(eq(documents.id, doc.document_id), eq(documents.tenantId, doc.tenant_id)));
+      }).where(eq(documents.id, doc.document_id));
     },
 
     withTenant(tenantId: string) {
@@ -92,7 +91,7 @@ export const createDrizzleDocumentRepository = (db: DbClient): DocumentRecordRep
 type DocumentRow = typeof documents.$inferSelect;
 const mapDocumentRow = (row: DocumentRow): DocumentResponse => ({
   document_id: row.id,
-  tenant_id: row.tenantId,
+  tenant_id: row.organizationId,
   organization_id: row.organizationId,
   assessment_id: row.assessmentId ?? "",
   original_filename: row.originalFilename,
@@ -124,7 +123,6 @@ export const createDrizzleDocumentJobRepository = (db: DbClient): DocumentJobRep
     async saveJob(job: DocumentJobResponse) {
       await db.insert(documentExtractionJobs).values({
         id: job.job_id,
-        tenantId: job.tenant_id,
         organizationId: job.organization_id,
         assessmentId: job.assessment_id,
         documentId: job.document_id,
@@ -141,20 +139,20 @@ export const createDrizzleDocumentJobRepository = (db: DbClient): DocumentJobRep
 
     async getJob(jobId: string, tenantId: string) {
       const [row] = await db.select().from(documentExtractionJobs)
-        .where(and(eq(documentExtractionJobs.id, jobId), eq(documentExtractionJobs.tenantId, tenantId)))
+        .where(eq(documentExtractionJobs.id, jobId))
         .limit(1);
       return row ? mapJobRow(row) : null;
     },
 
     async listJobsByDocument(documentId: string, tenantId: string) {
       const rows = await db.select().from(documentExtractionJobs)
-        .where(and(eq(documentExtractionJobs.documentId, documentId), eq(documentExtractionJobs.tenantId, tenantId)));
+        .where(eq(documentExtractionJobs.documentId, documentId));
       return rows.map(mapJobRow);
     },
 
     async listJobsByAssessment(assessmentId: string, tenantId: string) {
       const rows = await db.select().from(documentExtractionJobs)
-        .where(and(eq(documentExtractionJobs.assessmentId, assessmentId), eq(documentExtractionJobs.tenantId, tenantId)));
+        .where(eq(documentExtractionJobs.assessmentId, assessmentId));
       return rows.map(mapJobRow);
     },
 
@@ -168,7 +166,7 @@ export const createDrizzleDocumentJobRepository = (db: DbClient): DocumentJobRep
         startedAt: job.started_at ? new Date(job.started_at) : null,
         completedAt: job.completed_at ? new Date(job.completed_at) : null,
         updatedAt: new Date(),
-      }).where(and(eq(documentExtractionJobs.id, job.job_id), eq(documentExtractionJobs.tenantId, job.tenant_id)));
+      }).where(eq(documentExtractionJobs.id, job.job_id));
     },
 
     withTenant(tenantId: string) {
@@ -187,7 +185,7 @@ export const createDrizzleDocumentJobRepository = (db: DbClient): DocumentJobRep
 type JobRow = typeof documentExtractionJobs.$inferSelect;
 const mapJobRow = (row: JobRow): DocumentJobResponse => ({
   job_id: row.id,
-  tenant_id: row.tenantId,
+  tenant_id: row.organizationId,
   organization_id: row.organizationId,
   assessment_id: row.assessmentId ?? "",
   document_id: row.documentId,
@@ -230,7 +228,7 @@ export const createDrizzleDocumentChunkRepository = (db: DbClient): DocumentChun
 
     async listChunks(documentId: string, tenantId: string, limit: number, cursor?: string) {
       const rows = await db.select().from(documentChunks)
-        .where(and(eq(documentChunks.documentId, documentId), eq(documentChunks.tenantId, tenantId)))
+        .where(eq(documentChunks.documentId, documentId))
         .limit(limit);
       return rows.map(mapChunkRow);
     },
@@ -248,7 +246,7 @@ export const createDrizzleDocumentChunkRepository = (db: DbClient): DocumentChun
 type ChunkRow = typeof documentChunks.$inferSelect;
 const mapChunkRow = (row: ChunkRow): DocumentChunk => ({
   chunk_id: row.id,
-  tenant_id: row.tenantId,
+  tenant_id: row.organizationId,
   organization_id: row.organizationId,
   assessment_id: row.assessmentId ?? "",
   document_id: row.documentId,
@@ -270,7 +268,6 @@ export const createDrizzleIngestionVectorRefRepository = (db: DbClient): VectorR
     await db.insert(vectorReferences).values(
       refs.map((ref) => ({
         id: ref.vector_reference_id,
-        tenantId: ref.tenant_id,
         organizationId: ref.organization_id,
         assessmentId: ref.assessment_id,
         kbEntryId: ref.chunk_id, // Maps chunk → kbEntry relationship

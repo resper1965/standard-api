@@ -29,7 +29,6 @@ export const createDrizzleAssessmentSnapshotBuilder = (db: DbClient): Assessment
     const [assessment] = await db.select().from(assessments)
       .where(and(
         eq(assessments.id, assessmentId),
-        eq(assessments.tenantId, tenantId),
         eq(assessments.organizationId, organizationId)
       ))
       .limit(1);
@@ -37,42 +36,42 @@ export const createDrizzleAssessmentSnapshotBuilder = (db: DbClient): Assessment
 
     // 2. Count documents
     const [docCount] = await db.select({ count: count() }).from(documents)
-      .where(and(eq(documents.assessmentId, assessmentId), eq(documents.tenantId, tenantId)));
+      .where(and(eq(documents.assessmentId, assessmentId), ));
     const documentCount = docCount?.count ?? 0;
 
     // 3. Check extraction jobs
     const extractionJobs = await db.select().from(documentExtractionJobs)
-      .where(and(eq(documentExtractionJobs.assessmentId, assessmentId), eq(documentExtractionJobs.tenantId, tenantId)));
+      .where(and(eq(documentExtractionJobs.assessmentId, assessmentId), ));
     const requiredDocumentJobsComplete = extractionJobs.length === 0 ||
       extractionJobs.every(j => j.status === "completed" || j.status === "cancelled");
 
     // 4. SoA state
     const soaVersionsList = await db.select().from(soaVersions)
-      .where(and(eq(soaVersions.assessmentId, assessmentId), eq(soaVersions.tenantId, tenantId)));
+      .where(and(eq(soaVersions.assessmentId, assessmentId), ));
     const soaDraftVersionComplete = soaVersionsList.length > 0;
     const soaApproved = soaVersionsList.some(v => v.status === "approved");
 
     // 5. Gap Analysis state
     const gapVersionsList = await db.select().from(gapAnalysisVersions)
-      .where(and(eq(gapAnalysisVersions.assessmentId, assessmentId), eq(gapAnalysisVersions.tenantId, tenantId)));
+      .where(and(eq(gapAnalysisVersions.assessmentId, assessmentId), ));
     const gapAnalysisDrafted = gapVersionsList.length > 0;
     const gapAnalysisApproved = gapVersionsList.some(v => v.status === "approved");
 
     // 6. Maturity state
     const maturityVersionsList = await db.select().from(maturityAssessmentVersions)
-      .where(and(eq(maturityAssessmentVersions.assessmentId, assessmentId), eq(maturityAssessmentVersions.tenantId, tenantId)));
+      .where(and(eq(maturityAssessmentVersions.assessmentId, assessmentId), ));
     const maturityAssessed = maturityVersionsList.length > 0;
     const maturityApproved = maturityVersionsList.some(v => v.status === "approved");
 
     // 7. POA&M state
     const poamVersionsList = await db.select().from(poamVersions)
-      .where(and(eq(poamVersions.assessmentId, assessmentId), eq(poamVersions.tenantId, tenantId)));
+      .where(and(eq(poamVersions.assessmentId, assessmentId), ));
     const poamDrafted = poamVersionsList.length > 0;
     const poamApproved = poamVersionsList.some(v => v.status === "approved");
 
     // 8. Report state
     const reportVersionsList = await db.select().from(reportVersions)
-      .where(and(eq(reportVersions.assessmentId, assessmentId), eq(reportVersions.tenantId, tenantId)));
+      .where(and(eq(reportVersions.assessmentId, assessmentId), ));
     const reportGenerated = reportVersionsList.length > 0;
 
     // 9. Report approval events
@@ -80,7 +79,6 @@ export const createDrizzleAssessmentSnapshotBuilder = (db: DbClient): Assessment
       ? await db.select().from(approvalEvents)
           .where(and(
             eq(approvalEvents.assessmentId, assessmentId),
-            eq(approvalEvents.tenantId, tenantId),
             eq(approvalEvents.gate, "report"),
             eq(approvalEvents.decision, "approved"),
           ))
@@ -93,7 +91,7 @@ export const createDrizzleAssessmentSnapshotBuilder = (db: DbClient): Assessment
 
     return {
       id: assessment.id,
-      tenantId: assessment.tenantId,
+      tenantId: assessment.organizationId,
       organizationId: assessment.organizationId,
       state: assessment.state,
       documentCount,
