@@ -5,9 +5,14 @@
  * Standard Native Auth creates organizations with text IDs (e.g. "org_pa5khl").
  * The Standard domain schema uses UUID columns with FK relationships.
  *
- * This module resolves the active Standard Native Auth organization into valid
- * Standard tenant + organization UUIDs, creating them on-demand if needed
- * (lazy provisioning / "just-in-time" tenant setup).
+ * Two responsibilities, deliberately split (see ADR 0002):
+ *  - `resolveTenantContext`  — READ-ONLY lookup. Returns `null` when the org has
+ *    not been provisioned. Never writes. Safe to call on every request.
+ *  - `provisionTenantContext` — explicit creation. Call this only at well-defined
+ *    provisioning points (org creation, platform-admin bootstrap).
+ *
+ * Request-time code must NOT create domain rows: silent JIT provisioning used to
+ * mask resolution bugs by inventing "phantom" tenants.
  */
 import { eq } from "drizzle-orm";
 import { tenants, organizations, baOrganization } from "@standard/schemas";
@@ -20,17 +25,19 @@ export interface ResolvedTenantContext {
   org_name: string;        // Organization display name
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 /**
- * Resolve a Neon/Legacy Org ID into Standard domain UUIDs.
+ * READ-ONLY resolution of a Standard Native Auth org ID / slug into Standard
+ * domain UUIDs. Returns `null` if the org has not been provisioned — callers
+ * decide whether that is a 404 or a trigger to provision explicitly.
  */
 export async function resolveTenantContext(
   db: DbClient,
   orgId: string
 ): Promise<ResolvedTenantContext | null> {
-  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orgId);
-
-  if (isUuid) {
-    // 1. Try resolving by organization ID first (since routers often pass organization UUID)
+  if (UUID_RE.test(orgId)) {
+    // 1. Try resolving by organization ID first (routers often pass org UUID).
     const [existingOrg] = await db
       .select()
       .from(organizations)
@@ -54,7 +61,7 @@ export async function resolveTenantContext(
       }
     }
 
-    // 2. Fall back to resolving by tenant ID
+    // 2. Fall back to resolving by tenant ID.
     const [existingTenant] = await db
       .select()
       .from(tenants)
@@ -80,24 +87,16 @@ export async function resolveTenantContext(
     return null;
   }
 
-  const slug = orgId;
-  const name = `Org ${orgId.substring(0, 8)}`;
-
-  // Step 2a: If the string looks like a BA org ID (not a slug), map via baOrganization.slug
-  // BA stores org IDs as nanoid strings (e.g. "kk8d3n4mabdv3po0jha9"). When the session
-  // carries a BA org ID, we need to translate it to the tenant slug before resolution.
+  // Non-UUID: could be a BA org ID (nanoid) or a slug.
+  // Translate BA org ID → slug when applicable, then resolve by slug.
   const [baOrg] = await db
     .select({ slug: baOrganization.slug })
     .from(baOrganization)
     .where(eq(baOrganization.id, orgId))
     .limit(1);
 
-  if (baOrg?.slug && baOrg.slug !== orgId) {
-    return resolveTenantContext(db, baOrg.slug);
-  }
+  const slug = baOrg?.slug && baOrg.slug !== orgId ? baOrg.slug : orgId;
 
-  // Step 2: Check if Standard tenant already exists for this BA org
-  // We use the BA org ID as the tenant slug for deterministic mapping
   const [existingTenant] = await db
     .select()
     .from(tenants)
@@ -105,7 +104,6 @@ export async function resolveTenantContext(
     .limit(1);
 
   if (existingTenant) {
-    // Step 2a: Tenant exists — find its organization
     const [existingOrg] = await db
       .select()
       .from(organizations)
@@ -117,57 +115,64 @@ export async function resolveTenantContext(
         tenant_id: existingTenant.id,
         organization_id: existingOrg.id,
         ba_org_id: orgId,
-        org_name: name,
+        org_name: existingOrg.name,
       };
     }
-
-    // Tenant exists but no org — create org under this tenant
-    const [newOrg] = await db
-      .insert(organizations)
-      .values({
-        tenantId: existingTenant.id,
-        slug,
-        name,
-        status: "active",
-      })
-      .returning();
-
-    return {
-      tenant_id: existingTenant.id,
-      organization_id: newOrg!.id,
-      ba_org_id: orgId,
-      org_name: name,
-    };
   }
 
-  // Step 3: JIT provisioning — create both tenant and organization
-  const [newTenant] = await db
-    .insert(tenants)
-    .values({
-      slug,
-      name,
-      status: "active",
-    })
-    .returning();
+  return null;
+}
+
+/**
+ * Explicit provisioning: resolve the org, creating the domain tenant and/or
+ * organization when missing. Idempotent and keyed on slug. Call ONLY from
+ * deliberate provisioning points (org creation, platform-admin bootstrap).
+ */
+export async function provisionTenantContext(
+  db: DbClient,
+  orgId: string
+): Promise<ResolvedTenantContext> {
+  const existing = await resolveTenantContext(db, orgId);
+  if (existing) return existing;
+
+  // Translate BA org ID → slug so provisioning is keyed deterministically.
+  const [baOrg] = await db
+    .select({ slug: baOrganization.slug, name: baOrganization.name })
+    .from(baOrganization)
+    .where(eq(baOrganization.id, orgId))
+    .limit(1);
+
+  const slug = baOrg?.slug ?? orgId;
+  const name = baOrg?.name ?? `Org ${orgId.substring(0, 8)}`;
+
+  // Tenant may already exist (e.g. created without its org). Reuse it.
+  const [existingTenant] = await db
+    .select()
+    .from(tenants)
+    .where(eq(tenants.slug, slug))
+    .limit(1);
+
+  const tenantId =
+    existingTenant?.id ??
+    (await db
+      .insert(tenants)
+      .values({ slug, name, status: "active" })
+      .returning())[0]!.id;
 
   const [newOrg] = await db
     .insert(organizations)
-    .values({
-      tenantId: newTenant!.id,
-      slug,
-      name,
-      status: "active",
-    })
+    .values({ tenantId, slug, name, status: "active" })
     .returning();
 
   console.log(
-    `[standard:tenant-mapping] JIT provisioned tenant=${newTenant!.id} org=${newOrg!.id} for BA org=${orgId}`
+    `[standard:tenant-mapping] provisioned tenant=${tenantId} org=${newOrg!.id} for BA org=${orgId}`
   );
 
   return {
-    tenant_id: newTenant!.id,
+    tenant_id: tenantId,
     organization_id: newOrg!.id,
     ba_org_id: orgId,
     org_name: name,
   };
 }
+
