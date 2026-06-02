@@ -231,10 +231,15 @@ export const resolveAuthContext = async (
         context.tenantId = resolvedOrgId;
         context.organizationId = resolvedOrgId;
 
-        // JIT resolve Better-Auth string ID / slug to database UUIDs
+        // Resolve Better-Auth string ID / slug to database UUIDs (read-only).
+        // Regular orgs are provisioned at creation; the only deliberate
+        // request-time provisioning is the platform-admin operator-org bootstrap.
         if (context.deps.resolveTenantContext) {
           try {
-            const resolved = await context.deps.resolveTenantContext(resolvedOrgId);
+            let resolved = await context.deps.resolveTenantContext(resolvedOrgId);
+            if (!resolved && isPlatformAdminUser && context.deps.provisionTenantContext) {
+              resolved = await context.deps.provisionTenantContext(resolvedOrgId);
+            }
             if (resolved) {
               context.tenantId = resolved.tenant_id;
               context.organizationId = resolved.organization_id;
