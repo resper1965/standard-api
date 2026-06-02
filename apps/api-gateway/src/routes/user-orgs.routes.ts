@@ -17,7 +17,7 @@ import type { RouteDefinition } from "../http";
 import { json, routeParam, parseJson } from "../http";
 import type { DbClient } from "../adapters/db";
 import { z } from "zod";
-import { resolveTenantContext } from "../adapters/tenant-mapping";
+import { provisionTenantContext } from "../adapters/tenant-mapping";
 
 /**
  * Type-safe accessor for the raw Drizzle DB client on deps._db.
@@ -268,8 +268,8 @@ export const userOrgsRoutes: RouteDefinition[] = [
           createdAt: new Date()
         });
 
-      // Also JIT provision the Standard domain tenant and organization
-      await resolveTenantContext(db, orgId);
+      // Provision the Standard domain tenant and organization for this new org.
+      await provisionTenantContext(db, orgId);
 
       // Audit the creation
       await context.deps.audit.record("user_org.created", {

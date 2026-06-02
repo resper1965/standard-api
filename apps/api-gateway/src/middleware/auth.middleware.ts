@@ -71,8 +71,8 @@ export const resolveAuthContext = async (
       const apiKeyRecord = await context.deps.apiKeys.verifyKey(keyHash);
       if (apiKeyRecord) {
         context.actorId = `m2m:${apiKeyRecord.id}`;
-        context.tenantId = apiKeyRecord.tenantId;
         context.organizationId = apiKeyRecord.organizationId;
+        context.tenantId = apiKeyRecord.organizationId; // tenant_id === organization_id (ADR 0002 Phase 2/3)
 
         // Store scopes for downstream scope enforcement middleware
         context.m2mScopes = apiKeyRecord.scopes;
@@ -89,7 +89,7 @@ export const resolveAuthContext = async (
           module: "auth",
           environment: "production",
           trace_id: context.traceId,
-          tenant_id: apiKeyRecord.tenantId,
+          tenant_id: apiKeyRecord.organizationId,
           organization_id: apiKeyRecord.organizationId,
           metadata: { actor_id: `m2m:${apiKeyRecord.id}`, key_id: apiKeyRecord.id }
         });
@@ -233,7 +233,7 @@ export const resolveAuthContext = async (
           }
         }
 
-        resolvedOrgId = bekaaOrgId;
+        resolvedOrgId = platformOrgSlug; // use slug for domain resolution — bekaaOrgId is BA-internal only
 
         logger.log({
           level: "info",
@@ -254,10 +254,15 @@ export const resolveAuthContext = async (
         context.tenantId = resolvedOrgId;
         context.organizationId = resolvedOrgId;
 
-        // JIT resolve Better-Auth string ID / slug to database UUIDs
+        // Resolve Better-Auth string ID / slug to database UUIDs (read-only).
+        // Regular orgs are provisioned at creation; the only deliberate
+        // request-time provisioning is the platform-admin operator-org bootstrap.
         if (context.deps.resolveTenantContext) {
           try {
-            const resolved = await context.deps.resolveTenantContext(resolvedOrgId);
+            let resolved = await context.deps.resolveTenantContext(resolvedOrgId);
+            if (!resolved && isPlatformAdminUser && context.deps.provisionTenantContext) {
+              resolved = await context.deps.provisionTenantContext(resolvedOrgId);
+            }
             if (resolved) {
               context.tenantId = resolved.tenant_id;
               context.organizationId = resolved.organization_id;

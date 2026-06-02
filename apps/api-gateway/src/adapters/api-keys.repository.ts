@@ -50,7 +50,6 @@ export const createDrizzleApiKeysRepository = (db: DbClient): ApiKeysRepositoryA
       const [record] = await db
         .insert(apiKeys)
         .values({
-          tenantId: input.tenantId,
           organizationId: input.organizationId,
           name: input.name,
           keyHash: input.keyHash,
@@ -133,7 +132,7 @@ export const createMockApiKeysRepository = (): ApiKeysRepositoryAdapter => {
     async create(input) {
       const record: ApiKeyRecord = {
         id: crypto.randomUUID(),
-        tenantId: input.tenantId,
+        tenantId: input.organizationId, // alias
         organizationId: input.organizationId,
         name: input.name,
         keyHash: input.keyHash,

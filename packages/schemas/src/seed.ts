@@ -57,20 +57,21 @@ async function main() {
   const client = postgres(databaseUrl, { ssl: "require" });
   const db = drizzle(client, { schema });
 
-  // ── 1. Tenant ──
-  console.log("  → Seeding tenant...");
-  await db.insert(schema.tenants).values({
+  // ── 1. Organization (was: Tenant — ADR 0002 Phase 2/3) ──
+  // tenants table removed; organizations IS the tenant.
+  console.log("  → Seeding organization (was tenant)...");
+  await db.insert(schema.organizations).values({
     slug: SYNTH.tenantSlug,
     name: "Synthetic Tenant A",
     status: "active",
   }).onConflictDoNothing();
 
   const [tenant] = await db.select()
-    .from(schema.tenants)
-    .where(eq(schema.tenants.slug, SYNTH.tenantSlug))
+    .from(schema.organizations)
+    .where(eq(schema.organizations.slug, SYNTH.tenantSlug))
     .limit(1);
-  if (!tenant) throw new Error("Tenant not found after insert");
-  console.log(`     tenantId = ${tenant.id}`);
+  if (!tenant) throw new Error("Organization (tenant) not found after insert");
+  console.log(`     organizationId = ${tenant.id}`);
 
   // ── 2. User ──
   console.log("  → Seeding user...");
@@ -102,9 +103,9 @@ async function main() {
   if (!role) throw new Error("Role not found after insert");
 
   // ── 4. Organization ──
+  // The "tenant" above IS the org context. Create a second org for domain data.
   console.log("  → Seeding organization...");
   await db.insert(schema.organizations).values({
-    tenantId: tenant.id,
     slug: SYNTH.orgSlug,
     name: "Synthetic HealthTech Organization",
     status: "active",
@@ -112,10 +113,7 @@ async function main() {
 
   const [org] = await db.select()
     .from(schema.organizations)
-    .where(and(
-      eq(schema.organizations.tenantId, tenant.id),
-      eq(schema.organizations.slug, SYNTH.orgSlug)
-    ))
+    .where(eq(schema.organizations.slug, SYNTH.orgSlug))
     .limit(1);
   if (!org) throw new Error("Organization not found after insert");
   console.log(`     organizationId = ${org.id}`);
@@ -123,7 +121,6 @@ async function main() {
   // ── 5. Membership ──
   console.log("  → Seeding membership...");
   await db.insert(schema.memberships).values({
-    tenantId: tenant.id,
     organizationId: org.id,
     userId: user.id,
     roleId: role.id,
@@ -283,7 +280,6 @@ async function main() {
   // ── 12. Assessment (draft) ──
   console.log("  → Seeding assessment...");
   await db.insert(schema.assessments).values({
-    tenantId: tenant.id,
     organizationId: org.id,
     name: "Synthetic ISO Readiness Assessment",
     state: "draft",
@@ -294,9 +290,7 @@ async function main() {
 
   const [assessment] = await db.select()
     .from(schema.assessments)
-    .where(and(
-      eq(schema.assessments.tenantId, tenant.id),
-      eq(schema.assessments.traceId, SYNTH.assessmentTrace)
+    .where(eq(schema.assessments.traceId, SYNTH.assessmentTrace)
     ))
     .limit(1);
   if (!assessment) throw new Error("Assessment not found after insert");
@@ -305,7 +299,6 @@ async function main() {
   // ── 13. Assessment Framework Selection ──
   console.log("  → Seeding assessment framework...");
   await db.insert(schema.assessmentFrameworks).values({
-    tenantId: tenant.id,
     organizationId: org.id,
     assessmentId: assessment.id,
     scfFrameworkId: framework.id,
@@ -318,7 +311,6 @@ async function main() {
   console.log("  → Recording seed audit event...");
   await db.insert(schema.auditLogs).values({
     action: "synthetic_seed_executed",
-    tenantId: tenant.id,
     organizationId: org.id,
     actorId: user.id,
     resourceType: "seed_script",

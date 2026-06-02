@@ -1,4 +1,4 @@
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { organizations } from "@standard/schemas";
 import type { OrganizationRecord, OrganizationRepositoryAdapter } from "../http";
 import type { DbClient } from "./db";
@@ -13,19 +13,18 @@ export const createOrganizationRepository = (): OrganizationRepositoryAdapter =>
       records.set(record.organization_id, record);
       return record;
     },
-    async get(organizationId, tenantId) {
-      const record = records.get(organizationId);
-      return record?.tenant_id === tenantId ? record : null;
+    async get(organizationId, _tenantId) {
+      return records.get(organizationId) ?? null;
     },
-    async update(organizationId, tenantId, patch) {
+    async update(organizationId, _tenantId, patch) {
       const existing = records.get(organizationId);
-      if (!existing || existing.tenant_id !== tenantId) return null;
+      if (!existing) return null;
       const updated = { ...existing, ...patch };
       records.set(organizationId, updated);
       return updated;
     },
-    async listByTenant(tenantId) {
-      return [...records.values()].filter((record) => record.tenant_id === tenantId);
+    async listByTenant(_tenantId) {
+      return [...records.values()];
     },
     withTenant(tenantId) {
       return {
@@ -41,49 +40,49 @@ export const createOrganizationRepository = (): OrganizationRepositoryAdapter =>
 export const createDrizzleOrganizationRepository = (db: DbClient): OrganizationRepositoryAdapter => {
   return {
     async create(input) {
-      const record = { id: newId(), status: "active" as const, tenantId: input.tenant_id, name: input.name, slug: input.slug, billingTier: "free" };
-      const [inserted] = await db.insert(organizations).values(record).returning();
+      const [inserted] = await db.insert(organizations).values({
+        id: newId(),
+        status: "active" as const,
+        name: input.name,
+        slug: input.slug,
+        billingTier: "free"
+      }).returning();
       return {
         organization_id: inserted!.id,
-        tenant_id: inserted!.tenantId,
+        tenant_id: inserted!.id,
         slug: inserted!.slug,
         name: inserted!.name,
         status: inserted!.status as "active" | "inactive",
         billing_tier: inserted!.billingTier
       };
     },
-    async get(organizationId, tenantId) {
+    async get(organizationId, _tenantId) {
       const [found] = await db.select().from(organizations)
-        .where(
-          and(
-            eq(organizations.id, organizationId), 
-            eq(organizations.tenantId, tenantId)
-          )
-        )
+        .where(eq(organizations.id, organizationId))
         .limit(1);
       if (!found) return null;
-      
+
       return {
         organization_id: found.id,
-        tenant_id: found.tenantId,
+        tenant_id: found.id,
         slug: found.slug,
         name: found.name,
         status: found.status as "active" | "inactive",
         billing_tier: found.billingTier
       };
     },
-    async listByTenant(tenantId) {
-      const results = await db.select().from(organizations).where(eq(organizations.tenantId, tenantId));
+    async listByTenant(_tenantId) {
+      const results = await db.select().from(organizations);
       return results.map(found => ({
         organization_id: found.id,
-        tenant_id: found.tenantId,
+        tenant_id: found.id,
         slug: found.slug,
         name: found.name,
         status: found.status as "active" | "inactive",
         billing_tier: found.billingTier
       }));
     },
-    async update(organizationId, tenantId, patch) {
+    async update(organizationId, _tenantId, patch) {
       const [updated] = await db.update(organizations)
         .set({
           name: patch.name,
@@ -91,19 +90,14 @@ export const createDrizzleOrganizationRepository = (db: DbClient): OrganizationR
           status: patch.status,
           billingTier: patch.billing_tier
         })
-        .where(
-          and(
-            eq(organizations.id, organizationId),
-            eq(organizations.tenantId, tenantId)
-          )
-        )
+        .where(eq(organizations.id, organizationId))
         .returning();
-      
+
       if (!updated) return null;
 
       return {
         organization_id: updated.id,
-        tenant_id: updated.tenantId,
+        tenant_id: updated.id,
         slug: updated.slug,
         name: updated.name,
         status: updated.status as "active" | "inactive",
@@ -120,4 +114,3 @@ export const createDrizzleOrganizationRepository = (db: DbClient): OrganizationR
     }
   };
 };
-

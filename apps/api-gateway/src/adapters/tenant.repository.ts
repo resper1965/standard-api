@@ -1,5 +1,11 @@
+/**
+ * @module tenant.repository
+ * @description ADR 0002 Phase 2/3 — tenants table removed.
+ * This stub proxies TenantRepositoryAdapter calls to the organizations table
+ * for backward compat with callers that still reference AppDependencies.tenants.
+ */
 import { eq } from "drizzle-orm";
-import { tenants } from "@standard/schemas";
+import { organizations } from "@standard/schemas";
 import type { TenantRecord, TenantRepositoryAdapter } from "../http";
 import type { DbClient } from "./db";
 import { newId } from "../http";
@@ -28,38 +34,44 @@ export const createTenantRepository = (): TenantRepositoryAdapter => {
 export const createDrizzleTenantRepository = (db: DbClient): TenantRepositoryAdapter => {
   return {
     async create(input) {
-      const record = { id: newId(), status: "active" as const, name: input.name, slug: input.slug };
-      const [inserted] = await db.insert(tenants).values(record).returning();
-      return { 
-        tenant_id: inserted!.id, 
-        slug: inserted!.slug, 
-        name: inserted!.name, 
-        status: inserted!.status as "active" | "inactive" 
+      const [inserted] = await db
+        .insert(organizations)
+        .values({ slug: input.slug, name: input.name, status: "active" })
+        .returning();
+      return {
+        tenant_id: inserted!.id,
+        slug: inserted!.slug,
+        name: inserted!.name,
+        status: inserted!.status as "active" | "inactive"
       };
     },
     async get(tenantId) {
-      const [found] = await db.select().from(tenants).where(eq(tenants.id, tenantId)).limit(1);
+      const [found] = await db
+        .select()
+        .from(organizations)
+        .where(eq(organizations.id, tenantId))
+        .limit(1);
       if (!found) return null;
-      return { 
-        tenant_id: found.id, 
-        slug: found.slug, 
-        name: found.name, 
+      return {
+        tenant_id: found.id,
+        slug: found.slug,
+        name: found.name,
         status: found.status as "active" | "inactive"
       };
     },
     async update(tenantId, patch) {
-      const [updated] = await db.update(tenants)
+      const [updated] = await db
+        .update(organizations)
         .set({ ...patch })
-        .where(eq(tenants.id, tenantId))
+        .where(eq(organizations.id, tenantId))
         .returning();
       if (!updated) return null;
-      return { 
-        tenant_id: updated.id, 
-        slug: updated.slug, 
-        name: updated.name, 
+      return {
+        tenant_id: updated.id,
+        slug: updated.slug,
+        name: updated.name,
         status: updated.status as "active" | "inactive"
       };
     }
   };
 };
-

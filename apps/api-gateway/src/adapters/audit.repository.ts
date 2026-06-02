@@ -61,7 +61,6 @@ export const createDrizzleAuditRepository = (db: DbClient): AuditRepositoryAdapt
 
       await db.insert(auditLogs).values({
         action: event,
-        tenantId: tenantId ?? null,
         organizationId: organizationId ?? null,
         actorId: actorId ?? null,
         resourceType,
