@@ -176,6 +176,13 @@
       "when": 1780081240508,
       "tag": "0024_tough_grey_gargoyle",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1780423249426,
+      "tag": "0025_blue_lord_hawal",
+      "breakpoints": true
     }
   ]
 }
