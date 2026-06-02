@@ -34,6 +34,9 @@ export const baUser = pgTable("user", {
   // Platform-level admin flag — cross-tenant access.
   // Never set via public API. Only via SQL seed/migration by operators.
   platformAdmin: boolean("platform_admin").notNull().default(false),
+  // Account approval gate — new users require platform admin activation before access.
+  // Existing users (pre-migration) are marked approved=true by the migration.
+  approved: boolean("approved").notNull().default(false),
   // Custom Standard fields
   jobTitle: text("job_title"),
   phone: text("phone"),

@@ -125,6 +125,28 @@ export const resolveAuthContext = async (
       // Extract typed fields at the single cast boundary
       const { user, session } = resolveSessionFields(rawSession);
 
+      // ── Approval gate ──────────────────────────────────────────────────────
+      // New users are created with approved=false. Block access until a
+      // platform admin approves the account. Platform admins themselves
+      // are always allowed through.
+      const isPlatformAdminUser = user.platformAdmin === true || (user as any).platform_admin === true;
+      if (user.approved === false && !isPlatformAdminUser) {
+        logger.log({
+          level: "warn",
+          message: "account_pending_approval",
+          service: "api-gateway",
+          module: "auth",
+          environment: "production",
+          trace_id: context.traceId,
+          metadata: { actor_id: user.id, email: user.email },
+        });
+        throw new ApiError(
+          "ACCOUNT_PENDING_APPROVAL",
+          "Your account is pending approval by a platform administrator.",
+          403
+        );
+      }
+
       let resolvedActorId = user.id;
       if (context.deps.resolveUserContext) {
         try {
@@ -157,6 +179,7 @@ export const resolveAuthContext = async (
           name: user.name,
           role: user.role ?? "viewer",
           platformAdmin: user.platformAdmin ?? (user as any).platform_admin ?? false,
+          approved: user.approved ?? false,
         },
         session: {
           id: session.id,
@@ -168,7 +191,7 @@ export const resolveAuthContext = async (
       // Standard Native Auth stores the active org in the session.
       // ALL users (including platform admins) must be scoped to an organization.
       const activeOrgId = session.activeOrganizationId;
-      const isPlatformAdminUser = user.platformAdmin === true || (user as any).platform_admin === true;
+      // isPlatformAdminUser already computed above for the approval gate
 
       let resolvedOrgId: string | undefined = activeOrgId ?? undefined;
 

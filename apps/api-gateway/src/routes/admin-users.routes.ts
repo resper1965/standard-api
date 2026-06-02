@@ -13,12 +13,13 @@
  */
 import { z } from "zod";
 import { eq, ilike, or, sql, desc, and } from "drizzle-orm";
-import { baUser, baSession, baAccount } from "@standard/schemas";
+import { baUser, baSession, baAccount, baMember, baOrganization } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition, RequestContext } from "../http";
 import { json, parseJson, routeParam } from "../http";
 import { requirePlatformAdmin } from "../middleware/rbac.middleware";
 import type { DbClient } from "../adapters/db";
+import { resolveTenantContext } from "../adapters/tenant-mapping";
 
 // ── Helpers ────────────────────────────────────────────────────────────
 
@@ -56,6 +57,12 @@ const BanUserBodySchema = z.object({
   banExpires: z.coerce.date().optional(),
 });
 
+/** Zod schema for the approve body — organization assignment is mandatory. */
+const ApproveUserBodySchema = z.object({
+  organization_id: z.string().min(1, "organization_id is required to assign the user."),
+  role: z.string().min(1).max(50).default("member"),
+});
+
 /** Columns selected from baUser — avoids leaking internal metadata. */
 const userColumns = {
   id: baUser.id,
@@ -68,6 +75,7 @@ const userColumns = {
   banReason: baUser.banReason,
   banExpires: baUser.banExpires,
   platformAdmin: baUser.platformAdmin,
+  approved: baUser.approved,
   jobTitle: baUser.jobTitle,
   phone: baUser.phone,
   createdAt: baUser.createdAt,
@@ -275,6 +283,165 @@ export const adminUsersRoutes: RouteDefinition[] = [
       });
 
       return json({ data: updated, trace_id: context.traceId });
+    },
+  },
+
+  // ── POST /api/v1/admin/users/:userId/approve ──────────────────────────
+  {
+    method: "POST",
+    path: "/api/v1/admin/users/:userId/approve",
+    protected: true,
+    requireActor: true,
+    tenantRequired: false,
+    handler: async (context) => {
+      await requirePlatformAdmin(context);
+
+      const db = getDb(context);
+      const userId = routeParam(context.params, "userId");
+      const body = await parseJson(context.request, ApproveUserBodySchema);
+
+      // Verify user exists and is not already approved
+      const [existing] = await db
+        .select({ id: baUser.id, approved: baUser.approved })
+        .from(baUser)
+        .where(eq(baUser.id, userId))
+        .limit(1);
+      if (!existing) {
+        throw new ApiError("NOT_FOUND", "User not found.", 404);
+      }
+      if (existing.approved) {
+        return json({ data: { message: "User is already approved." }, trace_id: context.traceId });
+      }
+
+      // Verify the target organization exists
+      const [org] = await db
+        .select({ id: baOrganization.id, name: baOrganization.name })
+        .from(baOrganization)
+        .where(eq(baOrganization.id, body.organization_id))
+        .limit(1);
+      if (!org) {
+        throw new ApiError("NOT_FOUND", "Organization not found. Select a valid organization.", 404);
+      }
+
+      // 1. Mark user as approved
+      const [updated] = await db
+        .update(baUser)
+        .set({ approved: true, updatedAt: new Date() })
+        .where(eq(baUser.id, userId))
+        .returning(userColumns);
+
+      // 2. Create membership in the organization (baMember)
+      const [existingMembership] = await db
+        .select({ id: baMember.id })
+        .from(baMember)
+        .where(
+          and(
+            eq(baMember.userId, userId),
+            eq(baMember.organizationId, body.organization_id)
+          )
+        )
+        .limit(1);
+
+      if (!existingMembership) {
+        await db.insert(baMember).values({
+          id: crypto.randomUUID(),
+          organizationId: body.organization_id,
+          userId: userId,
+          role: body.role ?? "member",
+          createdAt: new Date(),
+        });
+      }
+
+      // 3. JIT resolve tenant context for the org (idempotent)
+      try {
+        await resolveTenantContext(db, body.organization_id);
+      } catch (err) {
+        // Non-fatal — tenant may already exist
+        console.warn("[admin:approve] resolveTenantContext warning:", err);
+      }
+
+      // 4. Activate the org in user’s sessions (if any exist)
+      await db
+        .update(baSession)
+        .set({ activeOrganizationId: body.organization_id })
+        .where(eq(baSession.userId, userId));
+
+      await context.deps.audit.record("admin.user.approved", {
+        actor_id: context.actorId,
+        target_user_id: userId,
+        organization_id: body.organization_id,
+        assigned_role: body.role ?? "member",
+        trace_id: context.traceId,
+      });
+
+      return json({ data: updated, trace_id: context.traceId });
+    },
+  },
+
+  // ── POST /api/v1/admin/users/:userId/reject ────────────────────────────
+  {
+    method: "POST",
+    path: "/api/v1/admin/users/:userId/reject",
+    protected: true,
+    requireActor: true,
+    tenantRequired: false,
+    handler: async (context) => {
+      await requirePlatformAdmin(context);
+
+      const db = getDb(context);
+      const userId = routeParam(context.params, "userId");
+
+      const [existing] = await db
+        .select({ id: baUser.id, email: baUser.email, approved: baUser.approved, platformAdmin: baUser.platformAdmin })
+        .from(baUser)
+        .where(eq(baUser.id, userId))
+        .limit(1);
+      if (!existing) {
+        throw new ApiError("NOT_FOUND", "User not found.", 404);
+      }
+      if (existing.platformAdmin) {
+        throw new ApiError("FORBIDDEN", "Cannot reject a platform admin.", 403);
+      }
+
+      // Cascade delete the rejected user and all their data
+      await db.delete(baAccount).where(eq(baAccount.userId, userId));
+      await db.delete(baSession).where(eq(baSession.userId, userId));
+      await db.delete(baUser).where(eq(baUser.id, userId));
+
+      await context.deps.audit.record("admin.user.rejected", {
+        actor_id: context.actorId,
+        target_user_id: userId,
+        target_email: existing.email,
+        trace_id: context.traceId,
+      });
+
+      return new Response(null, {
+        status: 204,
+        headers: { "x-trace-id": context.traceId },
+      });
+    },
+  },
+
+  // ── GET /api/v1/admin/users/pending-count ──────────────────────────────
+  {
+    method: "GET",
+    path: "/api/v1/admin/users/pending-count",
+    protected: true,
+    requireActor: true,
+    tenantRequired: false,
+    handler: async (context) => {
+      await requirePlatformAdmin(context);
+
+      const db = getDb(context);
+      const [result] = await db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(baUser)
+        .where(eq(baUser.approved, false));
+
+      return json({
+        data: { count: result?.count ?? 0 },
+        trace_id: context.traceId,
+      });
     },
   },
 

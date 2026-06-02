@@ -125,6 +125,18 @@ export const createAuth = (env: AuthEnv, db: any) => {
           returned: true,
           input: false,
         },
+        /**
+         * Account approval gate.
+         * New users default to false; platform admin must approve before access.
+         * - Never settable via public signup (input: false).
+         * - Managed via /api/v1/admin/users/:id/approve endpoint.
+         */
+        approved: {
+          type: "boolean",
+          defaultValue: false,
+          returned: true,
+          input: false,
+        },
       },
     },
 

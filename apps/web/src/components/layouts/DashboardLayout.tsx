@@ -22,6 +22,7 @@ import { api } from "@/lib/api"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ErrorBoundary } from "@/components/ErrorBoundary"
 import { useActiveOrg } from "@/hooks/useActiveOrg"
+import { usePendingUserCount } from "@/lib/queries"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -70,10 +71,11 @@ const routeTitles: Record<string, string> = {
 
 // ─── NavLinks ─────────────────────────────────────────────────────────────────
 
-function NavLinks({ items, currentPath, onNavigate }: {
+function NavLinks({ items, currentPath, onNavigate, badges }: {
   items: NavItem[]
   currentPath: string
   onNavigate?: () => void
+  badges?: Record<string, number>
 }) {
   return (
     <>
@@ -82,6 +84,7 @@ function NavLinks({ items, currentPath, onNavigate }: {
         const isActive = item.end
           ? currentPath === item.path
           : currentPath.startsWith(item.path)
+        const badgeCount = badges?.[item.path]
         return (
           <Link key={item.name} to={item.path} onClick={onNavigate}>
             <div
@@ -93,7 +96,12 @@ function NavLinks({ items, currentPath, onNavigate }: {
             >
               <Icon className="nav-icon h-[18px] w-[18px] shrink-0" strokeWidth={isActive ? 2 : 1.5} />
               <span className="truncate">{item.name}</span>
-              {isActive && <ChevronRight className="ml-auto h-3.5 w-3.5 opacity-40" />}
+              {badgeCount != null && badgeCount > 0 && (
+                <span className="ml-auto inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-destructive-foreground">
+                  {badgeCount > 99 ? "99+" : badgeCount}
+                </span>
+              )}
+              {isActive && !badgeCount && <ChevronRight className="ml-auto h-3.5 w-3.5 opacity-40" />}
             </div>
           </Link>
         )
@@ -112,6 +120,11 @@ export function DashboardLayout() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [orgs, setOrgs] = useState<Org[]>([])
   const [orgsLoading, setOrgsLoading] = useState(false)
+
+  // Pending approval count for admin badge
+  const { data: pendingData } = usePendingUserCount()
+  const pendingCount = isPlatformAdmin ? (pendingData?.data?.count ?? 0) : 0
+  const adminBadges = pendingCount > 0 ? { "/dashboard/users": pendingCount } : undefined
 
   // Close mobile nav on route change
   useEffect(() => { setMobileOpen(false) }, [location.pathname])
@@ -234,7 +247,7 @@ export function DashboardLayout() {
         <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/60">
           Administration
         </p>
-        <NavLinks items={adminItems} currentPath={location.pathname} onNavigate={closeMobile} />
+        <NavLinks items={adminItems} currentPath={location.pathname} onNavigate={closeMobile} badges={adminBadges} />
       </nav>
 
       {/* User footer */}

@@ -231,6 +231,7 @@ export function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [formMounted, setFormMounted] = useState(false)
   const [forgotSent, setForgotSent] = useState(false)
+  const [pendingApproval, setPendingApproval] = useState(false)
 
   useEffect(() => {
     const t = setTimeout(() => setFormMounted(true), 60)
@@ -258,19 +259,33 @@ export function LoginPage() {
     try {
       if (mode === "login") {
         const result = await signIn.email({ email, password })
-        if (result.error) setError(result.error.message || "Invalid email or password")
-        else navigate("/dashboard")
+        if (result.error) {
+          const msg = result.error.message || "Invalid email or password"
+          // Detect approval gate error from backend
+          if (msg.toLowerCase().includes("pending approval") || result.error.code === "ACCOUNT_PENDING_APPROVAL") {
+            setPendingApproval(true)
+          } else {
+            setError(msg)
+          }
+        } else navigate("/dashboard")
       } else {
         const result = await signUp.email({ email, password, name })
         if (result.error) setError(result.error.message || "Sign up failed")
-        else navigate("/dashboard")
+        else {
+          // Show pending approval message instead of redirecting
+          setPendingApproval(true)
+        }
       }
     } catch (err: unknown) {
       const msg =
         err instanceof Error ? err.message :
         (err as Record<string, unknown>)?.message as string ||
         "An unexpected error occurred"
-      setError(msg)
+      if (msg.toLowerCase().includes("pending approval")) {
+        setPendingApproval(true)
+      } else {
+        setError(msg)
+      }
     } finally {
       setLoading(false)
     }
@@ -279,6 +294,7 @@ export function LoginPage() {
   const switchMode = (m: "login" | "signup") => {
     setError("")
     setForgotSent(false)
+    setPendingApproval(false)
     setMode(m)
     setName("")
     setEmail("")
@@ -390,8 +406,36 @@ export function LoginPage() {
             </button>
           </div>
 
-          {/* Form card */}
+            {/* Form card */}
           <div className="lp-card" id="lp-form-panel" role="tabpanel" aria-labelledby={isLogin ? "tab-login" : "tab-signup"}>
+            {pendingApproval ? (
+              <div className="lp-card-header" style={{ textAlign: "center", padding: "2rem 1.5rem" }}>
+                <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 56, height: 56, borderRadius: "50%", background: "linear-gradient(135deg, rgba(96, 165, 250, 0.15), rgba(167, 139, 250, 0.15))", marginBottom: 16 }}>
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{ color: "#60a5fa" }}>
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M12 6v6l4 2" />
+                  </svg>
+                </div>
+                <h2 className="lp-card-title" style={{ marginBottom: 8 }}>
+                  {isLogin ? "Account Pending" : "Account Created!"}
+                </h2>
+                <p className="lp-card-sub" style={{ lineHeight: 1.6 }}>
+                  {isLogin
+                    ? "Your account is awaiting approval by a platform administrator. You will be able to access the platform once your account is approved."
+                    : "Your account has been created successfully. A platform administrator will review and approve your access shortly."}
+                </p>
+                <button
+                  type="button"
+                  className="lp-submit"
+                  style={{ marginTop: 24, maxWidth: 200 }}
+                  onClick={() => { setPendingApproval(false); switchMode("login"); }}
+                >
+                  <span className="lp-submit-content">Back to Sign In</span>
+                  <span className="lp-submit-shine" aria-hidden="true" />
+                </button>
+              </div>
+            ) : (
+            <>
             <div className="lp-card-header">
               <h2 className="lp-card-title">
                 {isLogin ? "Welcome back" : "Get started"}
@@ -520,6 +564,7 @@ export function LoginPage() {
                 <span className="lp-submit-shine" aria-hidden="true" />
               </button>
             </form>
+            </>)}
           </div>
 
           {/* Footer */}
