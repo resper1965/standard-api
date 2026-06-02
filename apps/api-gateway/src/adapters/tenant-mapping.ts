@@ -145,6 +145,14 @@ export async function provisionTenantContext(
   const slug = baOrg?.slug ?? orgId;
   const name = baOrg?.name ?? `Org ${orgId.substring(0, 8)}`;
 
+  // ADR 0002 Phase 1 — ID convergence: when the BA org ID is a UUID (every org
+  // created through the user-orgs route is), reuse it as BOTH tenants.id and
+  // organizations.id. The three IDs converge, so resolution becomes identity and
+  // the future tenant→org merge (Phase 2/3) is a no-op: tenant_id already equals
+  // organization_id for converged rows. Legacy non-UUID orgs (e.g. seeded
+  // operator org) keep auto-generated IDs.
+  const convergedId = UUID_RE.test(orgId) ? orgId : undefined;
+
   // Tenant may already exist (e.g. created without its org). Reuse it.
   const [existingTenant] = await db
     .select()
@@ -156,12 +164,12 @@ export async function provisionTenantContext(
     existingTenant?.id ??
     (await db
       .insert(tenants)
-      .values({ slug, name, status: "active" })
+      .values({ ...(convergedId ? { id: convergedId } : {}), slug, name, status: "active" })
       .returning())[0]!.id;
 
   const [newOrg] = await db
     .insert(organizations)
-    .values({ tenantId, slug, name, status: "active" })
+    .values({ ...(convergedId ? { id: convergedId } : {}), tenantId, slug, name, status: "active" })
     .returning();
 
   console.log(

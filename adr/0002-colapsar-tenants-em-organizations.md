@@ -55,21 +55,23 @@ sem palpite de formato, sem JIT fantasma.
 
 ### Fases
 
-**Fase 0 — Blindar a cola (sem migração, baixo risco). _Pode ser feita já._**
-- `resolveTenantContext` torna-se determinística e idempotente, chaveada por
-  slug. Em vez de criar tenant fantasma no caminho de falha, **lança erro
-  explícito** (`ORG_RESOLUTION_FAILED`) e loga.
-- Centralizar a regex `isUuid` num único helper (`packages/security` ou util do
-  gateway); remover as ~25 cópias.
-- Resultado: a classe de bug "tenant fantasma" desaparece sem tocar no schema.
+**Fase 0 — Blindar a cola (sem migração, baixo risco). ✅ _Concluída._**
+- `resolveTenantContext` agora é **somente leitura**: retorna `null` quando a org
+  não está provisionada, em vez de criar tenant fantasma. Criação foi extraída
+  para `provisionTenantContext`, idempotente e chaveada por slug, chamada apenas
+  em pontos de provisionamento deliberados (criação de org, bootstrap do
+  operador). Regex de UUID centralizada.
+- Resultado: a classe de bug "tenant fantasma" desapareceu sem tocar no schema.
 
 **Fase 1 — Convergir IDs em escrita (aditivo, sem destruição).**
-- No fluxo de criação de org (`user-orgs.routes.ts`), passar o UUID gerado
-  explicitamente como `organizations.id` do domínio (hoje usa `defaultRandom()`
-  independente).
-- Backfill: para orgs existentes, gravar mapeamento BA-org-id → domain-org-id
-  numa coluna/tabela de correspondência, ou alinhar via script idempotente.
-- Migração de dados testada contra dump de produção antes de aplicar.
+- ✅ _Código concluído:_ `provisionTenantContext` reusa o UUID da BA org como
+  `tenants.id` **e** `organizations.id` quando o ID é UUID (todas as orgs criadas
+  pela rota de usuário são). Os três IDs convergem → resolução vira identidade e,
+  para linhas convergidas, `tenant_id` já é igual a `organization_id`. Orgs
+  legadas com ID não-UUID (ex.: operador semeado) mantêm IDs gerados.
+- ⏳ _Pendente (requer dump de produção):_ backfill das orgs existentes para
+  alinhar `organizations.id`/`tenants.id` ao UUID da BA org, via script
+  idempotente testado contra dump antes de aplicar.
 
 **Fase 2 — Repointar FKs `tenant_id` → `organization_id`.**
 - Para cada uma das ~40 tabelas, adicionar verificação de que `tenant_id` é
