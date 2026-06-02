@@ -35,7 +35,7 @@ async function resolveOrgCtx(context: any, organizationId: string) {
     };
   }
 
-  const orgRef = context.tenantId || organizationId;
+  const orgRef = context.tenantId ?? organizationId;
   let tenantCtx = await context.deps.resolveTenantContext?.(orgRef);
   // First-touch provisioning: the org reference comes from the authenticated
   // session / validated route, so provision the domain org if it does not exist
