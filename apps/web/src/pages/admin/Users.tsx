@@ -1,7 +1,7 @@
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { api } from "../../lib/api";
-import { useAdminUsers, qk } from "../../lib/queries";
+import { useAdminUsers, useAdminOrgs, usePendingUserCount, qk } from "../../lib/queries";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "../../components/ui/card";
 import {
@@ -20,7 +20,7 @@ import {
 } from "../../components/ui/select";
 import {
   Loader2, UserPlus, Pencil, ShieldAlert, Shield, Ban, Trash2, UserCheck,
-  Search, AlertTriangle, Users, RefreshCw, ShieldOff, Eye, EyeOff,
+  Search, AlertTriangle, Users, RefreshCw, ShieldOff, Eye, EyeOff, CheckCircle2, Clock, XCircle,
 } from "lucide-react";
 import { useToast } from "../../hooks/use-toast";
 
@@ -35,6 +35,7 @@ type User = {
   role: string;
   createdAt: string;
   banned?: boolean;
+  approved?: boolean;
   image?: string;
 };
 
@@ -180,6 +181,8 @@ export function AdminUsers() {
   const [page, setPage] = useState(0);
 
   const { data, isLoading, isFetching, error, refetch } = useAdminUsers(page, search);
+  const { data: pendingData } = usePendingUserCount();
+  const pendingCount = pendingData?.data?.count ?? 0;
 
   const users = (data?.data ?? []) as User[];
   const hasMore = users.length > PAGE_SIZE;
@@ -203,7 +206,10 @@ export function AdminUsers() {
     );
   }, [visibleUsers, search]);
 
-  const invalidate = () => qc.invalidateQueries({ queryKey: qk.adminUsers(page, search) });
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: qk.adminUsers(page, search) });
+    qc.invalidateQueries({ queryKey: qk.pendingUserCount() });
+  };
 
   // ---- Create modal --------------------------------------------------------
   const [showCreate, setShowCreate] = useState(false);
@@ -222,11 +228,17 @@ export function AdminUsers() {
 
   // ---- Confirm dialog ------------------------------------------------------
   const [confirmAction, setConfirmAction] = useState<{
-    type: "ban" | "unban" | "delete";
+    type: "ban" | "unban" | "delete" | "approve" | "reject";
     user: User;
   } | null>(null);
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [banReason, setBanReason] = useState("");
+  const [showPendingOnly, setShowPendingOnly] = useState(false);
+  const [approveOrgId, setApproveOrgId] = useState("");
+
+  // Fetch orgs for the approval org-selector
+  const { data: orgsData } = useAdminOrgs(0, "");
+  const allOrgs = (orgsData?.data ?? []) as { id: string; name: string; slug: string }[];
 
   const { toast } = useToast();
 
@@ -295,9 +307,24 @@ export function AdminUsers() {
       } else if (type === "delete") {
         await api(`/api/v1/admin/users/${user.id}`, { method: "DELETE" });
         toast({ title: "User deleted", description: `${user.email} was permanently removed.` });
+      } else if (type === "approve") {
+        if (!approveOrgId) {
+          toast({ variant: "destructive", title: "Organization required", description: "Select an organization to assign the user to." });
+          setConfirmLoading(false);
+          return;
+        }
+        await api(`/api/v1/admin/users/${user.id}/approve`, {
+          method: "POST",
+          body: JSON.stringify({ organization_id: approveOrgId }),
+        });
+        toast({ title: "User approved", description: `${user.email} was approved and assigned to an organization.` });
+      } else if (type === "reject") {
+        await api(`/api/v1/admin/users/${user.id}/reject`, { method: "POST" });
+        toast({ title: "User rejected", description: `${user.email} registration was rejected and removed.` });
       }
       setConfirmAction(null);
       setBanReason("");
+      setApproveOrgId("");
       invalidate();
     } catch (e) {
       toast({ variant: "destructive", title: `${type.charAt(0).toUpperCase() + type.slice(1)} failed`, description: e instanceof Error ? e.message : `Failed to ${type} user.` });
@@ -307,6 +334,11 @@ export function AdminUsers() {
   };
 
   const loading = isLoading || isFetching;
+
+  // Client-side filter for pending-only mode
+  const displayUsers = showPendingOnly
+    ? filteredUsers.filter((u) => u.approved === false)
+    : filteredUsers;
 
   if (forbidden) {
     return (
@@ -346,6 +378,18 @@ export function AdminUsers() {
           />
         </div>
         <div className="flex items-center gap-2">
+          {pendingCount > 0 && (
+            <Button
+              variant={showPendingOnly ? "default" : "outline"}
+              size="sm"
+              onClick={() => setShowPendingOnly((v) => !v)}
+              className="cursor-pointer gap-1.5"
+            >
+              <Clock className="h-3.5 w-3.5" />
+              Pending
+              <Badge variant="destructive" className="ml-0.5 text-[10px] px-1.5 py-0">{pendingCount}</Badge>
+            </Button>
+          )}
           <Button variant="ghost" size="sm" onClick={() => refetch()} disabled={loading} className="cursor-pointer">
             <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${loading ? "animate-spin" : ""}`} />
             Refresh
@@ -374,7 +418,7 @@ export function AdminUsers() {
 
           {loading ? (
             <TableSkeleton rows={6} />
-          ) : filteredUsers.length === 0 && !error ? (
+          ) : displayUsers.length === 0 && !error ? (
             <div className="flex flex-col items-center justify-center py-16 space-y-3">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
                 <Users className="h-6 w-6 text-muted-foreground" />
@@ -408,7 +452,9 @@ export function AdminUsers() {
                 {filteredUsers.map((u) => (
                   <TableRow
                     key={u.id}
-                    className={`transition-colors duration-150 ${u.banned ? "opacity-60" : "hover:bg-muted/40"}`}
+                    className={`transition-colors duration-150 ${
+                      u.banned ? "opacity-60" : u.approved === false ? "bg-amber-500/5" : "hover:bg-muted/40"
+                    }`}
                   >
                     <TableCell>
                       <div className="flex items-center gap-3">
@@ -426,9 +472,20 @@ export function AdminUsers() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={u.banned ? "destructive" : "success"}>
-                        {u.banned ? "Banned" : "Active"}
-                      </Badge>
+                      {u.approved === false ? (
+                        <Badge variant="outline" className="gap-1 border-amber-500/40 text-amber-600">
+                          <Clock className="h-3 w-3" />
+                          Pending
+                        </Badge>
+                      ) : u.banned ? (
+                        <Badge variant="destructive">
+                          Banned
+                        </Badge>
+                      ) : (
+                        <Badge variant="success">
+                          Active
+                        </Badge>
+                      )}
                     </TableCell>
                     <TableCell>
                       <span className="text-sm text-muted-foreground" title={u.createdAt ? new Date(u.createdAt).toLocaleString() : ""}>
@@ -437,25 +494,48 @@ export function AdminUsers() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-0.5">
-                        <Button variant="ghost" size="sm" onClick={() => openEdit(u)} className="h-8 w-8 p-0 cursor-pointer" title="Edit user">
-                          <Pencil className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button
-                          variant="ghost" size="sm"
-                          onClick={() => setConfirmAction({ type: u.banned ? "unban" : "ban", user: u })}
-                          className={`h-8 w-8 p-0 cursor-pointer ${u.banned ? "text-emerald-500 hover:text-emerald-600 hover:bg-emerald-500/10" : "text-amber-500 hover:text-amber-600 hover:bg-amber-500/10"}`}
-                          title={u.banned ? "Unban user" : "Ban user"}
-                        >
-                          {u.banned ? <UserCheck className="h-3.5 w-3.5" /> : <Ban className="h-3.5 w-3.5" />}
-                        </Button>
-                        <Button
-                          variant="ghost" size="sm"
-                          onClick={() => setConfirmAction({ type: "delete", user: u })}
-                          className="h-8 w-8 p-0 cursor-pointer text-destructive/60 hover:text-destructive hover:bg-destructive/10"
-                          title="Delete user"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
+                        {u.approved === false ? (
+                          <>
+                            <Button
+                              variant="ghost" size="sm"
+                              onClick={() => setConfirmAction({ type: "approve", user: u })}
+                              className="h-8 w-8 p-0 cursor-pointer text-emerald-500 hover:text-emerald-600 hover:bg-emerald-500/10"
+                              title="Approve user"
+                            >
+                              <CheckCircle2 className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost" size="sm"
+                              onClick={() => setConfirmAction({ type: "reject", user: u })}
+                              className="h-8 w-8 p-0 cursor-pointer text-destructive/60 hover:text-destructive hover:bg-destructive/10"
+                              title="Reject registration"
+                            >
+                              <XCircle className="h-3.5 w-3.5" />
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button variant="ghost" size="sm" onClick={() => openEdit(u)} className="h-8 w-8 p-0 cursor-pointer" title="Edit user">
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost" size="sm"
+                              onClick={() => setConfirmAction({ type: u.banned ? "unban" : "ban", user: u })}
+                              className={`h-8 w-8 p-0 cursor-pointer ${u.banned ? "text-emerald-500 hover:text-emerald-600 hover:bg-emerald-500/10" : "text-amber-500 hover:text-amber-600 hover:bg-amber-500/10"}`}
+                              title={u.banned ? "Unban user" : "Ban user"}
+                            >
+                              {u.banned ? <UserCheck className="h-3.5 w-3.5" /> : <Ban className="h-3.5 w-3.5" />}
+                            </Button>
+                            <Button
+                              variant="ghost" size="sm"
+                              onClick={() => setConfirmAction({ type: "delete", user: u })}
+                              className="h-8 w-8 p-0 cursor-pointer text-destructive/60 hover:text-destructive hover:bg-destructive/10"
+                              title="Delete user"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -581,12 +661,16 @@ export function AdminUsers() {
               {confirmAction?.type === "delete" && <Trash2 className="h-5 w-5 text-destructive" />}
               {confirmAction?.type === "ban" && <Ban className="h-5 w-5 text-amber-500" />}
               {confirmAction?.type === "unban" && <UserCheck className="h-5 w-5 text-emerald-500" />}
-              {confirmAction?.type === "delete" ? "Delete User" : confirmAction?.type === "ban" ? "Ban User" : "Unban User"}
+              {confirmAction?.type === "approve" && <CheckCircle2 className="h-5 w-5 text-emerald-500" />}
+              {confirmAction?.type === "reject" && <XCircle className="h-5 w-5 text-destructive" />}
+              {confirmAction?.type === "delete" ? "Delete User" : confirmAction?.type === "ban" ? "Ban User" : confirmAction?.type === "unban" ? "Unban User" : confirmAction?.type === "approve" ? "Approve User" : "Reject Registration"}
             </DialogTitle>
             <DialogDescription>
               {confirmAction?.type === "delete" && <>This will permanently delete <span className="font-medium text-foreground">{confirmAction.user.email}</span>. This action cannot be undone.</>}
               {confirmAction?.type === "ban" && <><span className="font-medium text-foreground">{confirmAction.user.email}</span> will be banned and unable to log in.</>}
               {confirmAction?.type === "unban" && <><span className="font-medium text-foreground">{confirmAction.user.email}</span> will be unbanned and able to log in again.</>}
+              {confirmAction?.type === "approve" && <>Select an organization for <span className="font-medium text-foreground">{confirmAction.user.email}</span> and approve their access.</>}
+              {confirmAction?.type === "reject" && <>The registration for <span className="font-medium text-foreground">{confirmAction.user.email}</span> will be rejected and the account permanently removed.</>}
             </DialogDescription>
           </DialogHeader>
           {confirmAction?.type === "ban" && (
@@ -595,10 +679,33 @@ export function AdminUsers() {
               <textarea id="ban-reason" value={banReason} onChange={e => setBanReason(e.target.value)} placeholder="e.g. Violated terms of service" rows={2} className="w-full rounded-md border border-border/60 bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-primary" />
             </div>
           )}
+          {confirmAction?.type === "approve" && (
+            <div className="space-y-2">
+              <Label className="text-xs">Assign to Organization <span className="text-destructive">*</span></Label>
+              <Select value={approveOrgId} onValueChange={setApproveOrgId}>
+                <SelectTrigger className="cursor-pointer">
+                  <SelectValue placeholder="Select organization…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {allOrgs.map((org) => (
+                    <SelectItem key={org.id} value={org.id}>
+                      <span className="flex items-center gap-2">
+                        <span className="font-medium">{org.name}</span>
+                        <span className="text-xs text-muted-foreground">({org.slug})</span>
+                      </span>
+                    </SelectItem>
+                  ))}
+                  {allOrgs.length === 0 && (
+                    <div className="px-3 py-2 text-sm text-muted-foreground">No organizations available</div>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <DialogFooter className="pt-2">
             <Button variant="outline" onClick={() => setConfirmAction(null)} disabled={confirmLoading} className="cursor-pointer">Cancel</Button>
-            <Button variant={confirmAction?.type === "delete" ? "destructive" : "default"} onClick={executeConfirmAction} disabled={confirmLoading} className="cursor-pointer">
-              {confirmLoading ? <><Loader2 className="h-4 w-4 mr-1.5 animate-spin" />Processing…</> : confirmAction?.type === "delete" ? "Delete" : confirmAction?.type === "ban" ? "Ban User" : "Unban User"}
+            <Button variant={confirmAction?.type === "delete" || confirmAction?.type === "reject" ? "destructive" : "default"} onClick={executeConfirmAction} disabled={confirmLoading || (confirmAction?.type === "approve" && !approveOrgId)} className="cursor-pointer">
+              {confirmLoading ? <><Loader2 className="h-4 w-4 mr-1.5 animate-spin" />Processing…</> : confirmAction?.type === "delete" ? "Delete" : confirmAction?.type === "ban" ? "Ban User" : confirmAction?.type === "unban" ? "Unban User" : confirmAction?.type === "approve" ? "Approve" : "Reject"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -36,6 +36,7 @@ export const qk = {
   scfFrameworks: () => ["scf", "frameworks"] as const,
   scfFrameworkCoverage: (frameworkId: string, versionId: string) =>
     ["scf", "frameworks", frameworkId, "coverage", versionId] as const,
+  pendingUserCount: () => ["admin", "users", "pending-count"] as const,
 } as const;
 
 // ─── Auth / Orgs ──────────────────────────────────────────────────────────────
@@ -79,7 +80,7 @@ export function useCreateApiKey(orgId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: CreateApiKeyBody) =>
-      api<{ data: ApiKeyRecord; raw_key: string }>(`/api/v1/organizations/${orgId}/api-keys`, {
+      api<{ data: ApiKeyRecord & { key: string }; trace_id: string }>(`/api/v1/organizations/${orgId}/api-keys`, {
         method: "POST",
         body: JSON.stringify(body),
       }),
@@ -226,6 +227,16 @@ export function useAdminUsers(page: number, search: string) {
     queryFn: () =>
       api<{ data: AdminUser[]; total: number }>(`/api/v1/admin/users?${params}`),
     placeholderData: (prev) => prev,
+  });
+}
+
+export function usePendingUserCount() {
+  return useQuery({
+    queryKey: qk.pendingUserCount(),
+    queryFn: () =>
+      api<{ data: { count: number } }>("/api/v1/admin/users/pending-count"),
+    refetchInterval: 60_000, // poll every minute
+    retry: 1,
   });
 }
 
@@ -498,6 +509,7 @@ type AdminUser = {
   role: string;
   createdAt: string;
   banned?: boolean;
+  approved?: boolean;
 };
 
 type AdminOrg = {

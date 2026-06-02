@@ -208,6 +208,17 @@ export const userOrgsRoutes: RouteDefinition[] = [
         context.session?.user?.platformAdmin === true ||
         (context.session?.user as any)?.platform_admin === true;
 
+      // ── Platform-admin-only enforcement ────────────────────────────────
+      // Regular users cannot create organizations. A platform admin assigns
+      // users to organizations during the approval workflow.
+      if (!isPlatformAdmin) {
+        throw new ApiError(
+          "FORBIDDEN",
+          "Organization creation is restricted to platform administrators. Contact your administrator to be assigned to an organization.",
+          403
+        );
+      }
+
       const body = await parseJson(context.request, z.object({
         name: z.string().min(1),
         slug: z.string().min(2)

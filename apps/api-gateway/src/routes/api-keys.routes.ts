@@ -24,11 +24,23 @@ async function resolveOrgCtx(context: any, organizationId: string) {
   if (context.actorId?.startsWith("m2m:")) {
     throw new ApiError("FORBIDDEN", "M2M agents cannot manage API keys.", 403);
   }
-  const tenantCtx = await context.deps.resolveTenantContext?.(
-    context.tenantId || organizationId
-  );
+
+  // Prefer already-resolved context from auth middleware (tenant_id + organization_id are Standard domain UUIDs).
+  // The auth middleware resolves the BA org → Standard domain via resolveTenantContext on every request.
+  if (context.tenantId && context.organizationId) {
+    return {
+      tenant_id: context.tenantId,
+      organization_id: context.organizationId,
+      ba_org_id: organizationId,
+      org_name: "",
+    };
+  }
+
+  // Fallback: resolve the URL param through the tenant mapping function.
+  // This is needed for routes where auth middleware didn't resolve the org yet.
+  const tenantCtx = await context.deps.resolveTenantContext?.(organizationId);
   if (!tenantCtx) {
-    throw new ApiError("NOT_FOUND", "Organization not found.", 404);
+    throw new ApiError("NOT_FOUND", "Organization not found or not provisioned.", 404);
   }
   return tenantCtx;
 }

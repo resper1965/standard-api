@@ -42,6 +42,12 @@ export interface StandardUser {
    * Checked by `isPlatformAdmin()` in `rbac.middleware.ts`.
    */
   platformAdmin?: boolean;
+  /**
+   * Account approval gate. New users default to `false` and require
+   * platform admin approval before gaining access. Pre-existing users
+   * are migrated as `true`.
+   */
+  approved?: boolean;
   emailVerified?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
