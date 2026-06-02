@@ -24,9 +24,14 @@ async function resolveOrgCtx(context: any, organizationId: string) {
   if (context.actorId?.startsWith("m2m:")) {
     throw new ApiError("FORBIDDEN", "M2M agents cannot manage API keys.", 403);
   }
-  const tenantCtx = await context.deps.resolveTenantContext?.(
-    context.tenantId || organizationId
-  );
+  const orgRef = context.tenantId || organizationId;
+  let tenantCtx = await context.deps.resolveTenantContext?.(orgRef);
+  // First-touch provisioning: the org reference comes from the authenticated
+  // session / validated route, so provision the domain org if it does not exist
+  // yet (e.g. org seeded only in the Better Auth tables).
+  if (!tenantCtx && context.deps.provisionTenantContext) {
+    tenantCtx = await context.deps.provisionTenantContext(orgRef);
+  }
   if (!tenantCtx) {
     throw new ApiError("NOT_FOUND", "Organization not found.", 404);
   }
