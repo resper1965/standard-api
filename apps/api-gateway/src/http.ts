@@ -299,7 +299,14 @@ export const json = (body: unknown, init: ResponseInit = {}): Response =>
     }
   });
 
+const MAX_JSON_BODY_BYTES = 1_048_576; // 1 MB
+
 export const parseJson = async <T extends z.ZodType>(request: Request, schema: T): Promise<z.infer<T>> => {
+  const contentLength = request.headers.get("content-length");
+  if (contentLength && parseInt(contentLength, 10) > MAX_JSON_BODY_BYTES) {
+    throw new ApiError("VALIDATION_ERROR", "Request body too large.", 413);
+  }
+
   let body: unknown;
 
   try {
