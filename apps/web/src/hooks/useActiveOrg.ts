@@ -14,7 +14,7 @@ export function useActiveOrg() {
   const orgId =
     ((session?.session as Record<string, unknown> | undefined)
       ?.activeOrganizationId as string | null | undefined)
-    || (isPlatformAdmin ? "bekaa" : null)
+    ?? null
 
   const userId = session?.user?.id ?? null
   const userEmail = session?.user?.email ?? null

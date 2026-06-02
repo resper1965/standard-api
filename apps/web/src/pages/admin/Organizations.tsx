@@ -1,6 +1,8 @@
 ﻿import { useDocumentTitle } from "@/hooks/useDocumentTitle";
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useState, useMemo } from "react";
 import type { FormEvent } from "react";
+import { useUserOrgs, qk } from "../../lib/queries";
+import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "../../lib/auth-client";
 import { api } from "../../lib/api";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../components/ui/card";
@@ -215,10 +217,10 @@ export function AdminOrganizations() {
   const activeOrgId =
     (session?.session as Record<string, unknown>)?.activeOrganizationId as string | null ?? null;
 
-  // Data
-  const [orgs, setOrgs] = useState<Organization[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const qc = useQueryClient();
+  const { data: orgsData, isLoading: loading, error: loadError, refetch } = useUserOrgs();
+  const orgs = (orgsData?.data ?? []) as Organization[];
+  const error = loadError instanceof Error ? loadError.message : null;
 
   // Search
   const [searchQuery, setSearchQuery] = useState("");
@@ -247,31 +249,7 @@ export function AdminOrganizations() {
 
   const { toast } = useToast();
 
-  // -----------------------------------------------------------------------
-  // Data fetching — uses our own API exclusively
-  // -----------------------------------------------------------------------
-
-  const fetchOrgs = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await api<{ data: Organization[] }>("/api/v1/users/me/organizations");
-      const dataArray = Array.isArray(res?.data) ? res.data : [];
-      setOrgs(dataArray);
-    } catch (e: unknown) {
-      const msg =
-        e instanceof Error ? e.message : "Failed to fetch organizations";
-      console.error("[AdminOrganizations] fetch error:", e);
-      setError(msg);
-      setOrgs([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchOrgs();
-  }, [fetchOrgs]);
+  const invalidate = () => qc.invalidateQueries({ queryKey: qk.userOrgs() });
 
   // -----------------------------------------------------------------------
   // Filtered orgs
@@ -296,18 +274,11 @@ export function AdminOrganizations() {
     setActivating(orgId);
     try {
       await api(`/api/v1/users/me/organizations/${orgId}/activate`, { method: "POST" });
-      toast({
-        title: "Organization activated",
-        description: "Reloading to apply context…",
-      });
+      toast({ title: "Organization activated", description: "Reloading to apply context…" });
       window.location.reload();
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Could not activate organization";
-      toast({
-        variant: "destructive",
-        title: "Activation failed",
-        description: msg,
-      });
+      toast({ variant: "destructive", title: "Activation failed", description: msg });
       setActivating(null);
     }
   };
@@ -319,10 +290,7 @@ export function AdminOrganizations() {
       if (activeOrgId) {
         await api(`/api/v1/users/me/organizations/${activeOrgId}/deactivate`, { method: "POST" });
       }
-      toast({
-        title: "Organization deactivated",
-        description: "No organization is now active.",
-      });
+      toast({ title: "Organization deactivated", description: "No organization is now active." });
       window.location.reload();
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Could not deactivate organization";
@@ -352,11 +320,8 @@ export function AdminOrganizations() {
       setNewOrgName("");
       setNewOrgSlug("");
       setAutoSlug(true);
-      await fetchOrgs();
-      toast({
-        title: "Organization created",
-        description: `"${newOrgName}" is ready to use.`,
-      });
+      invalidate();
+      toast({ title: "Organization created", description: `"${newOrgName}" is ready to use.` });
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "An error occurred.";
       toast({
@@ -389,11 +354,8 @@ export function AdminOrganizations() {
         body: JSON.stringify({ name: editOrgName, slug: editOrgSlug }),
       });
       setEditingOrg(null);
-      await fetchOrgs();
-      toast({
-        title: "Organization updated",
-        description: "Changes saved successfully.",
-      });
+      invalidate();
+      toast({ title: "Organization updated", description: "Changes saved successfully." });
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "An error occurred.";
       toast({
@@ -419,11 +381,8 @@ export function AdminOrganizations() {
       });
       setDeleteTarget(null);
       setDeleteConfirmText("");
-      await fetchOrgs();
-      toast({
-        title: "Organization deleted",
-        description: `"${deleteTarget.name}" has been permanently removed.`,
-      });
+      invalidate();
+      toast({ title: "Organization deleted", description: `"${deleteTarget.name}" has been permanently removed.` });
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "An error occurred.";
       toast({
@@ -488,7 +447,7 @@ export function AdminOrganizations() {
           <Button
             variant="outline"
             size="sm"
-            onClick={fetchOrgs}
+            onClick={() => refetch()}
             disabled={loading}
             className="cursor-pointer transition-colors duration-200"
           >
@@ -516,7 +475,7 @@ export function AdminOrganizations() {
           <Button
             variant="outline"
             size="sm"
-            onClick={fetchOrgs}
+            onClick={() => refetch()}
             className="shrink-0 cursor-pointer"
           >
             Retry
