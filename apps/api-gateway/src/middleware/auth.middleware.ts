@@ -210,7 +210,7 @@ export const resolveAuthContext = async (
           }
         }
 
-        resolvedOrgId = bekaaOrgId;
+        resolvedOrgId = platformOrgSlug; // use slug for domain resolution — bekaaOrgId is BA-internal only
 
         logger.log({
           level: "info",
