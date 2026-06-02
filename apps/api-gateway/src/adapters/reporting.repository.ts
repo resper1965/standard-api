@@ -13,7 +13,6 @@ export const createDrizzleReportVersionRepository = (db: DbClient): ReportVersio
   async save(version: ReportVersionResponse) {
     await db.insert(reportVersions).values({
       id: version.report_version_id,
-      tenantId: version.tenant_id,
       organizationId: version.organization_id,
       assessmentId: version.assessment_id,
       versionNumber: version.version_number,
@@ -48,13 +47,13 @@ export const createDrizzleReportVersionRepository = (db: DbClient): ReportVersio
   },
   async get(reportVersionId, tenantId) {
     const [row] = await db.select().from(reportVersions)
-      .where(and(eq(reportVersions.id, reportVersionId), eq(reportVersions.tenantId, tenantId)))
+      .where(eq(reportVersions.id, reportVersionId))
       .limit(1);
     return row ? mapReportVersionRow(row) : null;
   },
   async listByAssessment(assessmentId, tenantId) {
     const rows = await db.select().from(reportVersions)
-      .where(and(eq(reportVersions.assessmentId, assessmentId), eq(reportVersions.tenantId, tenantId)));
+      .where(eq(reportVersions.assessmentId, assessmentId));
     return rows.map(mapReportVersionRow);
   },
 });
@@ -63,7 +62,6 @@ export const createDrizzleReportArtifactRepository = (db: DbClient): ReportArtif
   async save(artifact: ReportArtifactResponse) {
     await db.insert(reportArtifacts).values({
       id: artifact.report_artifact_id,
-      tenantId: artifact.tenant_id,
       organizationId: artifact.organization_id,
       assessmentId: artifact.assessment_id,
       reportVersionId: artifact.report_version_id,
@@ -80,13 +78,13 @@ export const createDrizzleReportArtifactRepository = (db: DbClient): ReportArtif
   },
   async get(artifactId, tenantId) {
     const [row] = await db.select().from(reportArtifacts)
-      .where(and(eq(reportArtifacts.id, artifactId), eq(reportArtifacts.tenantId, tenantId)))
+      .where(eq(reportArtifacts.id, artifactId))
       .limit(1);
     return row ? mapReportArtifactRow(row) : null;
   },
   async listByReport(reportVersionId, tenantId) {
     const rows = await db.select().from(reportArtifacts)
-      .where(and(eq(reportArtifacts.reportVersionId, reportVersionId), eq(reportArtifacts.tenantId, tenantId)));
+      .where(eq(reportArtifacts.reportVersionId, reportVersionId));
     return rows.map(mapReportArtifactRow);
   },
 });
@@ -95,7 +93,6 @@ export const createDrizzleExportJobRepository = (db: DbClient): ExportJobReposit
   async save(job: ExportJobResponse) {
     await db.insert(exportJobs).values({
       id: job.export_job_id,
-      tenantId: job.tenant_id,
       organizationId: job.organization_id,
       assessmentId: job.assessment_id,
       reportVersionId: job.report_version_id,
@@ -119,13 +116,13 @@ export const createDrizzleExportJobRepository = (db: DbClient): ExportJobReposit
   },
   async get(exportJobId, tenantId) {
     const [row] = await db.select().from(exportJobs)
-      .where(and(eq(exportJobs.id, exportJobId), eq(exportJobs.tenantId, tenantId)))
+      .where(eq(exportJobs.id, exportJobId))
       .limit(1);
     return row ? mapExportJobRow(row) : null;
   },
   async listByAssessment(assessmentId, tenantId) {
     const rows = await db.select().from(exportJobs)
-      .where(and(eq(exportJobs.assessmentId, assessmentId), eq(exportJobs.tenantId, tenantId)));
+      .where(eq(exportJobs.assessmentId, assessmentId));
     return rows.map(mapExportJobRow);
   },
 });
@@ -144,7 +141,7 @@ type ExportJobRow = typeof exportJobs.$inferSelect;
 
 const mapReportVersionRow = (row: ReportVersionRow): ReportVersionResponse => ({
   report_version_id: row.id,
-  tenant_id: row.tenantId,
+  tenant_id: row.organizationId,
   organization_id: row.organizationId,
   assessment_id: row.assessmentId,
   version_number: row.versionNumber,
@@ -176,7 +173,7 @@ const mapReportVersionRow = (row: ReportVersionRow): ReportVersionResponse => ({
 
 const mapReportArtifactRow = (row: ReportArtifactRow): ReportArtifactResponse => ({
   report_artifact_id: row.id,
-  tenant_id: row.tenantId,
+  tenant_id: row.organizationId,
   organization_id: row.organizationId,
   assessment_id: row.assessmentId,
   report_version_id: row.reportVersionId,
@@ -195,7 +192,7 @@ const mapReportArtifactRow = (row: ReportArtifactRow): ReportArtifactResponse =>
 
 const mapExportJobRow = (row: ExportJobRow): ExportJobResponse => ({
   export_job_id: row.id,
-  tenant_id: row.tenantId,
+  tenant_id: row.organizationId,
   organization_id: row.organizationId,
   assessment_id: row.assessmentId,
   report_version_id: row.reportVersionId ?? undefined,

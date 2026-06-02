@@ -31,7 +31,6 @@ const tableForType = (type: ArtifactType): VersionTable => {
 
 type GenericVersionRow = {
   id: string;
-  tenantId: string;
   organizationId: string;
   assessmentId: string;
   versionNumber: number;
@@ -44,7 +43,6 @@ type GenericVersionRow = {
 
 const mapRowToVersion = (row: GenericVersionRow, artifactType: ArtifactType): ArtifactVersion => ({
   id: row.id,
-  tenantId: row.tenantId,
   organizationId: row.organizationId,
   assessmentId: row.assessmentId,
   artifactType,
@@ -63,13 +61,12 @@ export const createDrizzleArtifactRepository = (db: DbClient): ArtifactRepositor
     const existing = await db.select().from(table as typeof soaVersions)
       .where(and(
         eq((table as typeof soaVersions).assessmentId, input.assessmentId),
-        eq((table as typeof soaVersions).tenantId, input.tenantId),
+        eq((table as typeof soaVersions).organizationId, input.organizationId),
       ));
     const versionNumber = existing.length + 1;
 
     await db.insert(table as typeof soaVersions).values({
       id: input.id,
-      tenantId: input.tenantId,
       organizationId: input.organizationId,
       assessmentId: input.assessmentId,
       versionNumber,
@@ -126,7 +123,7 @@ export const createDrizzleArtifactRepository = (db: DbClient): ArtifactRepositor
       create: async (input) => this.create(input),
       get: async (versionId) => {
         const artifact = await this.get(versionId);
-        return artifact && artifact.tenantId === tenantId ? artifact : null;
+        return artifact && artifact.organizationId === tenantId ? artifact : null;
       },
       save: async (version) => this.save(version),
       listByAssessment: async (assessmentId, artifactType) => {
@@ -134,7 +131,7 @@ export const createDrizzleArtifactRepository = (db: DbClient): ArtifactRepositor
         const rows = await db.select().from(table as typeof soaVersions)
           .where(and(
             eq((table as typeof soaVersions).assessmentId, assessmentId),
-            eq((table as typeof soaVersions).tenantId, tenantId)
+            eq((table as typeof soaVersions).organizationId, tenantId)
           ));
         return rows.map(r => mapRowToVersion(r as unknown as GenericVersionRow, artifactType));
       }
