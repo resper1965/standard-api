@@ -14,6 +14,7 @@ import { assertRbac } from "./middleware/rbac.middleware";
 import { assertApiKeyScopes } from "./middleware/scope.middleware";
 import { resolveTenantContext } from "./middleware/tenant.middleware";
 import { resolveTraceId } from "./middleware/trace.middleware";
+import { checkIdempotency, storeIdempotencyResult } from "./middleware/idempotency.middleware";
 import { agentRuntimeRoutes } from "./routes/agent-runtime.routes";
 import { agentToolsRoutes } from "./routes/agent-tools.routes";
 import { apiKeysRoutes } from "./routes/api-keys.routes";
@@ -61,6 +62,29 @@ import { ropaRoutes } from "./routes/ropa.routes";
 import { tpraRoutes } from "./routes/tpra.routes";
 import { userOrgsRoutes } from "./routes/user-orgs.routes";
 import { adminUsersRoutes } from "./routes/admin-users.routes";
+
+/**
+ * Route path prefixes that are tenant-exempt by convention.
+ * These are platform-admin or user-level routes that operate across tenants
+ * or don't require an active org context.
+ *
+ * Prefer setting `tenantRequired: false` explicitly on the route definition
+ * instead of expanding this list. This list is a fallback for routes that
+ * predate the declarative field.
+ */
+const TENANT_EXEMPT_PREFIXES = [
+  "/api/v1/scf",
+  "/api/v1/admin/scf",
+  "/api/v1/admin/users",
+  "/api/v1/admin/security",
+  "/api/v1/admin/metrics",
+  "/api/v1/admin/usage",
+  "/api/v1/users/me",
+] as const;
+
+const defaultTenantRequired = (route: RouteDefinition): boolean =>
+  Boolean(route.protected) &&
+  !TENANT_EXEMPT_PREFIXES.some((prefix) => route.path.startsWith(prefix));
 
 export const routes: RouteDefinition[] = [
   ...openapiRoutes,
@@ -255,8 +279,12 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
       const authRequired = route.authRequired ?? (Boolean(route.protected) || Boolean(route.requireActor) || Boolean(route.permissions?.length));
       if (auth) {
         await resolveAuthContext(context, auth, authRequired);
-      } else if (env?.STANDARD_ENV === "local" || env?.STANDARD_ENV === "development" || env?.STANDARD_ENV === "test") {
-        // Legacy header fallback — ONLY available in dev/test mode
+      } else if (
+        (env?.STANDARD_ENV === "local" || env?.STANDARD_ENV === "development" || env?.STANDARD_ENV === "test") &&
+        env?.ALLOW_MOCK_AUTH === "true"
+      ) {
+        // Legacy header fallback — requires ALLOW_MOCK_AUTH=true AND a non-production STANDARD_ENV.
+        // Fail-closed: omitting ALLOW_MOCK_AUTH disables mock-auth even in dev.
         const legacyActor = request.headers.get("x-standard-actor-id") ?? undefined;
         if (legacyActor) {
           context.actorId = legacyActor;
@@ -301,14 +329,17 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
         }
       }
 
-      // Tenant is now derived from session.activeOrganizationId or legacy header
-      const tenantRequired = route.tenantRequired ?? (Boolean(route.protected) && !route.path.startsWith("/api/v1/scf") && !route.path.startsWith("/api/v1/admin/scf") && !route.path.startsWith("/api/v1/admin/users") && !route.path.startsWith("/api/v1/admin/security") && !route.path.startsWith("/api/v1/admin/metrics") && !route.path.startsWith("/api/v1/admin/usage") && !route.path.startsWith("/api/v1/users/me"));
+      const tenantRequired = route.tenantRequired ?? defaultTenantRequired(route);
       await resolveTenantContext(context, tenantRequired);
 
       await assertRbac(context, route.permissions);
       assertApiKeyScopes(context, route.path, request.method, authRequired);
       await assertRateLimit(context, route.path, env?.STANDARD_CACHE);
       await recordAuditEvent(context, route.path);
+
+      // ── Idempotency replay ────────────────────────────────────
+      const idempotentReplay = await checkIdempotency(request, context.tenantId, env?.STANDARD_CACHE);
+      if (idempotentReplay) return withSecurityHeaders(idempotentReplay);
 
       // ── Declarative body validation ───────────────────────────
       // When route defines bodySchema, parse + validate before handler
@@ -317,6 +348,7 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
       }
 
       const response = await route.handler(context);
+      storeIdempotencyResult(request, response, context.tenantId, env?.STANDARD_CACHE);
       // Fire-and-forget observability — never blocks the response
       const obsPromise = recordRequestObservability(context, route.path, response, startedAt)
         .catch((obsErr) => console.error("[standard:observability] Failed to record metrics:", obsErr instanceof Error ? obsErr.message : obsErr));

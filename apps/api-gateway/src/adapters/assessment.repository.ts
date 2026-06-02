@@ -63,7 +63,12 @@ export const createAssessmentRepository = (): AssessmentRepositoryAdapter => {
         get: async (id) => this.get(id, tenantId),
         listByOrganization: async (orgId) => this.listByOrganization(orgId, tenantId),
         listAll: async () => this.listAll(tenantId),
-        save: async (record) => this.save(record)
+        save: async (record) => {
+          if (record.tenant_id !== tenantId) {
+            throw new Error(`Tenant mismatch in save: expected ${tenantId}, got ${record.tenant_id}`);
+          }
+          return this.save(record);
+        }
       };
     }
   };
@@ -174,7 +179,12 @@ export const createDrizzleAssessmentRepository = (db: DbClient): AssessmentRepos
         get: async (id) => this.get(id, tenantId),
         listByOrganization: async (orgId) => this.listByOrganization(orgId, tenantId),
         listAll: async () => this.listAll(tenantId),
-        save: async (record) => this.save(record)
+        save: async (record) => {
+          if (record.tenant_id !== tenantId) {
+            throw new Error(`Tenant mismatch in save: expected ${tenantId}, got ${record.tenant_id}`);
+          }
+          return this.save(record);
+        }
       };
     }
   };
