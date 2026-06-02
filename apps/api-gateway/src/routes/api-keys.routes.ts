@@ -156,7 +156,6 @@ export const apiKeysRoutes: RouteDefinition[] = [
         .join("");
 
       const record = await context.deps.apiKeys.create({
-        tenantId: tenantCtx.tenant_id,
         organizationId: tenantCtx.organization_id,
         name: input.name,
         keyHash,
