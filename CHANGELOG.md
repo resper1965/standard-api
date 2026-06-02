@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0](https://github.com/resper1965/standard-api/compare/v1.1.0...v1.2.0) (2026-06-02)
+
+
+### Features
+
+* user approval gate with org assignment + fix API key creation bug ([071c108](https://github.com/resper1965/standard-api/commit/071c108e35f42f3430b96b33ba7b183ebdbe119d))
+* **web:** add Active/Inactive activity badge to API keys table ([27f428b](https://github.com/resper1965/standard-api/commit/27f428b9e1af97ecd8b835a6cac744edcff49044))
+
+
+### Bug Fixes
+
+* **web:** remove misleading copy button on masked API keys ([89698e6](https://github.com/resper1965/standard-api/commit/89698e67df4e49df477f08fa1eb5b89d0b29389f))
+
 ## [1.1.0](https://github.com/resper1965/standard-api/compare/v1.0.0...v1.1.0) (2026-06-01)
 
 
