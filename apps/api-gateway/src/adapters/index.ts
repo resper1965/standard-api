@@ -43,7 +43,7 @@ import { createDrizzleReportRepositories } from "./reporting.repository";
 import { createMockApiKeysRepository, createDrizzleApiKeysRepository } from "./api-keys.repository";
 import { createInMemoryWebhookRepository, createDrizzleWebhookRepository } from "./webhook.repository";
 import { createDrizzleMembershipRepository, createMockMembershipRepository } from "./membership.repository";
-import { resolveTenantContext } from "./tenant-mapping";
+import { resolveTenantContext, provisionTenantContext } from "./tenant-mapping";
 import { users } from "@standard/schemas";
 import { eq } from "drizzle-orm";
 
@@ -149,6 +149,8 @@ export const createMockRepositories = (): AppDependencies => {
     privacy: createInMemoryPrivacyDependencies(),
     webhooks: createInMemoryWebhookRepository(),
     resolveTenantContext,
+    // In-memory path provisions on resolve; the same creating fn serves both roles.
+    provisionTenantContext: resolveTenantContext,
     resolveUserContext: async (email: string, displayName: string) => ({ id: crypto.randomUUID() })
   };
 };
@@ -199,6 +201,7 @@ export const createDrizzleRepositories = (db: DbClient, env?: Env): AppDependenc
     privacy: { repositories: createDrizzlePrivacyRepositories(db) },
     webhooks: createDrizzleWebhookRepository(db),
     resolveTenantContext: (baOrgId: string) => resolveTenantContext(db, baOrgId),
+    provisionTenantContext: (baOrgId: string) => provisionTenantContext(db, baOrgId),
     resolveUserContext: async (email: string, displayName: string) => {
       const [existing] = await db.select().from(users).where(eq(users.email, email)).limit(1);
       if (existing) return { id: existing.id };

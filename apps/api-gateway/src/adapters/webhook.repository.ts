@@ -18,7 +18,7 @@ import type { DbClient } from "./db";
 function toEndpointRecord(row: typeof webhookEndpoints.$inferSelect): WebhookEndpointRecord {
   return {
     id: row.id,
-    tenant_id: row.tenantId,
+    tenant_id: row.organizationId,
     organization_id: row.organizationId,
     url: row.url,
     events: row.events as WebhookEventType[],
@@ -52,7 +52,6 @@ function toDeliveryLog(row: typeof webhookDeliveries.$inferSelect): WebhookDeliv
 export const createDrizzleWebhookRepository = (db: DbClient): WebhookRepositoryAdapter => ({
   async createEndpoint(input) {
     const [row] = await db.insert(webhookEndpoints).values({
-      tenantId: input.tenant_id,
       organizationId: input.organization_id,
       url: input.url,
       events: input.events,
@@ -66,13 +65,13 @@ export const createDrizzleWebhookRepository = (db: DbClient): WebhookRepositoryA
 
   async getEndpoint(id, tenant_id) {
     const [row] = await db.select().from(webhookEndpoints)
-      .where(and(eq(webhookEndpoints.id, id), eq(webhookEndpoints.tenantId, tenant_id)));
+      .where(eq(webhookEndpoints.id, id));
     return row ? toEndpointRecord(row) : null;
   },
 
   async listEndpoints(tenant_id, organization_id) {
     const rows = await db.select().from(webhookEndpoints)
-      .where(and(eq(webhookEndpoints.tenantId, tenant_id), eq(webhookEndpoints.organizationId, organization_id)));
+      .where(eq(webhookEndpoints.organizationId, organization_id));
     return rows.map(toEndpointRecord);
   },
 
@@ -85,14 +84,14 @@ export const createDrizzleWebhookRepository = (db: DbClient): WebhookRepositoryA
 
     const [row] = await db.update(webhookEndpoints)
       .set(updates)
-      .where(and(eq(webhookEndpoints.id, id), eq(webhookEndpoints.tenantId, tenant_id)))
+      .where(eq(webhookEndpoints.id, id))
       .returning();
     return row ? toEndpointRecord(row) : null;
   },
 
   async deleteEndpoint(id, tenant_id) {
     const [deleted] = await db.delete(webhookEndpoints)
-      .where(and(eq(webhookEndpoints.id, id), eq(webhookEndpoints.tenantId, tenant_id)))
+      .where(eq(webhookEndpoints.id, id))
       .returning({ id: webhookEndpoints.id });
     return !!deleted;
   },
@@ -100,7 +99,6 @@ export const createDrizzleWebhookRepository = (db: DbClient): WebhookRepositoryA
   async findSubscribers(tenant_id, organization_id, event_type) {
     const rows = await db.select().from(webhookEndpoints)
       .where(and(
-        eq(webhookEndpoints.tenantId, tenant_id),
         eq(webhookEndpoints.organizationId, organization_id),
         eq(webhookEndpoints.enabled, true)
       ));
@@ -137,7 +135,7 @@ export const createDrizzleWebhookRepository = (db: DbClient): WebhookRepositoryA
   async rotateSecret(id, tenant_id, newSecretHash, newSecretMasked) {
     const [row] = await db.update(webhookEndpoints)
       .set({ signingSecretHash: newSecretHash, signingSecretMasked: newSecretMasked, updatedAt: new Date() })
-      .where(and(eq(webhookEndpoints.id, id), eq(webhookEndpoints.tenantId, tenant_id)))
+      .where(eq(webhookEndpoints.id, id))
       .returning();
     return row ? toEndpointRecord(row) : null;
   },

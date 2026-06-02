@@ -220,8 +220,10 @@ export type AppDependencies = {
   SOC_TRIAGE_QUEUE?: Queue | undefined;
   /** Webhook endpoint management (optional — requires storage adapter) */
   webhooks?: WebhookRepositoryAdapter | undefined;
-  /** Resolves Standard Native Auth org ID → Standard domain UUIDs (JIT provisioning) */
+  /** READ-ONLY: resolves Standard Native Auth org ID → Standard domain UUIDs. Returns null if not provisioned. */
   resolveTenantContext?: (standardAuthOrgId: string) => Promise<ResolvedTenantContext | null>;
+  /** Explicit provisioning: resolves and creates domain tenant/org if missing. Call only at deliberate provisioning points. */
+  provisionTenantContext?: (standardAuthOrgId: string) => Promise<ResolvedTenantContext>;
   /** Resolves Standard Native Auth user email → Standard domain users UUID (JIT provisioning) */
   resolveUserContext?: (email: string, displayName: string) => Promise<{ id: string }>;
   /** Bans/flags a user for deletion via Standard Native Auth admin API (optional — delegates to cachedAuth) */

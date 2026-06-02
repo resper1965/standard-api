@@ -62,7 +62,6 @@ export const createDrizzleMaturityVersionRepository = (db: DbClient): MaturityVe
   async create(record) {
     await db.insert(maturityAssessmentVersions).values({
       id: record.id,
-      tenantId: record.tenant_id,
       organizationId: record.organization_id,
       assessmentId: record.assessment_id,
       versionNumber: record.version_number,
@@ -74,14 +73,14 @@ export const createDrizzleMaturityVersionRepository = (db: DbClient): MaturityVe
 
   async get(id, tenantId) {
     const [row] = await db.select().from(maturityAssessmentVersions)
-      .where(and(eq(maturityAssessmentVersions.id, id), eq(maturityAssessmentVersions.tenantId, tenantId)))
+      .where(eq(maturityAssessmentVersions.id, id))
       .limit(1);
     return row ? mapVersionRow(row) : null;
   },
 
   async listByAssessment(assessmentId, tenantId) {
     const rows = await db.select().from(maturityAssessmentVersions)
-      .where(and(eq(maturityAssessmentVersions.assessmentId, assessmentId), eq(maturityAssessmentVersions.tenantId, tenantId)));
+      .where(eq(maturityAssessmentVersions.assessmentId, assessmentId));
     return rows.map(mapVersionRow);
   },
 
@@ -90,14 +89,14 @@ export const createDrizzleMaturityVersionRepository = (db: DbClient): MaturityVe
       status: record.status as "draft" | "under_review" | "approved" | "superseded" | "archived",
       approvalEventId: record.approval_event_id,
       updatedAt: new Date(),
-    }).where(and(eq(maturityAssessmentVersions.id, record.id), eq(maturityAssessmentVersions.tenantId, record.tenant_id)));
+    }).where(eq(maturityAssessmentVersions.id, record.id));
   },
 });
 
 type VersionRow = typeof maturityAssessmentVersions.$inferSelect;
 const mapVersionRow = (row: VersionRow): MaturityVersionRecord => ({
   id: row.id,
-  tenant_id: row.tenantId,
+  tenant_id: row.organizationId,
   organization_id: row.organizationId,
   assessment_id: row.assessmentId,
   version_number: row.versionNumber,
@@ -114,7 +113,6 @@ export const createDrizzleMaturityScoreRepository = (db: DbClient): MaturityScor
     await db.insert(maturityScores).values(
       records.map((r) => ({
         id: r.id,
-        tenantId: r.tenant_id,
         organizationId: r.organization_id,
         assessmentId: r.assessment_id,
         maturityAssessmentVersionId: r.maturity_assessment_version_id,
@@ -129,7 +127,7 @@ export const createDrizzleMaturityScoreRepository = (db: DbClient): MaturityScor
 
   async listByVersion(versionId, tenantId) {
     const rows = await db.select().from(maturityScores)
-      .where(and(eq(maturityScores.maturityAssessmentVersionId, versionId), eq(maturityScores.tenantId, tenantId)));
+      .where(eq(maturityScores.maturityAssessmentVersionId, versionId));
     return rows.map(mapScoreRow);
   },
 });
@@ -137,7 +135,7 @@ export const createDrizzleMaturityScoreRepository = (db: DbClient): MaturityScor
 type ScoreRow = typeof maturityScores.$inferSelect;
 const mapScoreRow = (row: ScoreRow): MaturityScoreRecord => ({
   id: row.id,
-  tenant_id: row.tenantId,
+  tenant_id: row.organizationId,
   organization_id: row.organizationId,
   assessment_id: row.assessmentId,
   maturity_assessment_version_id: row.maturityAssessmentVersionId,
