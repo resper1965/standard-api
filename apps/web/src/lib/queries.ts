@@ -40,6 +40,24 @@ export function useUserOrgs() {
   });
 }
 
+// ─── Orgs Detail & Members ────────────────────────────────────────────────────
+
+export function useOrgDetail(orgId: string | undefined) {
+  return useQuery({
+    queryKey: qk.orgDetail(orgId ?? ""),
+    queryFn: () => api<OrgListItem>(`/api/v1/organizations/${orgId}`),
+    enabled: !!orgId,
+  });
+}
+
+export function useOrgMembers(orgId: string | undefined) {
+  return useQuery({
+    queryKey: qk.orgMembers(orgId ?? ""),
+    queryFn: () => api<{ data: OrgMember[] }>(`/api/v1/organizations/${orgId}/members`),
+    enabled: !!orgId,
+  });
+}
+
 // ─── API Keys ─────────────────────────────────────────────────────────────────
 
 export function useOrgApiKeys(orgId: string | undefined) {
@@ -270,6 +288,18 @@ type OrgListItem = {
   slug?: string;
   role?: string;
   status?: string;
+  createdAt?: string;
+  logo?: string | null;
+  metadata?: Record<string, unknown>;
+};
+
+type OrgMember = {
+  userId?: string;
+  user?: { id: string; name: string; email: string };
+  name?: string;
+  email?: string;
+  role: string;
+  createdAt?: string;
 };
 
 type ApiKeyRecord = {

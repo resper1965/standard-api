@@ -1,6 +1,8 @@
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useState, useEffect } from "react"
 import { useSession } from "@/lib/auth-client"
+import { useOrgDetail, useOrgMembers, useOrgApiKeys, qk } from "@/lib/queries"
+import { useQueryClient } from "@tanstack/react-query"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table"
@@ -484,9 +486,17 @@ export function SettingsPage() {
   const { toast } = useToast()
   const hasActiveOrg = !!session?.session?.activeOrganizationId
 
-  const [activeOrg, setActiveOrg] = useState<OrgSummary | null>(null)
-  const [members, setMembers] = useState<Member[]>([])
-  const [apiKeys, setApiKeys] = useState<ApiKeySummary[]>([])
+  const orgId = (session?.session as Record<string, unknown>)?.activeOrganizationId as string | undefined
+
+  const qc = useQueryClient()
+  const { data: orgDetail } = useOrgDetail(orgId)
+  const { data: membersData } = useOrgMembers(orgId)
+  const { data: apiKeysData } = useOrgApiKeys(orgId)
+
+  const activeOrg = orgDetail as OrgSummary | null | undefined
+  const members = (membersData?.data ?? []) as Member[]
+  const apiKeys = (apiKeysData?.data ?? []) as ApiKeySummary[]
+
   const [newKey, setNewKey] = useState<string | null>(null)
   const [copiedId, setCopiedId] = useState("")
   const [isGenerating, setIsGenerating] = useState(false)
@@ -514,50 +524,6 @@ export function SettingsPage() {
   const loggedMember = members.find(m => m.userId === session?.user?.id || m.user?.id === session?.user?.id);
   const isOwner = loggedMember?.role === "owner" || session?.user?.role === "owner";
 
-  const loadApiKeys = async (orgId: string) => {
-    try {
-      const json = await api<{ data: unknown[] }>(`/api/v1/organizations/${orgId}/api-keys`)
-      setApiKeys(json.data || [])
-    } catch (e) {
-      toast({ variant: "destructive", title: "Error", description: e instanceof Error ? e.message : "Failed to load API keys." });
-    }
-  }
-
-  const loadMembers = async (orgId: string) => {
-    try {
-      const membersData = await api<{ data: unknown[] }>(`/api/v1/organizations/${orgId}/members`)
-      setMembers(membersData.data || [])
-    } catch { /* members endpoint may not exist yet */ }
-  }
-
-  const loadOrganizationDetails = async (orgId: string) => {
-    try {
-      const json = await api<Record<string, unknown>>(`/api/v1/organizations/${orgId}`)
-      setActiveOrg((prev: unknown) => ({ ...(prev as object), ...json }))
-    } catch (e) {
-      toast({ variant: "destructive", title: "Error", description: e instanceof Error ? e.message : "Failed to load organization details." });
-    }
-  }
-
-  useEffect(() => {
-    async function load() {
-      if (!hasActiveOrg) return
-      const orgId = (session?.session as Record<string, unknown>)?.activeOrganizationId as string | undefined
-      if (!orgId) return
-      try {
-        const orgData = await api<Record<string, unknown>>(`/api/v1/organizations/${orgId}`)
-        setActiveOrg(orgData)
-        await Promise.allSettled([
-          loadMembers(orgId),
-          loadApiKeys(orgId),
-        ])
-      } catch (e) {
-        toast({ variant: "destructive", title: "Error", description: e instanceof Error ? e.message : "Failed to load organization." });
-      }
-    }
-    load()
-  }, [hasActiveOrg])
-
   useEffect(() => {
     if (activeOrg) {
       setOrgName(activeOrg.name || "")
@@ -583,12 +549,12 @@ export function SettingsPage() {
     if (!activeOrg?.id) return
     setIsUpdatingOrg(true)
     try {
-      const json = await api<Record<string, unknown>>(`/api/v1/organizations/${activeOrg.id}`, {
+      await api<Record<string, unknown>>(`/api/v1/organizations/${activeOrg.id}`, {
         method: "PATCH",
         body: JSON.stringify({ name: orgName, slug: orgSlug })
       })
       toast({ title: "Organization updated", description: "Your organization settings have been updated successfully." })
-      setActiveOrg((prev: unknown) => ({ ...(prev as object), name: json.name, slug: json.slug }))
+      if (orgId) qc.invalidateQueries({ queryKey: qk.orgDetail(orgId) })
     } catch (e) {
       toast({ title: "Update failed", description: e instanceof Error ? e.message : "Failed to update organization details." })
     } finally {
@@ -600,12 +566,12 @@ export function SettingsPage() {
     if (!activeOrg?.id) return
     setIsUpdatingBilling(true)
     try {
-      const json = await api<Record<string, unknown>>(`/api/v1/organizations/${activeOrg.id}/billing`, {
+      await api<Record<string, unknown>>(`/api/v1/organizations/${activeOrg.id}/billing`, {
         method: "PATCH",
         body: JSON.stringify({ billing_tier: billingTier })
       })
       toast({ title: "Plan updated", description: `Organization billing plan updated to ${billingTier.toUpperCase()} successfully.` })
-      setActiveOrg((prev: unknown) => ({ ...(prev as object), billing_tier: json.billing_tier }))
+      if (orgId) qc.invalidateQueries({ queryKey: qk.orgDetail(orgId) })
     } catch (e) {
       toast({ title: "Update failed", description: e instanceof Error ? e.message : "Failed to update billing tier." })
     } finally {
@@ -627,7 +593,7 @@ export function SettingsPage() {
         })
       })
       toast({ title: "Member invited", description: `Invitation sent to ${inviteEmail}.` })
-      await loadMembers(activeOrg.id)
+      qc.invalidateQueries({ queryKey: qk.orgMembers(activeOrg.id) })
       setInviteEmail("")
       setInviteName("")
       setInviteRole("member")
@@ -652,7 +618,7 @@ export function SettingsPage() {
       })
       setNewKey(json.data.key)
       setSelectedScopes([])
-      await loadApiKeys(activeOrg.id)
+      qc.invalidateQueries({ queryKey: qk.orgApiKeys(activeOrg.id) })
     } catch (e) {
       toast({ title: "Generation failed", description: e instanceof Error ? e.message : "Failed to generate key." })
     } finally {
@@ -668,7 +634,7 @@ export function SettingsPage() {
       toast({ title: "API Key revoked", description: `The key "${keyToRevoke.name}" has been permanently revoked.` })
       setIsRevokeDialogOpen(false)
       setKeyToRevoke(null)
-      await loadApiKeys(activeOrg.id)
+      qc.invalidateQueries({ queryKey: qk.orgApiKeys(activeOrg.id) })
     } catch (e) {
       toast({ variant: "destructive", title: "Revocation failed", description: e instanceof Error ? e.message : "Failed to revoke key." })
     } finally {
