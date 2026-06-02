@@ -1,6 +1,6 @@
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
-import { useState, useEffect, useCallback } from "react"
-import { api, ApiError } from "@/lib/api"
+import { useState } from "react"
+import { useAuditLogs } from "@/lib/queries"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -8,18 +8,6 @@ import {
   RefreshCw, ShieldAlert, Filter, ChevronLeft, ChevronRight,
   Key, User, AlertCircle
 } from "lucide-react"
-
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-type AuditLog = {
-  id?: string
-  event?: string
-  action?: string
-  actorId?: string
-  targetId?: string
-  metadata?: Record<string, unknown>
-  createdAt: string
-}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -30,7 +18,6 @@ function formatActorId(actorId: string | undefined): {
   if (!actorId) return { label: "System", type: "system" }
   if (actorId.startsWith("m2m:")) return { label: "M2M Key", type: "m2m" }
   if (actorId.startsWith("system:")) return { label: "System", type: "system" }
-  // Show first 4 + last 4 chars of UUID
   const clean = actorId.replace(/-/g, "")
   return {
     label: clean.length > 8 ? `${clean.slice(0, 4)}…${clean.slice(-4)}` : actorId,
@@ -91,82 +78,71 @@ const COMMON_ACTIONS = [
   "webhook.created", "webhook.deleted",
 ]
 
+type NormalizedLog = {
+  id?: string
+  action: string
+  actorId?: string
+  targetId?: string
+  metadata?: Record<string, unknown>
+  createdAt: string
+}
+
 export function AuditLogsPage() {
   useDocumentTitle("Audit Logs");
-  const [logs, setLogs] = useState<AuditLog[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [forbidden, setForbidden] = useState(false)
   const [page, setPage] = useState(0)
-  const [hasMore, setHasMore] = useState(false)
 
-  // Filters
+  // Filters (applied on "Apply" click — committed state drives the query)
   const [filterAction, setFilterAction] = useState("")
   const [filterActor, setFilterActor] = useState("")
   const [filterFrom, setFilterFrom] = useState("")
   const [filterTo, setFilterTo] = useState("")
+
+  // Draft filter state (updated in UI but not yet applied)
+  const [draftAction, setDraftAction] = useState("")
+  const [draftActor, setDraftActor] = useState("")
+  const [draftFrom, setDraftFrom] = useState("")
+  const [draftTo, setDraftTo] = useState("")
+
   const [showFilters, setShowFilters] = useState(false)
 
-  const fetchLogs = useCallback(async (currentPage: number) => {
-    setLoading(true)
-    setError(null)
-    setForbidden(false)
+  const { data, isLoading, error, refetch, isFetching } = useAuditLogs(page, {
+    action: filterAction,
+    actorId: filterActor,
+    from: filterFrom,
+    to: filterTo,
+  })
 
-    const params = new URLSearchParams()
-    params.set("limit", String(PAGE_SIZE + 1)) // fetch one extra to detect hasMore
-    params.set("offset", String(currentPage * PAGE_SIZE))
-    if (filterAction) params.set("action", filterAction)
-    if (filterActor) params.set("actor_id", filterActor)
-    if (filterFrom) params.set("from", new Date(filterFrom).toISOString())
-    if (filterTo) params.set("to", new Date(filterTo + "T23:59:59").toISOString())
+  const forbidden = (error as { status?: number } | null)?.status === 403
 
-    try {
-      const res = await api<{ data?: any[]; events?: any[] }>(
-        `/api/v1/admin/security-events?${params}`
-      )
-      const rawItems = res?.data ?? res?.events ?? []
-      const items: AuditLog[] = rawItems.map((item: any) => ({
-        id: item.id,
-        action: item.action ?? item.event_type ?? item.event ?? "unknown",
-        actorId: item.actor_id ?? item.actorId ?? "system",
-        targetId: item.target_id ?? item.targetId ?? item.resource_id ?? item.resourceId ?? "",
-        metadata: item.metadata_safe ?? item.metadata ?? {},
-        createdAt: item.created_at ?? item.createdAt ?? item.timestamp ?? new Date().toISOString(),
-      }))
-      setHasMore(items.length > PAGE_SIZE)
-      setLogs(items.slice(0, PAGE_SIZE))
-    } catch (e) {
-      if (e instanceof ApiError && e.status === 403) {
-        setForbidden(true)
-      } else {
-        setError(e instanceof Error ? e.message : "Failed to load audit logs")
-      }
-    } finally {
-      setLoading(false)
-    }
-  }, [filterAction, filterActor, filterFrom, filterTo])
+  const rawItems = data?.data ?? data?.events ?? []
+  const logs: NormalizedLog[] = (rawItems as Record<string, unknown>[]).map((item) => ({
+    id: item.id as string | undefined,
+    action: (item.action ?? item.event_type ?? item.event ?? "unknown") as string,
+    actorId: (item.actor_id ?? item.actorId ?? "system") as string,
+    targetId: (item.target_id ?? item.targetId ?? item.resource_id ?? item.resourceId ?? "") as string,
+    metadata: (item.metadata_safe ?? item.metadata ?? {}) as Record<string, unknown>,
+    createdAt: (item.created_at ?? item.createdAt ?? item.timestamp ?? new Date().toISOString()) as string,
+  }))
 
-  useEffect(() => {
-    setPage(0)
-    fetchLogs(0)
-  }, [fetchLogs])
-
-  const handlePageChange = (newPage: number) => {
-    setPage(newPage)
-    fetchLogs(newPage)
-  }
+  const hasMore = logs.length > PAGE_SIZE
+  const visibleLogs = logs.slice(0, PAGE_SIZE)
 
   const handleFilterApply = () => {
+    setFilterAction(draftAction)
+    setFilterActor(draftActor)
+    setFilterFrom(draftFrom)
+    setFilterTo(draftTo)
     setPage(0)
-    fetchLogs(0)
   }
 
   const handleFilterReset = () => {
-    setFilterAction("")
-    setFilterActor("")
-    setFilterFrom("")
-    setFilterTo("")
+    setDraftAction(""); setDraftActor(""); setDraftFrom(""); setDraftTo("")
+    setFilterAction(""); setFilterActor(""); setFilterFrom(""); setFilterTo("")
+    setPage(0)
   }
+
+  const activeFilters = !!(filterAction || filterActor || filterFrom || filterTo)
+  const loading = isLoading || isFetching
 
   if (forbidden) return (
     <div className="flex flex-col items-center justify-center h-64 gap-4 text-center">
@@ -198,14 +174,14 @@ export function AuditLogsPage() {
           >
             <Filter className="h-4 w-4" />
             Filters
-            {(filterAction || filterActor || filterFrom || filterTo) && (
+            {activeFilters && (
               <span className="ml-1 h-2 w-2 rounded-full bg-primary" />
             )}
           </Button>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => fetchLogs(page)}
+            onClick={() => refetch()}
             disabled={loading}
             className="gap-2 cursor-pointer"
           >
@@ -223,8 +199,8 @@ export function AuditLogsPage() {
               <Label className="text-xs">Action</Label>
               <select
                 className="w-full rounded-md border border-border/60 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
-                value={filterAction}
-                onChange={e => setFilterAction(e.target.value)}
+                value={draftAction}
+                onChange={e => setDraftAction(e.target.value)}
               >
                 <option value="">All actions</option>
                 {COMMON_ACTIONS.map(a => (
@@ -236,8 +212,8 @@ export function AuditLogsPage() {
               <Label className="text-xs">Actor ID / Email</Label>
               <Input
                 placeholder="UUID or m2m:..."
-                value={filterActor}
-                onChange={e => setFilterActor(e.target.value)}
+                value={draftActor}
+                onChange={e => setDraftActor(e.target.value)}
                 className="text-sm"
               />
             </div>
@@ -245,8 +221,8 @@ export function AuditLogsPage() {
               <Label className="text-xs">From date</Label>
               <Input
                 type="date"
-                value={filterFrom}
-                onChange={e => setFilterFrom(e.target.value)}
+                value={draftFrom}
+                onChange={e => setDraftFrom(e.target.value)}
                 className="text-sm cursor-pointer"
               />
             </div>
@@ -254,8 +230,8 @@ export function AuditLogsPage() {
               <Label className="text-xs">To date</Label>
               <Input
                 type="date"
-                value={filterTo}
-                onChange={e => setFilterTo(e.target.value)}
+                value={draftTo}
+                onChange={e => setDraftTo(e.target.value)}
                 className="text-sm cursor-pointer"
               />
             </div>
@@ -272,10 +248,10 @@ export function AuditLogsPage() {
       )}
 
       {/* Error */}
-      {error && (
+      {error && !forbidden && (
         <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-4 text-destructive text-sm flex items-center gap-2">
           <AlertCircle className="h-4 w-4 shrink-0" />
-          {error}
+          {(error as Error).message ?? "Failed to load audit logs"}
         </div>
       )}
 
@@ -302,15 +278,14 @@ export function AuditLogsPage() {
                   ))}
                 </tr>
               ))
-            ) : logs.length === 0 ? (
+            ) : visibleLogs.length === 0 ? (
               <tr>
                 <td colSpan={5} className="px-4 py-10 text-center text-muted-foreground text-sm">
                   No audit events found.
                 </td>
               </tr>
             ) : (
-              logs.map((log, i) => {
-                const action = log.action ?? log.event ?? "unknown"
+              visibleLogs.map((log, i) => {
                 const ts = new Date(log.createdAt)
                 return (
                   <tr key={log.id ?? i} className="hover:bg-muted/10 transition-colors">
@@ -319,7 +294,7 @@ export function AuditLogsPage() {
                       <div className="text-[10px] opacity-70">{ts.toLocaleTimeString()}</div>
                     </td>
                     <td className="px-4 py-3">
-                      <ActionBadge action={action} />
+                      <ActionBadge action={log.action} />
                     </td>
                     <td className="px-4 py-3">
                       <ActorBadge actorId={log.actorId} />
@@ -348,13 +323,13 @@ export function AuditLogsPage() {
         {/* Pagination */}
         <div className="flex items-center justify-between px-4 py-3 border-t border-border/40 bg-muted/20">
           <span className="text-xs text-muted-foreground">
-            Page {page + 1} · {logs.length} events
+            Page {page + 1} · {visibleLogs.length} events
           </span>
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
               size="sm"
-              onClick={() => handlePageChange(page - 1)}
+              onClick={() => setPage(p => p - 1)}
               disabled={page === 0 || loading}
               className="h-8 w-8 p-0 cursor-pointer"
             >
@@ -363,7 +338,7 @@ export function AuditLogsPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => handlePageChange(page + 1)}
+              onClick={() => setPage(p => p + 1)}
               disabled={!hasMore || loading}
               className="h-8 w-8 p-0 cursor-pointer"
             >
