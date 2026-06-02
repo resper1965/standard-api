@@ -232,12 +232,14 @@ export const resolveAuthContext = async (
         context.organizationId = resolvedOrgId;
 
         // Resolve Better-Auth string ID / slug to database UUIDs (read-only).
-        // Regular orgs are provisioned at creation; the only deliberate
-        // request-time provisioning is the platform-admin operator-org bootstrap.
+        // If the org has not yet been provisioned in the domain tables, provision
+        // it now: the ID comes from the authenticated BA session (the user's
+        // active organization), so this is legitimate first-touch provisioning,
+        // not arbitrary "phantom" creation.
         if (context.deps.resolveTenantContext) {
           try {
             let resolved = await context.deps.resolveTenantContext(resolvedOrgId);
-            if (!resolved && isPlatformAdminUser && context.deps.provisionTenantContext) {
+            if (!resolved && context.deps.provisionTenantContext) {
               resolved = await context.deps.provisionTenantContext(resolvedOrgId);
             }
             if (resolved) {
