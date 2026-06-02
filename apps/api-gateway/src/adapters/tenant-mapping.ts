@@ -10,7 +10,7 @@
  * (lazy provisioning / "just-in-time" tenant setup).
  */
 import { eq } from "drizzle-orm";
-import { tenants, organizations } from "@standard/schemas";
+import { tenants, organizations, baOrganization } from "@standard/schemas";
 import type { DbClient } from "./db";
 
 export interface ResolvedTenantContext {
@@ -82,6 +82,19 @@ export async function resolveTenantContext(
 
   const slug = orgId;
   const name = `Org ${orgId.substring(0, 8)}`;
+
+  // Step 2a: If the string looks like a BA org ID (not a slug), map via baOrganization.slug
+  // BA stores org IDs as nanoid strings (e.g. "kk8d3n4mabdv3po0jha9"). When the session
+  // carries a BA org ID, we need to translate it to the tenant slug before resolution.
+  const [baOrg] = await db
+    .select({ slug: baOrganization.slug })
+    .from(baOrganization)
+    .where(eq(baOrganization.id, orgId))
+    .limit(1);
+
+  if (baOrg?.slug && baOrg.slug !== orgId) {
+    return resolveTenantContext(db, baOrg.slug);
+  }
 
   // Step 2: Check if Standard tenant already exists for this BA org
   // We use the BA org ID as the tenant slug for deterministic mapping
