@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1](https://github.com/resper1965/standard-api/compare/v1.2.0...v1.2.1) (2026-06-02)
+
+
+### Bug Fixes
+
+* **api-gateway:** align test context with ADR 0002 and fix tenant middleware sequencing ([0886959](https://github.com/resper1965/standard-api/commit/0886959107f3f7e53a69cc220cc6f9f0895344e8))
+
 ## [1.2.0](https://github.com/resper1965/standard-api/compare/v1.1.0...v1.2.0) (2026-06-02)
 
 
