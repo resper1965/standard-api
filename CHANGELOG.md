@@ -5,6 +5,49 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0](https://github.com/resper1965/standard-api/compare/v1.0.0...v1.1.0) (2026-06-01)
+
+
+### Features
+
+* **api-keys:** add getById/update to repository, fix PATCH persistence, scope selector, expiry and modals in frontend ([45c5247](https://github.com/resper1965/standard-api/commit/45c52470f699d85731b3e1f35fdba1eb638e4288))
+* **auth:** enforce org membership for all users incl. platform admins ([9d8f097](https://github.com/resper1965/standard-api/commit/9d8f097755ca8597462f23a42b494d020804dccc))
+* **frontend:** structured ApiError, useActiveOrg hook, AuditLogs filters+pagination, SystemHealth fixes, MCP standalone response.ok+tenant header ([0ecc0dd](https://github.com/resper1965/standard-api/commit/0ecc0dd77edf80d532f6a8a119f880a4373a11e6))
+* **frontend:** Users pagination+ban-reason, SettingsPage api() migration+members bug fix, OverviewPage Promise.allSettled+typed Org interface ([b11e21e](https://github.com/resper1965/standard-api/commit/b11e21e618aefd57580cf9bbf6c64893a45863e3))
+* implement forgot password flow and complete hardening ([fb551bc](https://github.com/resper1965/standard-api/commit/fb551bc80d562bba9d366be0811d9c2be06af870))
+* **mcp:** expand GRC server to 33 tools and integrate SoA lifecycle ([8417974](https://github.com/resper1965/standard-api/commit/8417974d25835fa3dce9af732c752b46926408aa))
+* **p5-hardening:** ErrorBoundary rewrite+integration, bundle splitting (598KB→121KB), DashboardLayout full refactor (as any eliminated, useActiveOrg, fetch→api, 415→310 lines), useDocumentTitle hook (9 pages), F5 console cleanup ([5cbd75c](https://github.com/resper1965/standard-api/commit/5cbd75c890a13ca9e327d9f6ef29926edd37d906))
+* **sdk:** SdkPage rewrite — REST/SDK/MCP/AI Prompts tabs, dynamic tenantId snippets, per-snippet copy, InfoCard, Step components, sdk-code-label style ([985ecf7](https://github.com/resper1965/standard-api/commit/985ecf7ff44507e2ee379da9d7ada23bee36910e))
+* **webhooks:** WebhooksPage with full CRUD, event selector, secret reveal, delivery history, test+rotate; sidebar+router integration; LoginPage forgot-pw UX + catch any fix ([eef607a](https://github.com/resper1965/standard-api/commit/eef607a6d48707412b0f4809b77739dc9e1eb7e3))
+
+
+### Bug Fixes
+
+* add fallback bekaa organization ID for platform admins to prevent infinite spinner on API Keys page ([d2e84de](https://github.com/resper1965/standard-api/commit/d2e84de5d0ec20efe1a67e3617bc0220add8de25))
+* **auth:** persist bekaa org to BA session on platform admin auto-scope ([8aff755](https://github.com/resper1965/standard-api/commit/8aff755fd457909e89f9bc10546db89b4222f893))
+* **auth:** remove fieldName mapping from Better Auth additionalFields to fix Drizzle adapter mapping ([2a9a35e](https://github.com/resper1965/standard-api/commit/2a9a35ea0b7b998f73a850dc107266790d01a07f))
+* **auth:** support both platformAdmin and platform_admin properties from raw session user ([ca85055](https://github.com/resper1965/standard-api/commit/ca850552704777db16663ae7db9edc92f609b625))
+* **ci:** add wrangler.queues-worker.toml configuration file ([b71bb45](https://github.com/resper1965/standard-api/commit/b71bb456ccb635d0f13a29cdc187156e86a3746a))
+* **ci:** fix smoke tests WAF block and remove obsolete defectdojo workflow ([0103219](https://github.com/resper1965/standard-api/commit/01032198f794cda78256bc6816593cb0a0be0cba))
+* **cleanup:** OrganizationSettingsTab useActiveOrg+err narrowing, TenantSubscriptionTab rewrite (no as any, error UI, mounted guard), remove unused useSession WebhooksPage, remove unused isPlatformAdmin OverviewPage ([53bbcec](https://github.com/resper1965/standard-api/commit/53bbcec36d12945c53f2b9a46f06311dc77b5d36))
+* **gateway:** resolve organization UUID resolver context and cache openapi spec ([bebc1a3](https://github.com/resper1965/standard-api/commit/bebc1a3ba7a816f14604902d960291bb7e189d39))
+* **infra:** add nodejs_compat compatibility flags to wrangler configs ([c28cb96](https://github.com/resper1965/standard-api/commit/c28cb96825d4e432604eb48622f9ff6b2f860d84))
+* **mcp-tools:** eliminate as any from assessment.tools.ts and soa.tools.ts - use AssessmentRepositoryAdapter.get()/listByOrganization() and SoaItemResponse/SoaVersionResponse types directly; mapAssessment()/mapItem()/mapVersion() helpers for consistent shape; membership.repository as any retained (Drizzle raw SQL pattern) ([02f7ec5](https://github.com/resper1965/standard-api/commit/02f7ec50257cd8f401b5d5ac05e097ee9b9cbcee))
+* resolve org activation 500 error and React Router DOM hydration warning ([4f52133](https://github.com/resper1965/standard-api/commit/4f5213388bcd307442c8e8bc52f083960ddeea62))
+* **types:** eliminate all as any from frontend - ApiKeysPage (useActiveOrg, typed api&lt;&gt;, err narrowing), SettingsPage (OrgSummary/Member/ApiKeySummary interfaces, 4 useState&lt;any&gt; fixed), OnboardingPage (err:unknown) ([9c7ab09](https://github.com/resper1965/standard-api/commit/9c7ab09ad0965a7b35bd86ac968a2c6cafebd58e))
+* **web:** bulletproof platform admin detection to stop flicker loop ([6d2edd9](https://github.com/resper1965/standard-api/commit/6d2edd99cc3965cfae06bef030e8f4beccd78634))
+* **web:** redirect to login page after signout ([98ff941](https://github.com/resper1965/standard-api/commit/98ff941d2dc40ae6a2927f67ff04d4c5d3155303))
+* **web:** remove duplicate user avatar from headers, make logout button labeled and symmetrical in sidebar ([b1f9f60](https://github.com/resper1965/standard-api/commit/b1f9f604aa799880813bd52bc7fec2c4fadf28d2))
+* **web:** resolve tenant context for platform admins in api client requests ([d262232](https://github.com/resper1965/standard-api/commit/d262232e536f1ed173a2dad11c5e194abe4a9a41))
+* **web:** show static Bekaa badge for platform admins instead of org selector ([faa2c6d](https://github.com/resper1965/standard-api/commit/faa2c6dd8b859fc7503b3f8d88e6834c32e869df))
+* **web:** skip onboarding redirect for platform admins (stop flicker loop) ([ffde486](https://github.com/resper1965/standard-api/commit/ffde486592b8ed975c70f98adf36c132c04c98f4))
+* **web:** visual duplicate titles removal and M2M key creation payload hardening ([b690d70](https://github.com/resper1965/standard-api/commit/b690d703c64526151cc2486f63e61c0ae09bc42a))
+
+
+### Performance Improvements
+
+* **web:** cache and deduplicate Better Auth session requests in api client ([0fe1f38](https://github.com/resper1965/standard-api/commit/0fe1f38308eac2fd69f46d0b0e73b92fe115a591))
+
 ## 1.0.0 (2026-05-29)
 
 
