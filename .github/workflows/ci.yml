@@ -62,11 +62,12 @@ jobs:
       - name: Unit Tests
         run: pnpm test:unit
 
-      # Non-blocking: contract tests require wrangler/miniflare CF environment.
-      # Tracked: needs CF_ACCOUNT_ID + D1 binding in CI secrets to become blocking.
-      - name: Contract Tests
+      # Blocking: contract tests exercise the real HTTP edge (createApp +
+      # app.fetch) against in-memory adapters — no CF/wrangler/DB required.
+      # They guard the golden-path regressions (e.g. API key creation) that
+      # previously only surfaced in the browser.
+      - name: Contract Tests (blocking)
         run: pnpm test:contracts
-        continue-on-error: true
 
   # Heavy tests: security, regression, evaluations, synthetic-e2e.
   # All require wrangler/miniflare CF environment — non-blocking until CF CI env is set up.
