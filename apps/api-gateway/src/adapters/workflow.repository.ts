@@ -15,7 +15,6 @@ export const createDrizzleWorkflowRepository = (db: DbClient): WorkflowRepositor
     async create(input: WorkflowRunRecord) {
       await db.insert(workflowRuns).values({
         id: input.workflow_run_id,
-        tenantId: input.state.tenant_id,
         organizationId: input.state.organization_id,
         assessmentId: input.state.assessment_id,
         status: input.status,
@@ -38,7 +37,6 @@ export const createDrizzleWorkflowRepository = (db: DbClient): WorkflowRepositor
       const [row] = await db.select().from(workflowRuns)
         .where(and(
           eq(workflowRuns.assessmentId, assessmentId),
-          eq(workflowRuns.tenantId, tenantId),
           notInArray(workflowRuns.status, ["completed", "cancelled"])
         ))
         .limit(1);
@@ -49,8 +47,7 @@ export const createDrizzleWorkflowRepository = (db: DbClient): WorkflowRepositor
       const rows = await db.select().from(workflowRuns)
         .where(and(
           eq(workflowRuns.assessmentId, assessmentId),
-          eq(workflowRuns.tenantId, tenantId)
-        ));
+          ));
       return rows.map(mapWorkflowRow);
     },
 
@@ -83,7 +80,6 @@ export const createDrizzleWorkflowRepository = (db: DbClient): WorkflowRepositor
 export const createDrizzleWorkflowAuditAdapter = (db: DbClient): WorkflowAuditAdapter => ({
   async record(event: WorkflowAuditEvent) {
     await db.insert(workflowAuditEvents).values({
-      tenantId: event.tenant_id,
       organizationId: event.organization_id,
       assessmentId: event.assessment_id,
       workflowRunId: event.workflow_run_id,

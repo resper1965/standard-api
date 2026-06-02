@@ -13,7 +13,6 @@ export const createDrizzleScopeRepository = (db: DbClient): ScopeRepository => (
   async save(scope: ScopeResponse) {
     await db.insert(assessmentScope).values({
       id: scope.scope_id,
-      tenantId: scope.tenant_id,
       organizationId: scope.organization_id,
       assessmentId: scope.assessment_id,
       title: scope.title,
@@ -51,18 +50,18 @@ export const createDrizzleScopeRepository = (db: DbClient): ScopeRepository => (
       assumptions: scope.assumptions,
       constraints: scope.constraints,
       updatedAt: new Date(),
-    }).where(and(eq(assessmentScope.id, scope.scope_id), eq(assessmentScope.tenantId, scope.tenant_id)));
+    }).where(eq(assessmentScope.id, scope.scope_id));
   },
   async get(scopeId, tenantId) {
     const [row] = await db.select().from(assessmentScope)
-      .where(and(eq(assessmentScope.id, scopeId), eq(assessmentScope.tenantId, tenantId)))
+      .where(eq(assessmentScope.id, scopeId))
       .limit(1);
     if (!row) return null;
     return mapScopeRow(row);
   },
   async listByAssessment(assessmentId, tenantId) {
     const rows = await db.select().from(assessmentScope)
-      .where(and(eq(assessmentScope.assessmentId, assessmentId), eq(assessmentScope.tenantId, tenantId)));
+      .where(eq(assessmentScope.assessmentId, assessmentId));
     return rows.map(mapScopeRow);
   }
 });
@@ -71,7 +70,6 @@ export const createDrizzleSoaVersionRepository = (db: DbClient): SoaVersionRepos
   async save(version: SoaVersionResponse) {
     await db.insert(soaVersions).values({
       id: version.soa_version_id,
-      tenantId: version.tenant_id,
       organizationId: version.organization_id,
       assessmentId: version.assessment_id,
       versionNumber: version.version_number,
@@ -95,18 +93,18 @@ export const createDrizzleSoaVersionRepository = (db: DbClient): SoaVersionRepos
       supersededBy: version.superseded_by,
       metadata: version.metadata ?? {},
       updatedAt: new Date(),
-    }).where(and(eq(soaVersions.id, version.soa_version_id), eq(soaVersions.tenantId, version.tenant_id)));
+    }).where(eq(soaVersions.id, version.soa_version_id));
   },
   async get(soaVersionId, tenantId) {
     const [row] = await db.select().from(soaVersions)
-      .where(and(eq(soaVersions.id, soaVersionId), eq(soaVersions.tenantId, tenantId)))
+      .where(eq(soaVersions.id, soaVersionId))
       .limit(1);
     if (!row) return null;
     return mapSoaVersionRow(row);
   },
   async listByAssessment(assessmentId, tenantId) {
     const rows = await db.select().from(soaVersions)
-      .where(and(eq(soaVersions.assessmentId, assessmentId), eq(soaVersions.tenantId, tenantId)));
+      .where(eq(soaVersions.assessmentId, assessmentId));
     return rows.map(mapSoaVersionRow);
   }
 });
@@ -116,7 +114,6 @@ export const createDrizzleSoaItemRepository = (db: DbClient): SoaItemRepository 
     if (items.length === 0) return;
     await db.insert(soaItems).values(items.map(item => ({
       id: item.soa_item_id,
-      tenantId: item.tenant_id,
       organizationId: item.organization_id,
       assessmentId: item.assessment_id,
       soaVersionId: item.soa_version_id,
@@ -155,18 +152,18 @@ export const createDrizzleSoaItemRepository = (db: DbClient): SoaItemRepository 
       requiresUserValidation: item.requires_user_validation,
       validationNotes: item.validation_notes,
       updatedAt: new Date(),
-    }).where(and(eq(soaItems.id, item.soa_item_id), eq(soaItems.tenantId, item.tenant_id)));
+    }).where(eq(soaItems.id, item.soa_item_id));
   },
   async get(soaItemId, tenantId) {
     const [row] = await db.select().from(soaItems)
-      .where(and(eq(soaItems.id, soaItemId), eq(soaItems.tenantId, tenantId)))
+      .where(eq(soaItems.id, soaItemId))
       .limit(1);
     if (!row) return null;
     return mapSoaItemRow(row);
   },
   async listByVersion(soaVersionId, tenantId) {
     const rows = await db.select().from(soaItems)
-      .where(and(eq(soaItems.soaVersionId, soaVersionId), eq(soaItems.tenantId, tenantId)));
+      .where(eq(soaItems.soaVersionId, soaVersionId));
     return rows.map(mapSoaItemRow);
   }
 });
@@ -185,7 +182,7 @@ type SoaItemRow = typeof soaItems.$inferSelect;
 
 const mapScopeRow = (row: ScopeRow): ScopeResponse => ({
   scope_id: row.id,
-  tenant_id: row.tenantId,
+  tenant_id: row.organizationId,
   organization_id: row.organizationId,
   assessment_id: row.assessmentId,
   title: row.title ?? "",
@@ -211,7 +208,7 @@ const mapScopeRow = (row: ScopeRow): ScopeResponse => ({
 
 const mapSoaVersionRow = (row: SoaVersionRow): SoaVersionResponse => ({
   soa_version_id: row.id,
-  tenant_id: row.tenantId,
+  tenant_id: row.organizationId,
   organization_id: row.organizationId,
   assessment_id: row.assessmentId,
   version_number: row.versionNumber,
@@ -233,7 +230,7 @@ const mapSoaVersionRow = (row: SoaVersionRow): SoaVersionResponse => ({
 
 const mapSoaItemRow = (row: SoaItemRow): SoaItemResponse => ({
   soa_item_id: row.id,
-  tenant_id: row.tenantId,
+  tenant_id: row.organizationId,
   organization_id: row.organizationId,
   assessment_id: row.assessmentId,
   soa_version_id: row.soaVersionId,

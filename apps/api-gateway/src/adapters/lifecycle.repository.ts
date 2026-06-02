@@ -9,7 +9,6 @@ import type { DbClient } from "./db";
 type EventRow = typeof assessmentEvents.$inferSelect;
 
 const mapRowToEvent = (row: EventRow): AssessmentLifecycleEvent => ({
-  tenantId: row.tenantId,
   organizationId: row.organizationId,
   assessmentId: row.assessmentId,
   previousState: row.previousState as AssessmentLifecycleEvent["previousState"],
@@ -32,7 +31,7 @@ export const createLifecycleEventRepository = (): LifecycleEventRepositoryAdapte
       records.push(event);
     },
     async listByAssessment(assessmentId, tenantId) {
-      return records.filter((record) => record.assessmentId === assessmentId && record.tenantId === tenantId);
+      return records.filter((record) => record.assessmentId === assessmentId && record.organizationId === tenantId);
     },
     withTenant(tenantId: string) {
       return {
@@ -49,7 +48,6 @@ export const createDrizzleLifecycleEventRepository = (db: DbClient): LifecycleEv
   return {
     async record(event) {
       await db.insert(assessmentEvents).values({
-        tenantId: event.tenantId,
         organizationId: event.organizationId,
         assessmentId: event.assessmentId,
         previousState: event.previousState as EventRow["previousState"],
@@ -66,8 +64,7 @@ export const createDrizzleLifecycleEventRepository = (db: DbClient): LifecycleEv
         .where(
           and(
             eq(assessmentEvents.assessmentId, assessmentId),
-            eq(assessmentEvents.tenantId, tenantId)
-          )
+            )
         );
       return results.map(mapRowToEvent);
     },
