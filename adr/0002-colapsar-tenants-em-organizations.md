@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposta.
+✅ Implementada.
 
 ## Contexto
 
