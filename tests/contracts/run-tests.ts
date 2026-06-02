@@ -5,6 +5,7 @@ import "./soc-contracts.test";
 import "./documents-contracts.test";
 import "./scf-contracts.test";
 import "./gap-poam-contracts.test";
+import "./api-keys-contracts.test";
 import { runTests } from "../test-kit";
 
 await runTests("contract");

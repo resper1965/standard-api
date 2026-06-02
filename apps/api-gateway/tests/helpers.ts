@@ -103,6 +103,42 @@ export const createTestClient = () => {
     return { response, body: wrapError(resBody) };
   };
 
-  return { send, sendMultipart, createTenantOrg, createAssessment };
+  // ── API key helpers ──────────────────────────────────────────────
+  // Default to an org-admin mock role so RBAC (`organization:update`) passes.
+  const authHeaders = (tenantId: string, role = "organization_admin") => ({
+    "x-standard-tenant-id": tenantId,
+    "x-standard-actor-id": ids.actorId,
+    "x-standard-mock-role": role,
+  });
+
+  const createApiKey = async (
+    tenantId: string,
+    organizationId: string,
+    body: { name: string; scopes: string[]; expiresAt?: string },
+  ) =>
+    send(
+      `/api/v1/organizations/${organizationId}/api-keys`,
+      "POST",
+      body,
+      authHeaders(tenantId),
+    );
+
+  const listApiKeys = async (tenantId: string, organizationId: string) =>
+    send(
+      `/api/v1/organizations/${organizationId}/api-keys`,
+      "GET",
+      undefined,
+      authHeaders(tenantId),
+    );
+
+  const revokeApiKey = async (tenantId: string, organizationId: string, keyId: string) =>
+    send(
+      `/api/v1/organizations/${organizationId}/api-keys/${keyId}`,
+      "DELETE",
+      undefined,
+      authHeaders(tenantId),
+    );
+
+  return { send, sendMultipart, createTenantOrg, createAssessment, createApiKey, listApiKeys, revokeApiKey, authHeaders };
 };
 
