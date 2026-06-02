@@ -304,9 +304,12 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
           // We pass security-package roles through directly — they match
           // STANDARD_ROLE_PERMISSIONS keys in permissions.ts (GRC roles).
           // Only "system" maps to special handling (platform_admin flag).
-          const isPlatAdmin = authRoles.includes("platform_admin" as any)
+          const isPlatAdmin = (authRoles.includes("platform_admin" as any)
             || authRoles.includes("system" as any)
-            || overrideRole === "platform_admin";
+            || overrideRole === "platform_admin")
+            && overrideRole !== "owner"
+            && overrideRole !== "viewer"
+            && overrideRole !== "admin";
           const mockRole = overrideRole ?? firstAuthRole ?? "admin";
           context.session = {
             user: {

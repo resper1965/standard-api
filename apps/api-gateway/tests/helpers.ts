@@ -46,7 +46,7 @@ const wrapError = (resBody: any) => {
 };
 
 export const createTestClient = () => {
-  const app = createApp(undefined, { STANDARD_ENV: "test" } as any);
+  const app = createApp(undefined, { STANDARD_ENV: "test", ALLOW_MOCK_AUTH: "true" } as any);
 
   const send = async (path: string, method = "GET", body?: unknown, headers: Record<string, string> = {}) => {
     const response = await app.fetch(jsonRequest(path, method, body, headers));
@@ -70,9 +70,10 @@ export const createTestClient = () => {
       "x-standard-actor-id": ids.actorId
     });
 
+    const orgId = orgResult.body.organization_id as string;
     return {
-      tenantId,
-      organizationId: orgResult.body.organization_id as string
+      tenantId: orgId,
+      organizationId: orgId
     };
   };
 

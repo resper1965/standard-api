@@ -12,34 +12,7 @@ export const resolveTenantContext = async (context: RequestContext, protectedRou
 
   const isPlatformAdmin = context.session?.user?.platformAdmin === true;
 
-  // Enforce tenant isolation for authenticated requests
-  if (context.tenantId && !isPlatformAdmin) {
-    if (pathTenantId && pathTenantId !== context.tenantId) {
-      throw new ApiError("FORBIDDEN", "Tenant context mismatch.", 403);
-    }
-    if (headerTenantId && headerTenantId !== context.tenantId) {
-      throw new ApiError("FORBIDDEN", "Tenant context mismatch.", 403);
-    }
-  }
-
-  // Enforce organization isolation for authenticated requests
-  const pathOrgId = context.params.organizationId;
-  if (context.organizationId && pathOrgId && !isPlatformAdmin) {
-    let resolvedPathOrgId = pathOrgId;
-    if (context.deps.resolveTenantContext) {
-      try {
-        const resolved = await context.deps.resolveTenantContext(pathOrgId);
-        if (resolved) {
-          resolvedPathOrgId = resolved.organization_id;
-        }
-      } catch (e) {
-        // ignore resolution error
-      }
-    }
-    if (resolvedPathOrgId !== context.organizationId) {
-      throw new ApiError("FORBIDDEN", "Organization context mismatch.", 403);
-    }
-  }
+  // Isolation checks are moved to the bottom after resolving tenantId and organizationId.
 
   const rawTenantId = headerTenantId ?? pathTenantId ?? context.tenantId;
 
@@ -121,6 +94,43 @@ export const resolveTenantContext = async (context: RequestContext, protectedRou
   context.tenantId = resolvedTenantId;
   if (resolvedOrgId) {
     context.organizationId = resolvedOrgId;
+  }
+
+  // Enforce tenant isolation for authenticated requests (after resolving context)
+  if (context.tenantId && pathTenantId && !isPlatformAdmin) {
+    let resolvedPathTenantId = pathTenantId;
+    if (context.deps.resolveTenantContext) {
+      try {
+        const resolved = await context.deps.resolveTenantContext(pathTenantId);
+        if (resolved) {
+          resolvedPathTenantId = resolved.tenant_id;
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+    if (resolvedPathTenantId !== context.tenantId) {
+      throw new ApiError("FORBIDDEN", "Tenant context mismatch.", 403);
+    }
+  }
+
+  // Enforce organization isolation for authenticated requests (after resolving context)
+  const pathOrgId = context.params.organizationId;
+  if (context.organizationId && pathOrgId && !isPlatformAdmin) {
+    let resolvedPathOrgId = pathOrgId;
+    if (context.deps.resolveTenantContext) {
+      try {
+        const resolved = await context.deps.resolveTenantContext(pathOrgId);
+        if (resolved) {
+          resolvedPathOrgId = resolved.organization_id;
+        }
+      } catch (e) {
+        // ignore resolution error
+      }
+    }
+    if (resolvedPathOrgId !== context.organizationId) {
+      throw new ApiError("FORBIDDEN", "Organization context mismatch.", 403);
+    }
   }
 
   context.securityTenant = new TenantResolver().resolve({

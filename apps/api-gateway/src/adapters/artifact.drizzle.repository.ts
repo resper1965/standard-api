@@ -43,6 +43,7 @@ type GenericVersionRow = {
 
 const mapRowToVersion = (row: GenericVersionRow, artifactType: ArtifactType): ArtifactVersion => ({
   id: row.id,
+  tenantId: row.organizationId,
   organizationId: row.organizationId,
   assessmentId: row.assessmentId,
   artifactType,

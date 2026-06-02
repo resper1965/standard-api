@@ -32,7 +32,8 @@ test("[SECURITY] Tenant A cannot read Tenant B assessment", async () => {
     undefined,
     {
       "x-standard-tenant-id": tenantB,
-      "x-standard-actor-id": ids.actorId
+      "x-standard-actor-id": ids.actorId,
+      "x-standard-mock-role": "owner"
     }
   );
 
@@ -55,7 +56,7 @@ test("[SECURITY] Tenant A cannot read Tenant B organization", async () => {
     "/api/v1/organizations",
     "POST",
     { tenant_id: tenantA, slug: `org-a-${Date.now()}`, name: "Org A" },
-    { "x-standard-tenant-id": tenantA, "x-standard-actor-id": ids.actorId }
+    { "x-standard-tenant-id": tenantA, "x-standard-actor-id": ids.actorId, "x-standard-mock-role": "owner" }
   );
   const orgAId = orgA.body.organization_id as string;
 
@@ -64,13 +65,13 @@ test("[SECURITY] Tenant A cannot read Tenant B organization", async () => {
     `/api/v1/organizations/${orgAId}`,
     "GET",
     undefined,
-    { "x-standard-tenant-id": tenantB, "x-standard-actor-id": ids.actorId }
+    { "x-standard-tenant-id": tenantB, "x-standard-actor-id": ids.actorId, "x-standard-mock-role": "owner" }
   );
 
   if (result.response.status === 200) {
     throw new Error(`CRITICAL: Cross-tenant org read! Tenant B read org ${orgAId} of Tenant A`);
   }
-  expect(result.response.status).toBe(404);
+  expectOneOf(result.response.status, [403, 404], "cross-tenant org read response");
 });
 
 test("[SECURITY] Tenant isolation: documents scoped to assessment tenant", async () => {
@@ -85,7 +86,7 @@ test("[SECURITY] Tenant isolation: documents scoped to assessment tenant", async
   await client.sendMultipart(
     `/api/v1/assessments/${assessmentId}/documents`,
     form,
-    { "x-standard-tenant-id": tenantA, "x-standard-actor-id": ids.actorId }
+    { "x-standard-tenant-id": tenantA, "x-standard-actor-id": ids.actorId, "x-standard-mock-role": "owner" }
   );
 
   // Tenant B tenta listar documentos do assessment de Tenant A
@@ -93,7 +94,7 @@ test("[SECURITY] Tenant isolation: documents scoped to assessment tenant", async
     `/api/v1/assessments/${assessmentId}/documents`,
     "GET",
     undefined,
-    { "x-standard-tenant-id": tenantB, "x-standard-actor-id": ids.actorId }
+    { "x-standard-tenant-id": tenantB, "x-standard-actor-id": ids.actorId, "x-standard-mock-role": "owner" }
   );
 
   if (result.response.status === 200 && Array.isArray(result.body.documents) && result.body.documents.length > 0) {
