@@ -24,7 +24,6 @@ async function resolveOrgCtx(context: any, organizationId: string) {
   if (context.actorId?.startsWith("m2m:")) {
     throw new ApiError("FORBIDDEN", "M2M agents cannot manage API keys.", 403);
   }
-
   // Prefer already-resolved context from auth middleware (tenant_id + organization_id are Standard domain UUIDs).
   // The auth middleware resolves the BA org → Standard domain via resolveTenantContext on every request.
   if (context.tenantId && context.organizationId) {
@@ -36,9 +35,14 @@ async function resolveOrgCtx(context: any, organizationId: string) {
     };
   }
 
-  // Fallback: resolve the URL param through the tenant mapping function.
-  // This is needed for routes where auth middleware didn't resolve the org yet.
-  const tenantCtx = await context.deps.resolveTenantContext?.(organizationId);
+  const orgRef = context.tenantId || organizationId;
+  let tenantCtx = await context.deps.resolveTenantContext?.(orgRef);
+  // First-touch provisioning: the org reference comes from the authenticated
+  // session / validated route, so provision the domain org if it does not exist
+  // yet (e.g. org seeded only in the Better Auth tables).
+  if (!tenantCtx && context.deps.provisionTenantContext) {
+    tenantCtx = await context.deps.provisionTenantContext(orgRef);
+  }
   if (!tenantCtx) {
     throw new ApiError("NOT_FOUND", "Organization not found or not provisioned.", 404);
   }
@@ -168,7 +172,6 @@ export const apiKeysRoutes: RouteDefinition[] = [
         .join("");
 
       const record = await context.deps.apiKeys.create({
-        tenantId: tenantCtx.tenant_id,
         organizationId: tenantCtx.organization_id,
         name: input.name,
         keyHash,

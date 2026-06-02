@@ -4,7 +4,6 @@ import type { DbClient } from "./db";
 
 export type ApiKeyRecord = {
   id: string;
-  tenantId: string;
   organizationId: string;
   name: string;
   keyHash: string;
@@ -19,7 +18,6 @@ export type ApiKeyRecord = {
 };
 
 export type CreateApiKeyInput = {
-  tenantId: string;
   organizationId: string;
   name: string;
   keyHash: string;
@@ -133,7 +131,6 @@ export const createMockApiKeysRepository = (): ApiKeysRepositoryAdapter => {
     async create(input) {
       const record: ApiKeyRecord = {
         id: crypto.randomUUID(),
-        tenantId: input.organizationId, // alias
         organizationId: input.organizationId,
         name: input.name,
         keyHash: input.keyHash,
