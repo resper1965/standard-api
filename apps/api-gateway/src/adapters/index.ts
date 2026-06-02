@@ -103,7 +103,7 @@ export const createMockRepositories = (): AppDependencies => {
     }
     if (org) {
       return {
-        tenant_id: org.tenant_id,
+        tenant_id: org.organization_id,
         organization_id: org.organization_id,
         ba_org_id: baOrgId,
         org_name: org.name
@@ -118,7 +118,7 @@ export const createMockRepositories = (): AppDependencies => {
     const newOrg = await orgsBase.create({ tenant_id: newTenant.tenant_id, name: `Org ${baOrgId}`, slug: baOrgId });
     orgMap.set(newOrg.organization_id, newOrg);
     return {
-      tenant_id: newTenant.tenant_id,
+      tenant_id: newOrg.organization_id,
       organization_id: newOrg.organization_id,
       ba_org_id: baOrgId,
       org_name: newOrg.name

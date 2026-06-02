@@ -39,7 +39,7 @@ export const privacyDataSubjectCategoryEnum = pgEnum("privacy_data_subject_categ
 
 export const privacyProcessingActivities = pgTable("privacy_processing_activities", {
   id: uuid("id").primaryKey().defaultRandom(),
-  tenantId: uuid("tenant_id").notNull(),
+  organizationId: uuid("organization_id").notNull(),
   assessmentId: uuid("assessment_id"),
   name: text("name").notNull(),
   description: text("description"),
@@ -70,15 +70,15 @@ export const privacyProcessingActivities = pgTable("privacy_processing_activitie
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   deletedAt: timestamp("deleted_at", { withTimezone: true }),
 }, (table) => [
-  index("idx_privacy_activities_tenant").on(table.tenantId),
+  index("idx_privacy_activities_org").on(table.organizationId),
   index("idx_privacy_activities_assessment").on(table.assessmentId),
   index("idx_privacy_activities_status").on(table.status),
-  index("idx_privacy_activities_tenant_status").on(table.tenantId, table.status),
+  index("idx_privacy_activities_org_status").on(table.organizationId, table.status),
 ]);
 
 export const privacyProcessingActivityDataSubjects = pgTable("privacy_processing_activity_data_subjects", {
   id: uuid("id").primaryKey().defaultRandom(),
-  tenantId: uuid("tenant_id").notNull(),
+  organizationId: uuid("organization_id").notNull(),
   activityId: uuid("activity_id").notNull(),
   category: privacyDataSubjectCategoryEnum("category").notNull(),
   description: text("description"),
@@ -90,12 +90,12 @@ export const privacyProcessingActivityDataSubjects = pgTable("privacy_processing
   deletedAt: timestamp("deleted_at", { withTimezone: true }),
 }, (table) => [
   index("idx_privacy_data_subjects_activity").on(table.activityId),
-  index("idx_privacy_data_subjects_tenant").on(table.tenantId),
+  index("idx_privacy_data_subjects_org").on(table.organizationId),
 ]);
 
 export const privacyProcessingActivityDataCategories = pgTable("privacy_processing_activity_data_categories", {
   id: uuid("id").primaryKey().defaultRandom(),
-  tenantId: uuid("tenant_id").notNull(),
+  organizationId: uuid("organization_id").notNull(),
   activityId: uuid("activity_id").notNull(),
   categoryName: text("category_name").notNull(),
   sensitivity: privacySensitivityEnum("sensitivity").default("personal").notNull(),
@@ -107,7 +107,7 @@ export const privacyProcessingActivityDataCategories = pgTable("privacy_processi
   deletedAt: timestamp("deleted_at", { withTimezone: true }),
 }, (table) => [
   index("idx_privacy_data_categories_activity").on(table.activityId),
-  index("idx_privacy_data_categories_tenant").on(table.tenantId),
+  index("idx_privacy_data_categories_org").on(table.organizationId),
 ]);
 
 // ─── Phase 2: Third Parties ────────────────────────────────────────
@@ -124,7 +124,7 @@ export const privacyTransferMechanismEnum = pgEnum("privacy_transfer_mechanism",
 
 export const privacyProcessingActivityThirdParties = pgTable("privacy_processing_activity_third_parties", {
   id: uuid("id").primaryKey().defaultRandom(),
-  tenantId: uuid("tenant_id").notNull(),
+  organizationId: uuid("organization_id").notNull(),
   activityId: uuid("activity_id").notNull(),
   name: text("name").notNull(),
   role: privacyThirdPartyRoleEnum("role").default("processor").notNull(),
@@ -139,7 +139,7 @@ export const privacyProcessingActivityThirdParties = pgTable("privacy_processing
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [
   index("idx_privacy_third_parties_activity").on(table.activityId),
-  index("idx_privacy_third_parties_tenant").on(table.tenantId),
+  index("idx_privacy_third_parties_org").on(table.organizationId),
 ]);
 
 // ─── Phase 3: Screenings (DPIA/LIA/TIA) ───────────────────────────
@@ -154,7 +154,7 @@ export const privacyScreeningResultEnum = pgEnum("privacy_screening_result", [
 
 export const privacyProcessingActivityScreenings = pgTable("privacy_processing_activity_screenings", {
   id: uuid("id").primaryKey().defaultRandom(),
-  tenantId: uuid("tenant_id").notNull(),
+  organizationId: uuid("organization_id").notNull(),
   activityId: uuid("activity_id").notNull(),
   screeningType: privacyScreeningTypeEnum("screening_type").notNull(),
   result: privacyScreeningResultEnum("result").notNull(),
@@ -167,7 +167,7 @@ export const privacyProcessingActivityScreenings = pgTable("privacy_processing_a
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [
   index("idx_privacy_screenings_activity").on(table.activityId),
-  index("idx_privacy_screenings_tenant").on(table.tenantId),
+  index("idx_privacy_screenings_org").on(table.organizationId),
 ]);
 
 // ─── Phase 4: Field Reviews ────────────────────────────────────────
@@ -182,7 +182,7 @@ export const privacyFieldReviewSourceEnum = pgEnum("privacy_field_review_source"
 
 export const privacyProcessingActivityFieldReviews = pgTable("privacy_processing_activity_field_reviews", {
   id: uuid("id").primaryKey().defaultRandom(),
-  tenantId: uuid("tenant_id").notNull(),
+  organizationId: uuid("organization_id").notNull(),
   activityId: uuid("activity_id").notNull(),
   fieldName: text("field_name").notNull(),
   reviewStatus: privacyFieldReviewStatusEnum("review_status").default("pending").notNull(),
@@ -196,7 +196,7 @@ export const privacyProcessingActivityFieldReviews = pgTable("privacy_processing
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [
   index("idx_privacy_field_reviews_activity").on(table.activityId),
-  index("idx_privacy_field_reviews_tenant").on(table.tenantId),
+  index("idx_privacy_field_reviews_org").on(table.organizationId),
   index("idx_privacy_field_reviews_status").on(table.reviewStatus),
 ]);
 
@@ -212,7 +212,7 @@ export const privacyScfPriorityEnum = pgEnum("privacy_scf_priority", [
 
 export const privacyProcessingActivityScfControls = pgTable("privacy_processing_activity_scf_controls", {
   id: uuid("id").primaryKey().defaultRandom(),
-  tenantId: uuid("tenant_id").notNull(),
+  organizationId: uuid("organization_id").notNull(),
   activityId: uuid("activity_id").notNull(),
   scfVersion: text("scf_version"),
   controlId: uuid("control_id"),
@@ -232,7 +232,6 @@ export const privacyProcessingActivityScfControls = pgTable("privacy_processing_
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [
   index("idx_privacy_scf_controls_activity").on(table.activityId),
-  index("idx_privacy_scf_controls_tenant").on(table.tenantId),
+  index("idx_privacy_scf_controls_org").on(table.organizationId),
   index("idx_privacy_scf_controls_code").on(table.controlCode),
 ]);
-

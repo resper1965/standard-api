@@ -9,6 +9,7 @@ import type { DbClient } from "./db";
 type EventRow = typeof assessmentEvents.$inferSelect;
 
 const mapRowToEvent = (row: EventRow): AssessmentLifecycleEvent => ({
+  tenantId: row.organizationId,
   organizationId: row.organizationId,
   assessmentId: row.assessmentId,
   previousState: row.previousState as AssessmentLifecycleEvent["previousState"],

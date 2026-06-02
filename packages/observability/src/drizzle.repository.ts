@@ -32,7 +32,6 @@ const createDrizzleAuditEventsRepo = (db: DrizzleDb): ObservabilityRepository<Au
     await db.insert(auditLogs).values({
       id: record.id,
       actorId: record.actor_id ?? null,
-      tenantId: record.tenant_id ?? null,
       organizationId: record.organization_id ?? null,
       action: record.action,
       resourceType: record.resource_type,
@@ -50,7 +49,7 @@ const createDrizzleAuditEventsRepo = (db: DrizzleDb): ObservabilityRepository<Au
   },
   async list(filter) {
     const conditions = [];
-    if (filter?.tenant_id) conditions.push(eq(auditLogs.tenantId, filter.tenant_id));
+    if (filter?.tenant_id) conditions.push(eq(auditLogs.organizationId, filter.tenant_id));
     if (filter?.assessment_id) conditions.push(eq(auditLogs.organizationId, filter.assessment_id));
     const query = db.select().from(auditLogs);
     const rows = conditions.length > 0
@@ -64,7 +63,6 @@ const createDrizzleSecurityEventsRepo = (db: DrizzleDb): ObservabilityRepository
   async create(record) {
     await db.insert(securityEvents).values({
       id: record.id,
-      tenantId: record.tenant_id ?? null,
       organizationId: record.organization_id ?? null,
       assessmentId: record.assessment_id ?? null,
       actorId: record.actor_id ?? null,
@@ -88,7 +86,7 @@ const createDrizzleSecurityEventsRepo = (db: DrizzleDb): ObservabilityRepository
   },
   async list(filter) {
     const conditions = [];
-    if (filter?.tenant_id) conditions.push(eq(securityEvents.tenantId, filter.tenant_id));
+    if (filter?.tenant_id) conditions.push(eq(securityEvents.organizationId, filter.tenant_id));
     if (filter?.assessment_id) conditions.push(eq(securityEvents.assessmentId, filter.assessment_id));
     const query = db.select().from(securityEvents);
     const rows = conditions.length > 0
@@ -102,7 +100,6 @@ const createDrizzleMetricsRepo = (db: DrizzleDb): ObservabilityRepository<Operat
   async create(record) {
     await db.insert(operationalMetrics).values({
       id: record.id,
-      tenantId: record.tenant_id ?? null,
       organizationId: record.organization_id ?? null,
       assessmentId: record.assessment_id ?? null,
       metricName: record.metric_name,
@@ -121,7 +118,7 @@ const createDrizzleMetricsRepo = (db: DrizzleDb): ObservabilityRepository<Operat
   },
   async list(filter) {
     const conditions = [];
-    if (filter?.tenant_id) conditions.push(eq(operationalMetrics.tenantId, filter.tenant_id));
+    if (filter?.tenant_id) conditions.push(eq(operationalMetrics.organizationId, filter.tenant_id));
     if (filter?.assessment_id) conditions.push(eq(operationalMetrics.assessmentId, filter.assessment_id));
     const query = db.select().from(operationalMetrics);
     const rows = conditions.length > 0
@@ -135,7 +132,6 @@ const createDrizzleUsageRepo = (db: DrizzleDb): ObservabilityRepository<UsageRec
   async create(record) {
     await db.insert(usageRecords).values({
       id: record.id,
-      tenantId: record.tenant_id ?? null,
       organizationId: record.organization_id ?? null,
       assessmentId: record.assessment_id ?? null,
       serviceName: record.service_name,
@@ -159,7 +155,7 @@ const createDrizzleUsageRepo = (db: DrizzleDb): ObservabilityRepository<UsageRec
   },
   async list(filter) {
     const conditions = [];
-    if (filter?.tenant_id) conditions.push(eq(usageRecords.tenantId, filter.tenant_id));
+    if (filter?.tenant_id) conditions.push(eq(usageRecords.organizationId, filter.tenant_id));
     if (filter?.assessment_id) conditions.push(eq(usageRecords.assessmentId, filter.assessment_id));
     const query = db.select().from(usageRecords);
     const rows = conditions.length > 0
@@ -173,7 +169,6 @@ const createDrizzleAgentUsageRepo = (db: DrizzleDb): ObservabilityRepository<Age
   async create(record) {
     await db.insert(agentUsageRecords).values({
       id: record.id,
-      tenantId: record.tenant_id,
       organizationId: record.organization_id,
       assessmentId: record.assessment_id,
       agentRunId: record.agent_run_id,
@@ -195,7 +190,7 @@ const createDrizzleAgentUsageRepo = (db: DrizzleDb): ObservabilityRepository<Age
   },
   async list(filter) {
     const conditions = [];
-    if (filter?.tenant_id) conditions.push(eq(agentUsageRecords.tenantId, filter.tenant_id));
+    if (filter?.tenant_id) conditions.push(eq(agentUsageRecords.organizationId, filter.tenant_id));
     if (filter?.assessment_id) conditions.push(eq(agentUsageRecords.assessmentId, filter.assessment_id));
     const query = db.select().from(agentUsageRecords);
     const rows = conditions.length > 0
