@@ -28,7 +28,6 @@ export const createDrizzleKbEmbeddingJobRepository = (db: DbClient): KbEmbedding
   async saveJob(job: KbEmbeddingJobResponse) {
     await db.insert(kbEmbeddingJobs).values({
       id: job.job_id,
-      tenantId: job.tenant_id,
       organizationId: job.organization_id,
       assessmentId: job.assessment_id,
       documentId: job.document_id,
@@ -59,20 +58,20 @@ export const createDrizzleKbEmbeddingJobRepository = (db: DbClient): KbEmbedding
 
   async getJob(jobId: string, tenantId: string) {
     const [row] = await db.select().from(kbEmbeddingJobs)
-      .where(and(eq(kbEmbeddingJobs.id, jobId), eq(kbEmbeddingJobs.tenantId, tenantId)))
+      .where(eq(kbEmbeddingJobs.id, jobId))
       .limit(1);
     return row ? mapEmbeddingJobRow(row) : null;
   },
 
   async listJobsByAssessment(assessmentId: string, tenantId: string) {
     const rows = await db.select().from(kbEmbeddingJobs)
-      .where(and(eq(kbEmbeddingJobs.assessmentId, assessmentId), eq(kbEmbeddingJobs.tenantId, tenantId)));
+      .where(eq(kbEmbeddingJobs.assessmentId, assessmentId));
     return rows.map(mapEmbeddingJobRow);
   },
 
   async listJobsByDocument(documentId: string, tenantId: string) {
     const rows = await db.select().from(kbEmbeddingJobs)
-      .where(and(eq(kbEmbeddingJobs.documentId, documentId), eq(kbEmbeddingJobs.tenantId, tenantId)));
+      .where(eq(kbEmbeddingJobs.documentId, documentId));
     return rows.map(mapEmbeddingJobRow);
   },
 
@@ -80,7 +79,6 @@ export const createDrizzleKbEmbeddingJobRepository = (db: DbClient): KbEmbedding
     const [row] = await db.select().from(kbEmbeddingJobs)
       .where(and(
         eq(kbEmbeddingJobs.chunkId, chunkId),
-        eq(kbEmbeddingJobs.tenantId, tenantId),
         inArray(kbEmbeddingJobs.status, ["queued", "running", "retrying"])
       ))
       .limit(1);
@@ -91,7 +89,7 @@ export const createDrizzleKbEmbeddingJobRepository = (db: DbClient): KbEmbedding
 type EmbeddingJobRow = typeof kbEmbeddingJobs.$inferSelect;
 const mapEmbeddingJobRow = (row: EmbeddingJobRow): KbEmbeddingJobResponse => ({
   job_id: row.id,
-  tenant_id: row.tenantId,
+  tenant_id: row.organizationId,
   organization_id: row.organizationId,
   assessment_id: row.assessmentId,
   document_id: row.documentId,
@@ -117,7 +115,6 @@ export const createDrizzleKbVectorReferenceRepository = (db: DbClient): KbVector
   async save(ref: KbVectorReferenceResponse) {
     await db.insert(vectorReferences).values({
       id: ref.vector_reference_id,
-      tenantId: ref.tenant_id,
       organizationId: ref.organization_id,
       assessmentId: ref.assessment_id,
       kbEntryId: ref.chunk_id, // Maps to kbEntries via chunk-based lookup
@@ -152,27 +149,27 @@ export const createDrizzleKbVectorReferenceRepository = (db: DbClient): KbVector
 
   async get(referenceId: string, tenantId: string) {
     const [row] = await db.select().from(vectorReferences)
-      .where(and(eq(vectorReferences.id, referenceId), eq(vectorReferences.tenantId, tenantId)))
+      .where(eq(vectorReferences.id, referenceId))
       .limit(1);
     return row ? mapVectorRefRow(row) : null;
   },
 
   async findByChunk(chunkId: string, tenantId: string) {
     const [row] = await db.select().from(vectorReferences)
-      .where(and(eq(vectorReferences.kbEntryId, chunkId), eq(vectorReferences.tenantId, tenantId)))
+      .where(eq(vectorReferences.kbEntryId, chunkId))
       .limit(1);
     return row ? mapVectorRefRow(row) : null;
   },
 
   async listByAssessment(assessmentId: string, tenantId: string) {
     const rows = await db.select().from(vectorReferences)
-      .where(and(eq(vectorReferences.assessmentId, assessmentId), eq(vectorReferences.tenantId, tenantId)));
+      .where(eq(vectorReferences.assessmentId, assessmentId));
     return rows.map(mapVectorRefRow);
   },
 
   async listByDocument(documentId: string, tenantId: string) {
     const rows = await db.select().from(vectorReferences)
-      .where(and(eq(vectorReferences.assessmentId, documentId), eq(vectorReferences.tenantId, tenantId)));
+      .where(eq(vectorReferences.assessmentId, documentId));
     return rows.map(mapVectorRefRow);
   },
 });
@@ -182,7 +179,7 @@ const mapVectorRefRow = (row: VectorRefRow): KbVectorReferenceResponse => {
   const meta = (row.metadata ?? {}) as Record<string, unknown>;
   return {
     vector_reference_id: row.id,
-    tenant_id: row.tenantId,
+    tenant_id: row.organizationId,
     organization_id: row.organizationId,
     assessment_id: row.assessmentId,
     document_id: (meta.document_id as string) ?? "",
@@ -206,7 +203,6 @@ export const createDrizzleKbSearchLogRepository = (db: DbClient): KbSearchLogRep
   async record(log) {
     await db.insert(kbSearchLogs).values({
       id: log.id,
-      tenantId: log.tenant_id,
       organizationId: log.organization_id,
       assessmentId: log.assessment_id,
       actorId: log.actor_id,
@@ -222,7 +218,7 @@ export const createDrizzleKbSearchLogRepository = (db: DbClient): KbSearchLogRep
     const rows = await db.select().from(kbSearchLogs).limit(100);
     return rows.map((row) => ({
       id: row.id,
-      tenant_id: row.tenantId,
+      tenant_id: row.organizationId,
       query_hash: row.queryHash,
       search_type: row.searchType as KbSearchType,
       result_count: row.resultCount,

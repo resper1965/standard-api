@@ -13,7 +13,6 @@ export const createDrizzleEvidenceFindingRepository = (db: DbClient): EvidenceFi
   async save(finding: EvidenceFindingResponse) {
     await db.insert(evidenceFindings).values({
       id: finding.evidence_finding_id,
-      tenantId: finding.tenant_id,
       organizationId: finding.organization_id,
       assessmentId: finding.assessment_id,
       soaVersionId: finding.soa_version_id,
@@ -39,22 +38,22 @@ export const createDrizzleEvidenceFindingRepository = (db: DbClient): EvidenceFi
       evidenceLimitations: finding.evidence_limitations,
       confidenceScore: String(finding.confidence_score),
       updatedAt: new Date(),
-    }).where(and(eq(evidenceFindings.id, finding.evidence_finding_id), eq(evidenceFindings.tenantId, finding.tenant_id)));
+    }).where(eq(evidenceFindings.id, finding.evidence_finding_id));
   },
   async get(evidenceFindingId, tenantId) {
     const [row] = await db.select().from(evidenceFindings)
-      .where(and(eq(evidenceFindings.id, evidenceFindingId), eq(evidenceFindings.tenantId, tenantId)))
+      .where(eq(evidenceFindings.id, evidenceFindingId))
       .limit(1);
     return row ? mapEvidenceFindingRow(row) : null;
   },
   async listByAssessment(assessmentId, tenantId) {
     const rows = await db.select().from(evidenceFindings)
-      .where(and(eq(evidenceFindings.assessmentId, assessmentId), eq(evidenceFindings.tenantId, tenantId)));
+      .where(eq(evidenceFindings.assessmentId, assessmentId));
     return rows.map(mapEvidenceFindingRow);
   },
   async findBySoaItem(soaItemId, tenantId) {
     const [row] = await db.select().from(evidenceFindings)
-      .where(and(eq(evidenceFindings.soaItemId, soaItemId), eq(evidenceFindings.tenantId, tenantId)))
+      .where(eq(evidenceFindings.soaItemId, soaItemId))
       .limit(1);
     return row ? mapEvidenceFindingRow(row) : null;
   },
@@ -74,7 +73,6 @@ export const createDrizzleEvidenceSourceRepository = (db: DbClient): EvidenceSou
     if (sources.length === 0) return;
     await db.insert(evidenceSources).values(sources.map(s => ({
       id: s.evidence_source_id,
-      tenantId: s.tenant_id,
       organizationId: s.organization_id,
       assessmentId: s.assessment_id,
       evidenceFindingId: s.evidence_finding_id,
@@ -92,7 +90,7 @@ export const createDrizzleEvidenceSourceRepository = (db: DbClient): EvidenceSou
   },
   async listByFinding(evidenceFindingId, tenantId) {
     const rows = await db.select().from(evidenceSources)
-      .where(and(eq(evidenceSources.evidenceFindingId, evidenceFindingId), eq(evidenceSources.tenantId, tenantId)));
+      .where(eq(evidenceSources.evidenceFindingId, evidenceFindingId));
     return rows.map(mapEvidenceSourceRow);
   },
   withTenant(tenantId: string) {
@@ -107,7 +105,6 @@ export const createDrizzleGapAnalysisVersionRepository = (db: DbClient): GapAnal
   async save(version: GapAnalysisVersionResponse) {
     await db.insert(gapAnalysisVersions).values({
       id: version.gap_analysis_version_id,
-      tenantId: version.tenant_id,
       organizationId: version.organization_id,
       assessmentId: version.assessment_id,
       versionNumber: version.version_number,
@@ -131,17 +128,17 @@ export const createDrizzleGapAnalysisVersionRepository = (db: DbClient): GapAnal
       supersededBy: version.superseded_by,
       metadata: version.metadata ?? {},
       updatedAt: new Date(),
-    }).where(and(eq(gapAnalysisVersions.id, version.gap_analysis_version_id), eq(gapAnalysisVersions.tenantId, version.tenant_id)));
+    }).where(eq(gapAnalysisVersions.id, version.gap_analysis_version_id));
   },
   async get(gapAnalysisVersionId, tenantId) {
     const [row] = await db.select().from(gapAnalysisVersions)
-      .where(and(eq(gapAnalysisVersions.id, gapAnalysisVersionId), eq(gapAnalysisVersions.tenantId, tenantId)))
+      .where(eq(gapAnalysisVersions.id, gapAnalysisVersionId))
       .limit(1);
     return row ? mapGapVersionRow(row) : null;
   },
   async listByAssessment(assessmentId, tenantId) {
     const rows = await db.select().from(gapAnalysisVersions)
-      .where(and(eq(gapAnalysisVersions.assessmentId, assessmentId), eq(gapAnalysisVersions.tenantId, tenantId)));
+      .where(eq(gapAnalysisVersions.assessmentId, assessmentId));
     return rows.map(mapGapVersionRow);
   },
   withTenant(tenantId: string) {
@@ -159,7 +156,6 @@ export const createDrizzleGapFindingRepository = (db: DbClient): GapFindingRepos
     if (findings.length === 0) return;
     await db.insert(gapFindings).values(findings.map(f => ({
       id: f.gap_finding_id,
-      tenantId: f.tenant_id,
       organizationId: f.organization_id,
       assessmentId: f.assessment_id,
       gapAnalysisVersionId: f.gap_analysis_version_id,
@@ -196,17 +192,17 @@ export const createDrizzleGapFindingRepository = (db: DbClient): GapFindingRepos
       confidenceScore: String(finding.confidence_score),
       requiresUserValidation: finding.requires_user_validation,
       updatedAt: new Date(),
-    }).where(and(eq(gapFindings.id, finding.gap_finding_id), eq(gapFindings.tenantId, finding.tenant_id)));
+    }).where(eq(gapFindings.id, finding.gap_finding_id));
   },
   async get(gapFindingId, tenantId) {
     const [row] = await db.select().from(gapFindings)
-      .where(and(eq(gapFindings.id, gapFindingId), eq(gapFindings.tenantId, tenantId)))
+      .where(eq(gapFindings.id, gapFindingId))
       .limit(1);
     return row ? mapGapFindingRow(row) : null;
   },
   async listByVersion(gapAnalysisVersionId, tenantId) {
     const rows = await db.select().from(gapFindings)
-      .where(and(eq(gapFindings.gapAnalysisVersionId, gapAnalysisVersionId), eq(gapFindings.tenantId, tenantId)));
+      .where(eq(gapFindings.gapAnalysisVersionId, gapAnalysisVersionId));
     return rows.map(mapGapFindingRow);
   },
   withTenant(tenantId: string) {
@@ -235,7 +231,7 @@ type GapFindingRow = typeof gapFindings.$inferSelect;
 
 const mapEvidenceFindingRow = (row: EvidenceFindingRow): EvidenceFindingResponse => ({
   evidence_finding_id: row.id,
-  tenant_id: row.tenantId,
+  tenant_id: row.organizationId,
   organization_id: row.organizationId,
   assessment_id: row.assessmentId,
   soa_version_id: row.soaVersionId,
@@ -257,7 +253,7 @@ const mapEvidenceFindingRow = (row: EvidenceFindingRow): EvidenceFindingResponse
 
 const mapEvidenceSourceRow = (row: EvidenceSourceRow): EvidenceSourceResponse => ({
   evidence_source_id: row.id,
-  tenant_id: row.tenantId,
+  tenant_id: row.organizationId,
   organization_id: row.organizationId,
   assessment_id: row.assessmentId,
   evidence_finding_id: row.evidenceFindingId,
@@ -276,7 +272,7 @@ const mapEvidenceSourceRow = (row: EvidenceSourceRow): EvidenceSourceResponse =>
 
 const mapGapVersionRow = (row: GapVersionRow): GapAnalysisVersionResponse => ({
   gap_analysis_version_id: row.id,
-  tenant_id: row.tenantId,
+  tenant_id: row.organizationId,
   organization_id: row.organizationId,
   assessment_id: row.assessmentId,
   version_number: row.versionNumber,
@@ -298,7 +294,7 @@ const mapGapVersionRow = (row: GapVersionRow): GapAnalysisVersionResponse => ({
 
 const mapGapFindingRow = (row: GapFindingRow): GapFindingResponse => ({
   gap_finding_id: row.id,
-  tenant_id: row.tenantId,
+  tenant_id: row.organizationId,
   organization_id: row.organizationId,
   assessment_id: row.assessmentId,
   gap_analysis_version_id: row.gapAnalysisVersionId,
