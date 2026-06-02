@@ -192,6 +192,7 @@ const createDrizzleActivityRepository = (db: DbClient): PrivacyActivityRepositor
   async save(activity) {
     await db.insert(privacyProcessingActivities).values({
       id: activity.id,
+      organizationId: activity.tenant_id,
       assessmentId: activity.assessment_id ?? undefined,
       name: activity.name,
       description: activity.description,
@@ -298,6 +299,7 @@ const createDrizzleDataSubjectRepository = (db: DbClient): PrivacyDataSubjectRep
     await db.insert(privacyProcessingActivityDataSubjects).values(
       subjects.map(s => ({
         id: s.id,
+        organizationId: s.tenant_id,
         activityId: s.activity_id,
         category: s.category,
         description: s.description,
@@ -330,6 +332,7 @@ const createDrizzleDataCategoryRepository = (db: DbClient): PrivacyDataCategoryR
     await db.insert(privacyProcessingActivityDataCategories).values(
       categories.map(c => ({
         id: c.id,
+        organizationId: c.tenant_id,
         activityId: c.activity_id,
         categoryName: c.category_name,
         sensitivity: c.sensitivity,
@@ -362,6 +365,7 @@ const createDrizzleThirdPartyRepository = (db: DbClient): PrivacyThirdPartyRepos
     await db.insert(privacyProcessingActivityThirdParties).values(
       parties.map(p => ({
         id: p.id,
+        organizationId: p.tenant_id,
         activityId: p.activity_id,
         name: p.name,
         role: p.role,
@@ -394,6 +398,7 @@ const createDrizzleScreeningRepository = (db: DbClient): PrivacyScreeningReposit
   async save(screening) {
     await db.insert(privacyProcessingActivityScreenings).values({
       id: screening.id,
+      organizationId: screening.tenant_id,
       activityId: screening.activity_id,
       screeningType: screening.screening_type,
       result: screening.result,
@@ -418,6 +423,7 @@ const createDrizzleFieldReviewRepository = (db: DbClient): PrivacyFieldReviewRep
   async save(review) {
     await db.insert(privacyProcessingActivityFieldReviews).values({
       id: review.id,
+      organizationId: review.tenant_id,
       activityId: review.activity_id,
       fieldName: review.field_name,
       reviewStatus: review.review_status,
@@ -466,6 +472,7 @@ const createDrizzleScfControlRepository = (db: DbClient): PrivacyScfControlRepos
     await db.insert(privacyProcessingActivityScfControls).values(
       controls.map(c => ({
         id: c.id,
+        organizationId: c.tenant_id,
         activityId: c.activity_id,
         scfVersion: c.scf_version,
         controlId: c.control_id,

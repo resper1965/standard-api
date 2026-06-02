@@ -19,7 +19,7 @@ test("POST /api/v1/assessments valida body", async () => {
 test("POST /api/v1/assessments cria assessment em draft", async () => {
   const client = createTestClient();
   const created = await client.createAssessment();
-  expect(created.body.tenant_id).toBe(created.tenantId);
+  expect(created.body.tenant_id).toBe(created.organizationId);
   expect(created.body.organization_id).toBe(created.organizationId);
   expect(created.body.state).toBe("draft");
 });

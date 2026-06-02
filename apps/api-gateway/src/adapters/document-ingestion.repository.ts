@@ -212,7 +212,6 @@ export const createDrizzleDocumentChunkRepository = (db: DbClient): DocumentChun
       await db.insert(documentChunks).values(
         chunks.map((chunk) => ({
           id: chunk.chunk_id,
-          tenantId: chunk.tenant_id,
           organizationId: chunk.organization_id,
           assessmentId: chunk.assessment_id,
           documentId: chunk.document_id,
@@ -307,7 +306,6 @@ export const createDrizzleIngestionAuditSink = (db: DbClient): AuditSink => {
       delete safeMeta.trace_id;
 
       await db.insert(auditLogs).values({
-        tenantId,
         organizationId,
         actorId,
         action: event,

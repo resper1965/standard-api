@@ -31,7 +31,7 @@ type AnyDrizzleClient = any;
 
 const mapEvidenceFindingRow = (row: any): EvidenceFindingResponse => ({
   evidence_finding_id: row.id,
-  tenant_id: row.tenantId,
+  tenant_id: row.organizationId,
   organization_id: row.organizationId,
   assessment_id: row.assessmentId,
   soa_version_id: row.soaVersionId,
@@ -55,7 +55,6 @@ export const createDrizzleEvidenceFindingRepository = (db: AnyDrizzleClient): Ev
   async save(finding: EvidenceFindingResponse) {
     await db.insert(evidenceFindings).values({
       id: finding.evidence_finding_id,
-      tenantId: finding.tenant_id,
       organizationId: finding.organization_id,
       assessmentId: finding.assessment_id,
       soaVersionId: finding.soa_version_id,
@@ -83,27 +82,27 @@ export const createDrizzleEvidenceFindingRepository = (db: AnyDrizzleClient): Ev
       confidenceScore: finding.confidence_score?.toString(),
       generatedByAgentRunId: finding.generated_by_agent_run_id ?? null
     }).where(
-      sql`${evidenceFindings.id} = ${finding.evidence_finding_id} AND ${evidenceFindings.tenantId} = ${finding.tenant_id}`
+      sql`${evidenceFindings.id} = ${finding.evidence_finding_id} AND ${evidenceFindings.organizationId} = ${finding.tenant_id}`
     );
   },
 
   async get(evidenceFindingId: string, tenantId: string) {
     const rows = await db.select().from(evidenceFindings).where(
-      sql`${evidenceFindings.id} = ${evidenceFindingId} AND ${evidenceFindings.tenantId} = ${tenantId}`
+      sql`${evidenceFindings.id} = ${evidenceFindingId} AND ${evidenceFindings.organizationId} = ${tenantId}`
     );
     return rows[0] ? mapEvidenceFindingRow(rows[0]) : null;
   },
 
   async listByAssessment(assessmentId: string, tenantId: string) {
     const rows = await db.select().from(evidenceFindings).where(
-      sql`${evidenceFindings.assessmentId} = ${assessmentId} AND ${evidenceFindings.tenantId} = ${tenantId}`
+      sql`${evidenceFindings.assessmentId} = ${assessmentId} AND ${evidenceFindings.organizationId} = ${tenantId}`
     );
     return rows.map(mapEvidenceFindingRow);
   },
 
   async findBySoaItem(soaItemId: string, tenantId: string) {
     const rows = await db.select().from(evidenceFindings).where(
-      sql`${evidenceFindings.soaItemId} = ${soaItemId} AND ${evidenceFindings.tenantId} = ${tenantId}`
+      sql`${evidenceFindings.soaItemId} = ${soaItemId} AND ${evidenceFindings.organizationId} = ${tenantId}`
     ).limit(1);
     return rows[0] ? mapEvidenceFindingRow(rows[0]) : null;
   },
@@ -124,7 +123,7 @@ export const createDrizzleEvidenceFindingRepository = (db: AnyDrizzleClient): Ev
 
 const mapEvidenceSourceRow = (row: any): EvidenceSourceResponse => ({
   evidence_source_id: row.id,
-  tenant_id: row.tenantId,
+  tenant_id: row.organizationId,
   organization_id: row.organizationId,
   assessment_id: row.assessmentId,
   evidence_finding_id: row.evidenceFindingId,
@@ -147,7 +146,6 @@ export const createDrizzleEvidenceSourceRepository = (db: AnyDrizzleClient): Evi
     await db.insert(evidenceSources).values(
       sources.map((source) => ({
         id: source.evidence_source_id,
-        tenantId: source.tenant_id,
         organizationId: source.organization_id,
         assessmentId: source.assessment_id,
         evidenceFindingId: source.evidence_finding_id,
@@ -167,7 +165,7 @@ export const createDrizzleEvidenceSourceRepository = (db: AnyDrizzleClient): Evi
 
   async listByFinding(evidenceFindingId: string, tenantId: string) {
     const rows = await db.select().from(evidenceSources).where(
-      sql`${evidenceSources.evidenceFindingId} = ${evidenceFindingId} AND ${evidenceSources.tenantId} = ${tenantId}`
+      sql`${evidenceSources.evidenceFindingId} = ${evidenceFindingId} AND ${evidenceSources.organizationId} = ${tenantId}`
     );
     return rows.map(mapEvidenceSourceRow);
   },
@@ -185,7 +183,7 @@ export const createDrizzleEvidenceSourceRepository = (db: AnyDrizzleClient): Evi
 
 const mapGapVersionRow = (row: any): GapAnalysisVersionResponse => ({
   gap_analysis_version_id: row.id,
-  tenant_id: row.tenantId,
+  tenant_id: row.organizationId,
   organization_id: row.organizationId,
   assessment_id: row.assessmentId,
   version_number: row.versionNumber,
@@ -209,7 +207,6 @@ export const createDrizzleGapAnalysisVersionRepository = (db: AnyDrizzleClient):
   async save(version: GapAnalysisVersionResponse) {
     await db.insert(gapAnalysisVersions).values({
       id: version.gap_analysis_version_id,
-      tenantId: version.tenant_id,
       organizationId: version.organization_id,
       assessmentId: version.assessment_id,
       versionNumber: version.version_number,
@@ -234,20 +231,20 @@ export const createDrizzleGapAnalysisVersionRepository = (db: AnyDrizzleClient):
       supersededBy: version.superseded_by ?? undefined,
       metadata: version.metadata
     }).where(
-      sql`${gapAnalysisVersions.id} = ${version.gap_analysis_version_id} AND ${gapAnalysisVersions.tenantId} = ${version.tenant_id}`
+      sql`${gapAnalysisVersions.id} = ${version.gap_analysis_version_id} AND ${gapAnalysisVersions.organizationId} = ${version.tenant_id}`
     );
   },
 
   async get(gapAnalysisVersionId: string, tenantId: string) {
     const rows = await db.select().from(gapAnalysisVersions).where(
-      sql`${gapAnalysisVersions.id} = ${gapAnalysisVersionId} AND ${gapAnalysisVersions.tenantId} = ${tenantId}`
+      sql`${gapAnalysisVersions.id} = ${gapAnalysisVersionId} AND ${gapAnalysisVersions.organizationId} = ${tenantId}`
     );
     return rows[0] ? mapGapVersionRow(rows[0]) : null;
   },
 
   async listByAssessment(assessmentId: string, tenantId: string) {
     const rows = await db.select().from(gapAnalysisVersions).where(
-      sql`${gapAnalysisVersions.assessmentId} = ${assessmentId} AND ${gapAnalysisVersions.tenantId} = ${tenantId}`
+      sql`${gapAnalysisVersions.assessmentId} = ${assessmentId} AND ${gapAnalysisVersions.organizationId} = ${tenantId}`
     );
     return rows.map(mapGapVersionRow);
   },
@@ -267,7 +264,7 @@ export const createDrizzleGapAnalysisVersionRepository = (db: AnyDrizzleClient):
 
 const mapGapFindingRow = (row: any): GapFindingResponse => ({
   gap_finding_id: row.id,
-  tenant_id: row.tenantId,
+  tenant_id: row.organizationId,
   organization_id: row.organizationId,
   assessment_id: row.assessmentId,
   gap_analysis_version_id: row.gapAnalysisVersionId,
@@ -299,7 +296,6 @@ export const createDrizzleGapFindingRepository = (db: AnyDrizzleClient): GapFind
     await db.insert(gapFindings).values(
       findings.map((finding) => ({
         id: finding.gap_finding_id,
-        tenantId: finding.tenant_id,
         organizationId: finding.organization_id,
         assessmentId: finding.assessment_id,
         gapAnalysisVersionId: finding.gap_analysis_version_id,
@@ -338,20 +334,20 @@ export const createDrizzleGapFindingRepository = (db: AnyDrizzleClient): GapFind
       confidenceScore: finding.confidence_score?.toString(),
       requiresUserValidation: finding.requires_user_validation
     }).where(
-      sql`${gapFindings.id} = ${finding.gap_finding_id} AND ${gapFindings.tenantId} = ${finding.tenant_id}`
+      sql`${gapFindings.id} = ${finding.gap_finding_id} AND ${gapFindings.organizationId} = ${finding.tenant_id}`
     );
   },
 
   async get(gapFindingId: string, tenantId: string) {
     const rows = await db.select().from(gapFindings).where(
-      sql`${gapFindings.id} = ${gapFindingId} AND ${gapFindings.tenantId} = ${tenantId}`
+      sql`${gapFindings.id} = ${gapFindingId} AND ${gapFindings.organizationId} = ${tenantId}`
     );
     return rows[0] ? mapGapFindingRow(rows[0]) : null;
   },
 
   async listByVersion(gapAnalysisVersionId: string, tenantId: string) {
     const rows = await db.select().from(gapFindings).where(
-      sql`${gapFindings.gapAnalysisVersionId} = ${gapAnalysisVersionId} AND ${gapFindings.tenantId} = ${tenantId}`
+      sql`${gapFindings.gapAnalysisVersionId} = ${gapAnalysisVersionId} AND ${gapFindings.organizationId} = ${tenantId}`
     );
     return rows.map(mapGapFindingRow);
   },

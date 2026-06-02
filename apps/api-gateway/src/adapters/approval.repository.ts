@@ -18,6 +18,7 @@ const mapRowToRecord = (row: ApprovalRow): ApprovalRecord => ({
   approvedBy: row.reviewerUserId,
   approvedAt: row.createdAt!.toISOString(),
   traceId: row.traceId,
+  tenantId: row.organizationId,
   organizationId: row.organizationId,
   assessmentId: row.assessmentId,
   targetType: row.artifactType as ApprovalRecord["targetType"],

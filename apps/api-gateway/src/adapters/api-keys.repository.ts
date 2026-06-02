@@ -59,7 +59,7 @@ export const createDrizzleApiKeysRepository = (db: DbClient): ApiKeysRepositoryA
         })
         .returning();
       if (!record) throw new Error("Failed to create API key");
-      return record;
+      return { ...record, tenantId: record.organizationId };
     },
     async getById(id, organizationId) {
       const [record] = await db
@@ -67,7 +67,7 @@ export const createDrizzleApiKeysRepository = (db: DbClient): ApiKeysRepositoryA
         .from(apiKeys)
         .where(and(eq(apiKeys.id, id), eq(apiKeys.organizationId, organizationId)))
         .limit(1);
-      return record ?? null;
+      return record ? { ...record, tenantId: record.organizationId } : null;
     },
     async update(id, organizationId, patch) {
       const set: Record<string, unknown> = { updatedAt: new Date() };
@@ -79,7 +79,7 @@ export const createDrizzleApiKeysRepository = (db: DbClient): ApiKeysRepositoryA
         .set(set)
         .where(and(eq(apiKeys.id, id), eq(apiKeys.organizationId, organizationId)))
         .returning();
-      return updated ?? null;
+      return updated ? { ...updated, tenantId: updated.organizationId } : null;
     },
     async verifyKey(keyHash) {
       const records = await db
@@ -104,7 +104,7 @@ export const createDrizzleApiKeysRepository = (db: DbClient): ApiKeysRepositoryA
       // Reject soft-deleted (revoked) keys
       if (record.revokedAt) return null;
       
-      return record;
+      return { ...record, tenantId: record.organizationId };
     },
     async markUsed(id) {
       await db.update(apiKeys).set({ lastUsedAt: new Date() }).where(eq(apiKeys.id, id));
@@ -121,7 +121,8 @@ export const createDrizzleApiKeysRepository = (db: DbClient): ApiKeysRepositoryA
     },
     async listByOrganization(organizationId, activeOnly = false) {
       const rows = await db.select().from(apiKeys).where(eq(apiKeys.organizationId, organizationId));
-      return activeOnly ? rows.filter(k => !k.revokedAt) : rows;
+      const mapped = rows.map(r => ({ ...r, tenantId: r.organizationId }));
+      return activeOnly ? mapped.filter(k => !k.revokedAt) : mapped;
     }
   };
 };

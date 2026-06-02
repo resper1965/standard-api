@@ -9,7 +9,6 @@ export const createDrizzleAgentRunRepository = (db: AnyDrizzleClient): AgentRunR
   async create(input: AgentRunResponse) {
     await db.insert(agentRuns).values({
       id: input.agent_run_id,
-      tenantId: input.tenant_id,
       organizationId: input.organization_id,
       assessmentId: input.assessment_id,
       agentName: input.model ?? "unknown",
@@ -31,7 +30,7 @@ export const createDrizzleAgentRunRepository = (db: AnyDrizzleClient): AgentRunR
 
     return {
       agent_run_id: record.id,
-      tenant_id: record.tenantId,
+      tenant_id: record.organizationId,
       organization_id: record.organizationId,
       assessment_id: record.assessmentId ?? "",
       agent_id: "knowledge_steward", // Mapping workaround
@@ -57,10 +56,10 @@ export const createDrizzleAgentRunRepository = (db: AnyDrizzleClient): AgentRunR
   },
 
   async listByAssessment(assessmentId: string, tenantId: string) {
-    const records = await db.select().from(agentRuns).where(sql`${agentRuns.assessmentId} = ${assessmentId} AND ${agentRuns.tenantId} = ${tenantId}`);
+    const records = await db.select().from(agentRuns).where(sql`${agentRuns.assessmentId} = ${assessmentId} AND ${agentRuns.organizationId} = ${tenantId}`);
     return records.map((record: any) => ({
       agent_run_id: record.id,
-      tenant_id: record.tenantId,
+      tenant_id: record.organizationId,
       organization_id: record.organizationId,
       assessment_id: record.assessmentId ?? "",
       agent_id: "knowledge_steward", // Mapping workaround
@@ -82,7 +81,6 @@ export const createDrizzleAgentToolCallRepository = (db: AnyDrizzleClient): Agen
   async create(input: AgentToolInvocationResponse) {
     await db.insert(agentToolCalls).values({
       id: input.tool_call_id,
-      tenantId: input.tenant_id,
       organizationId: input.organization_id,
       assessmentId: input.assessment_id ?? "",
       agentRunId: input.agent_run_id,
@@ -96,11 +94,11 @@ export const createDrizzleAgentToolCallRepository = (db: AnyDrizzleClient): Agen
   },
 
   async listByRun(agentRunId: string, tenantId: string) {
-    const records = await db.select().from(agentToolCalls).where(sql`${agentToolCalls.agentRunId} = ${agentRunId} AND ${agentToolCalls.tenantId} = ${tenantId}`);
+    const records = await db.select().from(agentToolCalls).where(sql`${agentToolCalls.agentRunId} = ${agentRunId} AND ${agentToolCalls.organizationId} = ${tenantId}`);
     return records.map((record: any) => ({
       tool_call_id: record.id,
       agent_run_id: record.agentRunId,
-      tenant_id: record.tenantId,
+      tenant_id: record.organizationId,
       organization_id: record.organizationId,
       assessment_id: record.assessmentId ?? "",
       tool_name: record.toolName as never,
