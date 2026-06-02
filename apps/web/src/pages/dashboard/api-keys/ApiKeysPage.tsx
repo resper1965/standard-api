@@ -1,6 +1,5 @@
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
-import { useState, useEffect, useCallback } from "react"
-import { api } from "@/lib/api"
+import { useState } from "react"
 import { useActiveOrg } from "@/hooks/useActiveOrg"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,6 +9,7 @@ import {
   Key, Plus, Trash2, Loader2, Copy, Check, Pencil,
   ShieldCheck, ShieldOff, Clock, AlertCircle, ChevronDown, ChevronUp
 } from "lucide-react"
+import { useOrgApiKeys, useCreateApiKey, useDeleteApiKey, useUpdateApiKey } from "@/lib/queries"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -134,6 +134,13 @@ function formatRelative(dateStr: string | null): string {
   return `${Math.floor(days / 365)} years ago`
 }
 
+/** A key is considered active if it was used within the last 30 days. */
+function isRecentlyActive(lastUsedAt: string | null): boolean {
+  if (!lastUsedAt) return false
+  const diff = Date.now() - new Date(lastUsedAt).getTime()
+  return diff < 30 * 86400000
+}
+
 function formatExpiry(dateStr: string | null): { label: string; expired: boolean } {
   if (!dateStr) return { label: "Never", expired: false }
   const date = new Date(dateStr)
@@ -168,6 +175,19 @@ function StatusBadge({ status }: { status: KeyStatus }) {
   )
 }
 
+function ActivityBadge({ active }: { active: boolean }) {
+  if (active) return (
+    <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Active
+    </span>
+  )
+  return (
+    <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border/50">
+      <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50" /> Inactive
+    </span>
+  )
+}
+
 function ScopeBadges({ scopes }: { scopes: string[] }) {
   if (!scopes || scopes.length === 0) return (
     <span className="text-[11px] text-amber-500 font-medium">Full Access</span>
@@ -185,19 +205,6 @@ function ScopeBadges({ scopes }: { scopes: string[] }) {
         <span className="text-[10px] text-muted-foreground px-1.5 py-0.5">+{rest} more</span>
       )}
     </div>
-  )
-}
-
-function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false)
-  return (
-    <button
-      onClick={() => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000) }}
-      className="p-1.5 rounded hover:bg-muted/60 transition-colors cursor-pointer"
-      title="Copy"
-    >
-      {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5 text-muted-foreground" />}
-    </button>
   )
 }
 
@@ -232,7 +239,6 @@ function ScopeSelector({
 
   return (
     <div className="space-y-3">
-      {/* Full Access toggle */}
       <label className="flex items-start gap-3 p-3 rounded-lg border border-amber-500/30 bg-amber-500/5 cursor-pointer hover:bg-amber-500/10 transition-colors">
         <input
           type="checkbox"
@@ -426,101 +432,63 @@ export function ApiKeysPage() {
   useDocumentTitle("API Keys");
   const { orgId } = useActiveOrg()
 
-  const [keys, setKeys] = useState<ApiKeyRecord[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [showRevoked, setShowRevoked] = useState(false)
+  // ── Server state (TanStack Query) ──────────────────────────────
+  const { data: keysData, isLoading: loading } = useOrgApiKeys(orgId)
+  const keys: ApiKeyRecord[] = (keysData?.data ?? []) as ApiKeyRecord[]
 
-  // Create state
+  const createMutation = useCreateApiKey(orgId ?? "")
+  const deleteMutation = useDeleteApiKey(orgId ?? "")
+  const updateMutation = useUpdateApiKey(orgId ?? "")
+
+  // ── Local UI state (modals, forms) ─────────────────────────────
+  const [showRevoked, setShowRevoked] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
   const [newName, setNewName] = useState("")
   const [expiryOption, setExpiryOption] = useState("never")
   const [customDate, setCustomDate] = useState("")
   const [fullAccess, setFullAccess] = useState(true)
   const [selectedScopes, setSelectedScopes] = useState<string[]>([])
-  const [creating, setCreating] = useState(false)
   const [newKey, setNewKey] = useState<string | null>(null)
   const [newKeyCopied, setNewKeyCopied] = useState(false)
-
-  // Modal state
   const [revokeTarget, setRevokeTarget] = useState<ApiKeyRecord | null>(null)
-  const [revoking, setRevoking] = useState(false)
   const [editTarget, setEditTarget] = useState<ApiKeyRecord | null>(null)
-  const [editing, setEditing] = useState(false)
 
-  const loadKeys = useCallback(async () => {
-    if (!orgId) return
-    setLoading(true)
-    setError(null)
-    try {
-      const res = await api<{ data: ApiKeyRecord[] }>(`/api/v1/organizations/${orgId}/api-keys`)
-      setKeys(res?.data ?? [])
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Failed to load API keys")
-    } finally {
-      setLoading(false)
-    }
-  }, [orgId])
+  const mutationError =
+    (createMutation.error as Error | null)?.message ??
+    (deleteMutation.error as Error | null)?.message ??
+    (updateMutation.error as Error | null)?.message ??
+    null
 
-  useEffect(() => { loadKeys() }, [loadKeys])
-
-  const handleCreate = async () => {
+  const handleCreate = () => {
     if (!newName.trim() || !orgId) return
-    setCreating(true)
-    setError(null)
-    try {
-      const expiresAt = getExpiryDate(expiryOption, customDate)
-      const scopes = fullAccess ? ALL_SCOPES : selectedScopes
-      const res = await api<{ data: ApiKeyRecord & { key: string } }>(
-        `/api/v1/organizations/${orgId}/api-keys`,
-        {
-          method: "POST",
-          body: JSON.stringify({ name: newName, ...(expiresAt ? { expiresAt } : {}), scopes }),
-        }
-      )
-      setNewKey(res?.data?.key ?? null)
-      setNewName("")
-      setExpiryOption("never")
-      setSelectedScopes([])
-      setFullAccess(true)
-      setIsCreating(false)
-      loadKeys()
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Failed to create API key")
-    } finally {
-      setCreating(false)
-    }
+    const expiresAt = getExpiryDate(expiryOption, customDate)
+    const scopes = fullAccess ? ALL_SCOPES : selectedScopes
+    createMutation.mutate(
+      { name: newName, ...(expiresAt ? { expiresAt } : {}), scopes },
+      {
+        onSuccess: (res) => {
+          const raw = res as unknown as { data: ApiKeyRecord & { key?: string; raw_key?: string } }
+          setNewKey(raw?.data?.key ?? raw?.data?.raw_key ?? null)
+          setNewName(""); setExpiryOption("never"); setSelectedScopes([]); setFullAccess(true)
+          setIsCreating(false)
+        },
+      }
+    )
   }
 
-  const handleRevoke = async () => {
-    if (!revokeTarget || !orgId) return
-    setRevoking(true)
-    try {
-      await api(`/api/v1/organizations/${orgId}/api-keys/${revokeTarget.id}`, { method: "DELETE" })
-      setRevokeTarget(null)
-      loadKeys()
-    } catch (e: unknown) {
-      setError(e instanceof Error ? `Failed to revoke: ${e.message}` : "Failed to revoke key")
-    } finally {
-      setRevoking(false)
-    }
+  const handleRevoke = () => {
+    if (!revokeTarget) return
+    deleteMutation.mutate(revokeTarget.id, {
+      onSuccess: () => setRevokeTarget(null),
+    })
   }
 
-  const handleEdit = async (patch: { name?: string; expiresAt?: string | null; scopes?: string[] }) => {
-    if (!editTarget || !orgId) return
-    setEditing(true)
-    try {
-      await api(`/api/v1/organizations/${orgId}/api-keys/${editTarget.id}`, {
-        method: "PATCH",
-        body: JSON.stringify(patch),
-      })
-      setEditTarget(null)
-      loadKeys()
-    } catch (e: unknown) {
-      setError(e instanceof Error ? `Failed to update: ${e.message}` : "Failed to update key")
-    } finally {
-      setEditing(false)
-    }
+  const handleEdit = (patch: { name?: string; expiresAt?: string | null; scopes?: string[] }) => {
+    if (!editTarget) return
+    updateMutation.mutate(
+      { keyId: editTarget.id, patch },
+      { onSuccess: () => setEditTarget(null) }
+    )
   }
 
   const displayedKeys = showRevoked ? keys : keys.filter(k => k.status !== "revoked")
@@ -549,10 +517,10 @@ export function ApiKeysPage() {
       </div>
 
       {/* Error */}
-      {error && (
+      {mutationError && (
         <div className="rounded-lg bg-destructive/10 p-4 border border-destructive/20 text-destructive text-sm font-medium flex items-center gap-2">
           <AlertCircle className="h-4 w-4 shrink-0" />
-          {error}
+          {mutationError}
         </div>
       )}
 
@@ -595,7 +563,6 @@ export function ApiKeysPage() {
             <CardDescription>Configure name, expiration and access scopes for the new key.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Name */}
             <div className="space-y-2">
               <Label htmlFor="key-name">Key Name <span className="text-destructive">*</span></Label>
               <Input
@@ -608,7 +575,6 @@ export function ApiKeysPage() {
               />
             </div>
 
-            {/* Expiration */}
             <div className="space-y-2">
               <Label>Expiration</Label>
               <div className="flex gap-2 flex-wrap">
@@ -640,7 +606,6 @@ export function ApiKeysPage() {
               )}
             </div>
 
-            {/* Scopes */}
             <div className="space-y-2">
               <Label>Access Scopes</Label>
               <ScopeSelector
@@ -659,13 +624,13 @@ export function ApiKeysPage() {
             <div className="flex gap-3 pt-2">
               <Button
                 onClick={handleCreate}
-                disabled={!newName.trim() || creating || (!fullAccess && selectedScopes.length === 0)}
+                disabled={!newName.trim() || createMutation.isPending || (!fullAccess && selectedScopes.length === 0)}
                 className="gap-2 min-w-[120px] cursor-pointer"
               >
-                {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Key className="h-4 w-4" />}
+                {createMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Key className="h-4 w-4" />}
                 Generate
               </Button>
-              <Button variant="ghost" onClick={() => { setIsCreating(false); setError(null) }} disabled={creating} className="cursor-pointer">
+              <Button variant="ghost" onClick={() => { setIsCreating(false); createMutation.reset() }} disabled={createMutation.isPending} className="cursor-pointer">
                 Cancel
               </Button>
             </div>
@@ -701,6 +666,7 @@ export function ApiKeysPage() {
                 <th className="px-6 py-3.5 font-medium">Scopes</th>
                 <th className="px-6 py-3.5 font-medium">Expires</th>
                 <th className="px-6 py-3.5 font-medium">Last Used</th>
+                <th className="px-6 py-3.5 font-medium">Activity</th>
                 <th className="px-6 py-3.5 font-medium">Status</th>
                 <th className="px-6 py-3.5 font-medium text-right">Actions</th>
               </tr>
@@ -708,13 +674,13 @@ export function ApiKeysPage() {
             <tbody className="divide-y divide-border/40">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center text-muted-foreground">
+                  <td colSpan={8} className="px-6 py-8 text-center text-muted-foreground">
                     <Loader2 className="h-5 w-5 animate-spin mx-auto" />
                   </td>
                 </tr>
               ) : displayedKeys.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center text-muted-foreground">
+                  <td colSpan={8} className="px-6 py-8 text-center text-muted-foreground">
                     No API keys found. Generate one to get started.
                   </td>
                 </tr>
@@ -732,7 +698,6 @@ export function ApiKeysPage() {
                           <code className="rounded bg-muted px-2 py-1 font-mono text-[12px] text-muted-foreground">
                             {key.maskedKey}
                           </code>
-                          <CopyButton text={key.maskedKey} />
                         </div>
                       </td>
                       <td className="px-6 py-4 max-w-[180px]">
@@ -745,6 +710,9 @@ export function ApiKeysPage() {
                       </td>
                       <td className="px-6 py-4 text-muted-foreground text-[13px]">
                         {formatRelative(key.lastUsedAt)}
+                      </td>
+                      <td className="px-6 py-4">
+                        <ActivityBadge active={isRecentlyActive(key.lastUsedAt)} />
                       </td>
                       <td className="px-6 py-4">
                         <StatusBadge status={key.status} />
@@ -789,16 +757,16 @@ export function ApiKeysPage() {
         <RevokeModal
           keyName={revokeTarget.name}
           onConfirm={handleRevoke}
-          onCancel={() => setRevokeTarget(null)}
-          loading={revoking}
+          onCancel={() => { setRevokeTarget(null); deleteMutation.reset() }}
+          loading={deleteMutation.isPending}
         />
       )}
       {editTarget && (
         <EditModal
           keyRecord={editTarget}
           onSave={handleEdit}
-          onCancel={() => setEditTarget(null)}
-          loading={editing}
+          onCancel={() => { setEditTarget(null); updateMutation.reset() }}
+          loading={updateMutation.isPending}
         />
       )}
     </div>

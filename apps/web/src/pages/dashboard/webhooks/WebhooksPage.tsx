@@ -1,7 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import { api, ApiError } from "@/lib/api";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useActiveOrg } from "@/hooks/useActiveOrg";
+import {
+  useOrgWebhooks, useCreateWebhook, useDeleteWebhook, useWebhookDeliveries,
+} from "@/lib/queries";
 import {
   Plus, Trash2, RotateCcw, Send, ChevronDown, ChevronUp,
   Webhook, Copy, Check, AlertCircle, CircleCheck, Circle,
@@ -9,7 +12,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
@@ -189,29 +192,10 @@ function WebhookRow({
   onTest: (id: string) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const [deliveries, setDeliveries] = useState<WebhookDelivery[]>([]);
-  const [loadingDel, setLoadingDel] = useState(false);
   const { copied, copy } = useCopy();
 
-  const loadDeliveries = useCallback(async () => {
-    if (loadingDel) return;
-    setLoadingDel(true);
-    try {
-      const res = await api<{ data: WebhookDelivery[] }>(
-        `/api/v1/webhooks/${endpoint.id}/deliveries`
-      );
-      setDeliveries(res?.data ?? []);
-    } catch {
-      // silent — deliveries are informational
-    } finally {
-      setLoadingDel(false);
-    }
-  }, [endpoint.id, loadingDel]);
-
-  const handleExpand = () => {
-    if (!expanded) loadDeliveries();
-    setExpanded((v) => !v);
-  };
+  const deliveriesQuery = useWebhookDeliveries(orgId, expanded ? endpoint.id : undefined);
+  const deliveries = (deliveriesQuery.data?.data ?? []) as WebhookDelivery[];
 
   return (
     <Card className="border-border/60 bg-card/60 shadow-none">
@@ -299,7 +283,7 @@ function WebhookRow({
               variant="ghost"
               size="icon"
               className="h-7 w-7 text-muted-foreground"
-              onClick={handleExpand}
+              onClick={() => setExpanded((v) => !v)}
             >
               {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
             </Button>
@@ -310,9 +294,9 @@ function WebhookRow({
           <div className="border-t border-border/40 px-4 pb-3">
             <p className="text-xs font-medium text-muted-foreground py-2.5">
               Recent Deliveries
-              {loadingDel && <span className="ml-2 opacity-60">Loading…</span>}
+              {deliveriesQuery.isLoading && <span className="ml-2 opacity-60">Loading…</span>}
             </p>
-            {deliveries.length === 0 && !loadingDel ? (
+            {deliveries.length === 0 && !deliveriesQuery.isLoading ? (
               <p className="text-xs text-muted-foreground py-2">No deliveries yet.</p>
             ) : (
               <div className="space-y-0.5">
@@ -331,16 +315,17 @@ export function WebhooksPage() {
   useDocumentTitle("Webhooks");
   const { orgId } = useActiveOrg();
 
-  const [endpoints, setEndpoints] = useState<WebhookEndpoint[]>([]);
-  const [loading, setLoading]     = useState(true);
-  const [error, setError]         = useState("");
+  const { data: webhooksData, isLoading, error: loadError } = useOrgWebhooks(orgId);
+  const endpoints = (webhooksData?.data ?? []) as WebhookEndpoint[];
+
+  const createMutation = useCreateWebhook(orgId ?? "");
+  const deleteMutation = useDeleteWebhook(orgId ?? "");
 
   // Create dialog
   const [createOpen, setCreateOpen]   = useState(false);
   const [newUrl, setNewUrl]           = useState("");
   const [newDesc, setNewDesc]         = useState("");
   const [newEvents, setNewEvents]     = useState<WebhookEventValue[]>([]);
-  const [creating, setCreating]       = useState(false);
   const [createError, setCreateError] = useState("");
 
   // New secret reveal (shown once after create/rotate)
@@ -353,73 +338,38 @@ export function WebhooksPage() {
   const [testOpen, setTestOpen]       = useState(false);
 
   // Delete confirm
-  const [deleteId, setDeleteId]   = useState<string | null>(null);
-  const [deleting, setDeleting]   = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  // Load endpoints
-  const load = useCallback(async () => {
-    if (!orgId) { setLoading(false); return; }
-    setLoading(true);
-    setError("");
-    try {
-      const res = await api<{ data: WebhookEndpoint[] }>(
-        `/api/v1/organizations/${orgId}/webhooks`
-      );
-      setEndpoints(res?.data ?? []);
-    } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Failed to load webhooks.");
-    } finally {
-      setLoading(false);
-    }
-  }, [orgId]);
-
-  useEffect(() => { load(); }, [load]);
-
-  // Create
-  const handleCreate = async () => {
+  const handleCreate = () => {
     if (!newUrl.trim()) { setCreateError("URL is required."); return; }
     if (newEvents.length === 0) { setCreateError("Select at least one event."); return; }
-    setCreating(true);
     setCreateError("");
-    try {
-      const res = await api<{ data: WebhookEndpoint & { signing_secret: string } }>(
-        `/api/v1/organizations/${orgId}/webhooks`,
-        {
-          method: "POST",
-          body: JSON.stringify({ url: newUrl.trim(), events: newEvents, description: newDesc.trim() || undefined }),
-        }
-      );
-      const ep = res?.data;
-      if (ep) {
-        setEndpoints((prev) => [ep, ...prev]);
-        setRevealSecret({ id: ep.id, secret: ep.signing_secret });
-        setShowSecret(false);
+    createMutation.mutate(
+      { url: newUrl.trim(), events: newEvents as string[], description: newDesc.trim() || undefined },
+      {
+        onSuccess: (res) => {
+          const ep = res?.data as (WebhookEndpoint & { signing_secret?: string }) | undefined;
+          if (ep?.signing_secret) {
+            setRevealSecret({ id: ep.id, secret: ep.signing_secret });
+            setShowSecret(false);
+          }
+          setCreateOpen(false);
+          setNewUrl(""); setNewDesc(""); setNewEvents([]);
+        },
+        onError: (e) => {
+          setCreateError(e instanceof ApiError ? e.message : "Failed to create webhook.");
+        },
       }
-      setCreateOpen(false);
-      setNewUrl(""); setNewDesc(""); setNewEvents([]);
-    } catch (e) {
-      setCreateError(e instanceof ApiError ? e.message : "Failed to create webhook.");
-    } finally {
-      setCreating(false);
-    }
+    );
   };
 
-  // Delete
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!deleteId) return;
-    setDeleting(true);
-    try {
-      await api(`/api/v1/webhooks/${deleteId}`, { method: "DELETE" });
-      setEndpoints((prev) => prev.filter((e) => e.id !== deleteId));
-    } catch {
-      // silent
-    } finally {
-      setDeleting(false);
-      setDeleteId(null);
-    }
+    deleteMutation.mutate(deleteId, {
+      onSettled: () => setDeleteId(null),
+    });
   };
 
-  // Rotate secret
   const handleRotate = async (id: string) => {
     try {
       const res = await api<{ data: WebhookEndpoint & { signing_secret: string } }>(
@@ -429,20 +379,12 @@ export function WebhooksPage() {
       if (res?.data?.signing_secret) {
         setRevealSecret({ id, secret: res.data.signing_secret });
         setShowSecret(false);
-        setEndpoints((prev) =>
-          prev.map((e) =>
-            e.id === id
-              ? { ...e, signing_secret_masked: res.data.signing_secret_masked }
-              : e
-          )
-        );
       }
     } catch {
       // silent
     }
   };
 
-  // Test
   const handleTest = async (id: string) => {
     try {
       const res = await api<{ data: { success: boolean; message: string } }>(
@@ -456,6 +398,8 @@ export function WebhooksPage() {
       setTestOpen(true);
     }
   };
+
+  const loadErrorMsg = loadError instanceof Error ? loadError.message : loadError ? "Failed to load webhooks." : "";
 
   return (
     <div className="space-y-6 pb-10">
@@ -532,15 +476,15 @@ export function WebhooksPage() {
       )}
 
       {/* Error */}
-      {error && (
+      {loadErrorMsg && (
         <div className="flex items-center gap-2 text-sm text-destructive p-3 rounded-lg border border-destructive/30 bg-destructive/5">
           <AlertCircle className="h-4 w-4 shrink-0" />
-          {error}
+          {loadErrorMsg}
         </div>
       )}
 
       {/* Loading skeleton */}
-      {loading && (
+      {isLoading && (
         <div className="space-y-3">
           {[1, 2].map((i) => (
             <Card key={i} className="border-border/60 shadow-none animate-pulse">
@@ -554,7 +498,7 @@ export function WebhooksPage() {
       )}
 
       {/* Endpoints list */}
-      {!loading && endpoints.length === 0 && orgId && (
+      {!isLoading && endpoints.length === 0 && orgId && (
         <Card className="border-dashed border-border/60 shadow-none">
           <CardContent className="flex flex-col items-center justify-center py-12 gap-3">
             <div className="h-10 w-10 rounded-lg bg-muted/60 flex items-center justify-center text-muted-foreground">
@@ -572,11 +516,11 @@ export function WebhooksPage() {
         </Card>
       )}
 
-      {!loading && endpoints.map((ep) => (
+      {!isLoading && endpoints.map((ep) => (
         <WebhookRow
           key={ep.id}
           endpoint={ep}
-          orgId={orgId}
+          orgId={orgId ?? ""}
           onDelete={setDeleteId}
           onRotateSecret={handleRotate}
           onTest={handleTest}
@@ -625,8 +569,8 @@ export function WebhooksPage() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
-            <Button onClick={handleCreate} disabled={creating}>
-              {creating ? "Creating…" : "Create Endpoint"}
+            <Button onClick={handleCreate} disabled={createMutation.isPending}>
+              {createMutation.isPending ? "Creating…" : "Create Endpoint"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -643,8 +587,8 @@ export function WebhooksPage() {
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteId(null)}>Cancel</Button>
-            <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
-              {deleting ? "Deleting…" : "Delete"}
+            <Button variant="destructive" onClick={handleDelete} disabled={deleteMutation.isPending}>
+              {deleteMutation.isPending ? "Deleting…" : "Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>
