@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { useDocumentTitle } from "@/hooks/useDocumentTitle"
 import { useActiveOrg } from "@/hooks/useActiveOrg"
 import { useQuery } from "@tanstack/react-query"
-import { qk } from "@/lib/queries"
+import { qk, useHealthStatus } from "@/lib/queries"
 
 function getGreeting(): string {
   const h = new Date().getHours()
@@ -56,14 +56,7 @@ export function OverviewPage() {
     enabled: !!orgId,
   })
 
-  const { data: healthData } = useQuery({
-    queryKey: qk.health(),
-    queryFn: () =>
-      fetch(`${API_URL}/health`)
-        .then((r) => (r.ok ? ("operational" as const) : ("degraded" as const)))
-        .catch(() => "down" as const),
-    refetchInterval: 30_000,
-  })
+  const { data: healthData } = useHealthStatus(API_URL)
 
   const { data: usageData } = useQuery({
     queryKey: qk.adminUsage(),

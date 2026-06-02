@@ -153,28 +153,41 @@ export function useTestWebhook(orgId: string) {
   });
 }
 
-// ─── Audit Logs ───────────────────────────────────────────────────────────────
+// ─── Audit Logs (admin security events) ──────────────────────────────────────
 
-export function useAuditLogs(
-  orgId: string | undefined,
-  page: number,
-  filter: string
-) {
-  const limit = 25;
-  const offset = page * limit;
-  const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
-  if (filter) params.set("event", filter);
+type AuditLogsFilters = {
+  action?: string;
+  actorId?: string;
+  from?: string;
+  to?: string;
+};
+
+const PAGE_SIZE_AUDIT = 50;
+
+export function useAuditLogs(page: number, filters: AuditLogsFilters) {
+  const params = new URLSearchParams();
+  params.set("limit", String(PAGE_SIZE_AUDIT + 1)); // fetch +1 to detect hasMore
+  params.set("offset", String(page * PAGE_SIZE_AUDIT));
+  if (filters.action) params.set("action", filters.action);
+  if (filters.actorId) params.set("actor_id", filters.actorId);
+  if (filters.from) params.set("from", new Date(filters.from).toISOString());
+  if (filters.to) params.set("to", new Date(filters.to + "T23:59:59").toISOString());
 
   return useQuery({
-    queryKey: qk.auditLogs(orgId, page, filter),
+    queryKey: qk.auditLogs(undefined, page, JSON.stringify(filters)),
     queryFn: () =>
-      api<{ data: AuditLog[]; total: number }>(
-        `/api/v1/organizations/${orgId}/audit-logs?${params}`
+      api<{ data?: RawAuditEvent[]; events?: RawAuditEvent[] }>(
+        `/api/v1/admin/security-events?${params}`
       ),
-    enabled: !!orgId,
     placeholderData: (prev) => prev,
+    retry: (count, err: unknown) => {
+      if ((err as { status?: number })?.status === 403) return false;
+      return count < 1;
+    },
   });
 }
+
+type RawAuditEvent = Record<string, unknown>;
 
 // ─── Admin ────────────────────────────────────────────────────────────────────
 
@@ -213,20 +226,39 @@ export function useAdminUsage() {
 
 // ─── Health ───────────────────────────────────────────────────────────────────
 
-export function useHealth() {
-  return useQuery({
+type RawHealthPayload = { basic: RawJson | null; detailed: RawJson | null };
+type RawJson = Record<string, unknown>;
+
+export function useHealthRaw(apiUrl: string) {
+  return useQuery<RawHealthPayload>({
     queryKey: qk.health(),
     queryFn: async () => {
-      const [basic, detailed] = await Promise.allSettled([
-        fetch("/health").then((r) => (r.ok ? r.json() : null)),
-        fetch("/api/v1/health").then((r) => (r.ok ? r.json() : null)),
+      const [basicRes, detailedRes] = await Promise.allSettled([
+        fetch(`${apiUrl}/health`, { signal: AbortSignal.timeout(8000) })
+          .then((r) => (r.ok ? (r.json() as Promise<RawJson>) : null)),
+        fetch(`${apiUrl}/api/v1/health`, { signal: AbortSignal.timeout(8000) })
+          .then((r) => (r.ok ? (r.json() as Promise<RawJson>) : null)),
       ]);
       return {
-        basic: basic.status === "fulfilled" ? basic.value : null,
-        detailed: detailed.status === "fulfilled" ? detailed.value : null,
+        basic: basicRes.status === "fulfilled" ? basicRes.value : null,
+        detailed: detailedRes.status === "fulfilled" ? detailedRes.value : null,
       };
     },
     refetchInterval: 30_000,
+    retry: 1,
+  });
+}
+
+// Lightweight health check used by OverviewPage status card
+export function useHealthStatus(apiUrl: string) {
+  return useQuery<"operational" | "degraded" | "down" | "unknown">({
+    queryKey: [...qk.health(), "status"],
+    queryFn: () =>
+      fetch(`${apiUrl}/health`, { signal: AbortSignal.timeout(5000) })
+        .then((r) => (r.ok ? ("operational" as const) : ("degraded" as const)))
+        .catch(() => "down" as const),
+    refetchInterval: 30_000,
+    retry: 1,
   });
 }
 
