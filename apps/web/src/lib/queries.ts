@@ -88,14 +88,6 @@ export function useCreateApiKey(orgId: string) {
   });
 }
 
-export function useRevokeApiKey(orgId: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (keyId: string) =>
-      api(`/api/v1/organizations/${orgId}/api-keys/${keyId}/revoke`, { method: "POST" }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: qk.orgApiKeys(orgId) }),
-  });
-}
 
 export function useDeleteApiKey(orgId: string) {
   const qc = useQueryClient();
@@ -387,6 +379,11 @@ type ScfControlItem = {
   control_code: string;
   control_title: string;
   control_description?: string;
+  control_question?: string;
+  control_intent?: string;
+  implementation_guidance?: string;
+  expected_evidence?: string;
+  control_weight?: number;
   status: string;
   is_synthetic: boolean;
 };

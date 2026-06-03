@@ -162,6 +162,18 @@ export const createAuth = (env: AuthEnv, db: any) => {
         enabled: true,
         maxAge: 5 * 60,
       },
+      additionalFields: {
+        /**
+         * Active organization ID — set by /api/v1/users/me/active-org endpoint.
+         * Returned in getSession so the frontend can scope all API calls.
+         * Without this, useActiveOrg() returns null → pages show infinite spinner.
+         */
+        activeOrganizationId: {
+          type: "string",
+          returned: true,
+          input: false,
+        },
+      },
     },
 
     // No plugins — user/org management via /api/v1/admin/* and /api/v1/users/me/*
