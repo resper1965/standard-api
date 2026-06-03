@@ -4,6 +4,7 @@ import type { DbClient } from "./db";
 
 export type ApiKeyRecord = {
   id: string;
+  tenantId: string;
   organizationId: string;
   name: string;
   keyHash: string;
@@ -18,6 +19,7 @@ export type ApiKeyRecord = {
 };
 
 export type CreateApiKeyInput = {
+  tenantId: string;
   organizationId: string;
   name: string;
   keyHash: string;
@@ -45,19 +47,32 @@ export type ApiKeysRepositoryAdapter = {
 export const createDrizzleApiKeysRepository = (db: DbClient): ApiKeysRepositoryAdapter => {
   return {
     async create(input) {
-      const [record] = await db
-        .insert(apiKeys)
-        .values({
-          organizationId: input.organizationId,
-          name: input.name,
-          keyHash: input.keyHash,
-          maskedKey: input.maskedKey,
-          scopes: input.scopes ?? [],
-          expiresAt: input.expiresAt ?? null,
-        })
-        .returning();
-      if (!record) throw new Error("Failed to create API key");
-      return { ...record, tenantId: record.organizationId };
+      try {
+        const [record] = await db
+          .insert(apiKeys)
+          .values({
+            organizationId: input.organizationId,
+            name: input.name,
+            keyHash: input.keyHash,
+            maskedKey: input.maskedKey,
+            scopes: input.scopes ?? [],
+            expiresAt: input.expiresAt ?? null,
+          })
+          .returning();
+        if (!record) throw new Error("Failed to create API key — no record returned");
+        return { ...record, tenantId: record.organizationId };
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        // Surface FK violation clearly — the most common cause is an invalid organizationId
+        if (msg.includes("violates foreign key") || msg.includes("insert or update on table")) {
+          console.error(
+            `[standard:api-keys] create: FK constraint violation. organizationId="${input.organizationId}" is not a valid organizations.id. ` +
+            `This usually means tenant resolution failed and a raw BA org ID was passed. Error: ${msg}`
+          );
+          throw new Error(`API key creation failed: organization "${input.organizationId}" does not exist in the domain. Check tenant resolution.`);
+        }
+        throw err;
+      }
     },
     async getById(id, organizationId) {
       const [record] = await db
@@ -131,6 +146,7 @@ export const createMockApiKeysRepository = (): ApiKeysRepositoryAdapter => {
     async create(input) {
       const record: ApiKeyRecord = {
         id: crypto.randomUUID(),
+        tenantId: input.tenantId,
         organizationId: input.organizationId,
         name: input.name,
         keyHash: input.keyHash,

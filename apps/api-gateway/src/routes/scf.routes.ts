@@ -29,6 +29,11 @@ const controlResponse = (control: ScfControl) => ({
   control_code: control.control_code,
   control_title: control.control_title,
   ...(control.control_description ? { control_description: control.control_description } : {}),
+  ...(control.control_question ? { control_question: control.control_question } : {}),
+  ...(control.control_intent ? { control_intent: control.control_intent } : {}),
+  ...(control.implementation_guidance ? { implementation_guidance: control.implementation_guidance } : {}),
+  ...(control.expected_evidence ? { expected_evidence: control.expected_evidence } : {}),
+  ...(control.control_weight ? { control_weight: control.control_weight } : {}),
   status: control.status,
   is_synthetic: control.is_synthetic
 });

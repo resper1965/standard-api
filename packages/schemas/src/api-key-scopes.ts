@@ -172,8 +172,10 @@ export function hasRequiredScopes(
   keyScopes: M2mScope[] | undefined | null,
   requiredScopes: M2mScope[]
 ): boolean {
-  // Empty keyScopes = no access (fail-closed)
-  if (!keyScopes || keyScopes.length === 0) return false;
+  // Undefined/null = no key = fail-closed
+  if (keyScopes == null) return false;
+  // Empty keyScopes = wildcard (full access)
+  if (keyScopes.length === 0) return true;
   // No required scopes = open route
   if (requiredScopes.length === 0) return true;
   // At least one required scope must be present

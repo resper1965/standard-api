@@ -35,6 +35,10 @@ type ScfControl = {
   control_code: string;
   control_title: string;
   control_description?: string;
+  control_question?: string;
+  control_intent?: string;
+  implementation_guidance?: string;
+  expected_evidence?: string;
   status: string;
 };
 
@@ -216,15 +220,55 @@ function ControlsTab({
             <DialogDescription className="sr-only">SCF control detail</DialogDescription>
           </DialogHeader>
           {selected && (
-            <div className="space-y-3">
+            <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
               {selected.control_description ? (
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
-                  {selected.control_description}
-                </p>
+                <div className="space-y-1">
+                  <h4 className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">Description</h4>
+                  <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+                    {selected.control_description}
+                  </p>
+                </div>
               ) : (
                 <p className="text-sm text-muted-foreground italic">No description available.</p>
               )}
-              <div className="flex items-center gap-2 pt-1">
+
+              {selected.control_question && (
+                <div className="space-y-1">
+                  <h4 className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">Control Question</h4>
+                  <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+                    {selected.control_question}
+                  </p>
+                </div>
+              )}
+
+              {selected.control_intent && (
+                <div className="space-y-1">
+                  <h4 className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">Control Intent</h4>
+                  <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+                    {selected.control_intent}
+                  </p>
+                </div>
+              )}
+
+              {selected.implementation_guidance && (
+                <div className="space-y-1">
+                  <h4 className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">Implementation Guidance</h4>
+                  <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+                    {selected.implementation_guidance}
+                  </p>
+                </div>
+              )}
+
+              {selected.expected_evidence && (
+                <div className="space-y-1">
+                  <h4 className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">Expected Evidence</h4>
+                  <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+                    {selected.expected_evidence}
+                  </p>
+                </div>
+              )}
+
+              <div className="flex items-center gap-2 pt-2">
                 <Badge variant="muted" className="text-[10px] capitalize">{selected.status}</Badge>
               </div>
               <div className="rounded-lg bg-muted/20 border border-border/40 p-3">

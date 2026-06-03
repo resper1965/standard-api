@@ -1,4 +1,4 @@
-import { eq, and, ilike, or, asc, desc, sql } from "drizzle-orm";
+import { eq, and, ilike, or, asc, desc, sql, isNotNull } from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import {
   scfVersions,
@@ -131,8 +131,16 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
   },
 
   getLatestVersion: async () => {
-    const [row] = await db.select().from(scfVersions).orderBy(desc(scfVersions.createdAt)).limit(1);
-    return row ? mapVersion(row) : null;
+    // Prefer published versions — an unpublished draft should never be "latest" in the explorer.
+    // Fall back to newest by created_at only if no versions have been published yet.
+    const [published] = await db.select().from(scfVersions)
+      .where(isNotNull(scfVersions.publishedAt))
+      .orderBy(desc(scfVersions.publishedAt))
+      .limit(1);
+    if (published) return mapVersion(published);
+
+    const [fallback] = await db.select().from(scfVersions).orderBy(desc(scfVersions.createdAt)).limit(1);
+    return fallback ? mapVersion(fallback) : null;
   },
 
   findVersionByLabel: async (label) => {

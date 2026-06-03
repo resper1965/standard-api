@@ -9,8 +9,8 @@ import { ApiError } from "../errors/api-error";
 const createApiKeyInput = z.object({
   name: z.string().min(1).max(100),
   expiresAt: z.string().datetime().optional(),
-  /** M2M scopes — required for security */
-  scopes: M2mScopesArraySchema,
+  /** M2M scopes — when omitted or empty, defaults to all scopes (full access) */
+  scopes: M2mScopesArraySchema.optional(),
 });
 
 const updateApiKeyInput = z.object({
@@ -18,6 +18,8 @@ const updateApiKeyInput = z.object({
   expiresAt: z.string().datetime().nullable().optional(),
   scopes: M2mScopesArraySchema.optional(),
 });
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Shared helper: resolve Standard Native Auth orgId → Standard UUIDs and block M2M self-management */
 async function resolveOrgCtx(context: any, organizationId: string) {
@@ -27,12 +29,21 @@ async function resolveOrgCtx(context: any, organizationId: string) {
   // Prefer already-resolved context from auth middleware (tenant_id + organization_id are Standard domain UUIDs).
   // The auth middleware resolves the BA org → Standard domain via resolveTenantContext on every request.
   if (context.tenantId && context.organizationId) {
-    return {
-      tenant_id: context.tenantId,
-      organization_id: context.organizationId,
-      ba_org_id: organizationId,
-      org_name: "",
-    };
+    // GUARD: Verify resolved IDs are valid UUIDs — prevent raw BA nanoids from reaching FK constraints
+    if (!UUID_RE.test(context.organizationId)) {
+      console.error(
+        `[standard:api-keys] resolveOrgCtx: context.organizationId is not a valid UUID: "${context.organizationId}". ` +
+        `Tenant resolution likely failed silently. ba_org_id=${organizationId}, trace=${context.traceId}`
+      );
+      // Fall through to explicit resolution below instead of passing a nanoid to the DB
+    } else {
+      return {
+        tenant_id: context.tenantId,
+        organization_id: context.organizationId,
+        ba_org_id: organizationId,
+        org_name: "",
+      };
+    }
   }
 
   const orgRef = context.tenantId ?? organizationId;
@@ -41,11 +52,28 @@ async function resolveOrgCtx(context: any, organizationId: string) {
   // session / validated route, so provision the domain org if it does not exist
   // yet (e.g. org seeded only in the Better Auth tables).
   if (!tenantCtx && context.deps.provisionTenantContext) {
+    console.log(
+      `[standard:api-keys] resolveOrgCtx: provisioning org for orgRef="${orgRef}", ba_org_id="${organizationId}", trace=${context.traceId}`
+    );
     tenantCtx = await context.deps.provisionTenantContext(orgRef);
   }
   if (!tenantCtx) {
+    console.error(
+      `[standard:api-keys] resolveOrgCtx: could not resolve or provision org. orgRef="${orgRef}", organizationId="${organizationId}", ` +
+      `tenantId=${context.tenantId}, trace=${context.traceId}`
+    );
     throw new ApiError("NOT_FOUND", "Organization not found or not provisioned.", 404);
   }
+
+  // Final UUID guard after resolution
+  if (!UUID_RE.test(tenantCtx.organization_id)) {
+    console.error(
+      `[standard:api-keys] resolveOrgCtx: resolved organization_id is not a valid UUID: "${tenantCtx.organization_id}". ` +
+      `orgRef="${orgRef}", trace=${context.traceId}`
+    );
+    throw new ApiError("INTERNAL_ERROR", "Organization ID resolution produced an invalid identifier.", 500);
+  }
+
   return tenantCtx;
 }
 
@@ -172,6 +200,7 @@ export const apiKeysRoutes: RouteDefinition[] = [
         .join("");
 
       const record = await context.deps.apiKeys.create({
+        tenantId: tenantCtx.tenant_id,
         organizationId: tenantCtx.organization_id,
         name: input.name,
         keyHash,
