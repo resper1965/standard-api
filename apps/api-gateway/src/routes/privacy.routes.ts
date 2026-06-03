@@ -431,8 +431,14 @@ export const privacyRoutes: RouteDefinition[] = [
         await ctx.deps.audit.record("privacy.ropa.analyzed", { tenant_id: ctx.tenantId, trace_id: ctx.traceId });
         return json({ data: result, trace_id: ctx.traceId }, { status: 200 });
       } catch (e) {
+        console.error("[POST /api/v1/privacy/analyze-ropa] Failure:", e);
         if (e instanceof ApiError) throw e;
-        throw new ApiError("INTERNAL_ERROR", "Agent generation failed", 500);
+        throw new ApiError(
+          "INTERNAL_ERROR",
+          `Agent generation failed: ${e instanceof Error ? e.message : String(e)}`,
+          500,
+          e instanceof Error && e.stack ? [e.stack] : []
+        );
       }
     },
   },
@@ -475,8 +481,14 @@ export const privacyRoutes: RouteDefinition[] = [
         await ctx.deps.audit.record("privacy.dpia.assessed", { tenant_id: ctx.tenantId, trace_id: ctx.traceId, draft: result.is_draft });
         return json({ data: result, trace_id: ctx.traceId }, { status: 200 });
       } catch (e) {
+        console.error("[POST /api/v1/privacy/assess-dpia] Failure:", e);
         if (e instanceof ApiError) throw e;
-        throw new ApiError("INTERNAL_ERROR", "Agent DPIA assessment failed", 500);
+        throw new ApiError(
+          "INTERNAL_ERROR",
+          `Agent DPIA assessment failed: ${e instanceof Error ? e.message : String(e)}`,
+          500,
+          e instanceof Error && e.stack ? [e.stack] : []
+        );
       }
     },
   },
@@ -589,8 +601,14 @@ export const privacyRoutes: RouteDefinition[] = [
         await ctx.deps.audit.record("vendor.contract.scanned", { tenant_id: ctx.tenantId, trace_id: ctx.traceId, vendor: body.vendorName, complete_dpa: result.is_dpa_compliant });
         return json({ data: result, trace_id: ctx.traceId }, { status: 200 });
       } catch (e) {
+        console.error("[POST /api/v1/privacy/scan-vendor-contract] Failure:", e);
         if (e instanceof ApiError) throw e;
-        throw new ApiError("INTERNAL_ERROR", "Agent Vendor Contract Scanning failed", 500);
+        throw new ApiError(
+          "INTERNAL_ERROR",
+          `Agent Vendor Contract Scanning failed: ${e instanceof Error ? e.message : String(e)}`,
+          500,
+          e instanceof Error && e.stack ? [e.stack] : []
+        );
       }
     },
     openapi: {

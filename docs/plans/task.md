@@ -29,3 +29,9 @@
 | P1-09.1 | Bloquear rota de debug `/api/v1/auth/debug` em produção (`health.routes.ts`) | done |
 | P2-05.1 | Adicionar script de lint em `apps/api-gateway/package.json` | done |
 | P2-06.1 | Corrigir declaração no state em `Users.tsx` | done |
+| P5-01.1 | Corrigir mapeamentos de frameworks no Drizzle Repository eUUIDs vazios | done |
+| P5-01.2 | Corrigir placeholders de Account ID em arquivos wrangler.toml | done |
+| P5-01.3 | Adicionar suporte a AI Gateway autenticado com cabeçalho especial cf-aig-authorization | done |
+| P5-01.4 | Corrigir cron triggers inválidos no Cloudflare (0 -> SUN) e remover consumidores duplicados | done |
+| P5-01.5 | Configurar secrets em produção e realizar deploy bem-sucedido de todos os workers | done |
+

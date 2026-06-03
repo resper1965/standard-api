@@ -121,10 +121,16 @@ export class IntelligenceService {
     'lgpd':          ['BR-LGPD'],                         // Brazil LGPD
     'gdpr':          ['EU-GDPR'],                         // EU GDPR
     'cmmc':          ['CM-LEVEL-2'],                      // CMMC Level 2
+    'tx-ramp':       ['TX-LEVEL-1', 'TX-LEVEL-2'],        // TX-RAMP Level 1+2
+    'tx-ramp-1':     ['TX-LEVEL-1'],                       // TX-RAMP Level 1
+    'tx-ramp-2':     ['TX-LEVEL-2'],                       // TX-RAMP Level 2
+    'tx-level-1':    ['TX-LEVEL-1'],                       // TX-RAMP Level 1 (by ID)
+    'tx-level-2':    ['TX-LEVEL-2'],                       // TX-RAMP Level 2 (by ID)
   };
 
   /**
    * Get required SCF controls for a framework from the database.
+   * Returns SCF control_codes (e.g. GOV-01, IAC-02) — NOT framework requirement codes.
    * Falls back to static extraction if DB is unavailable or framework not found.
    */
   async getControlsForFramework(mask: string): Promise<Set<string>> {
@@ -132,33 +138,47 @@ export class IntelligenceService {
       return IntelligenceService.extractFrameworkControls(mask);
     }
 
+    // Determine which framework_codes to look for
     const frameworkIds = IntelligenceService.FRAMEWORK_ID_MAP[mask.toLowerCase()];
-    if (!frameworkIds || frameworkIds.length === 0) {
-      return IntelligenceService.extractFrameworkControls(mask);
-    }
+    const codesToResolve = frameworkIds && frameworkIds.length > 0
+      ? frameworkIds
+      : [mask]; // Try raw mask as framework_code (e.g. 'TX-LEVEL-2')
 
     try {
       const controlSet = new Set<string>();
-      // Look up each framework by its code and collect requirement codes
-      // (e.g., ISO 27002:2022 requirements like 'A.5.1', 'A.8.2')
       const allFrameworks = await this.deps.scf.frameworks.listFrameworks();
-      for (const frameworkCode of frameworkIds) {
-        const fw = allFrameworks.find(f => f.framework_code === frameworkCode);
-        if (!fw) continue;
-        const reqs = await this.deps.scf.frameworks.listRequirements(fw.id);
-        for (const req of reqs) {
-          if (req.requirement_code) controlSet.add(req.requirement_code);
+      const allVersions = await this.deps.scf.versions.listVersions();
+
+      for (const frameworkCode of codesToResolve) {
+        // Find all framework records matching this code (may span multiple versions)
+        const matchingFws = allFrameworks.filter(f => 
+          f.framework_code.toLowerCase() === frameworkCode.toLowerCase()
+        );
+        if (matchingFws.length === 0) continue;
+
+        // Try each version to find mappings (framework is linked to a version)
+        for (const fw of matchingFws) {
+          for (const version of allVersions) {
+            const mappings = await this.deps.scf.mappings.mapFrameworkToScf(fw.id, version.id);
+            if (mappings.length > 0) {
+              const enriched = await this.deps.scf.mappings.enrichMappings(mappings);
+              for (const m of enriched) {
+                if (m.control_code) controlSet.add(m.control_code);
+              }
+              break; // Found mappings for this fw, no need to check other versions
+            }
+          }
         }
       }
+
       if (controlSet.size > 0) {
         return controlSet;
       }
-
     } catch (err) {
-      console.warn('[IntelligenceService] SCF DB lookup failed, falling back to static:', err instanceof Error ? err.message : String(err));
+      console.warn('[IntelligenceService] SCF DB lookup failed, falling back to static:', err);
     }
 
-    // Fallback: static extraction
+    // Fallback: static extraction (regulations-based)
     return IntelligenceService.extractFrameworkControls(mask);
   }
 

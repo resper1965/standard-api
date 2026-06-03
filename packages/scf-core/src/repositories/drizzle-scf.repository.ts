@@ -1,4 +1,4 @@
-import { eq, and, ilike, or, asc, desc, sql, isNotNull } from "drizzle-orm";
+import { eq, and, ilike, or, asc, desc, sql, isNotNull, inArray } from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import {
   scfVersions,
@@ -297,7 +297,7 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
       const rows = await db.select().from(scfMappings)
         .where(and(
           eq(scfMappings.scfVersionId, versionId),
-          sql`${scfMappings.scfFrameworkRequirementId} = ANY(${batch})`
+          inArray(scfMappings.scfFrameworkRequirementId, batch)
         ));
       allMappings.push(...rows.map(mapMapping));
     }
