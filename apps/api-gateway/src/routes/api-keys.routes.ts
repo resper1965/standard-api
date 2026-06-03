@@ -24,7 +24,7 @@ async function resolveOrgCtx(context: any, organizationId: string) {
   if (context.actorId?.startsWith("m2m:")) {
     throw new ApiError("FORBIDDEN", "M2M agents cannot manage API keys.", 403);
   }
-  const orgRef = context.tenantId || organizationId;
+  const orgRef = context.tenantId ?? organizationId;
   let tenantCtx = await context.deps.resolveTenantContext?.(orgRef);
   // First-touch provisioning: the org reference comes from the authenticated
   // session / validated route, so provision the domain org if it does not exist
