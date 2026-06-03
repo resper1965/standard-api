@@ -1,7 +1,7 @@
 {
   "name": "standard-api-standard",
   "private": true,
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "API-first standard implementation of the Standard SCF-Based Assessment Lifecycle.",
   "type": "module",
   "packageManager": "pnpm@9.15.9",

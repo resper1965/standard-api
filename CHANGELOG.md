@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.2](https://github.com/resper1965/standard-api/compare/v1.2.1...v1.2.2) (2026-06-03)
+
+
+### Bug Fixes
+
+* **api-gateway:** use ?? instead of || for orgRef fallback; chore: update lockfile ([1c57ffd](https://github.com/resper1965/standard-api/commit/1c57ffd559bf4eebee847cfca1b054b886c6fc23))
+* **api-keys:** use nullish coalescing for orgRef to avoid empty-string bypass ([bc0f16c](https://github.com/resper1965/standard-api/commit/bc0f16cf120e1666cf1c4faf18012ef2f12e3279))
+
 ## [1.2.1](https://github.com/resper1965/standard-api/compare/v1.2.0...v1.2.1) (2026-06-02)
 
 
