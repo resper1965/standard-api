@@ -29,7 +29,11 @@ const ORG_SLUG    = "bekaa";
 const ORG_NAME    = "Bekaa";
 
 async function post(path, body, cookie) {
-  const headers = { "Content-Type": "application/json" };
+  const headers = { 
+    "Content-Type": "application/json",
+    "Origin": API_URL,
+    "Referer": API_URL
+  };
   if (cookie) headers["Cookie"] = cookie;
   const res = await fetch(`${API_URL}${path}`, {
     method: "POST",
