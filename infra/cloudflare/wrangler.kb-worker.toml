@@ -7,7 +7,7 @@ compatibility_flags = [ "nodejs_compat" ]
 STANDARD_ENV = "development"
 LOG_LEVEL = "info"
 AI_GATEWAY_NAME = "standard-dev"
-AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/standard-dev"
+AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/0a6c490dd5fe9051422c15c9e133138e/standard-dev"
 
 [[queues.consumers]]
 queue = "standard-kb-embedding-dev"
@@ -25,7 +25,7 @@ index_name = "standard-kb-dev"
 
 [env.staging]
 name = "standard-kb-worker-staging"
-vars = { STANDARD_ENV = "staging", LOG_LEVEL = "info", AI_GATEWAY_NAME = "standard-staging", AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/standard-staging" }
+vars = { STANDARD_ENV = "staging", LOG_LEVEL = "info", AI_GATEWAY_NAME = "standard-staging", AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/0a6c490dd5fe9051422c15c9e133138e/standard-staging" }
 
 [[env.staging.queues.consumers]]
 queue = "standard-kb-embedding-staging"
@@ -43,7 +43,7 @@ index_name = "standard-kb-staging"
 
 [env.production]
 name = "standard-kb-worker-production"
-vars = { STANDARD_ENV = "production", LOG_LEVEL = "warn", AI_GATEWAY_NAME = "standard-prod", AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/standard-prod" }
+vars = { STANDARD_ENV = "production", LOG_LEVEL = "warn", AI_GATEWAY_NAME = "standard-prod", AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/0a6c490dd5fe9051422c15c9e133138e/standard-prod" }
 
 [[env.production.queues.consumers]]
 queue = "standard-kb-embedding-prod"

@@ -238,14 +238,15 @@ export const intelligenceRoutes: RouteDefinition[] = [
       authRequired: true,
       tenantRequired: false,
       bodySchema: CrossCoverageRequestSchema,
-      handler: async ({ request, validatedBody, traceId }) => {
+      handler: async ({ request, validatedBody, traceId, deps }) => {
           const locale = new URL(request.url).searchParams.get("locale") || "pt";
           const body = validatedBody as z.infer<typeof CrossCoverageRequestSchema>;
 
           const implementedSet = new Set(body.scf_controls_implemented);
           
-          // Get controls required by target framework
-          const targetControls = IntelligenceService.extractFrameworkControls(body.target_framework);
+          // Get controls required by target framework (DB-backed)
+          const service = new IntelligenceService(deps);
+          const targetControls = await service.getControlsForFramework(body.target_framework);
           const totalTarget = targetControls.size;
           
           let sharedImplementation = 0;
@@ -283,12 +284,13 @@ export const intelligenceRoutes: RouteDefinition[] = [
       authRequired: true,
       tenantRequired: false,
       bodySchema: RoiPathRequestSchema,
-      handler: async ({ request, validatedBody, traceId }) => {
+      handler: async ({ request, validatedBody, traceId, deps }) => {
           const locale = new URL(request.url).searchParams.get("locale") || "pt";
           const body = validatedBody as z.infer<typeof RoiPathRequestSchema>;
           
           const implementedSet = new Set(body.scf_controls_implemented);
-          const requiredControls = IntelligenceService.extractFrameworkControls(body.target_framework);
+          const service = new IntelligenceService(deps);
+          const requiredControls = await service.getControlsForFramework(body.target_framework);
           
           const missingControls = Array.from(requiredControls).filter(c => !implementedSet.has(c));
           

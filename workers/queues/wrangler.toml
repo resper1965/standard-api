@@ -8,7 +8,7 @@ compatibility_flags = [ "nodejs_compat" ]
 STANDARD_ENV = "development"
 LOG_LEVEL = "info"
 AI_GATEWAY_NAME = "standard-dev"
-AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/standard-dev"
+AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/0a6c490dd5fe9051422c15c9e133138e/standard-dev"
 
 
 [[queues.consumers]]
@@ -74,7 +74,7 @@ index_name = "standard-kb-dev"
 binding = "AI"
 
 [triggers]
-crons = ["0 2 * * 0"]
+crons = ["0 2 * * SUN"]
 
 
 # ─── Production environment ────────────────────────────────────
@@ -82,13 +82,13 @@ crons = ["0 2 * * 0"]
 name = "standard-queues-production"
 
 [env.production.triggers]
-crons = ["0 2 * * 0"]
+crons = ["0 2 * * SUN"]
 
 [env.production.vars]
 STANDARD_ENV = "production"
 LOG_LEVEL = "info"
 AI_GATEWAY_NAME = "standard-prod"
-AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/${CLOUDFLARE_ACCOUNT_ID}/standard-prod"
+AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/0a6c490dd5fe9051422c15c9e133138e/standard-prod"
 
 
 [[env.production.queues.consumers]]

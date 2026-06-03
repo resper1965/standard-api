@@ -6,9 +6,9 @@ import { z } from "zod";
 import type { Env } from "./index";
 
 export const AgentRunQueueMessageSchema = z.object({
-  agent_run_id: schema.UuidSchema,
-  tenant_id: schema.UuidSchema,
-  assessment_id: schema.UuidSchema,
+  agent_run_id: z.string().uuid(),
+  tenant_id: z.string().uuid(),
+  assessment_id: z.string().uuid(),
 });
 
 export const processAgentRunQueueMessage = async (messageBody: unknown, env: Env): Promise<void> => {
@@ -31,6 +31,11 @@ export const processAgentRunQueueMessage = async (messageBody: unknown, env: Env
       llm = createOpenAI({
         apiKey: env.OPENAI_API_KEY,
         baseURL: env.AI_GATEWAY_BASE_URL,
+        ...(env.AI_GATEWAY_TOKEN ? {
+          headers: {
+            "cf-aig-authorization": `Bearer ${env.AI_GATEWAY_TOKEN}`,
+          }
+        } : {})
       });
     } catch (e) {
       console.error("Failed to load @ai-sdk/openai dynamically", e);

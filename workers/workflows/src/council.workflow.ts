@@ -7,6 +7,7 @@ export interface Env {
   DATABASE_URL: string;
   OPENAI_API_KEY?: string;
   AI_GATEWAY_BASE_URL?: string;
+  AI_GATEWAY_TOKEN?: string;
   STANDARD_CACHE: KVNamespace;
 }
 
@@ -32,6 +33,11 @@ export class CouncilOrchestrationWorkflow extends WorkflowEntrypoint<Env, Counci
         llm = createOpenAI({
           apiKey: this.env.OPENAI_API_KEY,
           baseURL: this.env.AI_GATEWAY_BASE_URL,
+          ...(this.env.AI_GATEWAY_TOKEN ? {
+            headers: {
+              "cf-aig-authorization": `Bearer ${this.env.AI_GATEWAY_TOKEN}`,
+            }
+          } : {})
         });
       } catch (e) {
         console.error("Failed to load @ai-sdk/openai in Workflows", e);

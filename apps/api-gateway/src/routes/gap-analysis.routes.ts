@@ -364,8 +364,14 @@ export const gapAnalysisRoutes: RouteDefinition[] = [
         await ctx.deps.audit.record("gap.evidence.evaluated", { tenant_id: ctx.tenantId, trace_id: ctx.traceId, compliant: result.is_compliant });
         return json({ data: result, trace_id: ctx.traceId }, { status: 200 });
       } catch (e) {
+        console.error("[POST /api/v1/gap/evaluate-evidence] Failure:", e);
         if (e instanceof ApiError) throw e;
-        throw new ApiError("INTERNAL_ERROR", "Agent Evidence evaluation failed", 500);
+        throw new ApiError(
+          "INTERNAL_ERROR",
+          `Agent Evidence evaluation failed: ${e instanceof Error ? e.message : String(e)}`,
+          500,
+          e instanceof Error && e.stack ? [e.stack] : []
+        );
       }
     },
   },
@@ -441,8 +447,14 @@ export const gapAnalysisRoutes: RouteDefinition[] = [
         await ctx.deps.audit.record("poam.architectured", { tenant_id: ctx.tenantId, trace_id: ctx.traceId, priority: result.priority_level });
         return json({ data: result, trace_id: ctx.traceId }, { status: 200 });
       } catch (e) {
+        console.error("[POST /api/v1/poam/architect-remediation] Failure:", e);
         if (e instanceof ApiError) throw e;
-        throw new ApiError("INTERNAL_ERROR", "Agent PoAM Architecture failed", 500);
+        throw new ApiError(
+          "INTERNAL_ERROR",
+          `Agent PoAM Architecture failed: ${e instanceof Error ? e.message : String(e)}`,
+          500,
+          e instanceof Error && e.stack ? [e.stack] : []
+        );
       }
     },
   },
