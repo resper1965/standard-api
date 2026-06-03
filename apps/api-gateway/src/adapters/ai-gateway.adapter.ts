@@ -14,6 +14,7 @@ import type {
 export type AiGatewayConfig = {
   baseUrl: string; // e.g. https://gateway.ai.cloudflare.com/v1/{account_id}/{gateway}/openai
   apiKey: string;  // e.g. OpenAI API Key
+  gatewayToken?: string; // Cloudflare API token for Authenticated Gateway
 };
 
 export class CloudflareAiGatewayAdapter implements LlmProvider {
@@ -32,10 +33,14 @@ export class CloudflareAiGatewayAdapter implements LlmProvider {
       response_format: input.response_format,
     });
 
-    const headers = {
+    const headers: Record<string, string> = {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${this.config.apiKey}`,
     };
+
+    if (this.config.gatewayToken) {
+      headers["cf-aig-authorization"] = `Bearer ${this.config.gatewayToken}`;
+    }
 
     const url = `${this.config.baseUrl}/chat/completions`;
 

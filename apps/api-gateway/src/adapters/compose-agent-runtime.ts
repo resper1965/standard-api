@@ -17,6 +17,7 @@ export const composeDrizzleAgentRuntime = (db: DbClient, env?: Env): AgentRuntim
       ? new CloudflareAiGatewayAdapter({
           baseUrl: env.AI_GATEWAY_BASE_URL,
           apiKey: env.OPENAI_API_KEY,
+          ...(env.AI_GATEWAY_TOKEN ? { gatewayToken: env.AI_GATEWAY_TOKEN } : {}),
         })
       : createInMemoryAgentRuntimeDependencies().llm
   ),

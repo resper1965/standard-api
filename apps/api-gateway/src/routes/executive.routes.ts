@@ -43,8 +43,14 @@ export const executiveRoutes: RouteDefinition[] = [
         
         return json({ data: result, trace_id: ctx.traceId }, { status: 200 });
       } catch (e) {
+        console.error("[POST /api/v1/executive/translate-risk] Failure:", e);
         if (e instanceof ApiError) throw e;
-        throw new ApiError("INTERNAL_ERROR", "Agent Board Translation failed", 500);
+        throw new ApiError(
+          "INTERNAL_ERROR",
+          `Agent Board Translation failed: ${e instanceof Error ? e.message : String(e)}`,
+          500,
+          e instanceof Error && e.stack ? [e.stack] : []
+        );
       }
     },
   },

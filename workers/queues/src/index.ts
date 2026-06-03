@@ -19,6 +19,7 @@ export interface Env {
   AI: any;
   OPENAI_API_KEY?: string;
   AI_GATEWAY_BASE_URL?: string;
+  AI_GATEWAY_TOKEN?: string;
 }
 
 type QueueMessageBody = {
@@ -102,7 +103,7 @@ export default {
 
   /**
    * Scheduled cron trigger for data retention purge.
-   * Configured in wrangler.toml: crons = ["0 2 * * 0"] (every Sunday 02:00 UTC)
+   * Configured in wrangler.toml: crons = ["0 2 * * SUN"] (every Sunday 02:00 UTC)
    *
    * To run a dry-run manually via Cloudflare Dashboard:
    *   Workers > standard-queues > Triggers > Crons > Run

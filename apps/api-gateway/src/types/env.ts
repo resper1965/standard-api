@@ -16,6 +16,7 @@ export interface Env {
   STANDARD_ENV?: string;
   OPENAI_API_KEY?: string;
   AI_GATEWAY_BASE_URL?: string;
+  AI_GATEWAY_TOKEN?: string;
   ASSESSMENT_WORKFLOW?: Workflow;
   STANDARD_DOCUMENTS_BUCKET: R2Bucket;
   STANDARD_REPORTS_BUCKET?: R2Bucket;
