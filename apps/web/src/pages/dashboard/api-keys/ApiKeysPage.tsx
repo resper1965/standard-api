@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
   Key, Plus, Trash2, Loader2, Copy, Check, Pencil,
-  ShieldCheck, ShieldOff, Clock, AlertCircle, ChevronDown, ChevronUp
+  ShieldCheck, ShieldOff, Clock
 } from "lucide-react"
 import { useOrgApiKeys, useCreateApiKey, useDeleteApiKey, useUpdateApiKey } from "@/lib/queries"
 
@@ -28,86 +28,7 @@ type ApiKeyRecord = {
   createdAt: string
 }
 
-// ─── Scope Groups ─────────────────────────────────────────────────────────────
 
-const SCOPE_GROUPS = [
-  {
-    label: "Assessments",
-    scopes: [
-      { value: "assessment:read", description: "Read assessments and their state" },
-      { value: "assessment:write", description: "Create and modify assessments" },
-      { value: "assessment:transition", description: "Trigger lifecycle state transitions" },
-    ],
-  },
-  {
-    label: "Documents",
-    scopes: [
-      { value: "document:read", description: "Read uploaded documents" },
-      { value: "document:write", description: "Upload and create documents" },
-      { value: "document:delete", description: "Delete documents" },
-    ],
-  },
-  {
-    label: "SCF & Frameworks",
-    scopes: [
-      { value: "scf:read", description: "Read SCF catalog" },
-      { value: "soa:read", description: "Read Scope and Statement of Applicability" },
-      { value: "soa:write", description: "Create or edit SoA" },
-    ],
-  },
-  {
-    label: "Gap & POA&M",
-    scopes: [
-      { value: "gap:read", description: "Read Gap Analysis findings" },
-      { value: "gap:write", description: "Create or edit Gap Analysis" },
-      { value: "poam:read", description: "Read POA&M items" },
-      { value: "poam:write", description: "Create or edit POA&M items" },
-    ],
-  },
-  {
-    label: "Knowledge Base",
-    scopes: [
-      { value: "kb:read", description: "Read knowledge base chunks" },
-      { value: "kb:search", description: "Run semantic search on the KB" },
-    ],
-  },
-  {
-    label: "Agents & Intelligence",
-    scopes: [
-      { value: "agent:read", description: "Read agent run history" },
-      { value: "agent:run", description: "Trigger agent executions" },
-      { value: "intelligence:read", description: "Read intelligence outputs" },
-      { value: "intelligence:run", description: "Run the Agentic Council" },
-    ],
-  },
-  {
-    label: "Reporting",
-    scopes: [
-      { value: "report:read", description: "Read generated reports" },
-      { value: "report:write", description: "Create reports" },
-      { value: "report:export", description: "Export reports to PDF/XLSX" },
-    ],
-  },
-  {
-    label: "Observability",
-    scopes: [
-      { value: "audit:read", description: "Read audit logs" },
-      { value: "metrics:read", description: "Read system metrics" },
-      { value: "usage:read", description: "Read usage statistics" },
-    ],
-  },
-  {
-    label: "Workflows & Approvals",
-    scopes: [
-      { value: "workflow:read", description: "Read workflow status" },
-      { value: "workflow:write", description: "Create or cancel workflows" },
-      { value: "workflow:signal", description: "Send signals to workflows" },
-      { value: "approval:read", description: "Read approval gates" },
-    ],
-  },
-]
-
-const ALL_SCOPES = SCOPE_GROUPS.flatMap(g => g.scopes.map(s => s.value))
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -189,127 +110,14 @@ function ActivityBadge({ active }: { active: boolean }) {
 }
 
 function ScopeBadges({ scopes }: { scopes: string[] }) {
-  if (!scopes || scopes.length === 0) return (
-    <span className="text-[11px] text-amber-500 font-medium">Full Access</span>
-  )
-  const visible = scopes.slice(0, 2)
-  const rest = scopes.length - 2
   return (
-    <div className="flex flex-wrap gap-1">
-      {visible.map(s => (
-        <span key={s} className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-mono">
-          {s}
-        </span>
-      ))}
-      {rest > 0 && (
-        <span className="text-[10px] text-muted-foreground px-1.5 py-0.5">+{rest} more</span>
-      )}
-    </div>
+    <span className="inline-flex items-center gap-1 text-[11px] text-amber-500 font-medium">
+      <ShieldCheck className="h-3 w-3" /> Full Access
+    </span>
   )
 }
 
-function ScopeSelector({
-  selectedScopes,
-  onChange,
-  fullAccess,
-  onFullAccessChange,
-}: {
-  selectedScopes: string[]
-  onChange: (scopes: string[]) => void
-  fullAccess: boolean
-  onFullAccessChange: (v: boolean) => void
-}) {
-  const [expanded, setExpanded] = useState<string[]>([])
 
-  const toggle = (scope: string) => {
-    onChange(selectedScopes.includes(scope)
-      ? selectedScopes.filter(s => s !== scope)
-      : [...selectedScopes, scope]
-    )
-  }
-
-  const toggleGroup = (group: typeof SCOPE_GROUPS[0]) => {
-    const groupScopes = group.scopes.map(s => s.value)
-    const allSelected = groupScopes.every(s => selectedScopes.includes(s))
-    onChange(allSelected
-      ? selectedScopes.filter(s => !groupScopes.includes(s))
-      : [...new Set([...selectedScopes, ...groupScopes])]
-    )
-  }
-
-  return (
-    <div className="space-y-3">
-      <label className="flex items-start gap-3 p-3 rounded-lg border border-amber-500/30 bg-amber-500/5 cursor-pointer hover:bg-amber-500/10 transition-colors">
-        <input
-          type="checkbox"
-          checked={fullAccess}
-          onChange={e => onFullAccessChange(e.target.checked)}
-          className="mt-0.5 cursor-pointer"
-        />
-        <div>
-          <p className="text-sm font-semibold text-amber-500">Full Access (wildcard)</p>
-          <p className="text-xs text-muted-foreground mt-0.5">Grants access to all current and future API endpoints. Use with caution.</p>
-        </div>
-      </label>
-
-      {!fullAccess && (
-        <div className="space-y-2">
-          {SCOPE_GROUPS.map(group => {
-            const groupScopes = group.scopes.map(s => s.value)
-            const allSelected = groupScopes.every(s => selectedScopes.includes(s))
-            const someSelected = groupScopes.some(s => selectedScopes.includes(s))
-            const isExpanded = expanded.includes(group.label)
-            return (
-              <div key={group.label} className="border border-border/50 rounded-lg overflow-hidden">
-                <button
-                  type="button"
-                  className="w-full flex items-center justify-between px-4 py-2.5 bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer"
-                  onClick={() => setExpanded(e => e.includes(group.label) ? e.filter(l => l !== group.label) : [...e, group.label])}
-                >
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="checkbox"
-                      checked={allSelected}
-                      ref={el => { if (el) el.indeterminate = someSelected && !allSelected }}
-                      onChange={() => toggleGroup(group)}
-                      onClick={e => e.stopPropagation()}
-                      className="cursor-pointer"
-                    />
-                    <span className="text-sm font-medium">{group.label}</span>
-                    {someSelected && (
-                      <span className="text-[10px] text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">
-                        {groupScopes.filter(s => selectedScopes.includes(s)).length}/{groupScopes.length}
-                      </span>
-                    )}
-                  </div>
-                  {isExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
-                </button>
-                {isExpanded && (
-                  <div className="divide-y divide-border/30">
-                    {group.scopes.map(scope => (
-                      <label key={scope.value} className="flex items-start gap-3 px-5 py-2.5 hover:bg-muted/20 cursor-pointer transition-colors">
-                        <input
-                          type="checkbox"
-                          checked={selectedScopes.includes(scope.value)}
-                          onChange={() => toggle(scope.value)}
-                          className="mt-0.5 cursor-pointer"
-                        />
-                        <div>
-                          <code className="text-xs font-mono text-primary">{scope.value}</code>
-                          <p className="text-xs text-muted-foreground mt-0.5">{scope.description}</p>
-                        </div>
-                      </label>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )
-          })}
-        </div>
-      )}
-    </div>
-  )
-}
 
 // ─── Modals ───────────────────────────────────────────────────────────────────
 
@@ -350,22 +158,19 @@ function RevokeModal({ keyName, onConfirm, onCancel, loading }: {
 
 function EditModal({ keyRecord, onSave, onCancel, loading }: {
   keyRecord: ApiKeyRecord
-  onSave: (patch: { name?: string; expiresAt?: string | null; scopes?: string[] }) => void
+  onSave: (patch: { name?: string; expiresAt?: string | null }) => void
   onCancel: () => void
   loading: boolean
 }) {
   const [name, setName] = useState(keyRecord.name)
   const [expiryOption, setExpiryOption] = useState("never")
   const [customDate, setCustomDate] = useState("")
-  const [fullAccess, setFullAccess] = useState(keyRecord.scopes.length === 0)
-  const [selectedScopes, setSelectedScopes] = useState<string[]>(keyRecord.scopes)
 
   const handleSave = () => {
-    const patch: { name?: string; expiresAt?: string | null; scopes?: string[] } = {}
+    const patch: { name?: string; expiresAt?: string | null } = {}
     if (name !== keyRecord.name) patch.name = name
     const newExpiry = getExpiryDate(expiryOption, customDate) ?? null
     patch.expiresAt = newExpiry
-    patch.scopes = fullAccess ? ALL_SCOPES : selectedScopes
     onSave(patch)
   }
 
@@ -401,14 +206,12 @@ function EditModal({ keyRecord, onSave, onCancel, loading }: {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label>Scopes</Label>
-            <ScopeSelector
-              selectedScopes={selectedScopes}
-              onChange={setSelectedScopes}
-              fullAccess={fullAccess}
-              onFullAccessChange={setFullAccess}
-            />
+          <div className="p-3 rounded-lg border border-amber-500/30 bg-amber-500/5">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-amber-500" />
+              <p className="text-sm font-semibold text-amber-500">Full Access</p>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">This key has access to all API endpoints.</p>
           </div>
         </div>
 
@@ -425,6 +228,7 @@ function EditModal({ keyRecord, onSave, onCancel, loading }: {
     </div>
   )
 }
+
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
@@ -446,8 +250,6 @@ export function ApiKeysPage() {
   const [newName, setNewName] = useState("")
   const [expiryOption, setExpiryOption] = useState("never")
   const [customDate, setCustomDate] = useState("")
-  const [fullAccess, setFullAccess] = useState(true)
-  const [selectedScopes, setSelectedScopes] = useState<string[]>([])
   const [newKey, setNewKey] = useState<string | null>(null)
   const [newKeyCopied, setNewKeyCopied] = useState(false)
   const [revokeTarget, setRevokeTarget] = useState<ApiKeyRecord | null>(null)
@@ -462,15 +264,13 @@ export function ApiKeysPage() {
   const handleCreate = () => {
     if (!newName.trim() || !orgId) return
     const expiresAt = getExpiryDate(expiryOption, customDate)
-    const scopes = fullAccess ? ALL_SCOPES : selectedScopes
     createMutation.mutate(
-      { name: newName, ...(expiresAt ? { expiresAt } : {}), scopes },
+      { name: newName, ...(expiresAt ? { expiresAt } : {}), scopes: [] },
       {
         onSuccess: (res) => {
-          // The backend returns data.key with the raw token (only on create)
           const rawKey = (res as any)?.data?.key ?? null
           setNewKey(rawKey)
-          setNewName(""); setExpiryOption("never"); setSelectedScopes([]); setFullAccess(true)
+          setNewName(""); setExpiryOption("never")
           setIsCreating(false)
         },
         onError: (err) => {
@@ -487,7 +287,7 @@ export function ApiKeysPage() {
     })
   }
 
-  const handleEdit = (patch: { name?: string; expiresAt?: string | null; scopes?: string[] }) => {
+  const handleEdit = (patch: { name?: string; expiresAt?: string | null }) => {
     if (!editTarget) return
     updateMutation.mutate(
       { keyId: editTarget.id, patch },
@@ -610,25 +410,18 @@ export function ApiKeysPage() {
               )}
             </div>
 
-            <div className="space-y-2">
-              <Label>Access Scopes</Label>
-              <ScopeSelector
-                selectedScopes={selectedScopes}
-                onChange={setSelectedScopes}
-                fullAccess={fullAccess}
-                onFullAccessChange={v => { setFullAccess(v); if (v) setSelectedScopes([]) }}
-              />
-              {!fullAccess && selectedScopes.length === 0 && (
-                <p className="text-xs text-amber-500 flex items-center gap-1 mt-1">
-                  <AlertCircle className="h-3 w-3" /> Select at least one scope or enable Full Access.
-                </p>
-              )}
+            <div className="p-3 rounded-lg border border-amber-500/30 bg-amber-500/5">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4 text-amber-500" />
+                <p className="text-sm font-semibold text-amber-500">Full Access</p>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">This key will have access to all API endpoints.</p>
             </div>
 
             <div className="flex gap-3 pt-2">
               <Button
                 onClick={handleCreate}
-                disabled={!newName.trim() || createMutation.isPending || (!fullAccess && selectedScopes.length === 0)}
+                disabled={!newName.trim() || createMutation.isPending}
                 className="gap-2 min-w-[120px] cursor-pointer"
               >
                 {createMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Key className="h-4 w-4" />}

@@ -190,8 +190,51 @@ export const resolveAuthContext = async (
       // ── Organization context resolution ───────────────────────────────────────
       // Standard Native Auth stores the active org in the session.
       // ALL users (including platform admins) must be scoped to an organization.
-      const activeOrgId = session.activeOrganizationId;
+      let activeOrgId = session.activeOrganizationId;
       // isPlatformAdminUser already computed above for the approval gate
+
+      // Better Auth omits activeOrganizationId from the getSession() response
+      // when the `organization` plugin is not enabled server-side. The value
+      // exists in the DB column but is never serialized. Read it directly as a
+      // fallback so the org context chain is never broken.
+      if (!activeOrgId && context.deps._db && session.id) {
+        try {
+          const db = context.deps._db as DbClient;
+          const [row] = await db
+            .select({ activeOrganizationId: baSession.activeOrganizationId })
+            .from(baSession)
+            .where(eq(baSession.id, session.id))
+            .limit(1);
+          if (row?.activeOrganizationId) {
+            activeOrgId = row.activeOrganizationId;
+            console.log(
+              `[standard:auth] DB fallback resolved activeOrganizationId="${activeOrgId}" for session="${session.id}"`
+            );
+          } else {
+            console.warn(
+              `[standard:auth] DB fallback: no activeOrganizationId in session table for session="${session.id}"`
+            );
+          }
+        } catch (e) {
+          logger.log({
+            level: "warn",
+            message: "session_active_org_db_fallback_failed",
+            service: "api-gateway",
+            module: "auth",
+            environment: "production",
+            trace_id: context.traceId,
+            metadata: { error: e instanceof Error ? e.message : String(e), session_id: session.id },
+          });
+        }
+      } else if (activeOrgId) {
+        console.log(
+          `[standard:auth] session.activeOrganizationId="${activeOrgId}" (from BA getSession)`
+        );
+      } else {
+        console.warn(
+          `[standard:auth] No activeOrganizationId: session.id="${session.id}", _db=${!!context.deps._db}`
+        );
+      }
 
       let resolvedOrgId: string | undefined = activeOrgId ?? undefined;
 
@@ -282,6 +325,11 @@ export const resolveAuthContext = async (
                 resolved_org_id: resolvedOrgId,
               },
             });
+            // CRITICAL: Clear tenant context to prevent raw BA org ID (nanoid)
+            // from being used downstream as a domain UUID. Handlers should
+            // treat this as "no org context" and re-resolve or reject.
+            context.tenantId = undefined;
+            context.organizationId = undefined;
           }
         }
       } else {
