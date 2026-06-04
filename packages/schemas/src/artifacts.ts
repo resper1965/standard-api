@@ -26,7 +26,6 @@ export const SupersedeArtifactRequestSchema = z.object({
 
 export const ArtifactVersionResponseSchema = z.object({
   artifact_version_id: UuidSchema,
-  tenant_id: UuidSchema,
   organization_id: UuidSchema,
   assessment_id: UuidSchema,
   artifact_type: ArtifactTypeSchema,

@@ -44,7 +44,7 @@ Métricas a monitorar:
 Verificar a cada 15 minutos:
 - [ ] Audit logs crescendo normalmente (sem gaps)
 - [ ] Nenhum security event inesperado
-- [ ] Tenant isolation: nenhum `tenant_id` mismatch nos logs
+- [ ] Organization isolation: nenhum `organization_id` mismatch nos logs
 - [ ] Rate limiting funcionando (429 só para tráfego acima do limite)
 
 ### Primeiras 24 Horas
@@ -62,7 +62,7 @@ Verificar a cada hora:
 
 | Sinal | Threshold | Ação |
 |-------|-----------|------|
-| Cross-tenant data | Qualquer ocorrência | ROLLBACK imediato + incident |
+| Cross-organization data | Qualquer ocorrência | ROLLBACK imediato + incident |
 | 5xx error rate | > 5% por 2 min | ROLLBACK + investigar |
 | Auth failures | > 10% por 1 min | ROLLBACK + investigar |
 | Database connection | Sem conexão | ROLLBACK + verificar DATABASE_URL |

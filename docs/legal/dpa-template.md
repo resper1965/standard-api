@@ -79,7 +79,7 @@ A Bekaa processa as seguintes categorias de dados pessoais de usuários da Plata
 | Endereço de e-mail | Autenticação, notificações, comunicações do serviço |
 | Cargo / função | Controle de acesso baseado em papel (RBAC) |
 | Número de telefone | Verificação de identidade (MFA) — quando fornecido |
-| Identificador de tenant | Isolamento multi-tenant, associação de dados ao Controlador |
+| Identificador de organization | Isolamento multi-organization, associação de dados ao Controlador |
 | Logs de ações do usuário | Auditoria, rastreabilidade, segurança |
 
 ### 3.2 Dados em Documentos de Assessments (Incidental)
@@ -125,7 +125,7 @@ A Bekaa implementará e manterá medidas técnicas e organizacionais adequadas p
 
 - Criptografia em trânsito (TLS 1.2+) e em repouso;
 - Controle de acesso com menor privilégio e RBAC;
-- Isolamento de dados por tenant (`tenant_id`);
+- Isolamento de dados por organization (`organization_id`);
 - Monitoramento contínuo e detecção de anomalias;
 - Gestão segura de credenciais e secrets;
 - Testes regulares de segurança.
@@ -164,7 +164,7 @@ O Controlador autoriza o uso dos seguintes sub-processadores para a operação d
 | Sub-processador | Finalidade | País / Região | Salvaguarda |
 |---|---|---|---|
 | **Cloudflare, Inc.** | Infraestrutura edge (Workers, R2, Vectorize, AI Gateway, CDN, KV, D1) | EUA / UE (múltiplas regiões) | SCCs / DPA Cloudflare |
-| **Neon, Inc.** | Banco de dados PostgreSQL gerenciado (metadados, tenants, assessments) | EUA (AWS us-east-1) / UE (opcional) | SCCs / DPA Neon |
+| **Neon, Inc.** | Banco de dados PostgreSQL gerenciado (metadados, organizations, assessments) | EUA (AWS us-east-1) / UE (opcional) | SCCs / DPA Neon |
 | **OpenAI, LLC** | Modelos de linguagem para análise de assessments (via Cloudflare AI Gateway) | EUA | SCCs / DPA OpenAI |
 | **Google LLC (Google DeepMind / Gemini)** | Modelos de linguagem para análise de assessments (via Cloudflare AI Gateway) | EUA / múltiplas regiões | SCCs / DPA Google |
 

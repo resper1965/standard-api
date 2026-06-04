@@ -12,21 +12,21 @@ export class InMemoryPoamVersionRepository {
     this.versions.set(version.poam_version_id, version);
   }
 
-  async get(poamVersionId: string, tenantId: string): Promise<PoamVersionResponse | null> {
+  async get(poamVersionId: string, organizationId: string): Promise<PoamVersionResponse | null> {
     const version = this.versions.get(poamVersionId);
-    return version && version.tenant_id === tenantId ? version : null;
+    return version && version.organization_id === organizationId ? version : null;
   }
 
-  async listByAssessment(assessmentId: string, tenantId: string): Promise<PoamVersionResponse[]> {
-    return [...this.versions.values()].filter((version) => version.assessment_id === assessmentId && version.tenant_id === tenantId);
+  async listByAssessment(assessmentId: string, organizationId: string): Promise<PoamVersionResponse[]> {
+    return [...this.versions.values()].filter((version) => version.assessment_id === assessmentId && version.organization_id === organizationId);
   }
 
-  withTenant(tenantId: string) {
+  withOrganization(organizationId: string) {
     return {
       save: async (version: PoamVersionResponse) => this.save(version),
       update: async (version: PoamVersionResponse) => this.update(version),
-      get: async (poamVersionId: string) => this.get(poamVersionId, tenantId),
-      listByAssessment: async (assessmentId: string) => this.listByAssessment(assessmentId, tenantId)
+      get: async (poamVersionId: string) => this.get(poamVersionId, organizationId),
+      listByAssessment: async (assessmentId: string) => this.listByAssessment(assessmentId, organizationId)
     };
   }
 }
@@ -42,15 +42,15 @@ export class InMemoryPoamItemRepository {
     this.items.set(item.poam_item_id, item);
   }
 
-  async get(poamItemId: string, tenantId: string): Promise<PoamItemResponse | null> {
+  async get(poamItemId: string, organizationId: string): Promise<PoamItemResponse | null> {
     const item = this.items.get(poamItemId);
-    return item && item.tenant_id === tenantId ? item : null;
+    return item && item.organization_id === organizationId ? item : null;
   }
 
-  async listByVersion(poamVersionId: string, tenantId: string, filters: PoamItemFilters = {}): Promise<PoamItemResponse[]> {
+  async listByVersion(poamVersionId: string, organizationId: string, filters: PoamItemFilters = {}): Promise<PoamItemResponse[]> {
     return [...this.items.values()].filter((item) =>
       item.poam_version_id === poamVersionId &&
-      item.tenant_id === tenantId &&
+      item.organization_id === organizationId &&
       (!filters.priority || item.priority === filters.priority) &&
       (!filters.severity || item.severity === filters.severity) &&
       (!filters.status || item.status === filters.status) &&
@@ -60,12 +60,12 @@ export class InMemoryPoamItemRepository {
     );
   }
 
-  withTenant(tenantId: string) {
+  withOrganization(organizationId: string) {
     return {
       saveMany: async (items: PoamItemResponse[]) => this.saveMany(items),
       update: async (item: PoamItemResponse) => this.update(item),
-      get: async (poamItemId: string) => this.get(poamItemId, tenantId),
-      listByVersion: async (poamVersionId: string, filters?: PoamItemFilters) => this.listByVersion(poamVersionId, tenantId, filters)
+      get: async (poamItemId: string) => this.get(poamItemId, organizationId),
+      listByVersion: async (poamVersionId: string, filters?: PoamItemFilters) => this.listByVersion(poamVersionId, organizationId, filters)
     };
   }
 }
@@ -85,22 +85,22 @@ export class InMemoryPoamMilestoneRepository {
     this.milestones.set(milestone.poam_milestone_id, milestone);
   }
 
-  async get(milestoneId: string, tenantId: string): Promise<PoamMilestoneResponse | null> {
+  async get(milestoneId: string, organizationId: string): Promise<PoamMilestoneResponse | null> {
     const milestone = this.milestones.get(milestoneId);
-    return milestone && milestone.tenant_id === tenantId ? milestone : null;
+    return milestone && milestone.organization_id === organizationId ? milestone : null;
   }
 
-  async listByItem(poamItemId: string, tenantId: string): Promise<PoamMilestoneResponse[]> {
-    return [...this.milestones.values()].filter((milestone) => milestone.poam_item_id === poamItemId && milestone.tenant_id === tenantId);
+  async listByItem(poamItemId: string, organizationId: string): Promise<PoamMilestoneResponse[]> {
+    return [...this.milestones.values()].filter((milestone) => milestone.poam_item_id === poamItemId && milestone.organization_id === organizationId);
   }
 
-  withTenant(tenantId: string) {
+  withOrganization(organizationId: string) {
     return {
       save: async (milestone: PoamMilestoneResponse) => this.save(milestone),
       saveMany: async (milestones: PoamMilestoneResponse[]) => this.saveMany(milestones),
       update: async (milestone: PoamMilestoneResponse) => this.update(milestone),
-      get: async (milestoneId: string) => this.get(milestoneId, tenantId),
-      listByItem: async (poamItemId: string) => this.listByItem(poamItemId, tenantId)
+      get: async (milestoneId: string) => this.get(milestoneId, organizationId),
+      listByItem: async (poamItemId: string) => this.listByItem(poamItemId, organizationId)
     };
   }
 }
@@ -110,13 +110,13 @@ export class InMemoryPoamDependencyRepository {
   private readonly itemTenantIndex = new Map<string, string>();
 
   registerItem(item: PoamItemResponse): void {
-    this.itemTenantIndex.set(item.poam_item_id, item.tenant_id);
+    this.itemTenantIndex.set(item.poam_item_id, item.organization_id);
   }
 
   async save(dependency: PoamDependencyResponse): Promise<void> {
     const sourceTenant = this.itemTenantIndex.get(dependency.poam_item_id);
-    const targetTenant = dependency.depends_on_poam_item_id ? this.itemTenantIndex.get(dependency.depends_on_poam_item_id) : dependency.tenant_id;
-    if ((sourceTenant && sourceTenant !== dependency.tenant_id) || (targetTenant && targetTenant !== dependency.tenant_id)) {
+    const targetTenant = dependency.depends_on_poam_item_id ? this.itemTenantIndex.get(dependency.depends_on_poam_item_id) : dependency.organization_id;
+    if ((sourceTenant && sourceTenant !== dependency.organization_id) || (targetTenant && targetTenant !== dependency.organization_id)) {
       throw new PoamWorkflowError("POAM_TENANT_MISMATCH", "POA&M dependency cannot cross tenant boundaries.");
     }
     this.dependencies.set(dependency.poam_dependency_id, dependency);
@@ -126,15 +126,15 @@ export class InMemoryPoamDependencyRepository {
     for (const dependency of dependencies) await this.save(dependency);
   }
 
-  async listByItem(poamItemId: string, tenantId: string): Promise<PoamDependencyResponse[]> {
-    return [...this.dependencies.values()].filter((dependency) => dependency.poam_item_id === poamItemId && dependency.tenant_id === tenantId);
+  async listByItem(poamItemId: string, organizationId: string): Promise<PoamDependencyResponse[]> {
+    return [...this.dependencies.values()].filter((dependency) => dependency.poam_item_id === poamItemId && dependency.organization_id === organizationId);
   }
 
-  withTenant(tenantId: string) {
+  withOrganization(organizationId: string) {
     return {
       save: async (dependency: PoamDependencyResponse) => this.save(dependency),
       saveMany: async (dependencies: PoamDependencyResponse[]) => this.saveMany(dependencies),
-      listByItem: async (poamItemId: string) => this.listByItem(poamItemId, tenantId)
+      listByItem: async (poamItemId: string) => this.listByItem(poamItemId, organizationId)
     };
   }
 }

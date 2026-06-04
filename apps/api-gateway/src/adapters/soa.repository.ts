@@ -52,14 +52,14 @@ export const createDrizzleScopeRepository = (db: DbClient): ScopeRepository => (
       updatedAt: new Date(),
     }).where(eq(assessmentScope.id, scope.scope_id));
   },
-  async get(scopeId, tenantId) {
+  async get(scopeId, organizationId) {
     const [row] = await db.select().from(assessmentScope)
       .where(eq(assessmentScope.id, scopeId))
       .limit(1);
     if (!row) return null;
     return mapScopeRow(row);
   },
-  async listByAssessment(assessmentId, tenantId) {
+  async listByAssessment(assessmentId, organizationId) {
     const rows = await db.select().from(assessmentScope)
       .where(eq(assessmentScope.assessmentId, assessmentId));
     return rows.map(mapScopeRow);
@@ -95,14 +95,14 @@ export const createDrizzleSoaVersionRepository = (db: DbClient): SoaVersionRepos
       updatedAt: new Date(),
     }).where(eq(soaVersions.id, version.soa_version_id));
   },
-  async get(soaVersionId, tenantId) {
+  async get(soaVersionId, organizationId) {
     const [row] = await db.select().from(soaVersions)
       .where(eq(soaVersions.id, soaVersionId))
       .limit(1);
     if (!row) return null;
     return mapSoaVersionRow(row);
   },
-  async listByAssessment(assessmentId, tenantId) {
+  async listByAssessment(assessmentId, organizationId) {
     const rows = await db.select().from(soaVersions)
       .where(eq(soaVersions.assessmentId, assessmentId));
     return rows.map(mapSoaVersionRow);
@@ -154,14 +154,14 @@ export const createDrizzleSoaItemRepository = (db: DbClient): SoaItemRepository 
       updatedAt: new Date(),
     }).where(eq(soaItems.id, item.soa_item_id));
   },
-  async get(soaItemId, tenantId) {
+  async get(soaItemId, organizationId) {
     const [row] = await db.select().from(soaItems)
       .where(eq(soaItems.id, soaItemId))
       .limit(1);
     if (!row) return null;
     return mapSoaItemRow(row);
   },
-  async listByVersion(soaVersionId, tenantId) {
+  async listByVersion(soaVersionId, organizationId) {
     const rows = await db.select().from(soaItems)
       .where(eq(soaItems.soaVersionId, soaVersionId));
     return rows.map(mapSoaItemRow);
@@ -182,7 +182,6 @@ type SoaItemRow = typeof soaItems.$inferSelect;
 
 const mapScopeRow = (row: ScopeRow): ScopeResponse => ({
   scope_id: row.id,
-  tenant_id: row.organizationId,
   organization_id: row.organizationId,
   assessment_id: row.assessmentId,
   title: row.title ?? "",
@@ -208,7 +207,6 @@ const mapScopeRow = (row: ScopeRow): ScopeResponse => ({
 
 const mapSoaVersionRow = (row: SoaVersionRow): SoaVersionResponse => ({
   soa_version_id: row.id,
-  tenant_id: row.organizationId,
   organization_id: row.organizationId,
   assessment_id: row.assessmentId,
   version_number: row.versionNumber,
@@ -230,7 +228,6 @@ const mapSoaVersionRow = (row: SoaVersionRow): SoaVersionResponse => ({
 
 const mapSoaItemRow = (row: SoaItemRow): SoaItemResponse => ({
   soa_item_id: row.id,
-  tenant_id: row.organizationId,
   organization_id: row.organizationId,
   assessment_id: row.assessmentId,
   soa_version_id: row.soaVersionId,

@@ -31,12 +31,12 @@ export type AgentRunRepository = {
   create(input: AgentRunResponse): Promise<AgentRunResponse>;
   get(agentRunId: string): Promise<AgentRunResponse | null>;
   save(run: AgentRunResponse): Promise<void>;
-  listByAssessment(assessmentId: string, tenantId: string): Promise<AgentRunResponse[]>;
+  listByAssessment(assessmentId: string, organizationId: string): Promise<AgentRunResponse[]>;
 };
 
 export type AgentToolCallRepository = {
   create(input: AgentToolInvocationResponse): Promise<AgentToolInvocationResponse>;
-  listByRun(agentRunId: string, tenantId: string): Promise<AgentToolInvocationResponse[]>;
+  listByRun(agentRunId: string, organizationId: string): Promise<AgentToolInvocationResponse[]>;
 };
 
 import type { LlmProvider } from "./llm";

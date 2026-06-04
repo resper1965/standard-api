@@ -41,6 +41,7 @@ export const PermissionSchema = z.enum([
   "scf:read",
   "scf:import",
   "scf:admin",
+  "scf:create",
   "scope:create",
   "scope:update",
   "scope:approve",
@@ -71,19 +72,50 @@ export const PermissionSchema = z.enum([
   "report:approve",
   "report:read",
   "report:download",
+  "report:update",
   "agent:run",
   "agent:dry_run",
   "agent:read_runs",
+  "agent:read",
+  "agent:create",
   "agent:admin",
   "admin:read",
   "admin:write",
-  "audit:read"
+  "audit:read",
+  // Webhook management
+  "webhook:create",
+  "webhook:read",
+  "webhook:update",
+  "webhook:delete",
+  // Artifact versioning
+  "artifact:create",
+  "artifact:read",
+  "artifact:update",
+  "artifact:approve",
+  // Approvals
+  "approval:create",
+  "approval:read",
+  // Privacy & Data Subject
+  "privacy:create",
+  "privacy:read",
+  "privacy:update",
+  // Intelligence
+  "intelligence:read",
+  "intelligence:create",
+  // Additional RBAC coverage
+  "admin:create",
+  "admin:delete",
+  "admin:approve",
+  "privacy:delete",
+  "document:write",
+  "kb:read",
+  "kb:write",
 ]);
 
 export const AuthContextSchema = z.object({
   actor_id: UuidSchema,
   actor_type: ActorTypeSchema,
-  tenant_id: UuidSchema.optional(),
+  organization_id: UuidSchema.optional(),
   organization_ids: z.array(UuidSchema).default([]),
   roles: z.array(RoleSchema).default([]),
   permissions: z.array(PermissionSchema).default([]),
@@ -96,8 +128,7 @@ export const AuthContextSchema = z.object({
 });
 
 export const SecurityTenantContextSchema = z.object({
-  tenant_id: UuidSchema,
-  organization_id: UuidSchema.optional(),
+  organization_id: UuidSchema,
   assessment_id: UuidSchema.optional(),
   hostname: z.string().optional(),
   source: z.enum(["jwt", "api_key", "hostname", "header", "route_param", "internal_worker"]),
@@ -135,14 +166,14 @@ export const PolicyResultSchema = AccessDecisionSchema;
 
 export const ApiKeyScopeSchema = z.object({
   api_key_id: z.string().min(1),
-  tenant_id: UuidSchema,
+  organization_id: UuidSchema,
   organization_ids: z.array(UuidSchema).default([]),
   permissions: z.array(PermissionSchema).default([])
 });
 
 export const ServiceAccountSchema = z.object({
   service_account_id: UuidSchema,
-  tenant_id: UuidSchema.optional(),
+  organization_id: UuidSchema.optional(),
   roles: z.array(RoleSchema).default([]),
   permissions: z.array(PermissionSchema).default([]),
   status: z.enum(["active", "disabled"]).default("active")
@@ -151,7 +182,6 @@ export const ServiceAccountSchema = z.object({
 export const SecurityEventSchema = z.object({
   event_type: z.string().min(1),
   actor_id: UuidSchema.optional(),
-  tenant_id: UuidSchema.optional(),
   organization_id: UuidSchema.optional(),
   assessment_id: UuidSchema.optional(),
   trace_id: TraceIdSchema,

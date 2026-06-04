@@ -16,5 +16,5 @@ test("synthetic fixture creates a marked SCF dataset", () => {
 test("synthetic fixture has no tenant identifiers in official SCF records", () => {
   const fixture = createSyntheticScfFixture();
   const serialized = JSON.stringify(fixture);
-  expect(serialized.includes("tenant_id")).toBe(false);
+  expect(serialized.includes("organization_id")).toBe(false);
 });

@@ -11,7 +11,7 @@ test("POST /approvals valida approval target", async () => {
     decision: "approved",
     reason: "target incorreto"
   }, {
-    "x-standard-tenant-id": created.tenantId,
+    "x-standard-tenant-id": created.organizationId,
     "x-standard-actor-id": ids.actorId
   });
 
@@ -23,12 +23,12 @@ test("POST /artifacts/:artifactVersionId/approve bloqueia aprovação sem actor"
   const client = createTestClient();
   const created = await client.createAssessment();
   const artifact = await client.send(`/api/v1/assessments/${created.assessmentId}/artifacts/soa/versions`, "POST", {}, {
-    "x-standard-tenant-id": created.tenantId,
+    "x-standard-tenant-id": created.organizationId,
     "x-standard-actor-id": ids.actorId
   });
   const artifactVersionId = artifact.body.artifact_version_id as string;
   await client.send(`/api/v1/artifacts/${artifactVersionId}/submit-review`, "POST", { reason: "review" }, {
-    "x-standard-tenant-id": created.tenantId,
+    "x-standard-tenant-id": created.organizationId,
     "x-standard-actor-id": ids.actorId
   });
 
@@ -36,7 +36,7 @@ test("POST /artifacts/:artifactVersionId/approve bloqueia aprovação sem actor"
     gate: "soa",
     reason: "sem ator"
   }, {
-    "x-standard-tenant-id": created.tenantId
+    "x-standard-tenant-id": created.organizationId
   });
 
   expect(response.status).toBe(401);

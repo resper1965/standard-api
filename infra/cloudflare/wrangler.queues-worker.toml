@@ -8,7 +8,7 @@ compatibility_flags = [ "nodejs_compat" ]
 STANDARD_ENV = "development"
 LOG_LEVEL = "info"
 AI_GATEWAY_NAME = "standard-dev"
-AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/0a6c490dd5fe9051422c15c9e133138e/standard-dev"
+AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/0a6c490dd5fe9051422c15c9e133138e/standard-dev/openai"
 
 [[queues.consumers]]
 queue = "standard-kb-embedding-dev"
@@ -74,6 +74,86 @@ binding = "AI"
 [triggers]
 crons = ["0 2 * * SUN"]
 
+# ─── Staging environment ────────────────────────────────────
+[env.staging]
+name = "standard-queues-staging"
+
+[env.staging.triggers]
+crons = ["0 2 * * SUN"]
+
+[env.staging.vars]
+STANDARD_ENV = "staging"
+LOG_LEVEL = "info"
+AI_GATEWAY_NAME = "standard-staging"
+AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/0a6c490dd5fe9051422c15c9e133138e/standard-staging/openai"
+
+[[env.staging.queues.consumers]]
+queue = "standard-agent-run-staging"
+max_batch_size = 5
+max_batch_timeout = 60
+max_retries = 5
+dead_letter_queue = "standard-dead-letter-staging"
+
+[[env.staging.queues.consumers]]
+queue = "standard-soc-triage-staging"
+max_batch_size = 5
+max_batch_timeout = 30
+max_retries = 3
+dead_letter_queue = "standard-soc-triage-dlq-staging"
+
+[[env.staging.queues.consumers]]
+queue = "standard-kb-embedding-staging"
+max_batch_size = 10
+max_batch_timeout = 30
+max_retries = 3
+dead_letter_queue = "standard-dead-letter-staging"
+
+[[env.staging.queues.consumers]]
+queue = "standard-report-export-staging"
+max_batch_size = 5
+max_batch_timeout = 30
+max_retries = 3
+dead_letter_queue = "standard-dead-letter-staging"
+
+[[env.staging.queues.consumers]]
+queue = "standard-document-ingestion-staging"
+max_batch_size = 10
+max_batch_timeout = 30
+max_retries = 3
+dead_letter_queue = "standard-dead-letter-staging"
+
+# Dead Letter Queue consumers
+[[env.staging.queues.consumers]]
+queue = "standard-dead-letter-staging"
+max_batch_size = 20
+max_batch_timeout = 60
+max_retries = 1
+
+[[env.staging.queues.consumers]]
+queue = "standard-soc-triage-dlq-staging"
+max_batch_size = 10
+max_batch_timeout = 60
+max_retries = 1
+
+[[env.staging.r2_buckets]]
+binding = "STANDARD_DOCUMENTS_BUCKET"
+bucket_name = "standard-documents-staging"
+
+[[env.staging.r2_buckets]]
+binding = "STANDARD_REPORTS_BUCKET"
+bucket_name = "standard-reports-staging"
+
+[[env.staging.r2_buckets]]
+binding = "STANDARD_EXPORTS_BUCKET"
+bucket_name = "standard-exports-staging"
+
+[[env.staging.vectorize]]
+binding = "STANDARD_KB_INDEX"
+index_name = "standard-kb-staging"
+
+[env.staging.ai]
+binding = "AI"
+
 # ─── Production environment ────────────────────────────────────
 [env.production]
 name = "standard-queues-production"
@@ -85,7 +165,7 @@ crons = ["0 2 * * SUN"]
 STANDARD_ENV = "production"
 LOG_LEVEL = "info"
 AI_GATEWAY_NAME = "standard-prod"
-AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/0a6c490dd5fe9051422c15c9e133138e/standard-prod"
+AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/0a6c490dd5fe9051422c15c9e133138e/standard-prod/openai"
 
 
 [[env.production.queues.consumers]]

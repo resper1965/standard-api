@@ -137,7 +137,7 @@ export class PrivacyScreeningService {
 
   /** Run all screening rules against an activity, using its privacy_regime. */
   async screen(activityId: string, context: PrivacyContext): Promise<PrivacyScreeningResponse[]> {
-    const activity = await this.deps.repositories.activities.get(activityId, context.tenantId);
+    const activity = await this.deps.repositories.activities.get(activityId, context.organizationId);
     if (!activity) throw new PrivacyError("ACTIVITY_NOT_FOUND", `Activity ${activityId} not found.`);
 
     const regime = activity.privacy_regime ?? "lgpd";
@@ -178,7 +178,7 @@ export class PrivacyScreeningService {
 
       const screening: PrivacyScreeningResponse = {
         id: crypto.randomUUID(),
-        tenant_id: context.tenantId,
+        organization_id: context.organizationId,
         activity_id: activityId,
         screening_type: rule.type,
         result,
@@ -207,8 +207,8 @@ export class PrivacyScreeningService {
     return results;
   }
 
-  async listScreenings(activityId: string, tenantId: string): Promise<PrivacyScreeningResponse[]> {
-    return this.deps.repositories.screenings.listByActivity(activityId, tenantId);
+  async listScreenings(activityId: string, organizationId: string): Promise<PrivacyScreeningResponse[]> {
+    return this.deps.repositories.screenings.listByActivity(activityId, organizationId);
   }
 }
 

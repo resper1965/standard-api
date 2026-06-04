@@ -5,7 +5,7 @@ import { WorkflowOrchestrationError } from "../src/errors";
 import { expect, test } from "./test-kit";
 
 export const ids = {
-  tenantId: "11111111-1111-4111-8111-111111111111",
+  organizationId: "11111111-1111-4111-8111-111111111111",
   organizationId: "22222222-2222-4222-8222-222222222222",
   assessmentId: "33333333-3333-4333-8333-333333333333",
   actorId: "44444444-4444-4444-8444-444444444444",
@@ -15,7 +15,6 @@ export const ids = {
 
 export const snapshot = (patch: Partial<AssessmentSnapshot> = {}): AssessmentSnapshot => ({
   id: ids.assessmentId,
-  tenantId: ids.tenantId,
   organizationId: ids.organizationId,
   state: "draft",
   documentCount: 1,
@@ -48,7 +47,6 @@ export const approval = (gate: ApprovalEvent["gate"]): ApprovalEvent => ({
 });
 
 const input = {
-  tenant_id: ids.tenantId,
   organization_id: ids.organizationId,
   assessment_id: ids.assessmentId,
   requested_by: ids.actorId,
@@ -60,7 +58,7 @@ const input = {
 test("start cria workflow state com trace_id e bloqueia duplicado ativo", async () => {
   const rawDeps = createInMemoryWorkflowDependencies();
   const deps = {
-    workflows: rawDeps.workflows.withTenant(ids.tenantId),
+    workflows: rawDeps.workflows.withOrganization(ids.organizationId),
     audit: rawDeps.audit,
     assessmentEngine: rawDeps.assessmentEngine
   };
@@ -82,7 +80,7 @@ test("start cria workflow state com trace_id e bloqueia duplicado ativo", async 
 test("framework_selected avança por Assessment Engine até aguardar SoA approval", async () => {
   const rawDeps = createInMemoryWorkflowDependencies();
   const deps = {
-    workflows: rawDeps.workflows.withTenant(ids.tenantId),
+    workflows: rawDeps.workflows.withOrganization(ids.organizationId),
     audit: rawDeps.audit,
     assessmentEngine: rawDeps.assessmentEngine
   };
@@ -106,7 +104,7 @@ test("framework_selected avança por Assessment Engine até aguardar SoA approva
 test("SoA approval sem approval_event válido é bloqueado", async () => {
   const rawDeps = createInMemoryWorkflowDependencies();
   const deps = {
-    workflows: rawDeps.workflows.withTenant(ids.tenantId),
+    workflows: rawDeps.workflows.withOrganization(ids.organizationId),
     audit: rawDeps.audit,
     assessmentEngine: rawDeps.assessmentEngine
   };
@@ -137,7 +135,7 @@ test("SoA approval sem approval_event válido é bloqueado", async () => {
 test("aprovações válidas avançam até completed e fecham assessment", async () => {
   const rawDeps = createInMemoryWorkflowDependencies();
   const deps = {
-    workflows: rawDeps.workflows.withTenant(ids.tenantId),
+    workflows: rawDeps.workflows.withOrganization(ids.organizationId),
     audit: rawDeps.audit,
     assessmentEngine: rawDeps.assessmentEngine
   };

@@ -9,8 +9,8 @@ export class GapAnalysisWorkflowError extends Error {
   }
 }
 
-export const assertContext = (context: { tenantId?: string; organizationId?: string; assessmentId?: string; traceId?: string }): void => {
-  if (!context.tenantId || !context.organizationId || !context.assessmentId || !context.traceId) {
+export const assertContext = (context: { organizationId?: string; assessmentId?: string; traceId?: string }): void => {
+  if (!context.organizationId || !context.assessmentId || !context.traceId) {
     throw new GapAnalysisWorkflowError("TENANT_CONTEXT_REQUIRED", "Evidence and Gap Analysis require tenant, organization, assessment and trace context.");
   }
 };

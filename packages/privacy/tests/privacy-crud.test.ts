@@ -10,8 +10,8 @@ export const runPrivacyCrudTests = async (
   const ACTOR = "cccccccc-cccc-cccc-cccc-cccccccccccc";
   const TRACE = "test-trace-001";
 
-  const ctxA = { tenantId: TENANT_A, actorId: ACTOR, traceId: TRACE };
-  const ctxB = { tenantId: TENANT_B, actorId: ACTOR, traceId: TRACE };
+  const ctxA = { organizationId: TENANT_A, actorId: ACTOR, traceId: TRACE };
+  const ctxB = { organizationId: TENANT_B, actorId: ACTOR, traceId: TRACE };
 
   // ── Activity Create ─────────────────────────────────────────────
 
@@ -25,8 +25,8 @@ export const runPrivacyCrudTests = async (
     assert("create activity returns valid id",
       typeof activity.id === "string" && activity.id.length > 0
     );
-    assert("create activity sets tenant_id",
-      activity.tenant_id === TENANT_A
+    assert("create activity sets organization_id",
+      activity.organization_id === TENANT_A
     );
     assert("create activity defaults status to draft",
       activity.status === "draft"
@@ -73,7 +73,7 @@ export const runPrivacyCrudTests = async (
     await svc.createActivity({ name: "B1" }, ctxB);
 
     const listA = await svc.listActivities(TENANT_A);
-    assert("list activities filters by tenant_id",
+    assert("list activities filters by organization_id",
       listA.length === 2
     );
 
@@ -168,8 +168,8 @@ export const runPrivacyCrudTests = async (
     assert("data subject has activity_id",
       subjects[0]!.activity_id === activity.id
     );
-    assert("data subject has tenant_id",
-      subjects[0]!.tenant_id === TENANT_A
+    assert("data subject has organization_id",
+      subjects[0]!.organization_id === TENANT_A
     );
     assert("data subject vulnerable_group flag preserved",
       subjects[1]!.vulnerable_group === true

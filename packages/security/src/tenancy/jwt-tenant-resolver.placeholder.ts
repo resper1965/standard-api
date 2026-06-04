@@ -7,8 +7,7 @@
  */
 
 export type TenantResolution = {
-  tenantId: string;
-  organizationId?: string | undefined;
+  organizationId: string;
   userId?: string | undefined;
 };
 
@@ -17,8 +16,8 @@ export class JwtTenantResolver {
    * Standard claim paths to look for tenant ID, in priority order.
    */
   private static readonly TENANT_CLAIMS = [
-    "tenant_id",
-    "tenantId",
+    "organization_id",
+    "organizationId",
     "x-standard-tenant-id",
     "activeOrganizationId",
     "org_id",
@@ -47,12 +46,11 @@ export class JwtTenantResolver {
     const payload = this.decodePayload(token);
     if (!payload) return null;
 
-    const tenantId = this.findClaim(payload, JwtTenantResolver.TENANT_CLAIMS);
-    if (!tenantId) return null;
+    const organizationId = this.findClaim(payload, JwtTenantResolver.TENANT_CLAIMS);
+    if (!organizationId) return null;
 
     return {
-      tenantId,
-      organizationId: this.findClaim(payload, JwtTenantResolver.ORG_CLAIMS) ?? undefined,
+      organizationId,
       userId: this.findClaim(payload, JwtTenantResolver.USER_CLAIMS) ?? undefined,
     };
   }

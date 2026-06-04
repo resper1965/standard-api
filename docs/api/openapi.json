@@ -93,7 +93,7 @@
     },
     {
       "name": "Organizations",
-      "description": "Tenant organization management"
+      "description": "Organization organization management"
     },
     {
       "name": "API Keys",
@@ -108,8 +108,8 @@
       "description": "Audit logs, metrics, and operational visibility"
     },
     {
-      "name": "Tenants",
-      "description": "Tenant (subscription) provisioning (admin)"
+      "name": "Organizations",
+      "description": "Organization (subscription) provisioning (admin)"
     },
     {
       "name": "Admin SCF",
@@ -291,7 +291,7 @@
         "tags": [
           "Assessments"
         ],
-        "summary": "List all assessments for the authenticated tenant",
+        "summary": "List all assessments for the authenticated organization",
         "operationId": "listAssessments",
         "responses": {
           "200": {
@@ -2266,7 +2266,7 @@
         "tags": [
           "Organizations"
         ],
-        "summary": "Create organization under tenant",
+        "summary": "Create organization under organization",
         "operationId": "createOrganization",
         "requestBody": {
           "required": true,
@@ -2275,12 +2275,12 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "tenant_id",
+                  "organization_id",
                   "name",
                   "slug"
                 ],
                 "properties": {
-                  "tenant_id": {
+                  "organization_id": {
                     "type": "string",
                     "format": "uuid"
                   },
@@ -2326,7 +2326,7 @@
         "tags": [
           "API Keys"
         ],
-        "summary": "List API keys (masked) for your Root Tenant",
+        "summary": "List API keys (masked) for your Root Organization",
         "operationId": "listApiKeys",
         "responses": {
           "200": {
@@ -2338,7 +2338,7 @@
         "tags": [
           "API Keys"
         ],
-        "summary": "Generate a new API key for your Root Tenant",
+        "summary": "Generate a new API key for your Root Organization",
         "operationId": "createApiKey",
         "requestBody": {
           "required": true,
@@ -2427,12 +2427,12 @@
         }
       }
     },
-    "/api/v1/tenants": {
+    "/api/v1/organizations": {
       "post": {
         "tags": [
-          "Tenants"
+          "Organizations"
         ],
-        "summary": "Create a tenant (subscription)",
+        "summary": "Create a organization (subscription)",
         "operationId": "createTenant",
         "requestBody": {
           "required": true,
@@ -2466,21 +2466,21 @@
         },
         "responses": {
           "201": {
-            "description": "Tenant created"
+            "description": "Organization created"
           }
         }
       }
     },
-    "/api/v1/tenants/{tenantId}": {
+    "/api/v1/organizations/{organizationId}": {
       "get": {
         "tags": [
-          "Tenants"
+          "Organizations"
         ],
-        "summary": "Get tenant details",
+        "summary": "Get organization details",
         "operationId": "getTenant",
         "parameters": [
           {
-            "name": "tenantId",
+            "name": "organizationId",
             "in": "path",
             "required": true,
             "schema": {
@@ -2491,19 +2491,19 @@
         ],
         "responses": {
           "200": {
-            "description": "Tenant detail"
+            "description": "Organization detail"
           }
         }
       },
       "patch": {
         "tags": [
-          "Tenants"
+          "Organizations"
         ],
-        "summary": "Update tenant",
+        "summary": "Update organization",
         "operationId": "updateTenant",
         "parameters": [
           {
-            "name": "tenantId",
+            "name": "organizationId",
             "in": "path",
             "required": true,
             "schema": {
@@ -2514,7 +2514,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Tenant updated"
+            "description": "Organization updated"
           }
         }
       }
@@ -2879,7 +2879,7 @@
             "type": "string",
             "format": "uuid"
           },
-          "tenant_id": {
+          "organization_id": {
             "type": "string",
             "format": "uuid"
           },

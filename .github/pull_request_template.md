@@ -48,4 +48,4 @@ Justificativa:
 - [ ] Prompts/agentes/regras atualizados, se necessário.
 - [ ] Branch context atualizado, se necessário.
 - [ ] Nenhum contexto relevante ficou apenas localmente.
-- [ ] Impacto em tenant isolation, approval gates e auditabilidade foi considerado.
+- [ ] Impacto em organization isolation, approval gates e auditabilidade foi considerado.

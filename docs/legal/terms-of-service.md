@@ -32,7 +32,7 @@ A Plataforma permite que organizações ("Clientes") realizem assessments estrut
 
 **3.1.** Sujeito ao cumprimento destes Termos e ao pagamento dos valores devidos, a Bekaa concede ao Cliente uma licença **limitada, não exclusiva, intransferível e revogável** para acessar e usar a Plataforma Standard exclusivamente para as finalidades descritas nestes Termos e no contrato de serviço aplicável.
 
-**3.2.** A licença é concedida **por tenant**: cada organização contratante recebe um ambiente isolado na Plataforma, identificado por um `tenant_id` único.
+**3.2.** A licença é concedida **por organization**: cada organização contratante recebe um ambiente isolado na Plataforma, identificado por um `organization_id` único.
 
 **3.3.** É vedado ao Cliente:
 
@@ -156,7 +156,7 @@ A Plataforma permite que organizações ("Clientes") realizem assessments estrut
 
 **11.4. Inteireza:** Estes Termos, junto com o contrato de serviço, o DPA e a Política de Privacidade, constituem o acordo integral entre as partes em relação ao objeto aqui descrito.
 
-**11.5. Comunicações:** Comunicações oficiais devem ser enviadas por e-mail para **privacy@bekaa.eu** (Bekaa) ou para o e-mail do administrador do tenant (Cliente).
+**11.5. Comunicações:** Comunicações oficiais devem ser enviadas por e-mail para **privacy@bekaa.eu** (Bekaa) ou para o e-mail do administrador do organization (Cliente).
 
 ---
 

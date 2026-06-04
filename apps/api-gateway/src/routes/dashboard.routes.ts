@@ -24,28 +24,28 @@ export const dashboardRoutes: RouteDefinition[] = [
     path: "/api/v1/assessments/:assessmentId/summary",
     protected: true,
     permissions: ["assessment:read"],
-    handler: async ({ deps, params, tenantId, traceId }) => {
+    handler: async ({ deps, params, organizationId, traceId }) => {
       const assessmentId = routeParam(params, "assessmentId");
-      const assessment = await deps.assessments.withTenant(tenantId!).get(assessmentId);
+      const assessment = await deps.assessments.withOrganization(organizationId!).get(assessmentId);
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
 
       // SoA items → total & implemented controls
-      const soaVersions = await deps.soa.repositories.versions.listByAssessment(assessmentId, tenantId!);
+      const soaVersions = await deps.soa.repositories.versions.listByAssessment(assessmentId, organizationId!);
       const latestSoa = soaVersions.at(-1);
       let totalControls = 0;
       let implementedControls = 0;
       if (latestSoa) {
-        const items = await deps.soa.repositories.items.listByVersion(latestSoa.soa_version_id, tenantId!);
+        const items = await deps.soa.repositories.items.listByVersion(latestSoa.soa_version_id, organizationId!);
         totalControls = items.length;
         implementedControls = items.filter((i) => i.implementation_status === "implemented").length;
       }
 
       // Gap findings
-      const gapVersions = await deps.gapAnalysis.repositories.gapVersions.listByAssessment(assessmentId, tenantId!);
+      const gapVersions = await deps.gapAnalysis.repositories.gapVersions.listByAssessment(assessmentId, organizationId!);
       const latestGap = gapVersions.at(-1);
       let totalFindings = 0, critical = 0, high = 0, medium = 0, low = 0;
       if (latestGap) {
-        const findings = await deps.gapAnalysis.repositories.gapFindings.listByVersion(latestGap.gap_analysis_version_id, tenantId!);
+        const findings = await deps.gapAnalysis.repositories.gapFindings.listByVersion(latestGap.gap_analysis_version_id, organizationId!);
         totalFindings = findings.length;
         for (const f of findings) {
           if (f.severity === "critical") critical++;
@@ -56,11 +56,11 @@ export const dashboardRoutes: RouteDefinition[] = [
       }
 
       // POA&M open items
-      const poamVersions = await deps.poam.repositories.versions.listByAssessment(assessmentId, tenantId!);
+      const poamVersions = await deps.poam.repositories.versions.listByAssessment(assessmentId, organizationId!);
       const latestPoam = poamVersions.at(-1);
       let openPoamItems = 0;
       if (latestPoam) {
-        const items = await deps.poam.repositories.items.listByVersion(latestPoam.poam_version_id, tenantId!);
+        const items = await deps.poam.repositories.items.listByVersion(latestPoam.poam_version_id, organizationId!);
         openPoamItems = items.filter((p) => p.status === "draft" || p.status === "in_progress" || p.status === "approved").length;
       }
 
@@ -93,12 +93,12 @@ export const dashboardRoutes: RouteDefinition[] = [
     path: "/api/v1/organizations/:organizationId/dashboard",
     protected: true,
     permissions: ["organization:read"],
-    handler: async ({ deps, params, tenantId, traceId }) => {
+    handler: async ({ deps, params, organizationId, traceId }) => {
       const orgId = routeParam(params, "organizationId");
-      const org = await deps.organizations.get(orgId, tenantId!);
+      const org = await deps.organizations.get(orgId);
       if (!org) throw new ApiError("NOT_FOUND", "Organization not found.", 404);
 
-      const assessments = await deps.assessments.listByOrganization(orgId, tenantId!);
+      const assessments = await deps.assessments.listByOrganization(orgId);
 
       const byState: Record<string, number> = {};
       let complianceSum = 0;
@@ -113,10 +113,10 @@ export const dashboardRoutes: RouteDefinition[] = [
         byState[state] = (byState[state] ?? 0) + 1;
 
         // Quick SoA compliance calc
-        const soaVersions = await deps.soa.repositories.versions.listByAssessment(a.assessment_id, tenantId!);
+        const soaVersions = await deps.soa.repositories.versions.listByAssessment(a.assessment_id, organizationId!);
         const latestSoa = soaVersions.at(-1);
         if (latestSoa) {
-          const items = await deps.soa.repositories.items.listByVersion(latestSoa.soa_version_id, tenantId!);
+          const items = await deps.soa.repositories.items.listByVersion(latestSoa.soa_version_id, organizationId!);
           if (items.length > 0) {
             const implemented = items.filter((i) => i.implementation_status === "implemented").length;
             complianceSum += (implemented / items.length) * 100;
@@ -125,18 +125,18 @@ export const dashboardRoutes: RouteDefinition[] = [
         }
 
         // POA&M count
-        const poamVersions = await deps.poam.repositories.versions.listByAssessment(a.assessment_id, tenantId!);
+        const poamVersions = await deps.poam.repositories.versions.listByAssessment(a.assessment_id, organizationId!);
         const latestPoam = poamVersions.at(-1);
         if (latestPoam) {
-          const pItems = await deps.poam.repositories.items.listByVersion(latestPoam.poam_version_id, tenantId!);
+          const pItems = await deps.poam.repositories.items.listByVersion(latestPoam.poam_version_id, organizationId!);
           totalOpenPoams += pItems.filter((p) => p.status === "draft" || p.status === "in_progress" || p.status === "approved").length;
         }
 
         // Gap findings
-        const gapVersions = await deps.gapAnalysis.repositories.gapVersions.listByAssessment(a.assessment_id, tenantId!);
+        const gapVersions = await deps.gapAnalysis.repositories.gapVersions.listByAssessment(a.assessment_id, organizationId!);
         const latestGap = gapVersions.at(-1);
         if (latestGap) {
-          const findings = await deps.gapAnalysis.repositories.gapFindings.listByVersion(latestGap.gap_analysis_version_id, tenantId!);
+          const findings = await deps.gapAnalysis.repositories.gapFindings.listByVersion(latestGap.gap_analysis_version_id, organizationId!);
           for (const f of findings) {
             if (f.severity === "critical") totalCritical++;
             else if (f.severity === "high") totalHigh++;
@@ -165,13 +165,13 @@ export const dashboardRoutes: RouteDefinition[] = [
   // ── G4: Tenant-Wide Audit Logs ──────────────────────
   {
     method: "GET",
-    path: "/api/v1/tenants/:tenantId/audit-logs",
+    path: "/api/v1/tenants/:organizationId/audit-logs",
     protected: true,
     permissions: ["audit:read"],
-    handler: async ({ request, deps, params, tenantId, traceId }) => {
-      if (routeParam(params, "tenantId") !== tenantId) throw new ApiError("FORBIDDEN", "Tenant context mismatch.", 403);
+    handler: async ({ request, deps, params, organizationId, traceId }) => {
+      if (routeParam(params, "organizationId") !== organizationId) throw new ApiError("FORBIDDEN", "Tenant context mismatch.", 403);
       const query = parseQuery(request, AuditLogTenantQuerySchema) as AuditLogTenantQuery;
-      const data = await deps.observability.auditEvents.list({ tenant_id: tenantId, limit: query.limit });
+      const data = await deps.observability.auditEvents.list({ organization_id: organizationId, limit: query.limit });
 
       // Apply additional filters
       const filtered = data.filter((event) => {
@@ -192,12 +192,12 @@ export const dashboardRoutes: RouteDefinition[] = [
     path: "/api/v1/organizations/:organizationId/audit-logs",
     protected: true,
     permissions: ["audit:read"],
-    handler: async ({ request, deps, params, tenantId, traceId }) => {
+    handler: async ({ request, deps, params, organizationId, traceId }) => {
       const orgId = routeParam(params, "organizationId");
-      const org = await deps.organizations.get(orgId, tenantId!);
+      const org = await deps.organizations.get(orgId);
       if (!org) throw new ApiError("NOT_FOUND", "Organization not found.", 404);
       const query = parseQuery(request, AuditLogTenantQuerySchema) as AuditLogTenantQuery;
-      const data = await deps.observability.auditEvents.list({ tenant_id: tenantId, limit: query.limit });
+      const data = await deps.observability.auditEvents.list({ organization_id: organizationId, limit: query.limit });
 
       const filtered = data.filter((event) => {
         if (event.organization_id !== orgId) return false;

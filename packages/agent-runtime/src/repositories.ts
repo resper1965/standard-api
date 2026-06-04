@@ -16,8 +16,8 @@ export const createInMemoryAgentRunRepository = (): AgentRunRepository => {
     async save(run) {
       records.set(run.agent_run_id, run);
     },
-    async listByAssessment(assessmentId, tenantId) {
-      return Array.from(records.values()).filter((run) => run.assessment_id === assessmentId && run.tenant_id === tenantId);
+    async listByAssessment(assessmentId, organizationId) {
+      return Array.from(records.values()).filter((run) => run.assessment_id === assessmentId && run.organization_id === organizationId);
     }
   };
 };
@@ -30,8 +30,8 @@ export const createInMemoryAgentToolCallRepository = (): AgentToolCallRepository
       records.push(input);
       return input;
     },
-    async listByRun(agentRunId, tenantId) {
-      return records.filter((call) => call.agent_run_id === agentRunId && call.tenant_id === tenantId);
+    async listByRun(agentRunId, organizationId) {
+      return records.filter((call) => call.agent_run_id === agentRunId && call.organization_id === organizationId);
     }
   };
 };

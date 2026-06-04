@@ -2,7 +2,7 @@
 
 | # | Task | Status |
 |---|------|--------|
-| P3-1.1 | Mover API Keys para NavLinks do Tenant | done |
+| P3-1.1 | Mover API Keys para NavLinks do Organization | done |
 | P3-2.1 | Registrar a Rota do Onboarding | done |
 | P3-2.2 | Desenvolver a Página `OnboardingPage.tsx` | done |
 | P3-2.3 | Redirecionar Automaticamente Usuários sem Organização | done |
@@ -12,7 +12,7 @@
 | P0-01.2 | Remover secrets de `scripts/check-fw.mjs` | done |
 | P0-01.3 | Remover secrets de `scripts/migrations/001-fix-enums.mjs` | done |
 | P0-01.4 | Hardening de regras no scanner em `scripts/lint.mjs` | done |
-| P0-02.1 | Bloquear bypass de tenant em `tenant.middleware.ts` | done |
+| P0-02.1 | Bloquear bypass de organization em `organization.middleware.ts` | done |
 | P0-03.1 | Unificar KV binding em `wrangler.api-gateway.toml` | done |
 | P0-03.2 | Ligar `COUNCIL_WORKFLOW` em `wrangler.api-gateway.toml` | done |
 | P0-03.3 | Corrigir entrypoint e adicionar `COUNCIL_WORKFLOW` em `wrangler.workflows.toml` | done |

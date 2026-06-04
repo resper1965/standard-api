@@ -79,7 +79,7 @@ Authorization: Bearer <session-token>
 Authorization: ApiKey sk-your-api-key-here
 ```
 
-> **Note:** API keys are always scoped to a single tenant. Contact support to provision keys for your organization.
+> **Note:** API keys are always scoped to a single organization. Contact support to provision keys for your organization.
 
 ## Base URL
 
@@ -224,7 +224,7 @@ All errors follow a consistent format:
 | `400` | Invalid request body or parameters |
 | `401` | Missing or invalid authentication |
 | `403` | Insufficient permissions for this action |
-| `404` | Resource not found (or tenant boundary) |
+| `404` | Resource not found (or organization boundary) |
 | `409` | State conflict (e.g., wrong lifecycle state) |
 | `429` | Rate limit exceeded |
 | `500` | Internal server error (include `trace_id` in support ticket) |

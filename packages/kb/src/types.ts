@@ -83,25 +83,24 @@ export type VectorStore = {
 export type KbEmbeddingJobRepository = {
   saveJob(job: KbEmbeddingJobResponse): Promise<void>;
   updateJob(job: KbEmbeddingJobResponse): Promise<void>;
-  getJob(jobId: string, tenantId: string): Promise<KbEmbeddingJobResponse | null>;
-  listJobsByAssessment(assessmentId: string, tenantId: string): Promise<KbEmbeddingJobResponse[]>;
-  listJobsByDocument(documentId: string, tenantId: string): Promise<KbEmbeddingJobResponse[]>;
-  findQueuedJobForChunk(chunkId: string, tenantId: string): Promise<KbEmbeddingJobResponse | null>;
+  getJob(jobId: string, organizationId: string): Promise<KbEmbeddingJobResponse | null>;
+  listJobsByAssessment(assessmentId: string, organizationId: string): Promise<KbEmbeddingJobResponse[]>;
+  listJobsByDocument(documentId: string, organizationId: string): Promise<KbEmbeddingJobResponse[]>;
+  findQueuedJobForChunk(chunkId: string, organizationId: string): Promise<KbEmbeddingJobResponse | null>;
 };
 
 export type KbVectorReferenceRepository = {
   save(reference: KbVectorReferenceResponse): Promise<void>;
   update(reference: KbVectorReferenceResponse): Promise<void>;
-  get(referenceId: string, tenantId: string): Promise<KbVectorReferenceResponse | null>;
-  findByChunk(chunkId: string, tenantId: string): Promise<KbVectorReferenceResponse | null>;
-  listByAssessment(assessmentId: string, tenantId: string): Promise<KbVectorReferenceResponse[]>;
-  listByDocument(documentId: string, tenantId: string): Promise<KbVectorReferenceResponse[]>;
+  get(referenceId: string, organizationId: string): Promise<KbVectorReferenceResponse | null>;
+  findByChunk(chunkId: string, organizationId: string): Promise<KbVectorReferenceResponse | null>;
+  listByAssessment(assessmentId: string, organizationId: string): Promise<KbVectorReferenceResponse[]>;
+  listByDocument(documentId: string, organizationId: string): Promise<KbVectorReferenceResponse[]>;
 };
 
 export type KbSearchLogRepository = {
   record(log: {
     id: string;
-    tenant_id: string;
     organization_id: string;
     assessment_id: string;
     actor_id?: string;
@@ -136,7 +135,6 @@ export type KbServiceDependencies = {
 };
 
 export type KbRequestContext = {
-  tenantId: string;
   organizationId: string;
   assessmentId: string;
   actorId?: string;

@@ -43,7 +43,7 @@ import { createDrizzleReportRepositories } from "./reporting.repository";
 import { createMockApiKeysRepository, createDrizzleApiKeysRepository } from "./api-keys.repository";
 import { createInMemoryWebhookRepository, createDrizzleWebhookRepository } from "./webhook.repository";
 import { createDrizzleMembershipRepository, createMockMembershipRepository } from "./membership.repository";
-import { resolveTenantContext, provisionTenantContext } from "./tenant-mapping";
+import { resolveOrganizationContext, provisionOrganizationContext } from "./tenant-mapping";
 import { users } from "@standard/schemas";
 import { eq } from "drizzle-orm";
 
@@ -73,13 +73,13 @@ export const createMockRepositories = (): AppDependencies => {
       orgMap.set(record.organization_id, record);
       return record;
     },
-    async update(orgId: string, tenantId: string, patch: any) {
-      const record = await orgsBase.update(orgId, tenantId, patch);
+    async update(orgId: string, patch: any) {
+      const record = await orgsBase.update(orgId, patch);
       if (record) orgMap.set(orgId, record);
       return record;
     },
-    withTenant(tenantId: string) {
-      const baseTenantDb = orgsBase.withTenant(tenantId);
+    withOrganization(organizationId: string) {
+      const baseTenantDb = orgsBase.withOrganization(organizationId);
       return {
         ...baseTenantDb,
         create: async (input: any) => {
@@ -96,14 +96,13 @@ export const createMockRepositories = (): AppDependencies => {
     }
   };
 
-  const resolveTenantContext = async (baOrgId: string) => {
+  const resolveOrganizationContext = async (baOrgId: string) => {
     let org = orgMap.get(baOrgId);
     if (!org) {
-      org = [...orgMap.values()].find((o: any) => o.tenant_id === baOrgId);
+      org = [...orgMap.values()].find((o: any) => o.organization_id === baOrgId);
     }
     if (org) {
       return {
-        tenant_id: org.organization_id,
         organization_id: org.organization_id,
         ba_org_id: baOrgId,
         org_name: org.name
@@ -112,13 +111,12 @@ export const createMockRepositories = (): AppDependencies => {
     // JIT provision mock tenant + organization
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(baOrgId);
     const tenantPayload = isUuid
-      ? { tenant_id: baOrgId, name: `Tenant ${baOrgId}`, slug: baOrgId }
+      ? { organization_id: baOrgId, name: `Tenant ${baOrgId}`, slug: baOrgId }
       : { name: `Tenant ${baOrgId}`, slug: baOrgId };
     const newTenant = await tenants.create(tenantPayload);
-    const newOrg = await orgsBase.create({ tenant_id: newTenant.tenant_id, name: `Org ${baOrgId}`, slug: baOrgId });
+    const newOrg = await orgsBase.create({ organization_id: newTenant.organization_id, name: `Org ${baOrgId}`, slug: baOrgId } as any);
     orgMap.set(newOrg.organization_id, newOrg);
     return {
-      tenant_id: newOrg.organization_id,
       organization_id: newOrg.organization_id,
       ba_org_id: baOrgId,
       org_name: newOrg.name
@@ -148,9 +146,9 @@ export const createMockRepositories = (): AppDependencies => {
     alerts: new AlertService(new SecurityEventService(createInMemoryObservabilityDependencies())),
     privacy: createInMemoryPrivacyDependencies(),
     webhooks: createInMemoryWebhookRepository(),
-    resolveTenantContext,
+    resolveOrganizationContext,
     // In-memory path provisions on resolve; the same creating fn serves both roles.
-    provisionTenantContext: resolveTenantContext,
+    provisionOrganizationContext: resolveOrganizationContext,
     resolveUserContext: async (email: string, displayName: string) => ({ id: crypto.randomUUID() })
   };
 };
@@ -200,8 +198,8 @@ export const createDrizzleRepositories = (db: DbClient, env?: Env): AppDependenc
     alerts,
     privacy: { repositories: createDrizzlePrivacyRepositories(db) },
     webhooks: createDrizzleWebhookRepository(db),
-    resolveTenantContext: (baOrgId: string) => resolveTenantContext(db, baOrgId),
-    provisionTenantContext: (baOrgId: string) => provisionTenantContext(db, baOrgId),
+    resolveOrganizationContext: (baOrgId: string) => resolveOrganizationContext(db, baOrgId),
+    provisionOrganizationContext: (baOrgId: string) => provisionOrganizationContext(db, baOrgId),
     resolveUserContext: async (email: string, displayName: string) => {
       const [existing] = await db.select().from(users).where(eq(users.email, email)).limit(1);
       if (existing) return { id: existing.id };

@@ -57,7 +57,7 @@ Status suportados:
 
 ## Evidências Candidatas
 
-`SoaEvidenceService` consulta a KB por requirement/control com filtros de tenant, organization e assessment. O resultado é registrado como evidência candidata e conservadora.
+`SoaEvidenceService` consulta a KB por requirement/control com filtros de organization, organization e assessment. O resultado é registrado como evidência candidata e conservadora.
 
 Se nada for encontrado, o item pode receber `implementation_status: not_evidenced`, `evidence_coverage: absent` e `applicability_status: requires_validation`. Isso não significa `not_implemented`.
 

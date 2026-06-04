@@ -11,7 +11,7 @@
 
 Dashboard corporativo dark-mode para o Standard com duas áreas baseadas em role:
 - **Usuário** — Dashboard, Assessments, Documents, Gap Analysis, Reports
-- **Super-Admin (@bekaa.eu)** — Tudo acima + Tenant Management, License Keys, User Admin, Audit Logs, System Health
+- **Super-Admin (@bekaa.eu)** — Tudo acima + Organization Management, License Keys, User Admin, Audit Logs, System Health
 
 ## Design Tokens
 
@@ -49,7 +49,7 @@ Login → Google OAuth or Email/Password
 8. `/settings/profile` — Name, avatar, password
 
 ### Admin-only (role=admin)
-9. `/admin/tenants` — Create, manage organizations
+9. `/admin/organizations` — Create, manage organizations
 10. `/admin/users` — List, ban, unban, impersonate, roles
 11. `/admin/license-keys` — Generate, revoke, plan tiers
 12. `/admin/audit` — Full event log

@@ -28,17 +28,17 @@ export const createArtifactRepository = (): ArtifactRepositoryAdapter => {
         (record) => record.assessmentId === assessmentId && record.artifactType === artifactType
       );
     },
-    withTenant(tenantId: string) {
+    withOrganization(organizationId: string) {
       return {
         create: async (input) => this.create(input),
         get: async (versionId) => {
           const artifact = await this.get(versionId);
-          return artifact && artifact.organizationId === tenantId ? artifact : null;
+          return artifact && artifact.organizationId === organizationId ? artifact : null;
         },
         save: async (version) => this.save(version),
         listByAssessment: async (assessmentId, artifactType) => {
           return [...records.values()].filter(
-            (record) => record.assessmentId === assessmentId && record.artifactType === artifactType && record.organizationId === tenantId
+            (record) => record.assessmentId === assessmentId && record.artifactType === artifactType && record.organizationId === organizationId
           );
         }
       };

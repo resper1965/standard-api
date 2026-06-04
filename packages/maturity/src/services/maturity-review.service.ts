@@ -13,7 +13,7 @@ export const submitMaturityForReview = async (
   ctx: MaturityContext,
   deps: MaturityDependencies
 ): Promise<MaturityAssessmentVersion> => {
-  const version = await deps.repositories.versions.get(versionId, ctx.tenantId);
+  const version = await deps.repositories.versions.get(versionId, ctx.organizationId);
   if (!version || version.assessmentId !== ctx.assessmentId) {
     throw new MaturityError("VERSION_NOT_FOUND", "Maturity assessment version not found.", { versionId });
   }
@@ -48,7 +48,7 @@ export const rejectMaturityReview = async (
   ctx: MaturityContext,
   deps: MaturityDependencies
 ): Promise<MaturityAssessmentVersion> => {
-  const version = await deps.repositories.versions.get(versionId, ctx.tenantId);
+  const version = await deps.repositories.versions.get(versionId, ctx.organizationId);
   if (!version || version.assessmentId !== ctx.assessmentId) {
     throw new MaturityError("VERSION_NOT_FOUND", "Maturity assessment version not found.", { versionId });
   }

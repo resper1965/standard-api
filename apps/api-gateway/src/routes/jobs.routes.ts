@@ -9,6 +9,7 @@ export const jobsRoutes: RouteDefinition[] = [
     method: "GET",
     path: "/api/v1/jobs/:job_id",
     protected: true, // Requires auth
+    permissions: ["document:read"],
     tenantRequired: true,
     handler: async (ctx) => {
       const jobId = ctx.params["job_id"];
@@ -19,7 +20,7 @@ export const jobsRoutes: RouteDefinition[] = [
       const intelligenceService = new IntelligenceService(ctx.deps);
       
       try {
-        const run = await intelligenceService.getJobStatus(jobId, ctx.tenantId!);
+        const run = await intelligenceService.getJobStatus(jobId, ctx.organizationId!);
         
         if (!run) {
            throw new ApiError("NOT_FOUND", "Job not found", 404);

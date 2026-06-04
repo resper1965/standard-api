@@ -42,7 +42,7 @@ O `xlsx` é usado **exclusivamente** em:
 ### Superfície de ataque real
 
 - **Prototype Pollution**: Requer que um atacante faça upload de um arquivo XLSX malicioso via endpoint `platform_admin`. Um atacante com `platform_admin` já tem controle total da plataforma — o vetor de ataque não agrega risco incremental significativo.
-- **ReDoS**: Requer upload de conteúdo especialmente crafted. Mesmo que ocorra, é limitado ao Worker da importação (isolado, sem afetar outros tenants).
+- **ReDoS**: Requer upload de conteúdo especialmente crafted. Mesmo que ocorra, é limitado ao Worker da importação (isolado, sem afetar outros organizations).
 
 **Conclusão**: Risco baixo dada a superfície de ataque limitada.
 

@@ -2,7 +2,6 @@ import { OperationalMetricSchema, type MetricType, type OperationalMetric } from
 import type { ObservabilityDependencies } from "../repositories";
 
 export type RecordMetricInput = {
-  tenant_id?: string | undefined;
   organization_id?: string | undefined;
   assessment_id?: string | undefined;
   metric_name: string;

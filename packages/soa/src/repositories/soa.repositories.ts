@@ -11,13 +11,13 @@ export class InMemoryScopeRepository implements ScopeRepository {
     this.records.set(scope.scope_id, scope);
   }
 
-  async get(scopeId: string, tenantId: string): Promise<ScopeResponse | null> {
+  async get(scopeId: string, organizationId: string): Promise<ScopeResponse | null> {
     const scope = this.records.get(scopeId);
-    return scope?.tenant_id === tenantId ? scope : null;
+    return scope?.organization_id === organizationId ? scope : null;
   }
 
-  async listByAssessment(assessmentId: string, tenantId: string): Promise<ScopeResponse[]> {
-    return [...this.records.values()].filter((scope) => scope.assessment_id === assessmentId && scope.tenant_id === tenantId);
+  async listByAssessment(assessmentId: string, organizationId: string): Promise<ScopeResponse[]> {
+    return [...this.records.values()].filter((scope) => scope.assessment_id === assessmentId && scope.organization_id === organizationId);
   }
 }
 
@@ -32,13 +32,13 @@ export class InMemorySoaVersionRepository implements SoaVersionRepository {
     this.records.set(version.soa_version_id, version);
   }
 
-  async get(soaVersionId: string, tenantId: string): Promise<SoaVersionResponse | null> {
+  async get(soaVersionId: string, organizationId: string): Promise<SoaVersionResponse | null> {
     const version = this.records.get(soaVersionId);
-    return version?.tenant_id === tenantId ? version : null;
+    return version?.organization_id === organizationId ? version : null;
   }
 
-  async listByAssessment(assessmentId: string, tenantId: string): Promise<SoaVersionResponse[]> {
-    return [...this.records.values()].filter((version) => version.assessment_id === assessmentId && version.tenant_id === tenantId);
+  async listByAssessment(assessmentId: string, organizationId: string): Promise<SoaVersionResponse[]> {
+    return [...this.records.values()].filter((version) => version.assessment_id === assessmentId && version.organization_id === organizationId);
   }
 }
 
@@ -53,13 +53,13 @@ export class InMemorySoaItemRepository implements SoaItemRepository {
     this.records.set(item.soa_item_id, item);
   }
 
-  async get(soaItemId: string, tenantId: string): Promise<SoaItemResponse | null> {
+  async get(soaItemId: string, organizationId: string): Promise<SoaItemResponse | null> {
     const item = this.records.get(soaItemId);
-    return item?.tenant_id === tenantId ? item : null;
+    return item?.organization_id === organizationId ? item : null;
   }
 
-  async listByVersion(soaVersionId: string, tenantId: string): Promise<SoaItemResponse[]> {
-    return [...this.records.values()].filter((item) => item.soa_version_id === soaVersionId && item.tenant_id === tenantId);
+  async listByVersion(soaVersionId: string, organizationId: string): Promise<SoaItemResponse[]> {
+    return [...this.records.values()].filter((item) => item.soa_version_id === soaVersionId && item.organization_id === organizationId);
   }
 }
 

@@ -118,8 +118,8 @@ await test("GET /api/v1/assessments retorna apenas assessments do tenant autenti
   const items: any[] = body.data ?? body.assessments ?? body ?? [];
 
   if (Array.isArray(items) && items.length > 0) {
-    // Verificar que todos os items têm o mesmo tenant_id
-    const tenantIds = [...new Set(items.map((i: any) => i.tenant_id).filter(Boolean))];
+    // Verificar que todos os items têm o mesmo organization_id
+    const tenantIds = [...new Set(items.map((i: any) => i.organization_id).filter(Boolean))];
     assert(
       tenantIds.length <= 1,
       `Listagem retornou assessments de múltiplos tenants: ${tenantIds.join(", ")} — CROSS-TENANT LEAK`

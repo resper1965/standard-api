@@ -13,7 +13,7 @@ export const openApiSpec = {
     "/health": { get: { summary: "Service health check" } },
     "/api/v1/health": { get: { summary: "Versioned service health check" } },
     "/api/v1/tenants": { post: { summary: "Create tenant" } },
-    "/api/v1/tenants/{tenantId}": {
+    "/api/v1/tenants/{organizationId}": {
       get: { summary: "Get tenant" },
       patch: { summary: "Update tenant" }
     },

@@ -25,7 +25,7 @@ O objetivo é permitir avaliação técnica do backend, contratos, packages, wor
 - KB search como candidate evidence, sem autoridade normativa.
 - SoA, Gap Analysis, POA&M e Reporting com versionamento, traceability e aprovação humana.
 - Agent Runtime com registry, allowed tools, MockLLMProvider e schema validation.
-- Security layer com auth placeholder local, RBAC, tenant guard, secure errors, upload security e prompt injection defenses.
+- Security layer com auth placeholder local, RBAC, organization guard, secure errors, upload security e prompt injection defenses.
 - Observability layer com logs estruturados, redaction, audit/security events, metrics e usage/cost records.
 - Test suites, evals determinísticos, golden datasets sintéticos, regression tests e synthetic E2E.
 - GitHub Actions para CI, staging deploy e production deploy manual.
@@ -87,9 +87,9 @@ Para production, usar apenas `Deploy Production` com approval manual do environm
 ## Observações para Operadores
 
 - Staging deve usar dados sintéticos.
-- Smoke tests devem confirmar health, trace_id, tenant isolation, approval gate e ausência de vazamento em logs.
+- Smoke tests devem confirmar health, trace_id, organization isolation, approval gate e ausência de vazamento em logs.
 - DLQs devem ser monitoradas após deploy.
-- Qualquer falha de tenant isolation, approval bypass ou secret em log é No-Go.
+- Qualquer falha de organization isolation, approval bypass ou secret em log é No-Go.
 
 ## Próximos Passos
 

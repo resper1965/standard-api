@@ -118,7 +118,7 @@ test("Intelligence Council dispatches a detached agentic execution correctly", a
     },
     { 
       "x-standard-actor-id": ids.actorId,
-      "x-standard-tenant-id": ids.tenantId
+      "x-standard-tenant-id": ids.organizationId
     }
   );
 
@@ -138,7 +138,7 @@ test("Intelligence Council dispatches a detached agentic execution correctly", a
     },
     { 
       "x-standard-actor-id": ids.actorId,
-      "x-standard-tenant-id": ids.tenantId
+      "x-standard-tenant-id": ids.organizationId
     }
   );
 
@@ -156,7 +156,7 @@ test("Job Status Polling endpoint returns 404 for non-existent job", async () =>
     undefined,
     { 
       "x-standard-actor-id": ids.actorId,
-      "x-standard-tenant-id": ids.tenantId
+      "x-standard-tenant-id": ids.organizationId
     }
   );
 
@@ -181,7 +181,7 @@ test("Job Status Polling endpoint returns 200 OK and pending status for newly di
     },
     { 
       "x-standard-actor-id": ids.actorId,
-      "x-standard-tenant-id": ids.tenantId
+      "x-standard-tenant-id": ids.organizationId
     }
   );
 
@@ -199,7 +199,7 @@ test("Job Status Polling endpoint returns 200 OK and pending status for newly di
     undefined,
     { 
       "x-standard-actor-id": ids.actorId,
-      "x-standard-tenant-id": ids.tenantId
+      "x-standard-tenant-id": ids.organizationId
     }
   );
 

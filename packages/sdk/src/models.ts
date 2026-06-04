@@ -10,7 +10,6 @@
 // ── Assessments ──────────────────────────────────────────────
 export type Assessment = {
   id: string;
-  tenant_id: string;
   organization_id: string;
   name: string;
   state: string;
@@ -209,6 +208,11 @@ export type PoamVersion = {
   status: string;
   item_count?: number;
   created_at: string;
+  terminology?: {
+    artifactName: string;
+    artifactAbbreviation: string;
+    itemTerm: string;
+  };
 };
 
 export type PoamItem = {
@@ -328,7 +332,6 @@ export type WebhookDelivery = {
 // ── Organizations ────────────────────────────────────────────
 export type Organization = {
   organization_id: string;
-  tenant_id: string;
   name: string;
   slug: string;
   status: string;
@@ -410,8 +413,7 @@ export type OrganizationDashboard = {
 // ── Audit Logs ──────────────────────────────────────────────
 export type AuditLogEntry = {
   id: string;
-  tenant_id: string;
-  organization_id?: string;
+  organization_id: string;
   assessment_id?: string;
   actor_id?: string;
   action: string;
@@ -425,7 +427,6 @@ export type AuditLogEntry = {
 // ── Memberships ─────────────────────────────────────────────
 export type Membership = {
   membership_id: string;
-  tenant_id: string;
   organization_id: string;
   user_id: string | null;
   email: string;

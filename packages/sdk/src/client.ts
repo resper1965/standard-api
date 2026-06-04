@@ -25,8 +25,8 @@ import type {
 export type StandardClientConfig = {
   /** API key (starts with "standard_live_") */
   apiKey: string;
-  /** Tenant UUID */
-  tenantId: string;
+  /** Organization UUID */
+  organizationId: string;
   /** Base URL (defaults to production) */
   baseUrl?: string;
   /** Default timeout in ms (default: 30000) */
@@ -61,7 +61,7 @@ export class StandardClient {
   constructor(config: StandardClientConfig) {
     this.config = {
       apiKey: config.apiKey,
-      tenantId: config.tenantId,
+      organizationId: config.organizationId,
       baseUrl: (config.baseUrl ?? DEFAULT_BASE_URL).replace(/\/+$/, ""),
       timeout: config.timeout ?? DEFAULT_TIMEOUT,
       fetch: config.fetch ?? globalThis.fetch.bind(globalThis),
@@ -94,7 +94,7 @@ export class StandardClient {
 
     const headers: Record<string, string> = {
       "Authorization": `Bearer ${this.config.apiKey}`,
-      "x-standard-tenant-id": this.config.tenantId,
+      "x-standard-organization-id": this.config.organizationId,
       ...(body && !(body instanceof FormData) ? { "Content-Type": "application/json" } : {}),
       ...(opts?.idempotencyKey ? { "Idempotency-Key": opts.idempotencyKey } : {}),
       ...opts?.headers,

@@ -62,7 +62,7 @@ O serviço sugere `effort_estimate` por action type:
 
 ## Milestones e Dependências
 
-Cada item gerado recebe pelo menos um milestone inicial para confirmar abordagem, owner e caminho de evidência. Dependências são detectadas de forma conservadora e não podem cruzar tenant ou assessment. A detecção mais sofisticada fica preparada para evolução futura.
+Cada item gerado recebe pelo menos um milestone inicial para confirmar abordagem, owner e caminho de evidência. Dependências são detectadas de forma conservadora e não podem cruzar organization ou assessment. A detecção mais sofisticada fica preparada para evolução futura.
 
 ## Evidência Esperada e Critério de Aceite
 

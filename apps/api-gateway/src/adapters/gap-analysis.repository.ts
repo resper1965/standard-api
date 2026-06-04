@@ -40,30 +40,30 @@ export const createDrizzleEvidenceFindingRepository = (db: DbClient): EvidenceFi
       updatedAt: new Date(),
     }).where(eq(evidenceFindings.id, finding.evidence_finding_id));
   },
-  async get(evidenceFindingId, tenantId) {
+  async get(evidenceFindingId, organizationId) {
     const [row] = await db.select().from(evidenceFindings)
       .where(eq(evidenceFindings.id, evidenceFindingId))
       .limit(1);
     return row ? mapEvidenceFindingRow(row) : null;
   },
-  async listByAssessment(assessmentId, tenantId) {
+  async listByAssessment(assessmentId, organizationId) {
     const rows = await db.select().from(evidenceFindings)
       .where(eq(evidenceFindings.assessmentId, assessmentId));
     return rows.map(mapEvidenceFindingRow);
   },
-  async findBySoaItem(soaItemId, tenantId) {
+  async findBySoaItem(soaItemId, organizationId) {
     const [row] = await db.select().from(evidenceFindings)
       .where(eq(evidenceFindings.soaItemId, soaItemId))
       .limit(1);
     return row ? mapEvidenceFindingRow(row) : null;
   },
-  withTenant(tenantId: string) {
+  withOrganization(organizationId: string) {
     return {
       save: async (finding: EvidenceFindingResponse) => this.save(finding),
       update: async (finding: EvidenceFindingResponse) => this.update(finding),
-      get: async (evidenceFindingId: string) => this.get(evidenceFindingId, tenantId),
-      listByAssessment: async (assessmentId: string) => this.listByAssessment(assessmentId, tenantId),
-      findBySoaItem: async (soaItemId: string) => this.findBySoaItem(soaItemId, tenantId)
+      get: async (evidenceFindingId: string) => this.get(evidenceFindingId, organizationId),
+      listByAssessment: async (assessmentId: string) => this.listByAssessment(assessmentId, organizationId),
+      findBySoaItem: async (soaItemId: string) => this.findBySoaItem(soaItemId, organizationId)
     };
   }
 });
@@ -88,15 +88,15 @@ export const createDrizzleEvidenceSourceRepository = (db: DbClient): EvidenceSou
       candidateEvidence: s.candidate_evidence,
     }))).onConflictDoNothing();
   },
-  async listByFinding(evidenceFindingId, tenantId) {
+  async listByFinding(evidenceFindingId, organizationId) {
     const rows = await db.select().from(evidenceSources)
       .where(eq(evidenceSources.evidenceFindingId, evidenceFindingId));
     return rows.map(mapEvidenceSourceRow);
   },
-  withTenant(tenantId: string) {
+  withOrganization(organizationId: string) {
     return {
       saveMany: async (sources: EvidenceSourceResponse[]) => this.saveMany(sources),
-      listByFinding: async (evidenceFindingId: string) => this.listByFinding(evidenceFindingId, tenantId)
+      listByFinding: async (evidenceFindingId: string) => this.listByFinding(evidenceFindingId, organizationId)
     };
   }
 });
@@ -130,23 +130,23 @@ export const createDrizzleGapAnalysisVersionRepository = (db: DbClient): GapAnal
       updatedAt: new Date(),
     }).where(eq(gapAnalysisVersions.id, version.gap_analysis_version_id));
   },
-  async get(gapAnalysisVersionId, tenantId) {
+  async get(gapAnalysisVersionId, organizationId) {
     const [row] = await db.select().from(gapAnalysisVersions)
       .where(eq(gapAnalysisVersions.id, gapAnalysisVersionId))
       .limit(1);
     return row ? mapGapVersionRow(row) : null;
   },
-  async listByAssessment(assessmentId, tenantId) {
+  async listByAssessment(assessmentId, organizationId) {
     const rows = await db.select().from(gapAnalysisVersions)
       .where(eq(gapAnalysisVersions.assessmentId, assessmentId));
     return rows.map(mapGapVersionRow);
   },
-  withTenant(tenantId: string) {
+  withOrganization(organizationId: string) {
     return {
       save: async (version: GapAnalysisVersionResponse) => this.save(version),
       update: async (version: GapAnalysisVersionResponse) => this.update(version),
-      get: async (gapAnalysisVersionId: string) => this.get(gapAnalysisVersionId, tenantId),
-      listByAssessment: async (assessmentId: string) => this.listByAssessment(assessmentId, tenantId)
+      get: async (gapAnalysisVersionId: string) => this.get(gapAnalysisVersionId, organizationId),
+      listByAssessment: async (assessmentId: string) => this.listByAssessment(assessmentId, organizationId)
     };
   }
 });
@@ -194,23 +194,23 @@ export const createDrizzleGapFindingRepository = (db: DbClient): GapFindingRepos
       updatedAt: new Date(),
     }).where(eq(gapFindings.id, finding.gap_finding_id));
   },
-  async get(gapFindingId, tenantId) {
+  async get(gapFindingId, organizationId) {
     const [row] = await db.select().from(gapFindings)
       .where(eq(gapFindings.id, gapFindingId))
       .limit(1);
     return row ? mapGapFindingRow(row) : null;
   },
-  async listByVersion(gapAnalysisVersionId, tenantId) {
+  async listByVersion(gapAnalysisVersionId, organizationId) {
     const rows = await db.select().from(gapFindings)
       .where(eq(gapFindings.gapAnalysisVersionId, gapAnalysisVersionId));
     return rows.map(mapGapFindingRow);
   },
-  withTenant(tenantId: string) {
+  withOrganization(organizationId: string) {
     return {
       saveMany: async (findings: GapFindingResponse[]) => this.saveMany(findings),
       update: async (finding: GapFindingResponse) => this.update(finding),
-      get: async (gapFindingId: string) => this.get(gapFindingId, tenantId),
-      listByVersion: async (gapAnalysisVersionId: string) => this.listByVersion(gapAnalysisVersionId, tenantId)
+      get: async (gapFindingId: string) => this.get(gapFindingId, organizationId),
+      listByVersion: async (gapAnalysisVersionId: string) => this.listByVersion(gapAnalysisVersionId, organizationId)
     };
   }
 });
@@ -231,7 +231,6 @@ type GapFindingRow = typeof gapFindings.$inferSelect;
 
 const mapEvidenceFindingRow = (row: EvidenceFindingRow): EvidenceFindingResponse => ({
   evidence_finding_id: row.id,
-  tenant_id: row.organizationId,
   organization_id: row.organizationId,
   assessment_id: row.assessmentId,
   soa_version_id: row.soaVersionId,
@@ -253,7 +252,6 @@ const mapEvidenceFindingRow = (row: EvidenceFindingRow): EvidenceFindingResponse
 
 const mapEvidenceSourceRow = (row: EvidenceSourceRow): EvidenceSourceResponse => ({
   evidence_source_id: row.id,
-  tenant_id: row.organizationId,
   organization_id: row.organizationId,
   assessment_id: row.assessmentId,
   evidence_finding_id: row.evidenceFindingId,
@@ -272,7 +270,6 @@ const mapEvidenceSourceRow = (row: EvidenceSourceRow): EvidenceSourceResponse =>
 
 const mapGapVersionRow = (row: GapVersionRow): GapAnalysisVersionResponse => ({
   gap_analysis_version_id: row.id,
-  tenant_id: row.organizationId,
   organization_id: row.organizationId,
   assessment_id: row.assessmentId,
   version_number: row.versionNumber,
@@ -294,7 +291,6 @@ const mapGapVersionRow = (row: GapVersionRow): GapAnalysisVersionResponse => ({
 
 const mapGapFindingRow = (row: GapFindingRow): GapFindingResponse => ({
   gap_finding_id: row.id,
-  tenant_id: row.organizationId,
   organization_id: row.organizationId,
   assessment_id: row.assessmentId,
   gap_analysis_version_id: row.gapAnalysisVersionId,

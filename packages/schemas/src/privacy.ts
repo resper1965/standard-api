@@ -150,7 +150,7 @@ export const CreatePrivacyDataCategoryRequestSchema = z.object({
 
 export const PrivacyActivityResponseSchema = z.object({
   id: UuidSchema,
-  tenant_id: UuidSchema,
+  organization_id: UuidSchema,
   assessment_id: UuidSchema.nullable(),
   name: z.string(),
   description: z.string().nullable(),
@@ -188,7 +188,7 @@ export const PrivacyActivityResponseSchema = z.object({
 
 export const PrivacyDataSubjectResponseSchema = z.object({
   id: UuidSchema,
-  tenant_id: UuidSchema,
+  organization_id: UuidSchema,
   activity_id: UuidSchema,
   category: PrivacyDataSubjectCategorySchema,
   description: z.string().nullable(),
@@ -201,7 +201,7 @@ export const PrivacyDataSubjectResponseSchema = z.object({
 
 export const PrivacyDataCategoryResponseSchema = z.object({
   id: UuidSchema,
-  tenant_id: UuidSchema,
+  organization_id: UuidSchema,
   activity_id: UuidSchema,
   category_name: z.string(),
   sensitivity: PrivacyDataSensitivitySchema,
@@ -258,7 +258,7 @@ export const CreatePrivacyThirdPartyRequestSchema = z.object({
 
 export const PrivacyThirdPartyResponseSchema = z.object({
   id: UuidSchema,
-  tenant_id: UuidSchema,
+  organization_id: UuidSchema,
   activity_id: UuidSchema,
   name: z.string(),
   role: PrivacyThirdPartyRoleSchema,
@@ -285,7 +285,7 @@ export const PrivacyScreeningResultSchema = z.enum(["required", "not_required", 
 
 export const PrivacyScreeningResponseSchema = z.object({
   id: UuidSchema,
-  tenant_id: UuidSchema,
+  organization_id: UuidSchema,
   activity_id: UuidSchema,
   screening_type: PrivacyScreeningTypeSchema,
   result: PrivacyScreeningResultSchema,
@@ -322,7 +322,7 @@ export const UpdatePrivacyFieldReviewRequestSchema = z.object({
 
 export const PrivacyFieldReviewResponseSchema = z.object({
   id: UuidSchema,
-  tenant_id: UuidSchema,
+  organization_id: UuidSchema,
   activity_id: UuidSchema,
   field_name: z.string(),
   review_status: PrivacyFieldReviewStatusSchema,
@@ -349,7 +349,7 @@ export const PrivacyScfPrioritySchema = z.enum(["critical", "high", "medium", "l
 
 export const PrivacyScfControlResponseSchema = z.object({
   id: UuidSchema,
-  tenant_id: UuidSchema,
+  organization_id: UuidSchema,
   activity_id: UuidSchema,
   scf_version: z.string().nullable(),
   control_id: UuidSchema.nullable(),

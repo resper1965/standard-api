@@ -40,7 +40,7 @@ const toApiError = (error: unknown): never => {
 };
 
 const privacyContext = (ctx: any) => ({
-  tenantId: ctx.tenantId!,
+  organizationId: ctx.organizationId!,
   actorId: ctx.actorId,
   traceId: ctx.traceId,
 });
@@ -60,7 +60,7 @@ export const privacyRoutes: RouteDefinition[] = [
         const body = await parseJson(ctx.request, CreatePrivacyActivityRequestSchema);
         const svc = new PrivacyCrudService(ctx.deps.privacy);
         const result = await svc.createActivity(body, privacyContext(ctx));
-        await ctx.deps.audit.record("privacy.activity.created", { activity_id: result.id, tenant_id: ctx.tenantId, trace_id: ctx.traceId });
+        await ctx.deps.audit.record("privacy.activity.created", { activity_id: result.id, organization_id: ctx.organizationId, trace_id: ctx.traceId });
         return json({ data: result, trace_id: ctx.traceId }, { status: 201 });
       } catch (e) { return toApiError(e); }
     },
@@ -80,7 +80,7 @@ export const privacyRoutes: RouteDefinition[] = [
         limit: url.searchParams.has("limit") ? Number(url.searchParams.get("limit")) : undefined,
         offset: url.searchParams.has("offset") ? Number(url.searchParams.get("offset")) : undefined,
       };
-      const results = await svc.listActivities(ctx.tenantId!, filters);
+      const results = await svc.listActivities(ctx.organizationId!, filters);
       return json({ data: results, trace_id: ctx.traceId });
     },
   },
@@ -92,7 +92,7 @@ export const privacyRoutes: RouteDefinition[] = [
     tenantRequired: true,
     handler: async (ctx) => {
       const svc = new PrivacyCrudService(ctx.deps.privacy);
-      const activity = await svc.getActivity(routeParam(ctx.params, "id"), ctx.tenantId!);
+      const activity = await svc.getActivity(routeParam(ctx.params, "id"), ctx.organizationId!);
       if (!activity) throw new ApiError("NOT_FOUND", "Processing activity not found.", 404);
       return json({ data: activity, trace_id: ctx.traceId });
     },
@@ -108,7 +108,7 @@ export const privacyRoutes: RouteDefinition[] = [
         const body = await parseJson(ctx.request, UpdatePrivacyActivityRequestSchema);
         const svc = new PrivacyCrudService(ctx.deps.privacy);
         const result = await svc.updateActivity(routeParam(ctx.params, "id"), body, privacyContext(ctx));
-        await ctx.deps.audit.record("privacy.activity.updated", { activity_id: result.id, tenant_id: ctx.tenantId, trace_id: ctx.traceId });
+        await ctx.deps.audit.record("privacy.activity.updated", { activity_id: result.id, organization_id: ctx.organizationId, trace_id: ctx.traceId });
         return json({ data: result, trace_id: ctx.traceId });
       } catch (e) { return toApiError(e); }
     },
@@ -124,7 +124,7 @@ export const privacyRoutes: RouteDefinition[] = [
         const svc = new PrivacyCrudService(ctx.deps.privacy);
         const id = routeParam(ctx.params, "id");
         await svc.deleteActivity(id, privacyContext(ctx));
-        await ctx.deps.audit.record("privacy.activity.deleted", { activity_id: id, tenant_id: ctx.tenantId, trace_id: ctx.traceId });
+        await ctx.deps.audit.record("privacy.activity.deleted", { activity_id: id, organization_id: ctx.organizationId, trace_id: ctx.traceId });
         return json({ data: { deleted: true }, trace_id: ctx.traceId });
       } catch (e) { return toApiError(e); }
     },
@@ -144,7 +144,7 @@ export const privacyRoutes: RouteDefinition[] = [
         const body = await parseJson(ctx.request, UpdatePrivacyActivityStatusRequestSchema);
         const svc = new PrivacyStatusService(ctx.deps.privacy);
         const result = await svc.transition(routeParam(ctx.params, "id"), body.status, privacyContext(ctx), body.reason);
-        await ctx.deps.audit.record("privacy.activity.status_changed", { activity_id: routeParam(ctx.params, "id"), ...result, tenant_id: ctx.tenantId, trace_id: ctx.traceId });
+        await ctx.deps.audit.record("privacy.activity.status_changed", { activity_id: routeParam(ctx.params, "id"), ...result, organization_id: ctx.organizationId, trace_id: ctx.traceId });
         return json({ data: result, trace_id: ctx.traceId });
       } catch (e) { return toApiError(e); }
     },
@@ -158,7 +158,7 @@ export const privacyRoutes: RouteDefinition[] = [
     handler: async (ctx) => {
       try {
         const svc = new PrivacyCompletenessService(ctx.deps.privacy);
-        const result = await svc.analyze(routeParam(ctx.params, "id"), ctx.tenantId!);
+        const result = await svc.analyze(routeParam(ctx.params, "id"), ctx.organizationId!);
         return json({ data: result, trace_id: ctx.traceId });
       } catch (e) { return toApiError(e); }
     },
@@ -178,7 +178,7 @@ export const privacyRoutes: RouteDefinition[] = [
         const body = await parseJson(ctx.request, CreatePrivacyDataSubjectRequestSchema.array().min(1));
         const svc = new PrivacyCrudService(ctx.deps.privacy);
         const result = await svc.addDataSubjects(routeParam(ctx.params, "id"), body, privacyContext(ctx));
-        await ctx.deps.audit.record("privacy.data_subjects.added", { activity_id: routeParam(ctx.params, "id"), count: result.length, tenant_id: ctx.tenantId, trace_id: ctx.traceId });
+        await ctx.deps.audit.record("privacy.data_subjects.added", { activity_id: routeParam(ctx.params, "id"), count: result.length, organization_id: ctx.organizationId, trace_id: ctx.traceId });
         return json({ data: result, trace_id: ctx.traceId }, { status: 201 });
       } catch (e) { return toApiError(e); }
     },
@@ -191,7 +191,7 @@ export const privacyRoutes: RouteDefinition[] = [
     tenantRequired: true,
     handler: async (ctx) => {
       const svc = new PrivacyCrudService(ctx.deps.privacy);
-      const result = await svc.listDataSubjects(routeParam(ctx.params, "id"), ctx.tenantId!);
+      const result = await svc.listDataSubjects(routeParam(ctx.params, "id"), ctx.organizationId!);
       return json({ data: result, trace_id: ctx.traceId });
     },
   },
@@ -203,8 +203,8 @@ export const privacyRoutes: RouteDefinition[] = [
     tenantRequired: true,
     handler: async (ctx) => {
       const svc = new PrivacyCrudService(ctx.deps.privacy);
-      await svc.removeDataSubject(routeParam(ctx.params, "subjectId"), ctx.tenantId!);
-      await ctx.deps.audit.record("privacy.data_subject.removed", { subject_id: routeParam(ctx.params, "subjectId"), tenant_id: ctx.tenantId, trace_id: ctx.traceId });
+      await svc.removeDataSubject(routeParam(ctx.params, "subjectId"), ctx.organizationId!);
+      await ctx.deps.audit.record("privacy.data_subject.removed", { subject_id: routeParam(ctx.params, "subjectId"), organization_id: ctx.organizationId, trace_id: ctx.traceId });
       return json({ data: { deleted: true }, trace_id: ctx.traceId });
     },
   },
@@ -223,7 +223,7 @@ export const privacyRoutes: RouteDefinition[] = [
         const body = await parseJson(ctx.request, CreatePrivacyDataCategoryRequestSchema.array().min(1));
         const svc = new PrivacyCrudService(ctx.deps.privacy);
         const result = await svc.addDataCategories(routeParam(ctx.params, "id"), body, privacyContext(ctx));
-        await ctx.deps.audit.record("privacy.data_categories.added", { activity_id: routeParam(ctx.params, "id"), count: result.length, tenant_id: ctx.tenantId, trace_id: ctx.traceId });
+        await ctx.deps.audit.record("privacy.data_categories.added", { activity_id: routeParam(ctx.params, "id"), count: result.length, organization_id: ctx.organizationId, trace_id: ctx.traceId });
         return json({ data: result, trace_id: ctx.traceId }, { status: 201 });
       } catch (e) { return toApiError(e); }
     },
@@ -236,7 +236,7 @@ export const privacyRoutes: RouteDefinition[] = [
     tenantRequired: true,
     handler: async (ctx) => {
       const svc = new PrivacyCrudService(ctx.deps.privacy);
-      const result = await svc.listDataCategories(routeParam(ctx.params, "id"), ctx.tenantId!);
+      const result = await svc.listDataCategories(routeParam(ctx.params, "id"), ctx.organizationId!);
       return json({ data: result, trace_id: ctx.traceId });
     },
   },
@@ -248,8 +248,8 @@ export const privacyRoutes: RouteDefinition[] = [
     tenantRequired: true,
     handler: async (ctx) => {
       const svc = new PrivacyCrudService(ctx.deps.privacy);
-      await svc.removeDataCategory(routeParam(ctx.params, "categoryId"), ctx.tenantId!);
-      await ctx.deps.audit.record("privacy.data_category.removed", { category_id: routeParam(ctx.params, "categoryId"), tenant_id: ctx.tenantId, trace_id: ctx.traceId });
+      await svc.removeDataCategory(routeParam(ctx.params, "categoryId"), ctx.organizationId!);
+      await ctx.deps.audit.record("privacy.data_category.removed", { category_id: routeParam(ctx.params, "categoryId"), organization_id: ctx.organizationId, trace_id: ctx.traceId });
       return json({ data: { deleted: true }, trace_id: ctx.traceId });
     },
   },
@@ -268,7 +268,7 @@ export const privacyRoutes: RouteDefinition[] = [
         const body = await parseJson(ctx.request, CreatePrivacyThirdPartyRequestSchema.array().min(1));
         const svc = new PrivacyCrudService(ctx.deps.privacy);
         const result = await svc.addThirdParties(routeParam(ctx.params, "id"), body, privacyContext(ctx));
-        await ctx.deps.audit.record("privacy.third_parties.added", { activity_id: routeParam(ctx.params, "id"), count: result.length, tenant_id: ctx.tenantId, trace_id: ctx.traceId });
+        await ctx.deps.audit.record("privacy.third_parties.added", { activity_id: routeParam(ctx.params, "id"), count: result.length, organization_id: ctx.organizationId, trace_id: ctx.traceId });
         return json({ data: result, trace_id: ctx.traceId }, { status: 201 });
       } catch (e) { return toApiError(e); }
     },
@@ -281,7 +281,7 @@ export const privacyRoutes: RouteDefinition[] = [
     tenantRequired: true,
     handler: async (ctx) => {
       const svc = new PrivacyCrudService(ctx.deps.privacy);
-      const result = await svc.listThirdParties(routeParam(ctx.params, "id"), ctx.tenantId!);
+      const result = await svc.listThirdParties(routeParam(ctx.params, "id"), ctx.organizationId!);
       return json({ data: result, trace_id: ctx.traceId });
     },
   },
@@ -293,8 +293,8 @@ export const privacyRoutes: RouteDefinition[] = [
     tenantRequired: true,
     handler: async (ctx) => {
       const svc = new PrivacyCrudService(ctx.deps.privacy);
-      await svc.removeThirdParty(routeParam(ctx.params, "partyId"), ctx.tenantId!);
-      await ctx.deps.audit.record("privacy.third_party.removed", { party_id: routeParam(ctx.params, "partyId"), tenant_id: ctx.tenantId, trace_id: ctx.traceId });
+      await svc.removeThirdParty(routeParam(ctx.params, "partyId"), ctx.organizationId!);
+      await ctx.deps.audit.record("privacy.third_party.removed", { party_id: routeParam(ctx.params, "partyId"), organization_id: ctx.organizationId, trace_id: ctx.traceId });
       return json({ data: { deleted: true }, trace_id: ctx.traceId });
     },
   },
@@ -312,7 +312,7 @@ export const privacyRoutes: RouteDefinition[] = [
       try {
         const svc = new PrivacyScreeningService(ctx.deps.privacy);
         const result = await svc.screen(routeParam(ctx.params, "id"), privacyContext(ctx));
-        await ctx.deps.audit.record("privacy.screening.executed", { activity_id: routeParam(ctx.params, "id"), results: result.length, tenant_id: ctx.tenantId, trace_id: ctx.traceId });
+        await ctx.deps.audit.record("privacy.screening.executed", { activity_id: routeParam(ctx.params, "id"), results: result.length, organization_id: ctx.organizationId, trace_id: ctx.traceId });
         return json({ data: result, trace_id: ctx.traceId }, { status: 201 });
       } catch (e) { return toApiError(e); }
     },
@@ -325,7 +325,7 @@ export const privacyRoutes: RouteDefinition[] = [
     tenantRequired: true,
     handler: async (ctx) => {
       const svc = new PrivacyScreeningService(ctx.deps.privacy);
-      const result = await svc.listScreenings(routeParam(ctx.params, "id"), ctx.tenantId!);
+      const result = await svc.listScreenings(routeParam(ctx.params, "id"), ctx.organizationId!);
       return json({ data: result, trace_id: ctx.traceId });
     },
   },
@@ -344,7 +344,7 @@ export const privacyRoutes: RouteDefinition[] = [
         const body = await parseJson(ctx.request, CreatePrivacyFieldReviewRequestSchema);
         const svc = new PrivacyCrudService(ctx.deps.privacy);
         const result = await svc.addFieldReview(routeParam(ctx.params, "id"), body, privacyContext(ctx));
-        await ctx.deps.audit.record("privacy.field_review.created", { activity_id: routeParam(ctx.params, "id"), field: body.field_name, source: body.source, tenant_id: ctx.tenantId, trace_id: ctx.traceId });
+        await ctx.deps.audit.record("privacy.field_review.created", { activity_id: routeParam(ctx.params, "id"), field: body.field_name, source: body.source, organization_id: ctx.organizationId, trace_id: ctx.traceId });
         return json({ data: result, trace_id: ctx.traceId }, { status: 201 });
       } catch (e) { return toApiError(e); }
     },
@@ -357,7 +357,7 @@ export const privacyRoutes: RouteDefinition[] = [
     tenantRequired: true,
     handler: async (ctx) => {
       const svc = new PrivacyCrudService(ctx.deps.privacy);
-      const result = await svc.listFieldReviews(routeParam(ctx.params, "id"), ctx.tenantId!);
+      const result = await svc.listFieldReviews(routeParam(ctx.params, "id"), ctx.organizationId!);
       return json({ data: result, trace_id: ctx.traceId });
     },
   },
@@ -372,7 +372,7 @@ export const privacyRoutes: RouteDefinition[] = [
         const body = await parseJson(ctx.request, UpdatePrivacyFieldReviewRequestSchema);
         const svc = new PrivacyCrudService(ctx.deps.privacy);
         const result = await svc.updateFieldReview(routeParam(ctx.params, "reviewId"), body, privacyContext(ctx));
-        await ctx.deps.audit.record("privacy.field_review.updated", { review_id: routeParam(ctx.params, "reviewId"), status: body.review_status, tenant_id: ctx.tenantId, trace_id: ctx.traceId });
+        await ctx.deps.audit.record("privacy.field_review.updated", { review_id: routeParam(ctx.params, "reviewId"), status: body.review_status, organization_id: ctx.organizationId, trace_id: ctx.traceId });
         return json({ data: result, trace_id: ctx.traceId });
       } catch (e) { return toApiError(e); }
     },
@@ -394,7 +394,7 @@ export const privacyRoutes: RouteDefinition[] = [
         }));
         const svc = new PrivacyAiService(ctx.deps.privacy);
         const result = await svc.extractFromText(body.text, privacyContext(ctx));
-        await ctx.deps.audit.record("privacy.ai.extraction", { activity_id: result.activity.id, confidence: result.confidence, agent_model: result.agent_model, tenant_id: ctx.tenantId, trace_id: ctx.traceId });
+        await ctx.deps.audit.record("privacy.ai.extraction", { activity_id: result.activity.id, confidence: result.confidence, agent_model: result.agent_model, organization_id: ctx.organizationId, trace_id: ctx.traceId });
         return json({ data: result, trace_id: ctx.traceId }, { status: 201 });
       } catch (e) { return toApiError(e); }
     },
@@ -425,10 +425,10 @@ export const privacyRoutes: RouteDefinition[] = [
         const usecase = new RopaAnalyzerUseCase(llmProvider);
         const result = await usecase.analyze({
           naturalLanguageDescription: body.text,
-          tenantId: ctx.tenantId!
+          organizationId: ctx.organizationId!
         });
         
-        await ctx.deps.audit.record("privacy.ropa.analyzed", { tenant_id: ctx.tenantId, trace_id: ctx.traceId });
+        await ctx.deps.audit.record("privacy.ropa.analyzed", { organization_id: ctx.organizationId, trace_id: ctx.traceId });
         return json({ data: result, trace_id: ctx.traceId }, { status: 200 });
       } catch (e) {
         console.error("[POST /api/v1/privacy/analyze-ropa] Failure:", e);
@@ -437,7 +437,7 @@ export const privacyRoutes: RouteDefinition[] = [
           "INTERNAL_ERROR",
           `Agent generation failed: ${e instanceof Error ? e.message : String(e)}`,
           500,
-          e instanceof Error && e.stack ? [e.stack] : []
+          e instanceof Error ? [e.message] : []
         );
       }
     },
@@ -475,10 +475,10 @@ export const privacyRoutes: RouteDefinition[] = [
         const result = await usecase.assess({
           ropaContext: body.ropaContext,
           projectDescription: body.projectDescription,
-          tenantId: ctx.tenantId!
+          organizationId: ctx.organizationId!
         });
         
-        await ctx.deps.audit.record("privacy.dpia.assessed", { tenant_id: ctx.tenantId, trace_id: ctx.traceId, draft: result.is_draft });
+        await ctx.deps.audit.record("privacy.dpia.assessed", { organization_id: ctx.organizationId, trace_id: ctx.traceId, draft: result.is_draft });
         return json({ data: result, trace_id: ctx.traceId }, { status: 200 });
       } catch (e) {
         console.error("[POST /api/v1/privacy/assess-dpia] Failure:", e);
@@ -487,7 +487,7 @@ export const privacyRoutes: RouteDefinition[] = [
           "INTERNAL_ERROR",
           `Agent DPIA assessment failed: ${e instanceof Error ? e.message : String(e)}`,
           500,
-          e instanceof Error && e.stack ? [e.stack] : []
+          e instanceof Error ? [e.message] : []
         );
       }
     },
@@ -526,7 +526,7 @@ export const privacyRoutes: RouteDefinition[] = [
             const result = await usecase.scan({
               vendorName: item.payload.vendorName,
               contractExcerpt: item.payload.contractExcerpt,
-              tenantId: ctx.tenantId!
+              organizationId: ctx.organizationId!
             });
             await ctx.deps.audit.record("privacy.vendor_contract.batch.item_evaluated", { 
               job_id: jobId, 
@@ -595,10 +595,10 @@ export const privacyRoutes: RouteDefinition[] = [
         const result = await usecase.scan({
           vendorName: body.vendorName,
           contractExcerpt: body.contractExcerpt,
-          tenantId: ctx.tenantId!
+          organizationId: ctx.organizationId!
         });
         
-        await ctx.deps.audit.record("vendor.contract.scanned", { tenant_id: ctx.tenantId, trace_id: ctx.traceId, vendor: body.vendorName, complete_dpa: result.is_dpa_compliant });
+        await ctx.deps.audit.record("vendor.contract.scanned", { organization_id: ctx.organizationId, trace_id: ctx.traceId, vendor: body.vendorName, complete_dpa: result.is_dpa_compliant });
         return json({ data: result, trace_id: ctx.traceId }, { status: 200 });
       } catch (e) {
         console.error("[POST /api/v1/privacy/scan-vendor-contract] Failure:", e);
@@ -607,7 +607,7 @@ export const privacyRoutes: RouteDefinition[] = [
           "INTERNAL_ERROR",
           `Agent Vendor Contract Scanning failed: ${e instanceof Error ? e.message : String(e)}`,
           500,
-          e instanceof Error && e.stack ? [e.stack] : []
+          e instanceof Error ? [e.message] : []
         );
       }
     },
@@ -646,8 +646,8 @@ export const privacyRoutes: RouteDefinition[] = [
         const url = new URL(ctx.request.url);
         const format = url.searchParams.get("format") === "markdown" ? "markdown" as const : "json" as const;
         const svc = new PrivacyReportService(ctx.deps.privacy);
-        const result = await svc.generateReport(routeParam(ctx.params, "id"), ctx.tenantId!, format);
-        await ctx.deps.audit.record("privacy.report.generated", { activity_id: routeParam(ctx.params, "id"), format, report_id: result.report_id, tenant_id: ctx.tenantId, trace_id: ctx.traceId });
+        const result = await svc.generateReport(routeParam(ctx.params, "id"), ctx.organizationId!, format);
+        await ctx.deps.audit.record("privacy.report.generated", { activity_id: routeParam(ctx.params, "id"), format, report_id: result.report_id, organization_id: ctx.organizationId, trace_id: ctx.traceId });
         return json({ data: result, trace_id: ctx.traceId });
       } catch (e) { return toApiError(e); }
     },

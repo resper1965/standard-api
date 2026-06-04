@@ -54,7 +54,7 @@ Não versionar secrets em `.env.example`, docs, logs ou fixtures.
 
 Regras:
 
-- keys com prefixo lógico por `tenant_id/organization_id/assessment_id`;
+- keys com prefixo lógico por `organization_id/organization_id/assessment_id`;
 - sem documentos reais;
 - lifecycle/retention revisado antes de produção.
 
@@ -62,7 +62,7 @@ Regras:
 
 - índice sugerido: `standard-kb-staging`.
 - usar apenas embeddings de fixtures sintéticas ou dados mascarados.
-- metadados devem carregar tenant e assessment.
+- metadados devem carregar organization e assessment.
 - Vectorize não pode ser usado como fonte normativa SCF.
 
 ## Queues Staging
@@ -97,8 +97,8 @@ pnpm cf:deploy:staging
 
 - Health endpoint responde.
 - Erros seguros retornam `trace_id`.
-- Requisição sem auth/tenant é bloqueada.
-- Tenant mismatch é bloqueado.
+- Requisição sem auth/organization é bloqueada.
+- Organization mismatch é bloqueado.
 - Upload sintético aceito/rejeitado conforme política.
 - KB search retorna candidate evidence escopado.
 - Workflow inicia com assessment sintético.
@@ -117,7 +117,7 @@ pnpm cf:deploy:staging
 ## Logs e Monitoramento
 
 - Revisar logs estruturados por `trace_id`.
-- Verificar security events de auth/tenant/RBAC.
+- Verificar security events de auth/organization/RBAC.
 - Verificar metrics por endpoint e workflow step.
 - Verificar usage/cost records quando agents/KB/reporting informarem uso.
 - Monitorar DLQ e erros de binding.
@@ -127,7 +127,7 @@ pnpm cf:deploy:staging
 - Deploy concluído sem erro.
 - Smoke tests críticos verdes.
 - Nenhum secret em logs.
-- Nenhum cross-tenant access.
+- Nenhum cross-organization access.
 - Approval gates não burláveis.
 - Dados sintéticos processados ponta a ponta.
 - Production permanece isolado e sem deploy automático.

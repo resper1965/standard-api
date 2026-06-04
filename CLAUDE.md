@@ -47,7 +47,7 @@ export const myRoutes: RouteDefinition[] = [{
   protected: true,
   requireActor: true,
   permissions: ["resource:write"],
-  handler: async ({ request, deps, params, tenantId, traceId }) => {
+  handler: async ({ request, deps, params, organizationId, traceId }) => {
     const body = await parseJson(request, MyRequestSchema);
     // ... business logic
     return json(result, { status: 201, headers: { "x-trace-id": traceId } });
@@ -96,7 +96,7 @@ report_generated → closed
 
 ### Dashboard & Observability
 - `GET /organizations/:id/dashboard` → Org-wide KPIs
-- `GET /tenants/:id/audit-logs` → Tenant audit trail
+- `GET /organizations/:id/audit-logs` → Organization audit trail
 - `GET /organizations/:id/audit-logs` → Org audit trail
 
 ### Member Management
@@ -112,7 +112,7 @@ report_generated → closed
 
 ```typescript
 import { StandardClient } from "@standard/sdk";
-const client = new StandardClient({ apiKey: "standard_live_...", tenantId: "uuid" });
+const client = new StandardClient({ apiKey: "standard_live_...", organizationId: "uuid" });
 
 // KPIs
 const { data } = await client.assessments.summary("assessment-id");

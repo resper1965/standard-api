@@ -32,7 +32,7 @@
 |---|------|:----------:|--------|--------|
 | 1.1 | `pnpm lint` + `pnpm typecheck` sem erros | P0 | concluído | CI |
 | 1.2 | `pnpm test` todos passando | P0 | concluído | CI |
-| 1.3 | Rate limiting real por tenant (KV provisionado) | P0 | concluído | post-mvp P0 |
+| 1.3 | Rate limiting real por organization (KV provisionado) | P0 | concluído | post-mvp P0 |
 | 1.4 | Audit log persistence + Observability Drizzle repos | P0 | concluído | post-mvp P0 |
 | 1.5 | Backup/restore PostgreSQL + R2 | P0 | concluído | post-mvp P0 |
 | 1.6 | Cloudflare resources staging separados | P0 | descartado | user: sem staging |
@@ -57,7 +57,7 @@
 | 2.8 | SCF official importer hardening (XLSX/OSCAL validation) | P1 | concluído | post-mvp P1 |
 | 2.9 | Advanced evals (adversarial, prompt injection, regression) | P1 | concluído | post-mvp P1 |
 | 2.10 | Conectores externos (webhooks, DLQ, third-party scanners) | P2 | parcial \| 2026-05-25 | pendencias |
-| 2.11 | SOC monitoring (alertas, DLQ, tenant mismatch) | P1 | concluído \| 2026-05-25 | post-mvp P1 |
+| 2.11 | SOC monitoring (alertas, DLQ, organization mismatch) | P1 | concluído \| 2026-05-25 | post-mvp P1 |
 
 ---
 
@@ -70,7 +70,7 @@
 | 3.3 | API Keys Self-Service (criação, revogação, monitoramento) | P1 | pendente | pendencias |
 | 3.4 | Billing/Plans dashboard | P2 | concluído | plano novo |
 | 3.5 | Onboarding wizard | P2 | pendente | plano novo |
-| 3.6 | Separação Master Admin vs Tenant Admin vs User | P0 | concluído \| 2026-05-25 | Standard Native Auth: admin() plugin (platform) + organization roles (tenant) |
+| 3.6 | Separação Master Admin vs Organization Admin vs User | P0 | concluído \| 2026-05-25 | Standard Native Auth: admin() plugin (platform) + organization roles (organization) |
 | 3.7 | Backend endpoints faltantes (org update, invites, billing) | P1 | concluído | analysis |
 
 ---
@@ -84,7 +84,7 @@
 | 4.3 | Monitoring e alertas ativos | P0 | concluído \| 2026-05-25 | UptimeRobot + CF notifications pendentes |
 | 4.4 | Data retention enforcement | P0 | concluído \| 2026-05-25 | post-mvp P0 |
 | 4.5 | Revisão legal/privacy | P0 | em_andamento \| 2026-05-25 | docs criados, revisão jurídica pendente |
-| 4.6 | Primeiro tenant real onboarded | P0 | pendente | — |
+| 4.6 | Primeiro organization real onboarded | P0 | pendente | — |
 | 4.7 | Workers for Platforms (se necessário) | P3 | pendente | post-mvp P3 |
 | 4.8 | Customer custom domains (Cloudflare for SaaS) | P3 | descartado | user: não se aplica |
 | 4.9 | Performance/load testing com k6 | P2 | pendente | post-mvp P2 |

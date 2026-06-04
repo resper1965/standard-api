@@ -7,7 +7,7 @@ export type BoardTranslatorInput = {
   technicalRiskDescription: string;
   riskCategory: "security" | "privacy" | "compliance" | "architecture";
   businessContext?: string;
-  tenantId: string;
+  organizationId: string;
 };
 
 export type BoardTranslatorOutput = {
@@ -38,7 +38,7 @@ const boardTranslatorSchema = {
 };
 
 export class BoardTranslatorUseCase {
-  constructor(private provider: LlmProvider, private defaultModel: string = "gpt-4o") {}
+  constructor(private provider: LlmProvider, private defaultModel: string = "gpt-4o-mini") {}
 
   async translate(input: BoardTranslatorInput): Promise<BoardTranslatorOutput> {
     const systemPrompt = `You are the virtual CISO/DPO of a large corporation, acting as a "Board Translator".

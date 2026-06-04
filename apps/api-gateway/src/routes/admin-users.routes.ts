@@ -5,7 +5,7 @@
  * Drizzle, replacing the better-auth admin plugin.
  *
  * All routes require the `platform_admin` flag on the authenticated user.
- * These are cross-tenant operations — no tenant_id scoping required.
+ * These are cross-tenant operations — no organization_id scoping required.
  *
  * The raw Drizzle DB client is accessed via `context.deps._db`, which is
  * an internal escape hatch. Domain-scoped data should always use proper
@@ -19,7 +19,7 @@ import type { RouteDefinition, RequestContext } from "../http";
 import { json, parseJson, routeParam } from "../http";
 import { requirePlatformAdmin } from "../middleware/rbac.middleware";
 import type { DbClient } from "../adapters/db";
-import { resolveTenantContext } from "../adapters/tenant-mapping";
+import { resolveOrganizationContext } from "../adapters/tenant-mapping";
 
 // ── Helpers ────────────────────────────────────────────────────────────
 
@@ -90,6 +90,7 @@ export const adminUsersRoutes: RouteDefinition[] = [
     method: "GET",
     path: "/api/v1/admin/users",
     protected: true,
+    permissions: ["admin:read"],
     requireActor: true,
     tenantRequired: false,
     handler: async (context) => {
@@ -139,6 +140,7 @@ export const adminUsersRoutes: RouteDefinition[] = [
     method: "PATCH",
     path: "/api/v1/admin/users/:userId",
     protected: true,
+    permissions: ["admin:write"],
     requireActor: true,
     tenantRequired: false,
     handler: async (context) => {
@@ -186,6 +188,7 @@ export const adminUsersRoutes: RouteDefinition[] = [
     method: "POST",
     path: "/api/v1/admin/users/:userId/ban",
     protected: true,
+    permissions: ["admin:create"],
     requireActor: true,
     tenantRequired: false,
     handler: async (context) => {
@@ -247,6 +250,7 @@ export const adminUsersRoutes: RouteDefinition[] = [
     method: "POST",
     path: "/api/v1/admin/users/:userId/unban",
     protected: true,
+    permissions: ["admin:create"],
     requireActor: true,
     tenantRequired: false,
     handler: async (context) => {
@@ -291,6 +295,7 @@ export const adminUsersRoutes: RouteDefinition[] = [
     method: "POST",
     path: "/api/v1/admin/users/:userId/approve",
     protected: true,
+    permissions: ["admin:approve"],
     requireActor: true,
     tenantRequired: false,
     handler: async (context) => {
@@ -354,10 +359,10 @@ export const adminUsersRoutes: RouteDefinition[] = [
 
       // 3. JIT resolve tenant context for the org (idempotent)
       try {
-        await resolveTenantContext(db, body.organization_id);
+        await resolveOrganizationContext(db, body.organization_id);
       } catch (err) {
         // Non-fatal — tenant may already exist
-        console.warn("[admin:approve] resolveTenantContext warning:", err);
+        console.warn("[admin:approve] resolveOrganizationContext warning:", err);
       }
 
       // 4. Activate the org in user’s sessions (if any exist)
@@ -383,6 +388,7 @@ export const adminUsersRoutes: RouteDefinition[] = [
     method: "POST",
     path: "/api/v1/admin/users/:userId/reject",
     protected: true,
+    permissions: ["admin:create"],
     requireActor: true,
     tenantRequired: false,
     handler: async (context) => {
@@ -427,6 +433,7 @@ export const adminUsersRoutes: RouteDefinition[] = [
     method: "GET",
     path: "/api/v1/admin/users/pending-count",
     protected: true,
+    permissions: ["admin:read"],
     requireActor: true,
     tenantRequired: false,
     handler: async (context) => {
@@ -450,6 +457,7 @@ export const adminUsersRoutes: RouteDefinition[] = [
     method: "DELETE",
     path: "/api/v1/admin/users/:userId",
     protected: true,
+    permissions: ["admin:delete"],
     requireActor: true,
     tenantRequired: false,
     handler: async (context) => {

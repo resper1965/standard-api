@@ -16,18 +16,17 @@ export type ArtifactVersion = {
 export type ArtifactVersionReadDependencies = {
   getArtifactVersion: (
     artifactVersionId: string,
-    tenantId: string,
+    organizationId: string,
     assessmentId: string
   ) => Promise<ArtifactVersion | null>;
   listArtifactVersions: (
     assessmentId: string,
-    tenantId: string,
+    organizationId: string,
     artifactType?: string
   ) => Promise<ArtifactVersion[]>;
 };
 
 export type ArtifactVersionReadArgs = {
-  tenant_id: string;
   organization_id: string;
   assessment_id: string;
   trace_id: string;
@@ -46,14 +45,14 @@ export function createArtifactVersionReadTool(deps: ArtifactVersionReadDependenc
       if (args.artifact_version_id) {
         const version = await deps.getArtifactVersion(
           args.artifact_version_id,
-          args.tenant_id,
+          args.organization_id,
           args.assessment_id
         );
         return { versions: version ? [version] : [], count: version ? 1 : 0 };
       }
       const versions = await deps.listArtifactVersions(
         args.assessment_id,
-        args.tenant_id,
+        args.organization_id,
         args.artifact_type
       );
       return { versions, count: versions.length };

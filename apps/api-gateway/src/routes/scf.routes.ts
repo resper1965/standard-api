@@ -65,6 +65,7 @@ export const scfRoutes: RouteDefinition[] = [
     method: "GET",
     path: "/api/v1/scf/controls/:controlId/linked-entities",
     protected: true,
+    permissions: ["scf:read"],
     handler: async ({ params, traceId }) => {
       const controlId = routeParam(params, "controlId").toUpperCase();
       
@@ -121,6 +122,7 @@ export const scfRoutes: RouteDefinition[] = [
     method: "GET",
     path: "/api/v1/scf/versions",
     protected: true,
+    permissions: ["scf:read"],
     handler: async ({ deps, traceId }) => {
       const versions = await deps.scf.versions.listVersions();
       return json({ data: versions.map(versionResponse), trace_id: traceId });
@@ -130,6 +132,7 @@ export const scfRoutes: RouteDefinition[] = [
     method: "GET",
     path: "/api/v1/scf/versions/latest",
     protected: true,
+    permissions: ["scf:read"],
     handler: async ({ deps, traceId }) => {
       const version = await deps.scf.versions.getLatestVersion();
       if (!version) throw new ApiError("NOT_FOUND", "SCF version not found.", 404);
@@ -140,6 +143,7 @@ export const scfRoutes: RouteDefinition[] = [
     method: "GET",
     path: "/api/v1/scf/versions/:scfVersionId",
     protected: true,
+    permissions: ["scf:read"],
     handler: async ({ deps, params, traceId }) => {
       const version = await deps.scf.versions.getVersion(routeParam(params, "scfVersionId"));
       if (!version) throw new ApiError("NOT_FOUND", "SCF version not found.", 404);
@@ -150,6 +154,7 @@ export const scfRoutes: RouteDefinition[] = [
     method: "GET",
     path: "/api/v1/scf/versions/:scfVersionId/domains",
     protected: true,
+    permissions: ["scf:read"],
     handler: async ({ deps, params, traceId }) => {
       const scfVersionId = routeParam(params, "scfVersionId");
       try {
@@ -165,6 +170,7 @@ export const scfRoutes: RouteDefinition[] = [
     method: "GET",
     path: "/api/v1/scf/versions/:scfVersionId/controls",
     protected: true,
+    permissions: ["scf:read"],
     handler: async ({ deps, params, request, traceId }) => {
       const scfVersionId = routeParam(params, "scfVersionId");
       const url = new URL(request.url);
@@ -187,6 +193,7 @@ export const scfRoutes: RouteDefinition[] = [
     method: "GET",
     path: "/api/v1/scf/controls/by-code/:controlCode",
     protected: true,
+    permissions: ["scf:read"],
     handler: async ({ deps, params, request, traceId }) => {
       const versionId = requireVersionQuery(request, "version");
       const control = await deps.scf.controls.getControlByCode(versionId, routeParam(params, "controlCode"));
@@ -198,6 +205,7 @@ export const scfRoutes: RouteDefinition[] = [
     method: "GET",
     path: "/api/v1/scf/frameworks",
     protected: true,
+    permissions: ["scf:read"],
     handler: async ({ deps, traceId }) => {
       const frameworks = await deps.scf.frameworks.listFrameworks();
       return json({ data: frameworks.map(frameworkResponse), trace_id: traceId });
@@ -207,6 +215,7 @@ export const scfRoutes: RouteDefinition[] = [
     method: "GET",
     path: "/api/v1/scf/frameworks/:frameworkId",
     protected: true,
+    permissions: ["scf:read"],
     handler: async ({ deps, params, traceId }) => {
       const framework = await deps.scf.frameworks.getFramework(routeParam(params, "frameworkId"));
       if (!framework) throw new ApiError("NOT_FOUND", "SCF framework not found.", 404);
@@ -217,6 +226,7 @@ export const scfRoutes: RouteDefinition[] = [
     method: "GET",
     path: "/api/v1/scf/controls/:controlId",
     protected: true,
+    permissions: ["scf:read"],
     handler: async ({ deps, params, traceId }) => {
       const control = await deps.scf.controls.getControl(routeParam(params, "controlId"));
       if (!control) throw new ApiError("NOT_FOUND", "SCF control not found.", 404);
@@ -227,6 +237,7 @@ export const scfRoutes: RouteDefinition[] = [
     method: "GET",
     path: "/api/v1/scf/frameworks/:frameworkId/requirements",
     protected: true,
+    permissions: ["scf:read"],
     handler: async ({ deps, params, traceId }) => {
       const frameworkId = routeParam(params, "frameworkId");
       const requirements = await deps.scf.frameworks.listRequirements(frameworkId);
@@ -237,6 +248,7 @@ export const scfRoutes: RouteDefinition[] = [
     method: "GET",
     path: "/api/v1/scf/requirements/:requirementId/mappings",
     protected: true,
+    permissions: ["scf:read"],
     handler: async ({ deps, params, request, traceId }) => {
       const scfVersionId = requireVersionQuery(request);
       const mappings = await deps.scf.mappings.getMappingsForRequirement(routeParam(params, "requirementId"), scfVersionId);
@@ -247,12 +259,13 @@ export const scfRoutes: RouteDefinition[] = [
     method: "GET",
     path: "/api/v1/scf/controls/:controlId/mappings",
     protected: true,
-    handler: async ({ deps, params, request, traceId, tenantId }) => {
+    permissions: ["scf:read"],
+    handler: async ({ deps, params, request, traceId, organizationId }) => {
       const controlId = routeParam(params, "controlId");
       const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(controlId);
 
       if (!isUuid) {
-        if (!tenantId) {
+        if (!organizationId) {
           throw new ApiError("TENANT_CONTEXT_REQUIRED", "Tenant context is required.", 400);
         }
 
@@ -298,6 +311,7 @@ export const scfRoutes: RouteDefinition[] = [
     method: "GET",
     path: "/api/v1/scf/frameworks/:frameworkId/coverage",
     protected: true,
+    permissions: ["scf:read"],
     handler: async ({ deps, params, request, traceId }) => {
       const scfVersionId = requireVersionQuery(request);
       const coverage = await deps.scf.mappings.getCoverageSummary(routeParam(params, "frameworkId"), scfVersionId);
@@ -308,6 +322,7 @@ export const scfRoutes: RouteDefinition[] = [
     method: "GET",
     path: "/api/v1/scf/cross-mapping/:frameworkA/:frameworkB",
     protected: true,
+    permissions: ["scf:read"],
     handler: async ({ deps, params, request, traceId }) => {
       const scfVersionId = requireVersionQuery(request);
       const fwAId = routeParam(params, "frameworkA");
@@ -390,6 +405,7 @@ export const scfRoutes: RouteDefinition[] = [
     method: "GET",
     path: "/api/v1/admin/scf/import-runs",
     protected: true,
+    permissions: ["scf:read"],
     requireActor: true,
     handler: async ({ deps, traceId }) => {
       const runs = await deps.scf.repository.listImportRuns();
@@ -400,6 +416,7 @@ export const scfRoutes: RouteDefinition[] = [
     method: "GET",
     path: "/api/v1/admin/scf/import-runs/:importRunId",
     protected: true,
+    permissions: ["scf:read"],
     requireActor: true,
     handler: async ({ deps, params, traceId }) => {
       const run = await deps.scf.repository.getImportRun(routeParam(params, "importRunId"));
@@ -411,6 +428,7 @@ export const scfRoutes: RouteDefinition[] = [
     method: "POST",
     path: "/api/v1/admin/scf/import-runs/:importRunId/dry-run",
     protected: true,
+    permissions: ["scf:import"],
     requireActor: true,
     handler: async ({ deps, params, request, traceId }) => {
       const source = await parseJson(request, ScfImportSourceSchema);

@@ -22,7 +22,7 @@ test("[SECURITY] Tenant A cannot read Tenant B assessment", async () => {
   const client = createTestClient();
 
   // Tenant A cria assessment
-  const { tenantId: tenantA, assessmentId } = await client.createAssessment();
+  const { organizationId: tenantA, assessmentId } = await client.createAssessment();
 
   // Tenant B tenta ler o assessment de Tenant A
   const tenantB = crypto.randomUUID();
@@ -55,7 +55,7 @@ test("[SECURITY] Tenant A cannot read Tenant B organization", async () => {
   const orgA = await client.send(
     "/api/v1/organizations",
     "POST",
-    { tenant_id: tenantA, slug: `org-a-${Date.now()}`, name: "Org A" },
+    { organization_id: tenantA, slug: `org-a-${Date.now()}`, name: "Org A" },
     { "x-standard-tenant-id": tenantA, "x-standard-actor-id": ids.actorId, "x-standard-mock-role": "owner" }
   );
   const orgAId = orgA.body.organization_id as string;
@@ -77,7 +77,7 @@ test("[SECURITY] Tenant A cannot read Tenant B organization", async () => {
 test("[SECURITY] Tenant isolation: documents scoped to assessment tenant", async () => {
   const client = createTestClient();
 
-  const { tenantId: tenantA, assessmentId } = await client.createAssessment(1);
+  const { organizationId: tenantA, assessmentId } = await client.createAssessment(1);
   const tenantB = crypto.randomUUID();
 
   // Upload documento em assessment do Tenant A
@@ -126,7 +126,7 @@ test("[SECURITY] Forged tenant header without actor is rejected", async () => {
     "/api/v1/assessments",
     "GET",
     undefined,
-    { "x-standard-tenant-id": ids.tenantId }
+    { "x-standard-tenant-id": ids.organizationId }
   );
   expect(result.response.status).toBe(401);
 });
@@ -204,7 +204,7 @@ test("[SECURITY] Empty body on POST assessment returns 400", async () => {
     "/api/v1/assessments",
     "POST",
     {},
-    { "x-standard-tenant-id": ids.tenantId, "x-standard-actor-id": ids.actorId }
+    { "x-standard-tenant-id": ids.organizationId, "x-standard-actor-id": ids.actorId }
   );
   expect(result.response.status).toBe(400);
   expect(result.body.error?.code).toBe("VALIDATION_ERROR");
@@ -212,7 +212,7 @@ test("[SECURITY] Empty body on POST assessment returns 400", async () => {
 
 test("[SECURITY] SQL injection string in assessment name is sanitized", async () => {
   const client = createTestClient();
-  const { tenantId, organizationId } = await client.createTenantOrg();
+  const { organizationId, organizationId } = await client.createTenantOrg();
   const result = await client.send(
     "/api/v1/assessments",
     "POST",
@@ -222,7 +222,7 @@ test("[SECURITY] SQL injection string in assessment name is sanitized", async ()
       scf_version_id: ids.scfVersionId,
       document_count: 0
     },
-    { "x-standard-tenant-id": tenantId, "x-standard-actor-id": ids.actorId }
+    { "x-standard-tenant-id": organizationId, "x-standard-actor-id": ids.actorId }
   );
   // Should either create (strings are stored safely by ORM) or reject (schema constraint)
   // Must NOT 500 or leak DB error details
@@ -241,7 +241,7 @@ test("[SECURITY] SQL injection string in assessment name is sanitized", async ()
 
 test("[SECURITY] XSS payload in assessment name does not execute (stored safely)", async () => {
   const client = createTestClient();
-  const { tenantId, organizationId } = await client.createTenantOrg();
+  const { organizationId, organizationId } = await client.createTenantOrg();
   const xssPayload = "<script>alert('xss')</script>";
   const result = await client.send(
     "/api/v1/assessments",
@@ -252,7 +252,7 @@ test("[SECURITY] XSS payload in assessment name does not execute (stored safely)
       scf_version_id: ids.scfVersionId,
       document_count: 0
     },
-    { "x-standard-tenant-id": tenantId, "x-standard-actor-id": ids.actorId }
+    { "x-standard-tenant-id": organizationId, "x-standard-actor-id": ids.actorId }
   );
   if (result.response.status === 500) {
     throw new Error(`XSS payload caused 500! ${JSON.stringify(result.body)}`);
@@ -270,14 +270,14 @@ test("[SECURITY] XSS payload in assessment name does not execute (stored safely)
 
 test("[SECURITY] Cannot approve non-existent approval gate (404 expected)", async () => {
   const client = createTestClient();
-  const { tenantId, assessmentId } = await client.createAssessment();
+  const { organizationId, assessmentId } = await client.createAssessment();
   const fakeApprovalId = crypto.randomUUID();
 
   const result = await client.send(
     `/api/v1/assessments/${assessmentId}/approvals/${fakeApprovalId}/approve`,
     "POST",
     { outcome: "approved", reason: "bypass attempt" },
-    { "x-standard-tenant-id": tenantId, "x-standard-actor-id": ids.actorId }
+    { "x-standard-tenant-id": organizationId, "x-standard-actor-id": ids.actorId }
   );
 
   if (result.response.status === 200) {
@@ -288,14 +288,14 @@ test("[SECURITY] Cannot approve non-existent approval gate (404 expected)", asyn
 
 test("[SECURITY] Gap analysis approval requires prior gap analysis existence", async () => {
   const client = createTestClient();
-  const { tenantId, assessmentId } = await client.createAssessment();
+  const { organizationId, assessmentId } = await client.createAssessment();
 
   // Tentar aprovar gap analysis sem ter executado gap analysis
   const result = await client.send(
     `/api/v1/assessments/${assessmentId}/gap-analysis/approve`,
     "POST",
     { outcome: "approved", reason: "skip everything" },
-    { "x-standard-tenant-id": tenantId, "x-standard-actor-id": ids.actorId }
+    { "x-standard-tenant-id": organizationId, "x-standard-actor-id": ids.actorId }
   );
 
   if (result.response.status === 200) {
@@ -312,9 +312,9 @@ test("[CONTRACT] Error responses always have the correct envelope shape", async 
   const client = createTestClient();
 
   const errorProbes = [
-    { path: "/api/v1/assessments/non-existent-uuid", method: "GET", headers: { "x-standard-tenant-id": ids.tenantId, "x-standard-actor-id": ids.actorId } },
+    { path: "/api/v1/assessments/non-existent-uuid", method: "GET", headers: { "x-standard-tenant-id": ids.organizationId, "x-standard-actor-id": ids.actorId } },
     { path: "/api/v1/assessments", method: "GET", headers: {} }, // 401
-    { path: "/api/v1/assessments", method: "POST", body: {}, headers: { "x-standard-tenant-id": ids.tenantId, "x-standard-actor-id": ids.actorId } }, // 400
+    { path: "/api/v1/assessments", method: "POST", body: {}, headers: { "x-standard-tenant-id": ids.organizationId, "x-standard-actor-id": ids.actorId } }, // 400
     { path: "/api/v1/nonexistent-route-404", method: "GET", headers: {} },
   ];
 
@@ -382,7 +382,7 @@ test("[PERFORMANCE] 50 concurrent assessment reads are all isolated and correct"
       "GET",
       undefined,
       {
-        "x-standard-tenant-id": tenant.tenantId,
+        "x-standard-tenant-id": tenant.organizationId,
         "x-standard-actor-id": ids.actorId
       }
     );
@@ -410,15 +410,15 @@ test("[PERFORMANCE] 50 concurrent assessment reads are all isolated and correct"
 
 test("[PERFORMANCE] 20 concurrent org creations in same tenant don't collide", async () => {
   const client = createTestClient();
-  const tenantId = crypto.randomUUID();
+  const organizationId = crypto.randomUUID();
 
   const results = await Promise.all(
     Array.from({ length: 20 }, (_, i) =>
       client.send(
         "/api/v1/organizations",
         "POST",
-        { tenant_id: tenantId, slug: `org-concurrent-${i}-${Date.now()}`, name: `Org ${i}` },
-        { "x-standard-tenant-id": tenantId, "x-standard-actor-id": ids.actorId }
+        { organization_id: organizationId, slug: `org-concurrent-${i}-${Date.now()}`, name: `Org ${i}` },
+        { "x-standard-tenant-id": organizationId, "x-standard-actor-id": ids.actorId }
       )
     )
   );
@@ -474,7 +474,7 @@ test("[PERFORMANCE] SCF catalog handles 30 concurrent requests without degradati
 
 test("[PERFORMANCE] System stability under burst read load (15 concurrent GETs)", async () => {
   const client = createTestClient();
-  const { tenantId } = await client.createTenantOrg();
+  const { organizationId } = await client.createTenantOrg();
 
   // Burst 15 concurrent GET /assessments (most common production read pattern)
   const burstResults = await Promise.all(
@@ -483,7 +483,7 @@ test("[PERFORMANCE] System stability under burst read load (15 concurrent GETs)"
         `/api/v1/assessments?page=${(i % 3) + 1}&limit=10`,
         "GET",
         undefined,
-        { "x-standard-tenant-id": tenantId, "x-standard-actor-id": ids.actorId }
+        { "x-standard-tenant-id": organizationId, "x-standard-actor-id": ids.actorId }
       )
     )
   );
@@ -516,13 +516,13 @@ test("[PERFORMANCE] System stability under burst read load (15 concurrent GETs)"
 
 test("[LIFECYCLE] Assessment starts in 'draft' state", async () => {
   const client = createTestClient();
-  const { tenantId, assessmentId } = await client.createAssessment();
+  const { organizationId, assessmentId } = await client.createAssessment();
 
   const result = await client.send(
     `/api/v1/assessments/${assessmentId}`,
     "GET",
     undefined,
-    { "x-standard-tenant-id": tenantId, "x-standard-actor-id": ids.actorId }
+    { "x-standard-tenant-id": organizationId, "x-standard-actor-id": ids.actorId }
   );
 
   expect(result.response.status).toBe(200);
@@ -534,14 +534,14 @@ test("[LIFECYCLE] Assessment starts in 'draft' state", async () => {
 
 test("[LIFECYCLE] Cannot skip lifecycle states (documents_ingested before documents_uploaded)", async () => {
   const client = createTestClient();
-  const { tenantId, assessmentId } = await client.createAssessment(0);
+  const { organizationId, assessmentId } = await client.createAssessment(0);
 
   // Tentar marcar como ingested sem ter feito upload
   const result = await client.send(
     `/api/v1/assessments/${assessmentId}/lifecycle`,
     "POST",
     { event: "documents_ingested", actor_id: ids.actorId },
-    { "x-standard-tenant-id": tenantId, "x-standard-actor-id": ids.actorId }
+    { "x-standard-tenant-id": organizationId, "x-standard-actor-id": ids.actorId }
   );
 
   // Deve ser rejeitado — transição inválida
@@ -632,14 +632,14 @@ test("[SCF] Blast radius for unknown control returns empty linked entities (not 
 
 test("[OBSERVABILITY] Every response on protected routes includes trace context", async () => {
   const client = createTestClient();
-  const { tenantId } = await client.createTenantOrg();
+  const { organizationId } = await client.createTenantOrg();
 
   const result = await client.send(
     "/api/v1/assessments",
     "GET",
     undefined,
     {
-      "x-standard-tenant-id": tenantId,
+      "x-standard-tenant-id": organizationId,
       "x-standard-actor-id": ids.actorId,
       "x-trace-id": "trace-observability-test-001"
     }
@@ -658,13 +658,13 @@ test("[OBSERVABILITY] Every response on protected routes includes trace context"
 
 test("[OBSERVABILITY] Audit log endpoint returns structured records", async () => {
   const client = createTestClient();
-  const { tenantId } = await client.createTenantOrg();
+  const { organizationId } = await client.createTenantOrg();
 
   const result = await client.send(
     "/api/v1/admin/audit-logs",
     "GET",
     undefined,
-    { "x-standard-tenant-id": tenantId, "x-standard-actor-id": ids.actorId }
+    { "x-standard-tenant-id": organizationId, "x-standard-actor-id": ids.actorId }
   );
 
   // Acceptable: 200 (with logs), 401 (requires platform admin), 403 (RBAC), 404 (different route path)
@@ -679,7 +679,7 @@ test("[OBSERVABILITY] Audit log endpoint returns structured records", async () =
 
 test("[CONSISTENCY] Duplicate assessment creation with same name in same org returns consistent result", async () => {
   const client = createTestClient();
-  const { tenantId, organizationId } = await client.createTenantOrg();
+  const { organizationId, organizationId } = await client.createTenantOrg();
 
   const assessmentBody = {
     organization_id: organizationId,
@@ -687,7 +687,7 @@ test("[CONSISTENCY] Duplicate assessment creation with same name in same org ret
     scf_version_id: ids.scfVersionId,
     document_count: 0
   };
-  const headers = { "x-standard-tenant-id": tenantId, "x-standard-actor-id": ids.actorId };
+  const headers = { "x-standard-tenant-id": organizationId, "x-standard-actor-id": ids.actorId };
 
   const first = await client.send("/api/v1/assessments", "POST", assessmentBody, headers);
   const second = await client.send("/api/v1/assessments", "POST", assessmentBody, headers);
@@ -710,7 +710,7 @@ test("[CONSISTENCY] Duplicate assessment creation with same name in same org ret
 
 test("[CONSISTENCY] UUID validation: malformed IDs return 400 not 500", async () => {
   const client = createTestClient();
-  const { tenantId } = await client.createTenantOrg();
+  const { organizationId } = await client.createTenantOrg();
 
   const malformedIds = [
     "not-a-uuid",
@@ -725,7 +725,7 @@ test("[CONSISTENCY] UUID validation: malformed IDs return 400 not 500", async ()
       `/api/v1/assessments/${encodeURIComponent(badId)}`,
       "GET",
       undefined,
-      { "x-standard-tenant-id": tenantId, "x-standard-actor-id": ids.actorId }
+      { "x-standard-tenant-id": organizationId, "x-standard-actor-id": ids.actorId }
     );
     if (result.response.status === 500) {
       throw new Error(`Malformed ID "${badId.slice(0, 30)}" caused 500 — must return 4xx`);
@@ -736,9 +736,9 @@ test("[CONSISTENCY] UUID validation: malformed IDs return 400 not 500", async ()
 
 test("[SECURITY] API Key lifecycle: create, list, and revoke works", async () => {
   const client = createTestClient();
-  const { tenantId, organizationId } = await client.createTenantOrg();
+  const { organizationId, organizationId } = await client.createTenantOrg();
   const headers = {
-    "x-standard-tenant-id": tenantId,
+    "x-standard-tenant-id": organizationId,
     "x-standard-actor-id": ids.actorId
   };
 

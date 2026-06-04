@@ -27,7 +27,7 @@ export type EvidenceClassificationInput = {
     retrievalScore: number;
   }>;
   regulatoryContext?: string;
-  tenantId: string;
+  organizationId: string;
 };
 
 export type EvidenceClassificationOutput = {
@@ -168,7 +168,7 @@ export class EvidenceClassificationPrompt {
     return generateStructuredOutputWithUsage<EvidenceClassificationOutput>({
       provider: this.provider,
       model: this.model,
-      tenantId: input.tenantId,
+      organizationId: input.organizationId,
       systemPrompt: SYSTEM_PROMPT,
       userPrompt,
       schemaName: "evidence_classification_result",

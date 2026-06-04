@@ -25,6 +25,7 @@ export const dataSubjectRoutes: RouteDefinition[] = [
     method: "GET",
     path: "/api/v1/me/data-export",
     protected: true,
+    permissions: ["privacy:read"],
     requireActor: true,
     openapi: {
       tags: ["Data Subject Rights"],
@@ -87,8 +88,8 @@ export const dataSubjectRoutes: RouteDefinition[] = [
       // Fetch real memberships from DB
       try {
         const activeOrgId = (context.session as any)?.session?.activeOrganizationId;
-        if (activeOrgId && context.tenantId) {
-          const realMemberships = await context.deps.members.listByOrganization(activeOrgId, context.tenantId);
+        if (activeOrgId && context.organizationId) {
+          const realMemberships = await context.deps.members.listByOrganization(activeOrgId);
           exportData.memberships = realMemberships.map(m => ({
             membership_id: m.membership_id,
             organization_id: m.organization_id,
@@ -106,7 +107,7 @@ export const dataSubjectRoutes: RouteDefinition[] = [
       // Audit the export request itself (LGPD requires this)
       await context.deps.audit.record("data_subject.export_requested", {
         actor_id: context.actorId!,
-        tenant_id: context.tenantId,
+        organization_id: context.organizationId,
         trace_id: context.traceId,
         export_scope: "personal_data",
       });
@@ -125,6 +126,7 @@ export const dataSubjectRoutes: RouteDefinition[] = [
     method: "DELETE",
     path: "/api/v1/me/account",
     protected: true,
+    permissions: ["privacy:delete"],
     requireActor: true,
     openapi: {
       tags: ["Data Subject Rights"],
@@ -165,7 +167,7 @@ export const dataSubjectRoutes: RouteDefinition[] = [
         email_redacted: userEmail
           ? `${userEmail.slice(0, 3)}***@${userEmail.split("@")[1]}`
           : null,
-        tenant_id: context.tenantId,
+        organization_id: context.organizationId,
         trace_id: context.traceId,
         note: "User-initiated deletion request. Hard-delete follows retention schedule (max 30d).",
       });

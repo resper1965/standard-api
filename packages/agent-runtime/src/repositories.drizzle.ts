@@ -30,7 +30,6 @@ export const createDrizzleAgentRunRepository = (db: AnyDrizzleClient): AgentRunR
 
     return {
       agent_run_id: record.id,
-      tenant_id: record.organizationId,
       organization_id: record.organizationId,
       assessment_id: record.assessmentId ?? "",
       agent_id: "knowledge_steward", // Mapping workaround
@@ -55,11 +54,10 @@ export const createDrizzleAgentRunRepository = (db: AnyDrizzleClient): AgentRunR
     }).where(sql`${agentRuns.id} = ${run.agent_run_id}`);
   },
 
-  async listByAssessment(assessmentId: string, tenantId: string) {
-    const records = await db.select().from(agentRuns).where(sql`${agentRuns.assessmentId} = ${assessmentId} AND ${agentRuns.organizationId} = ${tenantId}`);
+  async listByAssessment(assessmentId: string, organizationId: string) {
+    const records = await db.select().from(agentRuns).where(sql`${agentRuns.assessmentId} = ${assessmentId} AND ${agentRuns.organizationId} = ${organizationId}`);
     return records.map((record: any) => ({
       agent_run_id: record.id,
-      tenant_id: record.organizationId,
       organization_id: record.organizationId,
       assessment_id: record.assessmentId ?? "",
       agent_id: "knowledge_steward", // Mapping workaround
@@ -93,12 +91,11 @@ export const createDrizzleAgentToolCallRepository = (db: AnyDrizzleClient): Agen
     return input;
   },
 
-  async listByRun(agentRunId: string, tenantId: string) {
-    const records = await db.select().from(agentToolCalls).where(sql`${agentToolCalls.agentRunId} = ${agentRunId} AND ${agentToolCalls.organizationId} = ${tenantId}`);
+  async listByRun(agentRunId: string, organizationId: string) {
+    const records = await db.select().from(agentToolCalls).where(sql`${agentToolCalls.agentRunId} = ${agentRunId} AND ${agentToolCalls.organizationId} = ${organizationId}`);
     return records.map((record: any) => ({
       tool_call_id: record.id,
       agent_run_id: record.agentRunId,
-      tenant_id: record.organizationId,
       organization_id: record.organizationId,
       assessment_id: record.assessmentId ?? "",
       tool_name: record.toolName as never,

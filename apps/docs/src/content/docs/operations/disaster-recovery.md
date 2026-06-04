@@ -24,14 +24,14 @@ title: "Disaster Recovery Plan"
 1. **Detecção**: health check falha, Workers retornam 500
 2. **Mitigação**: ativar maintenance mode (se existir), comunicar
 3. **Restauração**: Neon point-in-time restore para branch nova
-4. **Validação**: smoke tests, integridade de tenants
+4. **Validação**: smoke tests, integridade de organizations
 5. **Pós-incidente**: postmortem obrigatório
 
 ### 2.2 Corrupção de R2 Bucket
 1. **Detecção**: downloads falhando, hashes divergentes
 2. **Mitigação**: bloquear novos uploads até diagnóstico
 3. **Restauração**: R2 versioning (restaurar versão anterior) ou backup externo
-4. **Validação**: verificar documentos de tenants afetados
+4. **Validação**: verificar documentos de organizations afetados
 
 ### 2.3 Cloudflare Worker Indisponível
 1. **Detecção**: Cloudflare status page ou health check externo
@@ -68,5 +68,5 @@ title: "Disaster Recovery Plan"
 ## 5. Comunicação
 
 - **Interna**: Slack/Teams/Email conforme definido pelo Incident Commander
-- **Externa** (tenants): via email ou status page (quando existir)
+- **Externa** (organizations): via email ou status page (quando existir)
 - **Registro**: `docs/operations/postmortems/`

@@ -6,14 +6,12 @@ test("Search não retorna resultado de outro tenant", async () => {
   const deps = await createKbFixture();
   const indexing = new KbIndexingService(deps);
   const indexResult = await indexing.indexAssessment({
-    tenantId: ids.tenantId,
     organizationId: ids.organizationId,
     assessmentId: ids.assessmentId,
     traceId: "trace-test"
   });
-  const job = await deps.repositories.embeddingJobs.getJob(indexResult.queued_job_ids[0]!, ids.tenantId);
+  const job = await deps.repositories.embeddingJobs.getJob(indexResult.queued_job_ids[0]!, ids.organizationId);
   await processKbEmbeddingJob({
-    tenant_id: ids.tenantId,
     organization_id: ids.organizationId,
     assessment_id: ids.assessmentId,
     document_id: ids.documentId,
@@ -28,8 +26,7 @@ test("Search não retorna resultado de outro tenant", async () => {
 
   const search = new KbSearchService(deps);
   const result = await search.semanticSearch({
-    tenantId: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
-    organizationId: ids.organizationId,
+    organizationId: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
     assessmentId: ids.assessmentId,
     traceId: "trace-test"
   }, {

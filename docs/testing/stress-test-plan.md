@@ -6,7 +6,7 @@
 
 This document defines the stress testing strategy for the Standard platform. Tests will validate system behavior under sustained load, identify bottlenecks, and establish performance baselines.
 
-**Status**: Planned (P2) — to be executed before first production tenant onboarding.
+**Status**: Planned (P2) — to be executed before first production organization onboarding.
 
 ---
 
@@ -70,7 +70,7 @@ SLO:
 **Objective**: Verify KV-backed rate limiting under load
 
 ```
-Target: 200 req/s from single tenant
+Target: 200 req/s from single organization
 Expected: 120 req/s allowed, remainder rejected with 429
 Validation:
   - 429 responses contain proper headers
@@ -78,16 +78,16 @@ Validation:
   - No request leakage above limit
 ```
 
-### Scenario 5: Multi-Tenant Isolation Under Load
-**Objective**: Verify tenant isolation under concurrent multi-tenant traffic
+### Scenario 5: Multi-Organization Isolation Under Load
+**Objective**: Verify organization isolation under concurrent multi-organization traffic
 
 ```
-Tenants: 10 concurrent
-Each tenant: 50 req/s
+Organizations: 10 concurrent
+Each organization: 50 req/s
 Validation:
-  - Zero cross-tenant data leakage
-  - Rate limits independent per tenant
-  - Response times consistent across tenants
+  - Zero cross-organization data leakage
+  - Rate limits independent per organization
+  - Response times consistent across organizations
 ```
 
 ---

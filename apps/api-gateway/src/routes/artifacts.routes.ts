@@ -29,17 +29,17 @@ export const artifactsRoutes: RouteDefinition[] = [
     path: "/api/v1/assessments/:assessmentId/artifacts/:artifactType/versions",
     protected: true,
     requireActor: true,
-    handler: async ({ request, deps, params, tenantId, actorId, traceId }) => {
+    permissions: ["artifact:create"],
+    handler: async ({ request, deps, params, organizationId, actorId, traceId }) => {
       const artifactType = parseArtifactType(routeParam(params, "artifactType"));
       const body = await parseJson(request, CreateArtifactVersionRequestSchema);
-      const tenantAssessmentsDb = deps.assessments.withTenant(tenantId!);
+      const tenantAssessmentsDb = deps.assessments.withOrganization(organizationId!);
       const assessment = await tenantAssessmentsDb.get(routeParam(params, "assessmentId"));
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
 
-      const tenantArtifactsDb = deps.artifacts.withTenant(tenantId!);
+      const tenantArtifactsDb = deps.artifacts.withOrganization(organizationId!);
       const version = await tenantArtifactsDb.create({
         id: newId(),
-        tenantId: assessment.tenant_id,
         organizationId: assessment.organization_id,
         assessmentId: assessment.assessment_id,
         artifactType,
@@ -56,13 +56,14 @@ export const artifactsRoutes: RouteDefinition[] = [
     method: "GET",
     path: "/api/v1/assessments/:assessmentId/artifacts/:artifactType/versions",
     protected: true,
-    handler: async ({ deps, params, tenantId, traceId }) => {
+    permissions: ["artifact:read"],
+    handler: async ({ deps, params, organizationId, traceId }) => {
       const artifactType = parseArtifactType(routeParam(params, "artifactType"));
       const assessmentId = routeParam(params, "assessmentId");
-      const tenantAssessmentsDb = deps.assessments.withTenant(tenantId!);
+      const tenantAssessmentsDb = deps.assessments.withOrganization(organizationId!);
       const assessment = await tenantAssessmentsDb.get(assessmentId);
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
-      const tenantArtifactsDb = deps.artifacts.withTenant(tenantId!);
+      const tenantArtifactsDb = deps.artifacts.withOrganization(organizationId!);
       const versions = await tenantArtifactsDb.listByAssessment(assessmentId, artifactType);
       return json({ data: versions.map(artifactVersionResponse), trace_id: traceId });
     }
@@ -71,8 +72,9 @@ export const artifactsRoutes: RouteDefinition[] = [
     method: "GET",
     path: "/api/v1/artifacts/:artifactVersionId",
     protected: true,
-    handler: async ({ deps, params, tenantId }) => {
-      const tenantArtifactsDb = deps.artifacts.withTenant(tenantId!);
+    permissions: ["artifact:read"],
+    handler: async ({ deps, params, organizationId }) => {
+      const tenantArtifactsDb = deps.artifacts.withOrganization(organizationId!);
       const version = await tenantArtifactsDb.get(routeParam(params, "artifactVersionId"));
       if (!version) throw new ApiError("NOT_FOUND", "Artifact version not found.", 404);
       return json(artifactVersionResponse(version));
@@ -83,13 +85,13 @@ export const artifactsRoutes: RouteDefinition[] = [
     path: "/api/v1/artifacts/:artifactVersionId/submit-review",
     protected: true,
     requireActor: true,
-    handler: async ({ request, deps, params, tenantId, traceId }) => {
+    permissions: ["artifact:update"],
+    handler: async ({ request, deps, params, organizationId, traceId }) => {
       await parseJson(request, SubmitArtifactReviewRequestSchema);
-      const tenantArtifactsDb = deps.artifacts.withTenant(tenantId!);
+      const tenantArtifactsDb = deps.artifacts.withOrganization(organizationId!);
       const version = await tenantArtifactsDb.get(routeParam(params, "artifactVersionId"));
       if (!version) throw new ApiError("NOT_FOUND", "Artifact version not found.", 404);
       const updated = markArtifactUnderReview(version, {
-        tenantId: version.tenantId,
         organizationId: version.organizationId,
         assessmentId: version.assessmentId,
         reason: "submit artifact review",
@@ -105,13 +107,14 @@ export const artifactsRoutes: RouteDefinition[] = [
     path: "/api/v1/artifacts/:artifactVersionId/approve",
     protected: true,
     requireActor: true,
-    handler: async ({ request, deps, params, tenantId, actorId, traceId }) => {
+    permissions: ["artifact:approve"],
+    handler: async ({ request, deps, params, organizationId, actorId, traceId }) => {
       const body = await parseJson(request, ApproveArtifactRequestSchema);
-      const tenantArtifactsDb = deps.artifacts.withTenant(tenantId!);
+      const tenantArtifactsDb = deps.artifacts.withOrganization(organizationId!);
       const version = await tenantArtifactsDb.get(routeParam(params, "artifactVersionId"));
       if (!version) throw new ApiError("NOT_FOUND", "Artifact version not found.", 404);
 
-      const tenantApprovalsDb = deps.approvals.withTenant(tenantId!);
+      const tenantApprovalsDb = deps.approvals.withOrganization(organizationId!);
       const approvalEvent = body.approval_id
         ? await tenantApprovalsDb.getForGate(body.approval_id, body.gate)
         : {
@@ -139,13 +142,13 @@ export const artifactsRoutes: RouteDefinition[] = [
     path: "/api/v1/artifacts/:artifactVersionId/supersede",
     protected: true,
     requireActor: true,
-    handler: async ({ request, deps, params, tenantId, actorId, traceId }) => {
+    permissions: ["artifact:create"],
+    handler: async ({ request, deps, params, organizationId, actorId, traceId }) => {
       await parseJson(request, SupersedeArtifactRequestSchema);
-      const tenantArtifactsDb = deps.artifacts.withTenant(tenantId!);
+      const tenantArtifactsDb = deps.artifacts.withOrganization(organizationId!);
       const version = await tenantArtifactsDb.get(routeParam(params, "artifactVersionId"));
       if (!version) throw new ApiError("NOT_FOUND", "Artifact version not found.", 404);
       const next = createNextArtifactVersion(version, {
-        tenantId: version.tenantId,
         organizationId: version.organizationId,
         assessmentId: version.assessmentId,
         actorId: actorId!,

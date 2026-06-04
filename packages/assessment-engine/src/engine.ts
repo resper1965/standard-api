@@ -6,15 +6,15 @@ import type { AssessmentSnapshot, TransitionContext, TransitionResult } from "./
 const assertTenantContext = (assessment: AssessmentSnapshot, context: TransitionContext): void => {
   const matches =
     assessment.id === context.assessmentId &&
-    assessment.tenantId === context.tenantId &&
+    assessment.organizationId === context.organizationId &&
     assessment.organizationId === context.organizationId;
 
   if (!matches) {
     throw new AssessmentEngineError("TENANT_CONTEXT_MISMATCH", "Transition context does not match assessment tenancy.", {
       assessmentId: assessment.id,
       contextAssessmentId: context.assessmentId,
-      tenantId: assessment.tenantId,
-      contextTenantId: context.tenantId
+      organizationId: assessment.organizationId,
+      contextTenantId: context.organizationId
     });
   }
 };
@@ -110,7 +110,6 @@ export const executeTransition = (
   }
 
   const event = {
-    tenantId: context.tenantId,
     organizationId: context.organizationId,
     assessmentId: context.assessmentId,
     previousState: assessment.state,

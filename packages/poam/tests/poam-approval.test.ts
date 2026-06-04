@@ -34,7 +34,7 @@ test("approval valido marca versao approved", async () => {
 test("POA&M approved é imutável", async () => {
   const { poam, submitted } = await createReviewReadyPoam();
   const approved = await new PoamApprovalService(poam).approvePoam(submitted.poam_version_id, { approval_event_id: ids.approvalId }, context);
-  const [item] = await poam.repositories.items.listByVersion(approved.poam_version_id, context.tenantId);
+  const [item] = await poam.repositories.items.listByVersion(approved.poam_version_id, context.organizationId);
   await expectRejects(
     () => new PoamReviewService(poam).updatePoamItem(item!.poam_item_id, { corrective_action: "Updated action" }, context),
     "POAM_IMMUTABLE"

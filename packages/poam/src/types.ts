@@ -39,7 +39,6 @@ export type {
 };
 
 export type PoamContext = {
-  tenantId: string;
   organizationId: string;
   assessmentId: string;
   actorId?: string;
@@ -59,8 +58,8 @@ export type MaturityScoreReference = {
 };
 
 export type PoamMaturityProvider = {
-  findApprovedOrDraftByAssessment(assessmentId: string, tenantId: string): Promise<MaturityVersionReference | null>;
-  findScoreByControl(maturityAssessmentVersionId: string, scfControlId: string, tenantId: string): Promise<MaturityScoreReference | null>;
+  findApprovedOrDraftByAssessment(assessmentId: string, organizationId: string): Promise<MaturityVersionReference | null>;
+  findScoreByControl(maturityAssessmentVersionId: string, scfControlId: string, organizationId: string): Promise<MaturityScoreReference | null>;
 };
 
 export interface TenantScopedPoamVersionRepository {
@@ -73,9 +72,9 @@ export interface TenantScopedPoamVersionRepository {
 export type PoamVersionRepository = {
   save(version: PoamVersionResponse): Promise<void>;
   update(version: PoamVersionResponse): Promise<void>;
-  get(poamVersionId: string, tenantId: string): Promise<PoamVersionResponse | null>;
-  listByAssessment(assessmentId: string, tenantId: string): Promise<PoamVersionResponse[]>;
-  withTenant(tenantId: string): TenantScopedPoamVersionRepository;
+  get(poamVersionId: string, organizationId: string): Promise<PoamVersionResponse | null>;
+  listByAssessment(assessmentId: string, organizationId: string): Promise<PoamVersionResponse[]>;
+  withOrganization(organizationId: string): TenantScopedPoamVersionRepository;
 };
 
 export type PoamItemFilters = {
@@ -97,9 +96,9 @@ export interface TenantScopedPoamItemRepository {
 export type PoamItemRepository = {
   saveMany(items: PoamItemResponse[]): Promise<void>;
   update(item: PoamItemResponse): Promise<void>;
-  get(poamItemId: string, tenantId: string): Promise<PoamItemResponse | null>;
-  listByVersion(poamVersionId: string, tenantId: string, filters?: PoamItemFilters): Promise<PoamItemResponse[]>;
-  withTenant(tenantId: string): TenantScopedPoamItemRepository;
+  get(poamItemId: string, organizationId: string): Promise<PoamItemResponse | null>;
+  listByVersion(poamVersionId: string, organizationId: string, filters?: PoamItemFilters): Promise<PoamItemResponse[]>;
+  withOrganization(organizationId: string): TenantScopedPoamItemRepository;
 };
 
 export interface TenantScopedPoamMilestoneRepository {
@@ -114,9 +113,9 @@ export type PoamMilestoneRepository = {
   save(milestone: PoamMilestoneResponse): Promise<void>;
   saveMany(milestones: PoamMilestoneResponse[]): Promise<void>;
   update(milestone: PoamMilestoneResponse): Promise<void>;
-  get(milestoneId: string, tenantId: string): Promise<PoamMilestoneResponse | null>;
-  listByItem(poamItemId: string, tenantId: string): Promise<PoamMilestoneResponse[]>;
-  withTenant(tenantId: string): TenantScopedPoamMilestoneRepository;
+  get(milestoneId: string, organizationId: string): Promise<PoamMilestoneResponse | null>;
+  listByItem(poamItemId: string, organizationId: string): Promise<PoamMilestoneResponse[]>;
+  withOrganization(organizationId: string): TenantScopedPoamMilestoneRepository;
 };
 
 export interface TenantScopedPoamDependencyRepository {
@@ -128,8 +127,8 @@ export interface TenantScopedPoamDependencyRepository {
 export type PoamDependencyRepository = {
   save(dependency: PoamDependencyResponse): Promise<void>;
   saveMany(dependencies: PoamDependencyResponse[]): Promise<void>;
-  listByItem(poamItemId: string, tenantId: string): Promise<PoamDependencyResponse[]>;
-  withTenant(tenantId: string): TenantScopedPoamDependencyRepository;
+  listByItem(poamItemId: string, organizationId: string): Promise<PoamDependencyResponse[]>;
+  withOrganization(organizationId: string): TenantScopedPoamDependencyRepository;
 };
 
 export type PoamRepositories = {

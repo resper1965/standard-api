@@ -12,7 +12,7 @@ import type { ScfRepository } from "@standard/scf-core";
 // ─── Privacy Context ────────────────────────────────────────────────
 
 export type PrivacyContext = {
-  tenantId: string;
+  organizationId: string;
   actorId?: string | undefined;
   traceId: string;
 };
@@ -30,46 +30,46 @@ export type PrivacyActivityFilters = {
 
 export type PrivacyActivityRepository = {
   save(activity: PrivacyActivityResponse): Promise<void>;
-  get(id: string, tenantId: string): Promise<PrivacyActivityResponse | null>;
-  list(tenantId: string, filters?: PrivacyActivityFilters): Promise<PrivacyActivityResponse[]>;
+  get(id: string, organizationId: string): Promise<PrivacyActivityResponse | null>;
+  list(organizationId: string, filters?: PrivacyActivityFilters): Promise<PrivacyActivityResponse[]>;
   update(activity: PrivacyActivityResponse): Promise<void>;
-  softDelete(id: string, tenantId: string): Promise<void>;
+  softDelete(id: string, organizationId: string): Promise<void>;
 };
 
 export type PrivacyDataSubjectRepository = {
   saveMany(subjects: PrivacyDataSubjectResponse[]): Promise<void>;
-  listByActivity(activityId: string, tenantId: string): Promise<PrivacyDataSubjectResponse[]>;
-  remove(id: string, tenantId: string): Promise<void>;
+  listByActivity(activityId: string, organizationId: string): Promise<PrivacyDataSubjectResponse[]>;
+  remove(id: string, organizationId: string): Promise<void>;
 };
 
 export type PrivacyDataCategoryRepository = {
   saveMany(categories: PrivacyDataCategoryResponse[]): Promise<void>;
-  listByActivity(activityId: string, tenantId: string): Promise<PrivacyDataCategoryResponse[]>;
-  remove(id: string, tenantId: string): Promise<void>;
+  listByActivity(activityId: string, organizationId: string): Promise<PrivacyDataCategoryResponse[]>;
+  remove(id: string, organizationId: string): Promise<void>;
 };
 
 export type PrivacyThirdPartyRepository = {
   saveMany(parties: PrivacyThirdPartyResponse[]): Promise<void>;
-  listByActivity(activityId: string, tenantId: string): Promise<PrivacyThirdPartyResponse[]>;
-  remove(id: string, tenantId: string): Promise<void>;
+  listByActivity(activityId: string, organizationId: string): Promise<PrivacyThirdPartyResponse[]>;
+  remove(id: string, organizationId: string): Promise<void>;
 };
 
 export type PrivacyScreeningRepository = {
   save(screening: PrivacyScreeningResponse): Promise<void>;
-  listByActivity(activityId: string, tenantId: string): Promise<PrivacyScreeningResponse[]>;
+  listByActivity(activityId: string, organizationId: string): Promise<PrivacyScreeningResponse[]>;
 };
 
 export type PrivacyFieldReviewRepository = {
   save(review: PrivacyFieldReviewResponse): Promise<void>;
-  listByActivity(activityId: string, tenantId: string): Promise<PrivacyFieldReviewResponse[]>;
-  get(id: string, tenantId: string): Promise<PrivacyFieldReviewResponse | null>;
+  listByActivity(activityId: string, organizationId: string): Promise<PrivacyFieldReviewResponse[]>;
+  get(id: string, organizationId: string): Promise<PrivacyFieldReviewResponse | null>;
   update(review: PrivacyFieldReviewResponse): Promise<void>;
 };
 
 export type PrivacyScfControlRepository = {
   saveMany(controls: PrivacyScfControlResponse[]): Promise<void>;
-  listByActivity(activityId: string, tenantId: string): Promise<PrivacyScfControlResponse[]>;
-  remove(id: string, tenantId: string): Promise<void>;
+  listByActivity(activityId: string, organizationId: string): Promise<PrivacyScfControlResponse[]>;
+  remove(id: string, organizationId: string): Promise<void>;
 };
 
 export type PrivacyRepositories = {

@@ -36,7 +36,7 @@ Atualize arquivos em `evals/golden` apenas quando:
 
 - a mudança funcional for intencional;
 - a nova saída continuar sintética;
-- a mudança preservar tenant isolation, approval gates e traceability;
+- a mudança preservar organization isolation, approval gates e traceability;
 - a revisão explicar o impacto no lifecycle.
 
 ## Quando Atualizar Golden Outputs
@@ -49,12 +49,12 @@ Atualizar quando:
 
 Não atualizar para mascarar regressão.
 
-## Investigar Falha de Tenant Isolation
+## Investigar Falha de Organization Isolation
 
-1. Identifique tenant do request, body e recurso.
-2. Verifique `x-standard-tenant-id`.
+1. Identifique organization do request, body e recurso.
+2. Verifique `x-standard-organization-id`.
 3. Verifique filtros de repository/service.
-4. Procure security events `tenant_context_mismatch` ou `cross_tenant_access_blocked`.
+4. Procure security events `organization_context_mismatch` ou `cross_tenant_access_blocked`.
 5. Adicione teste negativo antes de corrigir.
 
 ## Investigar Falha de Schema Validation
@@ -62,7 +62,7 @@ Não atualizar para mascarar regressão.
 1. Leia o erro Zod.
 2. Confirme se o teste ou schema está errado.
 3. Não afrouxe schema sem justificar impacto.
-4. Preserve `tenant_id`, `organization_id`, `assessment_id` e `trace_id`.
+4. Preserve `organization_id`, `organization_id`, `assessment_id` e `trace_id`.
 
 ## Investigar Falha de Guardrail
 
@@ -93,7 +93,7 @@ Cloudflare real e LLM real ficam fora do CI principal. Use somente com fixtures 
 
 - CI verde.
 - Smoke tests de API planejados.
-- Testes de tenant isolation e approval gates verdes.
+- Testes de organization isolation e approval gates verdes.
 - Golden outputs revisados.
 - Runbook atualizado.
 - Testes opcionais Cloudflare executados em staging quando aplicável.

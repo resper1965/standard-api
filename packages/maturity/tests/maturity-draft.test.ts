@@ -3,13 +3,12 @@ import { createMaturityDraft } from "../src";
 import type { MaturityContext, MaturityDependencies } from "../src/types";
 
 const ids = {
-  tenantId: "11111111-1111-4111-8111-111111111111",
+  organizationId: "11111111-1111-4111-8111-111111111111",
   organizationId: "22222222-2222-4222-8222-222222222222",
   assessmentId: "33333333-3333-4333-8333-333333333333"
 };
 
 const context = (): MaturityContext => ({
-  tenantId: ids.tenantId,
   organizationId: ids.organizationId,
   assessmentId: ids.assessmentId,
   traceId: "trace-test-0001"
@@ -34,11 +33,11 @@ test("createMaturityDraft calcula maturidade dinamicamente baseado nos status e 
         async listByVersion() { return []; }
       }
     },
-    async getApprovedGapAnalysis(assessmentId, tenantId) {
+    async getApprovedGapAnalysis(assessmentId, organizationId) {
       return {
         version: {
           gap_analysis_version_id: "gap-ver-id",
-          tenant_id: tenantId,
+          organization_id: organizationId,
           organization_id: ids.organizationId,
           assessment_id: assessmentId,
           version_number: 1,
@@ -53,7 +52,7 @@ test("createMaturityDraft calcula maturidade dinamicamente baseado nos status e 
         findings: [
           {
             gap_finding_id: "find-1",
-            tenant_id: tenantId,
+            organization_id: organizationId,
             organization_id: ids.organizationId,
             assessment_id: assessmentId,
             gap_analysis_version_id: "gap-ver-id",
@@ -75,7 +74,7 @@ test("createMaturityDraft calcula maturidade dinamicamente baseado nos status e 
           },
           {
             gap_finding_id: "find-2",
-            tenant_id: tenantId,
+            organization_id: organizationId,
             organization_id: ids.organizationId,
             assessment_id: assessmentId,
             gap_analysis_version_id: "gap-ver-id",
@@ -97,7 +96,7 @@ test("createMaturityDraft calcula maturidade dinamicamente baseado nos status e 
           },
           {
             gap_finding_id: "find-3",
-            tenant_id: tenantId,
+            organization_id: organizationId,
             organization_id: ids.organizationId,
             assessment_id: assessmentId,
             gap_analysis_version_id: "gap-ver-id",

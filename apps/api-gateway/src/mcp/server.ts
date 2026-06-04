@@ -560,9 +560,9 @@ export async function dispatchMcpTool(
 
   // 2. Validate assessment_id if supplied (ensuring organization alignment)
   const argAssessmentId = (args["assessment_id"] ?? args["assessmentId"]) as string | undefined;
-  if (argAssessmentId && ctx.tenantId) {
+  if (argAssessmentId && ctx.organizationId) {
     try {
-      const assessment = await ctx.deps.assessments.get(argAssessmentId, ctx.tenantId);
+      const assessment = await ctx.deps.assessments.get(argAssessmentId, ctx.organizationId);
       if (!assessment) {
         return {
           content: [{ type: "text", text: `Assessment ${argAssessmentId} not found.` }],

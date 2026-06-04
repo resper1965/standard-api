@@ -2,7 +2,6 @@ import { createInMemoryDocumentIngestionDependencies } from "@standard/document-
 import { createInMemoryKbDependencies } from "../src";
 
 export const ids = {
-  tenantId: "11111111-1111-4111-8111-111111111111",
   organizationId: "22222222-2222-4222-8222-222222222222",
   assessmentId: "33333333-3333-4333-8333-333333333333",
   documentId: "44444444-4444-4444-8444-444444444444",
@@ -14,7 +13,6 @@ export const createKbFixture = async () => {
   const documentIngestion = createInMemoryDocumentIngestionDependencies();
   await documentIngestion.repositories.documents.saveDocument({
     document_id: ids.documentId,
-    tenant_id: ids.tenantId,
     organization_id: ids.organizationId,
     assessment_id: ids.assessmentId,
     original_filename: "synthetic-policy.txt",
@@ -39,7 +37,6 @@ export const createKbFixture = async () => {
   await documentIngestion.repositories.chunks.saveChunks([
     {
       chunk_id: ids.chunkId,
-      tenant_id: ids.tenantId,
       organization_id: ids.organizationId,
       assessment_id: ids.assessmentId,
       document_id: ids.documentId,

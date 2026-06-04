@@ -6,7 +6,7 @@ export const AGENT_VERSION_VENDOR = "1.0.0";
 export type VendorScannerInput = {
   contractExcerpt: string;
   vendorName: string;
-  tenantId: string;
+  organizationId: string;
 };
 
 export type VendorScannerOutput = {

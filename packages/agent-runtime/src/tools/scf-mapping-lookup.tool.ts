@@ -20,7 +20,6 @@ export type ScfMappingLookupDependencies = {
 };
 
 export type ScfMappingLookupArgs = {
-  tenant_id: string;
   organization_id: string;
   assessment_id: string;
   trace_id: string;

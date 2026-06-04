@@ -44,13 +44,13 @@ Restam 4 itens P1 na Fase 2, todos de hardening: anti-malware, SCF importer hard
 
 ### 2.9 — Advanced evals (P1)
 
-**Estado atual**: 7 evals de agentes com `MockLLMProvider`, guardrails e golden outputs. Métricas: schema_pass_rate, guardrail_pass_rate, hallucinated mappings, approval bypass, tenant violations.
+**Estado atual**: 7 evals de agentes com `MockLLMProvider`, guardrails e golden outputs. Métricas: schema_pass_rate, guardrail_pass_rate, hallucinated mappings, approval bypass, organization violations.
 
 **Plano**:
 1. Adicionar 2 evals de rejeição/rework: testar que rejection cria nova versão com rastreabilidade
 2. Adicionar 1 eval de maturity classification: verificar regras CMMI contra golden dataset
 3. Adicionar eval de prompt injection: input com instruções maliciosas deve ser rejeitado/sanitizado
-4. Adicionar eval de cross-tenant: verificar que agente não acessa dados de outro tenant
+4. Adicionar eval de cross-organization: verificar que agente não acessa dados de outro organization
 5. Expandir golden outputs com cenários de borda (absent evidence, N/A controls, conflicting scores)
 
 **Risco**: Nenhum bloqueador. Expansão do framework existente.
@@ -63,11 +63,11 @@ Restam 4 itens P1 na Fase 2, todos de hardening: anti-malware, SCF importer hard
 
 **Plano**:
 1. Criar `packages/observability/src/alerts.ts` com regras de alerta em código:
-   - `TENANT_MISMATCH`: evento de segurança com tenant_id inesperado
+   - `TENANT_MISMATCH`: evento de segurança com organization_id inesperado
    - `APPROVAL_BYPASS_ATTEMPT`: tentativa de aprovação sem permissão
    - `DLQ_THRESHOLD`: fila de dead-letter acima do limiar
    - `ERROR_RATE_SPIKE`: taxa de 5xx acima de 5% em janela de 5 min
-   - `COST_ANOMALY`: usage por tenant acima de 2x média
+   - `COST_ANOMALY`: usage por organization acima de 2x média
 2. Registrar alertas como `security_events` com severity e metadata
 3. Estruturar para futura integração com webhook/Slack/email (interface `AlertSink`)
 4. Adicionar health check endpoint `/api/v1/health/alerts` que retorna alertas ativos

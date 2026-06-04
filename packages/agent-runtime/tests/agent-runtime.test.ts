@@ -6,7 +6,6 @@ import {
 } from "../src/index";
 import { expect, test } from "./test-kit";
 
-const tenantId = "11111111-1111-4111-8111-111111111111";
 const organizationId = "22222222-2222-4222-8222-222222222222";
 const assessmentId = "33333333-3333-4333-8333-333333333333";
 const frameworkId = "44444444-4444-4444-8444-444444444444";
@@ -14,7 +13,6 @@ const scfVersionId = "55555555-5555-4555-8555-555555555555";
 const actorId = "66666666-6666-4666-8666-666666666666";
 
 const context = {
-  tenant_id: tenantId,
   organization_id: organizationId,
   assessment_id: assessmentId,
   framework_id: frameworkId,
@@ -36,7 +34,6 @@ test("tool contracts include risk classification and require tenant-scoped input
   expect(kbSearch).toBeDefined();
   expect(kbSearch!.risk_level).toBe("medium");
   const parsed = kbSearch!.input_schema.safeParse({
-    tenant_id: tenantId,
     organization_id: organizationId,
     assessment_id: assessmentId,
     framework_id: frameworkId,
@@ -60,7 +57,7 @@ test("starting an agent run records hashes, model metadata and traceability", as
   });
 
   expect(run.status).toBe("running");
-  expect(run.tenant_id).toBe(tenantId);
+  expect(run.organization_id).toBe(organizationId);
   expect(run.assessment_id).toBe(assessmentId);
   expect(run.input_hash.startsWith("sha256:")).toBe(true);
   expect(run.model).toBe("mock-model");
@@ -81,7 +78,6 @@ test("runtime rejects tools that are not allowed for an agent", async () => {
     await runtime.invokeTool(run.agent_run_id, {
       tool_name: "approval_event_create",
       input: {
-        tenant_id: tenantId,
         organization_id: organizationId,
         assessment_id: assessmentId,
         framework_id: frameworkId,

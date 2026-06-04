@@ -6,35 +6,35 @@ title: "Standard API: Authentication & Identity Guide"
 
 The Standard API is built on a highly secure, zero-trust **Ultra-Native Identity Architecture**. This means that identity is strictly API-First and decoupled from rigid frontend views.
 
-This guide explains how identity works, how to authenticate your requests, and how to properly scope data isolation for your customers (Sub-Tenants).
+This guide explains how identity works, how to authenticate your requests, and how to properly scope data isolation for your customers (Sub-Organizations).
 
 ---
 
 ## 1. Identity Architecture Overview
 
-Standard operates on a strictly hierarchical multi-tenant model:
+Standard operates on a strictly hierarchical multi-organization model:
 
 ```mermaid
 graph TD
-    A[Root Tenant / Developer] -->|Owns| B(API Keys)
+    A[Root Organization / Developer] -->|Owns| B(API Keys)
     B -->|Grants Access to| C[API Gateway]
-    C -->|Creates & Scopes| D[Sub-Tenant 1]
-    C -->|Creates & Scopes| E[Sub-Tenant 2]
+    C -->|Creates & Scopes| D[Sub-Organization 1]
+    C -->|Creates & Scopes| E[Sub-Organization 2]
     
     style A fill:#0ea5e9,color:#fff
     style B fill:#22c55e,color:#fff
     style C fill:#f59e0b,color:#fff
 ```
 
-### The Root Tenant (Developer)
-When you create an account on the **Standard Developer Console**, your unique User ID becomes your **Root Tenant ID**. 
+### The Root Organization (Developer)
+When you create an account on the **Standard Developer Console**, your unique User ID becomes your **Root Organization ID**. 
 - The Web Console is strictly an administrative portal to manage API Keys and billing. 
 - It does **not** have access to the GRC data layer.
 
-### Sub-Tenants (Organizations)
-Your Root Tenant can create and manage multiple **Organizations** via the API. In the Standard architecture, these organizations function as isolated **Sub-Tenants**. 
+### Sub-Organizations (Organizations)
+Your Root Organization can create and manage multiple **Organizations** via the API. In the Standard architecture, these organizations function as isolated **Sub-Organizations**. 
 - All data (Assessments, Documents, Findings) is completely isolated per Organization.
-- It is physically impossible for data to leak between Organizations, as the API Gateway actively enforces scoping based on the Root Tenant's API Key.
+- It is physically impossible for data to leak between Organizations, as the API Gateway actively enforces scoping based on the Root Organization's API Key.
 
 ---
 
@@ -59,15 +59,15 @@ curl -X GET "https://standard-api.bekaa.eu/api/v1/health" \
 ### Security & Data Bleed Protection
 When the API Gateway receives your API Key, it automatically:
 1. Validates the SHA-256 hash against the identity store.
-2. Identifies your **Root Tenant ID**.
-3. Locks the request context (`context.tenantId`) to your identity.
-4. **Result:** Any downstream query you perform is hard-scoped to your Tenant hierarchy.
+2. Identifies your **Root Organization ID**.
+3. Locks the request context (`context.organizationId`) to your identity.
+4. **Result:** Any downstream query you perform is hard-scoped to your Organization hierarchy.
 
 ---
 
-## 3. Scoping Requests to a Sub-Tenant
+## 3. Scoping Requests to a Sub-Organization
 
-While your API Key grants you access to your **Root Tenant**, many GRC endpoints (like creating an assessment or uploading evidence) act upon a specific customer's data (a Sub-Tenant).
+While your API Key grants you access to your **Root Organization**, many GRC endpoints (like creating an assessment or uploading evidence) act upon a specific customer's data (a Sub-Organization).
 
 For these endpoints, you must specify the target Organization ID in the URL path.
 
@@ -77,7 +77,7 @@ curl -X GET "https://standard-api.bekaa.eu/api/v1/organizations/org_12345/assess
      -H "Authorization: Bearer standard_live_..."
 ```
 
-The API Gateway will automatically verify that `org_12345` was created by, and belongs to, your Root Tenant. If you attempt to access an Organization ID belonging to another developer, the request will be instantly rejected with a `404 Not Found` to prevent enumeration attacks.
+The API Gateway will automatically verify that `org_12345` was created by, and belongs to, your Root Organization. If you attempt to access an Organization ID belonging to another developer, the request will be instantly rejected with a `404 Not Found` to prevent enumeration attacks.
 
 ---
 
@@ -85,7 +85,7 @@ The API Gateway will automatically verify that `org_12345` was created by, and b
 
 If you are using the Standard Model Context Protocol (MCP) Server with an AI assistant (like Claude Desktop or Cursor), the authentication relies on the exact same API Key.
 
-The MCP Server inherits your Root Tenant identity. When your AI agent executes a tool (e.g., `start_assessment`), the MCP server signs the request with your API key, guaranteeing that the AI can only access and modify data within your allowed Sub-Tenants.
+The MCP Server inherits your Root Organization identity. When your AI agent executes a tool (e.g., `start_assessment`), the MCP server signs the request with your API key, guaranteeing that the AI can only access and modify data within your allowed Sub-Organizations.
 
 ```json
 {

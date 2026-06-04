@@ -22,7 +22,7 @@ O `standard-api-standard` é Cloudflare-oriented, mas o core continua API-first 
 
 - `api-gateway`: expõe `/api/v1`, valida requests, produz jobs em Queues e aciona Workflows.
 - `ingestion-worker`: consome `DOCUMENT_INGESTION_QUEUE`, processa ingestão documental e grava artefatos em R2.
-- `kb-worker`: consome `KB_EMBEDDING_QUEUE` e atualiza Vectorize por tenant/assessment.
+- `kb-worker`: consome `KB_EMBEDDING_QUEUE` e atualiza Vectorize por organization/assessment.
 - `reporting-worker`: consome `REPORT_EXPORT_QUEUE` e gera reports/exports assíncronos.
 - `lifecycle-workflow`: executa `ASSESSMENT_WORKFLOW` para transições duráveis do lifecycle.
 
@@ -46,7 +46,7 @@ Buckets por ambiente:
 - `standard-reports-*`
 - `standard-exports-*`
 
-R2 keys devem preservar `tenant_id`, `organization_id` e `assessment_id` no prefixo lógico. Buckets production nunca são usados por dev/staging.
+R2 keys devem preservar `organization_id`, `organization_id` e `assessment_id` no prefixo lógico. Buckets production nunca são usados por dev/staging.
 
 ## Vectorize
 
@@ -56,7 +56,7 @@ R2 keys devem preservar `tenant_id`, `organization_id` e `assessment_id` no pref
 - `standard-kb-staging`
 - `standard-kb-prod`
 
-Namespaces/metadados devem separar tenant e assessment. Vectorize só recupera evidências; SCF estruturado continua fonte normativa.
+Namespaces/metadados devem separar organization e assessment. Vectorize só recupera evidências; SCF estruturado continua fonte normativa.
 
 ## AI Gateway
 
@@ -77,7 +77,7 @@ Nenhum endpoint real ou segredo é hardcoded. Produção deve habilitar controle
 
 ## Segurança e Multi-Tenancy
 
-- Nenhum fluxo crítico sem `tenant_id`, `organization_id`, `assessment_id` e `trace_id`.
+- Nenhum fluxo crítico sem `organization_id`, `organization_id`, `assessment_id` e `trace_id`.
 - Logs não podem conter documentos, chunks completos, prompts sensíveis ou secrets.
 - Deploy production exige aprovação manual.
 - Endpoints admin devem ficar protegidos por Access/Zero Trust antes de exposição.
@@ -114,10 +114,10 @@ O adaptador `CloudflareR2StorageAdapter` está ativo no API Gateway, lendo o bin
 
 ## Decisões em Aberto
 
-- Estratégia de custom hostnames por tenant (Cloudflare for SaaS).
+- Estratégia de custom hostnames por organization (Cloudflare for SaaS).
 - Política formal de DLP/log retention no AI Gateway.
 - Adoção de Terraform/Pulumi para IaC do estado de infra provisionada.
-- Separação física ou lógica de buckets por tenant enterprise.
+- Separação física ou lógica de buckets por organization enterprise.
 - Workers for Platforms e Access/Zero Trust para endpoints admin.
 - D1 e Durable Objects: não configurados — sem requisito ativo no MVP.
 - Dimensão de embeddings e modelo para Vectorize (configurado em 1536/cosine para compatibilidade com OpenAI text-embedding-3-small/large).

@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-A camada `packages/observability` cria a primeira base de logs estruturados, trace context, audit trail, security events, métricas operacionais e registros de uso/custo do Standard. O desenho é multi-tenant, API-first e sem dependência obrigatória de vendor.
+A camada `packages/observability` cria a primeira base de logs estruturados, trace context, audit trail, security events, métricas operacionais e registros de uso/custo do Standard. O desenho é multi-organization, API-first e sem dependência obrigatória de vendor.
 
 ## Logs Estruturados
 
@@ -15,7 +15,7 @@ Todo log estruturado contém:
 - `service`
 - `module`
 - `environment`
-- contexto seguro de tenant, organization e assessment quando aplicável
+- contexto seguro de organization, organization e assessment quando aplicável
 - `metadata_safe`
 
 O logger do MVP armazena entradas em memória para testes e define contrato para export futuro para Cloudflare Workers Logs, Analytics Engine, Logpush ou outro backend.
@@ -52,7 +52,7 @@ Campos sensíveis são redigidos recursivamente:
 - `trace_id`
 - `parent_trace_id`
 - `span_id`
-- `tenant_id`
+- `organization_id`
 - `organization_id`
 - `assessment_id`
 - `actor_id`
@@ -81,8 +81,8 @@ Os demais eventos obrigatórios estão modelados no schema para integração inc
 `SecurityEventService` separa eventos de segurança dos logs comuns. Integrações iniciais:
 
 - auth ausente;
-- tenant context ausente;
-- tenant context mismatch;
+- organization context ausente;
+- organization context mismatch;
 - permission denied;
 - approval permission denied;
 - tool use blocked;
@@ -92,7 +92,7 @@ Eventos contêm `severity`, `outcome`, `source`, `message_safe`, `trace_id` e me
 
 ## Métricas Operacionais
 
-`MetricsService` registra métricas por tenant/assessment quando possível.
+`MetricsService` registra métricas por organization/assessment quando possível.
 
 Métricas iniciais integradas:
 
@@ -185,6 +185,6 @@ Regras:
 - Backend final de métricas: PostgreSQL, Analytics Engine, Prometheus bridge ou combinação.
 - Política de retenção por tipo de evento.
 - Sampling de logs/trace em produção.
-- Modelo de budgets/thresholds por tenant.
+- Modelo de budgets/thresholds por organization.
 - Integração final com AI Gateway usage e billing.
 

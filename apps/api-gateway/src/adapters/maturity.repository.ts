@@ -13,7 +13,6 @@ import type { DbClient } from "./db";
 
 export type MaturityVersionRecord = {
   id: string;
-  tenant_id: string;
   organization_id: string;
   assessment_id: string;
   version_number: number;
@@ -26,7 +25,6 @@ export type MaturityVersionRecord = {
 
 export type MaturityScoreRecord = {
   id: string;
-  tenant_id: string;
   organization_id: string;
   assessment_id: string;
   maturity_assessment_version_id: string;
@@ -41,14 +39,14 @@ export type MaturityScoreRecord = {
 
 export type MaturityVersionRepository = {
   create(record: MaturityVersionRecord): Promise<void>;
-  get(id: string, tenantId: string): Promise<MaturityVersionRecord | null>;
-  listByAssessment(assessmentId: string, tenantId: string): Promise<MaturityVersionRecord[]>;
+  get(id: string, organizationId: string): Promise<MaturityVersionRecord | null>;
+  listByAssessment(assessmentId: string, organizationId: string): Promise<MaturityVersionRecord[]>;
   update(record: MaturityVersionRecord): Promise<void>;
 };
 
 export type MaturityScoreRepository = {
   saveBatch(records: MaturityScoreRecord[]): Promise<void>;
-  listByVersion(versionId: string, tenantId: string): Promise<MaturityScoreRecord[]>;
+  listByVersion(versionId: string, organizationId: string): Promise<MaturityScoreRecord[]>;
 };
 
 export type MaturityRepositories = {
@@ -71,14 +69,14 @@ export const createDrizzleMaturityVersionRepository = (db: DbClient): MaturityVe
     }).onConflictDoNothing();
   },
 
-  async get(id, tenantId) {
+  async get(id, organizationId) {
     const [row] = await db.select().from(maturityAssessmentVersions)
       .where(eq(maturityAssessmentVersions.id, id))
       .limit(1);
     return row ? mapVersionRow(row) : null;
   },
 
-  async listByAssessment(assessmentId, tenantId) {
+  async listByAssessment(assessmentId, organizationId) {
     const rows = await db.select().from(maturityAssessmentVersions)
       .where(eq(maturityAssessmentVersions.assessmentId, assessmentId));
     return rows.map(mapVersionRow);
@@ -96,7 +94,6 @@ export const createDrizzleMaturityVersionRepository = (db: DbClient): MaturityVe
 type VersionRow = typeof maturityAssessmentVersions.$inferSelect;
 const mapVersionRow = (row: VersionRow): MaturityVersionRecord => ({
   id: row.id,
-  tenant_id: row.organizationId,
   organization_id: row.organizationId,
   assessment_id: row.assessmentId,
   version_number: row.versionNumber,
@@ -125,7 +122,7 @@ export const createDrizzleMaturityScoreRepository = (db: DbClient): MaturityScor
     ).onConflictDoNothing();
   },
 
-  async listByVersion(versionId, tenantId) {
+  async listByVersion(versionId, organizationId) {
     const rows = await db.select().from(maturityScores)
       .where(eq(maturityScores.maturityAssessmentVersionId, versionId));
     return rows.map(mapScoreRow);
@@ -135,7 +132,6 @@ export const createDrizzleMaturityScoreRepository = (db: DbClient): MaturityScor
 type ScoreRow = typeof maturityScores.$inferSelect;
 const mapScoreRow = (row: ScoreRow): MaturityScoreRecord => ({
   id: row.id,
-  tenant_id: row.organizationId,
   organization_id: row.organizationId,
   assessment_id: row.assessmentId,
   maturity_assessment_version_id: row.maturityAssessmentVersionId,

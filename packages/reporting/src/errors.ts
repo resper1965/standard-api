@@ -4,8 +4,8 @@ export class ReportingWorkflowError extends Error {
   }
 }
 
-export const assertContext = (context: { tenantId?: string; organizationId?: string; assessmentId?: string; traceId?: string }): void => {
-  if (!context.tenantId || !context.organizationId || !context.assessmentId || !context.traceId) {
+export const assertContext = (context: { organizationId?: string; assessmentId?: string; traceId?: string }): void => {
+  if (!context.organizationId || !context.assessmentId || !context.traceId) {
     throw new ReportingWorkflowError("REPORT_CONTEXT_REQUIRED", "Reporting workflow requires tenant, organization, assessment and trace context.");
   }
 };

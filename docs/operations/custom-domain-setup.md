@@ -2,7 +2,7 @@
 
 > Runbook operacional para conectar um domínio personalizado ao Worker do API Gateway.
 > **Este runbook cobre o domínio da plataforma** (ex: `api.standard.bekaa.eu`).
-> Custom domains por tenant (Cloudflare for SaaS) está marcado como **fora de escopo** nesta fase.
+> Custom domains por organization (Cloudflare for SaaS) está marcado como **fora de escopo** nesta fase.
 
 ## Pré-requisitos
 
@@ -61,13 +61,13 @@ Para domínios externos (não gerenciados pelo Cloudflare), use **Cloudflare for
 
 ## 5. Cloudflare for SaaS (Referência — Fora de Escopo)
 
-> Custom domains por tenant (ex: `api.cliente.com` → Standard) requer Cloudflare for SaaS.
+> Custom domains por organization (ex: `api.cliente.com` → Standard) requer Cloudflare for SaaS.
 > **Decisão arquitetural: fora de escopo nesta fase.**
 
 Quando necessário, o processo é:
 1. Habilitar **Cloudflare for SaaS** no account.
-2. Configurar **Custom Hostname** por tenant via API Cloudflare.
-3. Tenant adiciona CNAME `api.cliente.com → fallback.standard.bekaa.eu`.
+2. Configurar **Custom Hostname** por organization via API Cloudflare.
+3. Organization adiciona CNAME `api.cliente.com → fallback.standard.bekaa.eu`.
 4. Cloudflare provisiona TLS via DCV automático.
 
 Referência: https://developers.cloudflare.com/cloudflare-for-platforms/cloudflare-for-saas/

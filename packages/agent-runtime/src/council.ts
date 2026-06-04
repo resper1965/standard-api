@@ -19,7 +19,6 @@ export class CouncilOrchestrator {
    * The actual execution should happen via Queues or background waitUntil.
    */
   async startCouncilDetached(options: {
-    tenant_id: string;
     organization_id: string;
     assessment_id: string;
     target_framework_id: string;
@@ -29,7 +28,6 @@ export class CouncilOrchestrator {
   }): Promise<{ run_id: string; status: string }> {
     // We create a root orchestrator run
     const context: AgentRuntimeContext = {
-      tenant_id: options.tenant_id,
       organization_id: options.organization_id,
       assessment_id: options.assessment_id,
       framework_id: options.target_framework_id,
@@ -59,8 +57,8 @@ export class CouncilOrchestrator {
    * Resumes and executes the council sequentially.
    * Driven by the background Queue consumer (agent-run.consumer.ts).
    */
-  async executeCouncilRun(runId: string, tenantId: string): Promise<AgentRunResponse> {
-    const run = await this.runtimeService.getRun(runId, tenantId);
+  async executeCouncilRun(runId: string, organizationId: string): Promise<AgentRunResponse> {
+    const run = await this.runtimeService.getRun(runId, organizationId);
     if (!run) throw new AgentRuntimeError("NOT_FOUND", "Council run not found");
 
     const inputData = (run.metadata as Record<string, unknown>)?.input as Record<string, unknown>;
@@ -87,7 +85,7 @@ export class CouncilOrchestrator {
            currentPayload = await evaluator.evaluate({
                controlRequirement: currentPayload.controlObjective || "Ensure proper configuration",
                evidenceDescription: currentPayload.evidenceText || "",
-               tenantId: tenantId
+               organizationId: organizationId
            });
         } 
         else if (agentName === "poam_architect" && PoamArchitectUseCase) {
@@ -95,7 +93,8 @@ export class CouncilOrchestrator {
            currentPayload = await architect.architect({
                evidenceContext: currentPayload,
                systemArchitectureDescription: inputData.systemArchitectureDescription as string || "Default Architecture",
-               tenantId: tenantId
+               organizationId: run.organization_id,
+               frameworkId: (run as any).framework_id ?? (run.metadata as any)?.framework_id
            });
         }
         else if (agentName === "board_translator" && CLevelBoardTranslatorUseCase) {
@@ -103,7 +102,7 @@ export class CouncilOrchestrator {
            currentPayload = await translator.translate({
                poamPlan: currentPayload,
                regulatoryContext: inputData.regulatoryContext as string || "Standard Compliance Framework",
-               tenantId: tenantId
+               organizationId: organizationId
            });
            finalSummary = currentPayload.executive_summary;
         }
@@ -112,7 +111,7 @@ export class CouncilOrchestrator {
            currentPayload = await triager.triage({
                rawLogsExcerpt: currentPayload.rawLogsExcerpt || inputData.rawLogsExcerpt || "",
                systemModuleName: currentPayload.systemModuleName || inputData.systemModuleName || "Unknown",
-               tenantId: tenantId
+               organizationId: organizationId
            });
            if (currentPayload.severity_level === "critical") finalSummary = "CRITICAL security incident triaged.";
         }
@@ -121,14 +120,14 @@ export class CouncilOrchestrator {
            currentPayload = await scanner.scan({
                contractExcerpt: currentPayload.contractExcerpt || inputData.contractExcerpt || "",
                vendorName: currentPayload.vendorName || inputData.vendorName || "Unknown Vendor",
-               tenantId: tenantId
+               organizationId: organizationId
            });
         }
         else if (agentName === "ropa_analyzer" && RopaAnalyzerUseCase) {
            const analyzer = new RopaAnalyzerUseCase(llmProvider);
            currentPayload = await analyzer.analyze({
                naturalLanguageDescription: currentPayload.naturalLanguageDescription || inputData.naturalLanguageDescription || "",
-               tenantId: tenantId
+               organizationId: organizationId
            });
         }
         else if (agentName === "dpia_assessor" && DpiaAssessorUseCase) {
@@ -136,7 +135,7 @@ export class CouncilOrchestrator {
            currentPayload = await assessor.assess({
                ropaContext: currentPayload,
                projectDescription: inputData.projectDescription as string || "General data processing project",
-               tenantId: tenantId
+               organizationId: organizationId
            });
            if (currentPayload.residual_risk_level === "high" || currentPayload.residual_risk_level === "critical") finalSummary = "High-Risk DPIA Requires Board Sign-off.";
         }
@@ -150,7 +149,6 @@ export class CouncilOrchestrator {
                prompt_version: "1.0",
                model: "orchestrator",
                context: {
-                  tenant_id: tenantId,
                   organization_id: run.organization_id,
                   assessment_id: run.assessment_id,
                   framework_id: (run.metadata as any)?.framework_id ?? "",
@@ -170,14 +168,13 @@ export class CouncilOrchestrator {
       limitations: [],
       sources: agents,
       confidence_score: 0.95,
-      writes_final_finding: true,
+      writes_final_finding: false, // Council orchestrates agents; it does NOT write final findings directly (AGENTS.md §10)
       creates_official_mapping: false,
       metadata: { final_payload: currentPayload, input_data: inputData }
     };
 
     return await this.runtimeService.completeRun(runId, {
       context: {
-        tenant_id: run.tenant_id,
         organization_id: run.organization_id,
         assessment_id: run.assessment_id,
         trace_id: run.trace_id,
@@ -190,91 +187,91 @@ export class CouncilOrchestrator {
 
   // Atomic Steps for Cloudflare Workflows SDK Integration
 
-  async executeEvidenceEvaluator(tenantId: string, currentPayload: any): Promise<any> {
+  async executeEvidenceEvaluator(organizationId: string, currentPayload: any): Promise<any> {
     const { EvidenceEvaluatorUseCase } = await import("./usecases/evidence-evaluator");
     const llmProvider = (this.runtimeService as any).deps.llm;
     const evaluator = new EvidenceEvaluatorUseCase(llmProvider);
     return await evaluator.evaluate({
         controlRequirement: currentPayload.controlObjective || "Ensure proper configuration",
         evidenceDescription: currentPayload.evidenceText || "",
-        tenantId: tenantId
+        organizationId: organizationId
     });
   }
 
-  async executePoamArchitect(tenantId: string, currentPayload: any, inputData: any): Promise<any> {
+  async executePoamArchitect(organizationId: string, currentPayload: any, inputData: any): Promise<any> {
     const { PoamArchitectUseCase } = await import("./usecases/poam-architect");
     const llmProvider = (this.runtimeService as any).deps.llm;
     const architect = new PoamArchitectUseCase(llmProvider);
     return await architect.architect({
         evidenceContext: currentPayload,
         systemArchitectureDescription: inputData.systemArchitectureDescription as string || "Default Architecture",
-        tenantId: tenantId
+        organizationId: organizationId,
+        frameworkId: inputData.frameworkId
     });
   }
 
-  async executeBoardTranslator(tenantId: string, currentPayload: any, inputData: any): Promise<any> {
+  async executeBoardTranslator(organizationId: string, currentPayload: any, inputData: any): Promise<any> {
     const { CLevelBoardTranslatorUseCase } = await import("./usecases/c-level-translator");
     const llmProvider = (this.runtimeService as any).deps.llm;
     const translator = new CLevelBoardTranslatorUseCase(llmProvider);
     return await translator.translate({
         poamPlan: currentPayload,
         regulatoryContext: inputData.regulatoryContext as string || "Standard Compliance Framework",
-        tenantId: tenantId
+        organizationId: organizationId
     });
   }
 
-  async executeIncidentTriager(tenantId: string, currentPayload: any, inputData: any): Promise<any> {
+  async executeIncidentTriager(organizationId: string, currentPayload: any, inputData: any): Promise<any> {
     const { IncidentTriagerUseCase } = await import("./usecases/incident-triager");
     const llmProvider = (this.runtimeService as any).deps.llm;
     const triager = new IncidentTriagerUseCase(llmProvider);
     return await triager.triage({
         rawLogsExcerpt: currentPayload.rawLogsExcerpt || inputData.rawLogsExcerpt || "",
         systemModuleName: currentPayload.systemModuleName || inputData.systemModuleName || "Unknown",
-        tenantId: tenantId
+        organizationId: organizationId
     });
   }
 
-  async executeVendorScanner(tenantId: string, currentPayload: any, inputData: any): Promise<any> {
+  async executeVendorScanner(organizationId: string, currentPayload: any, inputData: any): Promise<any> {
     const { VendorScannerUseCase } = await import("./usecases/vendor-scanner");
     const llmProvider = (this.runtimeService as any).deps.llm;
     const scanner = new VendorScannerUseCase(llmProvider);
     return await scanner.scan({
         contractExcerpt: currentPayload.contractExcerpt || inputData.contractExcerpt || "",
         vendorName: currentPayload.vendorName || inputData.vendorName || "Unknown Vendor",
-        tenantId: tenantId
+        organizationId: organizationId
     });
   }
 
-  async executeRopaAnalyzer(tenantId: string, currentPayload: any, inputData: any): Promise<any> {
+  async executeRopaAnalyzer(organizationId: string, currentPayload: any, inputData: any): Promise<any> {
     const { RopaAnalyzerUseCase } = await import("./usecases/ropa-analyzer");
     const llmProvider = (this.runtimeService as any).deps.llm;
     const analyzer = new RopaAnalyzerUseCase(llmProvider);
     return await analyzer.analyze({
         naturalLanguageDescription: currentPayload.naturalLanguageDescription || inputData.naturalLanguageDescription || "",
-        tenantId: tenantId
+        organizationId: organizationId
     });
   }
 
-  async executeDpiaAssessor(tenantId: string, currentPayload: any, inputData: any): Promise<any> {
+  async executeDpiaAssessor(organizationId: string, currentPayload: any, inputData: any): Promise<any> {
     const { DpiaAssessorUseCase } = await import("./usecases/dpia-assessor");
     const llmProvider = (this.runtimeService as any).deps.llm;
     const assessor = new DpiaAssessorUseCase(llmProvider);
     return await assessor.assess({
         ropaContext: currentPayload,
         projectDescription: inputData.projectDescription as string || "General data processing project",
-        tenantId: tenantId
+        organizationId: organizationId
     });
   }
 
-  async executeGenericAgent(tenantId: string, agentName: string, currentPayload: any, run: any, inputData: any): Promise<any> {
+  async executeGenericAgent(organizationId: string, agentName: string, currentPayload: any, run: any, inputData: any): Promise<any> {
     const genericRun = await this.executor.execute({
         agent_id: agentName as any,
         agent_version: "1.0.0",
         prompt_version: "1.0",
         model: "orchestrator",
         context: {
-           tenant_id: tenantId,
-           organization_id: run.organization_id,
+           organization_id: organizationId,
            assessment_id: run.assessment_id,
            framework_id: (run.metadata as any)?.framework_id ?? "",
            scf_version_id: "latest",
@@ -285,8 +282,8 @@ export class CouncilOrchestrator {
     return (genericRun.metadata as any)?.FinalOutput || (genericRun as any).summary;
   }
 
-  async finalizeCouncilRun(runId: string, tenantId: string, finalPayload: any, finalSummary: string, inputData: any): Promise<AgentRunResponse> {
-    const run = await this.runtimeService.getRun(runId, tenantId);
+  async finalizeCouncilRun(runId: string, organizationId: string, finalPayload: any, finalSummary: string, inputData: any): Promise<AgentRunResponse> {
+    const run = await this.runtimeService.getRun(runId, organizationId);
     if (!run) throw new AgentRuntimeError("NOT_FOUND", "Council run not found");
 
     const finalOutput = {
@@ -295,14 +292,13 @@ export class CouncilOrchestrator {
       limitations: [],
       sources: (run.metadata as Record<string, unknown>)?.agents as string[] ?? [],
       confidence_score: 0.95,
-      writes_final_finding: true,
+      writes_final_finding: false, // Council orchestrates agents; it does NOT write final findings directly (AGENTS.md §10)
       creates_official_mapping: false,
       metadata: { final_payload: finalPayload, input_data: inputData }
     };
 
     return await this.runtimeService.completeRun(runId, {
       context: {
-        tenant_id: run.tenant_id,
         organization_id: run.organization_id,
         assessment_id: run.assessment_id,
         trace_id: run.trace_id,

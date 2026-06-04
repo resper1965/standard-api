@@ -10,7 +10,6 @@ export const TransitionRequestSchema = z.object({
 });
 
 export const LifecycleEventResponseSchema = z.object({
-  tenant_id: UuidSchema,
   organization_id: UuidSchema,
   assessment_id: UuidSchema,
   previous_state: AssessmentLifecycleStateSchema,
@@ -26,7 +25,6 @@ export const LifecycleEventResponseSchema = z.object({
 
 export const TransitionResponseSchema = z.object({
   assessment_id: UuidSchema,
-  tenant_id: UuidSchema,
   organization_id: UuidSchema,
   previous_state: AssessmentLifecycleStateSchema,
   next_state: AssessmentLifecycleStateSchema,
@@ -36,7 +34,6 @@ export const TransitionResponseSchema = z.object({
 
 export const AvailableTransitionsResponseSchema = z.object({
   assessment_id: UuidSchema,
-  tenant_id: UuidSchema,
   organization_id: UuidSchema,
   current_state: AssessmentLifecycleStateSchema,
   available_transitions: z.array(AssessmentLifecycleStateSchema),

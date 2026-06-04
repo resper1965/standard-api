@@ -11,8 +11,7 @@ import {
 } from "./domain";
 import { AgentOutputSchema, AgentRunResponseSchema } from "./agent-runtime";
 
-const tenantId = "11111111-1111-4111-8111-111111111111";
-const organizationId = "22222222-2222-4222-8222-222222222222";
+const organizationId = "11111111-1111-4111-8111-111111111111";
 const assessmentId = "33333333-3333-4333-8333-333333333333";
 const scfVersionId = "44444444-4444-4444-8444-444444444444";
 const scfControlId = "55555555-5555-4555-8555-555555555555";
@@ -24,7 +23,6 @@ const traceId = "trace-smoke-0001";
 const cases = [
   AssessmentSchema.safeParse({
     id: assessmentId,
-    tenantId,
     organizationId,
     name: "Synthetic Standard assessment",
     state: "draft",
@@ -33,7 +31,6 @@ const cases = [
   }),
   DocumentSchema.safeParse({
     id: "99999999-9999-4999-8999-999999999999",
-    tenantId,
     organizationId,
     assessmentId,
     originalFilename: "synthetic-policy.pdf",
@@ -48,7 +45,6 @@ const cases = [
   }),
   DocumentChunkSchema.safeParse({
     id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
-    tenantId,
     organizationId,
     assessmentId,
     documentId: "99999999-9999-4999-8999-999999999999",
@@ -59,7 +55,6 @@ const cases = [
   }),
   VectorReferenceSchema.safeParse({
     id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
-    tenantId,
     organizationId,
     assessmentId,
     kbEntryId: "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
@@ -78,7 +73,6 @@ const cases = [
   }),
   AgentRunSchema.safeParse({
     id: agentRunId,
-    tenantId,
     organizationId,
     assessmentId,
     agentName: "standard-gap-analyst",
@@ -92,7 +86,6 @@ const cases = [
   }),
   AgentRunResponseSchema.safeParse({
     agent_run_id: agentRunId,
-    tenant_id: tenantId,
     organization_id: organizationId,
     assessment_id: assessmentId,
     agent_id: "gap_analyst",
@@ -116,7 +109,6 @@ const cases = [
   }),
   GapFindingSchema.safeParse({
     id: gapId,
-    tenantId,
     organizationId,
     assessmentId,
     findingCode: "GAP-001",
@@ -132,7 +124,6 @@ const cases = [
   }),
   MaturityScoreSchema.safeParse({
     id: "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee",
-    tenantId,
     organizationId,
     assessmentId,
     maturityAssessmentVersionId: "abababab-abab-4bab-8bab-abababababab",
@@ -144,7 +135,6 @@ const cases = [
   }),
   PoamItemSchema.safeParse({
     id: "ffffffff-ffff-4fff-8fff-ffffffffffff",
-    tenantId,
     organizationId,
     assessmentId,
     poamVersionId: "cdcdcdcd-cdcd-4dcd-8dcd-cdcdcdcdcdcd",

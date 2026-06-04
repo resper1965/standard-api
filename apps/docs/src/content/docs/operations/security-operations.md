@@ -32,16 +32,16 @@ Nunca versionar:
 - database URLs reais;
 - storage credentials.
 
-## Validar Tenant Isolation
+## Validar Organization Isolation
 
 Checklist:
 
-- toda rota de cliente recebe `x-standard-tenant-id`;
-- `tenant_id` do body não diverge do tenant context;
-- assessment carregado pertence ao tenant;
-- storage keys preservam tenant/organization/assessment;
+- toda rota de cliente recebe `x-standard-organization-id`;
+- `organization_id` do body não diverge do organization context;
+- assessment carregado pertence ao organization;
+- storage keys preservam organization/organization/assessment;
 - KB search usa assessment scope;
-- report downloads validam tenant.
+- report downloads validam organization.
 
 ## Revisar Permissões
 
@@ -59,7 +59,7 @@ Ao adicionar rota crítica:
 Eventos `security_permission_denied` registram:
 
 - actor;
-- tenant;
+- organization;
 - trace;
 - motivo;
 - permissões exigidas.
@@ -107,7 +107,7 @@ Admin endpoints devem exigir:
 
 Processo futuro esperado:
 
-1. Criar nova key/token escopada por tenant/org.
+1. Criar nova key/token escopada por organization/org.
 2. Aplicar permissões mínimas.
 3. Atualizar consumidor.
 4. Revogar key/token antigo.
@@ -123,6 +123,6 @@ Processo futuro esperado:
 - Malware scanning definido.
 - Audit log persistente.
 - Secrets em secret manager/bindings.
-- Testes cross-tenant passando.
+- Testes cross-organization passando.
 - Nenhum endpoint crítico sem permission.
 

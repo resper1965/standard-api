@@ -16,7 +16,7 @@ test("reprocessamento de documentos - verifica trace_id e actor_id no job de rep
 
   // Upload document
   const uploaded = await client.sendMultipart(`/api/v1/assessments/${created.assessmentId}/documents`, uploadForm(), {
-    "x-standard-tenant-id": created.tenantId,
+    "x-standard-tenant-id": created.organizationId,
     "x-standard-actor-id": ids.actorId
   });
 
@@ -25,7 +25,7 @@ test("reprocessamento de documentos - verifica trace_id e actor_id no job de rep
 
   // Reprocess document
   const reprocess = await client.send(`/api/v1/documents/${documentId}/reprocess`, "POST", { reason: "Force full extraction update" }, {
-    "x-standard-tenant-id": created.tenantId,
+    "x-standard-tenant-id": created.organizationId,
     "x-standard-actor-id": ids.actorId,
     "x-trace-id": customTraceId
   });

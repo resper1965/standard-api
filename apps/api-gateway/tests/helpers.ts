@@ -3,7 +3,7 @@ import { createApp } from "../src/app";
 export const ids = {
   actorId: "44444444-4444-4444-8444-444444444444",
   scfVersionId: "55555555-5555-4555-8555-555555555555",
-  tenantId: "11111111-1111-4111-8111-111111111111"
+  organizationId: "11111111-1111-4111-8111-111111111111"
 };
 
 export const jsonRequest = (path: string, method: string, body?: unknown, headers: Record<string, string> = {}) =>
@@ -57,41 +57,40 @@ export const createTestClient = () => {
   const createTenantOrg = async () => {
     // POST /api/v1/tenants requires platformAdmin (session-based) — unavailable in test mode.
     // Use a unique random UUID as tenant ID directly. The org creation route accepts any tenant
-    // UUID via x-standard-tenant-id header, and mock resolveTenantContext JIT-provisions the
+    // UUID via x-standard-tenant-id header, and mock resolveOrganizationContext JIT-provisions the
     // context from orgMap when the assessment is created. Cross-tenant isolation is preserved.
-    const tenantId = crypto.randomUUID();
+    const organizationId = crypto.randomUUID();
     const slug = `org-test-${Math.random().toString(36).slice(2, 8)}`;
     const orgResult = await send("/api/v1/organizations", "POST", {
-      tenant_id: tenantId,
+      organization_id: organizationId,
       slug,
       name: "Org Test"
     }, {
-      "x-standard-tenant-id": tenantId,
+      "x-standard-tenant-id": organizationId,
       "x-standard-actor-id": ids.actorId
     });
 
     const orgId = orgResult.body.organization_id as string;
     return {
-      tenantId: orgId,
+      organizationId: orgId,
       organizationId: orgId
     };
   };
 
 
   const createAssessment = async (documentCount = 0) => {
-    const { tenantId, organizationId } = await createTenantOrg();
+    const { organizationId, organizationId } = await createTenantOrg();
     const result = await send("/api/v1/assessments", "POST", {
       organization_id: organizationId,
       name: "Assessment Test",
       scf_version_id: ids.scfVersionId,
       document_count: documentCount
     }, {
-      "x-standard-tenant-id": tenantId,
+      "x-standard-tenant-id": organizationId,
       "x-standard-actor-id": ids.actorId
     });
 
     return {
-      tenantId,
       organizationId,
       assessmentId: result.body.assessment_id as string,
       body: result.body
@@ -106,14 +105,13 @@ export const createTestClient = () => {
 
   // ── API key helpers ──────────────────────────────────────────────
   // Default to an org-admin mock role so RBAC (`organization:update`) passes.
-  const authHeaders = (tenantId: string, role = "organization_admin") => ({
-    "x-standard-tenant-id": tenantId,
+  const authHeaders = (organizationId: string, role = "organization_admin") => ({
+    "x-standard-tenant-id": organizationId,
     "x-standard-actor-id": ids.actorId,
     "x-standard-mock-role": role,
   });
 
   const createApiKey = async (
-    tenantId: string,
     organizationId: string,
     body: { name: string; scopes: string[]; expiresAt?: string },
   ) =>
@@ -121,23 +119,23 @@ export const createTestClient = () => {
       `/api/v1/organizations/${organizationId}/api-keys`,
       "POST",
       body,
-      authHeaders(tenantId),
+      authHeaders(organizationId),
     );
 
-  const listApiKeys = async (tenantId: string, organizationId: string) =>
+  const listApiKeys = async (organizationId: string, organizationId: string) =>
     send(
       `/api/v1/organizations/${organizationId}/api-keys`,
       "GET",
       undefined,
-      authHeaders(tenantId),
+      authHeaders(organizationId),
     );
 
-  const revokeApiKey = async (tenantId: string, organizationId: string, keyId: string) =>
+  const revokeApiKey = async (organizationId: string, organizationId: string, keyId: string) =>
     send(
       `/api/v1/organizations/${organizationId}/api-keys/${keyId}`,
       "DELETE",
       undefined,
-      authHeaders(tenantId),
+      authHeaders(organizationId),
     );
 
   return { send, sendMultipart, createTenantOrg, createAssessment, createApiKey, listApiKeys, revokeApiKey, authHeaders };

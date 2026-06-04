@@ -14,7 +14,7 @@ export const approveMaturityVersion = async (
   ctx: MaturityContext,
   deps: MaturityDependencies
 ): Promise<MaturityAssessmentVersion> => {
-  const version = await deps.repositories.versions.get(versionId, ctx.tenantId);
+  const version = await deps.repositories.versions.get(versionId, ctx.organizationId);
   if (!version || version.assessmentId !== ctx.assessmentId) {
     throw new MaturityError("VERSION_NOT_FOUND", "Maturity assessment version not found.", { versionId });
   }
@@ -23,7 +23,7 @@ export const approveMaturityVersion = async (
   }
 
   // Supersede previous approved versions
-  const existingVersions = await deps.repositories.versions.listByAssessment(ctx.assessmentId, ctx.tenantId);
+  const existingVersions = await deps.repositories.versions.listByAssessment(ctx.assessmentId, ctx.organizationId);
   for (const existing of existingVersions) {
     if (existing.id !== versionId && existing.status === "approved") {
       await deps.repositories.versions.update({

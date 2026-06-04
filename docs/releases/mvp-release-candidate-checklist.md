@@ -12,7 +12,7 @@ Escopo validado:
 
 - backend API-first, packages reutilizáveis e contratos compartilhados;
 - lifecycle SCF-Based Assessment com state machine, approval gates e artefatos versionados;
-- segurança inicial com auth placeholder local, RBAC, tenant isolation, upload security e prompt security;
+- segurança inicial com auth placeholder local, RBAC, organization isolation, upload security e prompt security;
 - observability com logs estruturados, redaction, audit/security events, metrics e usage/cost records;
 - evals determinísticos, golden datasets sintéticos, regression tests e synthetic E2E.
 
@@ -22,7 +22,7 @@ Escopo validado:
 | --- | --- | --- |
 | Repository consistency | Atendido para MVP | Packages, apps e workers possuem `package.json`; exports principais existem em `src/index.ts`; scripts raiz cobrem lint, typecheck, tests e build. |
 | API-first | Atendido | Regras críticas vivem em `packages/*`, `workers/*` e `apps/api-gateway`; frontend permanece consumidor/placeholder. |
-| Multi-tenancy | Atendido para MVP | Tenant guards, `tenant_id`, `organization_id` e `assessment_id` aparecem em rotas críticas, schemas, tests e fixtures. |
+| Multi-tenancy | Atendido para MVP | Organization guards, `organization_id`, `organization_id` e `assessment_id` aparecem em rotas críticas, schemas, tests e fixtures. |
 | Security | Atendido | RBAC, upload validation, prompt injection guardrails, secure errors, redaction, rate limiting real (KV), observability persistente (PostgreSQL). Anti-malware scan é pós-MVP. |
 | Assessment Engine | Atendido | State transitions, approval gates, artifact immutability, rejection/rework loops e versionamento têm testes de package. |
 | SCF Data Service | Atendido | SCF 2026.1.1 oficial importado e seedado em produção via importer XLSX. |
@@ -51,7 +51,7 @@ Escopo validado:
 | `pnpm test:contracts` | Passou; 8 contract tests. |
 | `pnpm test:security` | Passou; security package e 51 API tests. |
 | `pnpm test:regression` | Passou; 5 synthetic regression tests. |
-| `pnpm test:evaluations` | Passou; 7 evals, `schema_pass_rate` 1, `guardrail_pass_rate` 1, zero hallucinated mappings/approval bypass/tenant violations. |
+| `pnpm test:evaluations` | Passou; 7 evals, `schema_pass_rate` 1, `guardrail_pass_rate` 1, zero hallucinated mappings/approval bypass/organization violations. |
 | `pnpm test:synthetic-e2e` | Passou; 1 synthetic E2E. |
 | `pnpm test:integration` | Passou; API Gateway e workflows com adapters/mocks. |
 | `pnpm build` | Passou; build workspace sem erro. |
@@ -61,8 +61,8 @@ Escopo validado:
 
 - Unit tests por package/worker.
 - Contract tests de API, schemas e erros.
-- Security tests de auth/RBAC/tenant/upload/prompt/tool policy.
-- Tenant isolation tests em API, KB, workflows, POA&M, reporting e packages.
+- Security tests de auth/RBAC/organization/upload/prompt/tool policy.
+- Organization isolation tests em API, KB, workflows, POA&M, reporting e packages.
 - Approval gate tests em Assessment Engine, SoA, Gap, POA&M, Reporting e Workflow.
 - Agent guardrail evals com `MockLLMProvider`.
 - Regression tests com golden dataset sintético.
@@ -81,7 +81,7 @@ Escopo validado:
 
 - CI configurado com lint, typecheck, unit, contract, security, regression, evals, synthetic E2E e build.
 - `.env.example` usa placeholders e não contém secrets reais.
-- Tenant isolation básico está testado.
+- Organization isolation básico está testado.
 - Approval gates básicos estão testados.
 - State machine está testada.
 - Schemas críticos estão testados.
@@ -97,13 +97,13 @@ Escopo validado:
 - Malware scanning ainda é placeholder.
 - Workflow Cloudflare real (Queues Durável) ainda precisa provisionamento.
 - DOCX/PDF reporting ainda é placeholder.
-- Vectorize real ainda depende de provisionamento por tenant.
+- Vectorize real ainda depende de provisionamento por organization.
 
 ## Bloqueadores
 
 Nenhum bloqueador conhecido para staging controlado com dados sintéticos.
 
-Bloqueadores antes de produção aberta (multi-tenant real):
+Bloqueadores antes de produção aberta (multi-organization real):
 
 - smoke tests Cloudflare com dados sintéticos;
 - revisão legal/privacy;

@@ -45,13 +45,13 @@ export const createDrizzleReportVersionRepository = (db: DbClient): ReportVersio
       updatedAt: new Date(),
     }).where(eq(reportVersions.id, version.report_version_id));
   },
-  async get(reportVersionId, tenantId) {
+  async get(reportVersionId, organizationId) {
     const [row] = await db.select().from(reportVersions)
       .where(eq(reportVersions.id, reportVersionId))
       .limit(1);
     return row ? mapReportVersionRow(row) : null;
   },
-  async listByAssessment(assessmentId, tenantId) {
+  async listByAssessment(assessmentId, organizationId) {
     const rows = await db.select().from(reportVersions)
       .where(eq(reportVersions.assessmentId, assessmentId));
     return rows.map(mapReportVersionRow);
@@ -76,13 +76,13 @@ export const createDrizzleReportArtifactRepository = (db: DbClient): ReportArtif
       metadata: artifact.metadata ?? {},
     }).onConflictDoNothing();
   },
-  async get(artifactId, tenantId) {
+  async get(artifactId, organizationId) {
     const [row] = await db.select().from(reportArtifacts)
       .where(eq(reportArtifacts.id, artifactId))
       .limit(1);
     return row ? mapReportArtifactRow(row) : null;
   },
-  async listByReport(reportVersionId, tenantId) {
+  async listByReport(reportVersionId, organizationId) {
     const rows = await db.select().from(reportArtifacts)
       .where(eq(reportArtifacts.reportVersionId, reportVersionId));
     return rows.map(mapReportArtifactRow);
@@ -114,13 +114,13 @@ export const createDrizzleExportJobRepository = (db: DbClient): ExportJobReposit
       metadata: job.metadata ?? {},
     }).where(eq(exportJobs.id, job.export_job_id));
   },
-  async get(exportJobId, tenantId) {
+  async get(exportJobId, organizationId) {
     const [row] = await db.select().from(exportJobs)
       .where(eq(exportJobs.id, exportJobId))
       .limit(1);
     return row ? mapExportJobRow(row) : null;
   },
-  async listByAssessment(assessmentId, tenantId) {
+  async listByAssessment(assessmentId, organizationId) {
     const rows = await db.select().from(exportJobs)
       .where(eq(exportJobs.assessmentId, assessmentId));
     return rows.map(mapExportJobRow);
@@ -141,7 +141,6 @@ type ExportJobRow = typeof exportJobs.$inferSelect;
 
 const mapReportVersionRow = (row: ReportVersionRow): ReportVersionResponse => ({
   report_version_id: row.id,
-  tenant_id: row.organizationId,
   organization_id: row.organizationId,
   assessment_id: row.assessmentId,
   version_number: row.versionNumber,
@@ -173,7 +172,6 @@ const mapReportVersionRow = (row: ReportVersionRow): ReportVersionResponse => ({
 
 const mapReportArtifactRow = (row: ReportArtifactRow): ReportArtifactResponse => ({
   report_artifact_id: row.id,
-  tenant_id: row.organizationId,
   organization_id: row.organizationId,
   assessment_id: row.assessmentId,
   report_version_id: row.reportVersionId,
@@ -192,7 +190,6 @@ const mapReportArtifactRow = (row: ReportArtifactRow): ReportArtifactResponse =>
 
 const mapExportJobRow = (row: ExportJobRow): ExportJobResponse => ({
   export_job_id: row.id,
-  tenant_id: row.organizationId,
   organization_id: row.organizationId,
   assessment_id: row.assessmentId,
   report_version_id: row.reportVersionId ?? undefined,

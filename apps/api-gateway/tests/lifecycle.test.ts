@@ -8,7 +8,7 @@ test("POST /transitions bloqueia transição inválida", async () => {
     next_state: "framework_selected",
     reason: "tentativa sem prerequisitos"
   }, {
-    "x-standard-tenant-id": created.tenantId,
+    "x-standard-tenant-id": created.organizationId,
     "x-standard-actor-id": ids.actorId
   });
 
@@ -23,7 +23,7 @@ test("POST /transitions permite transição válida usando assessment-engine", a
     next_state: "documents_uploaded",
     reason: "documento sintético registrado"
   }, {
-    "x-standard-tenant-id": created.tenantId,
+    "x-standard-tenant-id": created.organizationId,
     "x-standard-actor-id": ids.actorId
   });
 

@@ -5,7 +5,7 @@ export class GapValidationService {
   constructor(private readonly deps: GapAnalysisDependencies) {}
 
   async validateGapAnalysisForReview(gapAnalysisVersionId: string, context: GapAnalysisContext): Promise<GapAnalysisValidationResponse> {
-    const findings = await this.deps.repositories.gapFindings.listByVersion(gapAnalysisVersionId, context.tenantId);
+    const findings = await this.deps.repositories.gapFindings.listByVersion(gapAnalysisVersionId, context.organizationId);
     const blocking = findings.flatMap((finding) => this.validateFindingErrors(finding));
     return {
       valid: blocking.length === 0,
@@ -16,19 +16,19 @@ export class GapValidationService {
   }
 
   async validateGapFinding(gapFindingId: string, context: GapAnalysisContext): Promise<GapAnalysisValidationResponse> {
-    const finding = await this.deps.repositories.gapFindings.get(gapFindingId, context.tenantId);
+    const finding = await this.deps.repositories.gapFindings.get(gapFindingId, context.organizationId);
     if (!finding) throw new GapAnalysisWorkflowError("GAP_FINDING_NOT_FOUND", "Gap finding not found.");
     const blocking = this.validateFindingErrors(finding);
     return { valid: blocking.length === 0, blocking_errors: blocking, warnings: [], trace_id: context.traceId };
   }
 
   async detectMissingEvidenceLinks(gapAnalysisVersionId: string, context: GapAnalysisContext): Promise<string[]> {
-    const findings = await this.deps.repositories.gapFindings.listByVersion(gapAnalysisVersionId, context.tenantId);
+    const findings = await this.deps.repositories.gapFindings.listByVersion(gapAnalysisVersionId, context.organizationId);
     return findings.filter((finding) => !finding.evidence_finding_id && finding.assessment_status !== "not_applicable_justified").map((finding) => finding.gap_finding_id);
   }
 
   async detectItemsRequiringValidation(gapAnalysisVersionId: string, context: GapAnalysisContext): Promise<string[]> {
-    const findings = await this.deps.repositories.gapFindings.listByVersion(gapAnalysisVersionId, context.tenantId);
+    const findings = await this.deps.repositories.gapFindings.listByVersion(gapAnalysisVersionId, context.organizationId);
     return findings.filter((finding) => finding.requires_user_validation).map((finding) => finding.gap_finding_id);
   }
 

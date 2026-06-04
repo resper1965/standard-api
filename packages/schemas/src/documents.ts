@@ -45,7 +45,6 @@ export const CreateDocumentRequestSchema = z.object({
 
 export const DocumentResponseSchema = z.object({
   document_id: UuidSchema,
-  tenant_id: UuidSchema,
   organization_id: UuidSchema,
   assessment_id: UuidSchema,
   original_filename: z.string(),
@@ -83,7 +82,6 @@ export const DocumentListResponseSchema = z.object({
 
 export const DocumentChunkResponseSchema = z.object({
   chunk_id: UuidSchema,
-  tenant_id: UuidSchema,
   organization_id: UuidSchema,
   assessment_id: UuidSchema,
   document_id: UuidSchema,
@@ -99,7 +97,6 @@ export const DocumentChunkResponseSchema = z.object({
 
 export const DocumentJobResponseSchema = z.object({
   job_id: UuidSchema,
-  tenant_id: UuidSchema,
   organization_id: UuidSchema,
   assessment_id: UuidSchema,
   document_id: UuidSchema,
@@ -121,7 +118,6 @@ export const ReprocessDocumentRequestSchema = z.object({
 });
 
 export const DocumentIngestionJobMessageSchema = z.object({
-  tenant_id: UuidSchema,
   organization_id: UuidSchema,
   assessment_id: UuidSchema,
   document_id: UuidSchema,
@@ -135,7 +131,6 @@ export const DocumentIngestionJobMessageSchema = z.object({
 
 export const VectorReferenceResponseSchema = z.object({
   vector_reference_id: UuidSchema,
-  tenant_id: UuidSchema,
   organization_id: UuidSchema,
   assessment_id: UuidSchema,
   document_id: UuidSchema,

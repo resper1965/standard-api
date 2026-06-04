@@ -82,7 +82,6 @@ export const ObservabilityTraceContextSchema = z.object({
   trace_id: TraceIdSchema,
   parent_trace_id: TraceIdSchema.optional(),
   span_id: z.string().min(8).optional(),
-  tenant_id: UuidSchema.optional(),
   organization_id: UuidSchema.optional(),
   assessment_id: UuidSchema.optional(),
   actor_id: UuidSchema.optional(),
@@ -100,7 +99,6 @@ export const StructuredLogEntrySchema = z.object({
   service: z.string().min(1),
   module: z.string().min(1).optional(),
   environment: z.string().min(1),
-  tenant_id: UuidSchema.optional(),
   organization_id: UuidSchema.optional(),
   assessment_id: UuidSchema.optional(),
   metadata_safe: MetadataSafeSchema
@@ -108,7 +106,6 @@ export const StructuredLogEntrySchema = z.object({
 
 export const AuditEventSchema = z.object({
   id: UuidSchema,
-  tenant_id: UuidSchema.optional(),
   organization_id: UuidSchema.optional(),
   assessment_id: UuidSchema.optional(),
   actor_id: UuidSchema.optional(),
@@ -127,7 +124,6 @@ export const AuditEventSchema = z.object({
 
 export const SecurityEventRecordSchema = z.object({
   id: UuidSchema,
-  tenant_id: UuidSchema.optional(),
   organization_id: UuidSchema.optional(),
   assessment_id: UuidSchema.optional(),
   actor_id: UuidSchema.optional(),
@@ -147,7 +143,6 @@ export const SecurityEventRecordSchema = z.object({
 
 export const OperationalMetricSchema = z.object({
   id: UuidSchema,
-  tenant_id: UuidSchema.optional(),
   organization_id: UuidSchema.optional(),
   assessment_id: UuidSchema.optional(),
   metric_name: z.string().min(1),
@@ -167,7 +162,6 @@ export const CostEstimateSchema = z.object({
 
 export const UsageRecordSchema = z.object({
   id: UuidSchema,
-  tenant_id: UuidSchema.optional(),
   organization_id: UuidSchema.optional(),
   assessment_id: UuidSchema.optional(),
   service_name: z.string().min(1),
@@ -186,7 +180,6 @@ export const UsageRecordSchema = z.object({
 
 export const AgentUsageRecordSchema = z.object({
   id: UuidSchema,
-  tenant_id: UuidSchema,
   organization_id: UuidSchema,
   assessment_id: UuidSchema,
   agent_run_id: UuidSchema,
@@ -203,7 +196,7 @@ export const AgentUsageRecordSchema = z.object({
 });
 
 export const UsageQuerySchema = z.object({
-  tenant_id: UuidSchema.optional(),
+  organization_id: UuidSchema.optional(),
   assessment_id: UuidSchema.optional(),
   from: z.string().optional(),
   to: z.string().optional(),

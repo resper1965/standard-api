@@ -10,12 +10,11 @@ export class ReportDraftService {
     assertContext(context);
     assertActor(context);
     const sources = await resolveReportSources(this.deps, assessmentId, reportType, options, context);
-    const existing = await this.deps.repositories.versions.listByAssessment(assessmentId, context.tenantId);
+    const existing = await this.deps.repositories.versions.listByAssessment(assessmentId, context.organizationId);
     const versionNumber = existing.filter((version) => version.report_type === reportType).length + 1;
     const now = new Date().toISOString();
     const draft: ReportVersionResponse = {
       report_version_id: crypto.randomUUID(),
-      tenant_id: context.tenantId,
       organization_id: context.organizationId,
       assessment_id: assessmentId,
       version_number: versionNumber,
@@ -54,14 +53,14 @@ export class ReportDraftService {
 
   async getReportVersion(reportVersionId: string, context: ReportingContext): Promise<ReportVersionResponse> {
     assertContext(context);
-    const report = await this.deps.repositories.versions.get(reportVersionId, context.tenantId);
+    const report = await this.deps.repositories.versions.get(reportVersionId, context.organizationId);
     if (!report || report.assessment_id !== context.assessmentId) throw new ReportingWorkflowError("REPORT_NOT_FOUND", "Report version not found.");
     return report;
   }
 
   async listReportVersions(assessmentId: string, context: ReportingContext): Promise<ReportVersionResponse[]> {
     assertContext(context);
-    return this.deps.repositories.versions.listByAssessment(assessmentId, context.tenantId);
+    return this.deps.repositories.versions.listByAssessment(assessmentId, context.organizationId);
   }
 }
 

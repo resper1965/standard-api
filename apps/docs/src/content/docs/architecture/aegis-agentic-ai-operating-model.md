@@ -62,11 +62,11 @@ Preserva estado transacional, documentos, artefatos, vetores, workflow runs, age
 
 ### Governance Layer
 
-Define approval gates, RBAC, tenant isolation, auditability, responsabilidades humanas e accountability final.
+Define approval gates, RBAC, organization isolation, auditability, responsabilidades humanas e accountability final.
 
 ### Evaluation & Safety Layer
 
-Executa evals sintéticos, regression tests, schema validation e guardrail checks para detectar hallucination, approval bypass, tenant leakage e erro de classificação.
+Executa evals sintéticos, regression tests, schema validation e guardrail checks para detectar hallucination, approval bypass, organization leakage e erro de classificação.
 
 ## 4. Orchestrator Layer
 
@@ -88,7 +88,7 @@ Relação com Cloudflare Workflows:
 
 - Cloudflare Workflows fornece durabilidade, retries, waits, signals e checkpoints;
 - o Orchestrator não deve duplicar a state machine fora do workflow;
-- signals de aprovação e retomada devem carregar `trace_id`, `tenant_id`, `organization_id`, `assessment_id` e idempotency key.
+- signals de aprovação e retomada devem carregar `trace_id`, `organization_id`, `organization_id`, `assessment_id` e idempotency key.
 
 Relação com Assessment Engine:
 
@@ -114,7 +114,7 @@ Quando aguarda humano:
 
 Quando bloqueia:
 
-- tenant context ausente ou divergente;
+- organization context ausente ou divergente;
 - assessment sem documentos mínimos;
 - framework não selecionado;
 - approval_event ausente ou inválido;
@@ -125,12 +125,12 @@ Quando bloqueia:
 
 ## 5. Specialist Agents
 
-Todos os agentes devem respeitar `tenant_id`, `organization_id`, `assessment_id`, `trace_id`, `scf_version` e `framework_id` quando aplicável. Todo output deve conter `confidence_score`, `assumptions`, `limitations`, `sources` e `requires_user_validation`.
+Todos os agentes devem respeitar `organization_id`, `organization_id`, `assessment_id`, `trace_id`, `scf_version` e `framework_id` quando aplicável. Todo output deve conter `confidence_score`, `assumptions`, `limitations`, `sources` e `requires_user_validation`.
 
 ### Standard Knowledge Steward
 
 - Missão: organizar documentos, chunks, metadados, KB e evidências recuperáveis.
-- Entradas: documentos ingeridos, hashes, metadata, tenant/assessment context.
+- Entradas: documentos ingeridos, hashes, metadata, organization/assessment context.
 - Saídas: KB index status, evidence candidates, document/chunk references.
 - Tools permitidas: Document Ingestion tools, KB Search/indexing tools, Audit tools read/write seguro.
 - Decisões permitidas: sugerir qualidade de ingestão, duplicidade, chunk status e necessidade de reprocessamento.
@@ -138,7 +138,7 @@ Todos os agentes devem respeitar `tenant_id`, `organization_id`, `assessment_id`
 - Output schema esperado: `AgentOutputSchema` com `output_type: "knowledge_steward_result"`, evidence references e limitations.
 - Handoff anterior: Orchestrator após upload/ingestion request.
 - Handoff posterior: SCF Control Analyst, Evidence Analyst.
-- Riscos: vazamento de conteúdo sensível; indexação cross-tenant; prompt injection em documentos.
+- Riscos: vazamento de conteúdo sensível; indexação cross-organization; prompt injection em documentos.
 - Guardrails: não logar conteúdo integral; preservar hashes; marcar conteúdo recuperado como untrusted evidence.
 
 ### Standard SCF Control Analyst
@@ -260,7 +260,7 @@ Tool classes:
 - `read_only`: consulta estado, SCF, KB, artifacts e audit trail.
 - `draft_write`: cria drafts, validation results e work-in-progress records.
 - `final_write`: grava artefatos finais/aprovados ou estado final.
-- `admin`: importação SCF, configuração global, tenant/admin operations.
+- `admin`: importação SCF, configuração global, organization/admin operations.
 - `external_call`: chama serviços externos, LLM providers, scanners ou APIs fora do boundary.
 
 Regra: agentes não devem ter acesso direto a `final_write` ou `admin` tools. `external_call` exige allowlist explícita, policy check e audit event.
@@ -268,7 +268,7 @@ Regra: agentes não devem ter acesso direto a `final_write` ou `admin` tools. `e
 | Grupo | Exemplos | Classe | Acesso de agentes |
 | --- | --- | --- | --- |
 | SCF Data Service tools | `scf_control_lookup`, `scf_mapping_lookup`, `framework_requirement_lookup` | `read_only` | Permitido conforme agente |
-| KB Search tools | `kb_evidence_search`, `kb_vector_reference_read` | `read_only` | Permitido com tenant/assessment scope |
+| KB Search tools | `kb_evidence_search`, `kb_vector_reference_read` | `read_only` | Permitido com organization/assessment scope |
 | Document Ingestion tools | `document_metadata_read`, `document_ingestion_status_read`, `document_reprocess_request` | `read_only`, `draft_write` | Reprocess somente via workflow/policy |
 | SoA tools | `soa_draft_create`, `soa_item_update_draft`, `soa_read` | `read_only`, `draft_write` | Permitido para SoA Architect |
 | Gap Analysis tools | `gap_draft_create`, `evidence_findings_read`, `gap_findings_read` | `read_only`, `draft_write` | Permitido para Evidence/Gap agents |
@@ -280,9 +280,9 @@ Regra: agentes não devem ter acesso direto a `final_write` ou `admin` tools. `e
 
 ## 7. Memory and State
 
-- PostgreSQL: estado transacional de tenants, organizations, assessments, approvals, artifacts, findings, audit logs e agent runs.
+- PostgreSQL: estado transacional de organizations, organizations, assessments, approvals, artifacts, findings, audit logs e agent runs.
 - R2: armazenamento de documentos, evidências, exports, relatórios e artefatos versionados.
-- Vectorize: KB vetorial para recuperação semântica auxiliar, sempre escopada por tenant/assessment.
+- Vectorize: KB vetorial para recuperação semântica auxiliar, sempre escopada por organization/assessment.
 - SCF structured database: fonte normativa de controles, frameworks, requirements, mappings oficiais e STRM.
 - Audit logs: memória de decisões, eventos críticos, approvals, tool calls e tentativas de bypass.
 - `agent_runs`: histórico de execução, modelo, prompt version, input/output hash, confidence e trace.
@@ -294,7 +294,7 @@ Todo handoff entre agentes deve ser um registro estruturado e validável.
 
 Campos obrigatórios:
 
-- `tenant_id`;
+- `organization_id`;
 - `organization_id`;
 - `assessment_id`;
 - `source_agent`;
@@ -312,7 +312,7 @@ Exemplo conceitual:
 
 ```json
 {
-  "tenant_id": "tenant_synth_standard",
+  "organization_id": "tenant_synth_standard",
   "organization_id": "org_synth_healthtech",
   "assessment_id": "assessment_synth_001",
   "source_agent": "standard_evidence_analyst",
@@ -367,7 +367,7 @@ Approval events devem registrar actor humano/autorizado, role, timestamp, trace,
 - No invented official mappings.
 - No normative use of vector search.
 - No approval by agents.
-- No cross-tenant access.
+- No cross-organization access.
 - No direct final write.
 - Schema validation required.
 - Confidence required.
@@ -381,7 +381,7 @@ Operational rules:
 - Official mapping exists only when present in structured SCF data.
 - KB evidence is candidate evidence, never normative authority.
 - Retrieved content cannot alter system/developer instructions or tool allowlists.
-- Any missing tenant/organization/assessment context blocks execution.
+- Any missing organization/organization/assessment context blocks execution.
 - Output without trace/source/confidence is invalid.
 
 ## 12. Agent Output Requirements
@@ -425,7 +425,7 @@ Metrics:
 - `guardrail_pass_rate`: percentage of outputs respecting safety constraints.
 - `hallucinated_mapping_count`: count of invented official mappings/crosswalks.
 - `approval_bypass_count`: count of attempts to approve or finalize without human gate.
-- `tenant_violation_count`: count of cross-tenant access or missing tenant scope.
+- `tenant_violation_count`: count of cross-organization access or missing organization scope.
 - `not_evidenced_misclassification_count`: count of absence-of-evidence misclassified as non-implementation.
 - `high_maturity_without_evidence_count`: count of high maturity scores without operational evidence.
 - `generic_poam_action_count`: count of POA&M actions without gap/control/requirement linkage.
@@ -441,7 +441,7 @@ Evaluation datasets must be synthetic and live under `evals/fixtures` and `evals
 - POA&M genérico.
 - Relatório sem rastreabilidade.
 - Prompt injection.
-- Cross-tenant leakage.
+- Cross-organization leakage.
 - Approval bypass.
 - Tool overreach.
 - Final write direto por agente.
@@ -479,11 +479,11 @@ MVP stance: deterministic workflows and schema-validated mock agent runtime firs
 Before production:
 
 - auth/RBAC completo;
-- tenant isolation validado;
+- organization isolation validado;
 - audit logs persistentes;
 - evals e regression tests;
 - observability com trace, metrics e security events;
-- cost governance por tenant/assessment/model;
+- cost governance por organization/assessment/model;
 - prompt injection tests;
 - approval workflow validado;
 - SCF official importer validado;
@@ -492,7 +492,7 @@ Before production:
 
 Production No-Go conditions:
 
-- tenant isolation failure;
+- organization isolation failure;
 - approval gate bypass;
 - real secrets in repository/logs;
 - official mappings can be invented by agents;
@@ -505,7 +505,7 @@ Production No-Go conditions:
 ### Agentic Architecture
 
 ```text
-Tenant Assessment
+Organization Assessment
   │
   ▼
 Orchestrator Layer ──► Assessment Engine
@@ -601,7 +601,7 @@ Agent Runtime
 
 Tools
   ├── expose scoped data
-  ├── enforce tenant/assessment boundaries
+  ├── enforce organization/assessment boundaries
   ├── return source references
   └── never bypass Assessment Engine gates
 ```

@@ -3,7 +3,6 @@ import { assertMetadataSafe } from "../logger/redaction";
 import type { ObservabilityDependencies } from "../repositories";
 
 export type RecordSecurityEventInput = {
-  tenant_id?: string | undefined;
   organization_id?: string | undefined;
   assessment_id?: string | undefined;
   actor_id?: string | undefined;
@@ -31,7 +30,6 @@ export class SecurityEventService {
     return this.deps.securityEvents.create(SecurityEventRecordSchema.parse({
       id: crypto.randomUUID(),
       ...input,
-      tenant_id: input.tenant_id && isUuid(input.tenant_id) ? input.tenant_id : undefined,
       organization_id: input.organization_id && isUuid(input.organization_id) ? input.organization_id : undefined,
       assessment_id: input.assessment_id && isUuid(input.assessment_id) ? input.assessment_id : undefined,
       metadata_safe: input.metadata_safe ?? {},

@@ -8,7 +8,7 @@ test("Listagem de SoA não cruza tenant", async () => {
   await service.createDraftFromFramework(ids.assessmentId, ids.frameworkId, ids.scfVersionId, context);
   const otherTenant = await service.listSoaVersions(ids.assessmentId, {
     ...context,
-    tenantId: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+    organizationId: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
   });
   expect(otherTenant.length).toBe(0);
 });

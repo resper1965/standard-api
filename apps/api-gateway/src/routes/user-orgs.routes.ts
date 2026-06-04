@@ -17,7 +17,7 @@ import type { RouteDefinition } from "../http";
 import { json, routeParam, parseJson } from "../http";
 import type { DbClient } from "../adapters/db";
 import { z } from "zod";
-import { provisionTenantContext } from "../adapters/tenant-mapping";
+import { provisionOrganizationContext } from "../adapters/tenant-mapping";
 
 /**
  * Type-safe accessor for the raw Drizzle DB client on deps._db.
@@ -41,6 +41,7 @@ export const userOrgsRoutes: RouteDefinition[] = [
     method: "GET",
     path: "/api/v1/users/me/organizations",
     protected: true,
+    permissions: ["organization:read"],
     tenantRequired: false,
     handler: async (context) => {
       const userId = context.session?.user?.id;
@@ -77,6 +78,7 @@ export const userOrgsRoutes: RouteDefinition[] = [
     method: "POST",
     path: "/api/v1/users/me/organizations/:organizationId/activate",
     protected: true,
+    permissions: ["organization:create"],
     tenantRequired: false,
     handler: async (context) => {
       const userId = context.session?.user?.id;
@@ -139,6 +141,7 @@ export const userOrgsRoutes: RouteDefinition[] = [
     method: "POST",
     path: "/api/v1/users/me/organizations/:organizationId/deactivate",
     protected: true,
+    permissions: ["organization:create"],
     tenantRequired: false,
     handler: async (context) => {
       const userId = context.session?.user?.id;
@@ -197,6 +200,7 @@ export const userOrgsRoutes: RouteDefinition[] = [
     method: "POST",
     path: "/api/v1/users/me/organizations",
     protected: true,
+    permissions: ["organization:create"],
     tenantRequired: false,
     handler: async (context) => {
       const userId = context.session?.user?.id;
@@ -269,7 +273,7 @@ export const userOrgsRoutes: RouteDefinition[] = [
         });
 
       // Provision the Standard domain tenant and organization for this new org.
-      await provisionTenantContext(db, orgId);
+      await provisionOrganizationContext(db, orgId);
 
       // Audit the creation
       await context.deps.audit.record("user_org.created", {

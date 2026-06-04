@@ -13,7 +13,7 @@ Documentação operacional e contexto do projeto devem estar em português, salv
 
 Fluxos críticos devem preservar:
 
-- `tenant_id`;
+- `organization_id`;
 - `organization_id`;
 - `assessment_id`;
 - `trace_id`;

@@ -32,7 +32,7 @@ export class ReportReviewService {
   }
 
   private async requireEditable(reportVersionId: string, context: ReportingContext): Promise<ReportVersionResponse> {
-    const report = await this.deps.repositories.versions.get(reportVersionId, context.tenantId);
+    const report = await this.deps.repositories.versions.get(reportVersionId, context.organizationId);
     if (!report || report.assessment_id !== context.assessmentId) throw new ReportingWorkflowError("REPORT_NOT_FOUND", "Report version not found.");
     if (report.status === "approved") throw new ReportingWorkflowError("REPORT_IMMUTABLE", "Approved report versions are immutable.");
     return report;

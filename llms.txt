@@ -1,0 +1,26 @@
+# Standard GRC API - AI Context
+
+## Current Reality
+This file provides the single source of truth for the architecture and technical stack to prevent hallucinations or references to legacy code.
+
+### 1. Tenancy Model
+- **Concept:** Strict Organization-Based Tenancy. 
+- **Rule:** The concept of `tenant` or `tenant_id` **DOES NOT EXIST** in this application anymore. Multi-tenancy is exclusively handled via `organization_id` (or `organizationId`). All endpoints, middlewares, databases, and artifacts are strictly isolated by `organizationId`. 
+
+### 2. Authentication Model
+- **Provider:** Standard Native Auth v1.6.11 (which wraps Better Auth).
+- **Rule:** Do NOT use or reference Clerk, Supabase, Auth0, or any other external provider.
+- **Storage:** Sessions, Users, and Organizations are managed via Standard Native Auth backed by Neon PostgreSQL (`sessions`, `users`, `organizations` tables).
+- **API Keys:** Handled via `@standard-native-auth/api-key` plugin.
+
+### 3. Frontend Architecture
+- **Application (`apps/web`):** This is a **Platform Console** for managing Orgs, Users, API keys, and System Health. 
+- **Rule:** It is **NOT** a GRC Dashboard for end-users. The assessment features are primarily consumed via our API (`apps/api-gateway`).
+
+### 4. Core Stack
+- **Edge:** Cloudflare Workers, Workflows, Queues.
+- **Database:** Neon Serverless PostgreSQL with Drizzle ORM.
+- **AI/Vector:** Cloudflare Vectorize + R2 for documents.
+- **Package Manager:** pnpm workspaces.
+
+If you are modifying code, ensure you use `organizationId` instead of `tenantId`. If you encounter any remnant of `tenantId` in the codebase, you should immediately refactor it to `organizationId`.

@@ -25,7 +25,7 @@ export class PrivacyStatusService {
     context: PrivacyContext,
     reason?: string
   ): Promise<{ status: PrivacyActivityStatus; previous_status: PrivacyActivityStatus }> {
-    const activity = await this.deps.repositories.activities.get(activityId, context.tenantId);
+    const activity = await this.deps.repositories.activities.get(activityId, context.organizationId);
     if (!activity) {
       throw new PrivacyError("ACTIVITY_NOT_FOUND", `Activity ${activityId} not found.`);
     }
@@ -43,7 +43,7 @@ export class PrivacyStatusService {
     // Gate: under_review requires completeness check
     if (targetStatus === "under_review") {
       const completenessService = new PrivacyCompletenessService(this.deps);
-      const result = await completenessService.analyze(activityId, context.tenantId);
+      const result = await completenessService.analyze(activityId, context.organizationId);
       if (!result.can_be_submitted_for_review) {
         throw new PrivacyError("COMPLETENESS_CHECK_FAILED", "Activity cannot be submitted for review. Missing required fields or has blocking issues.", {
           completeness_score: result.completeness_score,

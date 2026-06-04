@@ -10,7 +10,7 @@ Secure Controls Framework. Fonte normativa estruturada usada pelo Standard.
 
 ## Assessment
 
-Execução de avaliação para uma organização/tenant, com documentos, escopo, SoA, Gap Analysis, Maturity, POA&M e relatório.
+Execução de avaliação para uma organização/organization, com documentos, escopo, SoA, Gap Analysis, Maturity, POA&M e relatório.
 
 ## SoA
 

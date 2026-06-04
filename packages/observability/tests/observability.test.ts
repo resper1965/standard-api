@@ -12,7 +12,7 @@ import {
 import { expect, test } from "./test-kit";
 
 const ids = {
-  tenantId: "11111111-1111-4111-8111-111111111111",
+  organizationId: "11111111-1111-4111-8111-111111111111",
   orgId: "22222222-2222-4222-8222-222222222222",
   assessmentId: "33333333-3333-4333-8333-333333333333",
   actorId: "44444444-4444-4444-8444-444444444444",
@@ -59,8 +59,7 @@ test("AuditEvent exige action e trace_id e rejeita metadata proibida", async () 
   const deps = createInMemoryObservabilityDependencies();
   const service = new AuditEventService(deps);
   const event = await service.record({
-    tenant_id: ids.tenantId,
-    organization_id: ids.orgId,
+    organization_id: ids.organizationId,
     assessment_id: ids.assessmentId,
     actor_id: ids.actorId,
     action: "assessment_created",
@@ -83,7 +82,7 @@ test("AuditEvent exige action e trace_id e rejeita metadata proibida", async () 
 test("SecurityEvent exige type severity e trace_id", async () => {
   const deps = createInMemoryObservabilityDependencies();
   const event = await new SecurityEventService(deps).record({
-    tenant_id: ids.tenantId,
+    organization_id: ids.organizationId,
     actor_id: ids.actorId,
     event_type: "forbidden_access_attempt",
     severity: "medium",
@@ -100,7 +99,7 @@ test("SecurityEvent exige type severity e trace_id", async () => {
 test("Metrics registra KB search sem query integral", async () => {
   const deps = createInMemoryObservabilityDependencies();
   const metric = await new MetricsService(deps).record({
-    tenant_id: ids.tenantId,
+    organization_id: ids.organizationId,
     assessment_id: ids.assessmentId,
     metric_name: "kb_search_count",
     metric_type: "counter",
@@ -117,7 +116,7 @@ test("Metrics registra KB search sem query integral", async () => {
 test("CostTracking registra usage sem preço quando PricingProvider ausente", async () => {
   const deps = createInMemoryObservabilityDependencies();
   const record = await new CostTrackingService(deps).recordUsage({
-    tenant_id: ids.tenantId,
+    organization_id: ids.organizationId,
     assessment_id: ids.assessmentId,
     service_name: "vectorize",
     operation_name: "query",
@@ -135,8 +134,7 @@ test("CostTracking registra usage sem preço quando PricingProvider ausente", as
 test("CostTracking registra agent usage com tokens", async () => {
   const deps = createInMemoryObservabilityDependencies();
   const usage = await new CostTrackingService(deps).recordAgentUsage({
-    tenant_id: ids.tenantId,
-    organization_id: ids.orgId,
+    organization_id: ids.organizationId,
     assessment_id: ids.assessmentId,
     agent_run_id: ids.agentRunId,
     model_provider: "mock",

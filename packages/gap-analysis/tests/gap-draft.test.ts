@@ -23,7 +23,7 @@ test("Gap draft cria versão draft e findings rastreáveis", async () => {
 
 test("SoA not_applicable com justificativa vira not_applicable_justified", async () => {
   const { gap, soa, approvedSoa } = await createApprovedSoaFixture();
-  const items = await soa.repositories.items.listByVersion(approvedSoa.soa_version_id, ids.tenantId);
+  const items = await soa.repositories.items.listByVersion(approvedSoa.soa_version_id, ids.organizationId);
   const updatedItem = {
     ...items[0]!,
     applicability_status: "not_applicable",
@@ -36,7 +36,7 @@ test("SoA not_applicable com justificativa vira not_applicable_justified", async
 
 test("SoA not_applicable sem justificativa vira not_applicable_not_justified", async () => {
   const { gap, soa, approvedSoa } = await createApprovedSoaFixture();
-  const items = await soa.repositories.items.listByVersion(approvedSoa.soa_version_id, ids.tenantId);
+  const items = await soa.repositories.items.listByVersion(approvedSoa.soa_version_id, ids.organizationId);
   const finding = await new GapDraftService(gap).generateGapFindingForSoaItem({
     ...items[0]!,
     applicability_status: "not_applicable",
@@ -47,7 +47,7 @@ test("SoA not_applicable sem justificativa vira not_applicable_not_justified", a
 
 test("Evidência parcial vira partially_met", async () => {
   const { gap, soa, approvedSoa } = await createApprovedSoaFixture();
-  const items = await soa.repositories.items.listByVersion(approvedSoa.soa_version_id, ids.tenantId);
+  const items = await soa.repositories.items.listByVersion(approvedSoa.soa_version_id, ids.organizationId);
   const finding = await new GapDraftService(gap).generateGapFindingForSoaItem(items[0]!, {
     evidence_finding_id: "99999999-9999-4999-8999-999999999999",
     evidence_strength: "partial",

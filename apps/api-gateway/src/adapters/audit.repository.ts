@@ -34,7 +34,6 @@ export const createDrizzleAuditRepository = (db: DbClient): AuditRepositoryAdapt
 
   return {
     async record(event, metadata) {
-      const tenantId = typeof metadata.tenant_id === "string" && isUuid(metadata.tenant_id) ? metadata.tenant_id : undefined;
       const organizationId = typeof metadata.organization_id === "string" && isUuid(metadata.organization_id) ? metadata.organization_id : undefined;
       const actorId = typeof metadata.actor_id === "string" && isUuid(metadata.actor_id) ? metadata.actor_id : undefined;
       const resourceType = typeof metadata.resource_type === "string" ? metadata.resource_type : event;
@@ -50,7 +49,6 @@ export const createDrizzleAuditRepository = (db: DbClient): AuditRepositoryAdapt
           safeMeta[key] = metadata[key];
         }
       }
-      if (tenantId) delete safeMeta.tenant_id;
       if (organizationId) delete safeMeta.organization_id;
       if (actorId) delete safeMeta.actor_id;
       if (resourceId) delete safeMeta.resource_id;

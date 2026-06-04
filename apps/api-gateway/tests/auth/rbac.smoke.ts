@@ -125,7 +125,7 @@ console.log("📋 Grupo 1: Platform Admin — acesso a rotas de tenant\n");
 
 await test("platform_admin GET /api/v1/tenants/:id retorna 200 (não 403)", async () => {
   // Busca o tenant do próprio admin — deve existir
-  const listRes = await apiGet("/api/v1/tenants/1", adminCookie); // tenantId=1 ou qualquer existente
+  const listRes = await apiGet("/api/v1/tenants/1", adminCookie); // organizationId=1 ou qualquer existente
   // O acesso deve ser permitido (não 403 de RBAC) — pode ser 404 se tenant não existir
   const isRbacBlock = listRes.status === 403;
   assert(!isRbacBlock, `Platform admin recebeu 403 em /api/v1/tenants — requirePlatformAdmin não reconheceu o flag`);

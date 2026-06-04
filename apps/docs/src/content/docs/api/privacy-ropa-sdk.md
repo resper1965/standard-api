@@ -6,7 +6,7 @@ title: "Standard Privacy ROPA — SDK Reference"
 
 > **Version**: v1 | **Base URL**: `https://api.standard.dev/api/v1`
 > **Auth**: Bearer token (header `Authorization: Bearer <token>`)
-> **Tenant**: Required (header `x-tenant-id: <uuid>`)
+> **Organization**: Required (header `x-organization-id: <uuid>`)
 
 ---
 
@@ -28,7 +28,7 @@ The fastest way to create a ROPA entry is to send natural language text:
 ```bash
 curl -X POST https://api.standard.dev/api/v1/privacy/processing-activities/from-text \
   -H "Authorization: Bearer $TOKEN" \
-  -H "x-tenant-id: $TENANT_ID" \
+  -H "x-organization-id: $TENANT_ID" \
   -H "Content-Type: application/json" \
   -d '{
     "text": "Nós coletamos emails, nomes e CPFs dos nossos clientes para enviar campanhas de marketing. Compartilhamos os dados com a Mailchimp para disparo de emails. Guardamos por 2 anos. Temos consentimento via formulário web."
@@ -276,7 +276,7 @@ class StandardPrivacyClient {
   constructor(
     private baseUrl: string,
     private token: string,
-    private tenantId: string,
+    private organizationId: string,
   ) {}
 
   private async request<T>(method: string, path: string, body?: unknown): Promise<T> {
@@ -284,7 +284,7 @@ class StandardPrivacyClient {
       method,
       headers: {
         "Authorization": `Bearer ${this.token}`,
-        "x-tenant-id": this.tenantId,
+        "x-organization-id": this.organizationId,
         "Content-Type": "application/json",
       },
       body: body ? JSON.stringify(body) : undefined,
@@ -377,7 +377,7 @@ class StandardPrivacyClient {
 const client = new StandardPrivacyClient(
   "https://api.standard.dev",
   "eyJ...",
-  "tenant-uuid"
+  "organization-uuid"
 );
 
 // 1. Extract from text
@@ -427,7 +427,7 @@ erDiagram
 
     ACTIVITY {
         uuid id PK
-        uuid tenant_id FK
+        uuid organization_id FK
         string name
         string purpose
         enum legal_basis_lgpd
@@ -469,4 +469,4 @@ erDiagram
 2. **AI suggests, humans decide.** Every AI-extracted field creates a `field_review` requiring human approval.
 3. **Critical legal fields get double review.** `legal_basis_lgpd`, `retention_period`, `purpose`, and `dpia_required` always get a `system_rule` review in addition to the AI review.
 4. **Absence of evidence ≠ absence of implementation.** The system reports gaps, not failures.
-5. **Tenant isolation is absolute.** Every query is scoped by `tenant_id`. Cross-tenant access returns empty, never throws (preventing information leakage).
+5. **Organization isolation is absolute.** Every query is scoped by `organization_id`. Cross-organization access returns empty, never throws (preventing information leakage).

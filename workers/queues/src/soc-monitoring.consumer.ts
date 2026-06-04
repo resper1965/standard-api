@@ -9,7 +9,7 @@
  *    It records a security event and logs structured metadata for every DLQ entry.
  *
  * 2. **Tenant Mismatch Alert**: Fired by the API gateway when it detects a request
- *    where the session tenant_id != the payload/path tenant_id. This is a critical
+ *    where the session organization_id != the payload/path organization_id. This is a critical
  *    security signal — it can indicate a confused deputy attack or a bug in
  *    multi-tenant isolation.
  *
@@ -30,7 +30,7 @@ export type DlqAlertMessage = {
   original_message: unknown;
   failure_reason?: string;
   retry_count?: number;
-  tenant_id?: string;
+  organization_id?: string;
   assessment_id?: string;
   agent_run_id?: string;
   trace_id?: string;
@@ -64,7 +64,7 @@ export async function processDlqAlert(
     original_queue: body.original_queue,
     failure_reason: body.failure_reason ?? "unknown",
     retry_count: body.retry_count ?? 0,
-    tenant_id: body.tenant_id ?? "unknown",
+    organization_id: body.organization_id ?? "unknown",
     assessment_id: body.assessment_id,
     agent_run_id: body.agent_run_id,
     trace_id: body.trace_id ?? crypto.randomUUID(),
@@ -74,16 +74,16 @@ export async function processDlqAlert(
   }));
 
   // Persist to security_events if DB available
-  if (env.DATABASE_URL && body.tenant_id) {
+  if (env.DATABASE_URL && body.organization_id) {
     try {
       const sql = neon(env.DATABASE_URL);
       await sql`
         INSERT INTO security_events (
-          id, tenant_id, event_type, severity,
+          id, organization_id, event_type, severity,
           actor_id, metadata, created_at
         ) VALUES (
           gen_random_uuid(),
-          ${body.tenant_id},
+          ${body.organization_id},
           'queue.dlq_message',
           'HIGH',
           'system',
@@ -118,7 +118,7 @@ export async function processDlqAlert(
           SET scan_status = 'error',
               updated_at = NOW()
           WHERE id = ${String(msg.document_id)}
-            AND tenant_id = ${body.tenant_id}
+            AND organization_id = ${body.organization_id}
             AND scan_status IN ('pending')
         `;
         // Also mark extraction job as failed
@@ -143,7 +143,7 @@ export async function processDlqAlert(
               error_message = ${`Agent run exhausted retries on queue ${queue}`},
               completed_at = NOW()
           WHERE id = ${runId}
-            AND tenant_id = ${body.tenant_id}
+            AND organization_id = ${body.organization_id}
             AND status IN ('queued', 'running')
         `;
         console.warn(`[soc:dlq:reconcile] Agent run ${runId} marked as poisoned_dlq (DLQ reconciliation)`);
@@ -157,7 +157,7 @@ export async function processDlqAlert(
               error_message_safe = ${`Embedding job exhausted retries on queue ${queue}`},
               completed_at = NOW()
           WHERE id = ${String(msg.job_id ?? msg.document_chunk_id)}
-            AND tenant_id = ${body.tenant_id}
+            AND organization_id = ${body.organization_id}
         `;
         console.warn(`[soc:dlq:reconcile] KB embedding job marked as failed (DLQ reconciliation)`);
       }
@@ -196,7 +196,7 @@ export async function processTenantMismatchAlert(
       const sql = neon(env.DATABASE_URL);
       await sql`
         INSERT INTO security_events (
-          id, tenant_id, event_type, severity,
+          id, organization_id, event_type, severity,
           actor_id, metadata, created_at
         ) VALUES (
           gen_random_uuid(),
@@ -245,7 +245,7 @@ export async function processDlqQueueMessage(
     queue_type: "dlq_alert",
     original_queue: queueName,
     original_message: originalBody,
-    tenant_id: (originalBody as any)?.tenant_id,
+    organization_id: (originalBody as any)?.organization_id,
     assessment_id: (originalBody as any)?.assessment_id,
     agent_run_id: (originalBody as any)?.agent_run_id,
     trace_id: (originalBody as any)?.trace_id,

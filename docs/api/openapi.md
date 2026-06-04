@@ -6,12 +6,12 @@ Base funcional: `/api/v1`. `GET /health` também existe fora de versão para hea
 
 - `GET /health`
 - `GET /api/v1/health`
-- `POST /api/v1/tenants`
-- `GET /api/v1/tenants/:tenantId`
-- `PATCH /api/v1/tenants/:tenantId`
 - `POST /api/v1/organizations`
 - `GET /api/v1/organizations/:organizationId`
-- `GET /api/v1/tenants/:tenantId/organizations`
+- `PATCH /api/v1/organizations/:organizationId`
+- `POST /api/v1/organizations`
+- `GET /api/v1/organizations/:organizationId`
+- `GET /api/v1/organizations/:organizationId/organizations`
 - `POST /api/v1/assessments`
 - `GET /api/v1/assessments/:assessmentId`
 - `GET /api/v1/organizations/:organizationId/assessments`
@@ -129,7 +129,7 @@ Base funcional: `/api/v1`. `GET /health` também existe fora de versão para hea
 - `GET /api/v1/assessments/:assessmentId/metrics`
 - `GET /api/v1/admin/metrics/operational`
 - `GET /api/v1/assessments/:assessmentId/usage`
-- `GET /api/v1/tenants/:tenantId/usage`
+- `GET /api/v1/organizations/:organizationId/usage`
 - `GET /api/v1/admin/usage`
 
 ## Requests e Responses Principais
@@ -150,7 +150,7 @@ Response:
 ```json
 {
   "assessment_id": "uuid",
-  "tenant_id": "uuid",
+  "organization_id": "uuid",
   "organization_id": "uuid",
   "name": "Assessment name",
   "state": "draft",
@@ -210,7 +210,7 @@ Response:
 ```json
 {
   "agent_run_id": "uuid",
-  "tenant_id": "uuid",
+  "organization_id": "uuid",
   "organization_id": "uuid",
   "assessment_id": "uuid",
   "agent_id": "gap_analyst",
@@ -229,7 +229,7 @@ Response:
 {
   "tool_name": "kb_evidence_search",
   "input": {
-    "tenant_id": "uuid",
+    "organization_id": "uuid",
     "organization_id": "uuid",
     "assessment_id": "uuid",
     "framework_id": "uuid",
@@ -265,7 +265,7 @@ Response:
 
 ## Observability, Audit e Usage
 
-Todos os endpoints de observability ficam em `/api/v1`, exigem auth, tenant context e RBAC.
+Todos os endpoints de observability ficam em `/api/v1`, exigem auth, organization context e RBAC.
 
 Audit:
 
@@ -285,7 +285,7 @@ Metrics:
 Usage/cost:
 
 - `GET /api/v1/assessments/:assessmentId/usage` exige `assessment:read`.
-- `GET /api/v1/tenants/:tenantId/usage` exige `tenant:read` e não permite tenant divergente.
+- `GET /api/v1/organizations/:organizationId/usage` exige `organization:read` e não permite organization divergente.
 - `GET /api/v1/admin/usage` exige `admin:read`.
 
 Queries aceitas:
@@ -327,14 +327,14 @@ Response:
 {
   "document": {
     "document_id": "uuid",
-    "tenant_id": "uuid",
+    "organization_id": "uuid",
     "organization_id": "uuid",
     "assessment_id": "uuid",
     "original_filename": "evidence.txt",
     "normalized_filename": "evidence.txt",
     "storage_provider": "mock_r2",
     "storage_bucket": "standard-documents-dev",
-    "storage_key": "tenants/.../documents/.../evidence.txt",
+    "storage_key": "organizations/.../documents/.../evidence.txt",
     "content_hash": "sha256",
     "mime_type": "text/plain",
     "file_size": 128,
@@ -359,7 +359,7 @@ Response:
 
 ## Knowledge Base
 
-Endpoints de KB exigem `tenant_id` e sempre limitam consulta a um `assessment_id`. Resultados são evidências candidatas, não conclusões de controle.
+Endpoints de KB exigem `organization_id` e sempre limitam consulta a um `assessment_id`. Resultados são evidências candidatas, não conclusões de controle.
 
 `POST /api/v1/assessments/:assessmentId/kb/index`:
 
@@ -420,7 +420,7 @@ Response:
   "warning": "KB results are candidate evidence only. They do not determine compliance, maturity, or official SCF mappings.",
   "data": [
     {
-      "tenant_id": "uuid",
+      "organization_id": "uuid",
       "organization_id": "uuid",
       "assessment_id": "uuid",
       "document_id": "uuid",
@@ -440,13 +440,13 @@ Response:
 }
 ```
 
-`GET /api/v1/assessments/:assessmentId/kb/vector-references` e `GET /api/v1/documents/:documentId/kb/vector-references` retornam referências vetoriais escopadas ao tenant.
+`GET /api/v1/assessments/:assessmentId/kb/vector-references` e `GET /api/v1/documents/:documentId/kb/vector-references` retornam referências vetoriais escopadas ao organization.
 
 `GET /api/v1/chunks/:chunkId/context?assessment_id=:assessmentId` retorna contexto controlado com snippet curto e IDs anterior/próximo quando disponíveis.
 
 ## SCF Data Service
 
-Os endpoints SCF consultam a base normativa estruturada global. Eles não exigem `tenant_id`, porque SCF oficial não é dado de cliente. Endpoints admin exigem `x-standard-actor-id` no placeholder atual.
+Os endpoints SCF consultam a base normativa estruturada global. Eles não exigem `organization_id`, porque SCF oficial não é dado de cliente. Endpoints admin exigem `x-standard-actor-id` no placeholder atual.
 
 `GET /api/v1/scf/versions/latest`:
 
@@ -552,7 +552,7 @@ Resposta principal:
 ```json
 {
   "scope_id": "uuid",
-  "tenant_id": "uuid",
+  "organization_id": "uuid",
   "organization_id": "uuid",
   "assessment_id": "uuid",
   "scope_version": 1,
@@ -872,7 +872,7 @@ Resposta sintética:
 ```json
 {
   "report_version_id": "uuid",
-  "tenant_id": "uuid",
+  "organization_id": "uuid",
   "organization_id": "uuid",
   "assessment_id": "uuid",
   "version_number": 1,
@@ -924,7 +924,7 @@ Resposta:
     "format": "markdown",
     "storage_provider": "r2_compatible_mock",
     "storage_bucket": "standard-reporting-local",
-    "storage_key": "tenants/{tenant}/organizations/{org}/assessments/{assessment}/reports/{report}/report.markdown",
+    "storage_key": "organizations/{organization}/organizations/{org}/assessments/{assessment}/reports/{report}/report.markdown",
     "content_hash": "64-char-sha256",
     "file_size": 1234,
     "mime_type": "text/markdown"
@@ -938,7 +938,7 @@ Regras:
 - Maturity e POA&M ausentes são permitidos no MVP apenas com limitação registrada.
 - Relatórios aprovados são imutáveis.
 - Aprovação exige `approval_event_id` do gate `report` e `x-standard-actor-id`.
-- Artifacts registram `content_hash` e storage key tenant-scoped.
+- Artifacts registram `content_hash` e storage key organization-scoped.
 - Evidências aparecem como índice/referência segura, não como documento completo.
 - DOCX/PDF retornam placeholder documentado até existir renderer server-side.
 
@@ -973,7 +973,7 @@ Resposta:
   "created_at": "2026-04-28T20:00:00.000Z",
   "updated_at": "2026-04-28T20:00:00.000Z",
   "state": {
-    "tenant_id": "uuid",
+    "organization_id": "uuid",
     "organization_id": "uuid",
     "assessment_id": "uuid",
     "current_step": "wait_for_documents",
@@ -1049,11 +1049,11 @@ Schemas de workflow:
 
 - `WorkflowRunStatus`: `pending`, `running`, `waiting_for_input`, `waiting_for_approval`, `blocked`, `failed`, `cancelled`, `completed`.
 - `WorkflowSignalType`: `framework_selected`, `scope_approved`, `soa_approved`, `gap_analysis_approved`, `maturity_approved`, `poam_approved`, `report_approved`, `assessment_cancelled`, `assessment_blocked`, `assessment_resumed`.
-- `WorkflowBlockedReason`: `missing_tenant_context`, `missing_assessment`, `duplicate_active_workflow`, `waiting_for_documents`, `waiting_for_framework_selection`, `approval_event_invalid`, `business_prerequisite_missing`, `manual_intervention_required`, `cancelled_by_actor`.
+- `WorkflowBlockedReason`: `missing_organization_context`, `missing_assessment`, `duplicate_active_workflow`, `waiting_for_documents`, `waiting_for_framework_selection`, `approval_event_invalid`, `business_prerequisite_missing`, `manual_intervention_required`, `cancelled_by_actor`.
 
 Regras:
 
-- Todos os endpoints exigem tenant context.
+- Todos os endpoints exigem organization context.
 - Start exige actor context e `idempotency_key`.
 - Não há workflow duplicado ativo por assessment.
 - Signals de approval validam `approval_event_id` no gate correto antes de avançar.
@@ -1064,7 +1064,7 @@ Regras:
 
 Headers de desenvolvimento/teste:
 
-- `x-standard-tenant-id`: tenant context para dados de cliente.
+- `x-standard-organization-id`: organization context para dados de cliente.
 - `x-standard-actor-id`: actor context.
 - `Authorization: Bearer dev:<role>`: placeholder local para role específica.
 

@@ -10,7 +10,7 @@ test("rota crítica sem auth retorna UNAUTHORIZED", async () => {
     top_k: 3,
     search_type: "semantic"
   }, {
-    "x-standard-tenant-id": created.tenantId
+    "x-standard-tenant-id": created.organizationId
   });
 
   expect(result.response.status).toBe(401);
@@ -26,7 +26,7 @@ test("usuário sem kb:search não busca KB", async () => {
     top_k: 3,
     search_type: "semantic"
   }, {
-    "x-standard-tenant-id": created.tenantId,
+    "x-standard-tenant-id": created.organizationId,
     "x-standard-actor-id": ids.actorId,
     authorization: "Bearer dev:auditor_readonly"
   });
@@ -48,7 +48,7 @@ test("usuário sem agent:run não executa agente", async () => {
     scf_version_id: ids.scfVersionId,
     input: { task: "synthetic" }
   }, {
-    "x-standard-tenant-id": created.tenantId,
+    "x-standard-tenant-id": created.organizationId,
     "x-standard-actor-id": ids.actorId,
     authorization: "Bearer dev:auditor_readonly"
   });
@@ -81,7 +81,7 @@ test("approval sem permissão específica é bloqueado", async () => {
     target_id: created.assessmentId,
     reason: "Synthetic approval."
   }, {
-    "x-standard-tenant-id": created.tenantId,
+    "x-standard-tenant-id": created.organizationId,
     "x-standard-actor-id": ids.actorId,
     authorization: "Bearer dev:assessor"
   });

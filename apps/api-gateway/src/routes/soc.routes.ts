@@ -85,7 +85,7 @@ export const socRoutes: RouteDefinition[] = [
           if (ctx.deps.SOC_TRIAGE_QUEUE) {
             await ctx.deps.SOC_TRIAGE_QUEUE.send({
               job_id,
-              tenantId: ctx.tenantId!,
+              organizationId: ctx.organizationId!,
               traceId: ctx.traceId,
               systemModuleName: body.systemModuleName,
               rawLogsExcerpt: body.rawLogsExcerpt,
@@ -105,11 +105,11 @@ export const socRoutes: RouteDefinition[] = [
         const result = await usecase.triage({
           systemModuleName: body.systemModuleName,
           rawLogsExcerpt: body.rawLogsExcerpt,
-          tenantId: ctx.tenantId!
+          organizationId: ctx.organizationId!
         });
         
         await ctx.deps.audit.record("soc.incident.triaged", { 
-          tenant_id: ctx.tenantId, 
+          organization_id: ctx.organizationId, 
           trace_id: ctx.traceId, 
           module: body.systemModuleName, 
           severity: result.severity_level,
@@ -125,7 +125,7 @@ export const socRoutes: RouteDefinition[] = [
           "INTERNAL_ERROR",
           `Agent SOC Incident Triage failed: ${e instanceof Error ? e.message : String(e)}`,
           500,
-          e instanceof Error && e.stack ? [e.stack] : []
+          e instanceof Error ? [e.message] : []
         );
       }
     },

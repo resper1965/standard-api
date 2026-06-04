@@ -29,7 +29,7 @@ export class GapApprovalService {
   }
 
   async supersedePreviousApprovedGapAnalysis(assessmentId: string, approvedGapAnalysisVersionId: string, context: GapAnalysisContext): Promise<void> {
-    const versions = await this.deps.repositories.gapVersions.listByAssessment(assessmentId, context.tenantId);
+    const versions = await this.deps.repositories.gapVersions.listByAssessment(assessmentId, context.organizationId);
     for (const version of versions) {
       if (version.gap_analysis_version_id !== approvedGapAnalysisVersionId && version.status === "approved") {
         await this.deps.repositories.gapVersions.update({
@@ -43,7 +43,7 @@ export class GapApprovalService {
   }
 
   private async getVersion(gapAnalysisVersionId: string, context: GapAnalysisContext): Promise<GapAnalysisVersionResponse> {
-    const version = await this.deps.repositories.gapVersions.get(gapAnalysisVersionId, context.tenantId);
+    const version = await this.deps.repositories.gapVersions.get(gapAnalysisVersionId, context.organizationId);
     if (!version || version.assessment_id !== context.assessmentId) throw new GapAnalysisWorkflowError("GAP_ANALYSIS_NOT_FOUND", "Gap Analysis version not found.");
     return version;
   }

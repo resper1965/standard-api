@@ -53,7 +53,7 @@ graph TD
   * O build do frontend continua passando sem erros de importação perdida.
 
 #### `CL-1.2`: Higienizar `LoginPage.tsx` para Platform Console
-* **Descrição:** Modificar os textos de copywriting em `apps/web/src/pages/auth/LoginPage.tsx` que ainda se referem à automação GRC e frameworks do SCF. Mudar o foco para a gestão administrativa de desenvolvedores e tenants.
+* **Descrição:** Modificar os textos de copywriting em `apps/web/src/pages/auth/LoginPage.tsx` que ainda se referem à automação GRC e frameworks do SCF. Mudar o foco para a gestão administrativa de desenvolvedores e organizations.
 * **Arquivos Alvo:**
   * [LoginPage.tsx](file:///c:/Users/resper/OneDrive/Área de Trabalho/aegis-api/apps/web/src/pages/auth/LoginPage.tsx)
 * **Critérios de Aceite:**

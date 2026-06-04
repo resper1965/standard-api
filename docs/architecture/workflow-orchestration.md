@@ -85,7 +85,7 @@ Sinais aceitos:
 - `assessment_resumed`
 - sinais técnicos do MVP: `documents_uploaded`, `documents_ingested`, `kb_indexed`, `scf_pre_analysis_completed`
 
-Cada signal preserva `tenant_id`, `organization_id`, `assessment_id`, `trace_id`, `actor_id` e `idempotency_key`.
+Cada signal preserva `organization_id`, `organization_id`, `assessment_id`, `trace_id`, `actor_id` e `idempotency_key`.
 
 ## Retry e Idempotência
 
@@ -146,7 +146,7 @@ Eventos auditáveis emitidos pelo serviço:
 - `lifecycle_workflow_resumed`
 - `lifecycle_workflow_completed`
 
-Cada evento inclui tenant, organization, assessment, workflow run, step quando aplicável, actor/system actor, trace e metadata segura.
+Cada evento inclui organization, organization, assessment, workflow run, step quando aplicável, actor/system actor, trace e metadata segura.
 
 ## Limitações do MVP
 

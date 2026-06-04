@@ -30,7 +30,6 @@ export type WorkflowAuditEventType =
 
 export type WorkflowAuditEvent = {
   event_type: WorkflowAuditEventType;
-  tenant_id: string;
   organization_id: string;
   assessment_id: string;
   workflow_run_id: string;
@@ -70,10 +69,10 @@ export interface TenantScopedWorkflowRepository {
 export type WorkflowRepository = {
   create(input: WorkflowRunRecord): Promise<WorkflowRunRecord>;
   get(workflowRunId: string): Promise<WorkflowRunRecord | null>;
-  getActiveByAssessment(assessmentId: string, tenantId: string): Promise<WorkflowRunRecord | null>;
-  listByAssessment(assessmentId: string, tenantId: string): Promise<WorkflowRunRecord[]>;
+  getActiveByAssessment(assessmentId: string, organizationId: string): Promise<WorkflowRunRecord | null>;
+  listByAssessment(assessmentId: string, organizationId: string): Promise<WorkflowRunRecord[]>;
   save(record: WorkflowRunRecord): Promise<void>;
-  withTenant(tenantId: string): TenantScopedWorkflowRepository;
+  withOrganization(organizationId: string): TenantScopedWorkflowRepository;
 };
 
 export type WorkflowAuditAdapter = {

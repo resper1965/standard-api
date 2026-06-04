@@ -43,7 +43,6 @@ type GenericVersionRow = {
 
 const mapRowToVersion = (row: GenericVersionRow, artifactType: ArtifactType): ArtifactVersion => ({
   id: row.id,
-  tenantId: row.organizationId,
   organizationId: row.organizationId,
   assessmentId: row.assessmentId,
   artifactType,
@@ -112,19 +111,19 @@ export const createDrizzleArtifactRepository = (db: DbClient): ArtifactRepositor
     const rows = await db.select().from(table as typeof soaVersions)
       .where(and(
         eq((table as typeof soaVersions).assessmentId, assessmentId),
-        // We lack tenantId parameter in this method signature natively, but wait, the signature in http.ts doesn't pass tenantId to listByAssessment?
+        // We lack organizationId parameter in this method signature natively, but wait, the signature in http.ts doesn't pass organizationId to listByAssessment?
         // Ah, looking at http.ts, `listByAssessment(assessmentId: string, artifactType: ArtifactType): Promise<ArtifactVersion[]>;`
-        // So I can't filter by tenantId in the base method unless I change http.ts. But I CAN in withTenant!
+        // So I can't filter by organizationId in the base method unless I change http.ts. But I CAN in withOrganization!
       ));
     return rows.map(r => mapRowToVersion(r as unknown as GenericVersionRow, artifactType));
   },
 
-  withTenant(tenantId: string) {
+  withOrganization(organizationId: string) {
     return {
       create: async (input) => this.create(input),
       get: async (versionId) => {
         const artifact = await this.get(versionId);
-        return artifact && artifact.organizationId === tenantId ? artifact : null;
+        return artifact && artifact.organizationId === organizationId ? artifact : null;
       },
       save: async (version) => this.save(version),
       listByAssessment: async (assessmentId, artifactType) => {
@@ -132,7 +131,7 @@ export const createDrizzleArtifactRepository = (db: DbClient): ArtifactRepositor
         const rows = await db.select().from(table as typeof soaVersions)
           .where(and(
             eq((table as typeof soaVersions).assessmentId, assessmentId),
-            eq((table as typeof soaVersions).organizationId, tenantId)
+            eq((table as typeof soaVersions).organizationId, organizationId)
           ));
         return rows.map(r => mapRowToVersion(r as unknown as GenericVersionRow, artifactType));
       }

@@ -45,25 +45,25 @@ export class DrizzleKbEmbeddingJobRepository implements KbEmbeddingJobRepository
     await this.saveJob(job);
   }
 
-  async getJob(jobId: string, tenantId: string): Promise<KbEmbeddingJobResponse | null> {
-    const result = await this.db.select().from(kbEmbeddingJobs).where(and(eq(kbEmbeddingJobs.id, jobId), eq(kbEmbeddingJobs.organizationId, tenantId))).limit(1);
+  async getJob(jobId: string, organizationId: string): Promise<KbEmbeddingJobResponse | null> {
+    const result = await this.db.select().from(kbEmbeddingJobs).where(and(eq(kbEmbeddingJobs.id, jobId), eq(kbEmbeddingJobs.organizationId, organizationId))).limit(1);
     const row = result[0];
     if (!row) return null;
     return this.mapToJob(row);
   }
 
-  async listJobsByAssessment(assessmentId: string, tenantId: string): Promise<KbEmbeddingJobResponse[]> {
-    const results = await this.db.select().from(kbEmbeddingJobs).where(and(eq(kbEmbeddingJobs.assessmentId, assessmentId), eq(kbEmbeddingJobs.organizationId, tenantId)));
+  async listJobsByAssessment(assessmentId: string, organizationId: string): Promise<KbEmbeddingJobResponse[]> {
+    const results = await this.db.select().from(kbEmbeddingJobs).where(and(eq(kbEmbeddingJobs.assessmentId, assessmentId), eq(kbEmbeddingJobs.organizationId, organizationId)));
     return results.map((row: any) => this.mapToJob(row));
   }
 
-  async listJobsByDocument(documentId: string, tenantId: string): Promise<KbEmbeddingJobResponse[]> {
-    const results = await this.db.select().from(kbEmbeddingJobs).where(and(eq(kbEmbeddingJobs.documentId, documentId), eq(kbEmbeddingJobs.organizationId, tenantId)));
+  async listJobsByDocument(documentId: string, organizationId: string): Promise<KbEmbeddingJobResponse[]> {
+    const results = await this.db.select().from(kbEmbeddingJobs).where(and(eq(kbEmbeddingJobs.documentId, documentId), eq(kbEmbeddingJobs.organizationId, organizationId)));
     return results.map((row: any) => this.mapToJob(row));
   }
 
-  async findQueuedJobForChunk(chunkId: string, tenantId: string): Promise<KbEmbeddingJobResponse | null> {
-    const result = await this.db.select().from(kbEmbeddingJobs).where(and(eq(kbEmbeddingJobs.chunkId, chunkId), eq(kbEmbeddingJobs.organizationId, tenantId), eq(kbEmbeddingJobs.status, "queued"))).limit(1);
+  async findQueuedJobForChunk(chunkId: string, organizationId: string): Promise<KbEmbeddingJobResponse | null> {
+    const result = await this.db.select().from(kbEmbeddingJobs).where(and(eq(kbEmbeddingJobs.chunkId, chunkId), eq(kbEmbeddingJobs.organizationId, organizationId), eq(kbEmbeddingJobs.status, "queued"))).limit(1);
     const row = result[0];
     if (!row) return null;
     return this.mapToJob(row);
@@ -72,7 +72,6 @@ export class DrizzleKbEmbeddingJobRepository implements KbEmbeddingJobRepository
   private mapToJob(row: any): KbEmbeddingJobResponse {
     return {
       job_id: row.id,
-      tenant_id: row.organizationId,
       organization_id: row.organizationId,
       assessment_id: row.assessmentId,
       document_id: row.documentId,
@@ -120,31 +119,30 @@ export class DrizzleKbVectorReferenceRepository implements KbVectorReferenceRepo
     await this.save(reference);
   }
 
-  async get(referenceId: string, tenantId: string): Promise<KbVectorReferenceResponse | null> {
-    const result = await this.db.select().from(vectorReferences).where(and(eq(vectorReferences.id, referenceId), eq(vectorReferences.organizationId, tenantId))).limit(1);
+  async get(referenceId: string, organizationId: string): Promise<KbVectorReferenceResponse | null> {
+    const result = await this.db.select().from(vectorReferences).where(and(eq(vectorReferences.id, referenceId), eq(vectorReferences.organizationId, organizationId))).limit(1);
     const row = result[0];
     if (!row) return null;
     return this.mapToReference(row);
   }
 
-  async findByChunk(chunkId: string, tenantId: string): Promise<KbVectorReferenceResponse | null> {
+  async findByChunk(chunkId: string, organizationId: string): Promise<KbVectorReferenceResponse | null> {
     // Actually the KB reference connects to kb_entries. So we look up kb_entries first, or use a join.
     throw new Error("findByChunk not fully implemented in Drizzle Adapter");
   }
 
-  async listByAssessment(assessmentId: string, tenantId: string): Promise<KbVectorReferenceResponse[]> {
-    const results = await this.db.select().from(vectorReferences).where(and(eq(vectorReferences.assessmentId, assessmentId), eq(vectorReferences.organizationId, tenantId)));
+  async listByAssessment(assessmentId: string, organizationId: string): Promise<KbVectorReferenceResponse[]> {
+    const results = await this.db.select().from(vectorReferences).where(and(eq(vectorReferences.assessmentId, assessmentId), eq(vectorReferences.organizationId, organizationId)));
     return results.map((row: any) => this.mapToReference(row));
   }
 
-  async listByDocument(documentId: string, tenantId: string): Promise<KbVectorReferenceResponse[]> {
+  async listByDocument(documentId: string, organizationId: string): Promise<KbVectorReferenceResponse[]> {
     throw new Error("listByDocument not fully implemented in Drizzle Adapter due to join requirement.");
   }
 
   private mapToReference(row: any): KbVectorReferenceResponse {
     return {
       vector_reference_id: row.id,
-      tenant_id: row.organizationId,
       organization_id: row.organizationId,
       assessment_id: row.assessmentId,
       document_id: row.documentId ?? row.kbEntryId,

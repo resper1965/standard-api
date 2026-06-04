@@ -6,13 +6,12 @@ import { expect, test } from "./test-kit";
 test("idempotency_key evita duplicidade de signal e versões lógicas", async () => {
   const rawDeps = createInMemoryWorkflowDependencies();
   const deps = {
-    workflows: rawDeps.workflows.withTenant(ids.tenantId),
+    workflows: rawDeps.workflows.withOrganization(ids.organizationId),
     audit: rawDeps.audit,
     assessmentEngine: rawDeps.assessmentEngine
   };
   const orchestrator = new AssessmentLifecycleOrchestrator(deps);
   const started = await orchestrator.start({
-    tenant_id: ids.tenantId,
     organization_id: ids.organizationId,
     assessment_id: ids.assessmentId,
     requested_by: ids.actorId,
@@ -39,13 +38,12 @@ test("idempotency_key evita duplicidade de signal e versões lógicas", async ()
 test("cancel muda status para cancelled e resume só funciona em blocked ou failed", async () => {
   const rawDeps = createInMemoryWorkflowDependencies();
   const deps = {
-    workflows: rawDeps.workflows.withTenant(ids.tenantId),
+    workflows: rawDeps.workflows.withOrganization(ids.organizationId),
     audit: rawDeps.audit,
     assessmentEngine: rawDeps.assessmentEngine
   };
   const orchestrator = new AssessmentLifecycleOrchestrator(deps);
   const started = await orchestrator.start({
-    tenant_id: ids.tenantId,
     organization_id: ids.organizationId,
     assessment_id: ids.assessmentId,
     requested_by: ids.actorId,
@@ -79,13 +77,12 @@ test("cancel muda status para cancelled e resume só funciona em blocked ou fail
 test("blocked registra blocked_reason seguro", async () => {
   const rawDeps = createInMemoryWorkflowDependencies();
   const deps = {
-    workflows: rawDeps.workflows.withTenant(ids.tenantId),
+    workflows: rawDeps.workflows.withOrganization(ids.organizationId),
     audit: rawDeps.audit,
     assessmentEngine: rawDeps.assessmentEngine
   };
   const orchestrator = new AssessmentLifecycleOrchestrator(deps);
   const started = await orchestrator.start({
-    tenant_id: ids.tenantId,
     organization_id: ids.organizationId,
     assessment_id: ids.assessmentId,
     requested_by: ids.actorId,
@@ -102,7 +99,7 @@ test("blocked registra blocked_reason seguro", async () => {
     payload: { blocked_reason: "manual_intervention_required" }
   }, snapshot());
 
-  const run = await orchestrator.get(started.workflow_run_id, ids.tenantId);
+  const run = await orchestrator.get(started.workflow_run_id, ids.organizationId);
   expect(run?.status).toBe("blocked");
   expect(run?.state.blocked_reason).toBe("manual_intervention_required");
 });
@@ -110,12 +107,11 @@ test("blocked registra blocked_reason seguro", async () => {
 test("tenant isolation bloqueia acesso cruzado ao workflow", async () => {
   const rawDeps = createInMemoryWorkflowDependencies();
   const orchestratorA = new AssessmentLifecycleOrchestrator({
-    workflows: rawDeps.workflows.withTenant(ids.tenantId),
+    workflows: rawDeps.workflows.withOrganization(ids.organizationId),
     audit: rawDeps.audit,
     assessmentEngine: rawDeps.assessmentEngine
   });
   const started = await orchestratorA.start({
-    tenant_id: ids.tenantId,
     organization_id: ids.organizationId,
     assessment_id: ids.assessmentId,
     requested_by: ids.actorId,
@@ -125,7 +121,7 @@ test("tenant isolation bloqueia acesso cruzado ao workflow", async () => {
   }, snapshot());
 
   const orchestratorB = new AssessmentLifecycleOrchestrator({
-    workflows: rawDeps.workflows.withTenant("99999999-9999-4999-8999-999999999999"),
+    workflows: rawDeps.workflows.withOrganization("99999999-9999-4999-8999-999999999999"),
     audit: rawDeps.audit,
     assessmentEngine: rawDeps.assessmentEngine
   });
@@ -136,13 +132,12 @@ test("tenant isolation bloqueia acesso cruzado ao workflow", async () => {
 test("approval gate errado permanece bloqueado pelo Assessment Engine", async () => {
   const rawDeps = createInMemoryWorkflowDependencies();
   const deps = {
-    workflows: rawDeps.workflows.withTenant(ids.tenantId),
+    workflows: rawDeps.workflows.withOrganization(ids.organizationId),
     audit: rawDeps.audit,
     assessmentEngine: rawDeps.assessmentEngine
   };
   const orchestrator = new AssessmentLifecycleOrchestrator(deps);
   const started = await orchestrator.start({
-    tenant_id: ids.tenantId,
     organization_id: ids.organizationId,
     assessment_id: ids.assessmentId,
     requested_by: ids.actorId,

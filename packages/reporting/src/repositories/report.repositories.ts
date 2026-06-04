@@ -11,13 +11,13 @@ export class InMemoryReportVersionRepository {
     this.versions.set(version.report_version_id, version);
   }
 
-  async get(reportVersionId: string, tenantId: string): Promise<ReportVersionResponse | null> {
+  async get(reportVersionId: string, organizationId: string): Promise<ReportVersionResponse | null> {
     const version = this.versions.get(reportVersionId);
-    return version && version.tenant_id === tenantId ? version : null;
+    return version && version.organization_id === organizationId ? version : null;
   }
 
-  async listByAssessment(assessmentId: string, tenantId: string): Promise<ReportVersionResponse[]> {
-    return [...this.versions.values()].filter((version) => version.assessment_id === assessmentId && version.tenant_id === tenantId);
+  async listByAssessment(assessmentId: string, organizationId: string): Promise<ReportVersionResponse[]> {
+    return [...this.versions.values()].filter((version) => version.assessment_id === assessmentId && version.organization_id === organizationId);
   }
 }
 
@@ -28,13 +28,13 @@ export class InMemoryReportArtifactRepository {
     this.artifacts.set(artifact.report_artifact_id, artifact);
   }
 
-  async get(artifactId: string, tenantId: string): Promise<ReportArtifactResponse | null> {
+  async get(artifactId: string, organizationId: string): Promise<ReportArtifactResponse | null> {
     const artifact = this.artifacts.get(artifactId);
-    return artifact && artifact.tenant_id === tenantId ? artifact : null;
+    return artifact && artifact.organization_id === organizationId ? artifact : null;
   }
 
-  async listByReport(reportVersionId: string, tenantId: string): Promise<ReportArtifactResponse[]> {
-    return [...this.artifacts.values()].filter((artifact) => artifact.report_version_id === reportVersionId && artifact.tenant_id === tenantId);
+  async listByReport(reportVersionId: string, organizationId: string): Promise<ReportArtifactResponse[]> {
+    return [...this.artifacts.values()].filter((artifact) => artifact.report_version_id === reportVersionId && artifact.organization_id === organizationId);
   }
 }
 
@@ -49,13 +49,13 @@ export class InMemoryExportJobRepository {
     this.jobs.set(job.export_job_id, job);
   }
 
-  async get(exportJobId: string, tenantId: string): Promise<ExportJobResponse | null> {
+  async get(exportJobId: string, organizationId: string): Promise<ExportJobResponse | null> {
     const job = this.jobs.get(exportJobId);
-    return job && job.tenant_id === tenantId ? job : null;
+    return job && job.organization_id === organizationId ? job : null;
   }
 
-  async listByAssessment(assessmentId: string, tenantId: string): Promise<ExportJobResponse[]> {
-    return [...this.jobs.values()].filter((job) => job.assessment_id === assessmentId && job.tenant_id === tenantId);
+  async listByAssessment(assessmentId: string, organizationId: string): Promise<ExportJobResponse[]> {
+    return [...this.jobs.values()].filter((job) => job.assessment_id === assessmentId && job.organization_id === organizationId);
   }
 }
 

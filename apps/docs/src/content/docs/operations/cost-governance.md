@@ -5,7 +5,7 @@ title: "Cost Governance — Standard Platform"
 # Cost Governance — Standard Platform
 
 > §8 do Production Go-Live Checklist.  
-> Define orçamentos por ambiente, alertas, quotas por operação e tracking de uso por tenant.
+> Define orçamentos por ambiente, alertas, quotas por operação e tracking de uso por organization.
 
 ---
 
@@ -40,12 +40,12 @@ title: "Cost Governance — Standard Platform"
 
 | Operação | Limite Atual | Burst | Implementação |
 |----------|-------------|-------|--------------|
-| API geral | 120 req/min | 20 | KV token bucket por `clientIp+tenantId` |
+| API geral | 120 req/min | 20 | KV token bucket por `clientIp+organizationId` |
 | Upload de documento | 10 req/min | 5 | Rate limit path-specific |
 | KB search | 60 req/min | 10 | Rate limit path-specific |
 | Report export | 5 req/min | 2 | Rate limit path-specific |
 
-### Quotas por Tenant (a implementar pós-MVP)
+### Quotas por Organization (a implementar pós-MVP)
 
 | Operação | Quota Proposta | Tier Free | Tier Pro | Tier Enterprise |
 |----------|----------------|-----------|----------|----------------|
@@ -60,23 +60,23 @@ title: "Cost Governance — Standard Platform"
 
 ---
 
-## 4. Usage Tracking por Tenant
+## 4. Usage Tracking por Organization
 
 ### Implementado
 
-- Audit logs incluem `tenant_id` em cada operação crítica ✅
-- Rate limiting usa `clientIp + tenantId` como chave ✅
-- Vectorize namespaced por tenant/assessment ✅
-- R2 prefixado por `tenant_id/org_id/assessment_id` ✅
+- Audit logs incluem `organization_id` em cada operação crítica ✅
+- Rate limiting usa `clientIp + organizationId` como chave ✅
+- Vectorize namespaced por organization/assessment ✅
+- R2 prefixado por `organization_id/org_id/assessment_id` ✅
 
-### Tracking de custo por tenant (roadmap)
+### Tracking de custo por organization (roadmap)
 
-Para billing SaaS por tenant, implementar:
+Para billing SaaS por organization, implementar:
 
 ```typescript
 // packages/observability/src/usage/usage-tracker.ts (roadmap)
 type UsageEvent = {
-  tenant_id: string;
+  organization_id: string;
   organization_id: string;
   event_type: "agent_run" | "kb_search" | "document_upload" | "report_export";
   units: number;
@@ -87,7 +87,7 @@ type UsageEvent = {
 
 Opções de implementação:
 1. **Cloudflare Analytics Engine** — writes de uso via Workers; free tier generoso
-2. **PostgreSQL `usage_events` table** — com agregações diárias por tenant
+2. **PostgreSQL `usage_events` table** — com agregações diárias por organization
 3. **Stripe Meter API** — integração direta para billing baseado em uso
 
 ---
@@ -129,12 +129,12 @@ Configurar no AI Gateway (Cloudflare Dashboard → AI → AI Gateway):
 
 1. `[ ]` Configurar billing alert no Cloudflare Dashboard (80% budget)
 2. `[ ]` Configurar alert no Neon Dashboard (90% compute)
-3. `[ ]` Revisar quotas de rate limiting para o primeiro tenant real
+3. `[ ]` Revisar quotas de rate limiting para o primeiro organization real
 4. `[ ]` Documentar pricing tier e quotas no developer portal
 
 ## 8. Ações Pós-Go-Live (P2)
 
-1. Implementar `usage_events` table para tracking por tenant
+1. Implementar `usage_events` table para tracking por organization
 2. Integrar Cloudflare Analytics Engine para métricas de uso
 3. Definir pricing tiers e implementar quota enforcement
 4. Integrar Stripe Meter para billing baseado em uso

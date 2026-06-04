@@ -13,7 +13,6 @@ export const recordAuditEvent = async (context: RequestContext, route: string): 
     await context.deps.audit.record("api_request", {
       route,
       method: context.request.method,
-      tenant_id: context.tenantId,
       organization_id: context.organizationId,
       actor_id: context.actorId,
       system_actor: context.systemActor,

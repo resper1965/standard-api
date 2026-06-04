@@ -9,7 +9,7 @@ This document details the design and specification for the new REST API endpoint
 - **Query Parameters**:
   - `?framework=` (Optional): Filters mappings case-insensitively by framework name or identifier slug.
   - `?version=` (Optional): Version of the SCF catalog. Defaults to the latest version.
-- **Security**: Must pass through Bearer Token authentication (`protected: true`) and tenant validation (`tenantRequired: true`).
+- **Security**: Must pass through Bearer Token authentication (`protected: true`) and organization validation (`tenantRequired: true`).
 - **Response Format**:
   ```json
   {
@@ -64,7 +64,7 @@ An in-memory fallback implementation for testing.
 ## 3. Security & Error Handling
 
 - **401 Unauthorized**: Missing or invalid Bearer token.
-- **400 Bad Request**: Missing `x-standard-tenant-id` header (enforced by `tenantRequired: true`).
+- **400 Bad Request**: Missing `x-standard-organization-id` header (enforced by `tenantRequired: true`).
 - **404 Not Found**: Control code does not exist in the requested version.
 
 ## 4. Testing Plan

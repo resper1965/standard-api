@@ -3,7 +3,6 @@ import { assertMetadataSafe } from "../logger/redaction";
 import type { ObservabilityDependencies } from "../repositories";
 
 export type RecordAuditEventInput = {
-  tenant_id?: string | undefined;
   organization_id?: string | undefined;
   assessment_id?: string | undefined;
   actor_id?: string | undefined;

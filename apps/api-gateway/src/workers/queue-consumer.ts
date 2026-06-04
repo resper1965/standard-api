@@ -46,7 +46,7 @@ import { createInMemoryAgentRuntimeDependencies } from "@standard/agent-runtime"
 
 interface SocTriagePayload {
   job_id: string;
-  tenantId: string;
+  organizationId: string;
   traceId: string;
   systemModuleName: string;
   rawLogsExcerpt: string;
@@ -57,7 +57,7 @@ const isSocTriagePayload = (body: unknown): body is SocTriagePayload => {
   const b = body as Record<string, unknown>;
   return (
     typeof b.job_id === "string" &&
-    typeof b.tenantId === "string" &&
+    typeof b.organizationId === "string" &&
     typeof b.traceId === "string" &&
     typeof b.systemModuleName === "string" &&
     typeof b.rawLogsExcerpt === "string"
@@ -68,12 +68,12 @@ const isSocTriagePayload = (body: unknown): body is SocTriagePayload => {
 
 /**
  * Validate that the incoming message has mandatory tenant context.
- * A missing or empty tenantId is a fatal, non-retryable error.
+ * A missing or empty organizationId is a fatal, non-retryable error.
  */
 const assertTenantIntegrity = (payload: SocTriagePayload): void => {
-  if (!payload.tenantId || payload.tenantId.length < 8) {
+  if (!payload.organizationId || payload.organizationId.length < 8) {
     throw new TenantMismatchError(
-      `Payload job_id=${payload.job_id} has invalid tenantId="${payload.tenantId}". ` +
+      `Payload job_id=${payload.job_id} has invalid organizationId="${payload.organizationId}". ` +
       `Possible cross-tenant contamination or malformed dispatch.`
     );
   }
@@ -99,8 +99,15 @@ export default {
         ? new CloudflareAiGatewayAdapter({
             baseUrl: env.AI_GATEWAY_BASE_URL,
             apiKey: env.OPENAI_API_KEY,
+            ...(env.AI_GATEWAY_TOKEN ? { gatewayToken: env.AI_GATEWAY_TOKEN } : {}),
+            metadata: { source: "queue-consumer", queue: "SOC_TRIAGE_QUEUE" },
           })
-        : createInMemoryAgentRuntimeDependencies().llm;
+        : (() => {
+            console.warn(
+              "[soc:queue] ⚠️ AI_GATEWAY_BASE_URL or OPENAI_API_KEY missing. Using MOCK LLM — all AI responses will be empty."
+            );
+            return createInMemoryAgentRuntimeDependencies().llm;
+          })();
 
     for (const message of batch.messages) {
       const raw = message.body;
@@ -129,19 +136,19 @@ export default {
 
         // ── Step 2: LLM Triage ──
         console.log(
-          `[soc:queue] 🔍 Processing job ${payload.job_id} for tenant ${payload.tenantId} (trace: ${payload.traceId})`,
+          `[soc:queue] 🔍 Processing job ${payload.job_id} for tenant ${payload.organizationId} (trace: ${payload.traceId})`,
         );
         const usecase = new IncidentTriagerUseCase(llm as any);
         const result = await usecase.triage({
           systemModuleName: payload.systemModuleName,
           rawLogsExcerpt: payload.rawLogsExcerpt,
-          tenantId: payload.tenantId,
+          organizationId: payload.organizationId,
         });
 
         // ── Step 3: Audit success ──
         await audit.record("soc.incident.triaged", {
           job_id: payload.job_id,
-          tenant_id: payload.tenantId,
+          organization_id: payload.organizationId,
           trace_id: payload.traceId,
           module: payload.systemModuleName,
           severity: result.severity_level,
@@ -162,7 +169,7 @@ export default {
           queue: "SOC_TRIAGE_QUEUE",
           outcome: "success",
           value: processingMs,
-          tenant_id: payload.tenantId,
+          organization_id: payload.organizationId,
           trace_id: payload.traceId,
           job_id: payload.job_id,
           timestamp: new Date().toISOString(),
@@ -187,7 +194,7 @@ export default {
 
           await audit.record("soc.dlq.event", {
             job_id: payload.job_id,
-            tenant_id: payload.tenantId,
+            organization_id: payload.organizationId,
             trace_id: payload.traceId,
             module: payload.systemModuleName,
             error_name: errorName,
@@ -206,7 +213,7 @@ export default {
             queue: "SOC_TRIAGE_QUEUE",
             outcome: "dlq",
             value: Date.now() - msgStartedAt,
-            tenant_id: payload.tenantId,
+            organization_id: payload.organizationId,
             trace_id: payload.traceId,
             job_id: payload.job_id,
             timestamp: new Date().toISOString(),
@@ -225,7 +232,7 @@ export default {
             queue: "SOC_TRIAGE_QUEUE",
             outcome: "retry",
             value: Date.now() - msgStartedAt,
-            tenant_id: payload.tenantId,
+            organization_id: payload.organizationId,
             trace_id: payload.traceId,
             job_id: payload.job_id,
             timestamp: new Date().toISOString(),

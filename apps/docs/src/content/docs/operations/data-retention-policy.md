@@ -10,7 +10,7 @@ title: "Data Retention & Legal Hold Policy"
 
 1. **Minimum necessary retention**: Data is kept only as long as required for operational, regulatory, or contractual purposes.
 2. **Soft delete first**: All critical entities use `deleted_at` timestamps for reversible removal.
-3. **Tenant isolation**: Retention policies are enforced per-tenant; no cross-tenant data leakage.
+3. **Organization isolation**: Retention policies are enforced per-organization; no cross-organization data leakage.
 4. **Legal holds override**: When active, legal holds suspend all automated purge for the affected scope.
 5. **Audit trail**: All retention actions (purge, hold, release) are recorded in `audit_logs`.
 
@@ -20,8 +20,8 @@ title: "Data Retention & Legal Hold Policy"
 
 | Entity | Default Retention | After Deletion | Notes |
 |--------|:-----------------:|:--------------:|-------|
-| **Tenants** | Indefinite (active) | 90 days soft delete | Cascade to all tenant data |
-| **Organizations** | Indefinite (active) | 90 days soft delete | Follows tenant lifecycle |
+| **Organizations** | Indefinite (active) | 90 days soft delete | Cascade to all organization data |
+| **Organizations** | Indefinite (active) | 90 days soft delete | Follows organization lifecycle |
 | **Assessments** | Indefinite (active) | 1 year soft delete | Regulatory: retain completed assessments |
 | **Documents** | Assessment lifetime | 1 year after assessment close | R2 objects purged after retention |
 | **Document Chunks** | Document lifetime | Same as parent document | Cascade delete |
@@ -61,7 +61,7 @@ UPDATE assessments SET deleted_at = NULL WHERE id = $1;
 
 ## Legal Hold
 
-A legal hold freezes all automated purge operations for a specific tenant, organization, or assessment.
+A legal hold freezes all automated purge operations for a specific organization, organization, or assessment.
 
 ### Activation
 ```json
@@ -75,7 +75,7 @@ A legal hold freezes all automated purge operations for a specific tenant, organ
 ```
 
 ### Rules
-- Legal holds are stored as metadata on the tenant/assessment record
+- Legal holds are stored as metadata on the organization/assessment record
 - No automated purge job may delete data under active legal hold
 - Only `platform_admin` role can activate or release legal holds
 - All hold/release events are recorded in `audit_logs`
@@ -92,7 +92,7 @@ A legal hold freezes all automated purge operations for a specific tenant, organ
 ### Automated (Future)
 A scheduled Cloudflare Worker or Cron Trigger will:
 1. Query entities past retention period with `deleted_at` set
-2. Verify no active legal hold on the entity or its parent tenant
+2. Verify no active legal hold on the entity or its parent organization
 3. Hard delete from PostgreSQL
 4. Remove associated R2 objects
 5. Remove associated Vectorize vectors
@@ -112,6 +112,6 @@ Until automated purge is implemented:
 | Regulation | Requirement | Standard Coverage |
 |------------|-------------|-------------------|
 | GDPR Art. 17 | Right to erasure | Soft delete + purge workflow |
-| SOC 2 CC6.1 | Logical access controls | Tenant isolation + RBAC |
+| SOC 2 CC6.1 | Logical access controls | Organization isolation + RBAC |
 | ISO 27001 A.8.10 | Information deletion | Retention policy + audit trail |
 | NIST 800-53 SI-12 | Information management | Defined retention periods |
