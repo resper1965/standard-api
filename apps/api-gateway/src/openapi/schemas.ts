@@ -3,7 +3,7 @@ import { extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
 
 extendZodWithOpenApi(z);
 
-export const RopaAnalysisOutputSchema = z.object({
+const RopaAnalysisOutputSchema = z.object({
   suggested_risk_level: z.enum(["low", "medium", "high", "critical"])
     .openapi({ description: "Primary risk level deduced from the data processing activity." }),
   required_controls: z.array(z.object({
@@ -15,7 +15,7 @@ export const RopaAnalysisOutputSchema = z.object({
   is_dpia_required: z.boolean().openapi({ description: "Whether a DPIA should be triggered in the agentic chain." })
 }).openapi("RopaAnalysisOutput");
 
-export const DpiaAssessmentInputSchema = z.object({
+const DpiaAssessmentInputSchema = z.object({
   projectDescription: z.string().min(5).openapi({ example: "Project integrating the accounting API" }),
   ropaContext: RopaAnalysisOutputSchema
 }).openapi("DpiaAssessmentInput");
@@ -41,12 +41,12 @@ export const VendorScannerOutputSchema = z.object({
   red_flags_for_negotiation: z.array(z.string()).openapi({ description: "Severe gaps that the legal team needs to renegotiate." })
 }).openapi("VendorScannerOutput");
 
-export const IncidentTriagerInputSchema = z.object({
+const IncidentTriagerInputSchema = z.object({
   systemModuleName: z.string().openapi({ example: "WAF Edge Firewall" }),
   rawLogsExcerpt: z.string().min(10).openapi({ example: "[10/Oct/2026:13:55:36 +0000] 'GET /admin' 403 154 '-' 'SqlMap/1.4'" })
 }).openapi("IncidentTriagerInput");
 
-export const IncidentTriagerOutputSchema = z.object({
+const IncidentTriagerOutputSchema = z.object({
   is_false_positive: z.boolean().openapi({ description: "Identifica se é apenas ruído ou tráfego lícito." }),
   severity_level: z.enum(["low", "medium", "high", "critical"]).openapi({ description: "Gravidade real calculada pelo Agente L3." }),
   attack_vector_guessed: z.string().openapi({ description: "Vetor provável (ex: SQL Injection)." }),
@@ -55,13 +55,13 @@ export const IncidentTriagerOutputSchema = z.object({
   requires_dpo_breach_notification: z.boolean().openapi({ description: "Se PII estiver exposto, deve disparar a notificação oficial DPO LGPD." })
 }).openapi("IncidentTriagerOutput");
 
-export const BoardTranslatorInputSchema = z.object({
+const BoardTranslatorInputSchema = z.object({
   technicalRiskDescription: z.string().min(10).openapi({ example: "Vulnerabilidade no pod kube-system expondo porta 10250 sem auth (CVE-2018-1002105)." }),
   riskCategory: z.enum(["security", "privacy", "compliance", "architecture"]).openapi({ example: "security" }),
   businessContext: z.string().optional().openapi({ example: "Cluster roda os pagamentos de Black Friday." })
 }).openapi("BoardTranslatorInput");
 
-export const BoardTranslatorOutputSchema = z.object({
+const BoardTranslatorOutputSchema = z.object({
   executive_summary: z.string().openapi({ description: "Plain-language summary without excessive jargon." }),
   financial_impact_estimate: z.string().openapi({ description: "Descriptive estimate of financial loss if the risk materializes." }),
   regulatory_impact: z.string().openapi({ description: "Fines or legal requirements involved." }),

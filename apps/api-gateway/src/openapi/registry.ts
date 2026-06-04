@@ -27,7 +27,7 @@ registry.registerComponent("securitySchemes", "CookieSession", {
 // Shared API Schemas
 // ==========================================
 
-export const ApiErrorSchema = z.object({
+const ApiErrorSchema = z.object({
   error: z.object({
     code: z.string().openapi({ example: "NOT_FOUND" }),
     message: z.string().openapi({ example: "Resource not found." }),
@@ -36,7 +36,7 @@ export const ApiErrorSchema = z.object({
   })
 }).openapi("ApiError");
 
-export const PaginatedMeta = z.object({
+const PaginatedMeta = z.object({
   page: z.number(),
   per_page: z.number(),
   total: z.number()

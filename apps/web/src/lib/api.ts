@@ -7,7 +7,7 @@ let cachedTenantId: string | null = null;
 let sessionFetchPromise: Promise<string> | null = null;
 
 /** Call this immediately after switching or activating an organization. */
-export function invalidateTenantCache(): void {
+function invalidateTenantCache(): void {
   cachedTenantId = null;
   sessionFetchPromise = null;
 }

@@ -152,7 +152,7 @@ export function useDeleteWebhook(orgId: string) {
   });
 }
 
-export function useToggleWebhook(orgId: string) {
+function useToggleWebhook(orgId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ endpointId, enabled }: { endpointId: string; enabled: boolean }) =>
@@ -164,7 +164,7 @@ export function useToggleWebhook(orgId: string) {
   });
 }
 
-export function useTestWebhook(orgId: string) {
+function useTestWebhook(orgId: string) {
   return useMutation({
     mutationFn: (endpointId: string) =>
       api(`/api/v1/organizations/${orgId}/webhooks/${endpointId}/test`, { method: "POST" }),
@@ -245,7 +245,7 @@ export function useAdminOrgs(page: number, search: string) {
   });
 }
 
-export function useAdminUsage() {
+function useAdminUsage() {
   return useQuery({
     queryKey: qk.adminUsage(),
     queryFn: () => api<{ usage: unknown[]; agent_usage: AgentUsage[] }>("/api/v1/admin/usage"),

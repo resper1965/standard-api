@@ -48,6 +48,8 @@ export type AssessmentRecord = {
   scf_version_id: string;
   snapshot: AssessmentSnapshot;
   trace_id: string;
+  observation_start_date?: string | undefined;
+  observation_end_date?: string | undefined;
   created_at?: string;
   updated_at?: string;
   scf_version_label?: string;

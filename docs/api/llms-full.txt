@@ -1,266 +1,832 @@
-# Standard GRC Platform — Complete API Context
+# Standard GRC Platform — Complete API Reference
 
-> This file contains the full API context for the Standard GRC Platform.
-> Load this file to understand the entire API surface, authentication, endpoints, AI agents, and integration patterns.
+> Agentic GRC intelligence engine. Send text, get structured compliance analysis.
+> 1,468 controls · 231 frameworks · 33 domains · 10 AI-powered endpoints
+> Auto-generated from OpenAPI ${spec.openapi} spec
 
----
-
-## Overview
-
-Standard is an API-first SaaS platform for executing security, compliance, and maturity assessments based on the Secure Controls Framework (SCF). The platform features 7 specialized AI agents that automate evidence evaluation, gap analysis, remediation planning, incident triage, vendor risk scanning, and executive reporting.
-
-### Architecture
-
-| Layer | Technology | Purpose |
-|-------|-----------|---------+
-| API Gateway | Cloudflare Workers | Edge-deployed REST API |
-| Database | Neon PostgreSQL | Transactional store |
-| Storage | Cloudflare R2 | Documents, reports, evidences |
-| Vector Search | Cloudflare Vectorize | Semantic search for KB |
-| AI Gateway | Cloudflare AI Gateway | LLM orchestration (gpt-4o) |
-| Async Processing | Cloudflare Queues | Document ingestion, embeddings |
-
----
+Base URL: \`${baseUrl}\`
 
 ## Authentication
 
-All protected endpoints require authentication via one of:
+Every request requires two headers:
 
-| Method | Header | Format |
-|--------|--------|--------|
-| API Key (M2M) | `Authorization` | `Bearer standard_live_<key>` |
-| Browser Session | Cookie | `standard-native-auth.session_token=<token>` |
+\`\`\`
+Authorization: Bearer standard_live_abc123def456
+x-standard-tenant-id: org_pa5khl
+\`\`\`
 
-**Organization context** is natively derived from your M2M API Key. To target a specific organization within your Root Organization, pass the `organization_id` in the URL or query where applicable.
+- **Bearer API Key**: Machine-to-machine key from the dashboard (prefix: \`standard_live_\` or \`standard_test_\`)
+- **Session Cookie**: Alternative — set by Standard Native Auth after \`POST /api/auth/sign-in/email\`
+- **Tenant Header**: Your organization ID from Standard Native Auth (format: \`org_xxxxx\`, required for all data-scoped endpoints)
 
-### Example: Authenticated Request
+## Internationalization (i18n)
 
-```bash
-curl -H "Authorization: Bearer standard_live_abc123" \
-     -H "Content-Type: application/json" \
-     https://standard-api.bekaa.eu/api/v1/assessments
-```
+Many endpoints support localized responses via query parameter:
 
----
+\`\`\`
+GET /api/v1/intelligence/compliance-score?locale=en
+GET /api/v1/intelligence/compliance-score?locale=pt
+\`\`\`
 
-## Base URL
+Default locale: \`pt\` (Portuguese). Fields with \`_i18n\` suffix are automatically flattened.
+Example: \`message_i18n: { pt: "...", en: "..." }\` → \`message: "..."\` based on your \`?locale=\` param.
 
-```
-https://standard-api.bekaa.eu
-```
-
-All endpoints are prefixed with `/api/v1`.
-
----
-
-## Endpoints
-
-### Health
-- `GET /api/v1/health` — System health, version, uptime
-
-### SCF Catalog (Read-Only)
-- `GET /api/v1/scf/versions/latest` — Latest SCF version
-- `GET /api/v1/scf/versions/{id}/domains` — List domains (33)
-- `GET /api/v1/scf/versions/{id}/controls` — Search controls (1,468). Query params: `control_code`, `domain_code`, `q`, `tags`
-- `GET /api/v1/scf/controls/by-code/{code}` — Lookup by control code
-- `GET /api/v1/scf/frameworks` — List frameworks (231)
-- `GET /api/v1/scf/frameworks/{id}/requirements` — Framework requirements
-- `GET /api/v1/scf/controls/{id}/mappings` — Crosswalk mappings
-- `GET /api/v1/scf/frameworks/{id}/coverage` — Coverage analysis
-
-### Assessments
-- `POST /api/v1/assessments` — Create assessment (body: `{ name, organization_id, scf_version_id }`)
-- `GET /api/v1/assessments` — List assessments
-- `GET /api/v1/assessments/{id}` — Get assessment details
-- `PATCH /api/v1/assessments/{id}` — Update assessment
-- `DELETE /api/v1/assessments/{id}` — Delete assessment
-- `GET /api/v1/assessments/{id}/summary` — **Server-computed KPIs**: compliance_pct, control counts, finding severities, open POAMs
-- `GET /api/v1/assessments/{id}/compliance-gate` — CI/CD pass/fail gate
-
-### Documents
-- `POST /api/v1/assessments/{id}/documents` — Upload (multipart/form-data, field: `file`)
-- `GET /api/v1/assessments/{id}/documents` — List documents
-- `GET /api/v1/documents/{id}/status` — Processing status
-- `GET /api/v1/documents/{id}/chunks` — Document chunks
-- `POST /api/v1/documents/{id}/reprocess` — Re-ingest
-
-### Knowledge Base
-- `POST /api/v1/kb/search` — Semantic search (body: `{ query, assessment_id, top_k?, min_score? }`)
-- `GET /api/v1/kb/stats` — KB statistics
-- `GET /api/v1/kb/chunks/{id}` — Chunk details
-
-### Scope & SoA
-- `POST /api/v1/assessments/{id}/scope` — Create scope
-- `POST /api/v1/assessments/{id}/soa/draft` — Generate SoA
-- `GET /api/v1/soa/{versionId}/items` — SoA items
-- `PATCH /api/v1/soa/items/{itemId}` — Update item
-- `POST /api/v1/soa/{versionId}/approve` — Approve SoA
-
-### Gap Analysis
-- `POST /api/v1/assessments/{id}/gap-analysis/draft` — Generate
-- `GET /api/v1/gap-analysis/{versionId}/findings` — Findings
-- `PATCH /api/v1/gap-analysis/findings/{findingId}` — Update finding
-- `POST /api/v1/gap-analysis/{versionId}/approve` — Approve
-- `GET /api/v1/gap-analysis/{versionId}/summary` — Summary stats
-
-### POA&M
-- `POST /api/v1/assessments/{id}/poam/draft` — Generate POA&M
-- `GET /api/v1/poam/{versionId}/items` — POA&M items
-- `PATCH /api/v1/poam/items/{itemId}` — Update item
-- `POST /api/v1/poam/{versionId}/approve` — Approve
-
-### Reports
-- `POST /api/v1/assessments/{id}/reports/generate` — Generate report
-- `GET /api/v1/reports/{id}/download` — Download
-- `POST /api/v1/assessments/{id}/audit-package` — Generate audit-ready PDF + JSON + Markdown
-- `GET /api/v1/export-jobs/{id}/download` — Download export job result
-
-### Dashboard KPIs (Server-Computed)
-- `GET /api/v1/assessments/{id}/summary` — Single assessment KPIs: compliance %, control counts, gap findings by severity, open POAMs, maturity avg
-- `GET /api/v1/organizations/{id}/dashboard` — Org-wide KPIs: total assessments, assessments by state, avg compliance %, total open POAMs, critical/high findings
-
-### Audit Trail
-- `GET /api/v1/assessments/{id}/audit-logs` — Assessment-level audit events
-- `GET /api/v1/audit-logs` — Root Organization-wide audit events. Query: `?action=&actor_id=&resource_type=&since=&until=&limit=`
-- `GET /api/v1/organizations/{id}/audit-logs` — Org-level audit events. Same query params.
-
-### Member Management (RBAC)
-- `POST /api/v1/organizations/{orgId}/members` — Invite member (body: `{ email, role, display_name? }`)
-- `GET /api/v1/organizations/{orgId}/members` — List org members
-- `GET /api/v1/members/{memberId}` — Get member detail
-- `PATCH /api/v1/members/{memberId}` — Update role (body: `{ role }`)
-- `DELETE /api/v1/members/{memberId}` — Remove member (returns 204)
-
-**Roles**: `owner`, `admin`, `assessor`, `auditor_readonly`, `contributor`
-
-### Approvals
-- `GET /api/v1/assessments/{id}/approvals` — List approvals
-- `POST /api/v1/approvals/{id}/approve` — Approve (body: `{ comment? }`)
-- `POST /api/v1/approvals/{id}/reject` — Reject (body: `{ reason }`)
-
-### Lifecycle
-- `POST /api/v1/assessments/{id}/lifecycle/transition` — State transition (body: `{ target_state }`)
-- `GET /api/v1/assessments/{id}/lifecycle/events` — Event history
-
-### Agent Runtime
-- `GET /api/v1/agent-runtime/agents` — List available AI agents
-- `POST /api/v1/assessments/{id}/agent-runs` — Start agent run
-- `GET /api/v1/assessments/{id}/agent-runs` — List runs for assessment
-- `GET /api/v1/agent-runs/{id}` — Get run details + output
-- `POST /api/v1/agent-runs/{id}/complete` — Complete run with output
-
-### Webhooks
-- `POST /api/v1/organizations/{orgId}/webhooks` — Create webhook
-- `GET /api/v1/webhooks/{id}/deliveries` — Delivery log
-
-### Intelligence Council
-- `POST /api/v1/intelligence/council` — Dispatch asynchronous multi-agent evaluation. Body requires `{ organization_id, context, agents: string[] }`. Returns `202 Accepted` with `{ job_id }`.
-
-### Jobs
-- `GET /api/v1/jobs/{id}` — Poll for the status of an asynchronous job (e.g. Council). Returns `{ status, output, progress }`.
-
-### API Keys
-- `GET /api/v1/api-keys` — List keys
-- `POST /api/v1/api-keys` — Create key
-- `DELETE /api/v1/api-keys/{id}` — Revoke
-- `POST /api/v1/api-keys/{id}/rotate` — Rotate
-
----
-
-## AI Agents
-
-Standard includes 7 specialized AI agents. Each uses gpt-4o with structured JSON output.
-
-| Agent | Endpoint | Input | Output |
-|-------|----------|-------|--------|
-| Evidence Evaluator | `POST /api/v1/gap/evaluate-evidence` | `{ controlRequirement, evidenceDescription }` | `{ is_compliant, confidence_score, missing_elements, auditor_notes }` |
-| Incident Triager | `POST /api/v1/soc/triage-incident` | `{ rawLog, sourceSystem, timestamp }` | `{ is_false_positive, severity, containment_actions, privacy_breach_applicable }` |
-| Board Translator | `POST /api/v1/executive/translate-risk` | `{ technicalRiskDescription, riskCategory, businessContext }` | `{ executive_summary, financial_impact_estimate, regulatory_impact, board_level_recommendation, urgency_metric }` |
-| Vendor Scanner | `POST /api/v1/privacy/scan-vendor-contract` | `{ vendorName, contractExcerpt }` | `{ has_standard_contractual_clauses, is_dpa_compliant, liability_cap_identified, data_subprocessors_listed, red_flags_for_negotiation }` |
-| PoAM Architect | `POST /api/v1/poam/architect-remediation` | `{ evidenceContext, systemArchitectureDescription }` | `{ priority_level, estimated_effort, sprint_action_items, devops_commands_suggested }` |
-| RoPA Analyzer | `POST /api/v1/privacy/analyze-ropa` | `{ text }` | `{ suggested_risk_level, required_controls, suggested_legal_basis, is_dpia_required }` |
-| DPIA Assessor | `POST /api/v1/privacy/assess-dpia` | `{ projectDescription, ropaContext }` | `{ residual_risk_level, is_approved_technically, mitigating_controls_required, justification }` |
-
-### Agent Chaining Patterns
-
-1. **Evidence → Remediation → Board**: Evaluate evidence → if non-compliant, generate PoAM → translate risk for board
-2. **RoPA → DPIA**: Analyze data processing → if DPIA required, run deep assessment
-3. **Incident → Board**: Triage security log → if real incident, translate for executives
-
----
-
-## Assessment Lifecycle States
-
-```
-draft → documents_uploaded → documents_ingested → scf_pre_analysis_ready →
-framework_selected → scope_drafted → soa_drafted → soa_under_review →
-soa_approved → soa_ingested → evidence_analysis_ready →
-gap_analysis_drafted → gap_analysis_under_review → gap_analysis_approved →
-maturity_assessed → maturity_under_review → maturity_approved →
-poam_drafted → poam_under_review → poam_approved →
-report_generated → closed
-```
-
-**Approval gates** (require human approval): SoA, Gap Analysis, Maturity, POA&M.
-
----
-
-## Full Assessment Flow (ISO 27001 Example)
-
-A GRC consumer executes this sequence to run a complete compliance assessment:
-
-```
-Step  1: POST /assessments                          → Creates assessment
-Step  2: POST /assessments/{id}/documents           → Upload evidence (repeat per file)
-Step  3: POST /assessments/{id}/lifecycle/transition → target_state: "documents_uploaded"
-Step  4: GET  /scf/frameworks                       → Find ISO 27001 framework_id
-Step  5: POST /assessments/{id}/scope               → Define scope (systems, BUs, locations)
-Step  6: POST /assessments/{id}/soa/draft           → AI generates SoA (320 controls mapped)
-Step  7: GET  /soa/{versionId}/items                → Review AI results
-Step  8: POST /soa/{versionId}/submit-review        → Submit for approval
-Step  9: POST /assessments/{id}/gap-analysis/draft  → AI identifies compliance gaps
-Step 10: GET  /gap-analysis/{versionId}/findings     → Review gaps by severity
-Step 11: POST /assessments/{id}/poam/draft          → AI generates remediation plan
-Step 12: GET  /poam/{versionId}/items               → Review actions with due dates
-Step 13: GET  /assessments/{id}/summary             → Get final KPIs (compliance %)
-Step 14: POST /assessments/{id}/audit-package       → Generate audit-ready export
-```
-
----
+Supported across: Intelligence, Risk, Regulations, Reference Data, Reporting, and Workflow Templates endpoints.
 
 ## Error Format
 
-All errors follow:
-```json
+All errors follow this structure:
+
+\`\`\`json
 {
   "error": {
     "code": "NOT_FOUND",
     "message": "Assessment not found.",
-    "details": [],
     "trace_id": "abc-123-def"
   }
 }
+\`\`\`
+
+Common codes: \`VALIDATION_ERROR\` (400), \`UNAUTHORIZED\` (401), \`NOT_FOUND\` (404), \`INTERNAL_ERROR\` (500)
+
+Rate limits: 100 req/10s (general) · 5/min (sign-in) · 3/min (sign-up)
+
+---
+
+## Cookbook — Recipes
+
+> [!CAUTION] **MANDATORY DATA FORMATTING RULE**
+> The Standard API acts purely as a deterministic GRC intelligence engine. **Clients MUST NOT upload raw binary streams, PDFs, or raw image screenshots.**
+> It is the sole responsibility of the consuming client application to perform OCR (Optical Character Recognition), PDF parsing, or audio transcription. All contextual evidence must be structured and normalized into Markdown or flat Strings prior to ingestion through the \`evidenceDescription\` payload. Sending unparsed binary formats will result in rejection.
+
+> Each recipe is self-contained. Copy the curl command, replace the auth headers, and execute.
+
+---
+
+### Recipe 1: Evidence Compliance Check (Standalone)
+
+> Send a control requirement + evidence description → get compliance verdict with confidence score.
+
+**Endpoint**: \`POST /api/v1/gap/evaluate-evidence\`
+**Use when**: You have a security control and need to verify if your evidence satisfies it.
+
+\`\`\`bash
+curl -X POST ${baseUrl}/api/v1/gap/evaluate-evidence \\
+  -H "Authorization: Bearer standard_live_YOUR_KEY" \\
+  -H "x-standard-tenant-id: YOUR_ORG_ID" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "controlRequirement": "Backup data must be encrypted at rest with AES-256.",
+    "evidenceDescription": "Our AWS S3 buckets have SSE-S3 encryption enabled with AES-256. Bucket policies enforce deny on unencrypted PutObject requests."
+  }'
+\`\`\`
+
+**Response (200)**:
+\`\`\`json
+{
+  "data": {
+    "is_compliant": true,
+    "confidence_score": 92,
+    "missing_elements": [],
+    "auditor_notes": "Evidence demonstrates AES-256 encryption at rest via AWS SSE-S3. Bucket policy enforces encryption. Control is satisfied."
+  },
+  "trace_id": "tr_abc123"
+}
+\`\`\`
+
+---
+
+### Recipe 2: SOC Incident Triage (Standalone)
+
+> Send raw security logs → get instant L3 diagnosis: false positive or real incident.
+
+**Endpoint**: \`POST /api/v1/soc/triage-incident\`
+**Use when**: Your SIEM fires an alert and you need automated triage before escalation.
+
+\`\`\`bash
+curl -X POST ${baseUrl}/api/v1/soc/triage-incident \\
+  -H "Authorization: Bearer standard_live_YOUR_KEY" \\
+  -H "x-standard-tenant-id: YOUR_ORG_ID" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "systemModuleName": "WAF Edge Firewall",
+    "rawLogsExcerpt": "[10/Oct/2026:13:55:36 +0000] GET /admin HTTP/1.1 403 154 - SqlMap/1.4"
+  }'
+\`\`\`
+
+**Response (200)**:
+\`\`\`json
+{
+  "data": {
+    "is_false_positive": false,
+    "severity_level": "high",
+    "attack_vector_guessed": "SQL Injection (automated scanner)",
+    "affected_assets_identified": ["WAF Edge Firewall", "/admin endpoint"],
+    "immediate_containment_actions": ["Block source IP", "Enable WAF SQL injection ruleset", "Review admin endpoint access logs"],
+    "requires_dpo_breach_notification": false
+  },
+  "trace_id": "tr_def456"
+}
+\`\`\`
+
+---
+
+### Recipe 3: Board Risk Translation (Standalone)
+
+> Translate technical cybersecurity risk → C-Level/Board-ready executive summary.
+
+**Endpoint**: \`POST /api/v1/executive/translate-risk\`
+**Use when**: CISO needs to present a technical vulnerability to the board in business terms.
+
+\`\`\`bash
+curl -X POST ${baseUrl}/api/v1/executive/translate-risk \\
+  -H "Authorization: Bearer standard_live_YOUR_KEY" \\
+  -H "x-standard-tenant-id: YOUR_ORG_ID" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "technicalRiskDescription": "Kubernetes pod kube-system exposing port 10250 without authentication (CVE-2018-1002105).",
+    "riskCategory": "security",
+    "businessContext": "Cluster runs Black Friday payment processing."
+  }'
+\`\`\`
+
+**Response (200)**:
+\`\`\`json
+{
+  "data": {
+    "executive_summary": "A critical vulnerability in our payment processing infrastructure allows unauthorized access to core system management. This could enable attackers to intercept or modify payment transactions.",
+    "financial_impact_estimate": "Potential exposure of $2-5M in transaction fraud, plus $500K+ in incident response and forensics costs.",
+    "regulatory_impact": "PCI DSS non-compliance. Mandatory breach notification to card networks within 24 hours if exploited.",
+    "board_level_recommendation": "Approve emergency patching budget ($50K) and authorize 48-hour maintenance window before Black Friday.",
+    "urgency_metric": 95
+  },
+  "trace_id": "tr_ghi789"
+}
+\`\`\`
+
+---
+
+### Recipe 4: Vendor Contract Scanner (Standalone)
+
+> Analyze a vendor contract excerpt → detect DPA compliance gaps, sub-processors, and red flags.
+
+**Endpoint**: \`POST /api/v1/privacy/scan-vendor-contract\`
+**Use when**: Legal team needs to evaluate a vendor's data processing agreement.
+
+\`\`\`bash
+curl -X POST ${baseUrl}/api/v1/privacy/scan-vendor-contract \\
+  -H "Authorization: Bearer standard_live_YOUR_KEY" \\
+  -H "x-standard-tenant-id: YOUR_ORG_ID" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "vendorName": "CloudSync Analytics Ltd.",
+    "contractExcerpt": "5.1 The Processor agrees to notify the Controller of any breach within 120 hours. 6.2 Data may be transferred to sub-processors in jurisdictions deemed adequate by the Processor."
+  }'
+\`\`\`
+
+**Response (200)**:
+\`\`\`json
+{
+  "data": {
+    "has_standard_contractual_clauses": false,
+    "is_dpa_compliant": false,
+    "liability_cap_identified": null,
+    "data_subprocessors_listed": [],
+    "red_flags_for_negotiation": [
+      "Breach notification at 120h exceeds GDPR 72h and LGPD 48h requirements",
+      "Adequacy determination unilaterally decided by Processor — must reference regulator decisions",
+      "No sub-processor list provided — violates GDPR Art. 28(2) transparency requirement"
+    ]
+  },
+  "trace_id": "tr_jkl012"
+}
+\`\`\`
+
+---
+
+### Recipe 5: Compliance Score (Standalone — No LLM)
+
+> Calculate your compliance score against a specific regulation based on implemented controls.
+
+**Endpoint**: \`POST /api/v1/intelligence/compliance-score\`
+**Use when**: Dashboard needs real-time compliance percentage for a specific framework.
+**Note**: Pure computation — no LLM call, instant response.
+
+\`\`\`bash
+curl -X POST ${baseUrl}/api/v1/intelligence/compliance-score \\
+  -H "Authorization: Bearer standard_live_YOUR_KEY" \\
+  -H "x-standard-tenant-id: YOUR_ORG_ID" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "regulation_id": "lgpd",
+    "scf_controls_implemented": ["DCH-01", "DCH-04", "PRI-01", "PRI-02", "PRI-05", "GOV-01"]
+  }'
+\`\`\`
+
+**Response (200)**:
+\`\`\`json
+{
+  "data": {
+    "regulation_id": "lgpd",
+    "score": 35,
+    "scf_controls_implemented_count": 6,
+    "total_required_controls": 17,
+    "missing_controls": ["PRI-03", "PRI-04", "PRI-06", "RSK-01", "..."],
+    "message": "O score de conformidade para LGPD é de 35%."
+  },
+  "trace_id": "tr_mno345"
+}
+\`\`\`
+
+---
+
+### Recipe 6: Cross-Framework Coverage (Standalone — No LLM)
+
+> "I implemented ISO 27001. How much of SOC 2 do I already cover?"
+
+**Endpoint**: \`POST /api/v1/intelligence/cross-coverage\`
+**Use when**: Planning multi-framework compliance — see overlap before investing.
+
+\`\`\`bash
+curl -X POST ${baseUrl}/api/v1/intelligence/cross-coverage \\
+  -H "Authorization: Bearer standard_live_YOUR_KEY" \\
+  -H "x-standard-tenant-id: YOUR_ORG_ID" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "source_framework": "iso27001",
+    "target_framework": "soc2",
+    "scf_controls_implemented": ["GOV-01", "GOV-02", "AST-01", "IAC-01", "IAC-02"]
+  }'
+\`\`\`
+
+**Response (200)** (with \`?locale=en\`):
+\`\`\`json
+{
+  "data": {
+    "source_framework": "iso27001",
+    "target_framework": "soc2",
+    "overlap_percentage": 42,
+    "shared_implementation_count": 5,
+    "total_target_controls": 12,
+    "missing_controls": ["CCC-01", "CCC-02", "LOG-01"],
+    "interpretation": "Your implemented controls cover 42% of soc2."
+  },
+  "trace_id": "tr_pqr678"
+}
+\`\`\`
+
+---
+
+### Recipe 7: ROI Path — Optimal Control Prioritization (Standalone — No LLM)
+
+> "Which controls should I implement FIRST for maximum compliance impact?"
+
+**Endpoint**: \`POST /api/v1/intelligence/roi-path\`
+**Use when**: Limited budget — need to prioritize controls by cross-framework impact.
+
+\`\`\`bash
+curl -X POST ${baseUrl}/api/v1/intelligence/roi-path \\
+  -H "Authorization: Bearer standard_live_YOUR_KEY" \\
+  -H "x-standard-tenant-id: YOUR_ORG_ID" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "target_framework": "iso27001",
+    "scf_controls_implemented": ["GOV-01"],
+    "top_n": 3
+  }'
+\`\`\`
+
+**Response (200)**:
+\`\`\`json
+{
+  "data": {
+    "target_framework": "iso27001",
+    "top_n_requested": 3,
+    "total_missing": 28,
+    "roi_path": [
+      {"control_id": "RSK-01", "roi_score": 8, "mitigations_count": 8, "key_mitigations": ["Risk: Data Breach", "Regulation: lgpd", "Regulation: gdpr"]},
+      {"control_id": "IAC-01", "roi_score": 6, "mitigations_count": 6, "key_mitigations": ["Risk: Unauthorized Access", "Regulation: soc2"]},
+      {"control_id": "PRI-01", "roi_score": 5, "mitigations_count": 5, "key_mitigations": ["Regulation: lgpd", "Data Category: personal_data"]}
+    ],
+    "summary": "The fastest path to comply with iso27001 with the highest global impact is to implement the listed 3 controls."
+  },
+  "trace_id": "tr_stu901"
+}
+\`\`\`
+
+---
+
+### Recipe 8: Blast Radius — Control Impact Topology (Standalone — No LLM)
+
+> "If this control fails, what breaks?"
+
+**Endpoint**: \`POST /api/v1/intelligence/blast-radius\`
+**Use when**: Risk assessment — understand the downstream impact of a control failure.
+
+\`\`\`bash
+curl -X POST ${baseUrl}/api/v1/intelligence/blast-radius \\
+  -H "Authorization: Bearer standard_live_YOUR_KEY" \\
+  -H "x-standard-tenant-id: YOUR_ORG_ID" \\
+  -H "Content-Type: application/json" \\
+  -d '{"control_id": "PRI-01"}'
+\`\`\`
+
+**Response (200)**:
+\`\`\`json
+{
+  "data": {
+    "control_id": "PRI-01",
+    "linked_entities": {
+      "risks": [{"category": "Privacy", "risk": "Personal Data Exposure"}],
+      "regulations": [{"id": "lgpd", "name": "LGPD"}, {"id": "gdpr", "name": "GDPR"}],
+      "data_categories": [{"id": "personal_data", "name": "Personal Data"}],
+      "retention_rules": [{"category": "personal_data", "context": "customer_service"}]
+    }
+  },
+  "trace_id": "tr_vwx234"
+}
+\`\`\`
+
+---
+
+### Recipe 9: Privacy RoPA + DPIA Chain (Agentic — 2 calls)
+
+> Analyze a process description for privacy compliance, then assess if DPIA is required.
+
+**Step 1: RoPA Analysis**
+
+\`\`\`bash
+curl -X POST ${baseUrl}/api/v1/privacy/analyze-ropa \\
+  -H "Authorization: Bearer standard_live_YOUR_KEY" \\
+  -H "x-standard-tenant-id: YOUR_ORG_ID" \\
+  -H "Content-Type: application/json" \\
+  -d '{"text": "We digitize medical records from patients at the reception desk and store them in a cloud database for 10 years."}'
+\`\`\`
+
+**Step 2: DPIA Assessment**
+
+\`\`\`bash
+curl -X POST ${baseUrl}/api/v1/privacy/assess-dpia \\
+  -H "Authorization: Bearer standard_live_YOUR_KEY" \\
+  -H "x-standard-tenant-id: YOUR_ORG_ID" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "projectDescription": "Digitization of medical records at reception desk",
+    "ropaContext": {
+      "suggested_risk_level": "high",
+      "required_controls": [
+        {"control_id": "PRI-01", "name": "Privacy Program"}
+      ],
+      "suggested_legal_basis": "Explicit consent",
+      "is_dpia_required": true
+    }
+  }'
+\`\`\`
+
+---
+
+### Recipe 10: Full Privacy Activity from Text (Multi-step)
+
+> Send natural language → get a complete processing activity with screening and report.
+
+**Step 1: Create activity from text**
+\`\`\`bash
+curl -X POST ${baseUrl}/api/v1/privacy/processing-activities/from-text \\
+  -H "Authorization: Bearer standard_live_YOUR_KEY" \\
+  -H "x-standard-tenant-id: YOUR_ORG_ID" \\
+  -H "Content-Type: application/json" \\
+  -d '{"text": "We collect customer emails... "}'
+\`\`\`
+
+**Step 2: Run screening**
+\`\`\`bash
+curl -X POST ${baseUrl}/api/v1/privacy/processing-activities/ACTIVITY_ID/screen \\
+  -H "Authorization: Bearer standard_live_YOUR_KEY" \\
+  -H "x-standard-tenant-id: YOUR_ORG_ID"
+\`\`\`
+
+**Step 3: Generate report**
+\`\`\`bash
+curl -X GET "${baseUrl}/api/v1/privacy/processing-activities/ACTIVITY_ID/report?format=markdown" \\
+  -H "Authorization: Bearer standard_live_YOUR_KEY" \\
+  -H "x-standard-tenant-id: YOUR_ORG_ID"
+\`\`\`
+
+---
+
+## Operational Workflows — Core Cookbooks
+
+> Multi-step workflows for core GRC operations. Each shows the full endpoint sequence.
+
+---
+
+### Cookbook: Assessment Lifecycle (9 steps)
+
+> Create a compliance assessment from scratch through to Go/No-Go decision.
+
+**Step 1: Create assessment**
+
+\`\`\`bash
+curl -X POST ${baseUrl}/api/v1/assessments \\
+  -H "Authorization: Bearer standard_live_YOUR_KEY" \\
+  -H "x-standard-tenant-id: YOUR_ORG_ID" \\
+  -H "Content-Type: application/json" \\
+  -d '{"name": "ISO 27001 Q4 2026", "scf_version_id": "SCF_VERSION_UUID", "organization_id": "YOUR_ORG_ID"}'
+\`\`\`
+
+**Step 2: Define scope**
+
+\`\`\`bash
+curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/scope \\
+  -H "Authorization: Bearer standard_live_YOUR_KEY" \\
+  -H "x-standard-tenant-id: YOUR_ORG_ID" \\
+  -H "Content-Type: application/json" \\
+  -d '{"framework_id": "iso27001", "departments": ["IT", "HR"], "locations": ["HQ"]}'
+\`\`\`
+
+**Step 3: Generate Statement of Applicability (SoA)**
+
+\`\`\`bash
+curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/soa/draft \\
+  -H "Authorization: Bearer standard_live_YOUR_KEY" \\
+  -H "x-standard-tenant-id: YOUR_ORG_ID"
+\`\`\`
+
+**Step 4: Upload evidence documents**
+
+\`\`\`bash
+curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/documents \\
+  -H "Authorization: Bearer standard_live_YOUR_KEY" \\
+  -H "x-standard-tenant-id: YOUR_ORG_ID" \\
+  -F "file=@security-policy.pdf" \\
+  -F "file=@access-control-matrix.xlsx"
+\`\`\`
+
+**Step 5: Run AI evidence analysis**
+
+\`\`\`bash
+curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/evidence-analysis/run \\
+  -H "Authorization: Bearer standard_live_YOUR_KEY" \\
+  -H "x-standard-tenant-id: YOUR_ORG_ID"
+\`\`\`
+
+**Step 6: Generate Gap Analysis**
+
+\`\`\`bash
+curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/gap-analysis/draft \\
+  -H "Authorization: Bearer standard_live_YOUR_KEY" \\
+  -H "x-standard-tenant-id: YOUR_ORG_ID"
+\`\`\`
+
+**Step 7: Generate POA&M (Plan of Action & Milestones)**
+
+\`\`\`bash
+curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/poam/draft \\
+  -H "Authorization: Bearer standard_live_YOUR_KEY" \\
+  -H "x-standard-tenant-id: YOUR_ORG_ID"
+\`\`\`
+
+**Step 8: Generate Report**
+
+\`\`\`bash
+curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/reports/draft \\
+  -H "Authorization: Bearer standard_live_YOUR_KEY" \\
+  -H "x-standard-tenant-id: YOUR_ORG_ID"
+\`\`\`
+
+**Step 9: Check Compliance Gate (Go/No-Go)**
+
+\`\`\`bash
+curl -X GET ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/compliance-gate \\
+  -H "Authorization: Bearer standard_live_YOUR_KEY" \\
+  -H "x-standard-tenant-id: YOUR_ORG_ID"
+\`\`\`
+
+**Notes**:
+- Each draft step (SoA, Gap, PoAM, Report) supports a review workflow: \`submit-review\` then \`approve\`
+- Use \`regenerate\` to re-run any draft with updated data
+- \`compliance-gate\` aggregates all artifact statuses into a single Go/No-Go verdict
+
+---
+
+### Cookbook: SCF Catalog & Controls (read-only)
+
+> Browse the Secure Controls Framework: 1,468 controls across 33 domains and 231 mapped frameworks.
+
+**Get latest SCF version:**
+\`\`\`bash
+curl -X GET ${baseUrl}/api/v1/scf/versions/latest \\
+  -H "Authorization: Bearer standard_live_YOUR_KEY"
+\`\`\`
+
+**List controls (paginated, filterable by domain):**
+\`\`\`bash
+curl -X GET "${baseUrl}/api/v1/scf/versions/SCF_VERSION_ID/controls?domain=PRI&page=1&per_page=50" \\
+  -H "Authorization: Bearer standard_live_YOUR_KEY"
+\`\`\`
+
+---
+
+### Cookbook: Gap Analysis & Findings
+
+> Three modes: automated (AI scans documents), standalone (single evidence check), and gap-to-remediation chain.
+
+**Mode A — Automated (run against uploaded documents):**
+
+\`\`\`bash
+# 1. Run AI evidence analysis
+curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/evidence-analysis/run \\
+  -H "Authorization: Bearer standard_live_YOUR_KEY" \\
+  -H "x-standard-tenant-id: YOUR_ORG_ID"
+
+# 2. List evidence findings
+curl -X GET ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/evidence-findings \\
+  -H "Authorization: Bearer standard_live_YOUR_KEY" \\
+  -H "x-standard-tenant-id: YOUR_ORG_ID"
+
+# 3. Generate gap analysis from findings
+curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/gap-analysis/draft \\
+  -H "Authorization: Bearer standard_live_YOUR_KEY" \\
+  -H "x-standard-tenant-id: YOUR_ORG_ID"
+
+# 4. Review gap findings
+curl -X GET ${baseUrl}/api/v1/gap-analysis/GAP_VERSION_ID/findings \\
+  -H "Authorization: Bearer standard_live_YOUR_KEY" \\
+  -H "x-standard-tenant-id: YOUR_ORG_ID"
+\`\`\`
+
+**Mode C — Gap to PoAM chain:**
+
+\`\`\`bash
+curl -X POST ${baseUrl}/api/v1/poam/architect-remediation \\
+  -H "Authorization: Bearer standard_live_YOUR_KEY" \\
+  -H "x-standard-tenant-id: YOUR_ORG_ID" \\
+  -H "Content-Type: application/json" \\
+  -d '{"controlGap": "Missing encryption at rest for PII data", "context": "Cloud-hosted SaaS processing healthcare data"}'
+\`\`\`
+
+---
+
+### Cookbook: Dashboard KPIs
+
+> Server-computed compliance metrics. Replace local calculations with API-driven KPIs.
+
+**Organization-level dashboard:**
+\`\`\`bash
+curl -X GET ${baseUrl}/api/v1/organizations/YOUR_ORG_ID/dashboard \\
+  -H "Authorization: Bearer standard_live_YOUR_KEY" \\
+  -H "x-standard-tenant-id: YOUR_ORG_ID"
+\`\`\`
+
+**Stateless intelligence (no assessment required):**
+- \`POST /intelligence/compliance-score\` — Score vs specific framework (supports ?locale=pt|en)
+- \`POST /intelligence/cross-coverage\` — Framework overlap %
+- \`POST /intelligence/gap-analysis\` — Stateless gap engine
+- \`POST /intelligence/roi-path\` — Optimal control priority
+
+---
+
+### Cookbook: Document Ingestion Pipeline
+
+> Upload, chunk, embed, search. Full document intelligence pipeline.
+
+**Upload documents:**
+\`\`\`bash
+curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/documents \\
+  -H "Authorization: Bearer standard_live_YOUR_KEY" \\
+  -H "x-standard-tenant-id: YOUR_ORG_ID" \\
+  -F "file=@policy-document.pdf"
+\`\`\`
+
+**Submit for embedding (RAG index):**
+\`\`\`bash
+curl -X POST ${baseUrl}/api/v1/documents/DOC_ID/submit-for-embedding \\
+  -H "Authorization: Bearer standard_live_YOUR_KEY" \\
+  -H "x-standard-tenant-id: YOUR_ORG_ID"
+\`\`\`
+
+**Semantic search in knowledge base:**
+\`\`\`bash
+curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/kb/search \\
+  -H "Authorization: Bearer standard_live_YOUR_KEY" \\
+  -H "x-standard-tenant-id: YOUR_ORG_ID" \\
+  -H "Content-Type: application/json" \\
+  -d '{"query": "What is our data retention policy for PII?", "top_k": 5}'
+\`\`\`
+
+---
+
+### Cookbook: Audit Trail (read-only)
+
+> All API operations are automatically logged. Query audit logs per tenant or organization.
+
+**By tenant:**
+\`\`\`bash
+curl -X GET "${baseUrl}/api/v1/tenants/TENANT_ID/audit-logs?limit=50" \\
+  -H "Authorization: Bearer standard_live_YOUR_KEY" \\
+  -H "x-standard-tenant-id: YOUR_ORG_ID"
+\`\`\`
+
+## Endpoint Reference
+
+> Auto-generated from OpenAPI spec. For full schemas, see /docs/openapi.json
+
+### POST `/api/v1/organizations`
+
+**Create Organization**
+
+Creates an organization under the authenticated tenant.
+
+**Request Body:**
+```json
+{
+  "organization_id": "string",
+  "slug": "string",
+  "name": "string"
+}
 ```
 
-| Code | HTTP | Description |
-|------|------|-------------|
-| `UNAUTHORIZED` | 401 | Missing or invalid authentication |
-| `FORBIDDEN` | 403 | Insufficient permissions |
-| `NOT_FOUND` | 404 | Resource does not exist |
-| `CONFLICT` | 409 | Duplicate or conflicting state |
-| `VALIDATION_ERROR` | 400 | Invalid request body |
-| `INVALID_STATE_TRANSITION` | 409 | Lifecycle state doesn't allow this action |
-| `RATE_LIMIT_EXCEEDED` | 429 | Too many requests |
+**201**: Organization created
 
-## Rate Limits
+---
 
-| Route | Max Requests | Window |
-|-------|-------------|--------|
-| `/documents` | 30 | 60s |
-| `/kb/search` | 60 | 60s |
-| `/agent-runs` | 10 | 60s |
-| Default | 120 | 60s |
+### GET `/api/v1/tenants/{organizationId}/organizations`
 
-## SCF Data
+**List Organizations by Tenant**
 
-Version: 2026.1.1 | Controls: 1,468 | Frameworks: 231 | Requirements: 32,903 | Mappings: 15,717 | Domains: 33
+Returns all organizations for the specified tenant.
+
+**200**: Organization list
+
+---
+
+### GET `/api/v1/organizations/{organizationId}/api-keys`
+
+**List API Keys**
+
+Returns all API keys for the authenticated organization (masked). Use ?active=true to exclude revoked keys.
+
+**200**: API key list
+
+---
+
+### POST `/api/v1/organizations/{organizationId}/api-keys`
+
+**Create API Key**
+
+Creates a new M2M API key. The raw key is returned only once — store it securely.
+
+**Request Body:**
+```json
+{
+  "name": "string",
+  "expiresAt": "string",
+  "scopes": [
+    "string"
+  ]
+}
+```
+
+**201**: API key created
+
+---
+
+### PATCH `/api/v1/organizations/{organizationId}/api-keys/{keyId}`
+
+**Update API Key**
+
+Update name, expiration date, and/or scopes of an existing API key.
+
+**Request Body:**
+```json
+{
+  "name": "string",
+  "expiresAt": "string",
+  "scopes": [
+    "string"
+  ]
+}
+```
+
+**200**: API key updated
+
+---
+
+### POST `/api/v1/privacy/scan-vendor-contract/batch`
+
+**Scan Vendor Contracts in Bulk (Async)**
+
+Dispatches long-running analysis across up to 500 contract snippets simultaneously. Returns a jobId for polling.
+
+**Request Body:**
+```json
+"<see #/components/schemas/VendorScannerBatchInput>"
+```
+
+**202**: Batch job dispatched successfully
+
+---
+
+### POST `/api/v1/privacy/scan-vendor-contract`
+
+**B2B Legal Analyzer (Vendor Risk Scanner)**
+
+Transforms raw contract text into executive intelligence about sub-processors and LGPD/GDPR privacy compliance.
+
+**Request Body:**
+```json
+"<see #/components/schemas/VendorScannerInput>"
+```
+
+**200**: Vendor risks and compliance gaps
+
+---
+
+### GET `/api/v1/me/data-export`
+
+**Export personal data (LGPD art. 18)**
+
+Returns a portable JSON export of all personal data stored for the authenticated user. Compliant with LGPD art. 18 (right of access and portability). The response includes a Content-Disposition header for download.
+
+**200**: Personal data export
+
+---
+
+### DELETE `/api/v1/me/account`
+
+**Request account deletion (LGPD art. 18)**
+
+Initiates an account deletion request. The account is flagged for deletion immediately. Personal data is permanently purged within 30 days per the data retention policy.
+
+**200**: Deletion request accepted
+
+---
+
+### GET `/api/v1/soc/status`
+
+**SOC pipeline health status**
+
+Returns SOC monitoring pipeline status: queue binding health, alert service configuration, and pipeline readiness. Requires admin:write permission (platform admin only).
+
+**200**: SOC pipeline status
+
+---
+
+## Quick Reference
+
+### Standalone Endpoints (1 call = 1 result)
+
+| Endpoint | What it does | LLM? |
+|----------|-------------|------|
+| \`POST /api/v1/gap/evaluate-evidence\` | Check evidence against a control | Yes |
+| \`POST /api/v1/soc/triage-incident\` | Triage security incident from logs | Yes |
+| \`POST /api/v1/executive/translate-risk\` | Translate tech risk for board | Yes |
+| \`POST /api/v1/privacy/scan-vendor-contract\` | Scan vendor contract for DPA gaps | Yes |
+| \`POST /api/v1/intelligence/compliance-score\` | Calculate compliance % | No |
+| \`POST /api/v1/intelligence/cross-coverage\` | Cross-framework overlap analysis | No |
+| \`POST /api/v1/intelligence/roi-path\` | Prioritize controls by ROI | No |
+| \`POST /api/v1/intelligence/blast-radius\` | Control failure impact topology | No |
+| \`POST /api/v1/intelligence/gap-analysis\` | Missing controls vs framework | No |
+| \`POST /api/v1/intelligence/breach-sla\` | Breach notification SLA rules | No |
+| \`POST /api/v1/intelligence/retention-check\` | Data retention rules lookup | No |
+| \`POST /api/v1/intelligence/dpia-score\` | DPIA trigger score calculation | No |
+
+### Agentic Chains (output of step N → input of step N+1)
+
+| Flow | Steps |
+|------|-------|
+| RoPA + DPIA | \`analyze-ropa\` → \`assess-dpia\` |
+| Evidence + PoAM | \`evaluate-evidence\` → \`architect-remediation\` |
+
+### Multi-step Workflows
+
+| Flow | Steps |
+|------|-------|
+| Privacy Activity | \`from-text\` → \`screen\` → \`report\` |
+| Full Assessment | \`POST assessments\` → \`upload docs\` → \`evaluate-evidence\` → \`compliance-gate\` |
+
+### CRUD Resources
+
+| Resource | Base Path | Methods |
+|----------|-----------|--------|
+| Assessments | \`/api/v1/assessments\` | CRUD + compliance-gate |
+| Documents | \`/api/v1/assessments/:id/documents\` | Upload, list, get |
+| Privacy Activities | \`/api/v1/privacy/processing-activities\` | Full CRUD + sub-resources |
+| SCF Controls | \`/api/v1/scf/versions/:id/controls\` | Read-only, paginated |
+| SCF Frameworks | \`/api/v1/scf/frameworks\` | Read-only (231 frameworks) |
+| Risk Management | \`/api/v1/risk/*\` | Methodologies, matrices, KRIs, categories |
+| Regulations | \`/api/v1/regulations\` | Legal bases, DSAR, breach rules, consent |
+| Reference Data | \`/api/v1/reference-data/*\` | Data subjects, categories, volume scales |
+| SOA (Statement of Applicability) | \`/api/v1/soa/*\` | Draft, review, approve |
+| Scope | \`/api/v1/assessments/:id/scope\` | CRUD + review workflow |
+| TPRA (Third Party Risk) | \`/api/v1/tpra/*\` | Questionnaires, scoring, SCF mapping |
+| Tenants | \`/api/v1/tenants\` | CRUD (admin only) |
+| Webhooks | \`/api/v1/webhooks\` | CRUD + delivery logs |
+| Workflows | \`/api/v1/workflows/*\` | Start, cancel, resume, signal |
+| Reporting | \`/api/v1/reports\` | Generate assessments reports |
+
+### Additional Intelligence Endpoints
+
+| Endpoint | What it does | LLM? |
+|----------|-------------|------|
+| \`POST /api/v1/intelligence/council\` | Orchestrate multi-agent GRC council | Yes |

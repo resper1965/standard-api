@@ -6,7 +6,7 @@ import {
 } from "./llms-constants";
 
 /** Extract example values from an OpenAPI schema object */
-export function extractExample(schema: any): any {
+function extractExample(schema: any): any {
   if (!schema || typeof schema !== 'object') return {};
   if (schema.example !== undefined) return schema.example;
   if (schema.type === 'string') return schema.example ?? "string";
