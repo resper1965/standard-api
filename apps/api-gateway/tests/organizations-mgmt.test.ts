@@ -3,7 +3,7 @@ import { expect, test } from "./test-kit";
 
 test("PATCH /api/v1/organizations/:id/billing - sucesso como owner", async () => {
   const client = createTestClient();
-  const { organizationId, organizationId } = await client.createTenantOrg();
+  const { organizationId } = await client.createTenantOrg();
 
   const { response, body } = await client.send(
     `/api/v1/organizations/${organizationId}/billing`,
@@ -22,7 +22,7 @@ test("PATCH /api/v1/organizations/:id/billing - sucesso como owner", async () =>
 
 test("PATCH /api/v1/organizations/:id/billing - falha como não-owner (viewer)", async () => {
   const client = createTestClient();
-  const { organizationId, organizationId } = await client.createTenantOrg();
+  const { organizationId } = await client.createTenantOrg();
 
   const { response } = await client.send(
     `/api/v1/organizations/${organizationId}/billing`,
@@ -40,7 +40,7 @@ test("PATCH /api/v1/organizations/:id/billing - falha como não-owner (viewer)",
 
 test("PATCH /api/v1/organizations/:id - atualiza nome/slug como owner com sucesso", async () => {
   const client = createTestClient();
-  const { organizationId, organizationId } = await client.createTenantOrg();
+  const { organizationId } = await client.createTenantOrg();
 
   const { response, body } = await client.send(
     `/api/v1/organizations/${organizationId}`,
@@ -60,7 +60,7 @@ test("PATCH /api/v1/organizations/:id - atualiza nome/slug como owner com sucess
 
 test("PATCH /api/v1/organizations/:id - falha ao atualizar nome/slug como não-owner (viewer)", async () => {
   const client = createTestClient();
-  const { organizationId, organizationId } = await client.createTenantOrg();
+  const { organizationId } = await client.createTenantOrg();
 
   const { response } = await client.send(
     `/api/v1/organizations/${organizationId}`,
@@ -78,7 +78,7 @@ test("PATCH /api/v1/organizations/:id - falha ao atualizar nome/slug como não-o
 
 test("POST /api/v1/organizations/:id/invites - envia convite com sucesso", async () => {
   const client = createTestClient();
-  const { organizationId, organizationId } = await client.createTenantOrg();
+  const { organizationId } = await client.createTenantOrg();
 
   const { response, body } = await client.send(
     `/api/v1/organizations/${organizationId}/invites`,
@@ -101,7 +101,7 @@ test("POST /api/v1/organizations/:id/invites - envia convite com sucesso", async
 
 test("POST /api/v1/organizations/:id/invites - falha ao enviar convite duplicado", async () => {
   const client = createTestClient();
-  const { organizationId, organizationId } = await client.createTenantOrg();
+  const { organizationId } = await client.createTenantOrg();
 
   // First invite
   await client.send(

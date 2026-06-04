@@ -212,7 +212,7 @@ test("[SECURITY] Empty body on POST assessment returns 400", async () => {
 
 test("[SECURITY] SQL injection string in assessment name is sanitized", async () => {
   const client = createTestClient();
-  const { organizationId, organizationId } = await client.createTenantOrg();
+  const { organizationId } = await client.createTenantOrg();
   const result = await client.send(
     "/api/v1/assessments",
     "POST",
@@ -241,7 +241,7 @@ test("[SECURITY] SQL injection string in assessment name is sanitized", async ()
 
 test("[SECURITY] XSS payload in assessment name does not execute (stored safely)", async () => {
   const client = createTestClient();
-  const { organizationId, organizationId } = await client.createTenantOrg();
+  const { organizationId } = await client.createTenantOrg();
   const xssPayload = "<script>alert('xss')</script>";
   const result = await client.send(
     "/api/v1/assessments",
@@ -679,7 +679,7 @@ test("[OBSERVABILITY] Audit log endpoint returns structured records", async () =
 
 test("[CONSISTENCY] Duplicate assessment creation with same name in same org returns consistent result", async () => {
   const client = createTestClient();
-  const { organizationId, organizationId } = await client.createTenantOrg();
+  const { organizationId } = await client.createTenantOrg();
 
   const assessmentBody = {
     organization_id: organizationId,
@@ -736,7 +736,7 @@ test("[CONSISTENCY] UUID validation: malformed IDs return 400 not 500", async ()
 
 test("[SECURITY] API Key lifecycle: create, list, and revoke works", async () => {
   const client = createTestClient();
-  const { organizationId, organizationId } = await client.createTenantOrg();
+  const { organizationId } = await client.createTenantOrg();
   const headers = {
     "x-standard-tenant-id": organizationId,
     "x-standard-actor-id": ids.actorId
