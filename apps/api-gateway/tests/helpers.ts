@@ -49,7 +49,12 @@ export const createTestClient = () => {
   const app = createApp(undefined, { STANDARD_ENV: "test", ALLOW_MOCK_AUTH: "true" } as any);
 
   const send = async (path: string, method = "GET", body?: unknown, headers: Record<string, string> = {}) => {
-    const response = await app.fetch(jsonRequest(path, method, body, headers));
+    // Auto-inject idempotency key for mutating methods (hardening requirement)
+    const mutating = ["POST", "PUT", "PATCH", "DELETE"].includes(method.toUpperCase());
+    const idempotencyHeaders = mutating && !headers["idempotency-key"]
+      ? { "idempotency-key": crypto.randomUUID() }
+      : {};
+    const response = await app.fetch(jsonRequest(path, method, body, { ...idempotencyHeaders, ...headers }));
     const resBody = await response.json();
     return { response, body: wrapError(resBody) };
   };
@@ -97,7 +102,11 @@ export const createTestClient = () => {
   };
 
   const sendMultipart = async (path: string, form: FormData, headers: Record<string, string> = {}) => {
-    const response = await app.fetch(multipartRequest(path, form, headers));
+    // Auto-inject idempotency key (multipart uploads are always POST — hardening requirement)
+    const idempotencyHeaders = !headers["idempotency-key"]
+      ? { "idempotency-key": crypto.randomUUID() }
+      : {};
+    const response = await app.fetch(multipartRequest(path, form, { ...idempotencyHeaders, ...headers }));
     const resBody = await response.json();
     return { response, body: wrapError(resBody) };
   };
