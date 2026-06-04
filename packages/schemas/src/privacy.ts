@@ -86,7 +86,7 @@ export const PrivacyDataSubjectCategorySchema = z.enum([
 
 // ─── Create/Update Requests ─────────────────────────────────────────
 
-export const CreatePrivacyActivityRequestSchema = z.object({
+export const CreatePrivacyActivityRequestSchema = z.strictObject({
   name: z.string().min(1).max(500),
   description: z.string().max(5000).optional(),
   assessment_id: UuidSchema.optional(),
@@ -121,14 +121,14 @@ export const CreatePrivacyActivityRequestSchema = z.object({
 
 export const UpdatePrivacyActivityRequestSchema = CreatePrivacyActivityRequestSchema.partial().omit({ assessment_id: true });
 
-export const UpdatePrivacyActivityStatusRequestSchema = z.object({
+export const UpdatePrivacyActivityStatusRequestSchema = z.strictObject({
   status: PrivacyActivityStatusSchema,
   reason: z.string().max(2000).optional(),
 });
 
 // ─── Data Subjects ──────────────────────────────────────────────────
 
-export const CreatePrivacyDataSubjectRequestSchema = z.object({
+export const CreatePrivacyDataSubjectRequestSchema = z.strictObject({
   category: PrivacyDataSubjectCategorySchema,
   description: z.string().max(2000).optional(),
   estimated_count: z.string().max(200).optional(),
@@ -138,7 +138,7 @@ export const CreatePrivacyDataSubjectRequestSchema = z.object({
 
 // ─── Data Categories ────────────────────────────────────────────────
 
-export const CreatePrivacyDataCategoryRequestSchema = z.object({
+export const CreatePrivacyDataCategoryRequestSchema = z.strictObject({
   category_name: z.string().min(1).max(500),
   sensitivity: PrivacyDataSensitivitySchema.default("personal"),
   specific_data_elements: z.array(z.string().max(200)).default([]),
@@ -244,7 +244,7 @@ export const PrivacyTransferMechanismSchema = z.enum([
   "vital_interests", "not_applicable", "other"
 ]);
 
-export const CreatePrivacyThirdPartyRequestSchema = z.object({
+export const CreatePrivacyThirdPartyRequestSchema = z.strictObject({
   name: z.string().min(1).max(500),
   role: PrivacyThirdPartyRoleSchema.default("processor"),
   country: z.string().max(200).optional(),
@@ -307,7 +307,7 @@ export type PrivacyScreeningResponse = z.infer<typeof PrivacyScreeningResponseSc
 export const PrivacyFieldReviewStatusSchema = z.enum(["pending", "approved", "rejected", "needs_revision"]);
 export const PrivacyFieldReviewSourceSchema = z.enum(["human", "ai_suggestion", "system_rule", "import"]);
 
-export const CreatePrivacyFieldReviewRequestSchema = z.object({
+export const CreatePrivacyFieldReviewRequestSchema = z.strictObject({
   field_name: z.string().min(1).max(200),
   suggested_value: z.string().max(10000).optional(),
   current_value: z.string().max(10000).optional(),
@@ -315,7 +315,7 @@ export const CreatePrivacyFieldReviewRequestSchema = z.object({
   source: PrivacyFieldReviewSourceSchema.default("human"),
 });
 
-export const UpdatePrivacyFieldReviewRequestSchema = z.object({
+export const UpdatePrivacyFieldReviewRequestSchema = z.strictObject({
   review_status: PrivacyFieldReviewStatusSchema,
   comment: z.string().max(5000).optional(),
 });

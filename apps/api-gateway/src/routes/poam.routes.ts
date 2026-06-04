@@ -17,7 +17,7 @@ import {
 import { ApiError } from "../errors/api-error";
 import type { ApiErrorCode } from "../errors/error-codes";
 import type { AppDependencies, AssessmentRecord, RouteDefinition } from "../http";
-import { json, parseJson, routeParam } from "../http";
+import { json, parseJson, routeParam, routeUuidParam } from "../http";
 import { parsePagination, applyPagination } from "../utils/pagination";
 import { getRemediationTerminology } from "../utils/remediation-terminology";
 
@@ -101,7 +101,7 @@ export const poamRoutes: RouteDefinition[] = [
     requireActor: true,
     permissions: ["poam:create"],
     handler: async ({ request, deps, params, organizationId, actorId, traceId }) => {
-      const assessment = await requireAssessment(deps, routeParam(params, "assessmentId"), organizationId!);
+      const assessment = await requireAssessment(deps, routeUuidParam(params, "assessmentId"), organizationId!);
       const body = await parseJson(request, CreatePoamDraftRequestSchema);
       try {
         const draftOptions = {
@@ -122,7 +122,7 @@ export const poamRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["poam:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
-      const assessment = await requireAssessment(deps, routeParam(params, "assessmentId"), organizationId!);
+      const assessment = await requireAssessment(deps, routeUuidParam(params, "assessmentId"), organizationId!);
       const data = await new PoamDraftService(deps.poam).listPoamVersions(assessment.assessment_id, contextFor(assessment, traceId));
       
       return json({ 
@@ -140,7 +140,7 @@ export const poamRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["poam:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
-      const assessment = await requireAssessment(deps, routeParam(params, "assessmentId"), organizationId!);
+      const assessment = await requireAssessment(deps, routeUuidParam(params, "assessmentId"), organizationId!);
       const tenantPoamVersionDb = deps.poam.repositories.versions.withOrganization(organizationId!);
       const versions = await tenantPoamVersionDb.listByAssessment(assessment.assessment_id);
       const latest = versions.at(-1);
@@ -155,7 +155,7 @@ export const poamRoutes: RouteDefinition[] = [
     permissions: ["poam:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
       const tenantPoamVersionDb = deps.poam.repositories.versions.withOrganization(organizationId!);
-      const version = await tenantPoamVersionDb.get(routeParam(params, "poamVersionId"));
+      const version = await tenantPoamVersionDb.get(routeUuidParam(params, "poamVersionId"));
       if (!version) throw new ApiError("NOT_FOUND", "POA&M version not found.", 404);
       
       const terminology = getRemediationTerminology((version as any).framework_id);
@@ -169,7 +169,7 @@ export const poamRoutes: RouteDefinition[] = [
     permissions: ["poam:read"],
     handler: async ({ request, deps, params, organizationId, traceId }) => {
       const tenantPoamVersionDb = deps.poam.repositories.versions.withOrganization(organizationId!);
-      const version = await tenantPoamVersionDb.get(routeParam(params, "poamVersionId"));
+      const version = await tenantPoamVersionDb.get(routeUuidParam(params, "poamVersionId"));
       if (!version) throw new ApiError("NOT_FOUND", "POA&M version not found.", 404);
       const url = new URL(request.url);
       const page = parsePagination(request);
@@ -192,7 +192,7 @@ export const poamRoutes: RouteDefinition[] = [
     path: "/api/v1/poam/:poamVersionId/summary",
     protected: true,
     permissions: ["poam:read"],
-    handler: async ({ deps, params, organizationId, traceId }) => json(await summarize(deps, routeParam(params, "poamVersionId"), organizationId!, traceId))
+    handler: async ({ deps, params, organizationId, traceId }) => json(await summarize(deps, routeUuidParam(params, "poamVersionId"), organizationId!, traceId))
   },
   {
     method: "GET",
@@ -201,7 +201,7 @@ export const poamRoutes: RouteDefinition[] = [
     permissions: ["poam:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
       const tenantPoamItemDb = deps.poam.repositories.items.withOrganization(organizationId!);
-      const item = await tenantPoamItemDb.get(routeParam(params, "poamItemId"));
+      const item = await tenantPoamItemDb.get(routeUuidParam(params, "poamItemId"));
       if (!item) throw new ApiError("NOT_FOUND", "POA&M item not found.", 404);
       return json({ ...item, trace_id: traceId });
     }
@@ -216,7 +216,7 @@ export const poamRoutes: RouteDefinition[] = [
       const tenantPoamItemDb = deps.poam.repositories.items.withOrganization(organizationId!);
       const tenantPoamVersionDb = deps.poam.repositories.versions.withOrganization(organizationId!);
       
-      const item = await tenantPoamItemDb.get(routeParam(params, "poamItemId"));
+      const item = await tenantPoamItemDb.get(routeUuidParam(params, "poamItemId"));
       if (!item) throw new ApiError("NOT_FOUND", "POA&M item not found.", 404);
       // Immutability guard: reject mutations on approved versions
       const parentVersion = await tenantPoamVersionDb.get(item.poam_version_id);
@@ -239,7 +239,7 @@ export const poamRoutes: RouteDefinition[] = [
     permissions: ["poam:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
       const tenantPoamItemDb = deps.poam.repositories.items.withOrganization(organizationId!);
-      const item = await tenantPoamItemDb.get(routeParam(params, "poamItemId"));
+      const item = await tenantPoamItemDb.get(routeUuidParam(params, "poamItemId"));
       if (!item) throw new ApiError("NOT_FOUND", "POA&M item not found.", 404);
       const assessment = await requireAssessment(deps, item.assessment_id, organizationId!);
       return json({ data: await new PoamMilestoneService(deps.poam).listMilestones(item.poam_item_id, contextFor(assessment, traceId)), trace_id: traceId });
@@ -253,7 +253,7 @@ export const poamRoutes: RouteDefinition[] = [
     permissions: ["poam:create"],
     handler: async ({ request, deps, params, organizationId, actorId, traceId }) => {
       const tenantPoamItemDb = deps.poam.repositories.items.withOrganization(organizationId!);
-      const item = await tenantPoamItemDb.get(routeParam(params, "poamItemId"));
+      const item = await tenantPoamItemDb.get(routeUuidParam(params, "poamItemId"));
       if (!item) throw new ApiError("NOT_FOUND", "POA&M item not found.", 404);
       const assessment = await requireAssessment(deps, item.assessment_id, organizationId!);
       const body = await parseJson(request, CreatePoamMilestoneRequestSchema);
@@ -275,7 +275,7 @@ export const poamRoutes: RouteDefinition[] = [
       const tenantPoamItemDb = deps.poam.repositories.items.withOrganization(organizationId!);
       const tenantPoamVersionDb = deps.poam.repositories.versions.withOrganization(organizationId!);
       
-      const milestone = await tenantPoamMilestoneDb.get(routeParam(params, "milestoneId"));
+      const milestone = await tenantPoamMilestoneDb.get(routeUuidParam(params, "milestoneId"));
       if (!milestone) throw new ApiError("NOT_FOUND", "POA&M milestone not found.", 404);
       // Immutability guard: reject mutations on approved versions (look up via parent item)
       const parentItem = await tenantPoamItemDb.get(milestone.poam_item_id);
@@ -301,7 +301,7 @@ export const poamRoutes: RouteDefinition[] = [
     permissions: ["poam:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
       const tenantPoamVersionDb = deps.poam.repositories.versions.withOrganization(organizationId!);
-      const version = await tenantPoamVersionDb.get(routeParam(params, "poamVersionId"));
+      const version = await tenantPoamVersionDb.get(routeUuidParam(params, "poamVersionId"));
       if (!version) throw new ApiError("NOT_FOUND", "POA&M version not found.", 404);
       const assessment = await requireAssessment(deps, version.assessment_id, organizationId!);
       return json(await new PoamValidationService(deps.poam).validatePoamForReview(version.poam_version_id, contextFor(assessment, traceId)));
@@ -315,7 +315,7 @@ export const poamRoutes: RouteDefinition[] = [
     permissions: ["poam:update"],
     handler: async ({ request, deps, params, organizationId, actorId, traceId }) => {
       const tenantPoamVersionDb = deps.poam.repositories.versions.withOrganization(organizationId!);
-      const version = await tenantPoamVersionDb.get(routeParam(params, "poamVersionId"));
+      const version = await tenantPoamVersionDb.get(routeUuidParam(params, "poamVersionId"));
       if (!version) throw new ApiError("NOT_FOUND", "POA&M version not found.", 404);
       const assessment = await requireAssessment(deps, version.assessment_id, organizationId!);
       const body = await parseJson(request, SubmitPoamReviewRequestSchema);
@@ -336,7 +336,7 @@ export const poamRoutes: RouteDefinition[] = [
     permissions: ["poam:approve"],
     handler: async ({ request, deps, params, organizationId, actorId, traceId }) => {
       const tenantPoamVersionDb = deps.poam.repositories.versions.withOrganization(organizationId!);
-      const version = await tenantPoamVersionDb.get(routeParam(params, "poamVersionId"));
+      const version = await tenantPoamVersionDb.get(routeUuidParam(params, "poamVersionId"));
       if (!version) throw new ApiError("NOT_FOUND", "POA&M version not found.", 404);
       const assessment = await requireAssessment(deps, version.assessment_id, organizationId!);
       const body = await parseJson(request, ApprovePoamRequestSchema);
@@ -359,7 +359,7 @@ export const poamRoutes: RouteDefinition[] = [
     permissions: ["poam:create"],
     handler: async ({ request, deps, params, organizationId, actorId, traceId }) => {
       const tenantPoamVersionDb = deps.poam.repositories.versions.withOrganization(organizationId!);
-      const version = await tenantPoamVersionDb.get(routeParam(params, "poamVersionId"));
+      const version = await tenantPoamVersionDb.get(routeUuidParam(params, "poamVersionId"));
       if (!version) throw new ApiError("NOT_FOUND", "POA&M version not found.", 404);
       const assessment = await requireAssessment(deps, version.assessment_id, organizationId!);
       const body = await parseJson(request, RegeneratePoamRequestSchema);
@@ -378,7 +378,7 @@ export const poamRoutes: RouteDefinition[] = [
     permissions: ["poam:update"],
     handler: async ({ request, deps, params, organizationId, actorId, traceId }) => {
       const tenantPoamVersionDb = deps.poam.repositories.versions.withOrganization(organizationId!);
-      const version = await tenantPoamVersionDb.get(routeParam(params, "poamVersionId"));
+      const version = await tenantPoamVersionDb.get(routeUuidParam(params, "poamVersionId"));
       if (!version) throw new ApiError("NOT_FOUND", "POA&M version not found.", 404);
       const assessment = await requireAssessment(deps, version.assessment_id, organizationId!);
       const body = await parseJson(request, UpdatePoamItemRequestSchema);
@@ -396,7 +396,7 @@ export const poamRoutes: RouteDefinition[] = [
     permissions: ["poam:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
       const tenantPoamVersionDb = deps.poam.repositories.versions.withOrganization(organizationId!);
-      const version = await tenantPoamVersionDb.get(routeParam(params, "poamVersionId"));
+      const version = await tenantPoamVersionDb.get(routeUuidParam(params, "poamVersionId"));
       if (!version) throw new ApiError("NOT_FOUND", "POA&M version not found.", 404);
       return json({ data: [], message: "Dependency detection runs during draft generation in MVP.", trace_id: traceId });
     }

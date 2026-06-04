@@ -104,7 +104,7 @@ export const WorkflowStepResultSchema = z.object({
   metadata: z.record(z.string(), z.unknown()).default({})
 });
 
-export const WorkflowSignalRequestSchema = z.object({
+export const WorkflowSignalRequestSchema = z.strictObject({
   signal_type: WorkflowSignalTypeSchema,
   actor_id: UuidSchema,
   approval_event_id: UuidSchema.optional(),
@@ -113,7 +113,7 @@ export const WorkflowSignalRequestSchema = z.object({
   payload: z.record(z.string(), z.unknown()).default({})
 });
 
-export const StartLifecycleWorkflowRequestSchema = z.object({
+export const StartLifecycleWorkflowRequestSchema = z.strictObject({
   requested_by: UuidSchema,
   idempotency_key: z.string().min(8),
   trace_id: TraceIdSchema.optional(),
@@ -121,14 +121,14 @@ export const StartLifecycleWorkflowRequestSchema = z.object({
   options: z.record(z.string(), z.unknown()).default({})
 });
 
-export const CancelWorkflowRequestSchema = z.object({
+export const CancelWorkflowRequestSchema = z.strictObject({
   actor_id: UuidSchema,
   reason: z.string().min(1).max(500),
   idempotency_key: z.string().min(8),
   trace_id: TraceIdSchema.optional()
 });
 
-export const ResumeWorkflowRequestSchema = z.object({
+export const ResumeWorkflowRequestSchema = z.strictObject({
   actor_id: UuidSchema,
   reason: z.string().min(1).max(500),
   idempotency_key: z.string().min(8),

@@ -4,7 +4,7 @@
  * Replaces the legacy flow-templates.routes.ts.
  */
 import type { RouteDefinition } from "../http";
-import { json, routeParam } from "../http";
+import { json, routeParam, routeUuidParam } from "../http";
 import { ApiError } from "../errors/api-error";
 import { flattenI18n } from "../utils/i18n";
 import type { WorkflowTemplate } from "@standard/schemas";
@@ -83,7 +83,7 @@ export const workflowsTemplatesRoutes: RouteDefinition[] = [
     tenantRequired: false,
     handler: async ({ request, params, traceId }) => {
       const locale = new URL(request.url).searchParams.get("locale") ?? "";
-      const t = TEMPLATES_INDEX.get(routeParam(params, "templateId"));
+      const t = TEMPLATES_INDEX.get(routeUuidParam(params, "templateId"));
       if (!t) throw new ApiError("NOT_FOUND", "Template not found.", 404);
       return json(flattenI18n({ data: t, trace_id: traceId }, locale));
     },

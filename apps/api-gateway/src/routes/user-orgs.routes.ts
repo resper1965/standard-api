@@ -14,7 +14,7 @@ import { eq, and } from "drizzle-orm";
 import { baOrganization, baMember, baSession } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";
-import { json, routeParam, parseJson } from "../http";
+import { json, routeParam, routeUuidParam, parseJson } from "../http";
 import type { DbClient } from "../adapters/db";
 import { z } from "zod";
 import { provisionOrganizationContext } from "../adapters/tenant-mapping";
@@ -86,7 +86,7 @@ export const userOrgsRoutes: RouteDefinition[] = [
         throw new ApiError("UNAUTHORIZED", "Session required.", 401);
       }
 
-      const organizationId = routeParam(context.params, "organizationId");
+      const organizationId = routeUuidParam(context.params, "organizationId");
       const db = getDb(context.deps);
 
       // Verify the user is actually a member of this organization
@@ -149,7 +149,7 @@ export const userOrgsRoutes: RouteDefinition[] = [
         throw new ApiError("UNAUTHORIZED", "Session required.", 401);
       }
 
-      const organizationId = routeParam(context.params, "organizationId");
+      const organizationId = routeUuidParam(context.params, "organizationId");
       const db = getDb(context.deps);
 
       // Verify the user is actually a member of this organization

@@ -7,7 +7,7 @@ import type {
 } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";
-import { json, newId, parseJson, routeParam } from "../http";
+import { json, newId, parseJson, routeParam, routeUuidParam } from "../http";
 import { CreateWebhookEndpointSchema, UpdateWebhookEndpointSchema } from "@standard/schemas";
 import { WebhookDispatcher } from "../services/webhook-dispatcher";
 
@@ -22,7 +22,7 @@ export const webhookRoutes: RouteDefinition[] = [
     permissions: ["webhook:create"],
     handler: async ({ request, deps, params, organizationId, traceId }) => {
       const body = await parseJson(request, CreateWebhookEndpointSchema);
-      const orgId = routeParam(params, "organizationId");
+      const orgId = routeUuidParam(params, "organizationId");
 
       if (!deps.webhooks) throw new ApiError("NOT_IMPLEMENTED", "Webhooks not configured.", 501);
 
@@ -64,7 +64,7 @@ export const webhookRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["webhook:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
-      const orgId = routeParam(params, "organizationId");
+      const orgId = routeUuidParam(params, "organizationId");
       if (!deps.webhooks) throw new ApiError("NOT_IMPLEMENTED", "Webhooks not configured.", 501);
       const endpoints = await deps.webhooks.listEndpoints(orgId);
       return json({ data: endpoints.map(endpointResponse), trace_id: traceId });
@@ -77,7 +77,7 @@ export const webhookRoutes: RouteDefinition[] = [
     permissions: ["webhook:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
       if (!deps.webhooks) throw new ApiError("NOT_IMPLEMENTED", "Webhooks not configured.", 501);
-      const endpoint = await deps.webhooks.getEndpoint(routeParam(params, "webhookId"), organizationId!);
+      const endpoint = await deps.webhooks.getEndpoint(routeUuidParam(params, "webhookId"), organizationId!);
       if (!endpoint) throw new ApiError("NOT_FOUND", "Webhook endpoint not found.", 404);
       return json({ data: endpointResponse(endpoint), trace_id: traceId });
     }
@@ -98,7 +98,7 @@ export const webhookRoutes: RouteDefinition[] = [
       if (body.enabled !== undefined) patch.enabled = body.enabled;
 
       const updated = await deps.webhooks.updateEndpoint(
-        routeParam(params, "webhookId"),
+        routeUuidParam(params, "webhookId"),
         organizationId!,
         patch
       );
@@ -114,7 +114,7 @@ export const webhookRoutes: RouteDefinition[] = [
     permissions: ["webhook:delete"],
     handler: async ({ deps, params, organizationId }) => {
       if (!deps.webhooks) throw new ApiError("NOT_IMPLEMENTED", "Webhooks not configured.", 501);
-      const deleted = await deps.webhooks.deleteEndpoint(routeParam(params, "webhookId"), organizationId!);
+      const deleted = await deps.webhooks.deleteEndpoint(routeUuidParam(params, "webhookId"), organizationId!);
       if (!deleted) throw new ApiError("NOT_FOUND", "Webhook endpoint not found.", 404);
       return json({ ok: true });
     }
@@ -127,7 +127,7 @@ export const webhookRoutes: RouteDefinition[] = [
     handler: async ({ deps, params, organizationId, traceId }) => {
       if (!deps.webhooks) throw new ApiError("NOT_IMPLEMENTED", "Webhooks not configured.", 501);
       // Verify ownership
-      const endpoint = await deps.webhooks.getEndpoint(routeParam(params, "webhookId"), organizationId!);
+      const endpoint = await deps.webhooks.getEndpoint(routeUuidParam(params, "webhookId"), organizationId!);
       if (!endpoint) throw new ApiError("NOT_FOUND", "Webhook endpoint not found.", 404);
       const deliveries = await deps.webhooks.listDeliveries(endpoint.id, 50);
       return json({ data: deliveries, trace_id: traceId });
@@ -141,7 +141,7 @@ export const webhookRoutes: RouteDefinition[] = [
     permissions: ["webhook:update"],
     handler: async ({ deps, params, organizationId, traceId }) => {
       if (!deps.webhooks) throw new ApiError("NOT_IMPLEMENTED", "Webhooks not configured.", 501);
-      const webhookId = routeParam(params, "webhookId");
+      const webhookId = routeUuidParam(params, "webhookId");
 
       // Verify ownership
       const endpoint = await deps.webhooks.getEndpoint(webhookId, organizationId!);
@@ -175,7 +175,7 @@ export const webhookRoutes: RouteDefinition[] = [
     permissions: ["webhook:create"],
     handler: async ({ deps, params, organizationId, traceId }) => {
       if (!deps.webhooks) throw new ApiError("NOT_IMPLEMENTED", "Webhooks not configured.", 501);
-      const webhookId = routeParam(params, "webhookId");
+      const webhookId = routeUuidParam(params, "webhookId");
 
       const endpoint = await deps.webhooks.getEndpoint(webhookId, organizationId!);
       if (!endpoint) throw new ApiError("NOT_FOUND", "Webhook endpoint not found.", 404);

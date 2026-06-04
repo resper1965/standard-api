@@ -1,7 +1,7 @@
 import { AuditLogQuerySchema, MetricsQuerySchema, SecurityEventQuerySchema, UsageQuerySchema } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";
-import { json, routeParam } from "../http";
+import { json, routeParam, routeUuidParam } from "../http";
 
 const parseQuery = <T extends { safeParse: (value: unknown) => { success: boolean; data?: unknown; error?: unknown } }>(
   request: Request,
@@ -21,7 +21,7 @@ export const observabilityRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["audit:read"],
     handler: async ({ request, deps, params, organizationId, traceId }) => {
-      const assessment = await deps.assessments.withOrganization(organizationId!).get(routeParam(params, "assessmentId"));
+      const assessment = await deps.assessments.withOrganization(organizationId!).get(routeUuidParam(params, "assessmentId"));
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
       const query = parseQuery(request, AuditLogQuerySchema);
       const data = await deps.observability.auditEvents.list({
@@ -38,7 +38,7 @@ export const observabilityRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["audit:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
-      const record = await deps.observability.auditEvents.get(routeParam(params, "auditLogId"));
+      const record = await deps.observability.auditEvents.get(routeUuidParam(params, "auditLogId"));
       if (!record || record.organization_id !== organizationId) throw new ApiError("NOT_FOUND", "Audit log not found.", 404);
       return json({ ...record, trace_id: traceId });
     }
@@ -60,7 +60,7 @@ export const observabilityRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["admin:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
-      const record = await deps.observability.securityEvents.get(routeParam(params, "securityEventId"));
+      const record = await deps.observability.securityEvents.get(routeUuidParam(params, "securityEventId"));
       if (!record || record.organization_id !== organizationId) throw new ApiError("NOT_FOUND", "Security event not found.", 404);
       return json({ ...record, trace_id: traceId });
     }
@@ -71,7 +71,7 @@ export const observabilityRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["assessment:read"],
     handler: async ({ request, deps, params, organizationId, traceId }) => {
-      const assessment = await deps.assessments.withOrganization(organizationId!).get(routeParam(params, "assessmentId"));
+      const assessment = await deps.assessments.withOrganization(organizationId!).get(routeUuidParam(params, "assessmentId"));
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
       const query = parseQuery(request, MetricsQuerySchema);
       const data = await deps.observability.metrics.list({
@@ -102,7 +102,7 @@ export const observabilityRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["assessment:read"],
     handler: async ({ request, deps, params, organizationId, traceId }) => {
-      const assessment = await deps.assessments.withOrganization(organizationId!).get(routeParam(params, "assessmentId"));
+      const assessment = await deps.assessments.withOrganization(organizationId!).get(routeUuidParam(params, "assessmentId"));
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
       const query = parseQuery(request, UsageQuerySchema);
       const usage = await deps.observability.usage.list({ organization_id: organizationId, assessment_id: assessment.assessment_id, limit: query.limit });
@@ -116,7 +116,7 @@ export const observabilityRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["tenant:read"],
     handler: async ({ request, deps, params, organizationId, traceId }) => {
-      if (routeParam(params, "organizationId") !== organizationId) throw new ApiError("FORBIDDEN", "Tenant context mismatch.", 403);
+      if (routeUuidParam(params, "organizationId") !== organizationId) throw new ApiError("FORBIDDEN", "Tenant context mismatch.", 403);
       const query = parseQuery(request, UsageQuerySchema);
       const usage = await deps.observability.usage.list({ organization_id: organizationId, limit: query.limit });
       return json({ usage, trace_id: traceId });

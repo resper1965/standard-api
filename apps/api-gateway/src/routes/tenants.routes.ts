@@ -1,7 +1,7 @@
 import { CreateTenantRequestSchema, UpdateTenantRequestSchema } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";
-import { json, parseJson, routeParam } from "../http";
+import { json, parseJson, routeParam, routeUuidParam } from "../http";
 import { requirePlatformAdmin } from "../middleware/rbac.middleware";
 
 /**
@@ -44,7 +44,7 @@ export const tenantsRoutes: RouteDefinition[] = [
     handler: async (context) => {
       await requirePlatformAdmin(context);
 
-      const tenant = await context.deps.tenants.get(routeParam(context.params, "organizationId"));
+      const tenant = await context.deps.tenants.get(routeUuidParam(context.params, "organizationId"));
       if (!tenant) throw new ApiError("NOT_FOUND", "Tenant not found.", 404);
       return json({ ...tenant, trace_id: context.traceId });
     }
@@ -64,7 +64,7 @@ export const tenantsRoutes: RouteDefinition[] = [
         ...(body.name ? { name: body.name } : {}),
         ...(body.status ? { status: body.status } : {})
       };
-      const tenant = await context.deps.tenants.update(routeParam(context.params, "organizationId"), patch);
+      const tenant = await context.deps.tenants.update(routeUuidParam(context.params, "organizationId"), patch);
       if (!tenant) throw new ApiError("NOT_FOUND", "Tenant not found.", 404);
       await context.deps.audit.record("tenant.updated", {
         organization_id: tenant.organization_id,

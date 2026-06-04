@@ -21,7 +21,7 @@ import {
 import { ApiError } from "../errors/api-error";
 import type { ApiErrorCode } from "../errors/error-codes";
 import type { AppDependencies, AssessmentRecord, RouteDefinition } from "../http";
-import { json, parseJson, routeParam } from "../http";
+import { json, parseJson, routeParam, routeUuidParam } from "../http";
 
 const toApiError = (error: unknown): never => {
   if (error instanceof ReportingWorkflowError) {
@@ -69,7 +69,7 @@ export const reportingRoutes: RouteDefinition[] = [
     permissions: ["report:create"],
     requireActor: true,
     handler: async ({ request, params, deps, organizationId, actorId, traceId }) => {
-      const assessment = await requireAssessment(deps, routeParam(params, "assessmentId"), organizationId!);
+      const assessment = await requireAssessment(deps, routeUuidParam(params, "assessmentId"), organizationId!);
       const body = await parseJson(request, CreateReportDraftRequestSchema);
       try {
         const draft = await new ReportDraftService(deps.reporting).createReportDraft(assessment.assessment_id, body.report_type, body, contextFor(assessment, traceId, actorId!));
@@ -85,7 +85,7 @@ export const reportingRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["report:read"],
     handler: async ({ params, deps, organizationId, traceId }) => {
-      const assessment = await requireAssessment(deps, routeParam(params, "assessmentId"), organizationId!);
+      const assessment = await requireAssessment(deps, routeUuidParam(params, "assessmentId"), organizationId!);
       return json(await new ReportDraftService(deps.reporting).listReportVersions(assessment.assessment_id, contextFor(assessment, traceId)));
     }
   },
@@ -95,7 +95,7 @@ export const reportingRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["report:read"],
     handler: async ({ params, deps, organizationId, traceId }) => {
-      const report = await deps.reporting.repositories.versions.get(routeParam(params, "reportVersionId"), organizationId!);
+      const report = await deps.reporting.repositories.versions.get(routeUuidParam(params, "reportVersionId"), organizationId!);
       if (!report) throw new ApiError("REPORT_NOT_FOUND", "Report version not found.", 404);
       const assessment = await requireAssessment(deps, report.assessment_id, organizationId!);
       return json(report, { headers: { "x-trace-id": traceId } });
@@ -107,7 +107,7 @@ export const reportingRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["report:read"],
     handler: async ({ params, deps, organizationId, traceId }) => {
-      const report = await deps.reporting.repositories.versions.get(routeParam(params, "reportVersionId"), organizationId!);
+      const report = await deps.reporting.repositories.versions.get(routeUuidParam(params, "reportVersionId"), organizationId!);
       if (!report) throw new ApiError("REPORT_NOT_FOUND", "Report version not found.", 404);
       const assessment = await requireAssessment(deps, report.assessment_id, organizationId!);
       return json(await new ReportComposerService(deps.reporting).composeFullAssessmentReport(report.report_version_id, contextFor(assessment, traceId)));
@@ -119,7 +119,7 @@ export const reportingRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["report:read"],
     handler: async ({ params, deps, organizationId, traceId }) => {
-      const report = await deps.reporting.repositories.versions.get(routeParam(params, "reportVersionId"), organizationId!);
+      const report = await deps.reporting.repositories.versions.get(routeUuidParam(params, "reportVersionId"), organizationId!);
       if (!report) throw new ApiError("REPORT_NOT_FOUND", "Report version not found.", 404);
       const assessment = await requireAssessment(deps, report.assessment_id, organizationId!);
       return json(await new ReportStorageService(deps.reporting).listArtifacts(report.report_version_id, contextFor(assessment, traceId)));
@@ -131,7 +131,7 @@ export const reportingRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["report:read"],
     handler: async ({ params, deps, organizationId, traceId }) => {
-      const report = await deps.reporting.repositories.versions.get(routeParam(params, "reportVersionId"), organizationId!);
+      const report = await deps.reporting.repositories.versions.get(routeUuidParam(params, "reportVersionId"), organizationId!);
       if (!report) throw new ApiError("REPORT_NOT_FOUND", "Report version not found.", 404);
       const assessment = await requireAssessment(deps, report.assessment_id, organizationId!);
       return json(await new ReportValidationService(deps.reporting).validateReportForReview(report.report_version_id, contextFor(assessment, traceId)));
@@ -144,7 +144,7 @@ export const reportingRoutes: RouteDefinition[] = [
     permissions: ["report:create"],
     requireActor: true,
     handler: async ({ request, params, deps, organizationId, actorId, traceId }) => {
-      const report = await deps.reporting.repositories.versions.get(routeParam(params, "reportVersionId"), organizationId!);
+      const report = await deps.reporting.repositories.versions.get(routeUuidParam(params, "reportVersionId"), organizationId!);
       if (!report) throw new ApiError("REPORT_NOT_FOUND", "Report version not found.", 404);
       const assessment = await requireAssessment(deps, report.assessment_id, organizationId!);
       const body = await parseJson(request, RenderReportRequestSchema);
@@ -163,7 +163,7 @@ export const reportingRoutes: RouteDefinition[] = [
     requireActor: true,
     handler: async ({ request, params, deps, organizationId, actorId, traceId }) => {
       await parseJson(request, SubmitReportReviewRequestSchema);
-      const report = await deps.reporting.repositories.versions.get(routeParam(params, "reportVersionId"), organizationId!);
+      const report = await deps.reporting.repositories.versions.get(routeUuidParam(params, "reportVersionId"), organizationId!);
       if (!report) throw new ApiError("REPORT_NOT_FOUND", "Report version not found.", 404);
       const assessment = await requireAssessment(deps, report.assessment_id, organizationId!);
       try {
@@ -181,7 +181,7 @@ export const reportingRoutes: RouteDefinition[] = [
     requireActor: true,
     handler: async ({ request, params, deps, organizationId, actorId, traceId }) => {
       const body = await parseJson(request, ApproveReportRequestSchema);
-      const report = await deps.reporting.repositories.versions.get(routeParam(params, "reportVersionId"), organizationId!);
+      const report = await deps.reporting.repositories.versions.get(routeUuidParam(params, "reportVersionId"), organizationId!);
       if (!report) throw new ApiError("REPORT_NOT_FOUND", "Report version not found.", 404);
       const assessment = await requireAssessment(deps, report.assessment_id, organizationId!);
       const approval = await deps.approvals.withOrganization(organizationId!).getForGate(body.approval_event_id, "report");
@@ -201,7 +201,7 @@ export const reportingRoutes: RouteDefinition[] = [
     requireActor: true,
     handler: async ({ request, params, deps, organizationId, actorId, traceId }) => {
       await parseJson(request, RegenerateReportRequestSchema);
-      const report = await deps.reporting.repositories.versions.get(routeParam(params, "reportVersionId"), organizationId!);
+      const report = await deps.reporting.repositories.versions.get(routeUuidParam(params, "reportVersionId"), organizationId!);
       if (!report) throw new ApiError("REPORT_NOT_FOUND", "Report version not found.", 404);
       const assessment = await requireAssessment(deps, report.assessment_id, organizationId!);
       return json(await new ReportDraftService(deps.reporting).regenerateReportDraft(report.report_version_id, {}, contextFor(assessment, traceId, actorId!)), { status: 201 });
@@ -213,7 +213,7 @@ export const reportingRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["report:read"],
     handler: async ({ params, deps, organizationId, traceId }) => {
-      const artifact = await deps.reporting.repositories.artifacts.get(routeParam(params, "artifactId"), organizationId!);
+      const artifact = await deps.reporting.repositories.artifacts.get(routeUuidParam(params, "artifactId"), organizationId!);
       if (!artifact) throw new ApiError("REPORT_ARTIFACT_NOT_FOUND", "Report artifact not found.", 404);
       await requireAssessment(deps, artifact.assessment_id, organizationId!);
       return json(artifact, { headers: { "x-trace-id": traceId } });
@@ -225,7 +225,7 @@ export const reportingRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["report:download"],
     handler: async ({ params, deps, organizationId, traceId, actorId }) => {
-      const artifact = await deps.reporting.repositories.artifacts.get(routeParam(params, "artifactId"), organizationId!);
+      const artifact = await deps.reporting.repositories.artifacts.get(routeUuidParam(params, "artifactId"), organizationId!);
       if (!artifact) throw new ApiError("REPORT_ARTIFACT_NOT_FOUND", "Report artifact not found.", 404);
       const assessment = await requireAssessment(deps, artifact.assessment_id, organizationId!);
       await new AuditEventService(deps.observability).record({
@@ -259,7 +259,7 @@ export const reportingRoutes: RouteDefinition[] = [
     permissions: ["report:create"],
     requireActor: true,
     handler: async ({ request, params, deps, organizationId, actorId, traceId }) => {
-      const assessment = await requireAssessment(deps, routeParam(params, "assessmentId"), organizationId!);
+      const assessment = await requireAssessment(deps, routeUuidParam(params, "assessmentId"), organizationId!);
       const body = await parseJson(request, ExportRequestSchema);
       return json(await new ExportJobService(deps.reporting).requestExport(assessment.assessment_id, body.format, body.report_type, contextFor(assessment, traceId, actorId!)), { status: 202 });
     }
@@ -270,7 +270,7 @@ export const reportingRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["report:read"],
     handler: async ({ params, deps, organizationId, traceId }) => {
-      const assessment = await requireAssessment(deps, routeParam(params, "assessmentId"), organizationId!);
+      const assessment = await requireAssessment(deps, routeUuidParam(params, "assessmentId"), organizationId!);
       return json(await new ExportJobService(deps.reporting).listExportJobs(assessment.assessment_id, contextFor(assessment, traceId)));
     }
   },
@@ -280,7 +280,7 @@ export const reportingRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["report:read"],
     handler: async ({ params, deps, organizationId, traceId }) => {
-      const job = await deps.reporting.repositories.exportJobs.get(routeParam(params, "exportJobId"), organizationId!);
+      const job = await deps.reporting.repositories.exportJobs.get(routeUuidParam(params, "exportJobId"), organizationId!);
       if (!job) throw new ApiError("EXPORT_JOB_NOT_FOUND", "Export job not found.", 404);
       await requireAssessment(deps, job.assessment_id, organizationId!);
       return json(job, { headers: { "x-trace-id": traceId } });
@@ -293,10 +293,10 @@ export const reportingRoutes: RouteDefinition[] = [
     permissions: ["report:create"],
     requireActor: true,
     handler: async ({ params, deps, organizationId, actorId, traceId }) => {
-      const report = await deps.reporting.repositories.versions.get(routeParam(params, "reportVersionId"), organizationId!);
+      const report = await deps.reporting.repositories.versions.get(routeUuidParam(params, "reportVersionId"), organizationId!);
       if (!report) throw new ApiError("REPORT_NOT_FOUND", "Report version not found.", 404);
       const assessment = await requireAssessment(deps, report.assessment_id, organizationId!);
-      const format = routeParam(params, "format");
+      const format = routeUuidParam(params, "format");
       const service = new ReportRendererService(deps.reporting);
       let rendered;
       if (format === "markdown") {
@@ -318,7 +318,7 @@ export const reportingRoutes: RouteDefinition[] = [
     permissions: ["report:create"],
     requireActor: true,
     handler: async ({ params, deps, organizationId, actorId, traceId, request }) => {
-      const assessment = await requireAssessment(deps, routeParam(params, "assessmentId"), organizationId!);
+      const assessment = await requireAssessment(deps, routeUuidParam(params, "assessmentId"), organizationId!);
       const locale = new URL(request.url).searchParams.get("locale") as import("@standard/schemas").SupportedLocale | null;
       try {
         const result = await new AuditPackageService(deps.reporting).generatePackage(
@@ -338,7 +338,7 @@ export const reportingRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["report:download"],
     handler: async ({ params, deps, organizationId, traceId }) => {
-      const job = await deps.reporting.repositories.exportJobs.get(routeParam(params, "exportJobId"), organizationId!);
+      const job = await deps.reporting.repositories.exportJobs.get(routeUuidParam(params, "exportJobId"), organizationId!);
       if (!job) throw new ApiError("EXPORT_JOB_NOT_FOUND", "Export job not found.", 404);
       if (job.status !== "succeeded") throw new ApiError("EXPORT_JOB_FAILED", `Export job status: ${job.status}. Only succeeded jobs can be downloaded.`, 409);
       const assessment = await requireAssessment(deps, job.assessment_id, organizationId!);

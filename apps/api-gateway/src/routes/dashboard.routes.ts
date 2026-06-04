@@ -8,7 +8,7 @@ import type { AssessmentSummary, OrganizationDashboard, AuditLogTenantQuery } fr
 import { AuditLogTenantQuerySchema } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";
-import { json, routeParam } from "../http";
+import { json, routeParam, routeUuidParam } from "../http";
 
 const parseQuery = (request: Request, schema: { safeParse: (v: unknown) => { success: boolean; data?: unknown; error?: unknown } }) => {
   const raw = Object.fromEntries(new URL(request.url).searchParams.entries());
@@ -25,7 +25,7 @@ export const dashboardRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["assessment:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
-      const assessmentId = routeParam(params, "assessmentId");
+      const assessmentId = routeUuidParam(params, "assessmentId");
       const assessment = await deps.assessments.withOrganization(organizationId!).get(assessmentId);
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
 
@@ -94,7 +94,7 @@ export const dashboardRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["organization:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
-      const orgId = routeParam(params, "organizationId");
+      const orgId = routeUuidParam(params, "organizationId");
       const org = await deps.organizations.get(orgId);
       if (!org) throw new ApiError("NOT_FOUND", "Organization not found.", 404);
 
@@ -169,7 +169,7 @@ export const dashboardRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["audit:read"],
     handler: async ({ request, deps, params, organizationId, traceId }) => {
-      if (routeParam(params, "organizationId") !== organizationId) throw new ApiError("FORBIDDEN", "Tenant context mismatch.", 403);
+      if (routeUuidParam(params, "organizationId") !== organizationId) throw new ApiError("FORBIDDEN", "Tenant context mismatch.", 403);
       const query = parseQuery(request, AuditLogTenantQuerySchema) as AuditLogTenantQuery;
       const data = await deps.observability.auditEvents.list({ organization_id: organizationId, limit: query.limit });
 
@@ -193,7 +193,7 @@ export const dashboardRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["audit:read"],
     handler: async ({ request, deps, params, organizationId, traceId }) => {
-      const orgId = routeParam(params, "organizationId");
+      const orgId = routeUuidParam(params, "organizationId");
       const org = await deps.organizations.get(orgId);
       if (!org) throw new ApiError("NOT_FOUND", "Organization not found.", 404);
       const query = parseQuery(request, AuditLogTenantQuerySchema) as AuditLogTenantQuery;

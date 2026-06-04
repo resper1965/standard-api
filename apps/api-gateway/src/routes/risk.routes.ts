@@ -14,7 +14,7 @@
  * All link to SCF via scf_controls[] / scf_domains[].
  */
 import type { RouteDefinition } from "../http";
-import { json, routeParam } from "../http";
+import { json, routeParam, routeUuidParam } from "../http";
 import { ApiError } from "../errors/api-error";
 import { flattenI18n } from "../utils/i18n";
 
@@ -235,7 +235,7 @@ export const riskRoutes: RouteDefinition[] = [
     authRequired: true, tenantRequired: false,
     handler: async ({ request, params, traceId }) => {
       const locale = new URL(request.url).searchParams.get("locale") || "pt";
-      const method = METHODOLOGY_INDEX.get(routeParam(params, "methodId"));
+      const method = METHODOLOGY_INDEX.get(routeUuidParam(params, "methodId"));
       if (!method) throw new ApiError("NOT_FOUND", "Methodology not found.", 404);
       return json({ data: flattenI18n(method, locale), trace_id: traceId });
     },
@@ -245,7 +245,7 @@ export const riskRoutes: RouteDefinition[] = [
     authRequired: true, tenantRequired: false,
     handler: async ({ request, params, traceId }) => {
       const locale = new URL(request.url).searchParams.get("locale") || "pt";
-      const method = METHODOLOGY_INDEX.get(routeParam(params, "methodId"));
+      const method = METHODOLOGY_INDEX.get(routeUuidParam(params, "methodId"));
       if (!method) throw new ApiError("NOT_FOUND", "Methodology not found.", 404);
       const cells = [];
       const likelihoodScale = method.dimensions.find(d => d.id === "likelihood")?.scale || [];
@@ -291,7 +291,7 @@ export const riskRoutes: RouteDefinition[] = [
     authRequired: true, tenantRequired: false,
     handler: async ({ request, params, traceId }) => {
       const locale = new URL(request.url).searchParams.get("locale") || "pt";
-      const cat = TAXONOMY_CAT_INDEX.get(routeParam(params, "categoryId"));
+      const cat = TAXONOMY_CAT_INDEX.get(routeUuidParam(params, "categoryId"));
       if (!cat) throw new ApiError("NOT_FOUND", `Category not found. Available: ${RISK_TAXONOMY.categories.map(c => c.id).join(", ")}`, 404);
       return json({ data: flattenI18n(cat, locale), trace_id: traceId });
     },
@@ -301,9 +301,9 @@ export const riskRoutes: RouteDefinition[] = [
     authRequired: true, tenantRequired: false,
     handler: async ({ request, params, traceId }) => {
       const locale = new URL(request.url).searchParams.get("locale") || "pt";
-      const cat = TAXONOMY_CAT_INDEX.get(routeParam(params, "categoryId"));
+      const cat = TAXONOMY_CAT_INDEX.get(routeUuidParam(params, "categoryId"));
       if (!cat) throw new ApiError("NOT_FOUND", "Category not found.", 404);
-      const risk = cat.risks.find((r: any) => r.id === routeParam(params, "riskId"));
+      const risk = cat.risks.find((r: any) => r.id === routeUuidParam(params, "riskId"));
       if (!risk) throw new ApiError("NOT_FOUND", `Risk not found in ${cat.id}: ${cat.risks.map((r: any) => r.id).join(", ")}`, 404);
       const data = { ...risk, category: { id: cat.id, name_i18n: cat.name_i18n } };
       return json({ data: flattenI18n(data, locale), trace_id: traceId });
@@ -346,7 +346,7 @@ export const riskRoutes: RouteDefinition[] = [
     authRequired: true, tenantRequired: false,
     handler: async ({ request, params, traceId }) => {
       const locale = new URL(request.url).searchParams.get("locale") || "pt";
-      const riskId = routeParam(params, "riskId");
+      const riskId = routeUuidParam(params, "riskId");
       for (const cat of RISK_TAXONOMY.categories) {
         const risk = cat.risks.find((r: any) => r.id === riskId);
         if (risk) {

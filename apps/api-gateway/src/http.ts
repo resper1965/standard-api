@@ -279,6 +279,7 @@ export type RouteDefinition = {
   authRequired?: boolean;
   tenantRequired?: boolean;
   requireActor?: boolean;
+  idempotencyRequired?: boolean;
   permissions?: Permission[];
   /** Zod schema for request body validation. When defined, body is parsed
    *  and validated before the handler runs. Access via `context.validatedBody`. */
@@ -324,6 +325,16 @@ export const parseJson = async <T extends z.ZodType>(request: Request, schema: T
 export const routeParam = (params: Record<string, string>, name: string): string => {
   const value = params[name];
   if (!value) throw new ApiError("VALIDATION_ERROR", `Missing route parameter: ${name}.`, 400);
+  return value;
+};
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export const routeUuidParam = (params: Record<string, string>, name: string): string => {
+  const value = routeParam(params, name);
+  if (!UUID_REGEX.test(value)) {
+    throw new ApiError("VALIDATION_ERROR", `Invalid UUID format for parameter: ${name}.`, 400);
+  }
   return value;
 };
 

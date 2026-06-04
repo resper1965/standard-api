@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { UuidSchema } from "./common";
 
-export const CreateOrganizationRequestSchema = z.object({
+export const CreateOrganizationRequestSchema = z.strictObject({
   organization_id: UuidSchema,
   slug: z.string().min(2),
   name: z.string().min(1)

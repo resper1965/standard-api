@@ -14,7 +14,7 @@ import {
 import { ApiError } from "../errors/api-error";
 import type { ApiErrorCode } from "../errors/error-codes";
 import type { AppDependencies, AssessmentRecord, RouteDefinition } from "../http";
-import { json, parseJson, routeParam } from "../http";
+import { json, parseJson, routeParam, routeUuidParam } from "../http";
 
 const toApiError = (error: unknown): never => {
   if (error instanceof AgentRuntimeError) {
@@ -62,7 +62,7 @@ export const agentRuntimeRoutes: RouteDefinition[] = [
     permissions: ["agent:run"],
     bodySchema: StartAgentRunRequestSchema,
     handler: async ({ validatedBody, params, deps, organizationId, actorId, traceId, request }) => {
-      const assessment = await requireAssessment(deps, routeParam(params, "assessmentId"), organizationId!);
+      const assessment = await requireAssessment(deps, routeUuidParam(params, "assessmentId"), organizationId!);
       const body = validatedBody as import("@standard/schemas").StartAgentRunRequest;
       const locale = new URL(request.url).searchParams.get("locale") ?? undefined;
       try {
@@ -118,7 +118,7 @@ export const agentRuntimeRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["agent:read_runs"],
     handler: async ({ params, deps, organizationId }) => {
-      const assessment = await requireAssessment(deps, routeParam(params, "assessmentId"), organizationId!);
+      const assessment = await requireAssessment(deps, routeUuidParam(params, "assessmentId"), organizationId!);
       return json(await new AgentRuntimeService(deps.agentRuntime).listRuns(assessment.assessment_id, organizationId!));
     }
   },
@@ -128,7 +128,7 @@ export const agentRuntimeRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["agent:read"],
     handler: async ({ params, deps, organizationId }) => {
-      const run = await new AgentRuntimeService(deps.agentRuntime).getRun(routeParam(params, "agentRunId"), organizationId!);
+      const run = await new AgentRuntimeService(deps.agentRuntime).getRun(routeUuidParam(params, "agentRunId"), organizationId!);
       if (!run) throw new ApiError("NOT_FOUND", "Agent run not found.", 404);
       return json(run);
     }
@@ -140,7 +140,7 @@ export const agentRuntimeRoutes: RouteDefinition[] = [
     permissions: ["agent:create"],
     requireActor: true,
     handler: async ({ request, params, deps, organizationId, traceId }) => {
-      const run = await new AgentRuntimeService(deps.agentRuntime).getRun(routeParam(params, "agentRunId"), organizationId!);
+      const run = await new AgentRuntimeService(deps.agentRuntime).getRun(routeUuidParam(params, "agentRunId"), organizationId!);
       if (!run) throw new ApiError("NOT_FOUND", "Agent run not found.", 404);
       const body = await parseJson(request, InvokeAgentToolRequestSchema);
       try {
@@ -182,7 +182,7 @@ export const agentRuntimeRoutes: RouteDefinition[] = [
     permissions: ["agent:create"],
     requireActor: true,
     handler: async ({ request, params, deps, organizationId, traceId }) => {
-      const run = await new AgentRuntimeService(deps.agentRuntime).getRun(routeParam(params, "agentRunId"), organizationId!);
+      const run = await new AgentRuntimeService(deps.agentRuntime).getRun(routeUuidParam(params, "agentRunId"), organizationId!);
       if (!run) throw new ApiError("NOT_FOUND", "Agent run not found.", 404);
       const body = await parseJson(request, CompleteAgentRunRequestSchema);
       try {
