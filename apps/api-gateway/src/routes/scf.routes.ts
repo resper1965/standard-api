@@ -174,15 +174,26 @@ export const scfRoutes: RouteDefinition[] = [
     handler: async ({ deps, params, request, traceId }) => {
       const scfVersionId = routeParam(params, "scfVersionId");
       const url = new URL(request.url);
+      
+      const limitStr = url.searchParams.get("limit") || url.searchParams.get("per_page");
+      const pageStr = url.searchParams.get("page");
+      const limit = limitStr ? parseInt(limitStr, 10) : 50;
+      const page = pageStr ? parseInt(pageStr, 10) : 1;
+      const offset = Math.max(0, (page - 1) * limit);
+
+      const domainCode = url.searchParams.get("domain_code") || url.searchParams.get("domain");
+
       try {
         const controls = await deps.scf.controls.searchControls({
           scf_version_id: scfVersionId,
           ...(url.searchParams.get("control_code") ? { control_code: url.searchParams.get("control_code")! } : {}),
-          ...(url.searchParams.get("domain_code") ? { domain_code: url.searchParams.get("domain_code")! } : {}),
+          ...(domainCode ? { domain_code: domainCode } : {}),
           ...(url.searchParams.get("q") ? { q: url.searchParams.get("q")! } : {}),
-          ...(url.searchParams.get("tags") ? { tags: url.searchParams.get("tags")!.split(",").map(t => t.trim()).filter(Boolean) } : {})
+          ...(url.searchParams.get("tags") ? { tags: url.searchParams.get("tags")!.split(",").map(t => t.trim()).filter(Boolean) } : {}),
+          limit,
+          offset
         });
-        return json({ data: controls.map(controlResponse), scf_version_id: scfVersionId, trace_id: traceId });
+        return json({ data: controls.map(controlResponse), scf_version_id: scfVersionId, page, per_page: limit, trace_id: traceId });
       } catch (err: any) {
         console.error("[scf:controls] FAILED:", err?.message, err?.stack, JSON.stringify({ name: err?.name, code: err?.code }));
         throw err;

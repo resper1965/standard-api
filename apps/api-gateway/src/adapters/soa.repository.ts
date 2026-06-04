@@ -9,7 +9,7 @@ import type { ScopeResponse, SoaVersionResponse, SoaItemResponse } from "@standa
 import type { ScopeRepository, SoaVersionRepository, SoaItemRepository, SoaRepositories } from "@standard/soa";
 import type { DbClient } from "./db";
 
-export const createDrizzleScopeRepository = (db: DbClient): ScopeRepository => ({
+const createDrizzleScopeRepository = (db: DbClient): ScopeRepository => ({
   async save(scope: ScopeResponse) {
     await db.insert(assessmentScope).values({
       id: scope.scope_id,
@@ -66,7 +66,7 @@ export const createDrizzleScopeRepository = (db: DbClient): ScopeRepository => (
   }
 });
 
-export const createDrizzleSoaVersionRepository = (db: DbClient): SoaVersionRepository => ({
+const createDrizzleSoaVersionRepository = (db: DbClient): SoaVersionRepository => ({
   async save(version: SoaVersionResponse) {
     await db.insert(soaVersions).values({
       id: version.soa_version_id,
@@ -109,7 +109,7 @@ export const createDrizzleSoaVersionRepository = (db: DbClient): SoaVersionRepos
   }
 });
 
-export const createDrizzleSoaItemRepository = (db: DbClient): SoaItemRepository => ({
+const createDrizzleSoaItemRepository = (db: DbClient): SoaItemRepository => ({
   async saveMany(items: SoaItemResponse[]) {
     if (items.length === 0) return;
     await db.insert(soaItems).values(items.map(item => ({

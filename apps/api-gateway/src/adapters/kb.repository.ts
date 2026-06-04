@@ -24,7 +24,7 @@ import type { DbClient } from "./db";
 
 // ---------- Embedding Jobs ----------
 
-export const createDrizzleKbEmbeddingJobRepository = (db: DbClient): KbEmbeddingJobRepository => ({
+const createDrizzleKbEmbeddingJobRepository = (db: DbClient): KbEmbeddingJobRepository => ({
   async saveJob(job: KbEmbeddingJobResponse) {
     await db.insert(kbEmbeddingJobs).values({
       id: job.job_id,
@@ -110,7 +110,7 @@ const mapEmbeddingJobRow = (row: EmbeddingJobRow): KbEmbeddingJobResponse => ({
 
 // ---------- KB Vector References ----------
 
-export const createDrizzleKbVectorReferenceRepository = (db: DbClient): KbVectorReferenceRepository => ({
+const createDrizzleKbVectorReferenceRepository = (db: DbClient): KbVectorReferenceRepository => ({
   async save(ref: KbVectorReferenceResponse) {
     await db.insert(vectorReferences).values({
       id: ref.vector_reference_id,
@@ -197,7 +197,7 @@ const mapVectorRefRow = (row: VectorRefRow): KbVectorReferenceResponse => {
 
 // ---------- Search Logs ----------
 
-export const createDrizzleKbSearchLogRepository = (db: DbClient): KbSearchLogRepository => ({
+const createDrizzleKbSearchLogRepository = (db: DbClient): KbSearchLogRepository => ({
   async record(log) {
     await db.insert(kbSearchLogs).values({
       id: log.id,

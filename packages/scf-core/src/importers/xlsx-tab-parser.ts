@@ -342,7 +342,7 @@ export const findControlWeight = (row: ParsedRow): number | undefined => {
  * In SCF XLSX, crosswalk tabs usually have the SCF control # in one column,
  * and the mapped framework requirement in other columns.
  */
-export const findCrosswalkReferenceColumn = (
+const findCrosswalkReferenceColumn = (
   headers: string[],
   _sheetName: string
 ): string | null => {

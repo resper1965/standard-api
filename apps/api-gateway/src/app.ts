@@ -370,7 +370,7 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
   }
 });
 
-export const notImplemented = (traceId: string): Response =>
+const notImplemented = (traceId: string): Response =>
   json(
     {
       error: {

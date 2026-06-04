@@ -492,7 +492,7 @@ export const MCP_TOOLS = [
 
 type ToolName = typeof MCP_TOOLS[number]["name"];
 
-export const MCP_TOOL_SCOPES: Record<string, string[]> = {
+const MCP_TOOL_SCOPES: Record<string, string[]> = {
   // Assessment
   "list-assessments": ["assessment:read"],
   "get-assessment": ["assessment:read"],

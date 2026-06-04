@@ -9,7 +9,7 @@ import type { EvidenceFindingResponse, EvidenceSourceResponse, GapAnalysisVersio
 import type { EvidenceFindingRepository, EvidenceSourceRepository, GapAnalysisVersionRepository, GapFindingRepository, GapAnalysisRepositories } from "@standard/gap-analysis";
 import type { DbClient } from "./db";
 
-export const createDrizzleEvidenceFindingRepository = (db: DbClient): EvidenceFindingRepository => ({
+const createDrizzleEvidenceFindingRepository = (db: DbClient): EvidenceFindingRepository => ({
   async save(finding: EvidenceFindingResponse) {
     await db.insert(evidenceFindings).values({
       id: finding.evidence_finding_id,
@@ -68,7 +68,7 @@ export const createDrizzleEvidenceFindingRepository = (db: DbClient): EvidenceFi
   }
 });
 
-export const createDrizzleEvidenceSourceRepository = (db: DbClient): EvidenceSourceRepository => ({
+const createDrizzleEvidenceSourceRepository = (db: DbClient): EvidenceSourceRepository => ({
   async saveMany(sources: EvidenceSourceResponse[]) {
     if (sources.length === 0) return;
     await db.insert(evidenceSources).values(sources.map(s => ({
@@ -101,7 +101,7 @@ export const createDrizzleEvidenceSourceRepository = (db: DbClient): EvidenceSou
   }
 });
 
-export const createDrizzleGapAnalysisVersionRepository = (db: DbClient): GapAnalysisVersionRepository => ({
+const createDrizzleGapAnalysisVersionRepository = (db: DbClient): GapAnalysisVersionRepository => ({
   async save(version: GapAnalysisVersionResponse) {
     await db.insert(gapAnalysisVersions).values({
       id: version.gap_analysis_version_id,
@@ -151,7 +151,7 @@ export const createDrizzleGapAnalysisVersionRepository = (db: DbClient): GapAnal
   }
 });
 
-export const createDrizzleGapFindingRepository = (db: DbClient): GapFindingRepository => ({
+const createDrizzleGapFindingRepository = (db: DbClient): GapFindingRepository => ({
   async saveMany(findings: GapFindingResponse[]) {
     if (findings.length === 0) return;
     await db.insert(gapFindings).values(findings.map(f => ({

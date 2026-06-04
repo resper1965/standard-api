@@ -9,7 +9,7 @@ import type { PoamVersionResponse, PoamItemResponse, PoamMilestoneResponse, Poam
 import type { PoamVersionRepository, PoamItemRepository, PoamMilestoneRepository, PoamDependencyRepository, PoamRepositories } from "@standard/poam";
 import type { DbClient } from "./db";
 
-export const createDrizzlePoamVersionRepository = (db: DbClient): PoamVersionRepository => ({
+const createDrizzlePoamVersionRepository = (db: DbClient): PoamVersionRepository => ({
   async save(version: PoamVersionResponse) {
     await db.insert(poamVersions).values({
       id: version.poam_version_id,
@@ -60,7 +60,7 @@ export const createDrizzlePoamVersionRepository = (db: DbClient): PoamVersionRep
   },
 });
 
-export const createDrizzlePoamItemRepository = (db: DbClient): PoamItemRepository => ({
+const createDrizzlePoamItemRepository = (db: DbClient): PoamItemRepository => ({
   async saveMany(items: PoamItemResponse[]) {
     if (items.length === 0) return;
     await db.insert(poamItems).values(items.map(i => ({
@@ -94,6 +94,7 @@ export const createDrizzlePoamItemRepository = (db: DbClient): PoamItemRepositor
       rationale: i.rationale,
       confidenceScore: String(i.confidence_score),
       requiresUserValidation: i.requires_user_validation,
+      riskAcceptanceExpiresAt: i.risk_acceptance_expires_at,
     }))).onConflictDoNothing();
   },
   async update(item: PoamItemResponse) {
@@ -112,6 +113,7 @@ export const createDrizzlePoamItemRepository = (db: DbClient): PoamItemRepositor
       rationale: item.rationale,
       confidenceScore: String(item.confidence_score),
       requiresUserValidation: item.requires_user_validation,
+      riskAcceptanceExpiresAt: item.risk_acceptance_expires_at,
       updatedAt: new Date(),
     }).where(eq(poamItems.id, item.poam_item_id));
   },
@@ -136,7 +138,7 @@ export const createDrizzlePoamItemRepository = (db: DbClient): PoamItemRepositor
   },
 });
 
-export const createDrizzlePoamMilestoneRepository = (db: DbClient): PoamMilestoneRepository => ({
+const createDrizzlePoamMilestoneRepository = (db: DbClient): PoamMilestoneRepository => ({
   async save(milestone: PoamMilestoneResponse) {
     await db.insert(poamMilestones).values({
       id: milestone.poam_milestone_id,
@@ -200,7 +202,7 @@ export const createDrizzlePoamMilestoneRepository = (db: DbClient): PoamMileston
   },
 });
 
-export const createDrizzlePoamDependencyRepository = (db: DbClient): PoamDependencyRepository => ({
+const createDrizzlePoamDependencyRepository = (db: DbClient): PoamDependencyRepository => ({
   async save(dep: PoamDependencyResponse) {
     await db.insert(poamDependencies).values({
       id: dep.poam_dependency_id,
@@ -309,6 +311,7 @@ const mapPoamItemRow = (row: PoamItemRow): PoamItemResponse => ({
   rationale: row.rationale,
   confidence_score: Number(row.confidenceScore),
   requires_user_validation: row.requiresUserValidation,
+  risk_acceptance_expires_at: row.riskAcceptanceExpiresAt ?? undefined,
   created_at: row.createdAt.toISOString(),
   updated_at: row.updatedAt.toISOString(),
 });

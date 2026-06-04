@@ -27,4 +27,4 @@ export const recordAuditEvent = async (context: RequestContext, route: string): 
 };
 
 /** @deprecated Use `recordAuditEvent` instead */
-export const recordAuditPlaceholder = recordAuditEvent;
+const recordAuditPlaceholder = recordAuditEvent;

@@ -206,7 +206,9 @@ export const ScfControlSearchQuerySchema = z.object({
   control_code: z.string().optional(),
   domain_code: z.string().optional(),
   q: z.string().optional(),
-  tags: z.array(z.string()).optional()
+  tags: z.array(z.string()).optional(),
+  limit: z.number().int().optional(),
+  offset: z.number().int().optional()
 });
 
 export const ScfMappingQuerySchema = z.object({

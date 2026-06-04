@@ -1,1407 +1,354 @@
-openapi: 3.1.0
+openapi: 3.0.0
 info:
-  title: Standard API
+  title: Standard GRC Platform — API Reference
   version: 1.0.0
-  description: |
-    API-first platform for SCF-based security, compliance, and maturity assessments.
-    
-    Standard provides normative SCF data (1,468 controls, 231 frameworks, 32,903 requirements, 
-    15,717 crosswalk mappings) and manages the full assessment lifecycle with approval gates.
-    
-    **Your application performs the analysis — Standard provides the authoritative data.**
-  contact:
-    name: Standard Platform
-    url: https://standard.bekaa.eu
-  license:
-    name: Proprietary
+  description: >-
+    API-first agentic GRC platform for compliance assessments powered by the
+    Secure Controls Framework (SCF). Features 7 specialized AI agents,
+    assessment lifecycle management, document ingestion, knowledge base search,
+    and multi-tenant authorization.
 
+
+    ---
+
+
+
+    > **🤖 AI-Dev First**: Se você é um Agente Autônomo ou está configurando uma
+    integração LLM, consuma nossa documentação contextual nativa em
+    [`/llms-full.txt`](/llms-full.txt).
+      
+
+    ---
+
+
+
+
+    ---
+
+
+    ## 📖 Manuais & Cookbook
+
+
+    Consulte [`/llms-full.txt`](/llms-full.txt) para workflows completos e
+    [`/llms.txt`](/llms.txt) para referência rápida.
 servers:
+  - url: /
+    description: Current environment
   - url: https://standard-api.bekaa.eu
-    description: Production API
-  - url: http://localhost:8787
-    description: Local development
-
+    description: Production
 security:
-  - BearerAuth: []
-  - ApiKeyAuth: []
-
-tags:
-  - name: Health
-    description: System health and readiness
-  - name: Assessments
-    description: Create and manage SCF-based security assessments
-  - name: Lifecycle
-    description: Assessment state transitions with approval gates
-  - name: Approvals
-    description: Human approval decisions for assessment gates
-  - name: Artifacts
-    description: Versioned assessment artifacts (SoA, Gap Analysis, etc.)
-  - name: Documents
-    description: Upload and manage assessment evidence documents
-  - name: SCF Catalog
-    description: Query the Secure Controls Framework normative data
-  - name: Scope & SoA
-    description: Statement of Applicability and scope management
-  - name: Gap Analysis
-    description: Gap analysis findings and management
-  - name: POA&M
-    description: Plan of Action & Milestones
-  - name: Reporting
-    description: Assessment report generation and export
-  - name: Knowledge Base
-    description: Evidence retrieval and semantic search
-  - name: Workflows
-    description: Durable assessment lifecycle orchestration
-  - name: Agent Runtime
-    description: AI agent execution and monitoring
-  - name: Integrations
-    description: External system integration endpoints
-  - name: Organizations
-    description: Tenant organization management
-  - name: API Keys
-    description: Programmatic access key management with optional M2M scopes
-  - name: Webhooks
-    description: Outbound event notifications with HMAC-SHA256 signed payloads
-  - name: Observability
-    description: Audit logs, metrics, and operational visibility
-  - name: Tenants
-    description: Tenant (subscription) provisioning (admin)
-  - name: Admin SCF
-    description: SCF catalog administration (admin only)
-
+  - BearerApiKey: []
+components:
+  securitySchemes:
+    BearerApiKey:
+      type: http
+      scheme: bearer
+      description: >-
+        API Key issued from the Standard dashboard. Prefix: `standard_live_` or
+        `standard_test_`.
+    CookieSession:
+      type: apiKey
+      in: cookie
+      name: standard-native-auth.session_token
+      description: Session cookie set by Standard Native Auth after login.
+  schemas:
+    VendorScannerBatchInput:
+      type: object
+      properties:
+        batch_id:
+          type: string
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              correlation_id:
+                type: string
+                example: vendor_clause_5.1
+              payload:
+                $ref: '#/components/schemas/VendorScannerInput'
+            required:
+              - correlation_id
+              - payload
+          maxItems: 500
+      required:
+        - items
+    VendorScannerInput:
+      type: object
+      properties:
+        vendorName:
+          type: string
+          example: Amazon Web Services (AWS)
+        contractExcerpt:
+          type: string
+          minLength: 20
+          example: >-
+            5.1 The Processor agrees to notify the Controller of any breach
+            within 120 hours.
+      required:
+        - vendorName
+        - contractExcerpt
+    VendorScannerOutput:
+      type: object
+      properties:
+        has_standard_contractual_clauses:
+          type: boolean
+          description: Whether the contract has EU/ANPD standardized DPA clauses.
+        is_dpa_compliant:
+          type: boolean
+          description: Whether the contract is globally compliant for LGPD/GDPR.
+        liability_cap_identified:
+          type: string
+          description: Liability cap paid by the vendor.
+        data_subprocessors_listed:
+          type: array
+          items:
+            type: string
+          description: Third-party companies detected in the contract text.
+        red_flags_for_negotiation:
+          type: array
+          items:
+            type: string
+          description: Severe gaps that the legal team needs to renegotiate.
+      required:
+        - has_standard_contractual_clauses
+        - is_dpa_compliant
+        - data_subprocessors_listed
+        - red_flags_for_negotiation
+  parameters: {}
 paths:
-  # ── Health ──────────────────────────────────────────────
-  /health:
-    get:
-      tags: [Health]
-      summary: Basic health check
-      operationId: healthCheck
-      security: []
-      responses:
-        "200":
-          description: Service is healthy
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status: { type: string, example: "ok" }
-                  timestamp: { type: string, format: date-time }
-
-  /api/v1/health:
-    get:
-      tags: [Health]
-      summary: Operational health with metrics (1h window)
-      operationId: operationalHealth
-      security: []
-      responses:
-        "200":
-          description: Operational health report
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status: { type: string, example: "ok" }
-                  uptime_s: { type: number }
-                  metrics_1h: { type: object }
-
-  /api/health/auth:
-    get:
-      tags: [Health]
-      summary: Auth stack health — DB connectivity probe
-      description: |
-        Probes Standard Native Auth database connectivity.
-        Returns HTTP 200 when the auth DB is reachable, HTTP 503 when not.
-        Used as a CI gate in `deploy-production.yml` (see ADR-AUTH-001).
-        A 503 here means logins will fail for all users.
-      operationId: authHealth
-      security: []
-      responses:
-        "200":
-          description: Auth stack is healthy
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status: { type: string, example: "ok" }
-                  auth: { type: string, example: "standard-native-auth@1.6.11" }
-                  db: { type: string, example: "connected" }
-                  latency_ms: { type: number, example: 42 }
-                  trace_id: { type: string }
-        "503":
-          description: Auth stack degraded — DB unreachable
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status: { type: string, example: "degraded" }
-                  auth: { type: string, example: "standard-native-auth@1.6.11" }
-                  db: { type: string, example: "unreachable" }
-                  latency_ms: { type: number }
-                  trace_id: { type: string }
-
-  # ── Assessments ─────────────────────────────────────────
-  /api/v1/assessments:
-    post:
-      tags: [Assessments]
-      summary: Create a new assessment
-      operationId: createAssessment
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreateAssessmentRequest"
-      responses:
-        "201":
-          description: Assessment created
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Assessment"
-    get:
-      tags: [Assessments]
-      summary: List all assessments for the authenticated tenant
-      operationId: listAssessments
-      responses:
-        "200":
-          description: Assessment list
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/AssessmentList"
-
-  /api/v1/assessments/{assessmentId}:
-    get:
-      tags: [Assessments]
-      summary: Get assessment by ID
-      operationId: getAssessment
-      parameters:
-        - $ref: "#/components/parameters/AssessmentId"
-      responses:
-        "200":
-          description: Assessment detail
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Assessment"
-    patch:
-      tags: [Assessments]
-      summary: Update assessment metadata
-      operationId: updateAssessment
-      parameters:
-        - $ref: "#/components/parameters/AssessmentId"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                name: { type: string }
-      responses:
-        "200":
-          description: Assessment updated
-
-  /api/v1/assessments/{assessmentId}/status:
-    get:
-      tags: [Assessments]
-      summary: Get current lifecycle state
-      operationId: getAssessmentStatus
-      parameters:
-        - $ref: "#/components/parameters/AssessmentId"
-      responses:
-        "200":
-          description: Current state
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  assessment_id: { type: string, format: uuid }
-                  state: { $ref: "#/components/schemas/AssessmentLifecycleState" }
-                  trace_id: { type: string }
-
-  /api/v1/assessments/{assessmentId}/timeline:
-    get:
-      tags: [Assessments]
-      summary: Get full timeline of lifecycle events
-      operationId: getAssessmentTimeline
-      parameters:
-        - $ref: "#/components/parameters/AssessmentId"
-      responses:
-        "200":
-          description: Timeline events
-
-  /api/v1/organizations/{organizationId}/assessments:
-    get:
-      tags: [Assessments]
-      summary: List assessments for a specific organization
-      operationId: listOrganizationAssessments
-      parameters:
-        - $ref: "#/components/parameters/OrganizationId"
-      responses:
-        "200":
-          description: Organization assessment list
-
-  # ── Lifecycle ───────────────────────────────────────────
-  /api/v1/assessments/{assessmentId}/transitions:
-    post:
-      tags: [Lifecycle]
-      summary: Execute assessment lifecycle transition
-      description: |
-        Transition the assessment to the next lifecycle state. The allowed transitions
-        depend on the current state — call GET /available-transitions first.
-        Some transitions require prerequisites (e.g., at least one document uploaded,
-        approved SoA, approval events). Returns 409 if prerequisites are not met.
-      operationId: executeTransition
-      x-lifecycle-precondition:
-        description: Depends on next_state — call GET /available-transitions to check
-      parameters:
-        - $ref: "#/components/parameters/AssessmentId"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/TransitionRequest"
-      responses:
-        "200":
-          description: Transition executed
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/TransitionResult"
-
-  /api/v1/assessments/{assessmentId}/available-transitions:
-    get:
-      tags: [Lifecycle]
-      summary: List allowed next states
-      operationId: getAvailableTransitions
-      parameters:
-        - $ref: "#/components/parameters/AssessmentId"
-      responses:
-        "200":
-          description: Available transitions
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  current_state: { $ref: "#/components/schemas/AssessmentLifecycleState" }
-                  available_transitions:
-                    type: array
-                    items: { $ref: "#/components/schemas/AssessmentLifecycleState" }
-
-  /api/v1/assessments/{assessmentId}/lifecycle-events:
-    get:
-      tags: [Lifecycle]
-      summary: List all lifecycle events for an assessment
-      operationId: listLifecycleEvents
-      parameters:
-        - $ref: "#/components/parameters/AssessmentId"
-      responses:
-        "200":
-          description: Lifecycle event list
-
-  # ── Approvals ───────────────────────────────────────────
-  /api/v1/assessments/{assessmentId}/approvals:
-    post:
-      tags: [Approvals]
-      summary: Submit approval or rejection decision
-      operationId: submitApprovalDecision
-      parameters:
-        - $ref: "#/components/parameters/AssessmentId"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ApprovalDecisionRequest"
-      responses:
-        "201":
-          description: Approval recorded
-    get:
-      tags: [Approvals]
-      summary: List assessment approvals
-      operationId: listApprovals
-      parameters:
-        - $ref: "#/components/parameters/AssessmentId"
-      responses:
-        "200":
-          description: Approval list
-
-  /api/v1/approvals/{approvalId}:
-    get:
-      tags: [Approvals]
-      summary: Get approval by ID
-      operationId: getApproval
-      parameters:
-        - name: approvalId
-          in: path
-          required: true
-          schema: { type: string, format: uuid }
-      responses:
-        "200":
-          description: Approval detail
-
-  # ── Artifacts ───────────────────────────────────────────
-  /api/v1/assessments/{assessmentId}/artifacts/{artifactType}/versions:
-    post:
-      tags: [Artifacts]
-      summary: Create artifact version
-      operationId: createArtifactVersion
-      parameters:
-        - $ref: "#/components/parameters/AssessmentId"
-        - $ref: "#/components/parameters/ArtifactType"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                source_agent_run_id: { type: string, format: uuid }
-      responses:
-        "201":
-          description: Artifact version created
-    get:
-      tags: [Artifacts]
-      summary: List artifact versions
-      operationId: listArtifactVersions
-      parameters:
-        - $ref: "#/components/parameters/AssessmentId"
-        - $ref: "#/components/parameters/ArtifactType"
-      responses:
-        "200":
-          description: Version list
-
-  /api/v1/artifacts/{artifactVersionId}:
-    get:
-      tags: [Artifacts]
-      summary: Get artifact version detail
-      operationId: getArtifactVersion
-      parameters:
-        - name: artifactVersionId
-          in: path
-          required: true
-          schema: { type: string, format: uuid }
-      responses:
-        "200":
-          description: Artifact version detail
-
-  /api/v1/artifacts/{artifactVersionId}/submit-review:
-    post:
-      tags: [Artifacts]
-      summary: Submit artifact for review
-      operationId: submitArtifactReview
-      parameters:
-        - name: artifactVersionId
-          in: path
-          required: true
-          schema: { type: string, format: uuid }
-      responses:
-        "200":
-          description: Artifact submitted for review
-
-  /api/v1/artifacts/{artifactVersionId}/approve:
-    post:
-      tags: [Artifacts]
-      summary: Approve artifact version
-      operationId: approveArtifact
-      parameters:
-        - name: artifactVersionId
-          in: path
-          required: true
-          schema: { type: string, format: uuid }
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [gate]
-              properties:
-                gate: { $ref: "#/components/schemas/ApprovalGate" }
-                approval_id: { type: string, format: uuid }
-      responses:
-        "200":
-          description: Artifact approved
-
-  /api/v1/artifacts/{artifactVersionId}/supersede:
-    post:
-      tags: [Artifacts]
-      summary: Create new version superseding this one
-      operationId: supersedeArtifact
-      parameters:
-        - name: artifactVersionId
-          in: path
-          required: true
-          schema: { type: string, format: uuid }
-      responses:
-        "201":
-          description: New superseding version created
-
-  # ── Documents ───────────────────────────────────────────
-  /api/v1/assessments/{assessmentId}/documents:
-    post:
-      tags: [Documents]
-      summary: Upload assessment document (multipart/form-data)
-      operationId: uploadDocument
-      parameters:
-        - $ref: "#/components/parameters/AssessmentId"
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                file: { type: string, format: binary }
-                description: { type: string }
-      responses:
-        "202":
-          description: Document registered for ingestion
-    get:
-      tags: [Documents]
-      summary: List assessment documents
-      operationId: listDocuments
-      parameters:
-        - $ref: "#/components/parameters/AssessmentId"
-      responses:
-        "200":
-          description: Document list
-
-  /api/v1/documents/{documentId}:
-    get:
-      tags: [Documents]
-      summary: Get document metadata
-      operationId: getDocument
-      parameters:
-        - name: documentId
-          in: path
-          required: true
-          schema: { type: string, format: uuid }
-      responses:
-        "200":
-          description: Document metadata
-    delete:
-      tags: [Documents]
-      summary: Delete a document
-      operationId: deleteDocument
-      parameters:
-        - name: documentId
-          in: path
-          required: true
-          schema: { type: string, format: uuid }
-      responses:
-        "200":
-          description: Document deleted
-
-  /api/v1/documents/{documentId}/chunks:
-    get:
-      tags: [Documents]
-      summary: List document chunks
-      operationId: listDocumentChunks
-      parameters:
-        - name: documentId
-          in: path
-          required: true
-          schema: { type: string, format: uuid }
-      responses:
-        "200":
-          description: Chunk list
-
-  /api/v1/documents/{documentId}/reprocess:
-    post:
-      tags: [Documents]
-      summary: Queue document reprocessing
-      operationId: reprocessDocument
-      parameters:
-        - name: documentId
-          in: path
-          required: true
-          schema: { type: string, format: uuid }
-      responses:
-        "202":
-          description: Reprocessing queued
-
-  /api/v1/assessments/{assessmentId}/ingestion-jobs:
-    get:
-      tags: [Documents]
-      summary: List ingestion jobs for an assessment
-      operationId: listIngestionJobs
-      parameters:
-        - $ref: "#/components/parameters/AssessmentId"
-      responses:
-        "200":
-          description: Ingestion job list
-
-  # ── SCF Catalog ─────────────────────────────────────────
-  /api/v1/scf/versions:
-    get:
-      tags: [SCF Catalog]
-      summary: List available SCF versions
-      operationId: listScfVersions
-      responses:
-        "200":
-          description: SCF version list
-
-  /api/v1/scf/versions/latest:
-    get:
-      tags: [SCF Catalog]
-      summary: Get latest SCF version
-      operationId: getLatestScfVersion
-      responses:
-        "200":
-          description: Latest SCF version
-
-  /api/v1/scf/versions/{scfVersionId}:
-    get:
-      tags: [SCF Catalog]
-      summary: Get specific SCF version
-      operationId: getScfVersion
-      parameters:
-        - name: scfVersionId
-          in: path
-          required: true
-          schema: { type: string, format: uuid }
-      responses:
-        "200":
-          description: SCF version detail
-
-  /api/v1/scf/versions/{scfVersionId}/domains:
-    get:
-      tags: [SCF Catalog]
-      summary: List SCF domains (33 security domains)
-      operationId: listScfDomains
-      parameters:
-        - name: scfVersionId
-          in: path
-          required: true
-          schema: { type: string, format: uuid }
-      responses:
-        "200":
-          description: Domain list
-
-  /api/v1/scf/versions/{scfVersionId}/controls:
-    get:
-      tags: [SCF Catalog]
-      summary: List SCF controls (paginated, 1,468 total)
-      operationId: listScfControls
-      parameters:
-        - name: scfVersionId
-          in: path
-          required: true
-          schema: { type: string, format: uuid }
-        - name: limit
-          in: query
-          schema: { type: integer, default: 50, maximum: 200 }
-        - name: cursor
-          in: query
-          schema: { type: string }
-        - name: domain_id
-          in: query
-          schema: { type: string }
-      responses:
-        "200":
-          description: Control list (paginated)
-
-  /api/v1/scf/controls/{controlId}:
-    get:
-      tags: [SCF Catalog]
-      summary: Get single control detail
-      operationId: getScfControl
-      parameters:
-        - name: controlId
-          in: path
-          required: true
-          schema: { type: string, format: uuid }
-      responses:
-        "200":
-          description: Control detail
-
-  /api/v1/scf/controls/by-code/{controlCode}:
-    get:
-      tags: [SCF Catalog]
-      summary: Get control by SCF control code (e.g. GOV-01)
-      operationId: getScfControlByCode
-      parameters:
-        - name: controlCode
-          in: path
-          required: true
-          schema: { type: string, example: "GOV-01" }
-      responses:
-        "200":
-          description: Control detail
-
-  /api/v1/scf/frameworks:
-    get:
-      tags: [SCF Catalog]
-      summary: List all 231 compliance frameworks
-      operationId: listScfFrameworks
-      responses:
-        "200":
-          description: Framework list
-
-  /api/v1/scf/frameworks/{frameworkId}:
-    get:
-      tags: [SCF Catalog]
-      summary: Get framework detail
-      operationId: getScfFramework
-      parameters:
-        - name: frameworkId
-          in: path
-          required: true
-          schema: { type: string, format: uuid }
-      responses:
-        "200":
-          description: Framework detail
-
-  /api/v1/scf/frameworks/{frameworkId}/requirements:
-    get:
-      tags: [SCF Catalog]
-      summary: List requirements for a framework
-      operationId: listFrameworkRequirements
-      parameters:
-        - name: frameworkId
-          in: path
-          required: true
-          schema: { type: string, format: uuid }
-      responses:
-        "200":
-          description: Requirement list
-
-  /api/v1/scf/frameworks/{frameworkId}/coverage:
-    get:
-      tags: [SCF Catalog]
-      summary: Get framework SCF control coverage statistics
-      operationId: getFrameworkCoverage
-      parameters:
-        - name: frameworkId
-          in: path
-          required: true
-          schema: { type: string, format: uuid }
-      responses:
-        "200":
-          description: Coverage metrics
-
-  /api/v1/scf/controls/{controlId}/mappings:
-    get:
-      tags: [SCF Catalog]
-      summary: Get crosswalk mappings for a control
-      operationId: getControlMappings
-      parameters:
-        - name: controlId
-          in: path
-          required: true
-          schema: { type: string, format: uuid }
-      responses:
-        "200":
-          description: Control-to-requirement mappings
-
-  /api/v1/scf/requirements/{requirementId}/mappings:
-    get:
-      tags: [SCF Catalog]
-      summary: Get crosswalk mappings for a requirement
-      operationId: getRequirementMappings
-      parameters:
-        - name: requirementId
-          in: path
-          required: true
-          schema: { type: string, format: uuid }
-      responses:
-        "200":
-          description: Requirement-to-control mappings
-
-  # ── Scope & SoA ─────────────────────────────────────────
-  /api/v1/assessments/{assessmentId}/scope:
-    post:
-      tags: [Scope & SoA]
-      summary: Create assessment scope
-      operationId: createScope
-      parameters:
-        - $ref: "#/components/parameters/AssessmentId"
-      responses:
-        "201":
-          description: Scope created
-    get:
-      tags: [Scope & SoA]
-      summary: Get assessment scope
-      operationId: getScope
-      parameters:
-        - $ref: "#/components/parameters/AssessmentId"
-      responses:
-        "200":
-          description: Scope detail
-
-  /api/v1/scopes/{scopeId}:
-    get:
-      tags: [Scope & SoA]
-      summary: Get scope by ID
-      operationId: getScopeById
-      parameters:
-        - name: scopeId
-          in: path
-          required: true
-          schema: { type: string, format: uuid }
-      responses:
-        "200":
-          description: Scope detail
-    patch:
-      tags: [Scope & SoA]
-      summary: Update scope
-      operationId: updateScope
-      parameters:
-        - name: scopeId
-          in: path
-          required: true
-          schema: { type: string, format: uuid }
-      responses:
-        "200":
-          description: Scope updated
-
-  /api/v1/scopes/{scopeId}/submit-review:
-    post:
-      tags: [Scope & SoA]
-      summary: Submit scope for review
-      operationId: submitScopeReview
-      responses:
-        "200":
-          description: Scope submitted
-
-  /api/v1/scopes/{scopeId}/approve:
-    post:
-      tags: [Scope & SoA]
-      summary: Approve scope
-      operationId: approveScope
-      responses:
-        "200":
-          description: Scope approved
-
-  /api/v1/assessments/{assessmentId}/soa/draft:
-    post:
-      tags: [Scope & SoA]
-      summary: Draft Statement of Applicability
-      description: |
-        Creates a new SoA draft version from the selected framework's SCF mappings.
-        **Pre-condition:** Assessment must be in state `framework_selected` or later.
-        The scope must already be drafted. Returns 409 if prerequisites are not met.
-      operationId: draftSoa
-      x-lifecycle-precondition:
-        required_state: framework_selected
-      parameters:
-        - $ref: "#/components/parameters/AssessmentId"
-      responses:
-        "201":
-          description: SoA draft created
-
-  /api/v1/assessments/{assessmentId}/soa:
-    get:
-      tags: [Scope & SoA]
-      summary: List SoA versions
-      operationId: listSoaVersions
-      parameters:
-        - $ref: "#/components/parameters/AssessmentId"
-      responses:
-        "200":
-          description: SoA version list
-
-  /api/v1/soa/{soaVersionId}:
-    get:
-      tags: [Scope & SoA]
-      summary: Get SoA version
-      operationId: getSoaVersion
-      parameters:
-        - name: soaVersionId
-          in: path
-          required: true
-          schema: { type: string, format: uuid }
-      responses:
-        "200":
-          description: SoA version detail
-
-  /api/v1/soa/{soaVersionId}/items:
-    get:
-      tags: [Scope & SoA]
-      summary: List SoA items (controls in scope)
-      operationId: listSoaItems
-      responses:
-        "200":
-          description: SoA item list
-    post:
-      tags: [Scope & SoA]
-      summary: Add SoA item
-      operationId: addSoaItem
-      responses:
-        "201":
-          description: SoA item added
-
-  /api/v1/soa/items/{soaItemId}:
-    patch:
-      tags: [Scope & SoA]
-      summary: Update SoA item
-      operationId: updateSoaItem
-      responses:
-        "200":
-          description: SoA item updated
-
-  /api/v1/soa/{soaVersionId}/submit-review:
-    post:
-      tags: [Scope & SoA]
-      summary: Submit SoA for review
-      description: |
-        **Pre-condition:** SoA version must be in `draft` status.
-        Transitions SoA to `under_review`. Returns 409 if SoA is not in draft.
-      operationId: submitSoaReview
-      x-lifecycle-precondition:
-        required_status: draft
-      responses:
-        "200":
-          description: SoA submitted
-
-  /api/v1/soa/{soaVersionId}/approve:
-    post:
-      tags: [Scope & SoA]
-      summary: Approve SoA version
-      description: |
-        **Pre-condition:** SoA version must be in `under_review` status.
-        Requires a human approval decision. Approved SoA versions become immutable.
-        Returns 409 if SoA is not under review.
-      operationId: approveSoa
-      x-lifecycle-precondition:
-        required_status: under_review
-      responses:
-        "200":
-          description: SoA approved
-
-  /api/v1/soa/{soaVersionId}/mark-ingested:
-    post:
-      tags: [Scope & SoA]
-      summary: Mark SoA as ingested into evidence analysis
-      operationId: markSoaIngested
-      responses:
-        "200":
-          description: SoA marked ingested
-
-  /api/v1/soa/{soaVersionId}/evidence/refresh:
-    post:
-      tags: [Scope & SoA]
-      summary: Refresh SoA evidence mappings
-      operationId: refreshSoaEvidence
-      responses:
-        "200":
-          description: Evidence refreshed
-
-  /api/v1/soa/{soaVersionId}/validation:
-    get:
-      tags: [Scope & SoA]
-      summary: Validate SoA completeness
-      operationId: validateSoa
-      responses:
-        "200":
-          description: SoA validation result
-
-  /api/v1/soa/{soaVersionId}/regenerate:
-    post:
-      tags: [Scope & SoA]
-      summary: Regenerate SoA from scope
-      operationId: regenerateSoa
-      responses:
-        "200":
-          description: SoA regenerated
-
-  # ── Gap Analysis ────────────────────────────────────────
-  /api/v1/assessments/{assessmentId}/gap-analysis/draft:
-    post:
-      tags: [Gap Analysis]
-      summary: Draft gap analysis
-      description: |
-        Creates a new gap analysis draft from the approved SoA and KB evidence.
-        **Pre-condition:** Assessment must have an approved SoA (`soa_approved` state or later).
-        Returns 409 if SoA has not been approved.
-      operationId: draftGapAnalysis
-      x-lifecycle-precondition:
-        required_state: soa_approved
-      parameters:
-        - $ref: "#/components/parameters/AssessmentId"
-      responses:
-        "201":
-          description: Gap analysis draft created
-
-  /api/v1/assessments/{assessmentId}/gap-analysis:
-    get:
-      tags: [Gap Analysis]
-      summary: List gap analysis versions
-      operationId: listGapAnalysisVersions
-      parameters:
-        - $ref: "#/components/parameters/AssessmentId"
-      responses:
-        "200":
-          description: Gap analysis version list
-
-  /api/v1/gap-analysis/{gapVersionId}:
-    get:
-      tags: [Gap Analysis]
-      summary: Get gap analysis version
-      operationId: getGapAnalysisVersion
-      responses:
-        "200":
-          description: Gap analysis version detail
-
-  /api/v1/gap-analysis/{gapVersionId}/findings:
-    get:
-      tags: [Gap Analysis]
-      summary: List gap findings
-      operationId: listGapFindings
-      responses:
-        "200":
-          description: Gap finding list
-    post:
-      tags: [Gap Analysis]
-      summary: Add gap finding
-      operationId: addGapFinding
-      responses:
-        "201":
-          description: Finding added
-
-  /api/v1/gap-analysis/findings/{findingId}:
-    patch:
-      tags: [Gap Analysis]
-      summary: Update gap finding
-      operationId: updateGapFinding
-      responses:
-        "200":
-          description: Finding updated
-
-  /api/v1/gap-analysis/{gapVersionId}/submit-review:
-    post:
-      tags: [Gap Analysis]
-      summary: Submit gap analysis for review
-      description: |
-        **Pre-condition:** Gap analysis version must be in `draft` status.
-        Transitions to `under_review`. Returns 409 if not in draft.
-      operationId: submitGapAnalysisReview
-      x-lifecycle-precondition:
-        required_status: draft
-      responses:
-        "200":
-          description: Submitted for review
-
-  /api/v1/gap-analysis/{gapVersionId}/approve:
-    post:
-      tags: [Gap Analysis]
-      summary: Approve gap analysis version
-      description: |
-        **Pre-condition:** Gap analysis must be in `under_review` status.
-        Requires human approval. Approved versions are immutable.
-        Returns 409 if not under review.
-      operationId: approveGapAnalysis
-      x-lifecycle-precondition:
-        required_status: under_review
-      responses:
-        "200":
-          description: Gap analysis approved
-
-  # ── POA&M ───────────────────────────────────────────────
-  /api/v1/assessments/{assessmentId}/poam/draft:
-    post:
-      tags: [POA&M]
-      summary: Draft POA&M plan
-      description: |
-        Creates a POA&M draft from approved gap analysis findings.
-        **Pre-condition:** Assessment must have an approved gap analysis
-        (`gap_analysis_approved` state or later). Returns 409 if not met.
-      operationId: draftPoam
-      x-lifecycle-precondition:
-        required_state: gap_analysis_approved
-      parameters:
-        - $ref: "#/components/parameters/AssessmentId"
-      responses:
-        "201":
-          description: POA&M draft created
-
-  /api/v1/assessments/{assessmentId}/poam:
-    get:
-      tags: [POA&M]
-      summary: List POA&M versions
-      operationId: listPoamVersions
-      parameters:
-        - $ref: "#/components/parameters/AssessmentId"
-      responses:
-        "200":
-          description: POA&M version list
-
-  /api/v1/poam/{poamVersionId}:
-    get:
-      tags: [POA&M]
-      summary: Get POA&M version
-      operationId: getPoamVersion
-      responses:
-        "200":
-          description: POA&M version detail
-
-  /api/v1/poam/{poamVersionId}/items:
-    get:
-      tags: [POA&M]
-      summary: List POA&M items
-      operationId: listPoamItems
-      responses:
-        "200":
-          description: POA&M item list
-    post:
-      tags: [POA&M]
-      summary: Add POA&M item
-      operationId: addPoamItem
-      responses:
-        "201":
-          description: Item added
-
-  /api/v1/poam/items/{poamItemId}:
-    patch:
-      tags: [POA&M]
-      summary: Update POA&M item
-      operationId: updatePoamItem
-      responses:
-        "200":
-          description: Item updated
-
-  /api/v1/poam/{poamVersionId}/submit-review:
-    post:
-      tags: [POA&M]
-      summary: Submit POA&M for review
-      description: |
-        **Pre-condition:** POA&M version must be in `draft` status.
-        Returns 409 if not in draft.
-      operationId: submitPoamReview
-      x-lifecycle-precondition:
-        required_status: draft
-      responses:
-        "200":
-          description: Submitted for review
-
-  /api/v1/poam/{poamVersionId}/approve:
-    post:
-      tags: [POA&M]
-      summary: Approve POA&M version
-      description: |
-        **Pre-condition:** POA&M must be in `under_review` status.
-        Requires human approval. Returns 409 if not under review.
-      operationId: approvePoam
-      x-lifecycle-precondition:
-        required_status: under_review
-      responses:
-        "200":
-          description: POA&M approved
-
-  # ── Reporting ───────────────────────────────────────────
-  /api/v1/assessments/{assessmentId}/reports/draft:
-    post:
-      tags: [Reporting]
-      summary: Draft assessment report
-      description: |
-        Creates a report draft from all approved artifacts (SoA, Gap Analysis,
-        Maturity Assessment, POA&M). **Pre-condition:** All four artifact types
-        must be approved (`poam_approved` state or later). Returns 409 if not met.
-      operationId: draftReport
-      x-lifecycle-precondition:
-        required_state: poam_approved
-      parameters:
-        - $ref: "#/components/parameters/AssessmentId"
-      responses:
-        "201":
-          description: Report draft created
-
-  /api/v1/assessments/{assessmentId}/reports:
-    get:
-      tags: [Reporting]
-      summary: List report versions
-      operationId: listReportVersions
-      parameters:
-        - $ref: "#/components/parameters/AssessmentId"
-      responses:
-        "200":
-          description: Report version list
-
-  /api/v1/reports/{reportVersionId}:
-    get:
-      tags: [Reporting]
-      summary: Get report version
-      operationId: getReportVersion
-      responses:
-        "200":
-          description: Report version detail
-
-  /api/v1/reports/{reportVersionId}/sections:
-    get:
-      tags: [Reporting]
-      summary: List report sections
-      operationId: listReportSections
-      responses:
-        "200":
-          description: Report section list
-
-  /api/v1/reports/{reportVersionId}/submit-review:
-    post:
-      tags: [Reporting]
-      summary: Submit report for review
-      operationId: submitReportReview
-      responses:
-        "200":
-          description: Report submitted
-
-  /api/v1/reports/{reportVersionId}/approve:
-    post:
-      tags: [Reporting]
-      summary: Approve report version
-      operationId: approveReport
-      responses:
-        "200":
-          description: Report approved
-
-  /api/v1/reports/{reportVersionId}/export:
-    post:
-      tags: [Reporting]
-      summary: Export report (PDF/DOCX)
-      operationId: exportReport
-      responses:
-        "202":
-          description: Export queued
-
-  # ── Knowledge Base ──────────────────────────────────────
-  /api/v1/assessments/{assessmentId}/kb/search:
-    post:
-      tags: [Knowledge Base]
-      summary: Semantic search in assessment knowledge base
-      operationId: searchKb
-      parameters:
-        - $ref: "#/components/parameters/AssessmentId"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [query]
-              properties:
-                query: { type: string }
-                limit: { type: integer, default: 10 }
-                filters: { type: object }
-      responses:
-        "200":
-          description: Search results with relevance scores
-
-  /api/v1/assessments/{assessmentId}/kb/chunks:
-    get:
-      tags: [Knowledge Base]
-      summary: List indexed KB chunks
-      operationId: listKbChunks
-      parameters:
-        - $ref: "#/components/parameters/AssessmentId"
-      responses:
-        "200":
-          description: KB chunk list
-
-  # ── Workflows ───────────────────────────────────────────
-  /api/v1/assessments/{assessmentId}/workflows/lifecycle/start:
-    post:
-      tags: [Workflows]
-      summary: Start durable lifecycle workflow for assessment
-      operationId: startLifecycleWorkflow
-      parameters:
-        - $ref: "#/components/parameters/AssessmentId"
-      responses:
-        "202":
-          description: Workflow started
-
-  /api/v1/assessments/{assessmentId}/workflows/lifecycle:
-    get:
-      tags: [Workflows]
-      summary: Get workflow status for assessment
-      operationId: getWorkflowStatus
-      parameters:
-        - $ref: "#/components/parameters/AssessmentId"
-      responses:
-        "200":
-          description: Workflow status
-
-  /api/v1/workflows/{workflowRunId}:
-    get:
-      tags: [Workflows]
-      summary: Get workflow run detail
-      operationId: getWorkflowRun
-      parameters:
-        - name: workflowRunId
-          in: path
-          required: true
-          schema: { type: string }
-      responses:
-        "200":
-          description: Workflow run detail
-
-  /api/v1/workflows/{workflowRunId}/cancel:
-    post:
-      tags: [Workflows]
-      summary: Cancel a running workflow
-      operationId: cancelWorkflow
-      responses:
-        "200":
-          description: Workflow cancelled
-
-  /api/v1/workflows/{workflowRunId}/resume:
-    post:
-      tags: [Workflows]
-      summary: Resume a paused workflow
-      operationId: resumeWorkflow
-      responses:
-        "200":
-          description: Workflow resumed
-
-  /api/v1/workflows/{workflowRunId}/signals:
-    post:
-      tags: [Workflows]
-      summary: Send signal to workflow (e.g. approval)
-      operationId: sendWorkflowSignal
-      responses:
-        "200":
-          description: Signal delivered
-
-  # ── Agent Runtime ───────────────────────────────────────
-  /api/v1/assessments/{assessmentId}/agent-runs:
-    post:
-      tags: [Agent Runtime]
-      summary: Start an agent run
-      operationId: startAgentRun
-      parameters:
-        - $ref: "#/components/parameters/AssessmentId"
-      responses:
-        "202":
-          description: Agent run started
-    get:
-      tags: [Agent Runtime]
-      summary: List agent runs for assessment
-      operationId: listAgentRuns
-      parameters:
-        - $ref: "#/components/parameters/AssessmentId"
-      responses:
-        "200":
-          description: Agent run list
-
-  /api/v1/agent-runs/{agentRunId}:
-    get:
-      tags: [Agent Runtime]
-      summary: Get agent run status and output
-      operationId: getAgentRun
-      parameters:
-        - name: agentRunId
-          in: path
-          required: true
-          schema: { type: string }
-      responses:
-        "200":
-          description: Agent run detail with output
-
-  /api/v1/agent-runs/{agentRunId}/tool-calls:
-    get:
-      tags: [Agent Runtime]
-      summary: List tool calls for an agent run
-      operationId: listAgentToolCalls
-      responses:
-        "200":
-          description: Tool call list
-
-  # ── Integrations ────────────────────────────────────────
-  /api/v1/integrations/assessments/{assessmentId}/analyze-text:
-    post:
-      tags: [Integrations]
-      summary: Analyze raw text against SCF framework
-      operationId: analyzeText
-      parameters:
-        - $ref: "#/components/parameters/AssessmentId"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/AnalyzeTextRequest"
-      responses:
-        "202":
-          description: Analysis run started asynchronously
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message: { type: string }
-                  job:
-                    type: object
-                    properties:
-                      agent_run_id: { type: string }
-                      mode: { type: string }
-                      status: { type: string }
-                  trace_id: { type: string }
-
-  # ── Organizations ───────────────────────────────────────
   /api/v1/organizations:
     post:
-      tags: [Organizations]
-      summary: Create organization under tenant
-      operationId: createOrganization
+      summary: Create Organization
+      description: Creates an organization under the authenticated tenant.
       requestBody:
-        required: true
         content:
           application/json:
             schema:
               type: object
-              required: [tenant_id, name, slug]
               properties:
-                tenant_id: { type: string, format: uuid }
-                name: { type: string }
-                slug: { type: string }
+                organization_id:
+                  type: string
+                  format: uuid
+                slug:
+                  type: string
+                  minLength: 2
+                name:
+                  type: string
+                  minLength: 1
+              required:
+                - organization_id
+                - slug
+                - name
       responses:
-        "201":
+        '201':
           description: Organization created
-
-  /api/v1/organizations/{organizationId}:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  organization_id:
+                    type: string
+                  slug:
+                    type: string
+                  name:
+                    type: string
+                  status:
+                    type: string
+                  trace_id:
+                    type: string
+                required:
+                  - organization_id
+                  - slug
+                  - name
+                  - status
+                  - trace_id
+  /api/v1/tenants/{organizationId}/organizations:
     get:
-      tags: [Organizations]
-      summary: Get organization details
-      operationId: getOrganization
+      summary: List Organizations by Tenant
+      description: Returns all organizations for the specified tenant.
       parameters:
-        - $ref: "#/components/parameters/OrganizationId"
+        - schema:
+            type: string
+          required: true
+          name: organizationId
+          in: path
       responses:
-        "200":
-          description: Organization detail
-
-  # ── API Keys ────────────────────────────────────────────
-  /api/v1/api-keys:
+        '200':
+          description: Organization list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        organization_id:
+                          type: string
+                        name:
+                          type: string
+                        slug:
+                          type: string
+                        status:
+                          type: string
+                      required:
+                        - organization_id
+                        - name
+                        - slug
+                        - status
+                  trace_id:
+                    type: string
+                required:
+                  - data
+                  - trace_id
+  /api/v1/organizations/{organizationId}/api-keys:
     get:
-      tags: [API Keys]
-      summary: List API keys (masked) for your Root Tenant
-      operationId: listApiKeys
+      summary: List API Keys
+      description: >-
+        Returns all API keys for the authenticated organization (masked). Use
+        ?active=true to exclude revoked keys.
+      parameters:
+        - schema:
+            type: string
+          required: true
+          name: organizationId
+          in: path
+        - schema:
+            type: string
+            enum:
+              - 'true'
+              - 'false'
+          required: false
+          name: active
+          in: query
       responses:
-        "200":
-          description: API key list (secrets are masked)
+        '200':
+          description: API key list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        name:
+                          type: string
+                        maskedKey:
+                          type: string
+                        scopes:
+                          type: array
+                          items:
+                            type: string
+                        lastUsedAt:
+                          type: string
+                          nullable: true
+                        expiresAt:
+                          type: string
+                          nullable: true
+                        revokedAt:
+                          type: string
+                          nullable: true
+                        isRevoked:
+                          type: boolean
+                        status:
+                          type: string
+                          enum:
+                            - active
+                            - expired
+                            - revoked
+                        createdAt:
+                          type: string
+                      required:
+                        - id
+                        - name
+                        - maskedKey
+                        - scopes
+                        - lastUsedAt
+                        - expiresAt
+                        - revokedAt
+                        - isRevoked
+                        - status
+                        - createdAt
+                required:
+                  - data
     post:
-      tags: [API Keys]
-      summary: Generate a new API key for your Root Tenant
-      operationId: createApiKey
+      summary: Create API Key
+      description: >-
+        Creates a new M2M API key. The raw key is returned only once — store it
+        securely.
+      parameters:
+        - schema:
+            type: string
+          required: true
+          name: organizationId
+          in: path
       requestBody:
-        required: true
         content:
           application/json:
             schema:
               type: object
-              required: [name]
               properties:
-                name: { type: string, maxLength: 100 }
-                expiresAt: { type: string, format: date-time }
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 100
+                expiresAt:
+                  type: string
+                  format: date-time
+                scopes:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - assessment:read
+                      - assessment:write
+                      - assessment:transition
+                      - document:read
+                      - document:write
+                      - document:delete
+                      - scf:read
+                      - soa:read
+                      - soa:write
+                      - gap:read
+                      - gap:write
+                      - poam:read
+                      - poam:write
+                      - report:read
+                      - report:write
+                      - report:export
+                      - kb:read
+                      - kb:search
+                      - agent:read
+                      - agent:run
+                      - integration:analyze
+                      - intelligence:read
+                      - intelligence:run
+                      - job:read
+                      - audit:read
+                      - metrics:read
+                      - usage:read
+                      - workflow:read
+                      - workflow:write
+                      - workflow:signal
+                      - artifact:read
+                      - artifact:write
+                      - approval:read
+                  minItems: 1
+                  maxItems: 33
+              required:
+                - name
       responses:
-        "201":
-          description: API key created (key shown only once)
+        '201':
+          description: API key created
           content:
             application/json:
               schema:
@@ -1410,363 +357,299 @@ paths:
                   data:
                     type: object
                     properties:
-                      id: { type: string, format: uuid }
-                      name: { type: string }
-                      key: { type: string, description: "Full key — shown only once" }
-                      maskedKey: { type: string }
-                      expiresAt: { type: string, format: date-time }
-
-  /api/v1/api-keys/{keyId}:
-    delete:
-      tags: [API Keys]
-      summary: Revoke an API key
-      operationId: revokeApiKey
-      parameters:
-        - name: keyId
-          in: path
-          required: true
-          schema: { type: string, format: uuid }
-      responses:
-        "200":
-          description: Key revoked
-
-  # ── Tenants (Admin) ─────────────────────────────────────
-  /api/v1/tenants:
-    post:
-      tags: [Tenants]
-      summary: Create a tenant (subscription)
-      operationId: createTenant
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [name, slug]
-              properties:
-                name: { type: string }
-                slug: { type: string }
-                status: { type: string, enum: [active, suspended], default: active }
-      responses:
-        "201":
-          description: Tenant created
-
-  /api/v1/tenants/{tenantId}:
-    get:
-      tags: [Tenants]
-      summary: Get tenant details
-      operationId: getTenant
-      parameters:
-        - name: tenantId
-          in: path
-          required: true
-          schema: { type: string, format: uuid }
-      responses:
-        "200":
-          description: Tenant detail
+                      id:
+                        type: string
+                      name:
+                        type: string
+                      key:
+                        type: string
+                        description: Raw key — shown only once
+                      maskedKey:
+                        type: string
+                      scopes:
+                        type: array
+                        items:
+                          type: string
+                      expiresAt:
+                        type: string
+                        nullable: true
+                      createdAt:
+                        type: string
+                    required:
+                      - id
+                      - name
+                      - key
+                      - maskedKey
+                      - scopes
+                      - expiresAt
+                      - createdAt
+                required:
+                  - data
+  /api/v1/organizations/{organizationId}/api-keys/{keyId}:
     patch:
-      tags: [Tenants]
-      summary: Update tenant
-      operationId: updateTenant
+      summary: Update API Key
+      description: Update name, expiration date, and/or scopes of an existing API key.
       parameters:
-        - name: tenantId
-          in: path
+        - schema:
+            type: string
           required: true
-          schema: { type: string, format: uuid }
-      responses:
-        "200":
-          description: Tenant updated
-
-  # ── Observability ───────────────────────────────────────
-  /api/v1/observability/audit-logs:
-    get:
-      tags: [Observability]
-      summary: Query audit logs
-      operationId: queryAuditLogs
-      parameters:
-        - name: limit
-          in: query
-          schema: { type: integer, default: 50 }
-        - name: cursor
-          in: query
-          schema: { type: string }
-      responses:
-        "200":
-          description: Audit log entries
-
-  /api/v1/observability/metrics:
-    get:
-      tags: [Observability]
-      summary: Query operational metrics
-      operationId: queryMetrics
-      responses:
-        "200":
-          description: Metric entries
-
-  /api/v1/observability/security-events:
-    get:
-      tags: [Observability]
-      summary: Query security events
-      operationId: querySecurityEvents
-      responses:
-        "200":
-          description: Security event entries
-
-  /api/v1/observability/usage:
-    get:
-      tags: [Observability]
-      summary: Query usage records (LLM token consumption)
-      operationId: queryUsage
-      responses:
-        "200":
-          description: Usage records
-  # ── Webhooks ──────────────────────────────────────────────
-  /api/v1/organizations/{organizationId}/webhooks:
-    post:
-      tags: [Webhooks]
-      summary: Register a webhook endpoint
-      operationId: createWebhookEndpoint
-      parameters:
-        - $ref: "#/components/parameters/OrganizationId"
+          name: organizationId
+          in: path
+        - schema:
+            type: string
+          required: true
+          name: keyId
+          in: path
       requestBody:
-        required: true
         content:
           application/json:
             schema:
               type: object
-              required: [url]
               properties:
-                url: { type: string, format: uri }
-                events:
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 100
+                expiresAt:
+                  type: string
+                  nullable: true
+                  format: date-time
+                scopes:
                   type: array
                   items:
                     type: string
-                    enum: [assessment.created, document.ingested, kb.indexed, soa.approved, gap.approved, maturity.approved, poam.approved, report.generated, report.approved, assessment.closed, workflow.failed]
-                description: { type: string, maxLength: 500 }
-                enabled: { type: boolean, default: true }
+                    enum:
+                      - assessment:read
+                      - assessment:write
+                      - assessment:transition
+                      - document:read
+                      - document:write
+                      - document:delete
+                      - scf:read
+                      - soa:read
+                      - soa:write
+                      - gap:read
+                      - gap:write
+                      - poam:read
+                      - poam:write
+                      - report:read
+                      - report:write
+                      - report:export
+                      - kb:read
+                      - kb:search
+                      - agent:read
+                      - agent:run
+                      - integration:analyze
+                      - intelligence:read
+                      - intelligence:run
+                      - job:read
+                      - audit:read
+                      - metrics:read
+                      - usage:read
+                      - workflow:read
+                      - workflow:write
+                      - workflow:signal
+                      - artifact:read
+                      - artifact:write
+                      - approval:read
+                  minItems: 1
+                  maxItems: 33
       responses:
-        "201":
-          description: Webhook endpoint created (signing_secret shown ONCE)
-    get:
-      tags: [Webhooks]
-      summary: List registered webhook endpoints
-      operationId: listWebhookEndpoints
-      parameters:
-        - $ref: "#/components/parameters/OrganizationId"
-      responses:
-        "200":
-          description: List of webhook endpoints
-
-  /api/v1/webhooks/{webhookId}:
-    get:
-      tags: [Webhooks]
-      summary: Get webhook endpoint details
-      operationId: getWebhookEndpoint
-      parameters:
-        - name: webhookId
-          in: path
-          required: true
-          schema: { type: string, format: uuid }
-      responses:
-        "200":
-          description: Webhook endpoint details
-    patch:
-      tags: [Webhooks]
-      summary: Update webhook endpoint
-      operationId: updateWebhookEndpoint
-      parameters:
-        - name: webhookId
-          in: path
-          required: true
-          schema: { type: string, format: uuid }
+        '200':
+          description: API key updated
+  /api/v1/privacy/scan-vendor-contract/batch:
+    post:
+      summary: Scan Vendor Contracts in Bulk (Async)
+      description: >-
+        Dispatches long-running analysis across up to 500 contract snippets
+        simultaneously. Returns a jobId for polling.
       requestBody:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                url: { type: string, format: uri }
-                events: { type: array, items: { type: string } }
-                description: { type: string }
-                enabled: { type: boolean }
+              $ref: '#/components/schemas/VendorScannerBatchInput'
       responses:
-        "200":
-          description: Webhook endpoint updated
-    delete:
-      tags: [Webhooks]
-      summary: Delete webhook endpoint
-      operationId: deleteWebhookEndpoint
-      parameters:
-        - name: webhookId
-          in: path
-          required: true
-          schema: { type: string, format: uuid }
+        '202':
+          description: Batch job dispatched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  job_id:
+                    type: string
+                required:
+                  - status
+                  - job_id
+  /api/v1/privacy/scan-vendor-contract:
+    post:
+      summary: B2B Legal Analyzer (Vendor Risk Scanner)
+      description: >-
+        Transforms raw contract text into executive intelligence about
+        sub-processors and LGPD/GDPR privacy compliance.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VendorScannerInput'
       responses:
-        "200":
-          description: Webhook deleted
-
-  /api/v1/webhooks/{webhookId}/deliveries:
+        '200':
+          description: Vendor risks and compliance gaps
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VendorScannerOutput'
+  /api/v1/me/data-export:
     get:
-      tags: [Webhooks]
-      summary: List webhook delivery attempts
-      operationId: listWebhookDeliveries
-      parameters:
-        - name: webhookId
-          in: path
-          required: true
-          schema: { type: string, format: uuid }
+      tags:
+        - Data Subject Rights
+      summary: Export personal data (LGPD art. 18)
+      description: >-
+        Returns a portable JSON export of all personal data stored for the
+        authenticated user. Compliant with LGPD art. 18 (right of access and
+        portability). The response includes a Content-Disposition header for
+        download.
       responses:
-        "200":
-          description: List of delivery attempts with status
-
-components:
-  securitySchemes:
-    BearerAuth:
-      type: http
-      scheme: bearer
-      description: API key as Bearer token (standard_live_...)
-    ApiKeyAuth:
-      type: apiKey
-      in: header
-      name: X-Standard-Api-Key
-
-  parameters:
-    AssessmentId:
-      name: assessmentId
-      in: path
-      required: true
-      schema:
-        type: string
-        format: uuid
-    OrganizationId:
-      name: organizationId
-      in: path
-      required: true
-      schema:
-        type: string
-        format: uuid
-    ArtifactType:
-      name: artifactType
-      in: path
-      required: true
-      schema:
-        type: string
-        enum: [scope, soa, gap_analysis, maturity_assessment, poam, report]
-
-  schemas:
-    CreateAssessmentRequest:
-      type: object
-      required: [organization_id, name, scf_version_id]
-      properties:
-        organization_id: { type: string, format: uuid }
-        name: { type: string }
-        scf_version_id: { type: string, format: uuid }
-        document_count: { type: integer }
-
-    Assessment:
-      type: object
-      properties:
-        assessment_id: { type: string, format: uuid }
-        tenant_id: { type: string, format: uuid }
-        organization_id: { type: string, format: uuid }
-        name: { type: string }
-        state: { $ref: "#/components/schemas/AssessmentLifecycleState" }
-        scf_version_id: { type: string, format: uuid }
-        trace_id: { type: string }
-
-    AssessmentList:
-      type: object
-      properties:
-        data:
-          type: array
-          items: { $ref: "#/components/schemas/Assessment" }
-        trace_id: { type: string }
-
-    AssessmentLifecycleState:
-      type: string
-      enum:
-        - draft
-        - documents_uploaded
-        - documents_ingested
-        - scf_pre_analysis_ready
-        - framework_selected
-        - scope_drafted
-        - soa_drafted
-        - soa_under_review
-        - soa_approved
-        - soa_ingested
-        - evidence_analysis_ready
-        - gap_analysis_drafted
-        - gap_analysis_under_review
-        - gap_analysis_approved
-        - maturity_assessed
-        - maturity_under_review
-        - maturity_approved
-        - poam_drafted
-        - poam_under_review
-        - poam_approved
-        - report_generated
-        - closed
-        - archived
-        - cancelled
-        - failed
-        - blocked
-
-    TransitionRequest:
-      type: object
-      required: [next_state, reason]
-      properties:
-        next_state: { $ref: "#/components/schemas/AssessmentLifecycleState" }
-        reason: { type: string }
-        approval_event_id: { type: string, format: uuid }
-        metadata: { type: object }
-
-    TransitionResult:
-      type: object
-      properties:
-        assessment_id: { type: string, format: uuid }
-        previous_state: { $ref: "#/components/schemas/AssessmentLifecycleState" }
-        next_state: { $ref: "#/components/schemas/AssessmentLifecycleState" }
-        event: { type: object }
-        trace_id: { type: string }
-
-    ApprovalDecisionRequest:
-      type: object
-      required: [gate, decision, target_type, target_id]
-      properties:
-        gate: { $ref: "#/components/schemas/ApprovalGate" }
-        decision: { type: string, enum: [approved, rejected, changes_requested] }
-        target_type: { type: string, enum: [assessment_state, artifact_version] }
-        target_id: { type: string, format: uuid }
-        reason: { type: string }
-
-    ApprovalGate:
-      type: string
-      enum: [soa, gap_analysis, maturity_assessment, poam, report]
-
-    AnalyzeTextRequest:
-      type: object
-      required: [raw_text, mode]
-      properties:
-        raw_text: { type: string, description: "Unstructured text to analyze" }
-        mode:
-          type: string
-          enum: [strict, consultative]
-          description: "'strict' for pure auditing, 'consultative' for inference-driven analysis"
-        context_focus:
-          type: array
-          items: { type: string }
-          description: "Force evaluation towards specific domains (e.g. ['GDPR', 'Data Privacy'])"
-        framework_id: { type: string }
-        scf_version_id: { type: string }
-
-    ErrorResponse:
-      type: object
-      properties:
-        error:
-          type: object
-          properties:
-            code: { type: string }
-            message: { type: string }
-            details: { type: array, items: { type: object } }
-            trace_id: { type: string }
+        '200':
+          description: Personal data export
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  export_generated_at:
+                    type: string
+                  export_format:
+                    type: string
+                  subject:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      email:
+                        type: string
+                        nullable: true
+                      name:
+                        type: string
+                        nullable: true
+                    required:
+                      - id
+                      - email
+                      - name
+                  profile:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      email:
+                        type: string
+                        nullable: true
+                      name:
+                        type: string
+                        nullable: true
+                    required:
+                      - id
+                      - email
+                      - name
+                  memberships:
+                    type: array
+                    items:
+                      type: object
+                      additionalProperties:
+                        nullable: true
+                  notices:
+                    type: array
+                    items:
+                      type: string
+                required:
+                  - export_generated_at
+                  - export_format
+                  - subject
+                  - profile
+                  - memberships
+                  - notices
+  /api/v1/me/account:
+    delete:
+      tags:
+        - Data Subject Rights
+      summary: Request account deletion (LGPD art. 18)
+      description: >-
+        Initiates an account deletion request. The account is flagged for
+        deletion immediately. Personal data is permanently purged within 30 days
+        per the data retention policy.
+      responses:
+        '200':
+          description: Deletion request accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  requested_at:
+                    type: string
+                  expected_purge_within:
+                    type: string
+                  contact:
+                    type: string
+                  trace_id:
+                    type: string
+                required:
+                  - message
+                  - requested_at
+                  - expected_purge_within
+                  - contact
+                  - trace_id
+  /api/v1/soc/status:
+    get:
+      tags:
+        - SOC Monitoring
+      summary: SOC pipeline health status
+      description: >-
+        Returns SOC monitoring pipeline status: queue binding health, alert
+        service configuration, and pipeline readiness. Requires admin:write
+        permission (platform admin only).
+      responses:
+        '200':
+          description: SOC pipeline status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - operational
+                      - degraded
+                  timestamp:
+                    type: string
+                  pipeline:
+                    type: object
+                    properties:
+                      soc_triage_queue:
+                        type: string
+                        enum:
+                          - bound
+                          - unbound
+                      alert_service:
+                        type: string
+                        enum:
+                          - configured
+                          - unconfigured
+                    required:
+                      - soc_triage_queue
+                      - alert_service
+                  note:
+                    type: string
+                  trace_id:
+                    type: string
+                required:
+                  - status
+                  - timestamp
+                  - pipeline
+                  - note
+                  - trace_id

@@ -31,7 +31,7 @@ import type { DbClient } from "./db";
 
 // ---------- Documents ----------
 
-export const createDrizzleDocumentRepository = (db: DbClient): DocumentRecordRepository => {
+const createDrizzleDocumentRepository = (db: DbClient): DocumentRecordRepository => {
   const repo = {
     async saveDocument(doc: DocumentResponse) {
       await db.insert(documents).values({
@@ -117,7 +117,7 @@ const mapDocumentRow = (row: DocumentRow): DocumentResponse => ({
 
 // ---------- Extraction Jobs ----------
 
-export const createDrizzleDocumentJobRepository = (db: DbClient): DocumentJobRepository => {
+const createDrizzleDocumentJobRepository = (db: DbClient): DocumentJobRepository => {
   const repo = {
     async saveJob(job: DocumentJobResponse) {
       await db.insert(documentExtractionJobs).values({
@@ -203,7 +203,7 @@ const mapJobRow = (row: JobRow): DocumentJobResponse => ({
 
 // ---------- Document Chunks ----------
 
-export const createDrizzleDocumentChunkRepository = (db: DbClient): DocumentChunkRepository => {
+const createDrizzleDocumentChunkRepository = (db: DbClient): DocumentChunkRepository => {
   const repo = {
     async saveChunks(chunks: DocumentChunk[]) {
       if (chunks.length === 0) return;
@@ -258,7 +258,7 @@ const mapChunkRow = (row: ChunkRow): DocumentChunk => ({
 
 // ---------- Vector References ----------
 
-export const createDrizzleIngestionVectorRefRepository = (db: DbClient): VectorReferenceRepository => ({
+const createDrizzleIngestionVectorRefRepository = (db: DbClient): VectorReferenceRepository => ({
   async saveVectorReferences(refs: VectorReferenceResponse[]) {
     if (refs.length === 0) return;
     await db.insert(vectorReferences).values(
@@ -277,7 +277,7 @@ export const createDrizzleIngestionVectorRefRepository = (db: DbClient): VectorR
 
 // ---------- Audit Sink ----------
 
-export const createDrizzleIngestionAuditSink = (db: DbClient): AuditSink => {
+const createDrizzleIngestionAuditSink = (db: DbClient): AuditSink => {
   const isUuid = (val: string): boolean => {
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
   };
