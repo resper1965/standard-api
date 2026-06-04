@@ -76,7 +76,7 @@ export const scfRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["scf:read"],
     handler: async ({ params, traceId }) => {
-      const controlId = routeUuidParam(params, "controlId").toUpperCase();
+      const controlId = routeParam(params, "controlId").toUpperCase();
       
       const linkedRegulations: any[] = [];
       const linkedRisks: any[] = [];
@@ -217,7 +217,7 @@ export const scfRoutes: RouteDefinition[] = [
     permissions: ["scf:read"],
     handler: async ({ deps, params, request, traceId }) => {
       const versionId = await requireVersionQuery(request, deps, "version");
-      const control = await deps.scf.controls.getControlByCode(versionId, routeUuidParam(params, "controlCode"));
+      const control = await deps.scf.controls.getControlByCode(versionId, routeParam(params, "controlCode"));
       if (!control) throw new ApiError("NOT_FOUND", "SCF control not found.", 404);
       return json({ ...controlResponse(control), trace_id: traceId });
     }
@@ -282,7 +282,7 @@ export const scfRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["scf:read"],
     handler: async ({ deps, params, request, traceId, organizationId }) => {
-      const controlId = routeUuidParam(params, "controlId");
+      const controlId = routeParam(params, "controlId");
       const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(controlId);
 
       if (!isUuid) {
