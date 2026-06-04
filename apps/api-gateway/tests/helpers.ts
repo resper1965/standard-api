@@ -72,14 +72,13 @@ export const createTestClient = () => {
 
     const orgId = orgResult.body.organization_id as string;
     return {
-      organizationId: orgId,
       organizationId: orgId
     };
   };
 
 
   const createAssessment = async (documentCount = 0) => {
-    const { organizationId, organizationId } = await createTenantOrg();
+    const { organizationId } = await createTenantOrg();
     const result = await send("/api/v1/assessments", "POST", {
       organization_id: organizationId,
       name: "Assessment Test",
@@ -122,7 +121,7 @@ export const createTestClient = () => {
       authHeaders(organizationId),
     );
 
-  const listApiKeys = async (organizationId: string, organizationId: string) =>
+  const listApiKeys = async (organizationId: string) =>
     send(
       `/api/v1/organizations/${organizationId}/api-keys`,
       "GET",
@@ -130,7 +129,7 @@ export const createTestClient = () => {
       authHeaders(organizationId),
     );
 
-  const revokeApiKey = async (organizationId: string, organizationId: string, keyId: string) =>
+  const revokeApiKey = async (organizationId: string, keyId: string) =>
     send(
       `/api/v1/organizations/${organizationId}/api-keys/${keyId}`,
       "DELETE",
