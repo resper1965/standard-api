@@ -100,9 +100,9 @@ O servidor MCP disponibiliza 4 ferramentas:
 | Nome da Ferramenta | Descrição | Argumentos |
 | :--- | :--- | :--- |
 | `get_scf_control` | Busca os detalhes regulatórios e metadados de um controle SCF específico (ex: `AC-01`). | `id` (ex: `"AC-01"`) |
-| `run_gap_analysis` | Calcula os controles faltantes baseando-se em uma máscara de framework e nos controles implementados pela organização. | `framework_mask`, `scf_controls_implemented`, `tenant_id` (opcional) |
-| `dispatch_grc_council` | Dispara assincronamente o Conselho de Agentes de GRC para processar um incidente ou contexto de auditoria. Retorna um `job_id`. | `assessment_id`, `target_framework_id`, `agents` (ex: `["incident_triager"]`), `input`, `tenant_id` (opcional) |
-| `poll_job_status` | Verifica o status e retorna a saída final do job do Conselho GRC. | `job_id`, `tenant_id` (opcional) |
+| `run_gap_analysis` | Calcula os controles faltantes baseando-se em uma máscara de framework e nos controles implementados pela organização. | `framework_mask`, `scf_controls_implemented`, `organization_id` (opcional) |
+| `dispatch_grc_council` | Dispara assincronamente o Conselho de Agentes de GRC para processar um incidente ou contexto de auditoria. Retorna um `job_id`. | `assessment_id`, `target_framework_id`, `agents` (ex: `["incident_triager"]`), `input`, `organization_id` (opcional) |
+| `poll_job_status` | Verifica o status e retorna a saída final do job do Conselho GRC. | `job_id`, `organization_id` (opcional) |
 
 ---
 

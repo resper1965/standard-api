@@ -72,7 +72,7 @@ Reduce compliance assessment time from **weeks → hours** while improving accur
 
 | Persona | Role | Needs |
 |---------|------|-------|
-| **Organization Admin** | Tenant administrator | Manage members, roles, API keys, billing |
+| **Organization Admin** | Organization administrator | Manage members, roles, API keys, billing |
 | **Contributor** | Evidence provider | Upload documents, respond to information requests |
 
 ---
@@ -223,7 +223,7 @@ The heart of the platform — a **25-state assessment lifecycle** with **4 human
 - Artifacts (SoA, Gap Analysis, Maturity, POA&M) are **versioned and immutable** once approved
 - Reprocessing creates new versions with full audit trail (reason, previous version, actor, trace)
 - State transitions are controlled by **durable workflows** — frontend cannot change state directly
-- Every transition is audit-logged with `tenant_id`, `organization_id`, `assessment_id`, and `trace_id`
+- Every transition is audit-logged with `organization_id`, `organization_id`, `assessment_id`, and `trace_id`
 
 ### 5.2 SCF Data Layer
 
@@ -272,10 +272,10 @@ Upload → Validation → R2 Storage → Chunking → KB Indexing → Vector Emb
 ```
 
 - File validation: type, size, signature, malware strategy, permissions
-- Storage: Cloudflare R2 with tenant-isolated keys
+- Storage: Cloudflare R2 with organization-isolated keys
 - Chunking: intelligent document segmentation for evidence retrieval
 - Embeddings: Cloudflare AI with `bge-base-en` model
-- Evidence chain: document → chunk → origin → date → hash → tenant/org/assessment
+- Evidence chain: document → chunk → origin → date → hash → organization/org/assessment
 
 ### 5.5 Reporting Engine
 
@@ -301,7 +301,7 @@ Upload → Validation → R2 Storage → Chunking → KB Indexing → Vector Emb
 **Auth Methods:**
 - API Key authentication (SHA-256 hash + timing-safe comparison)
 - JWT sessions via Standard Native Auth (Google OAuth supported)
-- Per-tenant rate limiting (sliding window)
+- Per-organization rate limiting (sliding window)
 
 ### 6.2 Core Assessment Flow
 
@@ -335,7 +335,7 @@ Upload → Validation → R2 Storage → Chunking → KB Indexing → Vector Emb
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
 | `GET` | `/api/v1/organizations/:id/dashboard` | Org-wide compliance KPIs |
-| `GET` | `/api/v1/tenants/:id/audit-logs` | Tenant audit trail |
+| `GET` | `/api/v1/organizations/:id/audit-logs` | Organization audit trail |
 | `GET` | `/api/v1/organizations/:id/audit-logs` | Organization audit trail |
 
 ### 6.5 Organization & Member Management
@@ -360,7 +360,7 @@ Upload → Validation → R2 Storage → Chunking → KB Indexing → Vector Emb
 
 ---
 
-## 7. Multi-Tenant Design
+## 7. Multi-Organization Design
 
 ### 7.1 Isolation Model
 
@@ -368,7 +368,7 @@ Every critical data flow carries:
 
 ```typescript
 {
-  tenant_id: string;        // Tenant boundary
+  organization_id: string;        // Organization boundary
   organization_id: string;  // Organizational unit
   assessment_id: string;    // Assessment scope
   trace_id: string;         // Request tracing
@@ -380,12 +380,12 @@ Every critical data flow carries:
 
 | Resource | Isolation Method |
 |----------|-----------------|
-| PostgreSQL rows | `tenant_id` column on all tables |
-| R2 objects | Tenant-prefixed keys |
-| Vectorize namespaces | Tenant-scoped indexes |
-| Audit logs | Tenant-filtered queries |
-| Rate limiting | Per-tenant sliding window |
-| API Keys | Tenant-scoped, SHA-256 hashed |
+| PostgreSQL rows | `organization_id` column on all tables |
+| R2 objects | Organization-prefixed keys |
+| Vectorize namespaces | Organization-scoped indexes |
+| Audit logs | Organization-filtered queries |
+| Rate limiting | Per-organization sliding window |
+| API Keys | Organization-scoped, SHA-256 hashed |
 
 ---
 
@@ -396,7 +396,7 @@ Every critical data flow carries:
 - **API Keys:** SHA-256 hashed storage, timing-safe comparison
 - **Sessions:** Standard Native Auth with session-based validation via database
 - **OAuth:** Google OAuth via Standard Native Auth
-- **Rate Limiting:** Per-tenant sliding window algorithm
+- **Rate Limiting:** Per-organization sliding window algorithm
 
 ### 8.2 Authorization (RBAC)
 
@@ -416,7 +416,7 @@ owner > admin > assessor > contributor > auditor_readonly
 
 - **Prompt injection protection:** Separate instructions, retrieved content, and sources
 - **Upload security:** Type, size, signature, malware strategy validation
-- **Tenant isolation:** Enforced at database, storage, vector, cache, and log levels
+- **Organization isolation:** Enforced at database, storage, vector, cache, and log levels
 - **Approval gates:** Cannot be bypassed by any actor or agent
 - **Audit logging:** All state changes, approvals, uploads, agent outputs, and exports
 - **Secret management:** No secrets in git; only secret managers, env vars, or CF bindings
@@ -457,7 +457,7 @@ import { StandardClient } from "@standard/sdk";
 
 const client = new StandardClient({
   apiKey: "standard_live_...",
-  tenantId: "uuid"
+  organizationId: "uuid"
 });
 
 // Create assessment
@@ -509,7 +509,7 @@ if (!gate.pass) process.exit(1);
 | KB Worker | Cloudflare Worker | `standard-kb-worker-production` |
 | Reporting | Cloudflare Worker | `standard-reporting-worker-production` |
 | Database | Neon PostgreSQL | Serverless, managed |
-| Storage | Cloudflare R2 | Tenant-isolated buckets |
+| Storage | Cloudflare R2 | Organization-isolated buckets |
 | Vectors | Cloudflare Vectorize | bge-base-en embeddings |
 | AI | Cloudflare AI Gateway → OpenAI | GPT-4o with cost tracking |
 
@@ -567,7 +567,7 @@ graph LR
 - API Key self-service (create, revoke, monitor)
 - Billing/Plans dashboard
 - Onboarding wizard
-- Role separation (Master Admin vs Tenant Admin vs User)
+- Role separation (Master Admin vs Organization Admin vs User)
 
 ### Phase 4: Production Go-Live
 - Production checklist executed
@@ -576,7 +576,7 @@ graph LR
 - Data retention & legal holds
 - SOC/SIEM integration
 - Legal/privacy review
-- First real tenant onboarded
+- First real organization onboarded
 
 > Phases 2 and 3 can run partially in parallel. Phase 4 is blocked by all previous phases.
 
@@ -598,7 +598,7 @@ graph LR
 
 | Metric | Target |
 |--------|--------|
-| First paying tenant | Phase 4 |
+| First paying organization | Phase 4 |
 | Frameworks actively used | > 10 |
 | Monthly API calls | Tracked via AI Gateway |
 | Cost per assessment (LLM) | Tracked via OpenAI cost tracking |
@@ -607,7 +607,7 @@ graph LR
 
 | Metric | Target |
 |--------|--------|
-| Tenant isolation violations | 0 |
+| Organization isolation violations | 0 |
 | Audit log coverage | 100% of state changes |
 | Secret leakage in git | 0 |
 | Approval gate bypass attempts | 0 |
@@ -620,7 +620,7 @@ graph LR
 |-------------|--------------|
 | **Availability** | 99.9% (Cloudflare Workers global edge) |
 | **Latency** | < 200ms API response (p95, excluding AI) |
-| **Scalability** | Multi-tenant, horizontal (Cloudflare auto-scaling) |
+| **Scalability** | Multi-organization, horizontal (Cloudflare auto-scaling) |
 | **Data Residency** | Configurable via R2 regions |
 | **Backup** | Neon PostgreSQL point-in-time recovery |
 | **Compliance** | BSL-1.1 license, security.txt active |
@@ -650,7 +650,7 @@ graph LR
 | Risk | Impact | Mitigation |
 |------|--------|------------|
 | LLM hallucination in findings | High | Schema validation, human approval gates, golden output regression tests |
-| Tenant data leakage | Critical | Row-level isolation, scoped R2 keys, scoped vector namespaces |
+| Organization data leakage | Critical | Row-level isolation, scoped R2 keys, scoped vector namespaces |
 | SCF data drift | Medium | Versioned imports, `scf_version` tracking on all outputs |
 | Cloudflare service limits | Medium | Rate limiting, queue backpressure, dead-letter handling |
 | Single LLM provider dependency | Medium | AI Gateway abstraction, MockLLMProvider for testing, fallback strategy |
@@ -670,7 +670,7 @@ graph LR
 | **Approval Gate** | Mandatory human review before an artifact becomes final |
 | **KB** | Knowledge Base — vector-indexed document store for evidence retrieval |
 | **RBAC** | Role-Based Access Control — hierarchical permission model |
-| **Tenant** | Isolated organizational unit in multi-tenant architecture |
+| **Organization** | Isolated organizational unit in multi-organization architecture |
 | **Crosswalk** | Official mapping between SCF controls and framework-specific requirements |
 | **Golden Output** | Reference AI agent output used for regression testing |
 

@@ -6,6 +6,8 @@ compatibility_flags = [ "nodejs_compat" ]
 [vars]
 STANDARD_ENV = "development"
 LOG_LEVEL = "info"
+AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/0a6c490dd5fe9051422c15c9e133138e/standard-dev/openai"
+# OPENAI_API_KEY, AI_GATEWAY_TOKEN, DATABASE_URL must be set via: wrangler secret put <NAME>
 
 [[workflows]]
 binding = "ASSESSMENT_WORKFLOW"
@@ -17,9 +19,17 @@ binding = "COUNCIL_WORKFLOW"
 name = "standard-council-orchestration-dev"
 class_name = "CouncilOrchestrationWorkflow"
 
+[[kv_namespaces]]
+binding = "STANDARD_CACHE"
+id = "094323d4e27d4b92994c89d412d27f74"
+
 [env.staging]
 name = "standard-workflows-staging"
-vars = { STANDARD_ENV = "staging", LOG_LEVEL = "info" }
+
+[env.staging.vars]
+STANDARD_ENV = "staging"
+LOG_LEVEL = "info"
+AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/0a6c490dd5fe9051422c15c9e133138e/standard-staging/openai"
 
 [[env.staging.workflows]]
 binding = "ASSESSMENT_WORKFLOW"
@@ -31,9 +41,17 @@ binding = "COUNCIL_WORKFLOW"
 name = "standard-council-orchestration-staging"
 class_name = "CouncilOrchestrationWorkflow"
 
+[[env.staging.kv_namespaces]]
+binding = "STANDARD_CACHE"
+id = "094323d4e27d4b92994c89d412d27f74"
+
 [env.production]
 name = "standard-workflows-production"
-vars = { STANDARD_ENV = "production", LOG_LEVEL = "warn" }
+
+[env.production.vars]
+STANDARD_ENV = "production"
+LOG_LEVEL = "warn"
+AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/0a6c490dd5fe9051422c15c9e133138e/standard-prod/openai"
 
 [[env.production.workflows]]
 binding = "ASSESSMENT_WORKFLOW"
@@ -44,5 +62,9 @@ class_name = "AssessmentLifecycleWorkflow"
 binding = "COUNCIL_WORKFLOW"
 name = "standard-council-orchestration-production"
 class_name = "CouncilOrchestrationWorkflow"
+
+[[env.production.kv_namespaces]]
+binding = "STANDARD_CACHE"
+id = "55f97abbf9794b0196bdf51e8c1dedec"
 
 

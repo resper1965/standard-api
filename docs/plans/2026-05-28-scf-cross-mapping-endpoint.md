@@ -2,7 +2,7 @@
 
 > **For Antigravity:** REQUIRED WORKFLOW: Use `.agent/workflows/execute-plan.md` to execute this plan in single-flow mode.
 
-**Goal:** Implement a new REST endpoint `/api/v1/scf/controls/:scf_control_id/mappings` that performs cross-mapping of SCF controls to other regulatory frameworks with query parameter filters for framework and version, under Bearer Token authentication and tenant context headers.
+**Goal:** Implement a new REST endpoint `/api/v1/scf/controls/:scf_control_id/mappings` that performs cross-mapping of SCF controls to other regulatory frameworks with query parameter filters for framework and version, under Bearer Token authentication and organization context headers.
 
 **Architecture:** We will implement an optimized join query in the Drizzle repository layer to fetch mappings and destination framework details in one roundtrip. We will also update the interface and InMemory repository to keep tests working, implement the Hono router endpoint with security tags, and write unit/integration tests verifying all behavior.
 
@@ -249,7 +249,7 @@ test("SCF cross-mappings endpoint - Success: returns mappings for existing contr
     undefined,
     {
       "x-standard-actor-id": ids.actorId,
-      "x-standard-tenant-id": ids.tenantId
+      "x-standard-organization-id": ids.organizationId
     }
   );
 
@@ -270,7 +270,7 @@ test("SCF cross-mappings endpoint - Success: filters by framework query paramete
     undefined,
     {
       "x-standard-actor-id": ids.actorId,
-      "x-standard-tenant-id": ids.tenantId
+      "x-standard-organization-id": ids.organizationId
     }
   );
 
@@ -286,7 +286,7 @@ test("SCF cross-mappings endpoint - Error: returns 404 for non-existent control 
     undefined,
     {
       "x-standard-actor-id": ids.actorId,
-      "x-standard-tenant-id": ids.tenantId
+      "x-standard-organization-id": ids.organizationId
     }
   );
 
@@ -301,14 +301,14 @@ test("SCF cross-mappings endpoint - Error: returns 401 for unauthenticated reque
     "GET",
     undefined,
     {
-      "x-standard-tenant-id": ids.tenantId
+      "x-standard-organization-id": ids.organizationId
     }
   );
 
   expect(result.response.status).toBe(401);
 });
 
-test("SCF cross-mappings endpoint - Error: returns 400 when tenant context is missing", async () => {
+test("SCF cross-mappings endpoint - Error: returns 400 when organization context is missing", async () => {
   const client = createTestClient();
   const result = await client.send(
     `/api/v1/scf/controls/GOV-001/mappings?version=${SYNTHETIC_SCF_VERSION_ID}`,

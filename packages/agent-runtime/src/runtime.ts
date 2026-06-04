@@ -31,7 +31,6 @@ export class AgentRuntimeService {
 
     const run = AgentRunResponseSchema.parse({
       agent_run_id: newId(),
-      tenant_id: context.tenant_id,
       organization_id: context.organization_id,
       assessment_id: context.assessment_id,
       agent_id: input.agent_id,
@@ -52,14 +51,14 @@ export class AgentRuntimeService {
     return this.deps.runs.create(run);
   }
 
-  async getRun(agentRunId: string, tenantId: string) {
+  async getRun(agentRunId: string, organizationId: string) {
     const run = await this.deps.runs.get(agentRunId);
-    if (!run || run.tenant_id !== tenantId) return null;
+    if (!run || run.organization_id !== organizationId) return null;
     return run;
   }
 
-  async listRuns(assessmentId: string, tenantId: string) {
-    return this.deps.runs.listByAssessment(assessmentId, tenantId);
+  async listRuns(assessmentId: string, organizationId: string) {
+    return this.deps.runs.listByAssessment(assessmentId, organizationId);
   }
 
   async invokeTool(agentRunId: string, input: InvokeAgentToolInput) {
@@ -69,7 +68,7 @@ export class AgentRuntimeService {
 
     const context = AgentRuntimeContextSchema.parse(input.context);
     this.guardrails.validateContext(context);
-    if (run.tenant_id !== context.tenant_id || run.assessment_id !== context.assessment_id) {
+    if (run.organization_id !== context.organization_id || run.assessment_id !== context.assessment_id) {
       throw new AgentRuntimeError("TENANT_CONTEXT_MISMATCH", "Agent run context does not match tool context.");
     }
 
@@ -93,7 +92,6 @@ export class AgentRuntimeService {
     return this.deps.toolCalls.create(AgentToolInvocationResponseSchema.parse({
       tool_call_id: newId(),
       agent_run_id: agentRunId,
-      tenant_id: context.tenant_id,
       organization_id: context.organization_id,
       assessment_id: context.assessment_id,
       tool_name: input.tool_name,
@@ -109,7 +107,7 @@ export class AgentRuntimeService {
     if (run.status !== "running") throw new AgentRuntimeError("AGENT_RUN_NOT_RUNNING", "Only running agent runs can complete.");
 
     const context = AgentRuntimeContextSchema.parse(input.context);
-    if (run.tenant_id !== context.tenant_id || run.assessment_id !== context.assessment_id) {
+    if (run.organization_id !== context.organization_id || run.assessment_id !== context.assessment_id) {
       throw new AgentRuntimeError("TENANT_CONTEXT_MISMATCH", "Agent run context does not match completion context.");
     }
 

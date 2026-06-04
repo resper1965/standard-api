@@ -54,7 +54,6 @@ export type UpdateWebhookEndpointInput = z.infer<typeof UpdateWebhookEndpointSch
 // ── Webhook Endpoint Record ──────────────────────────────────────
 export type WebhookEndpointRecord = {
   id: string;
-  tenant_id: string;
   organization_id: string;
   url: string;
   events: WebhookEventType[];
@@ -78,8 +77,6 @@ export type WebhookDeliveryPayload = {
   event_type: WebhookEventType;
   /** ISO 8601 timestamp */
   timestamp: string;
-  /** Tenant context */
-  tenant_id: string;
   /** Organization context */
   organization_id: string;
   /** Assessment context (when applicable) */
@@ -129,7 +126,6 @@ export type WebhookDeliveryLog = {
 // ── Webhook Repository Interface ──────────────────────────────────
 export type WebhookRepositoryAdapter = {
   createEndpoint(input: {
-    tenant_id: string;
     organization_id: string;
     url: string;
     events: WebhookEventType[];
@@ -138,21 +134,20 @@ export type WebhookRepositoryAdapter = {
     signing_secret_masked: string;
   }): Promise<WebhookEndpointRecord>;
 
-  getEndpoint(id: string, tenant_id: string): Promise<WebhookEndpointRecord | null>;
+  getEndpoint(id: string, organization_id: string): Promise<WebhookEndpointRecord | null>;
 
-  listEndpoints(tenant_id: string, organization_id: string): Promise<WebhookEndpointRecord[]>;
+  listEndpoints(organization_id: string): Promise<WebhookEndpointRecord[]>;
 
   updateEndpoint(
     id: string,
-    tenant_id: string,
+    organization_id: string,
     patch: Partial<Pick<WebhookEndpointRecord, "url" | "events" | "description" | "enabled">>
   ): Promise<WebhookEndpointRecord | null>;
 
-  deleteEndpoint(id: string, tenant_id: string): Promise<boolean>;
+  deleteEndpoint(id: string, organization_id: string): Promise<boolean>;
 
   /** Find all endpoints subscribed to a specific event for a tenant */
   findSubscribers(
-    tenant_id: string,
     organization_id: string,
     event_type: WebhookEventType
   ): Promise<WebhookEndpointRecord[]>;
@@ -164,7 +159,7 @@ export type WebhookRepositoryAdapter = {
   /** Rotate the signing secret for an endpoint */
   rotateSecret(
     id: string,
-    tenant_id: string,
+    organization_id: string,
     newSecretHash: string,
     newSecretMasked: string
   ): Promise<WebhookEndpointRecord | null>;

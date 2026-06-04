@@ -20,7 +20,7 @@ Describe the desired behavior.
 - **New API endpoints**: 
 - **Schema changes**: 
 - **Worker/Queue changes**: 
-- **Tenant isolation impact**: 
+- **Organization isolation impact**: 
 
 ## Acceptance Criteria
 

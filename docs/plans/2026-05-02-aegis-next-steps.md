@@ -9,7 +9,7 @@
 
 **Goal:** Close the remaining MVP gaps — give the frontend real SCF catalog browsing, polish all admin pages to Apple HIG, add an SCF import UI for admins, and harden the production environment.
 
-**Architecture:** The SCF API is already fully built (`/api/v1/scf/*`). The Drizzle repositories handle CRUD for tenants/orgs/assessments/approvals/lifecycle/audit. The SCF catalog runs in-memory from a synthetic fixture in production — the XLSX importer exists as a stub. The frontend uses vanilla CSS with Apple HIG tokens and the `api()` helper for cross-domain production calls.
+**Architecture:** The SCF API is already fully built (`/api/v1/scf/*`). The Drizzle repositories handle CRUD for organizations/orgs/assessments/approvals/lifecycle/audit. The SCF catalog runs in-memory from a synthetic fixture in production — the XLSX importer exists as a stub. The frontend uses vanilla CSS with Apple HIG tokens and the `api()` helper for cross-domain production calls.
 
 **Tech Stack:** React 19 + Vite, Vanilla CSS (Apple HIG tokens), Standard Native Auth, Cloudflare Workers + Pages, Drizzle ORM + Neon PostgreSQL, `packages/scf-core`
 
@@ -270,7 +270,7 @@ Replace the `<div style={{ display: "flex", ...}}>` header with:
 <div className="page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
   <div>
     <h1 className="page-title">Organizations</h1>
-    <p className="page-subtitle">Manage tenant organizations and access</p>
+    <p className="page-subtitle">Manage organization organizations and access</p>
   </div>
   {/* existing button */}
 </div>

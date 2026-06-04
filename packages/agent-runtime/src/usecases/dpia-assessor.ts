@@ -5,7 +5,7 @@ import type { RopaAnalysisOutput } from "./ropa-analyzer";
 export type DpiaAssessorInput = {
   ropaContext: RopaAnalysisOutput;
   projectDescription: string;
-  tenantId: string;
+  organizationId: string;
 };
 
 export type DpiaAssessorOutput = {

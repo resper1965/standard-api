@@ -9,7 +9,7 @@ export const healthRoutes: RouteDefinition[] = [
     handler: async ({ traceId, deps }) => {
       let dbStatus = "unknown";
       try {
-        await deps.organizations.get("00000000-0000-0000-0000-000000000000", "00000000-0000-0000-0000-000000000000");
+        await deps.organizations.get("00000000-0000-0000-0000-000000000000");
         dbStatus = "connected";
       } catch (error) {
         dbStatus = "disconnected";
@@ -91,7 +91,6 @@ export const healthRoutes: RouteDefinition[] = [
       let dbStatus = "unknown";
       try {
         await deps.organizations.get(
-          "00000000-0000-0000-0000-000000000000",
           "00000000-0000-0000-0000-000000000000"
         );
         dbStatus = "connected";

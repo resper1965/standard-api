@@ -4,7 +4,7 @@ title: "Modelo de Dados Transacional"
 
 # Modelo de Dados Transacional
 
-Este documento descreve o modelo transacional consolidado para o Enterprise-Grade MVP do `standard-api-standard`. O PostgreSQL externo/gerenciado via Drizzle ORM é a fonte crítica e central para tenants, organizações, gestão unificada de Auth/RBAC, assessments, estado, aprovações, achados, versionamento, rastreabilidade e auditoria interativa dos agentes. R2 armazena objetos binários brutos; Vectorize armazena embeddings vetoriais de LLM; o PostgreSQL guarda metadados estruturados, chaves simétricas e logs transacionais.
+Este documento descreve o modelo transacional consolidado para o Enterprise-Grade MVP do `standard-api-standard`. O PostgreSQL externo/gerenciado via Drizzle ORM é a fonte crítica e central para organizations, organizações, gestão unificada de Auth/RBAC, assessments, estado, aprovações, achados, versionamento, rastreabilidade e auditoria interativa dos agentes. R2 armazena objetos binários brutos; Vectorize armazena embeddings vetoriais de LLM; o PostgreSQL guarda metadados estruturados, chaves simétricas e logs transacionais.
 ## Visão Geral
 
 O modelo foi organizado em domínios:
@@ -30,7 +30,7 @@ Implementação:
 ## Relações Principais
 
 ```text
-tenant
+organization
   -> organizations
   -> memberships -> users + roles
   -> assessments
@@ -57,9 +57,9 @@ scf_versions
 
 ## Multi-Tenancy
 
-Toda tabela com dados de cliente carrega `tenant_id`. Entidades críticas do lifecycle carregam também `organization_id` e `assessment_id` quando aplicável. Isso inclui documentos, chunks, evidências, gaps, maturidade, POA&M, agent runs, relatórios, auditoria e links de rastreabilidade.
+Toda tabela com dados de cliente carrega `organization_id`. Entidades críticas do lifecycle carregam também `organization_id` e `assessment_id` quando aplicável. Isso inclui documentos, chunks, evidências, gaps, maturidade, POA&M, agent runs, relatórios, auditoria e links de rastreabilidade.
 
-As tabelas SCF globais não possuem `tenant_id`, porque representam base normativa compartilhada. Elas são versionadas por `scf_version_id`. O vínculo entre dados de cliente e base normativa acontece por IDs relacionais, como `scf_control_id`, `scf_framework_id` e `scf_framework_requirement_id`.
+As tabelas SCF globais não possuem `organization_id`, porque representam base normativa compartilhada. Elas são versionadas por `scf_version_id`. O vínculo entre dados de cliente e base normativa acontece por IDs relacionais, como `scf_control_id`, `scf_framework_id` e `scf_framework_requirement_id`.
 
 ## Versionamento de Artefatos
 
@@ -81,7 +81,7 @@ Cada tabela usa `version_number` e `status` controlado por `artifact_status`: `d
 
 `gap_findings` carrega diretamente os principais IDs de rastreabilidade:
 
-- `tenant_id`
+- `organization_id`
 - `organization_id`
 - `assessment_id`
 - `framework_requirement_id`
@@ -128,7 +128,7 @@ Vetores não são armazenados no PostgreSQL. `vector_references` guarda apenas `
 
 `poam_items` registra ação corretiva, tipo de ação, prioridade, severidade, risk rating, esforço, owner sugerido ou papel responsável, data alvo, evidência esperada, critérios de aceitação, status e validação humana. Cada item aponta para `related_gap_finding_id` e preserva `soa_item_id`, `framework_requirement_id`, `scf_control_id`, `scf_domain_id`, `framework_id` e `scf_version_id` quando disponíveis.
 
-`poam_milestones` registra marcos vinculados a cada item, com due date, status, evidência esperada e critério de aceite. `poam_dependencies` registra dependências entre itens do mesmo tenant/assessment ou dependências externas descritas.
+`poam_milestones` registra marcos vinculados a cada item, com due date, status, evidência esperada e critério de aceite. `poam_dependencies` registra dependências entre itens do mesmo organization/assessment ou dependências externas descritas.
 
 ## Reporting e Exports
 
@@ -140,7 +140,7 @@ Vetores não são armazenados no PostgreSQL. `vector_references` guarda apenas `
 
 ## Agentes e Agent Runs
 
-`agent_runs` registra metadados de execução: agente, versão, provider/modelo, prompt version, hashes de input/output, confiança, status, timestamps e `trace_id`. `agent_decisions` registra decisões, premissas, limitações, fontes e confiança. `agent_tool_calls` registra uso de tools com escopo de tenant/assessment, risco, hashes de input/output, status e `trace_id`.
+`agent_runs` registra metadados de execução: agente, versão, provider/modelo, prompt version, hashes de input/output, confiança, status, timestamps e `trace_id`. `agent_decisions` registra decisões, premissas, limitações, fontes e confiança. `agent_tool_calls` registra uso de tools com escopo de organization/assessment, risco, hashes de input/output, status e `trace_id`.
 
 A rastreabilidade dos outputs dos LLMs já está ativamente capturada pela abstração `Repositories` da API Gateway e armazenada fielmente. Eventos de Agentes estão persistindo suas assinaturas de confiança.
 ## Decisões de Modelagem

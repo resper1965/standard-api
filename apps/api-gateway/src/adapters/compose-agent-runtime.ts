@@ -18,7 +18,13 @@ export const composeDrizzleAgentRuntime = (db: DbClient, env?: Env): AgentRuntim
           baseUrl: env.AI_GATEWAY_BASE_URL,
           apiKey: env.OPENAI_API_KEY,
           ...(env.AI_GATEWAY_TOKEN ? { gatewayToken: env.AI_GATEWAY_TOKEN } : {}),
+          metadata: { source: "api-gateway" },
         })
-      : createInMemoryAgentRuntimeDependencies().llm
+      : (() => {
+          console.warn(
+            "[standard:agent-runtime] ⚠️ AI_GATEWAY_BASE_URL or OPENAI_API_KEY missing. Using MOCK LLM — all AI responses will be empty."
+          );
+          return createInMemoryAgentRuntimeDependencies().llm;
+        })()
   ),
 });

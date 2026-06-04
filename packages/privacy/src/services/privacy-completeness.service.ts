@@ -46,20 +46,20 @@ const privacyCompletenessAnalyzer = createCompletenessAnalyzer<PrivacyActivityRe
 export class PrivacyCompletenessService {
   constructor(private readonly deps: PrivacyDependencies) {}
 
-  async analyze(activityId: string, tenantId: string): Promise<CompletenessResult> {
-    const activity = await this.deps.repositories.activities.get(activityId, tenantId);
+  async analyze(activityId: string, organizationId: string): Promise<CompletenessResult> {
+    const activity = await this.deps.repositories.activities.get(activityId, organizationId);
     if (!activity) {
       throw new PrivacyError("ACTIVITY_NOT_FOUND", `Activity ${activityId} not found.`);
     }
 
     const [dataSubjects, dataCategories, thirdParties, fieldReviews, screenings, scfControls] =
       await Promise.all([
-        this.deps.repositories.dataSubjects.listByActivity(activityId, tenantId),
-        this.deps.repositories.dataCategories.listByActivity(activityId, tenantId),
-        this.deps.repositories.thirdParties.listByActivity(activityId, tenantId),
-        this.deps.repositories.fieldReviews.listByActivity(activityId, tenantId),
-        this.deps.repositories.screenings.listByActivity(activityId, tenantId),
-        this.deps.repositories.scfControls.listByActivity(activityId, tenantId),
+        this.deps.repositories.dataSubjects.listByActivity(activityId, organizationId),
+        this.deps.repositories.dataCategories.listByActivity(activityId, organizationId),
+        this.deps.repositories.thirdParties.listByActivity(activityId, organizationId),
+        this.deps.repositories.fieldReviews.listByActivity(activityId, organizationId),
+        this.deps.repositories.screenings.listByActivity(activityId, organizationId),
+        this.deps.repositories.scfControls.listByActivity(activityId, organizationId),
       ]);
 
     return privacyCompletenessAnalyzer.analyze({

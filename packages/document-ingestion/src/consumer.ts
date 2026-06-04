@@ -15,8 +15,8 @@ export const processDocumentIngestionJob = async (
   nowFactory: () => string = () => new Date().toISOString()
 ): Promise<void> => {
   const now = nowFactory();
-  const job = await deps.repositories.jobs.getJob(message.job_id, message.tenant_id);
-  const document = await deps.repositories.documents.getDocument(message.document_id, message.tenant_id);
+  const job = await deps.repositories.jobs.getJob(message.job_id, message.organization_id);
+  const document = await deps.repositories.documents.getDocument(message.document_id, message.organization_id);
   if (!job || !document) {
     throw new Error("Ingestion job or document not found.");
   }
@@ -24,7 +24,6 @@ export const processDocumentIngestionJob = async (
   await deps.repositories.jobs.updateJob({ ...job, status: "running", started_at: now, attempt_count: job.attempt_count + 1 });
   await deps.repositories.documents.updateDocument({ ...document, status: "extracting" });
   await deps.repositories.audit.record("document_extraction_started", {
-    tenant_id: message.tenant_id,
     organization_id: message.organization_id,
     assessment_id: message.assessment_id,
     document_id: message.document_id,
@@ -52,7 +51,6 @@ export const processDocumentIngestionJob = async (
     const chunks = await chunkExtractedDocument({
       extracted,
       config: deps.chunking,
-      tenantId: message.tenant_id,
       organizationId: message.organization_id,
       assessmentId: message.assessment_id,
       documentId: message.document_id,
@@ -64,7 +62,6 @@ export const processDocumentIngestionJob = async (
 
     const references: VectorReferenceResponse[] = chunks.map((chunk) => ({
       vector_reference_id: idFactory(),
-      tenant_id: message.tenant_id,
       organization_id: message.organization_id,
       assessment_id: message.assessment_id,
       document_id: message.document_id,
@@ -82,7 +79,6 @@ export const processDocumentIngestionJob = async (
     for (const chunk of chunks) {
       await deps.queue.enqueueKbEmbeddingJob({
         job_id: idFactory(),
-        tenant_id: message.tenant_id,
         organization_id: message.organization_id,
         assessment_id: message.assessment_id,
         document_id: message.document_id,
@@ -95,7 +91,6 @@ export const processDocumentIngestionJob = async (
     await deps.repositories.documents.updateDocument({ ...document, status: "queued_for_embedding" });
     await deps.repositories.jobs.updateJob({ ...job, status: "succeeded", attempt_count: job.attempt_count + 1, started_at: now, completed_at: nowFactory() });
     await deps.repositories.audit.record("document_chunking_completed", {
-      tenant_id: message.tenant_id,
       organization_id: message.organization_id,
       assessment_id: message.assessment_id,
       document_id: message.document_id,
@@ -116,7 +111,6 @@ export const processDocumentIngestionJob = async (
       error_message_safe: safeError(error)
     });
     await deps.repositories.audit.record("document_ingestion_failed", {
-      tenant_id: message.tenant_id,
       organization_id: message.organization_id,
       assessment_id: message.assessment_id,
       document_id: message.document_id,

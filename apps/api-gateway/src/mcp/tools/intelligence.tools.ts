@@ -41,7 +41,7 @@ export async function handleCalculateBlastRadius(
 // ── ROI Path ────────────────────────────────────────────────────────────────
 export async function handleCalculateRoiPath(
   args: Record<string, unknown>,
-  _ctx: RequestContext
+  ctx: RequestContext
 ): Promise<McpToolResult> {
   try {
     const targetFramework = args["target_framework"] as string;
@@ -57,7 +57,9 @@ export async function handleCalculateRoiPath(
     const topN = Math.min(Number(args["top_n"] ?? 10), 50);
 
     const implementedSet = new Set(implemented);
-    const requiredControls = IntelligenceService.extractFrameworkControls(targetFramework);
+    // Use DB-backed instance method instead of static (which only knows LGPD/GDPR)
+    const service = new IntelligenceService(ctx.deps);
+    const requiredControls = await service.getControlsForFramework(targetFramework);
     const missingControls = Array.from(requiredControls).filter(c => !implementedSet.has(c));
 
     // Calculate ROI topological score
@@ -113,7 +115,7 @@ export async function handleCalculateRoiPath(
 // ── Compliance Score ────────────────────────────────────────────────────────
 export async function handleCalculateComplianceScore(
   args: Record<string, unknown>,
-  _ctx: RequestContext
+  ctx: RequestContext
 ): Promise<McpToolResult> {
   try {
     const regulationId = args["regulation_id"] as string;
@@ -130,7 +132,9 @@ export async function handleCalculateComplianceScore(
     if (!regulation) return err(`Regulation '${regulationId}' not found.`);
 
     const implementedSet = new Set(implemented);
-    const requiredControls = IntelligenceService.extractFrameworkControls(regulationId);
+    // Use DB-backed instance method instead of static (which only knows LGPD/GDPR)
+    const service = new IntelligenceService(ctx.deps);
+    const requiredControls = await service.getControlsForFramework(regulationId);
 
     const missingControls: string[] = [];
     let implementedCount = 0;
@@ -255,7 +259,7 @@ export async function handleCheckBreachSla(
 // ── Cross-Coverage ──────────────────────────────────────────────────────────
 export async function handleCalculateCrossCoverage(
   args: Record<string, unknown>,
-  _ctx: RequestContext
+  ctx: RequestContext
 ): Promise<McpToolResult> {
   try {
     const sourceFramework = args["source_framework"] as string;
@@ -270,7 +274,9 @@ export async function handleCalculateCrossCoverage(
         : [];
 
     const implementedSet = new Set(implemented);
-    const targetControls = IntelligenceService.extractFrameworkControls(targetFramework);
+    // Use DB-backed instance method instead of static (which only knows LGPD/GDPR)
+    const service = new IntelligenceService(ctx.deps);
+    const targetControls = await service.getControlsForFramework(targetFramework);
     const totalTarget = targetControls.size;
 
     let sharedImplementation = 0;

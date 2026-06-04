@@ -12,22 +12,22 @@ export const resolveReportSources = async (
   options: CreateReportDraftOptions,
   context: ReportingContext
 ) => {
-  const soaVersions = await deps.soa.repositories.versions.listByAssessment(assessmentId, context.tenantId);
-  const gapVersions = await deps.gapAnalysis.repositories.gapVersions.listByAssessment(assessmentId, context.tenantId);
-  const poamVersions = deps.poam ? await deps.poam.repositories.versions.listByAssessment(assessmentId, context.tenantId) : [];
+  const soaVersions = await deps.soa.repositories.versions.listByAssessment(assessmentId, context.organizationId);
+  const gapVersions = await deps.gapAnalysis.repositories.gapVersions.listByAssessment(assessmentId, context.organizationId);
+  const poamVersions = deps.poam ? await deps.poam.repositories.versions.listByAssessment(assessmentId, context.organizationId) : [];
 
   const sourceSoa = options.source_soa_version_id
-    ? await deps.soa.repositories.versions.get(options.source_soa_version_id, context.tenantId)
+    ? await deps.soa.repositories.versions.get(options.source_soa_version_id, context.organizationId)
     : latestApproved(soaVersions);
   const sourceGap = options.source_gap_analysis_version_id
-    ? await deps.gapAnalysis.repositories.gapVersions.get(options.source_gap_analysis_version_id, context.tenantId)
+    ? await deps.gapAnalysis.repositories.gapVersions.get(options.source_gap_analysis_version_id, context.organizationId)
     : latestApproved(gapVersions);
   const sourcePoam = options.source_poam_version_id
-    ? await deps.poam?.repositories.versions.get(options.source_poam_version_id, context.tenantId)
+    ? await deps.poam?.repositories.versions.get(options.source_poam_version_id, context.organizationId)
     : latestApproved(poamVersions);
   const sourceMaturity = options.source_maturity_assessment_version_id
     ? { maturity_assessment_version_id: options.source_maturity_assessment_version_id, status: "approved" as const }
-    : await deps.maturity?.findApprovedByAssessment(assessmentId, context.tenantId);
+    : await deps.maturity?.findApprovedByAssessment(assessmentId, context.organizationId);
 
   const limitations: string[] = [];
   const sourceStatus: Record<string, string> = {};

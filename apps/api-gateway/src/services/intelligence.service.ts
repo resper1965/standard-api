@@ -7,12 +7,12 @@ import { AgentRuntimeService, createDrizzleAgentRuntimeDependencies } from "@sta
 export class IntelligenceService {
   constructor(private readonly deps?: AppDependencies) {}
 
-  async getJobStatus(jobId: string, tenantId: string) {
+  async getJobStatus(jobId: string, organizationId: string) {
     if (!this.deps || !this.deps.agentRuntime) {
        throw new Error("Agent Runtime dependency required to fetch job status.");
     }
     const run = await this.deps.agentRuntime.runs.get(jobId);
-    if (run && run.tenant_id !== tenantId) return null;
+    if (run && run.organization_id !== organizationId) return null;
     return run;
   }
 

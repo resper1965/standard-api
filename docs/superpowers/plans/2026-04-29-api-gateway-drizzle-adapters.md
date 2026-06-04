@@ -19,14 +19,14 @@ Adicionar `drizzle-orm` e `@neondatabase/serverless` localmente no gateway packa
 - [ ] **Step 2: Drizzle Edge Connection**
 Instanciar a pipeline exportando um construtor `createDb(databaseUrl: string)` baseado no wrapper `@neondatabase/serverless` encapsulando as tabelas e schemas do `@standard/schemas`.
 
-### Task 2: Refatoração dos Repositórios Core (Tenants e Instâncias Mestre)
+### Task 2: Refatoração dos Repositórios Core (Organizations e Instâncias Mestre)
 
 **Files:**
-- Modify: `c:/Users/resper/OneDrive/Área de Trabalho/standard-api/apps/api-gateway/src/adapters/tenant.repository.ts`
+- Modify: `c:/Users/resper/OneDrive/Área de Trabalho/standard-api/apps/api-gateway/src/adapters/organization.repository.ts`
 - Modify: `c:/Users/resper/OneDrive/Área de Trabalho/standard-api/apps/api-gateway/src/adapters/organization.repository.ts`
 
-- [ ] **Step 1: Tenants SQL**
-Transmutar métodos `create`, `get` e `update` para usar o Drizzle `db.insert(tenants)`, `db.select().from(tenants)`, implementando o mapeamento real das tipagens de Edge para Record Objects.
+- [ ] **Step 1: Organizations SQL**
+Transmutar métodos `create`, `get` e `update` para usar o Drizzle `db.insert(organizations)`, `db.select().from(organizations)`, implementando o mapeamento real das tipagens de Edge para Record Objects.
 - [ ] **Step 2: Orgs SQL**
 Idem para as Organizations.
 

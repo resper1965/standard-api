@@ -14,7 +14,6 @@ import { generateText, tool, stepCountIs, type ToolSet, type GenerateTextResult 
 import { z } from "zod";
 
 type ToolExecuteArgs = {
-  tenant_id: string;
   organization_id: string;
   assessment_id: string;
   trace_id: string;
@@ -61,12 +60,11 @@ export class AgentExecutor {
   /**
    * Resumes an existing (queued) functional agent run.
    */
-  async resumeRun(agentRunId: string, tenantId: string): Promise<AgentRunResponse> {
-    const run = await this.runtimeService.getRun(agentRunId, tenantId);
+  async resumeRun(agentRunId: string, organizationId: string): Promise<AgentRunResponse> {
+    const run = await this.runtimeService.getRun(agentRunId, organizationId);
     if (!run) throw new AgentRuntimeError("NOT_FOUND", "Agent run not found");
 
     const context: AgentRuntimeContext = {
-      tenant_id: run.tenant_id,
       organization_id: run.organization_id,
       assessment_id: run.assessment_id,
       framework_id: String((run.metadata as Record<string, unknown>)?.framework_id ?? "00000000-0000-0000-0000-000000000000"),
@@ -181,7 +179,6 @@ You must fulfill the task using provided tools. If you use tools, analyze the ou
       tools[tc.tool_name] = tool({
         description: tc.description,
         inputSchema: z.object({
-          tenant_id: z.string().describe("UUID of the tenant"),
           organization_id: z.string().describe("UUID of the organization"),
           assessment_id: z.string().describe("UUID of the current assessment"),
           trace_id: z.string().describe("Trace ID for observability"),

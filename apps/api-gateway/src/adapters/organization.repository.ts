@@ -13,25 +13,25 @@ export const createOrganizationRepository = (): OrganizationRepositoryAdapter =>
       records.set(record.organization_id, record);
       return record;
     },
-    async get(organizationId, _tenantId) {
+    async get(organizationId) {
       return records.get(organizationId) ?? null;
     },
-    async update(organizationId, _tenantId, patch) {
+    async update(organizationId, patch) {
       const existing = records.get(organizationId);
       if (!existing) return null;
       const updated = { ...existing, ...patch };
       records.set(organizationId, updated);
       return updated;
     },
-    async listByTenant(_tenantId) {
+    async listByTenant(organizationId) {
       return [...records.values()];
     },
-    withTenant(tenantId) {
+    withOrganization(organizationId) {
       return {
-        create: async (input) => this.create({ ...input, tenant_id: tenantId }),
-        get: async (orgId) => this.get(orgId, tenantId),
-        list: async () => this.listByTenant(tenantId),
-        update: async (orgId, patch) => this.update(orgId, tenantId, patch)
+        create: async (input) => this.create(input),
+        get: async (orgId) => this.get(orgId),
+        list: async () => this.listByTenant(organizationId),
+        update: async (orgId, patch) => this.update(orgId, patch)
       };
     }
   };
@@ -49,14 +49,13 @@ export const createDrizzleOrganizationRepository = (db: DbClient): OrganizationR
       }).returning();
       return {
         organization_id: inserted!.id,
-        tenant_id: inserted!.id,
         slug: inserted!.slug,
         name: inserted!.name,
         status: inserted!.status as "active" | "inactive",
         billing_tier: inserted!.billingTier
       };
     },
-    async get(organizationId, _tenantId) {
+    async get(organizationId) {
       const [found] = await db.select().from(organizations)
         .where(eq(organizations.id, organizationId))
         .limit(1);
@@ -64,25 +63,23 @@ export const createDrizzleOrganizationRepository = (db: DbClient): OrganizationR
 
       return {
         organization_id: found.id,
-        tenant_id: found.id,
         slug: found.slug,
         name: found.name,
         status: found.status as "active" | "inactive",
         billing_tier: found.billingTier
       };
     },
-    async listByTenant(_tenantId) {
+    async listByTenant(organizationId) {
       const results = await db.select().from(organizations);
       return results.map(found => ({
         organization_id: found.id,
-        tenant_id: found.id,
         slug: found.slug,
         name: found.name,
         status: found.status as "active" | "inactive",
         billing_tier: found.billingTier
       }));
     },
-    async update(organizationId, _tenantId, patch) {
+    async update(organizationId, patch) {
       const [updated] = await db.update(organizations)
         .set({
           name: patch.name,
@@ -97,19 +94,18 @@ export const createDrizzleOrganizationRepository = (db: DbClient): OrganizationR
 
       return {
         organization_id: updated.id,
-        tenant_id: updated.id,
         slug: updated.slug,
         name: updated.name,
         status: updated.status as "active" | "inactive",
         billing_tier: updated.billingTier
       };
     },
-    withTenant(tenantId) {
+    withOrganization(organizationId) {
       return {
-        create: async (input) => this.create({ ...input, tenant_id: tenantId }),
-        get: async (orgId) => this.get(orgId, tenantId),
-        list: async () => this.listByTenant(tenantId),
-        update: async (orgId, patch) => this.update(orgId, tenantId, patch)
+        create: async (input) => this.create(input),
+        get: async (orgId) => this.get(orgId),
+        list: async () => this.listByTenant(organizationId),
+        update: async (orgId, patch) => this.update(orgId, patch)
       };
     }
   };

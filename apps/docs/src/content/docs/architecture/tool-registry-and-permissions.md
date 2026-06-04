@@ -47,7 +47,7 @@ O Tool Registry segue princípios de segurança por padrão:
 - nenhum acesso direto a storage;
 - nenhum acesso direto a APIs externas;
 - schema validation obrigatória para input e output;
-- tenant scope obrigatório;
+- organization scope obrigatório;
 - rastreabilidade por `trace_id`.
 
 Regra operacional:
@@ -110,7 +110,7 @@ Exemplos:
 - importação oficial de SCF;
 - alteração de registry global;
 - migração administrativa;
-- configuração de tenant ou política;
+- configuração de organization ou política;
 - operação de retenção/exclusão.
 
 Risco típico: `critical`.
@@ -159,7 +159,7 @@ Campos:
 - `input_schema`: schema validável de entrada.
 - `output_schema`: schema validável de saída.
 - `allowed_agents`: lista explícita de agentes autorizados.
-- `required_context`: campos obrigatórios como `tenant_id`, `organization_id`, `assessment_id`, `trace_id`.
+- `required_context`: campos obrigatórios como `organization_id`, `organization_id`, `assessment_id`, `trace_id`.
 - `side_effects`: descrição de efeitos colaterais, se existirem.
 - `requires_approval`: indica se depende de aprovação humana antes/depois.
 - `reads_from`: fontes lógicas consultadas.
@@ -241,7 +241,7 @@ Resultado de KB = candidate evidence.
 Resultado de KB nunca é fonte normativa.
 ```
 
-KB Tools devem sempre retornar fonte, documento, chunk, hash, `tenant_id`, `organization_id`, `assessment_id` e confidence/relevance quando aplicável.
+KB Tools devem sempre retornar fonte, documento, chunk, hash, `organization_id`, `organization_id`, `assessment_id` e confidence/relevance quando aplicável.
 
 ## 8. SoA Tools
 
@@ -352,7 +352,7 @@ Matriz de permissões:
 Regra de interpretação:
 
 - "Pode usar" não significa uso irrestrito.
-- Toda tool ainda exige contexto válido, schema válido, tenant scope e decisão de runtime.
+- Toda tool ainda exige contexto válido, schema válido, organization scope e decisão de runtime.
 
 ## 15. Enforcement
 
@@ -364,7 +364,7 @@ Valida:
 - tool registrada;
 - contexto válido;
 - categoria permitida;
-- tenant/organization/assessment scope;
+- organization/organization/assessment scope;
 - input schema;
 - risk policy;
 - approval dependency;
@@ -375,7 +375,7 @@ Bloquear:
 - tool não permitida;
 - tool de alto risco;
 - tool fora do contexto;
-- ausência de `tenant_id`;
+- ausência de `organization_id`;
 - ausência de `organization_id`;
 - ausência de `assessment_id`;
 - ausência de `trace_id`;
@@ -459,7 +459,7 @@ Agent Runtime deve:
 - `external_call` → bloqueado por default.
 - `admin` → nunca exposto a agentes.
 - Ausência de contexto → bloqueio.
-- Cross-tenant → bloqueio.
+- Cross-organization → bloqueio.
 - Raw DB query → bloqueio.
 - Direct storage access → bloqueio.
 - KB como fonte normativa → bloqueio lógico.
@@ -488,7 +488,7 @@ Campos mínimos:
 - `tool_name`;
 - `tool_category`;
 - `risk_level`;
-- `tenant_id`;
+- `organization_id`;
 - `organization_id`;
 - `assessment_id`;
 - `trace_id`;
@@ -512,7 +512,7 @@ Logs não devem conter:
 Failure modes críticos:
 
 - agente tenta usar tool proibida;
-- tool retorna dados fora do tenant;
+- tool retorna dados fora do organization;
 - tool sem validação de schema;
 - tool expõe dados sensíveis;
 - tool executa ação indevida;
@@ -530,7 +530,7 @@ Mitigações:
 - testes por categoria;
 - audit event obrigatório;
 - schema validation;
-- tenant guard;
+- organization guard;
 - allowlist por agente;
 - security event em bloqueio.
 
@@ -539,7 +539,7 @@ Mitigações:
 Testes mínimos:
 
 - agente não usa tool proibida;
-- tool respeita tenant;
+- tool respeita organization;
 - tool valida schema;
 - tool bloqueia sem contexto;
 - tool não executa `final_write`;
@@ -563,7 +563,7 @@ Testes de matriz:
 
 - Sem policy dinâmica.
 - Sem runtime adaptive permissions.
-- Sem sandbox por tenant avançado.
+- Sem sandbox por organization avançado.
 - Sem controle fino por contexto semântico.
 - Sem external calls habilitadas por agente.
 - Sem execução real de admin tools pelo Agent Runtime.
@@ -577,7 +577,7 @@ Impacto no projeto: o MVP fica mais conservador e previsível. Isso reduz risco 
 Evoluções possíveis:
 
 - policy engine dinâmico;
-- tool sandboxing por tenant;
+- tool sandboxing por organization;
 - runtime adaptive tool access;
 - scoring de risco por execução;
 - approval-aware tools;
@@ -619,6 +619,6 @@ Definition of done para implementação futura:
 - bloqueio de `final_write`, `admin` e `external_call` para agentes;
 - schema validation em input/output;
 - audit/security events por tool call;
-- tenant isolation validado;
+- organization isolation validado;
 - documentação operacional atualizada quando tool nova for adicionada.
 

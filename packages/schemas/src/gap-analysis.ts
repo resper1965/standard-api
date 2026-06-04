@@ -10,7 +10,6 @@ export const GapSeveritySchema = z.enum(["informational", "low", "medium", "high
 
 export const EvidenceFindingResponseSchema = z.object({
   evidence_finding_id: UuidSchema,
-  tenant_id: UuidSchema,
   organization_id: UuidSchema,
   assessment_id: UuidSchema,
   soa_version_id: UuidSchema,
@@ -32,7 +31,6 @@ export const EvidenceFindingResponseSchema = z.object({
 
 export const EvidenceSourceResponseSchema = z.object({
   evidence_source_id: UuidSchema,
-  tenant_id: UuidSchema,
   organization_id: UuidSchema,
   assessment_id: UuidSchema,
   evidence_finding_id: UuidSchema,
@@ -66,7 +64,6 @@ export const RefreshEvidenceFindingRequestSchema = z.object({
 
 export const GapAnalysisVersionResponseSchema = z.object({
   gap_analysis_version_id: UuidSchema,
-  tenant_id: UuidSchema,
   organization_id: UuidSchema,
   assessment_id: UuidSchema,
   version_number: z.number().int().positive(),
@@ -88,7 +85,6 @@ export const GapAnalysisVersionResponseSchema = z.object({
 
 export const GapFindingResponseSchema = z.object({
   gap_finding_id: UuidSchema,
-  tenant_id: UuidSchema,
   organization_id: UuidSchema,
   assessment_id: UuidSchema,
   gap_analysis_version_id: UuidSchema,

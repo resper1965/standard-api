@@ -11,7 +11,7 @@ import { expect, test } from "./test-kit";
 
 const ids = {
   actorId: "44444444-4444-4444-8444-444444444444",
-  tenantId: "11111111-1111-4111-8111-111111111111",
+  organizationId: "11111111-1111-4111-8111-111111111111",
   otherTenantId: "99999999-9999-4999-8999-999999999999",
   orgId: "22222222-2222-4222-8222-222222222222",
   assessmentId: "33333333-3333-4333-8333-333333333333"
@@ -21,7 +21,7 @@ test("MockAuthProvider cria auth context dev e bloqueia production", async () =>
   const dev = new MockAuthProvider("development");
   const auth = await dev.authenticate({
     actorId: ids.actorId,
-    tenantId: ids.tenantId,
+    organizationId: ids.organizationId,
     traceId: "trace-test-0001",
     roles: ["assessor"]
   });
@@ -34,7 +34,7 @@ test("MockAuthProvider cria auth context dev e bloqueia production", async () =>
   try {
     await new MockAuthProvider("production").authenticate({
       actorId: ids.actorId,
-      tenantId: ids.tenantId,
+      organizationId: ids.organizationId,
       traceId: "trace-test-0001",
       roles: ["assessor"]
     });
@@ -50,7 +50,7 @@ test("PolicyEngine nega permissão ausente e permite role approver", () => {
     auth: {
       actor_id: ids.actorId,
       actor_type: "user",
-      tenant_id: ids.tenantId,
+      organization_id: ids.organizationId,
       organization_ids: [ids.orgId],
       roles: ["assessor"],
       permissions: DEFAULT_ROLE_PERMISSIONS.assessor,
@@ -59,8 +59,7 @@ test("PolicyEngine nega permissão ausente e permite role approver", () => {
       trace_id: "trace-test-0001"
     },
     tenant: {
-      tenant_id: ids.tenantId,
-      organization_id: ids.orgId,
+      organization_id: ids.organizationId,
       source: "header",
       resolved_at: "2026-04-28T20:00:00.000Z",
       trace_id: "trace-test-0001"
@@ -76,7 +75,7 @@ test("PolicyEngine nega permissão ausente e permite role approver", () => {
     auth: {
       actor_id: ids.actorId,
       actor_type: "user",
-      tenant_id: ids.tenantId,
+      organization_id: ids.organizationId,
       organization_ids: [ids.orgId],
       roles: ["approver"],
       permissions: DEFAULT_ROLE_PERMISSIONS.approver,
@@ -85,8 +84,7 @@ test("PolicyEngine nega permissão ausente e permite role approver", () => {
       trace_id: "trace-test-0001"
     },
     tenant: {
-      tenant_id: ids.tenantId,
-      organization_id: ids.orgId,
+      organization_id: ids.organizationId,
       source: "header",
       resolved_at: "2026-04-28T20:00:00.000Z",
       trace_id: "trace-test-0001"
@@ -101,19 +99,17 @@ test("PolicyEngine nega permissão ausente e permite role approver", () => {
 test("TenantGuard bloqueia body tenant divergente e assessment cross-tenant", () => {
   const guard = new TenantGuard();
   const tenant = {
-    tenant_id: ids.tenantId,
-    organization_id: ids.orgId,
+    organization_id: ids.organizationId,
     assessment_id: ids.assessmentId,
     source: "header" as const,
     resolved_at: "2026-04-28T20:00:00.000Z",
     trace_id: "trace-test-0001"
   };
 
-  expect(guard.validateBodyTenant({ tenant_id: ids.tenantId }, tenant).allowed).toBe(true);
-  expect(guard.validateBodyTenant({ tenant_id: ids.otherTenantId }, tenant).reason).toBe("tenant_mismatch");
+  expect(guard.validateBodyTenant({ organization_id: ids.organizationId }, tenant).allowed).toBe(true);
+  expect(guard.validateBodyTenant({ organization_id: ids.otherTenantId }, tenant).reason).toBe("tenant_mismatch");
   expect(guard.validateAssessmentAccess({
-    tenant_id: ids.otherTenantId,
-    organization_id: ids.orgId,
+    organization_id: ids.otherTenantId,
     assessment_id: ids.assessmentId
   }, tenant).reason).toBe("tenant_mismatch");
 });

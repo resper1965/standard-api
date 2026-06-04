@@ -17,7 +17,7 @@ export type ValidationResult = {
 export type ValidationResultWriteDependencies = {
   writeValidation: (input: {
     artifactVersionId: string;
-    tenantId: string;
+    organizationId: string;
     validationType: string;
     isValid: boolean;
     errors: string[];
@@ -27,7 +27,6 @@ export type ValidationResultWriteDependencies = {
 };
 
 export type ValidationResultWriteArgs = {
-  tenant_id: string;
   organization_id: string;
   assessment_id: string;
   trace_id: string;
@@ -46,7 +45,7 @@ export function createValidationResultWriteTool(deps: ValidationResultWriteDepen
     execute: async (args: ValidationResultWriteArgs): Promise<ValidationResultWriteOutput> => {
       const result = await deps.writeValidation({
         artifactVersionId: args.artifact_version_id ?? "",
-        tenantId: args.tenant_id,
+        organizationId: args.organization_id,
         validationType: args.artifact_type ?? "schema_validation",
         isValid: false, // Agent proposes validation — human decides
         errors: [],

@@ -45,7 +45,7 @@ flowchart TB
 classDiagram
     class StandardClient {
         +apiKey: string
-        +tenantId: string
+        +organizationId: string
         +baseUrl: string
         +assessments: AssessmentResource
         +documents: DocumentResource

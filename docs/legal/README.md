@@ -46,7 +46,7 @@ Descreve como a Bekaa coleta, usa e protege dados pessoais na operação da Plat
 
 Rege o relacionamento contratual entre a Bekaa e os clientes da Plataforma Standard. Cobre:
 
-- Licença de uso SaaS por tenant (não transferível)
+- Licença de uso SaaS por organization (não transferível)
 - Obrigações do cliente (dados precisos, credenciais, uso aceitável)
 - Modelo Controlador/Operadora (cliente controla dados de negócio; Bekaa opera)
 - SLA best-effort para MVP; SLA formal em contrato separado

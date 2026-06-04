@@ -20,7 +20,6 @@ export const ScfImportStatisticsSchema = z.object({
 
 export const ScfVersionSchema = z.object({
   id: UuidSchema,
-  tenant_id: UuidSchema.optional(),
   organization_id: UuidSchema.optional(),
   version_label: z.string().min(1),
   release_date: z.string().optional(),
@@ -46,7 +45,6 @@ export const ScfVersionResponseSchema = z.object({
 
 export const ScfDomainSchema = z.object({
   id: UuidSchema,
-  tenant_id: UuidSchema.optional(),
   organization_id: UuidSchema.optional(),
   scf_version_id: UuidSchema,
   domain_code: z.string().min(1),
@@ -62,7 +60,6 @@ export const ScfDomainResponseSchema = ScfDomainSchema.extend({
 
 export const ScfFrameworkSchema = z.object({
   id: UuidSchema,
-  tenant_id: UuidSchema.optional(),
   organization_id: UuidSchema.optional(),
   framework_code: z.string().min(1),
   framework_name: z.string().min(1),
@@ -90,7 +87,6 @@ export const ScfFrameworkResponseSchema = z.object({
 
 export const ScfStructuredControlSchema = z.object({
   id: UuidSchema,
-  tenant_id: UuidSchema.optional(),
   organization_id: UuidSchema.optional(),
   scf_version_id: UuidSchema,
   scf_domain_id: UuidSchema,
@@ -121,7 +117,6 @@ export const ScfControlResponseSchema = z.object({
 
 export const ScfFrameworkRequirementSchema = z.object({
   id: UuidSchema,
-  tenant_id: UuidSchema.optional(),
   organization_id: UuidSchema.optional(),
   scf_framework_id: UuidSchema,
   requirement_code: z.string().min(1),
@@ -146,7 +141,6 @@ export const ScfRequirementResponseSchema = z.object({
 
 export const ScfStructuredMappingSchema = z.object({
   id: UuidSchema,
-  tenant_id: UuidSchema.optional(),
   organization_id: UuidSchema.optional(),
   scf_version_id: UuidSchema,
   scf_framework_id: UuidSchema,
@@ -171,7 +165,6 @@ export const ScfMappingResponseSchema = ScfStructuredMappingSchema.extend({
 
 export const ScfStrmRelationshipSchema = z.object({
   id: UuidSchema,
-  tenant_id: UuidSchema.optional(),
   organization_id: UuidSchema.optional(),
   relationship_type: ScfRelationshipTypeSchema,
   label: z.string(),

@@ -22,6 +22,7 @@ export const organizationsMgmtRoutes: RouteDefinition[] = [
     method: "PATCH",
     path: "/api/v1/organizations/:organizationId",
     protected: true,
+    permissions: ["organization:update"],
     requireActor: true,
     bodySchema: updateOrgInput,
     handler: async (context) => {
@@ -40,7 +41,7 @@ export const organizationsMgmtRoutes: RouteDefinition[] = [
         return json({ error: "No fields to update." }, { status: 400 });
       }
 
-      const tenantDb = context.deps.organizations.withTenant(context.tenantId!);
+      const tenantDb = context.deps.organizations.withOrganization(context.organizationId!);
       const updated = await tenantDb.update(organizationId, patch);
 
       if (!updated) {
@@ -61,6 +62,7 @@ export const organizationsMgmtRoutes: RouteDefinition[] = [
     method: "PATCH",
     path: "/api/v1/organizations/:organizationId/billing",
     protected: true,
+    permissions: ["organization:update"],
     requireActor: true,
     bodySchema: updateBillingInput,
     handler: async (context) => {
@@ -70,7 +72,7 @@ export const organizationsMgmtRoutes: RouteDefinition[] = [
       // Only owners/admins (organization:update) can change billing.
       await assertRbac(context, ["organization:update"]);
 
-      const tenantDb = context.deps.organizations.withTenant(context.tenantId!);
+      const tenantDb = context.deps.organizations.withOrganization(context.organizationId!);
       const updated = await tenantDb.update(organizationId, { billing_tier: body.billing_tier });
 
       if (!updated) {
@@ -96,13 +98,13 @@ export const organizationsMgmtRoutes: RouteDefinition[] = [
     bodySchema: InviteMemberRequestSchema,
     handler: async (context) => {
       const orgId = routeParam(context.params, "organizationId");
-      const org = await context.deps.organizations.get(orgId, context.tenantId!);
+      const org = await context.deps.organizations.get(orgId);
       if (!org) throw new ApiError("NOT_FOUND", "Organization not found.", 404);
 
       const body = context.validatedBody as import("@standard/schemas").InviteMemberRequest;
 
       // Check duplicate via Drizzle
-      const existing = await context.deps.members.listByOrganization(orgId, context.tenantId!);
+      const existing = await context.deps.members.listByOrganization(orgId);
       if (existing.some((m) => m.email === body.email)) {
         throw new ApiError("CONFLICT", `Member with email ${body.email} already exists.`, 409);
       }
@@ -111,7 +113,6 @@ export const organizationsMgmtRoutes: RouteDefinition[] = [
       const now = new Date().toISOString();
       const membership = await context.deps.members.create({
         membership_id: crypto.randomUUID(),
-        tenant_id: context.tenantId!,
         organization_id: orgId,
         user_id: null,
         email: body.email,
@@ -122,7 +123,6 @@ export const organizationsMgmtRoutes: RouteDefinition[] = [
       });
 
       await context.deps.audit.record("member.invited", {
-        tenant_id: context.tenantId,
         organization_id: orgId,
         email: body.email,
         role: body.role,

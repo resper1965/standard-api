@@ -31,7 +31,7 @@ All protected endpoints require authentication via one of:
 | API Key (M2M) | `Authorization` | `Bearer standard_live_<key>` |
 | Browser Session | Cookie | `standard-native-auth.session_token=<token>` |
 
-**Tenant context** is natively derived from your M2M API Key. To target a specific organization within your Root Tenant, pass the `organization_id` in the URL or query where applicable.
+**Organization context** is natively derived from your M2M API Key. To target a specific organization within your Root Organization, pass the `organization_id` in the URL or query where applicable.
 
 ### Example: Authenticated Request
 
@@ -121,7 +121,7 @@ All endpoints are prefixed with `/api/v1`.
 
 ### Audit Trail
 - `GET /api/v1/assessments/{id}/audit-logs` — Assessment-level audit events
-- `GET /api/v1/audit-logs` — Root Tenant-wide audit events. Query: `?action=&actor_id=&resource_type=&since=&until=&limit=`
+- `GET /api/v1/audit-logs` — Root Organization-wide audit events. Query: `?action=&actor_id=&resource_type=&since=&until=&limit=`
 - `GET /api/v1/organizations/{id}/audit-logs` — Org-level audit events. Same query params.
 
 ### Member Management (RBAC)
@@ -154,7 +154,7 @@ All endpoints are prefixed with `/api/v1`.
 - `GET /api/v1/webhooks/{id}/deliveries` — Delivery log
 
 ### Intelligence Council
-- `POST /api/v1/intelligence/council` — Dispatch asynchronous multi-agent evaluation. Body requires `{ tenant_id, context, agents: string[] }`. Returns `202 Accepted` with `{ job_id }`.
+- `POST /api/v1/intelligence/council` — Dispatch asynchronous multi-agent evaluation. Body requires `{ organization_id, context, agents: string[] }`. Returns `202 Accepted` with `{ job_id }`.
 
 ### Jobs
 - `GET /api/v1/jobs/{id}` — Poll for the status of an asynchronous job (e.g. Council). Returns `{ status, output, progress }`.

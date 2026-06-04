@@ -37,11 +37,13 @@ export const intelligenceRoutes: RouteDefinition[] = [
     authRequired: true,
     tenantRequired: false, // Core rules engine is tenant agnostic
     bodySchema: GapAnalysisRequestSchema,
-    handler: async ({ request, validatedBody, traceId }) => {
+    handler: async ({ request, validatedBody, traceId, deps }) => {
       const locale = new URL(request.url).searchParams.get("locale") || "pt";
       const body = validatedBody as z.infer<typeof GapAnalysisRequestSchema>;
 
-      const metrics = IntelligenceService.calculateGapAnalysis(body.framework_mask, body.scf_controls_implemented);
+      // Use DB-backed async method instead of static (which only knows LGPD/GDPR)
+      const service = new IntelligenceService(deps);
+      const metrics = await service.calculateGapAnalysisAsync(body.framework_mask, body.scf_controls_implemented);
 
       const result = {
         framework: body.framework_mask,
@@ -132,7 +134,7 @@ export const intelligenceRoutes: RouteDefinition[] = [
       authRequired: true,
       tenantRequired: false,
       bodySchema: ComplianceScoreRequestSchema,
-      handler: async ({ request, validatedBody, traceId }) => {
+      handler: async ({ request, validatedBody, traceId, deps }) => {
         const locale = new URL(request.url).searchParams.get("locale") || "pt";
         const body = validatedBody as z.infer<typeof ComplianceScoreRequestSchema>;
 
@@ -140,7 +142,9 @@ export const intelligenceRoutes: RouteDefinition[] = [
         if (!regulation) throw new ApiError("NOT_FOUND", "Regulation not found.", 404);
 
         const implementedSet = new Set(body.scf_controls_implemented);
-        const requiredControls = IntelligenceService.extractFrameworkControls(body.regulation_id);
+        // Use DB-backed instance method instead of static (which only knows LGPD/GDPR)
+        const service = new IntelligenceService(deps);
+        const requiredControls = await service.getControlsForFramework(body.regulation_id);
 
         const missingControls: string[] = [];
         let implementedCount = 0;
@@ -381,7 +385,7 @@ export const intelligenceRoutes: RouteDefinition[] = [
         agents: z.array(z.string()).min(1),
         input: z.record(z.string(), z.unknown()).default({})
       }),
-      handler: async ({ request, validatedBody, traceId, tenantId, organizationId, deps }) => {
+      handler: async ({ request, validatedBody, traceId, organizationId, deps }) => {
           const body = validatedBody as { assessment_id: string; target_framework_id: string; agents: any[]; input: Record<string, unknown> };
           
           if (!deps.agentRuntime) {
@@ -407,7 +411,6 @@ export const intelligenceRoutes: RouteDefinition[] = [
           const council = new CouncilOrchestrator(runtimeService, executor);
 
           const job = await council.startCouncilDetached({
-              tenant_id: tenantId!,
               organization_id: organizationId || "00000000-0000-0000-0000-000000000000",
               assessment_id: body.assessment_id,
               target_framework_id: body.target_framework_id,
@@ -421,7 +424,7 @@ export const intelligenceRoutes: RouteDefinition[] = [
                   id: job.run_id,
                   params: {
                       runId: job.run_id,
-                      tenantId: tenantId!,
+                      organizationId: organizationId!,
                       agents: body.agents,
                       inputData: body.input
                   }
@@ -429,7 +432,7 @@ export const intelligenceRoutes: RouteDefinition[] = [
           } else if (deps.AGENT_RUN_QUEUE) {
               await deps.AGENT_RUN_QUEUE.send({
                   agent_run_id: job.run_id,
-                  tenant_id: tenantId!,
+                  organization_id: organizationId!,
                   assessment_id: body.assessment_id
               });
           }

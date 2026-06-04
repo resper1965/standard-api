@@ -41,8 +41,8 @@ const resolveLimit = (route: string): RateLimitConfig => {
 /**
  * Builds a unique rate-limit key: tenant:actor:route-category:window
  */
-const buildKey = (tenantId: string | undefined, actorId: string | undefined, route: string, windowSeconds: number): string => {
-  const t = tenantId ?? "anonymous";
+const buildKey = (organizationId: string | undefined, actorId: string | undefined, route: string, windowSeconds: number): string => {
+  const t = organizationId ?? "anonymous";
   const a = actorId ?? "anonymous";
   const window = Math.floor(Date.now() / (windowSeconds * 1000));
   const routeCategory = Object.keys(ROUTE_LIMITS).find((pattern) => route.includes(pattern)) ?? "default";
@@ -93,7 +93,7 @@ export const assertRateLimit = async (
   }
 
   const config = resolveLimit(route);
-  const key = buildKey(context.tenantId, context.actorId, route, config.windowSeconds);
+  const key = buildKey(context.organizationId, context.actorId, route, config.windowSeconds);
   const counter = getOrCreateCounter(key, config.windowSeconds);
 
   // Check limit in-memory (0ms, no I/O)
@@ -102,7 +102,7 @@ export const assertRateLimit = async (
     
     await context.deps.audit.record("security_rate_limit_exceeded", {
       route,
-      tenant_id: context.tenantId,
+      organization_id: context.organizationId,
       actor_id: context.actorId,
       trace_id: context.traceId,
       current_count: counter.count,
@@ -114,7 +114,7 @@ export const assertRateLimit = async (
     if (context.deps.SOC_TRIAGE_QUEUE) {
       const sendOp = context.deps.SOC_TRIAGE_QUEUE.send({
         job_id: crypto.randomUUID(),
-        tenantId: context.tenantId ?? "system",
+        organizationId: context.organizationId ?? "system",
         traceId: context.traceId,
         systemModuleName: "API Gateway - WAF/Rate Limiter",
         rawLogsExcerpt: `[Rate Limiting Block] Endpoint: ${route} breached quota. \nActor: ${context.actorId ?? 'anon'}\nIP: ${ip}\nCount: ${counter.count}/${config.maxRequests} per ${config.windowSeconds}s.\nAction: HTTP 429 triggered. Possible Unrestricted Resource Consumption attack.`

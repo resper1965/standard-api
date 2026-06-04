@@ -6,7 +6,7 @@ import type { AuthContext, Role } from "@standard/schemas";
  */
 export type AuthenticateInput = {
   actorId?: string | undefined;
-  tenantId?: string | undefined;
+  organizationId?: string | undefined;
   organizationIds?: string[] | undefined;
   roles?: Role[] | undefined;
   permissions?: AuthContext["permissions"] | undefined;

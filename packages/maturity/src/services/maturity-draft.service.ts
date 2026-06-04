@@ -20,7 +20,7 @@ export const createMaturityDraft = async (
   deps: MaturityDependencies
 ): Promise<{ version: MaturityAssessmentVersion; scores: MaturityScore[]; summary: MaturitySummary }> => {
   // 1. Get approved gap analysis
-  const gapResult = await deps.getApprovedGapAnalysis(ctx.assessmentId, ctx.tenantId);
+  const gapResult = await deps.getApprovedGapAnalysis(ctx.assessmentId, ctx.organizationId);
   if (!gapResult) {
     throw new MaturityError(
       "NO_APPROVED_GAP_ANALYSIS",
@@ -30,7 +30,7 @@ export const createMaturityDraft = async (
   }
 
   // 2. Determine next version number
-  const existingVersions = await deps.repositories.versions.listByAssessment(ctx.assessmentId, ctx.tenantId);
+  const existingVersions = await deps.repositories.versions.listByAssessment(ctx.assessmentId, ctx.organizationId);
   const nextVersionNumber = existingVersions.length > 0
     ? Math.max(...existingVersions.map(v => v.versionNumber)) + 1
     : 1;
@@ -38,7 +38,6 @@ export const createMaturityDraft = async (
   // 3. Create version record
   const version: MaturityAssessmentVersion = {
     id: crypto.randomUUID(),
-    tenantId: ctx.tenantId,
     organizationId: ctx.organizationId,
     assessmentId: ctx.assessmentId,
     versionNumber: nextVersionNumber,
@@ -99,7 +98,6 @@ export const createMaturityDraft = async (
 
     return {
       id: crypto.randomUUID(),
-      tenantId: ctx.tenantId,
       organizationId: ctx.organizationId,
       assessmentId: ctx.assessmentId,
       maturityAssessmentVersionId: version.id,

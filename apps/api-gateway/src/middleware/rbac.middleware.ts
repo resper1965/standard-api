@@ -38,7 +38,7 @@ export const requirePlatformAdmin = async (context: RequestContext): Promise<voi
 
   // Record the unauthorized attempt before throwing.
   await new SecurityEventService(context.deps.observability).record({
-    tenant_id: context.tenantId,
+    organization_id: context.organizationId,
     actor_id: context.actorId,
     event_type: "forbidden_access_attempt",
     severity: "high",
@@ -102,7 +102,7 @@ export const assertRbac = async (context: RequestContext, requiredPermissions: P
   if (!allowed) {
     await context.deps.audit.record("security_permission_denied", {
       actor_id: context.actorId,
-      tenant_id: context.tenantId,
+      organization_id: context.organizationId,
       trace_id: context.traceId,
       reason,
       required_permissions: requiredPermissions
@@ -110,9 +110,9 @@ export const assertRbac = async (context: RequestContext, requiredPermissions: P
     
     const isApprovalBypass = requiredPermissions.some((permission) => permission.includes(":approve"));
 
-    if (isApprovalBypass && context.deps.alerts && context.tenantId && context.params.assessmentId) {
+    if (isApprovalBypass && context.deps.alerts && context.organizationId && context.params.assessmentId) {
       void context.deps.alerts.fireApprovalBypass({
-        tenantId: context.tenantId,
+        organizationId: context.organizationId,
         assessmentId: context.params.assessmentId,
         artifactType: "assessment_state",
         traceId: context.traceId,
@@ -120,8 +120,7 @@ export const assertRbac = async (context: RequestContext, requiredPermissions: P
       });
     } else {
       await new SecurityEventService(context.deps.observability).record({
-        tenant_id: context.tenantId,
-        organization_id: context.securityTenant?.organization_id,
+        organization_id: context.organizationId ?? context.securityTenant?.organization_id,
         assessment_id: context.params.assessmentId,
         actor_id: context.actorId,
         event_type: isApprovalBypass ? "approval_permission_denied" : "forbidden_access_attempt",
@@ -150,10 +149,10 @@ export const assertRbac = async (context: RequestContext, requiredPermissions: P
  * Use on any route that writes or reads tenant-scoped data (assessments, KB, etc.).
  */
 const requireOrganizationContext = async (context: RequestContext): Promise<void> => {
-  if (context.organizationId && context.tenantId) return;
+  if (context.organizationId && context.organizationId) return;
 
   await new SecurityEventService(context.deps.observability).record({
-    tenant_id: context.tenantId,
+    organization_id: context.organizationId,
     actor_id: context.actorId,
     event_type: "forbidden_access_attempt",
     severity: "medium",

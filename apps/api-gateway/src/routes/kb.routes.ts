@@ -5,11 +5,10 @@ import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";
 import { json, parseJson, routeParam } from "../http";
 
-const getAssessmentContext = async (deps: Parameters<RouteDefinition["handler"]>[0]["deps"], assessmentId: string, tenantId: string) => {
-  const assessment = await deps.assessments.withTenant(tenantId).get(assessmentId);
+const getAssessmentContext = async (deps: Parameters<RouteDefinition["handler"]>[0]["deps"], assessmentId: string, organizationId: string) => {
+  const assessment = await deps.assessments.withOrganization(organizationId).get(assessmentId);
   if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
   return {
-    tenantId: assessment.tenant_id,
     organizationId: assessment.organization_id,
     assessmentId: assessment.assessment_id
   };
@@ -27,8 +26,8 @@ export const kbRoutes: RouteDefinition[] = [
     protected: true,
     requireActor: true,
     permissions: ["kb:index"],
-    handler: async ({ request, deps, params, tenantId, actorId, traceId }) => {
-      const assessmentContext = await getAssessmentContext(deps, routeParam(params, "assessmentId"), tenantId!);
+    handler: async ({ request, deps, params, organizationId, actorId, traceId }) => {
+      const assessmentContext = await getAssessmentContext(deps, routeParam(params, "assessmentId"), organizationId!);
       const body = await parseJson(request, KbIndexRequestSchema);
       const service = new KbIndexingService(deps.kb);
       const result = await service.indexAssessment({
@@ -43,9 +42,10 @@ export const kbRoutes: RouteDefinition[] = [
     method: "GET",
     path: "/api/v1/assessments/:assessmentId/kb/indexing-jobs",
     protected: true,
-    handler: async ({ deps, params, tenantId, traceId }) => {
-      const assessment = await getAssessmentContext(deps, routeParam(params, "assessmentId"), tenantId!);
-      const jobs = await deps.kb.repositories.embeddingJobs.listJobsByAssessment(assessment.assessmentId, tenantId!);
+    permissions: ["kb:read"],
+    handler: async ({ deps, params, organizationId, traceId }) => {
+      const assessment = await getAssessmentContext(deps, routeParam(params, "assessmentId"), organizationId!);
+      const jobs = await deps.kb.repositories.embeddingJobs.listJobsByAssessment(assessment.assessmentId, organizationId!);
       return json({ data: jobs, trace_id: traceId });
     }
   },
@@ -53,8 +53,9 @@ export const kbRoutes: RouteDefinition[] = [
     method: "GET",
     path: "/api/v1/kb/indexing-jobs/:jobId",
     protected: true,
-    handler: async ({ deps, params, tenantId, traceId }) => {
-      const job = await deps.kb.repositories.embeddingJobs.getJob(routeParam(params, "jobId"), tenantId!);
+    permissions: ["kb:read"],
+    handler: async ({ deps, params, organizationId, traceId }) => {
+      const job = await deps.kb.repositories.embeddingJobs.getJob(routeParam(params, "jobId"), organizationId!);
       if (!job) throw new ApiError("NOT_FOUND", "KB indexing job not found.", 404);
       return json({ ...job, trace_id: traceId });
     }
@@ -65,13 +66,12 @@ export const kbRoutes: RouteDefinition[] = [
     protected: true,
     requireActor: true,
     permissions: ["kb:index"],
-    handler: async ({ request, deps, params, tenantId, actorId, traceId }) => {
+    handler: async ({ request, deps, params, organizationId, actorId, traceId }) => {
       await parseJson(request, KbReindexDocumentRequestSchema);
-      const document = await deps.documentIngestion.repositories.documents.getDocument(routeParam(params, "documentId"), tenantId!);
+      const document = await deps.documentIngestion.repositories.documents.getDocument(routeParam(params, "documentId"), organizationId!);
       if (!document) throw new ApiError("NOT_FOUND", "Document not found.", 404);
       const service = new KbReprocessService(deps.kb);
       const result = await service.reindexDocument(document.document_id, {
-        tenantId: document.tenant_id,
         organizationId: document.organization_id,
         assessmentId: document.assessment_id,
         ...(actorId ? { actorId, requestedBy: actorId } : {}),
@@ -85,8 +85,8 @@ export const kbRoutes: RouteDefinition[] = [
     path: "/api/v1/assessments/:assessmentId/kb/search",
     protected: true,
     permissions: ["kb:search"],
-    handler: async ({ request, deps, params, tenantId, actorId, traceId }) => {
-      const assessmentContext = await getAssessmentContext(deps, routeParam(params, "assessmentId"), tenantId!);
+    handler: async ({ request, deps, params, organizationId, actorId, traceId }) => {
+      const assessmentContext = await getAssessmentContext(deps, routeParam(params, "assessmentId"), organizationId!);
       const body = await parseJson(request, KbSearchRequestSchema);
       const service = new KbSearchService(deps.kb);
       const started = Date.now();
@@ -95,7 +95,6 @@ export const kbRoutes: RouteDefinition[] = [
         : await service.semanticSearch({ ...assessmentContext, ...(actorId ? { actorId } : {}), traceId }, body);
       const queryHash = await sha256(body.query);
       await new MetricsService(deps.observability).record({
-        tenant_id: assessmentContext.tenantId,
         organization_id: assessmentContext.organizationId,
         assessment_id: assessmentContext.assessmentId,
         metric_name: "kb_search_count",
@@ -106,7 +105,6 @@ export const kbRoutes: RouteDefinition[] = [
         trace_id: traceId
       });
       await new MetricsService(deps.observability).record({
-        tenant_id: assessmentContext.tenantId,
         organization_id: assessmentContext.organizationId,
         assessment_id: assessmentContext.assessmentId,
         metric_name: "kb_search_duration_ms",
@@ -117,7 +115,6 @@ export const kbRoutes: RouteDefinition[] = [
         trace_id: traceId
       });
       await new CostTrackingService(deps.observability).recordUsage({
-        tenant_id: assessmentContext.tenantId,
         organization_id: assessmentContext.organizationId,
         assessment_id: assessmentContext.assessmentId,
         service_name: "vectorize",
@@ -135,9 +132,10 @@ export const kbRoutes: RouteDefinition[] = [
     method: "GET",
     path: "/api/v1/assessments/:assessmentId/kb/vector-references",
     protected: true,
-    handler: async ({ deps, params, tenantId, traceId }) => {
-      const assessment = await getAssessmentContext(deps, routeParam(params, "assessmentId"), tenantId!);
-      const refs = await deps.kb.repositories.vectorReferences.listByAssessment(assessment.assessmentId, tenantId!);
+    permissions: ["kb:read"],
+    handler: async ({ deps, params, organizationId, traceId }) => {
+      const assessment = await getAssessmentContext(deps, routeParam(params, "assessmentId"), organizationId!);
+      const refs = await deps.kb.repositories.vectorReferences.listByAssessment(assessment.assessmentId, organizationId!);
       return json({ data: refs, trace_id: traceId });
     }
   },
@@ -145,10 +143,11 @@ export const kbRoutes: RouteDefinition[] = [
     method: "GET",
     path: "/api/v1/documents/:documentId/kb/vector-references",
     protected: true,
-    handler: async ({ deps, params, tenantId, traceId }) => {
-      const document = await deps.documentIngestion.repositories.documents.getDocument(routeParam(params, "documentId"), tenantId!);
+    permissions: ["kb:read"],
+    handler: async ({ deps, params, organizationId, traceId }) => {
+      const document = await deps.documentIngestion.repositories.documents.getDocument(routeParam(params, "documentId"), organizationId!);
       if (!document) throw new ApiError("NOT_FOUND", "Document not found.", 404);
-      const refs = await deps.kb.repositories.vectorReferences.listByDocument(document.document_id, tenantId!);
+      const refs = await deps.kb.repositories.vectorReferences.listByDocument(document.document_id, organizationId!);
       return json({ data: refs, trace_id: traceId });
     }
   },
@@ -156,15 +155,15 @@ export const kbRoutes: RouteDefinition[] = [
     method: "GET",
     path: "/api/v1/chunks/:chunkId/context",
     protected: true,
-    handler: async ({ request, deps, params, tenantId, traceId }) => {
+    permissions: ["kb:read"],
+    handler: async ({ request, deps, params, organizationId, traceId }) => {
       const assessmentId = new URL(request.url).searchParams.get("assessment_id");
       if (!assessmentId) throw new ApiError("VALIDATION_ERROR", "assessment_id query parameter is required.", 400);
-      const assessmentContext = await getAssessmentContext(deps, assessmentId, tenantId!);
+      const assessmentContext = await getAssessmentContext(deps, assessmentId, organizationId!);
       const service = new KbSearchService(deps.kb);
       const context = await service.getChunkContext(routeParam(params, "chunkId"), { ...assessmentContext, traceId });
       if (!context) throw new ApiError("NOT_FOUND", "Chunk context not found.", 404);
       return json({
-        tenant_id: context.chunk.tenant_id,
         organization_id: context.chunk.organization_id,
         assessment_id: context.chunk.assessment_id,
         document_id: context.chunk.document_id,
@@ -182,11 +181,11 @@ export const kbRoutes: RouteDefinition[] = [
     path: "/api/v1/kb/indexing-jobs/:jobId/process",
     protected: true,
     requireActor: true,
-    handler: async ({ deps, params, tenantId, traceId }) => {
-      const job = await deps.kb.repositories.embeddingJobs.getJob(routeParam(params, "jobId"), tenantId!);
+    permissions: ["kb:write"],
+    handler: async ({ deps, params, organizationId, traceId }) => {
+      const job = await deps.kb.repositories.embeddingJobs.getJob(routeParam(params, "jobId"), organizationId!);
       if (!job || !job.chunk_id || !job.vector_reference_id) throw new ApiError("NOT_FOUND", "KB indexing job not found.", 404);
       await processKbEmbeddingJob({
-        tenant_id: job.tenant_id,
         organization_id: job.organization_id,
         assessment_id: job.assessment_id,
         document_id: job.document_id,
@@ -198,7 +197,7 @@ export const kbRoutes: RouteDefinition[] = [
         trace_id: traceId,
         created_at: job.queued_at
       }, deps.kb);
-      const updated = await deps.kb.repositories.embeddingJobs.getJob(job.job_id, tenantId!);
+      const updated = await deps.kb.repositories.embeddingJobs.getJob(job.job_id, organizationId!);
       return json(updated);
     }
   }

@@ -66,7 +66,7 @@ test("SCF admin import-xlsx rejeita arquivo sem assinatura ZIP", async () => {
     form,
     {
       "x-standard-actor-id": ids.actorId,
-      "x-standard-tenant-id": ids.tenantId,
+      "x-standard-tenant-id": ids.organizationId,
       "authorization": "Bearer dev:platform_admin"
     }
   );
@@ -84,7 +84,7 @@ test("SCF cross-mappings endpoint - Success: returns mappings for existing contr
     undefined,
     {
       "x-standard-actor-id": ids.actorId,
-      "x-standard-tenant-id": ids.tenantId
+      "x-standard-tenant-id": ids.organizationId
     }
   );
 
@@ -105,7 +105,7 @@ test("SCF cross-mappings endpoint - Success: filters by framework query paramete
     undefined,
     {
       "x-standard-actor-id": ids.actorId,
-      "x-standard-tenant-id": ids.tenantId
+      "x-standard-tenant-id": ids.organizationId
     }
   );
 
@@ -121,7 +121,7 @@ test("SCF cross-mappings endpoint - Error: returns 404 for non-existent control 
     undefined,
     {
       "x-standard-actor-id": ids.actorId,
-      "x-standard-tenant-id": ids.tenantId
+      "x-standard-tenant-id": ids.organizationId
     }
   );
 
@@ -136,7 +136,7 @@ test("SCF cross-mappings endpoint - Error: returns 401 for unauthenticated reque
     "GET",
     undefined,
     {
-      "x-standard-tenant-id": ids.tenantId
+      "x-standard-tenant-id": ids.organizationId
     }
   );
 

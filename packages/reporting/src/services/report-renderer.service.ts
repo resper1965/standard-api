@@ -26,7 +26,7 @@ export class ReportRendererService {
   async renderDocx(reportVersionId: string, context: ReportingContext): Promise<RenderReportResponse> {
     assertContext(context);
     assertActor(context);
-    const report = await this.deps.repositories.versions.get(reportVersionId, context.tenantId);
+    const report = await this.deps.repositories.versions.get(reportVersionId, context.organizationId);
     if (!report || report.assessment_id !== context.assessmentId) throw new ReportingWorkflowError("REPORT_NOT_FOUND", "Report version not found.");
     const sections = await new ReportComposerService(this.deps).composeFullAssessmentReport(reportVersionId, context);
     const artifact = renderDocxArtifact(report.title, reportVersionId, sections);
@@ -43,7 +43,7 @@ export class ReportRendererService {
   async renderPdf(reportVersionId: string, context: ReportingContext, locale?: SupportedLocale): Promise<RenderReportResponse> {
     assertContext(context);
     assertActor(context);
-    const report = await this.deps.repositories.versions.get(reportVersionId, context.tenantId);
+    const report = await this.deps.repositories.versions.get(reportVersionId, context.organizationId);
     if (!report || report.assessment_id !== context.assessmentId) throw new ReportingWorkflowError("REPORT_NOT_FOUND", "Report version not found.");
     const sections = await new ReportComposerService(this.deps).composeFullAssessmentReport(reportVersionId, context);
     const artifact = renderPdfArtifact(report.title, reportVersionId, sections, locale);
@@ -60,7 +60,7 @@ export class ReportRendererService {
   private async render(reportVersionId: string, format: "json" | "markdown", context: ReportingContext): Promise<RenderReportResponse> {
     assertContext(context);
     assertActor(context);
-    const report = await this.deps.repositories.versions.get(reportVersionId, context.tenantId);
+    const report = await this.deps.repositories.versions.get(reportVersionId, context.organizationId);
     if (!report || report.assessment_id !== context.assessmentId) throw new ReportingWorkflowError("REPORT_NOT_FOUND", "Report version not found.");
     const sections = await new ReportComposerService(this.deps).composeFullAssessmentReport(reportVersionId, context);
     const artifact = format === "json" ? renderJsonArtifact(reportVersionId, sections) : renderMarkdownArtifact(report.title, reportVersionId, sections);

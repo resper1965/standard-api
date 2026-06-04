@@ -192,13 +192,13 @@ const app = new Hono<{ Bindings: { ASSESSMENT_QUEUE: Queue } }>();
 
 app.post('/:assessmentId/analyze', async (c) => {
     const assessmentId = c.req.param('assessmentId');
-    const tenantId = c.get('tenant').id;
+    const organizationId = c.get('organization').id;
     
     // Push the heavy job to the Edge Queue
     await c.env.ASSESSMENT_QUEUE.send({
         type: 'START_GAP_ANALYSIS',
         assessmentId,
-        tenantId
+        organizationId
     });
     
     // CQRS Immediate Return

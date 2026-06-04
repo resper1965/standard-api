@@ -9,7 +9,7 @@ title: "Observability Runbook"
 1. Capture o `trace_id` da resposta ou erro público.
 2. Consulte logs estruturados do serviço.
 3. Consulte audit logs do assessment quando aplicável.
-4. Consulte security events se houve `401`, `403`, tenant mismatch ou guardrail.
+4. Consulte security events se houve `401`, `403`, organization mismatch ou guardrail.
 5. Correlacione com workflow run, agent run, queue job ou report artifact.
 
 ## Investigar Falha de Workflow
@@ -35,10 +35,10 @@ title: "Observability Runbook"
 3. Confirme filename normalizado, MIME, extensão e tamanho.
 4. Não abrir ou copiar conteúdo do arquivo em logs.
 
-## Investigar Cross-Tenant Access
+## Investigar Cross-Organization Access
 
-1. Procure security events `tenant_context_mismatch` ou `cross_tenant_access_blocked`.
-2. Compare `x-standard-tenant-id`, route params e tenant do recurso.
+1. Procure security events `organization_context_mismatch` ou `cross_tenant_access_blocked`.
+2. Compare `x-standard-organization-id`, route params e organization do recurso.
 3. Audite actor, role, auth method e trace.
 4. Se envolver API key, verificar escopo da key.
 
@@ -60,11 +60,11 @@ GET /api/v1/admin/security-events/{securityEventId}
 
 Permissão exigida: `admin:read`.
 
-## Revisar Uso e Custo por Tenant
+## Revisar Uso e Custo por Organization
 
 ```http
 GET /api/v1/assessments/{assessmentId}/usage
-GET /api/v1/tenants/{tenantId}/usage
+GET /api/v1/organizations/{organizationId}/usage
 GET /api/v1/admin/usage
 ```
 
@@ -110,6 +110,6 @@ Use hashes, IDs, counts, status, safe summaries e `trace_id`.
 - Cloudflare Logs/Analytics ou backend equivalente configurado.
 - AI Gateway correlation habilitada quando LLM real existir.
 - PricingProvider configurado por ambiente.
-- Budgets/thresholds por tenant definidos.
+- Budgets/thresholds por organization definidos.
 - Dashboards e alertas revisados para baixo ruído.
 

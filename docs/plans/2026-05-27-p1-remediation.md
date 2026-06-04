@@ -18,20 +18,20 @@
 Repo: c:\Users\resper\OneDrive\Área de Trabalho\aegis-api
 TypeScript monorepo — pnpm workspaces
 Test runner before this plan: tsx tests/run-tests.ts (manual, no framework)
-Assessment handler pattern: withTenant(tenantId).get(id) — never verifies returned assessment.tenantId
+Assessment handler pattern: withTenant(organizationId).get(id) — never verifies returned assessment.organizationId
 ```
 
 ---
 
-## Task 1: IDOR — Tenant ownership assertion in assessment handlers
+## Task 1: IDOR — Organization ownership assertion in assessment handlers
 
-**Risk:** HIGH — user can switch org and access another tenant's assessment if repositório `.get()` doesn't filter by tenant_id at DB level.
+**Risk:** HIGH — user can switch org and access another organization's assessment if repositório `.get()` doesn't filter by organization_id at DB level.
 
 **Files:**
 - Modify: `apps/api-gateway/src/routes/assessments.routes.ts` (6 handlers at L65, L115, L131, L151, L172, L267)
 - Create test: `apps/api-gateway/tests/idor.test.ts`
 
-**Background:** `withTenant(resolvedTenantId).get(assessmentId)` may return a row even if the tenant column doesn't match (depends on Drizzle repo internals). We add an explicit post-fetch check: if `assessment.tenantId !== resolvedTenantId` → throw `ApiError("FORBIDDEN", ..., 403)`.
+**Background:** `withTenant(resolvedOrganizationId).get(assessmentId)` may return a row even if the organization column doesn't match (depends on Drizzle repo internals). We add an explicit post-fetch check: if `assessment.organizationId !== resolvedOrganizationId` → throw `ApiError("FORBIDDEN", ..., 403)`.
 
 ### Step 1: Write the failing test (RED)
 
@@ -39,26 +39,26 @@ Create `apps/api-gateway/tests/idor.test.ts`:
 
 ```typescript
 /**
- * IDOR Guard Tests — Assessment Tenant Ownership
+ * IDOR Guard Tests — Assessment Organization Ownership
  * 
- * Tests that assessment endpoints reject cross-tenant access.
+ * Tests that assessment endpoints reject cross-organization access.
  * Uses the existing test-kit synthetic IDs.
  */
 import { describe, it, expect } from "vitest";
 import { buildTestApp, SYNTH } from "./test-kit";
 
 // If test-kit uses a different test runner, adapt accordingly.
-// The key assertion: tenant B cannot access tenant A's assessment.
+// The key assertion: organization B cannot access organization A's assessment.
 
-describe("IDOR: Assessment tenant ownership", () => {
-  it("GET /api/v1/assessments/:id returns 403 when assessment belongs to different tenant", async () => {
+describe("IDOR: Assessment organization ownership", () => {
+  it("GET /api/v1/assessments/:id returns 403 when assessment belongs to different organization", async () => {
     const app = buildTestApp({
-      tenantId: SYNTH.tenantId,
+      organizationId: SYNTH.organizationId,
       assessments: {
         withTenant: (_tid: string) => ({
           get: async (_id: string) => ({
             id: "30000000-0000-4000-8000-000000000001",
-            tenantId: "OTHER-TENANT-ID", // ← different tenant
+            organizationId: "OTHER-TENANT-ID", // ← different organization
             state: "draft",
           }),
         }),
@@ -70,7 +70,7 @@ describe("IDOR: Assessment tenant ownership", () => {
       headers: {
         "x-standard-actor-id": SYNTH.userId,
         "x-standard-mock-role": "org_admin",
-        "x-standard-tenant-id": SYNTH.tenantId,
+        "x-standard-organization-id": SYNTH.organizationId,
       },
     });
 
@@ -79,14 +79,14 @@ describe("IDOR: Assessment tenant ownership", () => {
     expect(body.code).toBe("FORBIDDEN");
   });
 
-  it("GET /api/v1/assessments/:id returns 200 when assessment belongs to same tenant", async () => {
+  it("GET /api/v1/assessments/:id returns 200 when assessment belongs to same organization", async () => {
     const app = buildTestApp({
-      tenantId: SYNTH.tenantId,
+      organizationId: SYNTH.organizationId,
       assessments: {
         withTenant: (_tid: string) => ({
           get: async (_id: string) => ({
             id: "30000000-0000-4000-8000-000000000001",
-            tenantId: SYNTH.tenantId, // ← same tenant
+            organizationId: SYNTH.organizationId, // ← same organization
             state: "draft",
             name: "Test",
             organizationId: SYNTH.orgId,
@@ -104,7 +104,7 @@ describe("IDOR: Assessment tenant ownership", () => {
       headers: {
         "x-standard-actor-id": SYNTH.userId,
         "x-standard-mock-role": "org_admin",
-        "x-standard-tenant-id": SYNTH.tenantId,
+        "x-standard-organization-id": SYNTH.organizationId,
       },
     });
 
@@ -118,7 +118,7 @@ describe("IDOR: Assessment tenant ownership", () => {
 ```bash
 pnpm --filter @standard/api-gateway test:unit 2>&1 | Select-String "IDOR|FAIL|PASS" | Select-Object -First 10
 ```
-Expected: FAIL — test for 403 gets 200 (no tenant ownership check yet).
+Expected: FAIL — test for 403 gets 200 (no organization ownership check yet).
 
 ### Step 3: Implement the fix — add ownership assertion helper
 
@@ -127,18 +127,18 @@ In `apps/api-gateway/src/routes/assessments.routes.ts`, add after the imports bl
 ```typescript
 /**
  * assertTenantOwnership — throws FORBIDDEN if the fetched resource
- * belongs to a different tenant than the request context.
- * Prevents IDOR across tenant boundaries.
+ * belongs to a different organization than the request context.
+ * Prevents IDOR across organization boundaries.
  */
 function assertTenantOwnership(
-  resourceTenantId: string | undefined | null,
-  resolvedTenantId: string,
+  resourceOrganizationId: string | undefined | null,
+  resolvedOrganizationId: string,
   resourceType = "Assessment"
 ): void {
-  if (resourceTenantId && resourceTenantId !== resolvedTenantId) {
+  if (resourceOrganizationId && resourceOrganizationId !== resolvedOrganizationId) {
     throw new ApiError(
       "FORBIDDEN",
-      `${resourceType} does not belong to the current tenant.`,
+      `${resourceType} does not belong to the current organization.`,
       403
     );
   }
@@ -148,7 +148,7 @@ function assertTenantOwnership(
 Then in **each of the 6 handlers**, after the `if (!assessment) throw NOT_FOUND` line, add:
 
 ```typescript
-assertTenantOwnership(assessment.tenantId, resolvedTenantId);
+assertTenantOwnership(assessment.organizationId, resolvedOrganizationId);
 ```
 
 **Exact handler locations:**
@@ -184,15 +184,15 @@ Expected: empty (0 errors).
 
 ```bash
 git add apps/api-gateway/src/routes/assessments.routes.ts apps/api-gateway/tests/idor.test.ts
-git commit --no-verify -m "fix(security): add IDOR tenant ownership assertion to all assessment handlers
+git commit --no-verify -m "fix(security): add IDOR organization ownership assertion to all assessment handlers
 
 - Add assertTenantOwnership() helper to assessments.routes.ts
-- Checks assessment.tenantId === resolvedTenantId after every .get() call
-- Returns HTTP 403 FORBIDDEN for cross-tenant access attempts
+- Checks assessment.organizationId === resolvedOrganizationId after every .get() call
+- Returns HTTP 403 FORBIDDEN for cross-organization access attempts
 - Covers all 6 handlers: GET, PATCH, status, timeline, compliance-gate, automation-rules
 - Add idor.test.ts with RED/GREEN coverage
 
-AGENTS.md §13: tenant isolation enforced at handler level
+AGENTS.md §13: organization isolation enforced at handler level
 
 Co-Authored-By: Antigravity (Google DeepMind)"
 ```
@@ -609,7 +609,7 @@ import { describe, it, expect, vi } from "vitest";
 describe("progressFromStart — documentCount snapshot drift", () => {
   it("re-fetches assessment from DB instead of trusting stale snapshot", async () => {
     // Arrange: snapshot says documentCount=0 but DB says 3
-    const staleSnapshot = { state: "draft", documentCount: 0, id: "assess-1", tenantId: "t1" };
+    const staleSnapshot = { state: "draft", documentCount: 0, id: "assess-1", organizationId: "t1" };
     const freshDbRecord = { ...staleSnapshot, documentCount: 3 };
     
     const mockGet = vi.fn().mockResolvedValue(freshDbRecord);
@@ -633,7 +633,7 @@ In `progressFromStart`, before the `if (currentAssessment.state === "draft" && c
 // were uploaded after the snapshot was taken.
 try {
   const fresh = await this.deps.assessments
-    .withTenant(currentAssessment.tenantId)
+    .withTenant(currentAssessment.organizationId)
     .get(currentAssessment.id);
   if (fresh && typeof fresh.documentCount === "number") {
     currentAssessment = { ...currentAssessment, documentCount: fresh.documentCount };

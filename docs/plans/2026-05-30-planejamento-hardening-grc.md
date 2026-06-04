@@ -26,15 +26,15 @@ graph TD
 * **Objetivo:** Garantir que o mapeamento entre IDs textuais (ex: `"org_pa5khl"`) e os UUIDs do banco de dados ocorra logo no middleware de autenticação, eliminando conversões redundantes e ad-hoc nas rotas e prevenindo falhas de inserção de chaves estrangeiras.
 
 #### `IP-1.1`: Refatorar `resolveAuthContext` para Resolução JIT de UUIDs
-* **Descrição:** Modificar o middleware `resolveAuthContext` em `apps/api-gateway/src/middleware/auth.middleware.ts` para que, na validação de cookies/sessões do Better-Auth, ele chame `resolveTenantContext` e atribua os UUIDs finais mapeados diretamente a `context.tenantId` e `context.organizationId`.
+* **Descrição:** Modificar o middleware `resolveAuthContext` em `apps/api-gateway/src/middleware/auth.middleware.ts` para que, na validação de cookies/sessões do Better-Auth, ele chame `resolveTenantContext` e atribua os UUIDs finais mapeados diretamente a `context.organizationId` e `context.organizationId`.
 * **Arquivos Alvo:**
   * [auth.middleware.ts](file:///c:/Users/resper/OneDrive/Área de Trabalho/aegis-api/apps/api-gateway/src/middleware/auth.middleware.ts)
 * **Critérios de Aceite:**
-  * `context.tenantId` e `context.organizationId` devem ser UUIDs válidos a partir da saída do middleware de autenticação.
+  * `context.organizationId` e `context.organizationId` devem ser UUIDs válidos a partir da saída do middleware de autenticação.
   * Preservar o fluxo M2M (onde os tokens da API já carregam UUIDs).
   * Lançar erro apropriado ou fallback seguro se a conversão falhar.
 * **Plano de Verificação:**
-  * Adicionar asserções de tipo `z.string().uuid()` para verificar `tenantId` nos testes de integração do gateway.
+  * Adicionar asserções de tipo `z.string().uuid()` para verificar `organizationId` nos testes de integração do gateway.
 
 #### `IP-1.2`: Higienizar Rotas e Remover Resoluções Ad-hoc
 * **Descrição:** Limpar os arquivos de rotas para consumir o contexto do Hono já resolvido em UUID. Remover chamadas manuais repetitivas a `deps.resolveTenantContext`.
@@ -42,8 +42,8 @@ graph TD
   * [assessments.routes.ts](file:///c:/Users/resper/OneDrive/Área de Trabalho/aegis-api/apps/api-gateway/src/routes/assessments.routes.ts)
   * [api-keys.routes.ts](file:///c:/Users/resper/OneDrive/Área de Trabalho/aegis-api/apps/api-gateway/src/routes/api-keys.routes.ts)
 * **Critérios de Aceite:**
-  * Sem try/catch manuais de conversão de ID de tenant nos manipuladores de rotas.
-  * Todas as rotas de domínio GRC devem operar sob a premissa de que `context.tenantId` é estritamente um UUID.
+  * Sem try/catch manuais de conversão de ID de organization nos manipuladores de rotas.
+  * Todas as rotas de domínio GRC devem operar sob a premissa de que `context.organizationId` é estritamente um UUID.
 * **Plano de Verificação:**
   * Rodar `pnpm typecheck` para garantir consistência de tipos nos endpoints limpos.
 
@@ -76,16 +76,16 @@ graph TD
 ---
 
 ### Épico 3: Blindagem SQL Escopada (Defense in Depth)
-* **Objetivo:** Impedir vazamento ou modificações cross-tenant no banco de dados, aplicando filtragem de segurança de forma redundante em todas as queries SQL de alteração (`update`, `delete`, `insert`) no Drizzle ORM.
+* **Objetivo:** Impedir vazamento ou modificações cross-organization no banco de dados, aplicando filtragem de segurança de forma redundante em todas as queries SQL de alteração (`update`, `delete`, `insert`) no Drizzle ORM.
 
 #### `IP-3.1`: Hardening no Ingestion Adapter
-* **Descrição:** Alterar o repositório de documentos de ingestão para garantir que todas as cláusulas `where` exijam correspondência exata do ID do documento e do `tenantId`.
+* **Descrição:** Alterar o repositório de documentos de ingestão para garantir que todas as cláusulas `where` exijam correspondência exata do ID do documento e do `organizationId`.
 * **Arquivos Alvo:**
   * [document-ingestion.repository.ts](file:///c:/Users/resper/OneDrive/Área de Trabalho/aegis-api/apps/api-gateway/src/adapters/document-ingestion.repository.ts)
 * **Critérios de Aceite:**
-  * O método `update` ou `archive` deve retornar `null` ou lançar erro se o documento pertencer a outro tenant.
+  * O método `update` ou `archive` deve retornar `null` ou lançar erro se o documento pertencer a outro organization.
 * **Plano de Verificação:**
-  * Criar teste de integração injetando um ID de documento válido associado a um tenant B em uma requisição autenticada no tenant A e verificar que a escrita é negada.
+  * Criar teste de integração injetando um ID de documento válido associado a um organization B em uma requisição autenticada no organization A e verificar que a escrita é negada.
 
 #### `IP-3.2`: Hardening dos Repositórios GRC (Gap, SoA, POAM, Maturity)
 * **Descrição:** Revisar os adapters do Drizzle ORM nos pacotes de domínio sob `packages/` para garantir isolamento absoluto nas queries de escrita.
@@ -95,7 +95,7 @@ graph TD
   * `packages/poam/src/repositories/`
   * `packages/maturity/src/repositories/`
 * **Critérios de Aceite:**
-  * Nenhuma operação de banco de dados do tipo Drizzle `.update()` ou `.delete()` pode rodar sem incluir `eq(table.tenantId, tenantId)` na cláusula `where`.
+  * Nenhuma operação de banco de dados do tipo Drizzle `.update()` ou `.delete()` pode rodar sem incluir `eq(table.organizationId, organizationId)` na cláusula `where`.
 * **Plano de Verificação:**
   * Realizar auditoria via typecheck e verificação estática das queries compiladas.
 
@@ -154,7 +154,7 @@ graph TD
    │
    └── [Fase 2] Alinhamento do RBAC unificado
          │
-         └── [Fase 3] Blindagem SQL Multi-tenant (Depende dos UUIDs devidamente propagados)
+         └── [Fase 3] Blindagem SQL Multi-organization (Depende dos UUIDs devidamente propagados)
                │
                └── [Fase 4 & 5] Governança de Logs & Testes E2E
 ```

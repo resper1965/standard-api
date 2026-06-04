@@ -12,7 +12,7 @@ O Gap Analysis gera uma versão draft de achados frente ao framework selecionado
 
 - `packages/soa` fornece a SoA aprovada e seus itens aplicáveis, parcialmente aplicáveis ou justificados como não aplicáveis.
 - `packages/scf-core` continua sendo a fonte normativa para framework, requirements, controles e mappings oficiais.
-- `packages/kb` fornece evidência candidata por tenant e assessment.
+- `packages/kb` fornece evidência candidata por organization e assessment.
 - `packages/gap-analysis` combina esses insumos sem inventar mappings e sem tratar vector search como conclusão.
 
 ## Evidência Candidata, Aceita e Conclusão
@@ -58,8 +58,8 @@ Ausência de evidência indica que a KB consultada não trouxe material suficien
 ## Fluxo de Criação
 
 1. O serviço recebe `assessment_id` e `soa_version_id`.
-2. Valida que a SoA existe, pertence ao tenant/assessment e está `approved`.
-3. Para cada item de SoA, busca evidências candidatas na KB limitada ao tenant e assessment.
+2. Valida que a SoA existe, pertence ao organization/assessment e está `approved`.
+3. Para cada item de SoA, busca evidências candidatas na KB limitada ao organization e assessment.
 4. Gera ou atualiza `evidence_findings`.
 5. Preserva fontes em `evidence_sources` com snippet curto.
 6. Cria `gap_analysis_version` em `draft`.
@@ -84,7 +84,7 @@ A state machine não é duplicada no pacote de Gap Analysis.
 
 ## Integração com KB
 
-A busca usa `KbSearchService` com contexto de `tenant_id`, `organization_id` e `assessment_id`. Sources armazenam apenas ponteiros e snippets, nunca documentos completos.
+A busca usa `KbSearchService` com contexto de `organization_id`, `organization_id` e `assessment_id`. Sources armazenam apenas ponteiros e snippets, nunca documentos completos.
 
 ## Integração com SCF Data Service
 

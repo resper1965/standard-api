@@ -5,11 +5,11 @@
 
 ## Goal
 
-Add a ROPA (Record of Processing Activities) module to the Standard platform, following existing architectural patterns for routes, tenant isolation, auth, audit, and Drizzle ORM.
+Add a ROPA (Record of Processing Activities) module to the Standard platform, following existing architectural patterns for routes, organization isolation, auth, audit, and Drizzle ORM.
 
 ## Scope
 
-Phase 1 only — base entity CRUD, tenant isolation, audit events, completeness analysis. No SCF applicability, DPIA screening, evidence management, agent runtime, or reports.
+Phase 1 only — base entity CRUD, organization isolation, audit events, completeness analysis. No SCF applicability, DPIA screening, evidence management, agent runtime, or reports.
 
 ## Architecture Decisions
 
@@ -72,8 +72,8 @@ Drizzle-backed repositories, same pattern as `soa.repository.ts`.
 
 ## Business Rules
 
-1. All queries filter by `tenant_id`.
-2. Cross-tenant access blocked.
+1. All queries filter by `organization_id`.
+2. Cross-organization access blocked.
 3. No physical deletes — use `archived_at`.
 4. Audit event on: create, update, archive, submit, approve, reject.
 5. Cannot approve if critical fields are missing (name, purpose, data_subjects, data_categories, legal_basis, international_transfer, third_party_sharing, automated_decision, profiling).

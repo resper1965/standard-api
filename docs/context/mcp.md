@@ -19,12 +19,12 @@ O Standard expõe um servidor MCP (Model Context Protocol) remoto em `POST /mcp`
 - **MCP version:** 2025-03-26
 - **Transport:** Streamable HTTP (JSON response)
 - **Auth:** `Authorization: Bearer <api-key>` — mesmo sistema de API Keys M2M da plataforma
-- **Tenant isolation:** automático — cada API key é escopada ao tenant do criador
+- **Organization isolation:** automático — cada API key é escopada ao organization do criador
 
 ## Tools (32)
 
 ### Assessment Management (4)
-- `list-assessments` — lista assessments do tenant (filtro por status)
+- `list-assessments` — lista assessments do organization (filtro por status)
 - `get-assessment` — detalhes de um assessment
 - `get-assessment-status` — estado lifecycle do assessment
 - `list-assessment-documents` — documentos de evidência de conformidade

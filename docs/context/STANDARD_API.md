@@ -62,7 +62,7 @@ Todos os endpoints de aplicação seguem o prefixo `/api/v1`. O Standard Native 
 | `/api/v1/assessments/:id/documents/*` | Upload e gestão de evidências |
 | `/api/v1/assessments/:id/scope/*` | Escopo do assessment |
 | `/api/v1/assessments/:id/soa/*` | Statement of Applicability (SoA) |
-| `/api/v1/assessments/:id/gap-analysis/*` | Gap Analysis — persiste findings por tenant/assessment |
+| `/api/v1/assessments/:id/gap-analysis/*` | Gap Analysis — persiste findings por organization/assessment |
 | `/api/v1/assessments/:id/maturity/*` | Maturity Assessment |
 | `/api/v1/assessments/:id/poam/*` | Plan of Action & Milestones (POA&M) |
 | `/api/v1/assessments/:id/reports/*` | Relatórios gerados e aprovados |
@@ -72,7 +72,7 @@ Todos os endpoints de aplicação seguem o prefixo `/api/v1`. O Standard Native 
 | Prefixo | Descrição |
 |---|---|
 | `/api/v1/scf/*` | SCF Catalog — controles, frameworks, crosswalks |
-| `/api/v1/organizations/*` | Gestão de organizações multi-tenant |
+| `/api/v1/organizations/*` | Gestão de organizações multi-organization |
 | `/api/v1/api-keys/*` | API Keys M2M |
 | `/api/v1/observability/*` | Audit logs e métricas operacionais |
 
@@ -84,7 +84,7 @@ Todos os endpoints de aplicação seguem o prefixo `/api/v1`. O Standard Native 
 Todo valor reutilizável existe como API, serviço, pacote ou contrato. Frontend, integrações e automações são consumidores — nunca fontes de lógica crítica.
 
 ### Multi-tenancy por design
-Nenhum fluxo crítico sem `tenant_id`, `organization_id` e `assessment_id`. Isolamento preservado em banco, storage (R2 keys), Vectorize namespaces, cache e logs.
+Nenhum fluxo crítico sem `organization_id`, `organization_id` e `assessment_id`. Isolamento preservado em banco, storage (R2 keys), Vectorize namespaces, cache e logs.
 
 ### Approval gates obrigatórios
 Os seguintes artefatos só são finalizados após aprovação humana explícita:

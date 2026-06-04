@@ -27,7 +27,7 @@ import { ApiError } from "./errors/api-error";
 import type { ResolvedTenantContext } from "./adapters/tenant-mapping";
 
 export type TenantRecord = {
-  tenant_id: string;
+  organization_id: string;
   slug: string;
   name: string;
   status: string;
@@ -35,7 +35,6 @@ export type TenantRecord = {
 
 export type OrganizationRecord = {
   organization_id: string;
-  tenant_id: string;
   slug: string;
   name: string;
   status: string;
@@ -44,7 +43,6 @@ export type OrganizationRecord = {
 
 export type AssessmentRecord = {
   assessment_id: string;
-  tenant_id: string;
   organization_id: string;
   name: string;
   scf_version_id: string;
@@ -56,7 +54,6 @@ export type AssessmentRecord = {
 };
 
 export type ApprovalRecord = ApprovalEvent & {
-  tenantId: string;
   organizationId: string;
   assessmentId: string;
   targetType: "assessment_state" | "artifact_version";
@@ -65,7 +62,7 @@ export type ApprovalRecord = ApprovalEvent & {
 };
 
 export interface TenantScopedAssessmentRepository {
-  create(input: Omit<AssessmentRecord, "snapshot" | "tenant_id"> & { documentCount: number }): Promise<AssessmentRecord>;
+  create(input: Omit<AssessmentRecord, "snapshot" | "organization_id"> & { documentCount: number }): Promise<AssessmentRecord>;
   get(assessmentId: string): Promise<AssessmentRecord | null>;
   listByOrganization(organizationId: string): Promise<AssessmentRecord[]>;
   listAll(): Promise<AssessmentRecord[]>;
@@ -74,17 +71,16 @@ export interface TenantScopedAssessmentRepository {
 
 export type AssessmentRepositoryAdapter = {
   create(input: Omit<AssessmentRecord, "snapshot"> & { documentCount: number }): Promise<AssessmentRecord>;
-  get(assessmentId: string, tenantId: string): Promise<AssessmentRecord | null>;
-  listByOrganization(organizationId: string, tenantId: string): Promise<AssessmentRecord[]>;
-  listAll(tenantId: string): Promise<AssessmentRecord[]>;
+  get(assessmentId: string, organizationId: string): Promise<AssessmentRecord | null>;
+  listByOrganization(organizationId: string): Promise<AssessmentRecord[]>;
+  listAll(organizationId: string): Promise<AssessmentRecord[]>;
   save(record: AssessmentRecord): Promise<void>;
   /** Strict tenant-scoped data access pattern */
-  withTenant(tenantId: string): TenantScopedAssessmentRepository;
+  withOrganization(organizationId: string): TenantScopedAssessmentRepository;
 };
 
 export type ApiKeyRecord = {
   id: string;
-  tenantId: string;
   organizationId: string;
   name: string;
   keyHash: string;
@@ -99,7 +95,6 @@ export type ApiKeyRecord = {
 
 /** Input shape for creating a new API key (server generates id, timestamps). */
 export type ApiKeyCreateInput = {
-  tenantId: string;
   organizationId: string;
   name: string;
   keyHash: string;
@@ -122,13 +117,13 @@ export type ApiKeysRepositoryAdapter = {
 };
 
 export type TenantRepositoryAdapter = {
-  create(input: Omit<TenantRecord, "tenant_id" | "status">): Promise<TenantRecord>;
-  get(tenantId: string): Promise<TenantRecord | null>;
-  update(tenantId: string, patch: Partial<Pick<TenantRecord, "name" | "status">>): Promise<TenantRecord | null>;
+  create(input: Omit<TenantRecord, "organization_id" | "status">): Promise<TenantRecord>;
+  get(organizationId: string): Promise<TenantRecord | null>;
+  update(organizationId: string, patch: Partial<Pick<TenantRecord, "name" | "status">>): Promise<TenantRecord | null>;
 };
 
 export interface TenantScopedOrganizationRepository {
-  create(input: Omit<OrganizationRecord, "organization_id" | "status" | "tenant_id" | "billing_tier">): Promise<OrganizationRecord>;
+  create(input: Omit<OrganizationRecord, "organization_id" | "status" | "organization_id" | "billing_tier">): Promise<OrganizationRecord>;
   get(organizationId: string): Promise<OrganizationRecord | null>;
   list(): Promise<OrganizationRecord[]>;
   update(organizationId: string, patch: Partial<Pick<OrganizationRecord, "name" | "slug" | "status" | "billing_tier">>): Promise<OrganizationRecord | null>;
@@ -136,11 +131,11 @@ export interface TenantScopedOrganizationRepository {
 
 export type OrganizationRepositoryAdapter = {
   create(input: Omit<OrganizationRecord, "organization_id" | "status" | "billing_tier">): Promise<OrganizationRecord>;
-  get(organizationId: string, tenantId: string): Promise<OrganizationRecord | null>;
-  listByTenant(tenantId: string): Promise<OrganizationRecord[]>;
-  update(organizationId: string, tenantId: string, patch: Partial<Pick<OrganizationRecord, "name" | "slug" | "status" | "billing_tier">>): Promise<OrganizationRecord | null>;
+  get(organizationId: string): Promise<OrganizationRecord | null>;
+  listByTenant(organizationId: string): Promise<OrganizationRecord[]>;
+  update(organizationId: string, patch: Partial<Pick<OrganizationRecord, "name" | "slug" | "status" | "billing_tier">>): Promise<OrganizationRecord | null>;
   /** Strict tenant-scoped data access pattern */
-  withTenant(tenantId: string): TenantScopedOrganizationRepository;
+  withOrganization(organizationId: string): TenantScopedOrganizationRepository;
 };
 
 export interface TenantScopedApprovalRepository {
@@ -154,8 +149,8 @@ export type ApprovalRepositoryAdapter = {
   create(input: ApprovalRecord): Promise<ApprovalRecord>;
   get(approvalId: string): Promise<ApprovalRecord | null>;
   getForGate(approvalId: string, gate: ApprovalGate): Promise<ApprovalEvent | null>;
-  listByAssessment(assessmentId: string, tenantId: string): Promise<ApprovalRecord[]>;
-  withTenant(tenantId: string): TenantScopedApprovalRepository;
+  listByAssessment(assessmentId: string, organizationId: string): Promise<ApprovalRecord[]>;
+  withOrganization(organizationId: string): TenantScopedApprovalRepository;
 };
 
 export interface TenantScopedArtifactRepository {
@@ -170,7 +165,7 @@ export type ArtifactRepositoryAdapter = {
   get(versionId: string): Promise<ArtifactVersion | null>;
   save(version: ArtifactVersion): Promise<void>;
   listByAssessment(assessmentId: string, artifactType: ArtifactType): Promise<ArtifactVersion[]>;
-  withTenant(tenantId: string): TenantScopedArtifactRepository;
+  withOrganization(organizationId: string): TenantScopedArtifactRepository;
 };
 
 export interface TenantScopedLifecycleEventRepository {
@@ -180,8 +175,8 @@ export interface TenantScopedLifecycleEventRepository {
 
 export type LifecycleEventRepositoryAdapter = {
   record(event: AssessmentLifecycleEvent): Promise<void>;
-  listByAssessment(assessmentId: string, tenantId: string): Promise<AssessmentLifecycleEvent[]>;
-  withTenant(tenantId: string): TenantScopedLifecycleEventRepository;
+  listByAssessment(assessmentId: string, organizationId: string): Promise<AssessmentLifecycleEvent[]>;
+  withOrganization(organizationId: string): TenantScopedLifecycleEventRepository;
 };
 
 export type AuditRepositoryAdapter = {
@@ -221,9 +216,9 @@ export type AppDependencies = {
   /** Webhook endpoint management (optional — requires storage adapter) */
   webhooks?: WebhookRepositoryAdapter | undefined;
   /** READ-ONLY: resolves Standard Native Auth org ID → Standard domain UUIDs. Returns null if not provisioned. */
-  resolveTenantContext?: (standardAuthOrgId: string) => Promise<ResolvedTenantContext | null>;
+  resolveOrganizationContext?: (standardAuthOrgId: string) => Promise<ResolvedTenantContext | null>;
   /** Explicit provisioning: resolves and creates domain tenant/org if missing. Call only at deliberate provisioning points. */
-  provisionTenantContext?: (standardAuthOrgId: string) => Promise<ResolvedTenantContext>;
+  provisionOrganizationContext?: (standardAuthOrgId: string) => Promise<ResolvedTenantContext>;
   /** Resolves Standard Native Auth user email → Standard domain users UUID (JIT provisioning) */
   resolveUserContext?: (email: string, displayName: string) => Promise<{ id: string }>;
   /** Bans/flags a user for deletion via Standard Native Auth admin API (optional — delegates to cachedAuth) */
@@ -237,7 +232,6 @@ export type RequestContext = {
   request: Request;
   params: Record<string, string>;
   traceId: string;
-  tenantId?: string | undefined;
   organizationId?: string | undefined;
   actorId?: string | undefined;
   systemActor?: string | undefined;

@@ -14,7 +14,7 @@ test("scf_control_lookup returns controls matching the query", async () => {
   };
   const tool = createScfControlLookupTool(mockScf);
   const result = await tool.execute({
-    tenant_id: "t1", organization_id: "o1", assessment_id: "a1",
+    organization_id: "o1", assessment_id: "a1",
     trace_id: "tr1", query: "asset management",
   });
   expect(result.count).toBe(2);
@@ -28,7 +28,7 @@ test("scf_control_lookup returns empty when no match", async () => {
   };
   const tool = createScfControlLookupTool(mockScf);
   const result = await tool.execute({
-    tenant_id: "t1", organization_id: "o1", assessment_id: "a1",
+    organization_id: "o1", assessment_id: "a1",
     trace_id: "tr1", query: "nonexistent",
   });
   expect(result.count).toBe(0);
@@ -46,7 +46,7 @@ test("kb_evidence_search returns evidence matching query", async () => {
   };
   const tool = createKbEvidenceSearchTool(mockKb);
   const result = await tool.execute({
-    tenant_id: "t1", organization_id: "o1", assessment_id: "a1",
+    organization_id: "o1", assessment_id: "a1",
     trace_id: "tr1", query: "security policy",
   });
   expect(result.count).toBe(1);
@@ -59,7 +59,7 @@ test("kb_evidence_search returns empty when no evidence found", async () => {
   };
   const tool = createKbEvidenceSearchTool(mockKb);
   const result = await tool.execute({
-    tenant_id: "t1", organization_id: "o1", assessment_id: "a1",
+    organization_id: "o1", assessment_id: "a1",
     trace_id: "tr1", query: "nonexistent",
   });
   expect(result.count).toBe(0);
@@ -71,7 +71,7 @@ test("kb_evidence_search returns empty when no evidence found", async () => {
 test("assessment_state_read returns snapshot when found", async () => {
   const mockDeps = {
     getAssessmentSnapshot: async () => ({
-      assessment_id: "a1", tenant_id: "t1", organization_id: "o1",
+      assessment_id: "a1", organization_id: "o1",
       state: "gap_analysis_drafted", framework_id: "f1",
       created_at: "2026-01-01T00:00:00Z", updated_at: "2026-05-01T00:00:00Z",
       metadata: {},
@@ -79,7 +79,7 @@ test("assessment_state_read returns snapshot when found", async () => {
   };
   const tool = createAssessmentStateReadTool(mockDeps);
   const result = await tool.execute({
-    tenant_id: "t1", organization_id: "o1", assessment_id: "a1",
+    organization_id: "o1", assessment_id: "a1",
     trace_id: "tr1",
   });
   expect(result.found).toBe(true);
@@ -92,7 +92,7 @@ test("assessment_state_read returns found=false when not found", async () => {
   };
   const tool = createAssessmentStateReadTool(mockDeps);
   const result = await tool.execute({
-    tenant_id: "t1", organization_id: "o1", assessment_id: "a1",
+    organization_id: "o1", assessment_id: "a1",
     trace_id: "tr1",
   });
   expect(result.found).toBe(false);

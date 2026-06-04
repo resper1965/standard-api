@@ -28,7 +28,7 @@ A clear and concise description of the bug.
 
 - **API Version**: 
 - **Endpoint**: `/api/v1/...`
-- **Tenant ID**: (redact if sensitive)
+- **Organization ID**: (redact if sensitive)
 - **Trace ID**: 
 - **Browser/Client**: 
 

@@ -21,11 +21,11 @@ graph TD
 
 ---
 
-### Épico 1: Ajuste de Layout das API Keys (Self-Service do Tenant)
-* **Objetivo:** Reposicionar a rota de gerenciamento de chaves de API para ser um item de nível de plataforma (tenant-specific) no console, em vez de constar como controle de administração global de plataforma.
+### Épico 1: Ajuste de Layout das API Keys (Self-Service do Organization)
+* **Objetivo:** Reposicionar a rota de gerenciamento de chaves de API para ser um item de nível de plataforma (organization-specific) no console, em vez de constar como controle de administração global de plataforma.
 
-#### `P3-1.1`: Mover API Keys para NavLinks do Tenant
-* **Descrição:** Em `apps/web/src/components/layouts/DashboardLayout.tsx`, mover o item `API Keys` da lista `adminItems` para `navItems`. Isso garante que usuários com acesso comum à organização possam visualizar a tela e gerenciar chaves no escopo do tenant.
+#### `P3-1.1`: Mover API Keys para NavLinks do Organization
+* **Descrição:** Em `apps/web/src/components/layouts/DashboardLayout.tsx`, mover o item `API Keys` da lista `adminItems` para `navItems`. Isso garante que usuários com acesso comum à organização possam visualizar a tela e gerenciar chaves no escopo do organization.
 * **Arquivos Alvo:**
   * [DashboardLayout.tsx](file:///c:/Users/resper/OneDrive/Área de Trabalho/aegis-api/apps/web/src/components/layouts/DashboardLayout.tsx)
 * **Critérios de Aceite:**

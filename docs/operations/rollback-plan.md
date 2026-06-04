@@ -8,7 +8,7 @@
 Ativar rollback quando:
 - Error rate > 5% por mais de 2 minutos
 - P95 latency > 2s por mais de 5 minutos
-- Cross-tenant data leakage detectado (No-Go imediato)
+- Cross-organization data leakage detectado (No-Go imediato)
 - Approval gate bypassável
 - Auth quebrado (401 em endpoints autenticados)
 
@@ -113,7 +113,7 @@ Para desabilitar webhooks globalmente (emergência):
 
 ```sql
 -- Via Neon dashboard ou psql:
-UPDATE webhook_endpoints SET enabled = false WHERE tenant_id IS NOT NULL;
+UPDATE webhook_endpoints SET enabled = false WHERE organization_id IS NOT NULL;
 
 -- Reverter após fix:
 UPDATE webhook_endpoints SET enabled = true WHERE enabled = false;
@@ -124,7 +124,7 @@ UPDATE webhook_endpoints SET enabled = true WHERE enabled = false;
 ## 8. Regras de Rollback
 
 1. **Audit logs**: rollback NUNCA pode apagar audit logs  
-2. **Tenant isolation**: toda mudança de rollback deve ser verificada com cross-tenant test  
+2. **Organization isolation**: toda mudança de rollback deve ser verificada com cross-organization test  
 3. **Comunicação**: toda ação de rollback deve ser registrada no incident channel  
 4. **Backup**: verificar backup antes de qualquer migration de rollback  
 5. **Aprovação**: rollback de migration exige engineering owner  

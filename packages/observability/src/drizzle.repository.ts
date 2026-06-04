@@ -49,7 +49,7 @@ const createDrizzleAuditEventsRepo = (db: DrizzleDb): ObservabilityRepository<Au
   },
   async list(filter) {
     const conditions = [];
-    if (filter?.tenant_id) conditions.push(eq(auditLogs.organizationId, filter.tenant_id));
+    if (filter?.organization_id) conditions.push(eq(auditLogs.organizationId, filter.organization_id));
     if (filter?.assessment_id) conditions.push(eq(auditLogs.organizationId, filter.assessment_id));
     const query = db.select().from(auditLogs);
     const rows = conditions.length > 0
@@ -86,7 +86,7 @@ const createDrizzleSecurityEventsRepo = (db: DrizzleDb): ObservabilityRepository
   },
   async list(filter) {
     const conditions = [];
-    if (filter?.tenant_id) conditions.push(eq(securityEvents.organizationId, filter.tenant_id));
+    if (filter?.organization_id) conditions.push(eq(securityEvents.organizationId, filter.organization_id));
     if (filter?.assessment_id) conditions.push(eq(securityEvents.assessmentId, filter.assessment_id));
     const query = db.select().from(securityEvents);
     const rows = conditions.length > 0
@@ -118,7 +118,7 @@ const createDrizzleMetricsRepo = (db: DrizzleDb): ObservabilityRepository<Operat
   },
   async list(filter) {
     const conditions = [];
-    if (filter?.tenant_id) conditions.push(eq(operationalMetrics.organizationId, filter.tenant_id));
+    if (filter?.organization_id) conditions.push(eq(operationalMetrics.organizationId, filter.organization_id));
     if (filter?.assessment_id) conditions.push(eq(operationalMetrics.assessmentId, filter.assessment_id));
     const query = db.select().from(operationalMetrics);
     const rows = conditions.length > 0
@@ -155,7 +155,7 @@ const createDrizzleUsageRepo = (db: DrizzleDb): ObservabilityRepository<UsageRec
   },
   async list(filter) {
     const conditions = [];
-    if (filter?.tenant_id) conditions.push(eq(usageRecords.organizationId, filter.tenant_id));
+    if (filter?.organization_id) conditions.push(eq(usageRecords.organizationId, filter.organization_id));
     if (filter?.assessment_id) conditions.push(eq(usageRecords.assessmentId, filter.assessment_id));
     const query = db.select().from(usageRecords);
     const rows = conditions.length > 0
@@ -190,7 +190,7 @@ const createDrizzleAgentUsageRepo = (db: DrizzleDb): ObservabilityRepository<Age
   },
   async list(filter) {
     const conditions = [];
-    if (filter?.tenant_id) conditions.push(eq(agentUsageRecords.organizationId, filter.tenant_id));
+    if (filter?.organization_id) conditions.push(eq(agentUsageRecords.organizationId, filter.organization_id));
     if (filter?.assessment_id) conditions.push(eq(agentUsageRecords.assessmentId, filter.assessment_id));
     const query = db.select().from(agentUsageRecords);
     const rows = conditions.length > 0
@@ -221,7 +221,6 @@ export const createDrizzleObservabilityDependencies = (db: DrizzleDb): Observabi
 function mapAuditRow(row: any): AuditEvent {
   return {
     id: row.id,
-    tenant_id: row.tenantId ?? undefined,
     organization_id: row.organizationId ?? undefined,
     assessment_id: undefined,
     actor_id: row.actorId ?? undefined,
@@ -241,7 +240,6 @@ function mapAuditRow(row: any): AuditEvent {
 function mapSecurityEventRow(row: any): SecurityEventRecord {
   return {
     id: row.id,
-    tenant_id: row.tenantId ?? undefined,
     organization_id: row.organizationId ?? undefined,
     assessment_id: row.assessmentId ?? undefined,
     actor_id: row.actorId ?? undefined,
@@ -263,7 +261,6 @@ function mapSecurityEventRow(row: any): SecurityEventRecord {
 function mapMetricRow(row: any): OperationalMetric {
   return {
     id: row.id,
-    tenant_id: row.tenantId ?? undefined,
     organization_id: row.organizationId ?? undefined,
     assessment_id: row.assessmentId ?? undefined,
     metric_name: row.metricName,
@@ -280,7 +277,6 @@ function mapMetricRow(row: any): OperationalMetric {
 function mapUsageRow(row: any): UsageRecord {
   return {
     id: row.id,
-    tenant_id: row.tenantId ?? undefined,
     organization_id: row.organizationId ?? undefined,
     assessment_id: row.assessmentId ?? undefined,
     service_name: row.serviceName,
@@ -301,7 +297,6 @@ function mapUsageRow(row: any): UsageRecord {
 function mapAgentUsageRow(row: any): AgentUsageRecord {
   return {
     id: row.id,
-    tenant_id: row.tenantId,
     organization_id: row.organizationId,
     assessment_id: row.assessmentId,
     agent_run_id: row.agentRunId,

@@ -93,14 +93,14 @@ Toda afirmação relevante deve apontar para artefato-fonte ou aparecer como lim
 `report_artifacts` registra metadados de armazenamento e `content_hash`. O storage adapter local usa provider `r2_compatible_mock` e chave segura:
 
 ```text
-tenants/{tenant_id}/organizations/{organization_id}/assessments/{assessment_id}/reports/{report_version_id}/{artifact_type}.{format}
+organizations/{organization_id}/organizations/{organization_id}/assessments/{assessment_id}/reports/{report_version_id}/{artifact_type}.{format}
 ```
 
-Download URL é placeholder e respeita tenant/assessment, com expiração documentada.
+Download URL é placeholder e respeita organization/assessment, com expiração documentada.
 
 ## Segurança e Multi-Tenancy
 
-Todo serviço exige `tenant_id`, `organization_id`, `assessment_id` e `trace_id`. Criação, renderização, storage e aprovação exigem `actor_id`. Repositórios in-memory filtram por tenant e assessment. Export sem tenant context é bloqueado.
+Todo serviço exige `organization_id`, `organization_id`, `assessment_id` e `trace_id`. Criação, renderização, storage e aprovação exigem `actor_id`. Repositórios in-memory filtram por organization e assessment. Export sem organization context é bloqueado.
 
 ## Integrações
 

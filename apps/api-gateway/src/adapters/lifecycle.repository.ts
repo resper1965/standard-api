@@ -9,7 +9,6 @@ import type { DbClient } from "./db";
 type EventRow = typeof assessmentEvents.$inferSelect;
 
 const mapRowToEvent = (row: EventRow): AssessmentLifecycleEvent => ({
-  tenantId: row.organizationId,
   organizationId: row.organizationId,
   assessmentId: row.assessmentId,
   previousState: row.previousState as AssessmentLifecycleEvent["previousState"],
@@ -31,13 +30,13 @@ export const createLifecycleEventRepository = (): LifecycleEventRepositoryAdapte
     async record(event) {
       records.push(event);
     },
-    async listByAssessment(assessmentId, tenantId) {
-      return records.filter((record) => record.assessmentId === assessmentId && record.organizationId === tenantId);
+    async listByAssessment(assessmentId, organizationId) {
+      return records.filter((record) => record.assessmentId === assessmentId && record.organizationId === organizationId);
     },
-    withTenant(tenantId: string) {
+    withOrganization(organizationId: string) {
       return {
         record: async (event) => this.record(event),
-        listByAssessment: async (assessmentId: string) => this.listByAssessment(assessmentId, tenantId)
+        listByAssessment: async (assessmentId: string) => this.listByAssessment(assessmentId, organizationId)
       };
     }
   };
@@ -60,7 +59,7 @@ export const createDrizzleLifecycleEventRepository = (db: DbClient): LifecycleEv
         createdAt: new Date(),
       });
     },
-    async listByAssessment(assessmentId, tenantId) {
+    async listByAssessment(assessmentId, organizationId) {
       const results = await db.select().from(assessmentEvents)
         .where(
           and(
@@ -69,10 +68,10 @@ export const createDrizzleLifecycleEventRepository = (db: DbClient): LifecycleEv
         );
       return results.map(mapRowToEvent);
     },
-    withTenant(tenantId: string) {
+    withOrganization(organizationId: string) {
       return {
         record: async (event) => this.record(event),
-        listByAssessment: async (assessmentId: string) => this.listByAssessment(assessmentId, tenantId)
+        listByAssessment: async (assessmentId: string) => this.listByAssessment(assessmentId, organizationId)
       };
     }
   };

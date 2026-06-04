@@ -119,7 +119,7 @@ const preference = await mercadopago.preferences.create({
     currency_id: "BRL",
     quantity: 1,
   }],
-  payer: { email: tenant.billing_email },
+  payer: { email: organization.billing_email },
   back_urls: {
     success: `${BASE}/billing/success`,
     failure: `${BASE}/billing/failure`,
@@ -135,11 +135,11 @@ Planned endpoints:
 
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | `/api/v1/tenants/:id/usage` | Current period usage summary |
-| GET | `/api/v1/tenants/:id/usage/history` | Usage history by period |
-| GET | `/api/v1/tenants/:id/billing/plan` | Current plan details |
-| POST | `/api/v1/tenants/:id/billing/upgrade` | Initiate plan upgrade |
-| GET | `/api/v1/tenants/:id/billing/invoices` | Invoice history |
+| GET | `/api/v1/organizations/:id/usage` | Current period usage summary |
+| GET | `/api/v1/organizations/:id/usage/history` | Usage history by period |
+| GET | `/api/v1/organizations/:id/billing/plan` | Current plan details |
+| POST | `/api/v1/organizations/:id/billing/upgrade` | Initiate plan upgrade |
+| GET | `/api/v1/organizations/:id/billing/invoices` | Invoice history |
 
 ---
 
@@ -154,14 +154,14 @@ erDiagram
     INVOICE ||--o{ PAYMENT : receives
 
     TENANT {
-        uuid tenant_id PK
+        uuid organization_id PK
         string billing_email
         string billing_name
     }
 
     USAGE_RECORD {
         uuid usage_id PK
-        uuid tenant_id FK
+        uuid organization_id FK
         string event_type
         int quantity
         timestamp recorded_at
@@ -179,7 +179,7 @@ erDiagram
 
     SUBSCRIPTION {
         uuid subscription_id PK
-        uuid tenant_id FK
+        uuid organization_id FK
         uuid plan_id FK
         string status
         timestamp current_period_start
@@ -210,7 +210,7 @@ erDiagram
 1. **Phase 1 — Metering only** (no billing): Record usage events via Cloudflare Queue. Display on admin dashboard. No enforcement.
 2. **Phase 2 — Plan enforcement**: Add soft limits (warnings) and hard limits (403 responses) based on plan.
 3. **Phase 3 — MercadoPago integration**: Checkout flow, webhook handler, invoice generation.
-4. **Phase 4 — Self-service billing**: Tenant-facing billing dashboard with upgrade/downgrade, invoice download.
+4. **Phase 4 — Self-service billing**: Organization-facing billing dashboard with upgrade/downgrade, invoice download.
 
 ---
 

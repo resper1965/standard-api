@@ -64,8 +64,7 @@ test("ApiKeyAuthProvider autentica key válida com SHA-256", async () => {
 
   const mock = createMockDb({
     id: "key-001",
-    tenantId: "t-001",
-    organizationId: "o-001",
+    organizationId: "t-001",
     keyHash: hash,
     scopes: [],
     expiresAt: null,
@@ -80,7 +79,7 @@ test("ApiKeyAuthProvider autentica key válida com SHA-256", async () => {
 
   if (!result) throw new Error("Expected valid auth context");
   expect(result.actor_id).toBe("apikey:key-001");
-  expect(result.tenant_id).toBe("t-001");
+  expect(result.organization_id).toBe("t-001");
   expect(result.auth_method).toBe("api_key");
   expect(result.actor_type).toBe("service_account");
   expect(result.roles).toContain("integration_service");
@@ -92,8 +91,7 @@ test("ApiKeyAuthProvider rejeita key expirada", async () => {
 
   const mock = createMockDb({
     id: "key-002",
-    tenantId: "t-001",
-    organizationId: "o-001",
+    organizationId: "t-001",
     keyHash: hash,
     scopes: [],
     expiresAt: new Date("2020-01-01").toISOString(),
@@ -114,8 +112,7 @@ test("ApiKeyAuthProvider rejeita key soft-deleted", async () => {
 
   const mock = createMockDb({
     id: "key-003",
-    tenantId: "t-001",
-    organizationId: "o-001",
+    organizationId: "t-001",
     keyHash: hash,
     scopes: [],
     expiresAt: null,
@@ -136,8 +133,7 @@ test("ApiKeyAuthProvider extrai key de Bearer header", async () => {
 
   const mock = createMockDb({
     id: "key-004",
-    tenantId: "t-002",
-    organizationId: "o-002",
+    organizationId: "t-002",
     keyHash: hash,
     scopes: [],
     expiresAt: null,
@@ -160,8 +156,7 @@ test("ApiKeyAuthProvider extrai key de ApiKey header", async () => {
 
   const mock = createMockDb({
     id: "key-005",
-    tenantId: "t-003",
-    organizationId: "o-003",
+    organizationId: "t-003",
     keyHash: hash,
     scopes: [],
     expiresAt: null,
@@ -184,8 +179,7 @@ test("ApiKeyAuthProvider: scopes vazio = full integration_service permissions", 
 
   const mock = createMockDb({
     id: "key-006",
-    tenantId: "t-001",
-    organizationId: "o-001",
+    organizationId: "t-001",
     keyHash: hash,
     scopes: [],
     expiresAt: null,
@@ -212,13 +206,13 @@ function makeJwt(payload: Record<string, unknown>): string {
   return `${header}.${body}.fake-signature`;
 }
 
-test("JwtTenantResolver extrai tenant_id de JWT válido", () => {
+test("JwtTenantResolver extrai organization_id de JWT válido", () => {
   const resolver = new JwtTenantResolver();
-  const token = makeJwt({ tenant_id: "t-001", sub: "user-001" });
+  const token = makeJwt({ organization_id: "t-001", sub: "user-001" });
   const result = resolver.resolve(token);
 
   if (!result) throw new Error("Expected resolution");
-  expect(result.tenantId).toBe("t-001");
+  expect(result.organizationId).toBe("t-001");
   expect(result.userId).toBe("user-001");
 });
 
@@ -231,7 +225,7 @@ test("JwtTenantResolver suporta claim activeOrganizationId", () => {
   const result = resolver.resolve(token);
 
   if (!result) throw new Error("Expected resolution");
-  expect(result.tenantId).toBe("org-001");
+  expect(result.organizationId).toBe("org-001");
 });
 
 test("JwtTenantResolver retorna null para token inválido", () => {
@@ -250,16 +244,16 @@ test("JwtTenantResolver retorna null sem claim de tenant", () => {
 
 test("JwtTenantResolver resolveFromHeader com Bearer", () => {
   const resolver = new JwtTenantResolver();
-  const token = makeJwt({ tenant_id: "t-header", sub: "user-003" });
+  const token = makeJwt({ organization_id: "t-header", sub: "user-003" });
   const result = resolver.resolveFromHeader(`Bearer ${token}`);
 
   if (!result) throw new Error("Expected resolution from header");
-  expect(result.tenantId).toBe("t-header");
+  expect(result.organizationId).toBe("t-header");
 });
 
 test("JwtTenantResolver resolveFromHeader null sem Bearer prefix", () => {
   const resolver = new JwtTenantResolver();
-  const token = makeJwt({ tenant_id: "t-nope" });
+  const token = makeJwt({ organization_id: "t-nope" });
   expect(resolver.resolveFromHeader(`Basic ${token}`)).toBe(null);
   expect(resolver.resolveFromHeader(undefined)).toBe(null);
 });

@@ -27,7 +27,6 @@ export const UpdateScopeRequestSchema = CreateScopeRequestSchema.partial();
 
 export const ScopeResponseSchema = CreateScopeRequestSchema.extend({
   scope_id: UuidSchema,
-  tenant_id: UuidSchema,
   organization_id: UuidSchema,
   assessment_id: UuidSchema,
   scope_version: z.number().int().positive(),
@@ -47,7 +46,6 @@ export const CreateSoaDraftRequestSchema = z.object({
 
 export const SoaVersionResponseSchema = z.object({
   soa_version_id: UuidSchema,
-  tenant_id: UuidSchema,
   organization_id: UuidSchema,
   assessment_id: UuidSchema,
   version_number: z.number().int().positive(),
@@ -69,7 +67,6 @@ export const SoaVersionResponseSchema = z.object({
 
 export const SoaItemResponseSchema = z.object({
   soa_item_id: UuidSchema,
-  tenant_id: UuidSchema,
   organization_id: UuidSchema,
   assessment_id: UuidSchema,
   soa_version_id: UuidSchema,

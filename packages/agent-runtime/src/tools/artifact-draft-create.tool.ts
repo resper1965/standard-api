@@ -7,7 +7,6 @@
 export type ArtifactDraftCreateDependencies = {
   createDraft: (input: {
     assessmentId: string;
-    tenantId: string;
     organizationId: string;
     artifactType: string;
     content: Record<string, unknown>;
@@ -16,7 +15,6 @@ export type ArtifactDraftCreateDependencies = {
 };
 
 export type ArtifactDraftCreateArgs = {
-  tenant_id: string;
   organization_id: string;
   assessment_id: string;
   trace_id: string;
@@ -34,10 +32,9 @@ export type ArtifactDraftCreateOutput = {
 export function createArtifactDraftCreateTool(deps: ArtifactDraftCreateDependencies) {
   return {
     execute: async (args: ArtifactDraftCreateArgs): Promise<ArtifactDraftCreateOutput> => {
-      const { tenant_id, organization_id, assessment_id, artifact_type, trace_id, ...content } = args;
+      const { organization_id, assessment_id, artifact_type, trace_id, ...content } = args;
       const result = await deps.createDraft({
         assessmentId: assessment_id,
-        tenantId: tenant_id,
         organizationId: organization_id,
         artifactType: artifact_type ?? "unknown",
         content: content as Record<string, unknown>,

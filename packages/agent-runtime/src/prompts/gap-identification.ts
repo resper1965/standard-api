@@ -32,7 +32,7 @@ export type GapIdentificationInput = {
   soaApplicabilityStatus: string;
   soaNonApplicabilityRationale?: string;
   regulatoryContext?: string;
-  tenantId: string;
+  organizationId: string;
 };
 
 export type GapIdentificationOutput = {
@@ -208,7 +208,7 @@ export class GapIdentificationPrompt {
     return generateStructuredOutputWithUsage<GapIdentificationOutput>({
       provider: this.provider,
       model: this.model,
-      tenantId: input.tenantId,
+      organizationId: input.organizationId,
       systemPrompt: SYSTEM_PROMPT,
       userPrompt,
       schemaName: "gap_identification_result",

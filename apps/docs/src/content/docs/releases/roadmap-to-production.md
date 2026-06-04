@@ -14,7 +14,7 @@ title: "Master Roadmap to Production"
 
 - [x] **Estratégia Final de Storage Físico:** R2 provisionado com buckets `standard-documents-prod` e `standard-exports-prod`. Backup script `scripts/backup-r2.mjs` operacional.
 - [x] **Estratégia de PostgreSQL Gerenciado:** Neon PostgreSQL com drizzle-orm, 8 tabelas Standard Native Auth + domain tables + 4 tabelas observability migradas.
-- [ ] **Cloudflare Assíncrono Real:** Provisionar filas reais (Queues), Vectorize Workspaces separados por Tenant/Subdomain e aplicar o Workflow durável via nuvem em vez do simulador dev.
+- [ ] **Cloudflare Assíncrono Real:** Provisionar filas reais (Queues), Vectorize Workspaces separados por Organization/Subdomain e aplicar o Workflow durável via nuvem em vez do simulador dev.
 - [x] **Provedor de Auth (Staging/Production):** Standard Native Auth integrado com session cookies, Google OAuth, API keys e organization-based tenancy.
 
 ## Trilha 2: Core Funcional & Assessments (Standard Lifecycle)
@@ -25,7 +25,7 @@ title: "Master Roadmap to Production"
 - [ ] **Conectores Externos:** Desenhar como os conectores third-party se conectarão à nossa Engine do SCF (Ex: Ingestão passiva de Cloud scanners).
 
 ## Trilha 3: Governança, AppSec & Hardening 
-*Defesa de negócio e escalabilidade multi-tenant*
+*Defesa de negócio e escalabilidade multi-organization*
 
 - [x] **Rate Limiting & Quotas Comerciais:** KV namespace `STANDARD_CACHE` provisionado. Rate limiting ativo no API Gateway.
 - [ ] **Anti-Malware Binding:** Garantir scan as-a-service em todos os anexos injetados por usuários antes do storage no R2.

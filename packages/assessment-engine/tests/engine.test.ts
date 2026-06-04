@@ -23,13 +23,13 @@ function expectErrorCode(run: () => void, code: string): void {
 // ── TENANT_CONTEXT_MISMATCH ─────────────────────────────────────
 
 describe("Engine — TENANT_CONTEXT_MISMATCH", () => {
-  it("rejeita transição quando tenantId do contexto difere do assessment", () => {
+  it("rejeita transição quando organizationId do contexto difere do assessment", () => {
     expectErrorCode(
       () =>
         validateTransition(
           assessment({ documentCount: 1 }),
           "documents_uploaded",
-          baseContext({ tenantId: "ffffffff-ffff-4fff-8fff-ffffffffffff" })
+          baseContext({ organizationId: "ffffffff-ffff-4fff-8fff-ffffffffffff" })
         ),
       "TENANT_CONTEXT_MISMATCH"
     );
@@ -432,14 +432,12 @@ describe("Engine — Integridade do evento de transição", () => {
     const result = executeTransition(current, "documents_uploaded", baseContext());
     expect(result.assessment.state).toBe("documents_uploaded");
     expect(result.assessment.documentCount).toBe(3);
-    expect(result.assessment.tenantId).toBe(ids.tenantId);
     expect(result.assessment.organizationId).toBe(ids.organizationId);
   });
 
-  it("evento preserva tenant_id, organization_id e assessment_id", () => {
+  it("evento preserva organization_id, organization_id e assessment_id", () => {
     const current = assessment({ documentCount: 1 });
     const result = executeTransition(current, "documents_uploaded", baseContext());
-    expect(result.event.tenantId).toBe(current.tenantId);
     expect(result.event.organizationId).toBe(current.organizationId);
     expect(result.event.assessmentId).toBe(current.id);
   });

@@ -5,11 +5,11 @@
 
 > **For Antigravity:** REQUIRED WORKFLOW: Use `.agent/workflows/execute-plan.md` to execute this plan in single-flow mode.
 
-**Goal:** Create the base entity for processing activities (ROPA), with CRUD, tenant isolation, audit events, and CompletenessAnalyzer integration.
+**Goal:** Create the base entity for processing activities (ROPA), with CRUD, organization isolation, audit events, and CompletenessAnalyzer integration.
 
 **Architecture:** New `packages/privacy/` package following the existing SoA pattern (types → repos → services → factory → routes). The package owns 3 Drizzle tables, exposes `PrivacyDependencies`, and consumes `@standard/domain` for `CompletenessAnalyzer<T>`. Routes are registered in `apps/api-gateway/`.
 
-**Tech Stack:** TypeScript (strict), Drizzle ORM, Zod validation, `@standard/domain` CompletenessAnalyzer, existing auth/tenant/error middleware.
+**Tech Stack:** TypeScript (strict), Drizzle ORM, Zod validation, `@standard/domain` CompletenessAnalyzer, existing auth/organization/error middleware.
 
 ---
 
@@ -96,7 +96,7 @@ export const privacyDataSubjectCategoryEnum = pgEnum("privacy_data_subject_categ
 
 export const privacyProcessingActivities = pgTable("privacy_processing_activities", {
   id: uuid("id").primaryKey().defaultRandom(),
-  tenantId: uuid("tenant_id").notNull(),
+  organizationId: uuid("organization_id").notNull(),
   assessmentId: uuid("assessment_id"),
   name: text("name").notNull(),
   description: text("description"),
@@ -125,15 +125,15 @@ export const privacyProcessingActivities = pgTable("privacy_processing_activitie
   ...auditMetadata(),
   ...timestamps(),
 }, (table) => [
-  index("idx_privacy_activities_tenant").on(table.tenantId),
+  index("idx_privacy_activities_tenant").on(table.organizationId),
   index("idx_privacy_activities_assessment").on(table.assessmentId),
   index("idx_privacy_activities_status").on(table.status),
-  index("idx_privacy_activities_tenant_status").on(table.tenantId, table.status),
+  index("idx_privacy_activities_tenant_status").on(table.organizationId, table.status),
 ]);
 
 export const privacyProcessingActivityDataSubjects = pgTable("privacy_processing_activity_data_subjects", {
   id: uuid("id").primaryKey().defaultRandom(),
-  tenantId: uuid("tenant_id").notNull(),
+  organizationId: uuid("organization_id").notNull(),
   activityId: uuid("activity_id").notNull(),
   category: privacyDataSubjectCategoryEnum("category").notNull(),
   description: text("description"),
@@ -143,12 +143,12 @@ export const privacyProcessingActivityDataSubjects = pgTable("privacy_processing
   ...timestamps(),
 }, (table) => [
   index("idx_privacy_data_subjects_activity").on(table.activityId),
-  index("idx_privacy_data_subjects_tenant").on(table.tenantId),
+  index("idx_privacy_data_subjects_tenant").on(table.organizationId),
 ]);
 
 export const privacyProcessingActivityDataCategories = pgTable("privacy_processing_activity_data_categories", {
   id: uuid("id").primaryKey().defaultRandom(),
-  tenantId: uuid("tenant_id").notNull(),
+  organizationId: uuid("organization_id").notNull(),
   activityId: uuid("activity_id").notNull(),
   categoryName: text("category_name").notNull(),
   sensitivity: privacySensitivityEnum("sensitivity").default("personal").notNull(),
@@ -158,7 +158,7 @@ export const privacyProcessingActivityDataCategories = pgTable("privacy_processi
   ...timestamps(),
 }, (table) => [
   index("idx_privacy_data_categories_activity").on(table.activityId),
-  index("idx_privacy_data_categories_tenant").on(table.tenantId),
+  index("idx_privacy_data_categories_tenant").on(table.organizationId),
 ]);
 ```
 
@@ -284,7 +284,7 @@ export const CreatePrivacyDataCategoryRequestSchema = z.object({
 
 export const PrivacyActivityResponseSchema = z.object({
   id: UuidSchema,
-  tenant_id: UuidSchema,
+  organization_id: UuidSchema,
   assessment_id: UuidSchema.nullable(),
   name: z.string(),
   description: z.string().nullable(),
@@ -317,7 +317,7 @@ export const PrivacyActivityResponseSchema = z.object({
 
 export const PrivacyDataSubjectResponseSchema = z.object({
   id: UuidSchema,
-  tenant_id: UuidSchema,
+  organization_id: UuidSchema,
   activity_id: UuidSchema,
   category: PrivacyDataSubjectCategorySchema,
   description: z.string().nullable(),
@@ -330,7 +330,7 @@ export const PrivacyDataSubjectResponseSchema = z.object({
 
 export const PrivacyDataCategoryResponseSchema = z.object({
   id: UuidSchema,
-  tenant_id: UuidSchema,
+  organization_id: UuidSchema,
   activity_id: UuidSchema,
   category_name: z.string(),
   sensitivity: PrivacyDataSensitivitySchema,
@@ -415,7 +415,7 @@ git commit -m "feat(schemas): add privacy Zod validation schemas"
 
 Repository interfaces + PrivacyDependencies + PrivacyContext. Follow the SoA pattern in `packages/soa/src/types.ts`:
 
-- `PrivacyContext` = `{ tenantId, actorId?, traceId }`
+- `PrivacyContext` = `{ organizationId, actorId?, traceId }`
 - `PrivacyActivityRepository` = `{ save, get, list, update, delete }`
 - `PrivacyDataSubjectRepository` = `{ saveMany, listByActivity, deleteByActivity }`
 - `PrivacyDataCategoryRepository` = `{ saveMany, listByActivity, deleteByActivity }`
@@ -427,7 +427,7 @@ Repository interfaces + PrivacyDependencies + PrivacyContext. Follow the SoA pat
 Follow `packages/soa/src/errors.ts` pattern:
 
 - `PrivacyError` extends `Error` with `code`, `details`
-- `assertPrivacyContext()` validates `tenantId` + `traceId`
+- `assertPrivacyContext()` validates `organizationId` + `traceId`
 - `assertPrivacyActor()` validates `actorId`
 
 **Step 5: Commit**
@@ -453,7 +453,7 @@ Follow `packages/soa/src/repositories/soa.repositories.ts` pattern. Three InMemo
 - `createInMemoryPrivacyDataCategoryRepository()`
 - `createInMemoryPrivacyRepositories()` — combines all three.
 
-All methods must filter by `tenant_id`.
+All methods must filter by `organization_id`.
 
 **Step 2: Commit**
 
@@ -478,15 +478,15 @@ Test file: `packages/privacy/tests/privacy-crud.test.ts`
 Tests to write:
 1. `create activity returns valid response with id`
 2. `create activity sets defaults (status=draft, controller_role=unknown)`
-3. `get activity returns null for wrong tenant`
-4. `list activities filters by tenant_id`
+3. `get activity returns null for wrong organization`
+4. `list activities filters by organization_id`
 5. `update activity merges partial patch`
 6. `update activity rejects archived status`
 7. `delete (soft) sets deletedAt`
 8. `create data subject links to activity`
-9. `list data subjects filters by activity_id and tenant_id`
+9. `list data subjects filters by activity_id and organization_id`
 10. `create data category links to activity`
-11. `list data categories filters by activity_id and tenant_id`
+11. `list data categories filters by activity_id and organization_id`
 12. `CRUD rejects operations on non-existent activity`
 
 **Step 2: Run tests to verify they fail**
@@ -502,18 +502,18 @@ export class PrivacyCrudService {
   constructor(private readonly deps: PrivacyDependencies) {}
 
   async createActivity(request, context): Promise<PrivacyActivityResponse> { ... }
-  async getActivity(id, tenantId): Promise<PrivacyActivityResponse | null> { ... }
-  async listActivities(tenantId, filters?): Promise<PrivacyActivityResponse[]> { ... }
+  async getActivity(id, organizationId): Promise<PrivacyActivityResponse | null> { ... }
+  async listActivities(organizationId, filters?): Promise<PrivacyActivityResponse[]> { ... }
   async updateActivity(id, patch, context): Promise<PrivacyActivityResponse> { ... }
   async deleteActivity(id, context): Promise<void> { ... }
 
   async addDataSubjects(activityId, subjects, context): Promise<PrivacyDataSubjectResponse[]> { ... }
-  async listDataSubjects(activityId, tenantId): Promise<PrivacyDataSubjectResponse[]> { ... }
-  async removeDataSubject(subjectId, tenantId): Promise<void> { ... }
+  async listDataSubjects(activityId, organizationId): Promise<PrivacyDataSubjectResponse[]> { ... }
+  async removeDataSubject(subjectId, organizationId): Promise<void> { ... }
 
   async addDataCategories(activityId, categories, context): Promise<PrivacyDataCategoryResponse[]> { ... }
-  async listDataCategories(activityId, tenantId): Promise<PrivacyDataCategoryResponse[]> { ... }
-  async removeDataCategory(categoryId, tenantId): Promise<void> { ... }
+  async listDataCategories(activityId, organizationId): Promise<PrivacyDataCategoryResponse[]> { ... }
+  async removeDataCategory(categoryId, organizationId): Promise<void> { ... }
 }
 ```
 
@@ -575,11 +575,11 @@ const privacyCompletenessAnalyzer = createCompletenessAnalyzer<PrivacyActivityRe
 export class PrivacyCompletenessService {
   constructor(private readonly deps: PrivacyDependencies) {}
 
-  async analyze(activityId: string, tenantId: string): Promise<CompletenessResult> {
-    const activity = await this.deps.repositories.activities.get(activityId, tenantId);
+  async analyze(activityId: string, organizationId: string): Promise<CompletenessResult> {
+    const activity = await this.deps.repositories.activities.get(activityId, organizationId);
     if (!activity) throw new PrivacyError("ACTIVITY_NOT_FOUND", "Activity not found.");
-    const dataSubjects = await this.deps.repositories.dataSubjects.listByActivity(activityId, tenantId);
-    const dataCategories = await this.deps.repositories.dataCategories.listByActivity(activityId, tenantId);
+    const dataSubjects = await this.deps.repositories.dataSubjects.listByActivity(activityId, organizationId);
+    const dataCategories = await this.deps.repositories.dataCategories.listByActivity(activityId, organizationId);
     return privacyCompletenessAnalyzer.analyze({
       entity: activity,
       relations: { data_subjects: dataSubjects, data_categories: dataCategories },
@@ -688,7 +688,7 @@ Endpoints:
 | DELETE | `/api/v1/privacy/processing-activities/:id/data-categories/:categoryId` | remove |
 
 Each handler:
-1. Extracts `tenantId`, `traceId`, `actorId` from context
+1. Extracts `organizationId`, `traceId`, `actorId` from context
 2. Validates request body with Zod
 3. Calls service method
 4. Returns JSON response
@@ -782,7 +782,7 @@ Expected: 57/57 PASS
 
 ```bash
 git add -A
-git commit -m "feat(privacy): complete Phase 1 — base ROPA entity with CRUD, tenant isolation, audit events, and CompletenessAnalyzer integration
+git commit -m "feat(privacy): complete Phase 1 — base ROPA entity with CRUD, organization isolation, audit events, and CompletenessAnalyzer integration
 
 Co-Authored-By: Google Antigravity (Gemini)"
 ```
@@ -792,9 +792,9 @@ Co-Authored-By: Google Antigravity (Gemini)"
 ## Verification Checklist
 
 - [ ] 3 Drizzle tables created with proper indexes
-- [ ] All tables have `tenant_id` column + index
+- [ ] All tables have `organization_id` column + index
 - [ ] Zod schemas cover create, update, and response for all entities
-- [ ] InMemory repos filter by `tenant_id` in every query
+- [ ] InMemory repos filter by `organization_id` in every query
 - [ ] CRUD service handles create, get, list, update, soft-delete
 - [ ] CompletenessAnalyzer configured with Privacy-specific rules
 - [ ] Status transitions validated (cannot advance to `under_review` without passing completeness)

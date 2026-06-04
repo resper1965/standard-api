@@ -30,7 +30,7 @@ Quando um usuário é cadastrado na plataforma Standard, coletamos:
 | Endereço de e-mail | Autenticação, comunicação, notificações | Execução de contrato (art. 7º, V) |
 | Cargo / função | Controle de acesso baseado em papel (RBAC) | Legítimo interesse (art. 7º, IX) |
 | Número de telefone | Verificação de identidade (MFA), suporte | Consentimento (art. 7º, I) — coletado opcionalmente |
-| Identificador de tenant/organização | Isolamento multi-tenant, auditoria | Execução de contrato (art. 7º, V) |
+| Identificador de organization/organização | Isolamento multi-organization, auditoria | Execução de contrato (art. 7º, V) |
 
 ### 2.2 Dados de Uso e Logs (Controladora: Bekaa)
 
@@ -49,7 +49,7 @@ Os documentos enviados pelo cliente para a plataforma (políticas, evidências, 
 
 - O **cliente é o controlador** de quaisquer dados pessoais contidos nesses documentos.
 - A **Bekaa atua exclusivamente como operadora**, processando esses dados conforme as instruções do cliente e nos termos do **DPA (Data Processing Agreement)** disponível em `docs/legal/dpa-template.md`.
-- Os documentos são armazenados em **storage isolado por tenant** (Cloudflare R2) e não são acessados pela Bekaa exceto para fins operacionais necessários (suporte técnico com autorização explícita, ou cumprimento de obrigação legal).
+- Os documentos são armazenados em **storage isolado por organization** (Cloudflare R2) e não são acessados pela Bekaa exceto para fins operacionais necessários (suporte técnico com autorização explícita, ou cumprimento de obrigação legal).
 - O processamento por **modelos de IA** (OpenAI, Google Gemini) ocorre via **Cloudflare AI Gateway**, com observabilidade e controle de chamadas.
 
 **Aviso importante:** A plataforma Standard não é projetada para armazenar dados pessoais sensíveis de consumidores finais (saúde, biometria, dados financeiros de pessoas físicas). Caso o cliente insira tais dados, é de sua responsabilidade garantir a base legal adequada.
@@ -82,7 +82,7 @@ A retenção obedece à política completa descrita em [`data-retention-policy.m
 | Logs de acesso e auditoria | 3 anos (obrigação legal e contratual) |
 | Métricas de uso agregadas | 90 dias para dados brutos; indefinido para dados agregados anonimizados |
 | Documentos do cliente (assessments) | Conforme contrato de serviço; padrão: 30 dias após encerramento |
-| Tokens de sessão | Expiração automática (configurável por tenant) |
+| Tokens de sessão | Expiração automática (configurável por organization) |
 
 Após os prazos, os dados são excluídos de forma segura ou anonimizados irreversivelmente.
 
@@ -138,7 +138,7 @@ Não transferimos dados para países sem nível adequado de proteção sem mecan
 A Bekaa adota medidas técnicas e organizacionais para proteger os dados pessoais, incluindo:
 
 - Criptografia em trânsito (TLS 1.2+) e em repouso;
-- Controle de acesso baseado em papéis (RBAC) e isolamento por tenant;
+- Controle de acesso baseado em papéis (RBAC) e isolamento por organization;
 - Audit trail completo de ações críticas;
 - Gerenciamento de secrets via variáveis seguras (sem armazenamento em código);
 - Revisões periódicas de segurança e monitoramento contínuo;

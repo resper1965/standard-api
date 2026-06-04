@@ -12,7 +12,7 @@ Escopo: arquitetura, soluções, código e ambiente de produção do Standard AP
 Esta revisão encontrou bloqueadores reais para produção. Os principais riscos são:
 
 - Credenciais reais versionadas em scripts rastreados pelo Git.
-- Possível bypass de isolamento multi-tenant via `:tenantId` em path.
+- Possível bypass de isolamento multi-organization via `:organizationId` em path.
 - Rate limiting e revogação de sessão/API key potencialmente inoperantes em produção por mismatch de binding KV.
 - Pipeline de produção configurado para ignorar falhas de lint/audit e aplicar schema com `drizzle-kit push --force`.
 - Drift relevante entre documentação de go-live, configs Wrangler e código efetivamente executado.
@@ -72,41 +72,41 @@ Correção recomendada:
 - Bloquear deploy se secret scan falhar.
 - Revisar e, se necessário, limpar histórico Git ou tratar o repositório como permanentemente exposto.
 
-### P0-02: Bypass de isolamento por tenant via path param
+### P0-02: Bypass de isolamento por organization via path param
 
 Severidade: P0 / bloqueador de produção  
 Status: aberto
 
-O middleware de tenant permite que `:tenantId` do path substitua o tenant autenticado quando não há header de tenant. A comparação existente só valida path contra header, não path contra o tenant já resolvido da sessão/API key.
+O middleware de organization permite que `:organizationId` do path substitua o organization autenticado quando não há header de organization. A comparação existente só valida path contra header, não path contra o organization já resolvido da sessão/API key.
 
 Evidências:
 
-- `apps/api-gateway/src/middleware/tenant.middleware.ts:7` lê `context.params.tenantId`.
-- `apps/api-gateway/src/middleware/tenant.middleware.ts:12` escolhe `headerTenantId ?? pathTenantId ?? context.tenantId`.
-- `apps/api-gateway/src/middleware/tenant.middleware.ts:46` só compara path contra header.
-- `apps/api-gateway/src/middleware/tenant.middleware.ts:89` sobrescreve `context.tenantId = resolvedTenantId`.
+- `apps/api-gateway/src/middleware/organization.middleware.ts:7` lê `context.params.organizationId`.
+- `apps/api-gateway/src/middleware/organization.middleware.ts:12` escolhe `headerOrganizationId ?? pathOrganizationId ?? context.organizationId`.
+- `apps/api-gateway/src/middleware/organization.middleware.ts:46` só compara path contra header.
+- `apps/api-gateway/src/middleware/organization.middleware.ts:89` sobrescreve `context.organizationId = resolvedOrganizationId`.
 
 Rotas afetadas observadas:
 
-- `apps/api-gateway/src/routes/organizations.routes.ts:48` define `/api/v1/tenants/:tenantId/organizations`.
-- `apps/api-gateway/src/routes/organizations.routes.ts:61` usa `deps.organizations.withTenant(tenantId!)`.
-- `apps/api-gateway/src/routes/organizations.routes.ts:62` lista organizações do tenant resolvido.
-- `apps/api-gateway/src/routes/dashboard.routes.ts:168` define `/api/v1/tenants/:tenantId/audit-logs`.
-- `apps/api-gateway/src/routes/dashboard.routes.ts:172` compara `routeParam(params, "tenantId") !== tenantId`, mas `tenantId` já pode ter sido sobrescrito pelo path.
-- `apps/api-gateway/src/routes/observability.routes.ts:115` define `/api/v1/tenants/:tenantId/usage`.
+- `apps/api-gateway/src/routes/organizations.routes.ts:48` define `/api/v1/organizations/:organizationId/organizations`.
+- `apps/api-gateway/src/routes/organizations.routes.ts:61` usa `deps.organizations.withTenant(organizationId!)`.
+- `apps/api-gateway/src/routes/organizations.routes.ts:62` lista organizações do organization resolvido.
+- `apps/api-gateway/src/routes/dashboard.routes.ts:168` define `/api/v1/organizations/:organizationId/audit-logs`.
+- `apps/api-gateway/src/routes/dashboard.routes.ts:172` compara `routeParam(params, "organizationId") !== organizationId`, mas `organizationId` já pode ter sido sobrescrito pelo path.
+- `apps/api-gateway/src/routes/observability.routes.ts:115` define `/api/v1/organizations/:organizationId/usage`.
 - `apps/api-gateway/src/routes/observability.routes.ts:119` tem a mesma guarda tautológica.
 
 Impacto:
 
-- Usuário autenticado ou API key de um tenant pode tentar acessar dados de outro tenant se souber/adivinhar UUID de tenant.
-- A arquitetura do produto exige isolamento por `tenant_id`; esse bug viola a premissa central multi-tenant.
+- Usuário autenticado ou API key de um organization pode tentar acessar dados de outro organization se souber/adivinhar UUID de organization.
+- A arquitetura do produto exige isolamento por `organization_id`; esse bug viola a premissa central multi-organization.
 
 Correção recomendada:
 
-- Tratar tenant autenticado como fonte autoritativa.
-- Permitir path tenant apenas se for idêntico ao tenant da sessão/API key.
-- Separar claramente tenant solicitado, tenant autenticado e tenant resolvido.
-- Adicionar testes negativos para path tenant diferente do tenant da sessão/API key.
+- Tratar organization autenticado como fonte autoritativa.
+- Permitir path organization apenas se for idêntico ao organization da sessão/API key.
+- Separar claramente organization solicitado, organization autenticado e organization resolvido.
+- Adicionar testes negativos para path organization diferente do organization da sessão/API key.
 - Aplicar validação equivalente para `organization_id` em rotas e tools.
 
 ### P0-03: Rate limiting e revogação podem estar desligados em produção
@@ -333,12 +333,12 @@ Evidências:
 - `apps/api-gateway/src/routes/mcp.routes.ts:95` processa `tools/call`.
 - `apps/api-gateway/src/routes/mcp.routes.ts:107` chama `dispatchMcpTool(toolName, toolArgs, ctx)`.
 - `apps/api-gateway/src/mcp/tools/assessment.tools.ts:46` aceita `organization_id` de args ou `ctx.organizationId`.
-- `apps/api-gateway/src/mcp/tools/assessment.tools.ts:50` lista assessments por `orgId` e `tenantId`, sem validar se `orgId` pertence ao contexto da API key.
+- `apps/api-gateway/src/mcp/tools/assessment.tools.ts:50` lista assessments por `orgId` e `organizationId`, sem validar se `orgId` pertence ao contexto da API key.
 
 Impacto:
 
 - Chaves M2M com acesso ao MCP podem executar ferramentas além do necessário.
-- Organização pode ser parâmetro controlado pelo cliente, abrindo risco de cross-org dentro do tenant.
+- Organização pode ser parâmetro controlado pelo cliente, abrindo risco de cross-org dentro do organization.
 
 Correção recomendada:
 
@@ -432,7 +432,7 @@ Existe script para habilitar RLS, mas ele não está no diretório usado pelo mi
 Evidências:
 
 - `scripts/migrations/011-enable-rls.mjs:5` documenta uso de `app.current_tenant`.
-- `scripts/migrations/011-enable-rls.mjs:11` mostra `SET app.current_tenant = '<tenant-uuid>'`.
+- `scripts/migrations/011-enable-rls.mjs:11` mostra `SET app.current_tenant = '<organization-uuid>'`.
 - `scripts/migrations/011-enable-rls.mjs:97` habilita RLS.
 - `scripts/migrations/011-enable-rls.mjs:113` cria policy com `current_setting('app.current_tenant', true)::text`.
 - `scripts/migrations/011-enable-rls.mjs:123` executa `FORCE ROW LEVEL SECURITY`.
@@ -446,8 +446,8 @@ Impacto:
 Correção recomendada:
 
 - Mover RLS para migration versionada oficial, se for a estratégia escolhida.
-- Setar tenant no início de cada transação/request.
-- Validar tipos da policy, especialmente se `tenant_id` for UUID.
+- Setar organization no início de cada transação/request.
+- Validar tipos da policy, especialmente se `organization_id` for UUID.
 - Criar testes de isolamento em nível de banco.
 
 ### P2-02: Tipos `Env` são manuais e divergem dos Wrangler efetivos
@@ -622,7 +622,7 @@ Cannot access variable before it is declared
 ## Ordem recomendada de correção
 
 1. Rotacionar credenciais expostas e remover secrets versionados.
-2. Corrigir tenant middleware para impedir path tenant override.
+2. Corrigir organization middleware para impedir path organization override.
 3. Unificar binding `STANDARD_CACHE` e fazer rate limit falhar fechado em produção.
 4. Corrigir workflow de produção: remover `|| true`, trocar `drizzle-kit push --force` por migrations versionadas e fixar Wrangler.
 5. Reconciliar Wrangler configs e gerar tipos `Env`.
@@ -637,7 +637,7 @@ Cannot access variable before it is declared
 
 - Nenhum P0 aberto.
 - Credenciais rotacionadas e scanner de secrets bloqueando CI.
-- Teste negativo de cross-tenant passando para path/header/session/API key.
+- Teste negativo de cross-organization passando para path/header/session/API key.
 - Rate limit validado contra o binding produtivo.
 - Deploy usando migrations versionadas.
 - Workflow/queue/cron testados no ambiente staging com os mesmos configs de produção.

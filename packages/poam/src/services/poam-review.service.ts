@@ -8,7 +8,7 @@ export class PoamReviewService {
   async updatePoamItem(poamItemId: string, patch: UpdatePoamItemRequest, context: PoamContext): Promise<PoamItemResponse> {
     assertContext(context);
     assertActor(context);
-    const item = await this.deps.repositories.items.get(poamItemId, context.tenantId);
+    const item = await this.deps.repositories.items.get(poamItemId, context.organizationId);
     if (!item || item.assessment_id !== context.assessmentId) throw new PoamWorkflowError("POAM_ITEM_NOT_FOUND", "POA&M item not found.");
     const version = await this.getVersion(item.poam_version_id, context);
     if (version.status === "approved") throw new PoamWorkflowError("POAM_IMMUTABLE", "Approved POA&M versions are immutable.");
@@ -23,7 +23,7 @@ export class PoamReviewService {
   async bulkUpdatePoamItems(poamVersionId: string, patch: UpdatePoamItemRequest, context: PoamContext): Promise<PoamItemResponse[]> {
     const version = await this.getVersion(poamVersionId, context);
     if (version.status === "approved") throw new PoamWorkflowError("POAM_IMMUTABLE", "Approved POA&M versions are immutable.");
-    const items = await this.deps.repositories.items.listByVersion(poamVersionId, context.tenantId);
+    const items = await this.deps.repositories.items.listByVersion(poamVersionId, context.organizationId);
     const updated: PoamItemResponse[] = [];
     for (const item of items) updated.push(await this.updatePoamItem(item.poam_item_id, patch, context));
     return updated;
@@ -51,7 +51,7 @@ export class PoamReviewService {
   }
 
   private async getVersion(poamVersionId: string, context: PoamContext): Promise<PoamVersionResponse> {
-    const version = await this.deps.repositories.versions.get(poamVersionId, context.tenantId);
+    const version = await this.deps.repositories.versions.get(poamVersionId, context.organizationId);
     if (!version || version.assessment_id !== context.assessmentId) throw new PoamWorkflowError("POAM_NOT_FOUND", "POA&M version not found.");
     return version;
   }

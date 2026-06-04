@@ -43,7 +43,7 @@ const toIso = (d: Date | null | undefined): string =>
 function mapActivityRow(row: typeof privacyProcessingActivities.$inferSelect): PrivacyActivityResponse {
   return {
     id: row.id,
-    tenant_id: row.organizationId,
+    organization_id: row.organizationId,
     assessment_id: row.assessmentId ?? null,
     name: row.name,
     description: row.description ?? null,
@@ -81,7 +81,7 @@ function mapActivityRow(row: typeof privacyProcessingActivities.$inferSelect): P
 function mapDataSubjectRow(row: typeof privacyProcessingActivityDataSubjects.$inferSelect): PrivacyDataSubjectResponse {
   return {
     id: row.id,
-    tenant_id: row.organizationId,
+    organization_id: row.organizationId,
     activity_id: row.activityId,
     category: row.category as PrivacyDataSubjectResponse["category"],
     description: row.description ?? null,
@@ -96,7 +96,7 @@ function mapDataSubjectRow(row: typeof privacyProcessingActivityDataSubjects.$in
 function mapDataCategoryRow(row: typeof privacyProcessingActivityDataCategories.$inferSelect): PrivacyDataCategoryResponse {
   return {
     id: row.id,
-    tenant_id: row.organizationId,
+    organization_id: row.organizationId,
     activity_id: row.activityId,
     category_name: row.categoryName,
     sensitivity: row.sensitivity as PrivacyDataCategoryResponse["sensitivity"],
@@ -111,7 +111,7 @@ function mapDataCategoryRow(row: typeof privacyProcessingActivityDataCategories.
 function mapThirdPartyRow(row: typeof privacyProcessingActivityThirdParties.$inferSelect): PrivacyThirdPartyResponse {
   return {
     id: row.id,
-    tenant_id: row.organizationId,
+    organization_id: row.organizationId,
     activity_id: row.activityId,
     name: row.name,
     role: row.role as PrivacyThirdPartyResponse["role"],
@@ -130,7 +130,7 @@ function mapThirdPartyRow(row: typeof privacyProcessingActivityThirdParties.$inf
 function mapScreeningRow(row: typeof privacyProcessingActivityScreenings.$inferSelect): PrivacyScreeningResponse {
   return {
     id: row.id,
-    tenant_id: row.organizationId,
+    organization_id: row.organizationId,
     activity_id: row.activityId,
     screening_type: row.screeningType as PrivacyScreeningResponse["screening_type"],
     result: row.result as PrivacyScreeningResponse["result"],
@@ -147,7 +147,7 @@ function mapScreeningRow(row: typeof privacyProcessingActivityScreenings.$inferS
 function mapFieldReviewRow(row: typeof privacyProcessingActivityFieldReviews.$inferSelect): PrivacyFieldReviewResponse {
   return {
     id: row.id,
-    tenant_id: row.organizationId,
+    organization_id: row.organizationId,
     activity_id: row.activityId,
     field_name: row.fieldName,
     review_status: row.reviewStatus as PrivacyFieldReviewResponse["review_status"],
@@ -165,7 +165,7 @@ function mapFieldReviewRow(row: typeof privacyProcessingActivityFieldReviews.$in
 function mapScfControlRow(row: typeof privacyProcessingActivityScfControls.$inferSelect): PrivacyScfControlResponse {
   return {
     id: row.id,
-    tenant_id: row.organizationId,
+    organization_id: row.organizationId,
     activity_id: row.activityId,
     scf_version: row.scfVersion ?? null,
     control_id: row.controlId ?? null,
@@ -192,7 +192,7 @@ const createDrizzleActivityRepository = (db: DbClient): PrivacyActivityRepositor
   async save(activity) {
     await db.insert(privacyProcessingActivities).values({
       id: activity.id,
-      organizationId: activity.tenant_id,
+      organizationId: activity.organization_id,
       assessmentId: activity.assessment_id ?? undefined,
       name: activity.name,
       description: activity.description,
@@ -222,7 +222,7 @@ const createDrizzleActivityRepository = (db: DbClient): PrivacyActivityRepositor
     }).onConflictDoNothing();
   },
 
-  async get(id, tenantId) {
+  async get(id, organizationId) {
     const [row] = await db.select().from(privacyProcessingActivities)
       .where(and(
         eq(privacyProcessingActivities.id, id),
@@ -232,7 +232,7 @@ const createDrizzleActivityRepository = (db: DbClient): PrivacyActivityRepositor
     return row ? mapActivityRow(row) : null;
   },
 
-  async list(tenantId, filters?: PrivacyActivityFilters) {
+  async list(organizationId, filters?: PrivacyActivityFilters) {
     let query = db.select().from(privacyProcessingActivities)
       .where(and(
         isNull(privacyProcessingActivities.deletedAt),
@@ -282,7 +282,7 @@ const createDrizzleActivityRepository = (db: DbClient): PrivacyActivityRepositor
         ));
   },
 
-  async softDelete(id, tenantId) {
+  async softDelete(id, organizationId) {
     await db.update(privacyProcessingActivities)
       .set({ deletedAt: new Date() })
       .where(and(
@@ -299,7 +299,7 @@ const createDrizzleDataSubjectRepository = (db: DbClient): PrivacyDataSubjectRep
     await db.insert(privacyProcessingActivityDataSubjects).values(
       subjects.map(s => ({
         id: s.id,
-        organizationId: s.tenant_id,
+        organizationId: s.organization_id,
         activityId: s.activity_id,
         category: s.category,
         description: s.description,
@@ -309,7 +309,7 @@ const createDrizzleDataSubjectRepository = (db: DbClient): PrivacyDataSubjectRep
       }))
     ).onConflictDoNothing();
   },
-  async listByActivity(activityId, tenantId) {
+  async listByActivity(activityId, organizationId) {
     const rows = await db.select().from(privacyProcessingActivityDataSubjects)
       .where(and(
         eq(privacyProcessingActivityDataSubjects.activityId, activityId),
@@ -317,7 +317,7 @@ const createDrizzleDataSubjectRepository = (db: DbClient): PrivacyDataSubjectRep
       ));
     return rows.map(mapDataSubjectRow);
   },
-  async remove(id, tenantId) {
+  async remove(id, organizationId) {
     await db.update(privacyProcessingActivityDataSubjects)
       .set({ deletedAt: new Date() })
       .where(and(
@@ -332,7 +332,7 @@ const createDrizzleDataCategoryRepository = (db: DbClient): PrivacyDataCategoryR
     await db.insert(privacyProcessingActivityDataCategories).values(
       categories.map(c => ({
         id: c.id,
-        organizationId: c.tenant_id,
+        organizationId: c.organization_id,
         activityId: c.activity_id,
         categoryName: c.category_name,
         sensitivity: c.sensitivity,
@@ -342,7 +342,7 @@ const createDrizzleDataCategoryRepository = (db: DbClient): PrivacyDataCategoryR
       }))
     ).onConflictDoNothing();
   },
-  async listByActivity(activityId, tenantId) {
+  async listByActivity(activityId, organizationId) {
     const rows = await db.select().from(privacyProcessingActivityDataCategories)
       .where(and(
         eq(privacyProcessingActivityDataCategories.activityId, activityId),
@@ -350,7 +350,7 @@ const createDrizzleDataCategoryRepository = (db: DbClient): PrivacyDataCategoryR
       ));
     return rows.map(mapDataCategoryRow);
   },
-  async remove(id, tenantId) {
+  async remove(id, organizationId) {
     await db.update(privacyProcessingActivityDataCategories)
       .set({ deletedAt: new Date() })
       .where(and(
@@ -365,7 +365,7 @@ const createDrizzleThirdPartyRepository = (db: DbClient): PrivacyThirdPartyRepos
     await db.insert(privacyProcessingActivityThirdParties).values(
       parties.map(p => ({
         id: p.id,
-        organizationId: p.tenant_id,
+        organizationId: p.organization_id,
         activityId: p.activity_id,
         name: p.name,
         role: p.role,
@@ -379,14 +379,14 @@ const createDrizzleThirdPartyRepository = (db: DbClient): PrivacyThirdPartyRepos
       }))
     ).onConflictDoNothing();
   },
-  async listByActivity(activityId, tenantId) {
+  async listByActivity(activityId, organizationId) {
     const rows = await db.select().from(privacyProcessingActivityThirdParties)
       .where(and(
         eq(privacyProcessingActivityThirdParties.activityId, activityId),
         ));
     return rows.map(mapThirdPartyRow);
   },
-  async remove(id, tenantId) {
+  async remove(id, organizationId) {
     await db.delete(privacyProcessingActivityThirdParties)
       .where(and(
         eq(privacyProcessingActivityThirdParties.id, id),
@@ -398,7 +398,7 @@ const createDrizzleScreeningRepository = (db: DbClient): PrivacyScreeningReposit
   async save(screening) {
     await db.insert(privacyProcessingActivityScreenings).values({
       id: screening.id,
-      organizationId: screening.tenant_id,
+      organizationId: screening.organization_id,
       activityId: screening.activity_id,
       screeningType: screening.screening_type,
       result: screening.result,
@@ -409,7 +409,7 @@ const createDrizzleScreeningRepository = (db: DbClient): PrivacyScreeningReposit
       screenedBy: screening.screened_by,
     }).onConflictDoNothing();
   },
-  async listByActivity(activityId, tenantId) {
+  async listByActivity(activityId, organizationId) {
     const rows = await db.select().from(privacyProcessingActivityScreenings)
       .where(and(
         eq(privacyProcessingActivityScreenings.activityId, activityId),
@@ -423,7 +423,7 @@ const createDrizzleFieldReviewRepository = (db: DbClient): PrivacyFieldReviewRep
   async save(review) {
     await db.insert(privacyProcessingActivityFieldReviews).values({
       id: review.id,
-      organizationId: review.tenant_id,
+      organizationId: review.organization_id,
       activityId: review.activity_id,
       fieldName: review.field_name,
       reviewStatus: review.review_status,
@@ -435,7 +435,7 @@ const createDrizzleFieldReviewRepository = (db: DbClient): PrivacyFieldReviewRep
       reviewedAt: review.reviewed_at ? new Date(review.reviewed_at) : undefined,
     }).onConflictDoNothing();
   },
-  async listByActivity(activityId, tenantId) {
+  async listByActivity(activityId, organizationId) {
     const rows = await db.select().from(privacyProcessingActivityFieldReviews)
       .where(and(
         eq(privacyProcessingActivityFieldReviews.activityId, activityId),
@@ -443,7 +443,7 @@ const createDrizzleFieldReviewRepository = (db: DbClient): PrivacyFieldReviewRep
       .orderBy(desc(privacyProcessingActivityFieldReviews.createdAt));
     return rows.map(mapFieldReviewRow);
   },
-  async get(id, tenantId) {
+  async get(id, organizationId) {
     const [row] = await db.select().from(privacyProcessingActivityFieldReviews)
       .where(and(
         eq(privacyProcessingActivityFieldReviews.id, id),
@@ -472,7 +472,7 @@ const createDrizzleScfControlRepository = (db: DbClient): PrivacyScfControlRepos
     await db.insert(privacyProcessingActivityScfControls).values(
       controls.map(c => ({
         id: c.id,
-        organizationId: c.tenant_id,
+        organizationId: c.organization_id,
         activityId: c.activity_id,
         scfVersion: c.scf_version,
         controlId: c.control_id,
@@ -491,14 +491,14 @@ const createDrizzleScfControlRepository = (db: DbClient): PrivacyScfControlRepos
       }))
     ).onConflictDoNothing();
   },
-  async listByActivity(activityId, tenantId) {
+  async listByActivity(activityId, organizationId) {
     const rows = await db.select().from(privacyProcessingActivityScfControls)
       .where(and(
         eq(privacyProcessingActivityScfControls.activityId, activityId),
         ));
     return rows.map(mapScfControlRow);
   },
-  async remove(id, tenantId) {
+  async remove(id, organizationId) {
     await db.delete(privacyProcessingActivityScfControls)
       .where(and(
         eq(privacyProcessingActivityScfControls.id, id),

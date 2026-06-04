@@ -3,14 +3,13 @@ import { AgentRuntimeError } from "./errors";
 
 export class AgentGuardrailService {
   validateContext(context: AgentRuntimeContext): void {
-    if (!context.tenant_id || !context.organization_id || !context.assessment_id || !context.trace_id) {
+    if (!context.organization_id || !context.organization_id || !context.assessment_id || !context.trace_id) {
       throw new AgentRuntimeError("TENANT_CONTEXT_REQUIRED", "Agent runtime requires tenant, organization, assessment and trace context.");
     }
   }
 
   validateToolInputContext(input: Record<string, unknown>, context: AgentRuntimeContext): void {
     const expected = {
-      tenant_id: context.tenant_id,
       organization_id: context.organization_id,
       assessment_id: context.assessment_id
     };

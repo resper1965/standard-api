@@ -83,7 +83,7 @@ pnpm test:contracts # API contract tests
 - [ ] No secrets, tokens, credentials, or customer data
 - [ ] `CONTEXT.md` updated if architectural changes were made
 - [ ] ADR created for significant decisions
-- [ ] Tenant isolation and approval gates impact considered
+- [ ] Organization isolation and approval gates impact considered
 
 ## Architecture Guidelines
 
@@ -99,7 +99,7 @@ infra/       → Infrastructure as code, Docker, Terraform
 ### Key Principles
 
 - **API-first**: All features are exposed via versioned REST endpoints (`/api/v1/...`)
-- **Tenant isolation**: Every query MUST be scoped by `tenant_id`
+- **Organization isolation**: Every query MUST be scoped by `organization_id`
 - **Schema validation**: All API boundaries use Zod schemas from `@standard/schemas`
 - **Human-in-the-loop**: Agents NEVER approve final artifacts or create official mappings
 - **Immutability**: Approved artifacts are immutable — create new versions instead

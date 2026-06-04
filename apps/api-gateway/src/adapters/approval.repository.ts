@@ -18,7 +18,6 @@ const mapRowToRecord = (row: ApprovalRow): ApprovalRecord => ({
   approvedBy: row.reviewerUserId,
   approvedAt: row.createdAt!.toISOString(),
   traceId: row.traceId,
-  tenantId: row.organizationId,
   organizationId: row.organizationId,
   assessmentId: row.assessmentId,
   targetType: row.artifactType as ApprovalRecord["targetType"],
@@ -62,25 +61,25 @@ export const createApprovalRepository = (): ApprovalRepositoryAdapter => {
         traceId: approval.traceId,
       };
     },
-    async listByAssessment(assessmentId, tenantId) {
+    async listByAssessment(assessmentId, organizationId) {
       return [...records.values()].filter(
-        (record) => record.assessmentId === assessmentId && record.organizationId === tenantId
+        (record) => record.assessmentId === assessmentId && record.organizationId === organizationId
       );
     },
-    withTenant(tenantId: string) {
+    withOrganization(organizationId: string) {
       return {
         create: async (input) => this.create(input),
         get: async (approvalId) => {
           const approval = await this.get(approvalId);
-          return approval && approval.organizationId === tenantId ? approval : null;
+          return approval && approval.organizationId === organizationId ? approval : null;
         },
         getForGate: async (approvalId, gate) => {
           const approval = await this.getForGate(approvalId, gate);
           if (!approval) return null;
           const fullRecord = records.get(approvalId);
-          return fullRecord && fullRecord.organizationId === tenantId ? approval : null;
+          return fullRecord && fullRecord.organizationId === organizationId ? approval : null;
         },
-        listByAssessment: async (assessmentId) => this.listByAssessment(assessmentId, tenantId),
+        listByAssessment: async (assessmentId) => this.listByAssessment(assessmentId, organizationId),
       };
     }
   };
@@ -125,7 +124,7 @@ export const createDrizzleApprovalRepository = (db: DbClient): ApprovalRepositor
       if (!found) return null;
       return mapRowToEvent(found);
     },
-    async listByAssessment(assessmentId, tenantId) {
+    async listByAssessment(assessmentId, organizationId) {
       const results = await db.select().from(approvalEvents)
         .where(
           and(
@@ -134,7 +133,7 @@ export const createDrizzleApprovalRepository = (db: DbClient): ApprovalRepositor
         );
       return results.map(mapRowToRecord);
     },
-    withTenant(tenantId: string) {
+    withOrganization(organizationId: string) {
       return {
         create: async (input) => this.create(input),
         get: async (approvalId) => {
@@ -155,7 +154,7 @@ export const createDrizzleApprovalRepository = (db: DbClient): ApprovalRepositor
             .limit(1);
           return found ? mapRowToEvent(found) : null;
         },
-        listByAssessment: async (assessmentId: string) => this.listByAssessment(assessmentId, tenantId)
+        listByAssessment: async (assessmentId: string) => this.listByAssessment(assessmentId, organizationId)
       };
     }
   };

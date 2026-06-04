@@ -434,8 +434,8 @@ CREATE INDEX IF NOT EXISTS scf_mappings_source_idx ON scf_mappings(scf_version_i
 -- Session cleanup
 CREATE INDEX IF NOT EXISTS session_expires_at_idx ON session(expires_at);
 
--- Document type filter per tenant
-CREATE INDEX IF NOT EXISTS documents_type_idx ON documents(tenant_id, document_type);
+-- Document type filter per organization
+CREATE INDEX IF NOT EXISTS documents_type_idx ON documents(organization_id, document_type);
 
 -- SCF framework search (text pattern match)
 CREATE INDEX IF NOT EXISTS scf_frameworks_name_trgm_idx ON scf_frameworks USING gin (name gin_trgm_ops);

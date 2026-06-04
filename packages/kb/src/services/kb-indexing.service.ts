@@ -12,8 +12,8 @@ export class KbIndexingService {
 
   async indexAssessment(context: KbRequestContext, request: KbIndexRequest = { force_reindex: false }): Promise<KbIndexResponse> {
     const documents = request.document_id
-      ? [await this.deps.documentIngestion.repositories.documents.getDocument(request.document_id, context.tenantId)].filter(Boolean)
-      : await this.deps.documentIngestion.repositories.documents.listDocuments(context.assessmentId, context.tenantId);
+      ? [await this.deps.documentIngestion.repositories.documents.getDocument(request.document_id, context.organizationId)].filter(Boolean)
+      : await this.deps.documentIngestion.repositories.documents.listDocuments(context.assessmentId, context.organizationId);
 
     const queuedJobIds: string[] = [];
     const vectorReferenceIds: string[] = [];
@@ -21,7 +21,7 @@ export class KbIndexingService {
 
     for (const document of documents as DocumentResponse[]) {
       if (document.assessment_id !== context.assessmentId || document.organization_id !== context.organizationId) continue;
-      const chunks = await this.deps.documentIngestion.repositories.chunks.listChunks(document.document_id, context.tenantId, 1000);
+      const chunks = await this.deps.documentIngestion.repositories.chunks.listChunks(document.document_id, context.organizationId, 1000);
       for (const chunk of chunks) {
         const result = await this.queueChunkEmbedding(chunk, request.force_reindex ?? false, context);
         if (result.queuedJobId) queuedJobIds.push(result.queuedJobId);
@@ -44,12 +44,12 @@ export class KbIndexingService {
     vectorReferenceId?: string;
     skippedChunkId?: string;
   }> {
-    if (chunk.tenant_id !== context.tenantId || chunk.assessment_id !== context.assessmentId) {
+    if (chunk.organization_id !== context.organizationId || chunk.assessment_id !== context.assessmentId) {
       return { skippedChunkId: chunk.chunk_id };
     }
 
     const now = new Date().toISOString();
-    const existingJob = await this.deps.repositories.embeddingJobs.findQueuedJobForChunk(chunk.chunk_id, context.tenantId);
+    const existingJob = await this.deps.repositories.embeddingJobs.findQueuedJobForChunk(chunk.chunk_id, context.organizationId);
     if (existingJob && !forceReindex) {
       return {
         skippedChunkId: chunk.chunk_id,
@@ -74,7 +74,6 @@ export class KbIndexingService {
 
     const job = {
       job_id: crypto.randomUUID(),
-      tenant_id: chunk.tenant_id,
       organization_id: chunk.organization_id,
       assessment_id: chunk.assessment_id,
       document_id: chunk.document_id,
@@ -92,7 +91,6 @@ export class KbIndexingService {
 
     await this.deps.repositories.embeddingJobs.saveJob(job);
     await this.deps.queue.enqueue({
-      tenant_id: chunk.tenant_id,
       organization_id: chunk.organization_id,
       assessment_id: chunk.assessment_id,
       document_id: chunk.document_id,

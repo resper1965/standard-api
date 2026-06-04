@@ -33,7 +33,7 @@ export const createDrizzleWorkflowRepository = (db: DbClient): WorkflowRepositor
       return row ? mapWorkflowRow(row) : null;
     },
 
-    async getActiveByAssessment(assessmentId: string, tenantId: string) {
+    async getActiveByAssessment(assessmentId: string, organizationId: string) {
       const [row] = await db.select().from(workflowRuns)
         .where(and(
           eq(workflowRuns.assessmentId, assessmentId),
@@ -43,7 +43,7 @@ export const createDrizzleWorkflowRepository = (db: DbClient): WorkflowRepositor
       return row ? mapWorkflowRow(row) : null;
     },
 
-    async listByAssessment(assessmentId: string, tenantId: string) {
+    async listByAssessment(assessmentId: string, organizationId: string) {
       const rows = await db.select().from(workflowRuns)
         .where(and(
           eq(workflowRuns.assessmentId, assessmentId),
@@ -61,15 +61,15 @@ export const createDrizzleWorkflowRepository = (db: DbClient): WorkflowRepositor
       }).where(eq(workflowRuns.id, record.workflow_run_id));
     },
 
-    withTenant(tenantId: string) {
+    withOrganization(organizationId: string) {
       return {
         create: async (input) => repo.create(input),
         get: async (workflowRunId) => {
           const run = await repo.get(workflowRunId);
-          return run && run.state.tenant_id === tenantId ? run : null;
+          return run && run.state.organization_id === organizationId ? run : null;
         },
-        getActiveByAssessment: async (assessmentId: string) => repo.getActiveByAssessment(assessmentId, tenantId),
-        listByAssessment: async (assessmentId: string) => repo.listByAssessment(assessmentId, tenantId),
+        getActiveByAssessment: async (assessmentId: string) => repo.getActiveByAssessment(assessmentId, organizationId),
+        listByAssessment: async (assessmentId: string) => repo.listByAssessment(assessmentId, organizationId),
         save: async (record) => repo.save(record),
       };
     }

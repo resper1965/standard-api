@@ -2,11 +2,11 @@
 
 ## Resumo
 
-O Standard é API-first, SaaS-ready, multi-tenant e Cloudflare-oriented. O backend, contracts, packages, workflows, workers e agent runtime são o centro do sistema.
+O Standard é API-first, SaaS-ready, multi-organization e Cloudflare-oriented. O backend, contracts, packages, workflows, workers e agent runtime são o centro do sistema.
 
 ## Camadas Principais
 
-- API Gateway: endpoints versionados, auth, RBAC, tenant guard e validação.
+- API Gateway: endpoints versionados, auth, RBAC, organization guard e validação.
 - Assessment Engine: state machine, transitions, approval gates e invariantes.
 - Packages: schemas, domain, contracts, SCF core, SCF catalog, KB, SoA, Gap, POA&M, Reporting, Security, Observability e Agent Runtime.
 - Data Layer: Dependência fixa em PostgreSQL transacional (via Drizzle ORM) para Lifecycle artifacts, Standard Native Auth, persistência de Orquestração, Logs de Auditoria e Estado de Agent Runs. O armazenamento de docs usa R2, e KB apoia-se em Vectorize.
@@ -16,7 +16,7 @@ O Standard é API-first, SaaS-ready, multi-tenant e Cloudflare-oriented. O backe
 - KB é evidência candidata.
 - Agentes sugerem, humanos aprovam.
 - Outputs críticos exigem schema validation e rastreabilidade.
-- Nenhum fluxo crítico sem tenant/organization/assessment/trace.
+- Nenhum fluxo crítico sem organization/organization/assessment/trace.
 
 ## MCP Server
 

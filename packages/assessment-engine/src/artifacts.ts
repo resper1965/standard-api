@@ -27,7 +27,6 @@ export const createNextArtifactVersion = (
 
   return {
     id,
-    tenantId: current.tenantId,
     organizationId: current.organizationId,
     assessmentId: current.assessmentId,
     artifactType: current.artifactType,
@@ -154,7 +153,6 @@ export const createReworkedVersion = (
 
   return {
     id,
-    tenantId: rejectedVersion.tenantId,
     organizationId: rejectedVersion.organizationId,
     assessmentId: rejectedVersion.assessmentId,
     artifactType: rejectedVersion.artifactType,

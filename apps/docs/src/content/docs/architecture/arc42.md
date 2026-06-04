@@ -36,12 +36,12 @@ O desenho arquitetural do Standard é governado por restrições operacionais e 
 
 ### 2.2 Restrições de Banco de Dados e Dados
 - **PostgreSQL transacional (Neon)**: Os dados relacionais de tenancy, logs de auditoria e status de assessments exigem transações íntegras (Acid). A persistência é gerenciada via Neon PostgreSQL com adapter de pool de conexões edge-safe.
-- **Integridade de Tipagem (UUID) e Identity Bridge**: Chaves estrangeiras que ligam logs de auditoria, eventos e assessments a usuários e tenants exigem estritamente o formato de ID `UUID`. Como a autenticação (Better-Auth) gera identificadores de organizações e sessões baseados em strings/slugs (ex: `org_pa5khl`), o gateway resolve essa diferença de tipagem aplicando um validador de formato UUID. IDs incompatíveis são setados como `null` nas colunas indexadas físicas e armazenados intactos dentro de metadados JSONB, eliminando a possibilidade de falhas de tipagem referencial ou de conversão SQL (erros 500) sem perder rastreabilidade.
+- **Integridade de Tipagem (UUID) e Identity Bridge**: Chaves estrangeiras que ligam logs de auditoria, eventos e assessments a usuários e organizations exigem estritamente o formato de ID `UUID`. Como a autenticação (Better-Auth) gera identificadores de organizações e sessões baseados em strings/slugs (ex: `org_pa5khl`), o gateway resolve essa diferença de tipagem aplicando um validador de formato UUID. IDs incompatíveis são setados como `null` nas colunas indexadas físicas e armazenados intactos dentro de metadados JSONB, eliminando a possibilidade de falhas de tipagem referencial ou de conversão SQL (erros 500) sem perder rastreabilidade.
 
 ### 2.3 Restrições de Identidade
 - **Modelo Dual de Autenticação (Standard Native Auth v1.6.11)**: A plataforma adota um modelo dual de autenticação gerenciado pelo Standard Native Auth (better-auth v1.6.11) com Drizzle adapter no Neon PostgreSQL:
   - **Sessões (Platform Console)**: Autenticação de usuários humanos via email/password e Google OAuth, com sessões persistidas em banco e cookies seguros. Usado pelo Platform Console (`apps/web`) para gestão de organizations, users e API keys.
-  - **M2M API Keys (SDK/MCP/Integrações)**: Acesso programático via header `Authorization: ApiKey <key>`. O gateway de API realiza validação do hash `SHA-256` na borda (Web Crypto API) e valida no Neon PostgreSQL, garantindo latência mínima e resolução implícita da hierarquia de *Root Tenants* e *Sub-Tenants*.
+  - **M2M API Keys (SDK/MCP/Integrações)**: Acesso programático via header `Authorization: ApiKey <key>`. O gateway de API realiza validação do hash `SHA-256` na borda (Web Crypto API) e valida no Neon PostgreSQL, garantindo latência mínima e resolução implícita da hierarquia de *Root Organizations* e *Sub-Organizations*.
   - Ambos os canais são gerenciados nativamente pelo Standard Native Auth, com tabelas de autenticação (user, session, account, verification, activeOrganization) no Neon PostgreSQL. O plugin `@standard-native-auth/api-key` provisiona e controla M2M/API Keys integradas às contas de organizações.
 
 ---
@@ -65,7 +65,7 @@ graph TB
     standard["Standard Assessment Engine<br>(System under study)"]
 
     %% Sistemas Externos
-    db["Neon PostgreSQL<br>(Banco Relacional e Root Tenants)"]
+    db["Neon PostgreSQL<br>(Banco Relacional e Root Organizations)"]
     r2["Cloudflare R2 Bucket<br>(Armazenamento de Arquivos)"]
     vectorize["Cloudflare Vectorize<br>(Índice de Embeddings RAG)"]
     email["Serviço de Email (CF Email/Resend)<br>(Notificações)"]
@@ -73,10 +73,10 @@ graph TB
     %% Relações de Atores para o Sistema
     ciso -->|"Gerencia escopo, SoA e POA&M via API Clients"| standard
     assessor -->|"Envia evidências via integrações M2M"| standard
-    admin -->|"Acessa Developer Console para gerenciar tenants e API Keys"| standard
+    admin -->|"Acessa Developer Console para gerenciar organizations e API Keys"| standard
 
     %% Relações do Sistema para Sistemas Externos
-    standard -->|"Autentica M2M, persiste tenants e audit"| db
+    standard -->|"Autentica M2M, persiste organizations e audit"| db
     standard -->|"Armazena arquivos de evidência e relatórios"| r2
     standard -->|"Consulta e indexa chunks de KB"| vectorize
     standard -->|"Dispara notificações e convites"| email
@@ -203,7 +203,7 @@ sequenceDiagram
     participant Vec as Vectorize Index
 
     Assessor->>GW: POST /api/v1/organizations/:id/documents (Multipart) com API Key
-    GW->>R2: Salva arquivo bruto com chave isolada por tenant
+    GW->>R2: Salva arquivo bruto com chave isolada por organization
     R2-->>GW: Retorna URI/Etag do arquivo
     GW->>DB: Cria registro do documento (status: 'uploaded')
     GW->>Queue: Envia job de processamento de documento
@@ -215,7 +215,7 @@ sequenceDiagram
     Worker->>Worker: Extrai texto puro (OCR/Parser)
     Worker->>AI: Solicita geração de embeddings dos chunks de texto
     AI-->>Worker: Retorna vetores (arrays numéricos)
-    Worker->>Vec: Salva vetores no namespace do tenant
+    Worker->>Vec: Salva vetores no namespace do organization
     Worker->>DB: Atualiza status do documento para 'ingested' e vincula metadados
     Worker-->>Queue: Confirma conclusão do job (ACK)
 ```
@@ -321,14 +321,14 @@ graph TD
 
 Estes são conceitos e regras aplicados uniformemente em todo o monorepo para garantir consistência, segurança e operabilidade.
 
-### 8.1 Isolamento de Tenants (Multi-tenancy)
-O Standard é um sistema multi-tenant por design. Para evitar o vazamento de dados (*cross-tenant data leakage*):
-- **Camada Relacional**: Toda tabela transacional crítica (ex: `assessments`, `documents`, `audit_logs`) contém colunas `tenant_id` e `organization_id` que apontam para UUIDs do GRC. Todas as queries de leitura/escrita filtram estritamente por estas colunas.
-- **Armazenamento de Arquivos (R2)**: As chaves de arquivos no bucket seguem o padrão `tenants/:tenant_id/documents/:document_id/filename.ext`.
-- **Camada Vetorial (Vectorize)**: Os índices vetoriais utilizam namespaces dedicados (ou partições via metadados contendo o `tenant_id`) para garantir isolamento durante a recuperação semântica do RAG.
+### 8.1 Isolamento de Organizations (Multi-tenancy)
+O Standard é um sistema multi-organization por design. Para evitar o vazamento de dados (*cross-organization data leakage*):
+- **Camada Relacional**: Toda tabela transacional crítica (ex: `assessments`, `documents`, `audit_logs`) contém colunas `organization_id` e `organization_id` que apontam para UUIDs do GRC. Todas as queries de leitura/escrita filtram estritamente por estas colunas.
+- **Armazenamento de Arquivos (R2)**: As chaves de arquivos no bucket seguem o padrão `organizations/:organization_id/documents/:document_id/filename.ext`.
+- **Camada Vetorial (Vectorize)**: Os índices vetoriais utilizam namespaces dedicados (ou partições via metadados contendo o `organization_id`) para garantir isolamento durante a recuperação semântica do RAG.
 
 ### 8.2 Logs de Auditoria e Eventos de Segurança (SOC 2 & ISO 27001)
-- **Logs de Auditoria**: O middleware `recordAuditEvent` intercepta todas as requisições autenticadas e cria um registro na tabela `audit_logs` contendo data, ação, IP, User-Agent, ID do ator (`actor_id`) e ID do tenant (`tenant_id`). Para garantir a robustez contra erros 500 causados por falhas de tipo de dados SQL, o repositório aplica validação de formato UUID antes de preencher as colunas do banco. Caso IDs textuais (como chaves de organização do Better-Auth do tipo `"org_pa5khl"`) sejam passados, eles são inseridos como `null` nas chaves estrangeiras físicas, e a string original é salva de forma íntegra na coluna de metadados JSONB (`metadata`), assegurando a rastreabilidade total do SOC sem comprometer a estabilidade do gateway.
+- **Logs de Auditoria**: O middleware `recordAuditEvent` intercepta todas as requisições autenticadas e cria um registro na tabela `audit_logs` contendo data, ação, IP, User-Agent, ID do ator (`actor_id`) e ID do organization (`organization_id`). Para garantir a robustez contra erros 500 causados por falhas de tipo de dados SQL, o repositório aplica validação de formato UUID antes de preencher as colunas do banco. Caso IDs textuais (como chaves de organização do Better-Auth do tipo `"org_pa5khl"`) sejam passados, eles são inseridos como `null` nas chaves estrangeiras físicas, e a string original é salva de forma íntegra na coluna de metadados JSONB (`metadata`), assegurando a rastreabilidade total do SOC sem comprometer a estabilidade do gateway.
 - **Triagem de Incidentes (SOC)**: Eventos de segurança graves (como tentativas de injeção de SQL, violações de RBAC ou estouros de limites de cota) disparam eventos assíncronos enviados à fila `SOC_TRIAGE_QUEUE`. O gateway também grava incidentes na tabela `security_events` com níveis de severidade.
 
 ### 8.3 Defesa Contra Prompt Injection
@@ -385,7 +385,7 @@ Identificamos os riscos e trade-offs assumidos na arquitetura:
 
 - **Dependência do Ecossistema Cloudflare (Vendor Lock-in)**: O gateway utiliza bindings nativos (Queues, R2, Vectorize, Workflows). Embora o código javascript rode sobre o padrão WinterCG, migrar a infraestrutura para AWS ou GCP exigiria reescrever os adapters de persistência e orquestração.
 - **Cold Starts de Workers**: À medida que mais pacotes de domínio são incluídos no build do `api-gateway`, o tamanho do bundle compilado aumenta. Controlamos o tamanho do bundle desativando imports pesados e mantendo as dependências de roteamento leves (Hono).
-- **Scope Creep no Developer Console**: Como optamos por manter uma interface Web (`apps/web`) atuando como Painel do Desenvolvedor (gestão de API Keys e Tenants), existe a tentação e o risco de lógica de negócios GRC acabar vazando para o frontend. Exigirá disciplina arquitetural rigorosa para manter o frontend estritamente como um "console burro".
+- **Scope Creep no Developer Console**: Como optamos por manter uma interface Web (`apps/web`) atuando como Painel do Desenvolvedor (gestão de API Keys e Organizations), existe a tentação e o risco de lógica de negócios GRC acabar vazando para o frontend. Exigirá disciplina arquitetural rigorosa para manter o frontend estritamente como um "console burro".
 
 ---
 

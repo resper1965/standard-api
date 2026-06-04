@@ -143,7 +143,7 @@ export async function processDataRetentionPurge(
             AND a.updated_at < ${cutoff}
             AND NOT EXISTS (
               SELECT 1 FROM legal_holds lh
-              WHERE lh.tenant_id = a.tenant_id
+              WHERE lh.organization_id = a.organization_id
                 AND (lh.assessment_id = a.id OR lh.assessment_id IS NULL)
                 AND lh.active = true
             )
@@ -160,7 +160,7 @@ export async function processDataRetentionPurge(
               AND a.updated_at < ${cutoff}
               AND NOT EXISTS (
                 SELECT 1 FROM legal_holds lh
-                WHERE lh.tenant_id = a.tenant_id
+                WHERE lh.organization_id = a.organization_id
                   AND (lh.assessment_id = a.id OR lh.assessment_id IS NULL)
                   AND lh.active = true
               )
@@ -187,7 +187,7 @@ export async function processDataRetentionPurge(
           AND deleted_at < ${cutoff}
           AND NOT EXISTS (
             SELECT 1 FROM legal_holds lh
-            WHERE lh.tenant_id = tenants.id AND lh.active = true
+            WHERE lh.organization_id = tenants.id AND lh.active = true
           )
         LIMIT 50
       `;
@@ -205,7 +205,7 @@ export async function processDataRetentionPurge(
 
           // Audit the purge action itself
           await sql`
-            INSERT INTO audit_logs (id, tenant_id, event_type, actor_id, metadata, created_at)
+            INSERT INTO audit_logs (id, organization_id, event_type, actor_id, metadata, created_at)
             VALUES (
               gen_random_uuid(), ${tenant.id}, 'tenant.hard_purged',
               ${initiatedBy},
@@ -230,12 +230,12 @@ export async function processDataRetentionPurge(
       const cutoff = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString();
 
       const expiredAssessments = await sql`
-        SELECT id, tenant_id, title FROM assessments
+        SELECT id, organization_id, title FROM assessments
         WHERE deleted_at IS NOT NULL
           AND deleted_at < ${cutoff}
           AND NOT EXISTS (
             SELECT 1 FROM legal_holds lh
-            WHERE lh.tenant_id = assessments.tenant_id
+            WHERE lh.organization_id = assessments.organization_id
               AND (lh.assessment_id = assessments.id OR lh.assessment_id IS NULL)
               AND lh.active = true
           )
@@ -251,9 +251,9 @@ export async function processDataRetentionPurge(
           summary.deleted.soft_deleted_assessments++;
 
           await sql`
-            INSERT INTO audit_logs (id, tenant_id, event_type, actor_id, metadata, created_at)
+            INSERT INTO audit_logs (id, organization_id, event_type, actor_id, metadata, created_at)
             VALUES (
-              gen_random_uuid(), ${a.tenant_id}, 'assessment.hard_purged',
+              gen_random_uuid(), ${a.organization_id}, 'assessment.hard_purged',
               ${initiatedBy},
               ${JSON.stringify({ assessment_id: a.id, reason: "retention_policy_1y" })},
               NOW()

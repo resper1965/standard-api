@@ -29,7 +29,6 @@ export class DocumentIngestionService {
   }): Promise<{ document: DocumentResponse; message: DocumentIngestionJobMessage }> {
     const validation = await validateFile(input.file);
     const storageKey = buildStorageKey({
-      tenantId: input.context.tenantId,
       organizationId: input.context.organizationId,
       assessmentId: input.context.assessmentId,
       documentId: input.documentId,
@@ -51,7 +50,6 @@ export class DocumentIngestionService {
       if (!scanResult.clean) {
         // Audit the block event BEFORE rejecting
         await this.deps.repositories.audit.record("document.malware_scan_blocked", {
-          tenant_id: input.context.tenantId,
           organization_id: input.context.organizationId,
           assessment_id: input.context.assessmentId,
           document_id: input.documentId,
@@ -71,7 +69,7 @@ export class DocumentIngestionService {
       scanStatus = "clean";
 
       await this.deps.repositories.audit.record("document.malware_scan_clean", {
-        tenant_id: input.context.tenantId,
+        organization_id: input.context.organizationId,
         document_id: input.documentId,
         trace_id: input.context.traceId,
         scan_duration_ms: scanResult.scanDurationMs,
@@ -81,7 +79,6 @@ export class DocumentIngestionService {
 
     const document: DocumentResponse = {
       document_id: input.documentId,
-      tenant_id: input.context.tenantId,
       organization_id: input.context.organizationId,
       assessment_id: input.context.assessmentId,
       original_filename: input.file.originalFilename,
@@ -105,7 +102,6 @@ export class DocumentIngestionService {
     };
 
     const message: DocumentIngestionJobMessage = {
-      tenant_id: input.context.tenantId,
       organization_id: input.context.organizationId,
       assessment_id: input.context.assessmentId,
       document_id: input.documentId,
@@ -127,7 +123,6 @@ export class DocumentIngestionService {
     await this.deps.repositories.documents.saveDocument(document);
     await this.deps.repositories.jobs.saveJob({
       job_id: input.jobId,
-      tenant_id: input.context.tenantId,
       organization_id: input.context.organizationId,
       assessment_id: input.context.assessmentId,
       document_id: input.documentId,
@@ -140,7 +135,6 @@ export class DocumentIngestionService {
     });
     await this.deps.queue.enqueue(message);
     await this.deps.repositories.audit.record("document_uploaded", {
-      tenant_id: input.context.tenantId,
       organization_id: input.context.organizationId,
       assessment_id: input.context.assessmentId,
       document_id: input.documentId,
@@ -149,7 +143,6 @@ export class DocumentIngestionService {
       timestamp: input.context.now
     });
     await this.deps.repositories.audit.record("document_extraction_queued", {
-      tenant_id: input.context.tenantId,
       organization_id: input.context.organizationId,
       assessment_id: input.context.assessmentId,
       document_id: input.documentId,

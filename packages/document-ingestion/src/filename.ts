@@ -17,10 +17,9 @@ export const getExtension = (filename: string): string => {
 };
 
 export const buildStorageKey = (input: {
-  tenantId: string;
   organizationId: string;
   assessmentId: string;
   documentId: string;
   safeFilename: string;
 }): string =>
-  `tenants/${input.tenantId}/organizations/${input.organizationId}/assessments/${input.assessmentId}/documents/${input.documentId}/${input.safeFilename}`;
+  `tenants/${input.organizationId}/organizations/${input.organizationId}/assessments/${input.assessmentId}/documents/${input.documentId}/${input.safeFilename}`;

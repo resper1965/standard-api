@@ -5,7 +5,7 @@ import { expect, test } from "./test-kit";
 
 test("rate limit: normal traffic under limit succeeds", async () => {
   const client = createTestClient();
-  const { tenantId, organizationId } = await client.createTenantOrg();
+  const { organizationId, organizationId } = await client.createTenantOrg();
 
   // Send a few requests — should all succeed (default limit is 120/min)
   for (let i = 0; i < 3; i++) {
@@ -15,7 +15,7 @@ test("rate limit: normal traffic under limit succeeds", async () => {
       undefined,
       {
         "x-standard-actor-id": "44444444-4444-4444-8444-444444444444",
-        "x-standard-tenant-id": tenantId,
+        "x-standard-tenant-id": organizationId,
       }
     );
     expect(response.status).toBe(200);
@@ -27,14 +27,14 @@ test("rate limit: agent-runs has lower limit (10/min)", async () => {
   // We don't push past the limit here (that would require 11 sequential calls)
   // but verify the route is accepted
   const client = createTestClient();
-  const { tenantId } = await client.createTenantOrg();
+  const { organizationId } = await client.createTenantOrg();
   const { response } = await client.send(
     "/api/v1/agent-runs",
     "POST",
     { agent_type: "test", input: {} },
     {
       "x-standard-actor-id": "44444444-4444-4444-8444-444444444444",
-      "x-standard-tenant-id": tenantId,
+      "x-standard-tenant-id": organizationId,
     }
   );
   // May return 400/422 for invalid body, but NOT 429

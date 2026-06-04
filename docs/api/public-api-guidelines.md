@@ -4,7 +4,7 @@
 
 Este documento define as regras para exposição da API pública/partner do `standard-api-standard`.
 
-A API pública deve permitir integrações externas sem comprometer tenant isolation, approval gates, auditabilidade, compatibilidade ou segurança operacional.
+A API pública deve permitir integrações externas sem comprometer organization isolation, approval gates, auditabilidade, compatibilidade ou segurança operacional.
 
 ## 2. Superfícies de API
 
@@ -36,7 +36,7 @@ Modelos permitidos:
 
 Regras para API keys:
 
-- escopadas por tenant;
+- escopadas por organization;
 - com permissões específicas;
 - rotacionáveis;
 - com expiração ou política de rotação;
@@ -59,7 +59,7 @@ Autorização pública combina:
 
 - RBAC para usuários humanos;
 - scoped permissions para API keys;
-- tenant-bound access;
+- organization-bound access;
 - resource-level authorization;
 - approval-specific permissions.
 
@@ -67,8 +67,8 @@ Regras:
 
 - toda operação crítica exige permissão explícita;
 - API key não aprova artifacts por padrão;
-- resource deve pertencer ao tenant da credencial;
-- admin/support cross-tenant não faz parte da Public API;
+- resource deve pertencer ao organization da credencial;
+- admin/support cross-organization não faz parte da Public API;
 - scopes devem aparecer na documentação de cada endpoint.
 
 ## 5. Versionamento
@@ -118,7 +118,7 @@ Schemas públicos devem:
 - ser documentados em OpenAPI;
 - validar request/response;
 - usar nomes consistentes;
-- incluir `tenant_id` apenas quando seguro e necessário;
+- incluir `organization_id` apenas quando seguro e necessário;
 - incluir `trace_id` em responses críticas;
 - evitar campos ambíguos;
 - diferenciar draft, under review e approved.
@@ -154,14 +154,14 @@ Regras:
 - `message` é seguro para cliente;
 - `details` não inclui secrets ou dados sensíveis;
 - códigos são estáveis;
-- erros de auth não revelam existência de recurso cross-tenant.
+- erros de auth não revelam existência de recurso cross-organization.
 
 Status recomendados:
 
 - `400` validation;
 - `401` unauthenticated;
 - `403` unauthorized;
-- `404` not found ou resource oculto por tenant boundary;
+- `404` not found ou resource oculto por organization boundary;
 - `409` conflict/idempotency/state;
 - `422` semantic validation;
 - `429` rate limited;
@@ -197,7 +197,7 @@ Regras:
 - `limit` tem máximo por endpoint;
 - cursor deve ser opaque;
 - ordenação padrão documentada;
-- não vazar dados cross-tenant via cursor.
+- não vazar dados cross-organization via cursor.
 
 ## 10. Filtering e Sorting
 
@@ -205,7 +205,7 @@ Filtros devem:
 
 - ser documentados;
 - ter nomes estáveis;
-- ser tenant-scoped;
+- ser organization-scoped;
 - validar enums;
 - recusar filtros desconhecidos quando necessário.
 
@@ -242,7 +242,7 @@ Idempotency-Key: <stable-client-key>
 
 Regras:
 
-- key é escopada por tenant, endpoint e operação;
+- key é escopada por organization, endpoint e operação;
 - replay com mesmo payload retorna mesmo resultado lógico;
 - replay com payload divergente retorna conflict;
 - key deve ter retenção definida;
@@ -270,7 +270,7 @@ Se o cliente não envia `trace_id`, o gateway gera um.
 
 Documentar:
 
-- limite por tenant;
+- limite por organization;
 - limite por API key;
 - limite por endpoint;
 - limite por operação pesada;
@@ -297,7 +297,7 @@ APIs públicas não podem:
 - inventar mapping SCF oficial;
 - tratar KB como normativa;
 - executar admin import sem permissão admin;
-- acessar outro tenant;
+- acessar outro organization;
 - criar final finding direto por agente.
 
 Fluxos públicos devem:
@@ -360,7 +360,7 @@ Conteúdo mínimo:
 - changelog;
 - lifecycle overview;
 - approval gates;
-- tenant scoping;
+- organization scoping;
 - sandbox usage.
 
 Docs devem deixar claro:
@@ -413,7 +413,7 @@ Requisitos:
 
 - TLS obrigatório;
 - auth obrigatória;
-- tenant-bound access;
+- organization-bound access;
 - scopes por key;
 - audit log;
 - rate limiting;
@@ -426,10 +426,10 @@ Requisitos:
 No-Go:
 
 - endpoint público sem auth;
-- API key sem tenant;
+- API key sem organization;
 - approval por integração sem permissão humana explícita;
 - wildcard CORS em rota authenticated;
-- public endpoint retornando dados cross-tenant.
+- public endpoint retornando dados cross-organization.
 
 ## 20. Examples
 
@@ -456,7 +456,7 @@ Erro:
 {
   "error": {
     "code": "TENANT_CONTEXT_REQUIRED",
-    "message": "Tenant context is required.",
+    "message": "Organization context is required.",
     "details": [],
     "trace_id": "trace-id"
   }
@@ -472,7 +472,7 @@ Estas diretrizes garantem:
 - integrações previsíveis;
 - rastreabilidade;
 - idempotência;
-- tenant isolation;
+- organization isolation;
 - approval gates preservados;
 - base para documentação pública e SDKs futuros.
 

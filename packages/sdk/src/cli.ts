@@ -9,7 +9,7 @@
  *
  * Environment variables:
  *   STANDARD_API_KEY   — API key (starts with "standard_live_")
- *   STANDARD_TENANT_ID — Tenant UUID
+ *   STANDARD_ORGANIZATION_ID — Organization UUID
  *   STANDARD_API_URL   — Base URL (optional, defaults to production)
  */
 
@@ -29,7 +29,7 @@ const env = (name: string, fallback?: string): string => {
 const createClient = (): StandardClient => {
   const config: StandardClientConfig = {
     apiKey: env("STANDARD_API_KEY"),
-    tenantId: env("STANDARD_TENANT_ID"),
+    organizationId: env("STANDARD_ORGANIZATION_ID"),
   };
   const baseUrl = process.env["STANDARD_API_URL"];
   if (baseUrl) config.baseUrl = baseUrl;
@@ -95,7 +95,7 @@ function cmdLogin() {
   console.log("  Set the following environment variables:");
   console.log("");
   console.log("    export STANDARD_API_KEY=\"standard_live_...\"");
-  console.log("    export STANDARD_TENANT_ID=\"your-tenant-uuid\"");
+  console.log("    export STANDARD_ORGANIZATION_ID=\"your-organization-uuid\"");
   console.log("    export STANDARD_API_URL=\"https://api.standard.dev\"  # optional");
   console.log("");
   console.log("  Then run: standard gate --assessment-id <uuid>");

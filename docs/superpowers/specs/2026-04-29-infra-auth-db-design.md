@@ -7,10 +7,10 @@ Substituir as fundações em "Mock" elaboradas no MVP (MockAuthProvider) para in
 ### 1. Implementação JWT Auth Provider (`packages/security`)
 O Standard atualmente resolve contexto de tráfego usando o pacote nativo `packages/security` invocando `MockAuthProvider`. Como o Cloudflare atua no edge, usaremos a interface padrão exportada para injetar o `JwtAuthProvider`.
 - **Validação:** Parsing de bearer token nativo.
-- **Isolamento de Tenants:** O Token validado retornará o `tenant_id` atestado na fonte da autoridade da infraestrutura em conformidade ao `AuthContext`.
+- **Isolamento de Organizations:** O Token validado retornará o `organization_id` atestado na fonte da autoridade da infraestrutura em conformidade ao `AuthContext`.
 
 ### 2. Configuração de Persistência Worker-To-Postgres (`packages/assessment-engine` ou Core infra)
-O `schema.ts` do Drizzle já lista rigorosa governança com +1100 linhas englobando estado, tenants, e aprovações humanas. Iremos pavimentar o runtime connection:
+O `schema.ts` do Drizzle já lista rigorosa governança com +1100 linhas englobando estado, organizations, e aprovações humanas. Iremos pavimentar o runtime connection:
 - Iniciar o bootstrap de conexão Drizzle.
 - Integrar provedor severless edge (ex: `postgres.js` ou equivalente validado no ecossistema do Drizzle para Workers/Hyperdrive).
 - Adicionar string de conexão via `env` type definitions localmente no `api-gateway`.

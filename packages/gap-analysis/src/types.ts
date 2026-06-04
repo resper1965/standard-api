@@ -35,7 +35,6 @@ export type {
 };
 
 export type GapAnalysisContext = {
-  tenantId: string;
   organizationId: string;
   assessmentId: string;
   actorId?: string;
@@ -53,10 +52,10 @@ export interface TenantScopedEvidenceFindingRepository {
 export type EvidenceFindingRepository = {
   save(finding: EvidenceFindingResponse): Promise<void>;
   update(finding: EvidenceFindingResponse): Promise<void>;
-  get(evidenceFindingId: string, tenantId: string): Promise<EvidenceFindingResponse | null>;
-  listByAssessment(assessmentId: string, tenantId: string): Promise<EvidenceFindingResponse[]>;
-  findBySoaItem(soaItemId: string, tenantId: string): Promise<EvidenceFindingResponse | null>;
-  withTenant(tenantId: string): TenantScopedEvidenceFindingRepository;
+  get(evidenceFindingId: string, organizationId: string): Promise<EvidenceFindingResponse | null>;
+  listByAssessment(assessmentId: string, organizationId: string): Promise<EvidenceFindingResponse[]>;
+  findBySoaItem(soaItemId: string, organizationId: string): Promise<EvidenceFindingResponse | null>;
+  withOrganization(organizationId: string): TenantScopedEvidenceFindingRepository;
 };
 
 export interface TenantScopedEvidenceSourceRepository {
@@ -66,8 +65,8 @@ export interface TenantScopedEvidenceSourceRepository {
 
 export type EvidenceSourceRepository = {
   saveMany(sources: EvidenceSourceResponse[]): Promise<void>;
-  listByFinding(evidenceFindingId: string, tenantId: string): Promise<EvidenceSourceResponse[]>;
-  withTenant(tenantId: string): TenantScopedEvidenceSourceRepository;
+  listByFinding(evidenceFindingId: string, organizationId: string): Promise<EvidenceSourceResponse[]>;
+  withOrganization(organizationId: string): TenantScopedEvidenceSourceRepository;
 };
 
 export interface TenantScopedGapAnalysisVersionRepository {
@@ -80,9 +79,9 @@ export interface TenantScopedGapAnalysisVersionRepository {
 export type GapAnalysisVersionRepository = {
   save(version: GapAnalysisVersionResponse): Promise<void>;
   update(version: GapAnalysisVersionResponse): Promise<void>;
-  get(gapAnalysisVersionId: string, tenantId: string): Promise<GapAnalysisVersionResponse | null>;
-  listByAssessment(assessmentId: string, tenantId: string): Promise<GapAnalysisVersionResponse[]>;
-  withTenant(tenantId: string): TenantScopedGapAnalysisVersionRepository;
+  get(gapAnalysisVersionId: string, organizationId: string): Promise<GapAnalysisVersionResponse | null>;
+  listByAssessment(assessmentId: string, organizationId: string): Promise<GapAnalysisVersionResponse[]>;
+  withOrganization(organizationId: string): TenantScopedGapAnalysisVersionRepository;
 };
 
 export interface TenantScopedGapFindingRepository {
@@ -95,9 +94,9 @@ export interface TenantScopedGapFindingRepository {
 export type GapFindingRepository = {
   saveMany(findings: GapFindingResponse[]): Promise<void>;
   update(finding: GapFindingResponse): Promise<void>;
-  get(gapFindingId: string, tenantId: string): Promise<GapFindingResponse | null>;
-  listByVersion(gapAnalysisVersionId: string, tenantId: string): Promise<GapFindingResponse[]>;
-  withTenant(tenantId: string): TenantScopedGapFindingRepository;
+  get(gapFindingId: string, organizationId: string): Promise<GapFindingResponse | null>;
+  listByVersion(gapAnalysisVersionId: string, organizationId: string): Promise<GapFindingResponse[]>;
+  withOrganization(organizationId: string): TenantScopedGapFindingRepository;
 };
 
 export type GapAnalysisRepositories = {

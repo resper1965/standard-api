@@ -27,9 +27,9 @@
 - Separar frontend, API gateway, workflows, queues, ingestion, SCF core, KB, reporting e agent runtime.
 - SCF estruturado em `packages/scf-core` é a fonte normativa de verdade.
 - KB é fonte de evidências do cliente; RAG apoia recuperação, não decide mapping oficial.
-- SaaS-ready: isolamento por tenant, organização, assessment e auditoria desde o desenho.
+- SaaS-ready: isolamento por organization, organização, assessment e auditoria desde o desenho.
 - Cloudflare-oriented: usar Workers, Workflows, Queues, R2, Vectorize, AI Gateway, Pages, KV/D1 e Durable Objects conforme responsabilidade.
-- Multi-tenant by design: nenhum fluxo crítico sem `tenant_id`, `organization_id` e `assessment_id`.
+- Multi-organization by design: nenhum fluxo crítico sem `organization_id`, `organization_id` e `assessment_id`.
 
 ## 4. Repository Structure
 
@@ -95,17 +95,17 @@ standard-api-standard/
 - AI Gateway: observabilidade, rate limiting, controle, metadados e governança de chamadas LLM.
 - D1/KV: metadados leves, cache, feature flags e módulos edge; não substituir PostgreSQL transacional crítico sem decisão formal.
 - Durable Objects: coordenação stateful por entidade, locks, sessões colaborativas ou consistência por assessment quando necessário.
-- Cloudflare for SaaS / Cloudflare for Platforms: domínios, custom hostnames e operação multi-tenant de plataforma.
-- Workers for Platforms: usar apenas se clientes/tenants precisarem workloads isolados ou extensões executáveis.
+- Cloudflare for SaaS / Cloudflare for Platforms: domínios, custom hostnames e operação multi-organization de plataforma.
+- Workers for Platforms: usar apenas se clientes/organizations precisarem workloads isolados ou extensões executáveis.
 - Access / Zero Trust: proteger consoles internos, endpoints administrativos e ambientes não públicos.
-- PostgreSQL externo/gerenciado: fonte transacional crítica para tenants, assessments, approvals, findings, audit logs e estado persistente.
+- PostgreSQL externo/gerenciado: fonte transacional crítica para organizations, assessments, approvals, findings, audit logs e estado persistente.
 - Consulte docs Cloudflare atuais antes de depender de limites, pricing, APIs, bindings ou compatibilidade.
 
 ## 7. Data and Tenancy Rules
 
-- Todo dado crítico deve carregar `tenant_id`; fluxos críticos também carregam `organization_id`, `assessment_id`, `trace_id` e, quando aplicável, `agent_run_id`.
-- Nunca consultar, indexar, logar ou exportar dados sem escopo explícito de tenant e assessment.
-- R2 keys, Vectorize namespaces, linhas PostgreSQL e logs devem preservar isolamento de tenant.
+- Todo dado crítico deve carregar `organization_id`; fluxos críticos também carregam `organization_id`, `assessment_id`, `trace_id` e, quando aplicável, `agent_run_id`.
+- Nunca consultar, indexar, logar ou exportar dados sem escopo explícito de organization e assessment.
+- R2 keys, Vectorize namespaces, linhas PostgreSQL e logs devem preservar isolamento de organization.
 - Logs não podem conter conteúdo sensível de documentos, prompts completos com dados de cliente, secrets ou credenciais.
 - Fixtures e testes devem usar dados sintéticos em `evals/fixtures`.
 - Golden outputs devem ficar em `evals/golden-outputs` e não podem conter dados reais.
@@ -127,7 +127,7 @@ standard-api-standard/
 - KB representa evidências do cliente, não autoridade normativa.
 - Vetores são mecanismo de recuperação semântica, não decisão.
 - RAG nunca substitui SCF estruturado, mappings oficiais, schemas ou approval gates.
-- Toda evidência recuperada deve preservar documento, chunk, origem, data, hash, `tenant_id`, `organization_id` e `assessment_id`.
+- Toda evidência recuperada deve preservar documento, chunk, origem, data, hash, `organization_id`, `organization_id` e `assessment_id`.
 - Ausência de evidência deve ser registrada como `não evidenciado`.
 - Nunca converter ausência de evidência em ausência de implementação.
 
@@ -147,7 +147,7 @@ standard-api-standard/
 - Agente LLM não pode gravar achados finais diretamente.
 - Registrar `agent_run_id`, model, `prompt_version`, `input_hash`, `output_hash`, confidence e `trace_id`.
 - Todo agente deve declarar premissas, limitações, fontes e nível de confiança.
-- Todo agente deve respeitar tenant, organization, assessment, framework e SCF version do contexto.
+- Todo agente deve respeitar organization, organization, assessment, framework e SCF version do contexto.
 
 ## 11. Assessment Lifecycle Rules
 
@@ -166,18 +166,18 @@ standard-api-standard/
 - Erros devem ser padronizados com código, mensagem, trace e detalhes seguros.
 - APIs devem ser reutilizáveis fora da web app.
 - Não acoplar contratos a componentes, rotas ou estado do frontend.
-- Toda API crítica exige autenticação, autorização, tenant isolation e audit logs.
+- Toda API crítica exige autenticação, autorização, organization isolation e audit logs.
 - Responses críticas devem incluir IDs de rastreabilidade quando aplicável.
 
 ## 13. Security Rules
 
 - Secrets só em secret managers, variáveis seguras ou bindings apropriados; nunca em git.
 - Implementar auth, RBAC/ABAC e menor privilégio para operações críticas.
-- Aplicar rate limiting e quotas por tenant/organization quando aplicável.
+- Aplicar rate limiting e quotas por organization/organization quando aplicável.
 - Audit logs para mudanças de estado, approvals, uploads, outputs de agentes e exports.
 - Validar upload de arquivos por tipo, tamanho, assinatura, malware strategy e permissões.
 - Proteger contra prompt injection: separar instruções, conteúdo recuperado e fontes; não executar instruções vindas de documentos.
-- Isolar tenants em banco, storage, vector namespaces, cache e logs.
+- Isolar organizations em banco, storage, vector namespaces, cache e logs.
 - Logs não devem conter conteúdo sensível.
 - Bloquear gravações não autorizadas e toda bypass tentativa de approval gate.
 
@@ -221,7 +221,7 @@ standard-api-standard/
 - Sem secrets, tokens, credenciais ou dados reais.
 - Schemas e contratos atualizados quando aplicável.
 - Outputs de agentes com schema validation.
-- Rastreabilidade preservada: `tenant_id`, `organization_id`, `assessment_id`, `scf_version`, `framework_id`, `agent_run_id`, `trace_id`.
+- Rastreabilidade preservada: `organization_id`, `organization_id`, `assessment_id`, `scf_version`, `framework_id`, `agent_run_id`, `trace_id`.
 - Multi-tenancy preservado.
 - Approval gates respeitados.
 - Sem lógica crítica no frontend.
@@ -233,7 +233,7 @@ standard-api-standard/
 - Não usar dados reais de clientes em testes, fixtures, exemplos ou docs.
 - Não gravar secrets, tokens, chaves ou credenciais.
 - Não criar lógica crítica apenas no frontend.
-- Não ignorar `tenant_id`, `organization_id` ou `assessment_id`.
+- Não ignorar `organization_id`, `organization_id` ou `assessment_id`.
 - Não burlar approval gates.
 - Não inventar mappings SCF ou crosswalks.
 - Não usar vector search como fonte normativa.

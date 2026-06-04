@@ -7,7 +7,7 @@ compatibility_flags = [ "nodejs_compat" ]
 STANDARD_ENV = "development"
 LOG_LEVEL = "info"
 AI_GATEWAY_NAME = "standard-dev"
-AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/0a6c490dd5fe9051422c15c9e133138e/standard-dev"
+AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/0a6c490dd5fe9051422c15c9e133138e/standard-dev/openai"
 
 [[r2_buckets]]
 binding = "STANDARD_DOCUMENTS_BUCKET"
@@ -68,7 +68,7 @@ name = "standard-api-gateway-staging"
 STANDARD_ENV = "staging"
 LOG_LEVEL = "info"
 AI_GATEWAY_NAME = "standard-staging"
-AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/0a6c490dd5fe9051422c15c9e133138e/standard-staging"
+AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/0a6c490dd5fe9051422c15c9e133138e/standard-staging/openai"
 BETTER_AUTH_URL = "https://standard-api.bekaa.eu"
 
 [[env.staging.r2_buckets]]
@@ -134,7 +134,7 @@ routes = [
 STANDARD_ENV = "production"
 LOG_LEVEL = "warn"
 AI_GATEWAY_NAME = "standard-prod"
-AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/0a6c490dd5fe9051422c15c9e133138e/standard-prod"
+AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/0a6c490dd5fe9051422c15c9e133138e/standard-prod/openai"
 BETTER_AUTH_URL = "https://standard-api.bekaa.eu"
 
 [[env.production.r2_buckets]]

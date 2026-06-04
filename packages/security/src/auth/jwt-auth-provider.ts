@@ -19,7 +19,7 @@ export type JwtAuthConfig =
 const StandardClaimsSymbol = Symbol("standard-claims");
 
 interface StandardClaims extends JWTPayload {
-  tenant_id?: string;
+  organization_id?: string;
   organization_ids?: string[];
   roles?: Role[];
   permissions?: string[];
@@ -45,10 +45,10 @@ export class JwtAuthProvider implements AuthProvider {
     }
 
     const actorId = payload.sub || input.actorId || "service-actor";
-    const tenantId = payload.tenant_id || input.tenantId;
+    const organizationId = payload.organization_id || input.organizationId;
     const roles = (payload.roles || input.roles || []) as Role[];
 
-    if (!tenantId) {
+    if (!organizationId) {
       // Strict multi-tenancy: deny tokens without tenant scope
       return null;
     }
@@ -56,7 +56,7 @@ export class JwtAuthProvider implements AuthProvider {
     return {
       actor_id: actorId,
       actor_type: "user",
-      tenant_id: tenantId,
+      organization_id: organizationId,
       roles,
       permissions: (payload.permissions as AuthContext["permissions"]) || [],
       organization_ids: payload.organization_ids || input.organizationIds || [],

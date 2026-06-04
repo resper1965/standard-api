@@ -82,7 +82,6 @@ export type MembershipStatus = z.infer<typeof MembershipStatusSchema>;
 
 export const MembershipSchema = z.object({
   membership_id: z.string().uuid(),
-  tenant_id: z.string().uuid(),
   organization_id: z.string().uuid(),
   user_id: z.string().uuid().nullable(),
   email: z.string().email(),

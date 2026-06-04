@@ -15,7 +15,6 @@ export const CreateApprovalRequestSchema = z.object({
 
 export const ApprovalResponseSchema = z.object({
   approval_id: UuidSchema,
-  tenant_id: UuidSchema,
   organization_id: UuidSchema,
   assessment_id: UuidSchema,
   gate: ApprovalGateSchema,

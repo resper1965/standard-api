@@ -50,7 +50,6 @@ export class AuditPackageService {
     // 1. Create & persist the export job record
     const job: ExportJobResponse = {
       export_job_id: jobId,
-      tenant_id: context.tenantId,
       organization_id: context.organizationId,
       assessment_id: assessmentId,
       job_type: "audit_package",

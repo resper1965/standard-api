@@ -39,23 +39,23 @@ export const createDrizzlePoamVersionRepository = (db: DbClient): PoamVersionRep
       updatedAt: new Date(),
     }).where(eq(poamVersions.id, version.poam_version_id));
   },
-  async get(poamVersionId, tenantId) {
+  async get(poamVersionId, organizationId) {
     const [row] = await db.select().from(poamVersions)
       .where(eq(poamVersions.id, poamVersionId))
       .limit(1);
     return row ? mapPoamVersionRow(row) : null;
   },
-  async listByAssessment(assessmentId, tenantId) {
+  async listByAssessment(assessmentId, organizationId) {
     const rows = await db.select().from(poamVersions)
       .where(eq(poamVersions.assessmentId, assessmentId));
     return rows.map(mapPoamVersionRow);
   },
-  withTenant(tenantId) {
+  withOrganization(organizationId) {
     return {
       save: async (version) => this.save(version),
       update: async (version) => this.update(version),
-      get: async (poamVersionId) => this.get(poamVersionId, tenantId),
-      listByAssessment: async (assessmentId) => this.listByAssessment(assessmentId, tenantId),
+      get: async (poamVersionId) => this.get(poamVersionId, organizationId),
+      listByAssessment: async (assessmentId) => this.listByAssessment(assessmentId, organizationId),
     };
   },
 });
@@ -115,23 +115,23 @@ export const createDrizzlePoamItemRepository = (db: DbClient): PoamItemRepositor
       updatedAt: new Date(),
     }).where(eq(poamItems.id, item.poam_item_id));
   },
-  async get(poamItemId, tenantId) {
+  async get(poamItemId, organizationId) {
     const [row] = await db.select().from(poamItems)
       .where(eq(poamItems.id, poamItemId))
       .limit(1);
     return row ? mapPoamItemRow(row) : null;
   },
-  async listByVersion(poamVersionId, tenantId) {
+  async listByVersion(poamVersionId, organizationId) {
     const rows = await db.select().from(poamItems)
       .where(eq(poamItems.poamVersionId, poamVersionId));
     return rows.map(mapPoamItemRow);
   },
-  withTenant(tenantId) {
+  withOrganization(organizationId) {
     return {
       saveMany: async (items) => this.saveMany(items),
       update: async (item) => this.update(item),
-      get: async (poamItemId) => this.get(poamItemId, tenantId),
-      listByVersion: async (poamVersionId, filters) => this.listByVersion(poamVersionId, tenantId, filters),
+      get: async (poamItemId) => this.get(poamItemId, organizationId),
+      listByVersion: async (poamVersionId, filters) => this.listByVersion(poamVersionId, organizationId, filters),
     };
   },
 });
@@ -178,24 +178,24 @@ export const createDrizzlePoamMilestoneRepository = (db: DbClient): PoamMileston
       expectedEvidence: milestone.expected_evidence,
     }).where(eq(poamMilestones.id, milestone.poam_milestone_id));
   },
-  async get(milestoneId, tenantId) {
+  async get(milestoneId, organizationId) {
     const [row] = await db.select().from(poamMilestones)
       .where(eq(poamMilestones.id, milestoneId))
       .limit(1);
     return row ? mapPoamMilestoneRow(row) : null;
   },
-  async listByItem(poamItemId, tenantId) {
+  async listByItem(poamItemId, organizationId) {
     const rows = await db.select().from(poamMilestones)
       .where(eq(poamMilestones.poamItemId, poamItemId));
     return rows.map(mapPoamMilestoneRow);
   },
-  withTenant(tenantId) {
+  withOrganization(organizationId) {
     return {
       save: async (milestone) => this.save(milestone),
       saveMany: async (milestones) => this.saveMany(milestones),
       update: async (milestone) => this.update(milestone),
-      get: async (milestoneId) => this.get(milestoneId, tenantId),
-      listByItem: async (poamItemId) => this.listByItem(poamItemId, tenantId),
+      get: async (milestoneId) => this.get(milestoneId, organizationId),
+      listByItem: async (poamItemId) => this.listByItem(poamItemId, organizationId),
     };
   },
 });
@@ -224,16 +224,16 @@ export const createDrizzlePoamDependencyRepository = (db: DbClient): PoamDepende
       description: d.description,
     }))).onConflictDoNothing();
   },
-  async listByItem(poamItemId, tenantId) {
+  async listByItem(poamItemId, organizationId) {
     const rows = await db.select().from(poamDependencies)
       .where(eq(poamDependencies.poamItemId, poamItemId));
     return rows.map(mapPoamDependencyRow);
   },
-  withTenant(tenantId) {
+  withOrganization(organizationId) {
     return {
       save: async (dep) => this.save(dep),
       saveMany: async (deps) => this.saveMany(deps),
-      listByItem: async (poamItemId) => this.listByItem(poamItemId, tenantId),
+      listByItem: async (poamItemId) => this.listByItem(poamItemId, organizationId),
     };
   },
 });
@@ -254,7 +254,6 @@ type PoamDependencyRow = typeof poamDependencies.$inferSelect;
 
 const mapPoamVersionRow = (row: PoamVersionRow): PoamVersionResponse => ({
   poam_version_id: row.id,
-  tenant_id: row.organizationId,
   organization_id: row.organizationId,
   assessment_id: row.assessmentId,
   version_number: row.versionNumber,
@@ -281,7 +280,6 @@ const mapPoamVersionRow = (row: PoamVersionRow): PoamVersionResponse => ({
 
 const mapPoamItemRow = (row: PoamItemRow): PoamItemResponse => ({
   poam_item_id: row.id,
-  tenant_id: row.organizationId,
   organization_id: row.organizationId,
   assessment_id: row.assessmentId,
   poam_version_id: row.poamVersionId,
@@ -317,7 +315,6 @@ const mapPoamItemRow = (row: PoamItemRow): PoamItemResponse => ({
 
 const mapPoamMilestoneRow = (row: PoamMilestoneRow): PoamMilestoneResponse => ({
   poam_milestone_id: row.id,
-  tenant_id: row.organizationId,
   organization_id: row.organizationId,
   assessment_id: row.assessmentId,
   poam_item_id: row.poamItemId,
@@ -334,7 +331,6 @@ const mapPoamMilestoneRow = (row: PoamMilestoneRow): PoamMilestoneResponse => ({
 
 const mapPoamDependencyRow = (row: PoamDependencyRow): PoamDependencyResponse => ({
   poam_dependency_id: row.id,
-  tenant_id: row.organizationId,
   organization_id: row.organizationId,
   assessment_id: row.assessmentId,
   poam_item_id: row.poamItemId,

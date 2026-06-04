@@ -9,7 +9,7 @@ import { StandardClient } from "@standard/sdk";
 
 const client = new StandardClient({
   apiKey: "standard_live_...",     // From Settings → API Keys
-  tenantId: "your-tenant-uuid",   // Your tenant ID
+  organizationId: "your-organization-uuid",   // Your organization ID
 });
 ```
 
@@ -48,9 +48,9 @@ console.log(data.total_critical_findings); // 3
 console.log(data.assessments_by_state);    // { "draft": 1, "poam_approved": 2, "closed": 1 }
 ```
 
-### Audit trail (tenant-wide)
+### Audit trail (organization-wide)
 ```typescript
-const { data } = await client.assessments.auditLogs("tenant-uuid", {
+const { data } = await client.assessments.auditLogs("organization-uuid", {
   action: "assessment_created",
   since: "2026-04-01T00:00:00Z",
   limit: 50,

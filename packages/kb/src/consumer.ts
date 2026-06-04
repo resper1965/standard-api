@@ -7,13 +7,13 @@ const safeError = (error: unknown): string => {
 };
 
 const findChunk = async (deps: KbServiceDependencies, message: KbEmbeddingJobMessage): Promise<DocumentChunk | null> => {
-  const chunks = await deps.documentIngestion.repositories.chunks.listChunks(message.document_id, message.tenant_id, 1000);
+  const chunks = await deps.documentIngestion.repositories.chunks.listChunks(message.document_id, message.organization_id, 1000);
   return chunks.find((chunk) => chunk.chunk_id === message.chunk_id && chunk.assessment_id === message.assessment_id) ?? null;
 };
 
 export const processKbEmbeddingJob = async (message: KbEmbeddingJobMessage, deps: KbServiceDependencies): Promise<void> => {
-  const job = await deps.repositories.embeddingJobs.getJob(message.job_id, message.tenant_id);
-  const reference = await deps.repositories.vectorReferences.get(message.vector_reference_id, message.tenant_id);
+  const job = await deps.repositories.embeddingJobs.getJob(message.job_id, message.organization_id);
+  const reference = await deps.repositories.vectorReferences.get(message.vector_reference_id, message.organization_id);
   const now = new Date().toISOString();
 
   if (!job || !reference) return;
@@ -28,10 +28,10 @@ export const processKbEmbeddingJob = async (message: KbEmbeddingJobMessage, deps
   try {
     const chunk = await findChunk(deps, message);
     if (!chunk) throw new Error("Chunk not found for KB embedding job.");
-    if (chunk.tenant_id !== message.tenant_id || chunk.assessment_id !== message.assessment_id) {
+    if (chunk.organization_id !== message.organization_id || chunk.assessment_id !== message.assessment_id) {
       throw new Error("KB embedding job tenant or assessment mismatch.");
     }
-    const document = await deps.documentIngestion.repositories.documents.getDocument(chunk.document_id, chunk.tenant_id);
+    const document = await deps.documentIngestion.repositories.documents.getDocument(chunk.document_id, chunk.organization_id);
     if (!document) throw new Error("Document not found for KB embedding job.");
 
     await deps.repositories.vectorReferences.update({
@@ -47,7 +47,6 @@ export const processKbEmbeddingJob = async (message: KbEmbeddingJobMessage, deps
         id: vectorId,
         values: embedding.vector,
         metadata: {
-          tenant_id: chunk.tenant_id,
           organization_id: chunk.organization_id,
           assessment_id: chunk.assessment_id,
           document_id: chunk.document_id,

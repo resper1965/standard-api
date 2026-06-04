@@ -5,7 +5,7 @@ import { expect, expectRejects, test } from "./test-kit";
 test("bloqueia relatório sem tenant context", async () => {
   const { reporting } = await createApprovedSourceFixture();
   await expectRejects(
-    () => new ReportDraftService(reporting).createReportDraft(context.assessmentId, "full_assessment_report", {}, { ...context, tenantId: "" }),
+    () => new ReportDraftService(reporting).createReportDraft(context.assessmentId, "full_assessment_report", {}, { ...context, organizationId: "" }),
     "REPORT_CONTEXT_REQUIRED"
   );
 });

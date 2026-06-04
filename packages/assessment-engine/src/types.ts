@@ -8,7 +8,6 @@ export type ApprovalDecision = "approved" | "rejected" | "changes_requested";
 
 export type AssessmentSnapshot = {
   id: string;
-  tenantId: string;
   organizationId: string;
   state: AssessmentState;
   documentCount: number;
@@ -40,7 +39,6 @@ export type ApprovalEvent = {
 };
 
 export type TransitionContext = {
-  tenantId: string;
   organizationId: string;
   assessmentId: string;
   actorId?: string;
@@ -60,7 +58,6 @@ export type AssessmentTransition = {
 };
 
 export type AssessmentLifecycleEvent = {
-  tenantId: string;
   organizationId: string;
   assessmentId: string;
   previousState: AssessmentState;
@@ -82,7 +79,6 @@ export type TransitionResult = {
 
 export type ArtifactVersion = {
   id: string;
-  tenantId: string;
   organizationId: string;
   assessmentId: string;
   artifactType: ArtifactType;
@@ -102,7 +98,6 @@ export type ArtifactVersion = {
 
 export type CreateArtifactVersionInput = {
   id: string;
-  tenantId: string;
   organizationId: string;
   assessmentId: string;
   artifactType: ArtifactType;
@@ -113,7 +108,7 @@ export type CreateArtifactVersionInput = {
 };
 
 export type AssessmentRepository = {
-  getAssessment(id: string, tenantId: string, organizationId: string): Promise<AssessmentSnapshot | null>;
+  getAssessment(id: string, organizationId: string): Promise<AssessmentSnapshot | null>;
   saveAssessment(assessment: AssessmentSnapshot): Promise<void>;
 };
 

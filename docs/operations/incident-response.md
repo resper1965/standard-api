@@ -6,8 +6,8 @@
 
 | Severidade | Definição | SLA Meta (reconhecimento) | SLA Meta (resolução) |
 |:----------:|-----------|:-------------------------:|:--------------------:|
-| **SEV-1** | Indisponibilidade total, breach confirmado, dados de tenant expostos | 15 min | 4h |
-| **SEV-2** | Degradação crítica, approval bypass attempt, cross-tenant access blocked | 30 min | 8h |
+| **SEV-1** | Indisponibilidade total, breach confirmado, dados de organization expostos | 15 min | 4h |
+| **SEV-2** | Degradação crítica, approval bypass attempt, cross-organization access blocked | 30 min | 8h |
 | **SEV-3** | Degradação parcial, DLQ acumulando, workflow failures acima do baseline | 2h | 24h |
 | **SEV-4** | Bug funcional, performance degradada não crítica, alerta informativo | 8h | 72h |
 
@@ -24,14 +24,14 @@ Alerta → Engineering On-call → Security Owner → Operations Owner → Produ
 | Papel | Responsabilidade |
 |-------|------------------|
 | **Engineering On-call** | Primeiro contato, triagem, mitigação inicial |
-| **Security Owner** | Avalia impacto em dados, auth, tenant isolation |
+| **Security Owner** | Avalia impacto em dados, auth, organization isolation |
 | **Operations Owner** | Coordena rollback, comunicação, recursos Cloudflare |
 | **Incident Commander** | Decisão final, comunicação com stakeholders |
 
 ## 3. Cenários Específicos
 
-### 3.1 Tenant Data Breach (SEV-1)
-1. Identificar escopo: quais tenants, quais dados, qual vetor
+### 3.1 Organization Data Breach (SEV-1)
+1. Identificar escopo: quais organizations, quais dados, qual vetor
 2. Isolar: revogar sessions/API keys comprometidos
 3. Preservar evidência: snapshots de logs, audit events, security events
 4. Comunicar: security owner → incident commander → stakeholders
@@ -48,13 +48,13 @@ Alerta → Engineering On-call → Security Owner → Operations Owner → Produ
 ### 3.3 API Key Compromise (SEV-2)
 1. Revogar API key imediatamente
 2. Auditar uso: `GET /api/v1/admin/audit-logs?actor_type=api_key&key_id=...`
-3. Verificar se houve acesso cross-tenant
+3. Verificar se houve acesso cross-organization
 4. Rotar key e comunicar consumidor
 5. Registrar incident
 
 ### 3.4 DLQ Acumulando (SEV-3)
 1. Verificar queue depth: Cloudflare dashboard ou API
-2. Identificar mensagens falhando: type, error, tenant
+2. Identificar mensagens falhando: type, error, organization
 3. Avaliar impacto: quais assessments estão parados
 4. Corrigir consumer, refire mensagens válidas
 5. Registrar aprendizado
@@ -90,7 +90,7 @@ Todo SEV-1 e SEV-2 exige postmortem. SEV-3 fica a critério do incident commande
 [Descrição concisa]
 
 ## Impacto
-- Tenants afetados: N
+- Organizations afetados: N
 - Dados expostos: sim/não
 - Assessments impactados: N
 

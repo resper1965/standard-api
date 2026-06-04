@@ -25,45 +25,45 @@ export const createInMemoryPrivacyActivityRepository = (): PrivacyActivityReposi
   const store = new Map<string, PrivacyActivityResponse>();
   return {
     async save(activity) { store.set(activity.id, activity); },
-    async get(id, tenantId) {
+    async get(id, organizationId) {
       const item = store.get(id);
-      if (!item || item.tenant_id !== tenantId) return null;
+      if (!item || item.organization_id !== organizationId) return null;
       return item;
     },
-    async list(tenantId, filters) {
-      let results = Array.from(store.values()).filter((a) => a.tenant_id === tenantId);
+    async list(organizationId, filters) {
+      let results = Array.from(store.values()).filter((a) => a.organization_id === organizationId);
       if (filters?.status) results = results.filter((a) => a.status === filters.status);
       if (filters?.assessment_id) results = results.filter((a) => a.assessment_id === filters.assessment_id);
       if (filters?.limit) results = results.slice(filters.offset ?? 0, (filters.offset ?? 0) + filters.limit);
       return results;
     },
     async update(activity) { store.set(activity.id, activity); },
-    async softDelete(id, tenantId) {
+    async softDelete(id, organizationId) {
       const item = store.get(id);
-      if (item && item.tenant_id === tenantId) store.delete(id);
+      if (item && item.organization_id === organizationId) store.delete(id);
     },
   };
 };
 
 // ─── Generic InMemory Repository (shared pattern) ───────────────────
 
-const createSimpleListRepo = <T extends { id: string; tenant_id: string; activity_id: string }>() => {
+const createSimpleListRepo = <T extends { id: string; organization_id: string; activity_id: string }>() => {
   const store = new Map<string, T>();
   return {
     async saveMany(items: T[]) { for (const i of items) store.set(i.id, i); },
     async save(item: T) { store.set(item.id, item); },
-    async listByActivity(activityId: string, tenantId: string) {
-      return Array.from(store.values()).filter((i) => i.activity_id === activityId && i.tenant_id === tenantId);
+    async listByActivity(activityId: string, organizationId: string) {
+      return Array.from(store.values()).filter((i) => i.activity_id === activityId && i.organization_id === organizationId);
     },
-    async get(id: string, tenantId: string) {
+    async get(id: string, organizationId: string) {
       const item = store.get(id);
-      if (!item || item.tenant_id !== tenantId) return null;
+      if (!item || item.organization_id !== organizationId) return null;
       return item;
     },
     async update(item: T) { store.set(item.id, item); },
-    async remove(id: string, tenantId: string) {
+    async remove(id: string, organizationId: string) {
       const item = store.get(id);
-      if (item && item.tenant_id === tenantId) store.delete(id);
+      if (item && item.organization_id === organizationId) store.delete(id);
     },
   };
 };

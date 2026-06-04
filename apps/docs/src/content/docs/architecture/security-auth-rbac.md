@@ -6,7 +6,7 @@ title: "Security, Auth and RBAC"
 
 ## Objetivo
 
-A camada de segurança inicial do Standard cria contratos reutilizáveis para autenticação, tenant context, RBAC, upload security, prompt security e auditabilidade segura. A implementação fica em `packages/security` e é integrada ao `apps/api-gateway`.
+A camada de segurança inicial do Standard cria contratos reutilizáveis para autenticação, organization context, RBAC, upload security, prompt security e auditabilidade segura. A implementação fica em `packages/security` e é integrada ao `apps/api-gateway`.
 
 ## Modelo de Autenticação
 
@@ -14,7 +14,7 @@ O MVP define `AuthContext` com:
 
 - `actor_id`
 - `actor_type`
-- `tenant_id`
+- `organization_id`
 - `organization_ids`
 - `roles`
 - `permissions`
@@ -35,23 +35,23 @@ Auth methods modelados:
 
 No MVP, integramos o provedor definitivo usando o **Standard Native Auth Plugin**, que assume JWT, Auth Session, Database Persistence (Drizzle) e a hierarquia oficial do sistema, além da gestão madura via o plugin API Keys.
 
-## Tenant Resolution
+## Organization Resolution
 
-`TenantResolver` resolve o tenant por:
+`TenantResolver` resolve o organization por:
 
-- header interno `x-standard-tenant-id`;
-- route param `tenantId`;
+- header interno `x-standard-organization-id`;
+- route param `organizationId`;
 - placeholders futuros para JWT, API key e hostname.
 
-Regra: `tenant_id` vindo do body nunca é suficiente isoladamente. Divergência entre body/contexto deve ser bloqueada por `TenantGuard`.
+Regra: `organization_id` vindo do body nunca é suficiente isoladamente. Divergência entre body/contexto deve ser bloqueada por `TenantGuard`.
 
 ## RBAC
 
 `PolicyEngine` avalia:
 
 - auth context presente;
-- tenant context presente quando a permissão não é global;
-- tenant do auth compatível com tenant resolvido;
+- organization context presente quando a permissão não é global;
+- organization do auth compatível com organization resolvido;
 - permissões requeridas pela rota/operação.
 
 Roles iniciais:
@@ -62,22 +62,22 @@ Roles iniciais:
 - `auditor`
 - `system`
 
-As permissões iniciais cobrem tenant, organization, assessment, documents, KB, SCF, SoA, Gap, Maturity, POA&M, Reports, Agents e Admin.
+As permissões iniciais cobrem organization, organization, assessment, documents, KB, SCF, SoA, Gap, Maturity, POA&M, Reports, Agents e Admin.
 
-## Tenant Isolation
+## Organization Isolation
 
-Toda operação de cliente deve carregar `tenant_id`. Para assessment, o backend valida que o assessment pertence ao tenant resolvido antes de acessar dados.
+Toda operação de cliente deve carregar `organization_id`. Para assessment, o backend valida que o assessment pertence ao organization resolvido antes de acessar dados.
 
 `TenantGuard` fornece:
 
-- validação de `tenant_id` divergente no body;
+- validação de `organization_id` divergente no body;
 - validação de organization/assessment context;
-- bloqueio de cross-tenant access.
+- bloqueio de cross-organization access.
 
 ## Authorization Flow
 
 1. Resolver `trace_id`.
-2. Resolver tenant context.
+2. Resolver organization context.
 3. Resolver auth context.
 4. Executar RBAC se a rota declarar `permissions`.
 5. Aplicar rate limit placeholder em rotas sensíveis.
@@ -131,7 +131,7 @@ Regras:
 O API Gateway agora suporta:
 
 - auth middleware;
-- tenant middleware;
+- organization middleware;
 - RBAC middleware;
 - rate limit placeholder;
 - secure error handling;
@@ -162,7 +162,7 @@ Não logar documento completo, chunks completos, prompt completo, tokens, secret
 ## Maturidade do MVP Enterprise-Grade
 
 - **Auth real (Session e DB Persistence):** Utiliza Standard Native Auth (`@standard-native-auth/api-key` encapsulados no PostgreSQL pelo Schema Drizzle).
-- **Membership context:** Standard Native Auth provê multi-tenant assignment e organizações associadas nas claims.
+- **Membership context:** Standard Native Auth provê multi-organization assignment e organizações associadas nas claims.
 - **RBAC Ativo:** Funcionalidades seguras integradas via `rbac.middleware.ts` para checar `context.auth.roles`.
 - **API Keys / Revogações:** Plugin nativo que interage com as tabelas na DB garantindo segurança transacional.
 - Toda lógica in-memory simulada foi deprecada na fase Enterprise-Grade e desativada nas rotas de produção operando na porta 3000 do Gateway.

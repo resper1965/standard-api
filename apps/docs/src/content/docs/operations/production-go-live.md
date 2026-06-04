@@ -10,7 +10,7 @@ Este documento detalha as configurações de infraestrutura e procedimentos fina
 
 ## 1. Configurações de DNS e Cloudflare
 
-Para expor a API de forma segura e com suporte a múltiplos inquilinos (SaaS multi-tenant), a Cloudflare deve ser utilizada como camada de proxy, CDN, SSL/TLS e WAF.
+Para expor a API de forma segura e com suporte a múltiplos inquilinos (SaaS multi-organization), a Cloudflare deve ser utilizada como camada de proxy, CDN, SSL/TLS e WAF.
 
 ### 1.1 Apontamentos DNS (Registros A/CNAME)
 Configure as seguintes entradas de DNS no painel da Cloudflare:
@@ -67,10 +67,10 @@ A observabilidade em tempo real é crítica para manter o SLA do serviço SaaS.
 - **Variavéis**: Configure a variável `SENTRY_DSN` em ambos os ambientes.
 - **Tratamento de Dados Sensíveis**:
   - Habilite a sanitização de dados no Sentry para filtrar campos como `Authorization`, `password`, `key` e `token` antes do envio.
-  - Impeça logs de corpos de requisições de documentos para manter a conformidade com a privacidade de dados dos tenants.
+  - Impeça logs de corpos de requisições de documentos para manter a conformidade com a privacidade de dados dos organizations.
 
 ### 3.2 Agregação de Logs (Logflare / Better Stack / Axiom)
-- Todos os logs de console (`console.log`, `console.error`) devem ser transmitidos formatados como JSON estruturado contendo o correspondente `trace_id` e `tenant_id`.
+- Todos os logs de console (`console.log`, `console.error`) devem ser transmitidos formatados como JSON estruturado contendo o correspondente `trace_id` e `organization_id`.
 - Alertas automáticos devem disparar no Slack ou PagerDuty se a taxa de erros `5xx` no gateway ultrapassar **1%** do tráfego total por 5 minutos consecutivos.
 
 ---

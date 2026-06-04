@@ -17,7 +17,6 @@ export type MaturityLevelName = (typeof MATURITY_LEVELS)[MaturityLevel]["name"];
 // ── Domain Types ────────────────────────────────────────────────────────────
 
 export type MaturityContext = {
-  tenantId: string;
   organizationId: string;
   assessmentId: string;
   actorId?: string;
@@ -27,7 +26,6 @@ export type MaturityContext = {
 
 export type MaturityScore = {
   id: string;
-  tenantId: string;
   organizationId: string;
   assessmentId: string;
   maturityAssessmentVersionId: string;
@@ -40,7 +38,6 @@ export type MaturityScore = {
 
 export type MaturityAssessmentVersion = {
   id: string;
-  tenantId: string;
   organizationId: string;
   assessmentId: string;
   versionNumber: number;
@@ -82,15 +79,15 @@ export type MaturityClassificationInput = {
 export type MaturityVersionRepository = {
   save(version: MaturityAssessmentVersion): Promise<void>;
   update(version: MaturityAssessmentVersion): Promise<void>;
-  get(versionId: string, tenantId: string): Promise<MaturityAssessmentVersion | null>;
-  listByAssessment(assessmentId: string, tenantId: string): Promise<MaturityAssessmentVersion[]>;
+  get(versionId: string, organizationId: string): Promise<MaturityAssessmentVersion | null>;
+  listByAssessment(assessmentId: string, organizationId: string): Promise<MaturityAssessmentVersion[]>;
 };
 
 export type MaturityScoreRepository = {
   saveMany(scores: MaturityScore[]): Promise<void>;
   update(score: MaturityScore): Promise<void>;
-  get(scoreId: string, tenantId: string): Promise<MaturityScore | null>;
-  listByVersion(maturityAssessmentVersionId: string, tenantId: string): Promise<MaturityScore[]>;
+  get(scoreId: string, organizationId: string): Promise<MaturityScore | null>;
+  listByVersion(maturityAssessmentVersionId: string, organizationId: string): Promise<MaturityScore[]>;
 };
 
 export type MaturityRepositories = {
@@ -102,7 +99,7 @@ export type MaturityRepositories = {
 
 export type MaturityDependencies = {
   repositories: MaturityRepositories;
-  getApprovedGapAnalysis: (assessmentId: string, tenantId: string) => Promise<{
+  getApprovedGapAnalysis: (assessmentId: string, organizationId: string) => Promise<{
     version: GapAnalysisVersionResponse;
     findings: GapFindingResponse[];
   } | null>;

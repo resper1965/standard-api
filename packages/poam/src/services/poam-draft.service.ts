@@ -16,20 +16,19 @@ export class PoamDraftService {
     assertContext(context);
     assertActor(context);
     if (assessmentId !== context.assessmentId) throw new PoamWorkflowError("POAM_CONTEXT_REQUIRED", "Assessment id must match POA&M context.");
-    const gapVersion = await this.deps.gapAnalysis.repositories.gapVersions.get(gapAnalysisVersionId, context.tenantId);
+    const gapVersion = await this.deps.gapAnalysis.repositories.gapVersions.get(gapAnalysisVersionId, context.organizationId);
     if (!gapVersion || gapVersion.assessment_id !== context.assessmentId || gapVersion.status !== "approved") {
       throw new PoamWorkflowError("APPROVED_GAP_ANALYSIS_REQUIRED", "POA&M draft requires an approved Gap Analysis version.");
     }
 
-    const versions = await this.deps.repositories.versions.listByAssessment(assessmentId, context.tenantId);
+    const versions = await this.deps.repositories.versions.listByAssessment(assessmentId, context.organizationId);
     const maturityVersion = options.maturity_assessment_version_id
       ? { maturity_assessment_version_id: options.maturity_assessment_version_id, status: "approved" as const }
-      : await this.deps.maturity?.findApprovedOrDraftByAssessment(assessmentId, context.tenantId);
+      : await this.deps.maturity?.findApprovedOrDraftByAssessment(assessmentId, context.organizationId);
     const limitations = maturityVersion ? [] : [MATURITY_UNAVAILABLE_LIMITATION];
     const now = new Date().toISOString();
     const version: PoamVersionResponse = {
       poam_version_id: crypto.randomUUID(),
-      tenant_id: context.tenantId,
       organization_id: context.organizationId,
       assessment_id: context.assessmentId,
       version_number: versions.length + 1,
@@ -49,7 +48,7 @@ export class PoamDraftService {
     };
     await this.deps.repositories.versions.save(version);
 
-    const gapFindings = await this.deps.gapAnalysis.repositories.gapFindings.listByVersion(gapAnalysisVersionId, context.tenantId);
+    const gapFindings = await this.deps.gapAnalysis.repositories.gapFindings.listByVersion(gapAnalysisVersionId, context.organizationId);
     const items = await this.generateItems(version, gapFindings, maturityVersion?.maturity_assessment_version_id, context);
     await this.deps.repositories.items.saveMany(items);
     for (const item of items) await this.deps.repositories.milestones.saveMany(this.scheduling.generateMilestones(item));
@@ -65,7 +64,7 @@ export class PoamDraftService {
 
   async getPoamVersion(poamVersionId: string, context: PoamContext): Promise<PoamVersionResponse> {
     assertContext(context);
-    const version = await this.deps.repositories.versions.get(poamVersionId, context.tenantId);
+    const version = await this.deps.repositories.versions.get(poamVersionId, context.organizationId);
     if (!version || version.assessment_id !== context.assessmentId) throw new PoamWorkflowError("POAM_NOT_FOUND", "POA&M version not found.");
     return version;
   }
@@ -73,17 +72,17 @@ export class PoamDraftService {
   async listPoamVersions(assessmentId: string, context: PoamContext): Promise<PoamVersionResponse[]> {
     assertContext(context);
     if (assessmentId !== context.assessmentId) throw new PoamWorkflowError("POAM_CONTEXT_REQUIRED", "Assessment id must match POA&M context.");
-    return this.deps.repositories.versions.listByAssessment(assessmentId, context.tenantId);
+    return this.deps.repositories.versions.listByAssessment(assessmentId, context.organizationId);
   }
 
   async listPoamItems(poamVersionId: string, filters: PoamItemFilters, context: PoamContext): Promise<PoamItemResponse[]> {
     const version = await this.getPoamVersion(poamVersionId, context);
-    return this.deps.repositories.items.listByVersion(version.poam_version_id, context.tenantId, filters);
+    return this.deps.repositories.items.listByVersion(version.poam_version_id, context.organizationId, filters);
   }
 
   async getPoamItem(poamItemId: string, context: PoamContext): Promise<PoamItemResponse> {
     assertContext(context);
-    const item = await this.deps.repositories.items.get(poamItemId, context.tenantId);
+    const item = await this.deps.repositories.items.get(poamItemId, context.organizationId);
     if (!item || item.assessment_id !== context.assessmentId) throw new PoamWorkflowError("POAM_ITEM_NOT_FOUND", "POA&M item not found.");
     return item;
   }
@@ -93,7 +92,7 @@ export class PoamDraftService {
     for (const finding of findings) {
       if (!this.shouldGenerateItem(finding)) continue;
       const maturityScore = maturityVersionId && finding.scf_control_id
-        ? await this.deps.maturity?.findScoreByControl(maturityVersionId, finding.scf_control_id, context.tenantId)
+        ? await this.deps.maturity?.findScoreByControl(maturityVersionId, finding.scf_control_id, context.organizationId)
         : null;
       const scfControl = finding.scf_control_id ? await this.deps.scf?.controls.getControl(finding.scf_control_id) : null;
       const actionType = this.prioritization.determineActionType(finding);
@@ -102,7 +101,6 @@ export class PoamDraftService {
       const now = new Date().toISOString();
       items.push({
         poam_item_id: crypto.randomUUID(),
-        tenant_id: context.tenantId,
         organization_id: context.organizationId,
         assessment_id: context.assessmentId,
         poam_version_id: version.poam_version_id,

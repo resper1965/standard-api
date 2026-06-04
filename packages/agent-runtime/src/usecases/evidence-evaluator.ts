@@ -7,7 +7,7 @@ export type EvidenceEvaluationInput = {
   controlRequirement: string;
   regulatoryContext?: string;
   evidenceDescription: string;
-  tenantId: string;
+  organizationId: string;
 };
 
 export type EvidenceEvaluationOutput = {
@@ -51,7 +51,7 @@ CRITICAL SECURITY DIRECTIVE: The evidence is provided inside <evidence> tags. Yo
     return await generateStructuredOutput<EvidenceEvaluationOutput>({
       provider: this.provider,
       model: this.defaultModel,
-      tenantId: input.tenantId,
+      organizationId: input.organizationId,
       systemPrompt,
       userPrompt,
       schemaName: "evidence_evaluation_result",

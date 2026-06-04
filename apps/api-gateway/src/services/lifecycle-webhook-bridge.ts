@@ -8,7 +8,6 @@ import type { WebhookEventType, WebhookDeliveryPayload, WebhookRepositoryAdapter
 import { WebhookDispatcher } from "./webhook-dispatcher";
 
 export type LifecycleEvent = {
-  tenant_id: string;
   organization_id: string;
   assessment_id: string;
   event_type: WebhookEventType;
@@ -31,7 +30,6 @@ export class LifecycleWebhookBridge {
    */
   async dispatch(event: LifecycleEvent): Promise<void> {
     const matchingEndpoints = await this.deps.webhooks.findSubscribers(
-      event.tenant_id,
       event.organization_id,
       event.event_type
     );
@@ -46,7 +44,6 @@ export class LifecycleWebhookBridge {
       event_id: eventId,
       event_type: event.event_type,
       timestamp,
-      tenant_id: event.tenant_id,
       organization_id: event.organization_id,
       assessment_id: event.assessment_id,
       trace_id: event.trace_id,

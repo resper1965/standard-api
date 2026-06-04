@@ -71,7 +71,7 @@ export class ReportComposerService {
 
   async composeSoaSection(reportVersionId: string, context: ReportingContext): Promise<ReportSectionResponse[]> {
     const report = await this.requireReport(reportVersionId, context);
-    const items = report.source_soa_version_id ? await this.deps.soa.repositories.items.listByVersion(report.source_soa_version_id, context.tenantId) : [];
+    const items = report.source_soa_version_id ? await this.deps.soa.repositories.items.listByVersion(report.source_soa_version_id, context.organizationId) : [];
     const counts = this.countBy(items, "applicability_status");
     return [section(reportVersionId, 6, "soa_summary", "Statement of Applicability Summary", {
       source_soa_version_id: report.source_soa_version_id,
@@ -82,7 +82,7 @@ export class ReportComposerService {
 
   async composeGapAnalysisSection(reportVersionId: string, context: ReportingContext): Promise<ReportSectionResponse[]> {
     const report = await this.requireReport(reportVersionId, context);
-    const findings = report.source_gap_analysis_version_id ? await this.deps.gapAnalysis.repositories.gapFindings.listByVersion(report.source_gap_analysis_version_id, context.tenantId) : [];
+    const findings = report.source_gap_analysis_version_id ? await this.deps.gapAnalysis.repositories.gapFindings.listByVersion(report.source_gap_analysis_version_id, context.organizationId) : [];
     const details = findings.map((finding) => ({
       gap_finding_id: finding.gap_finding_id,
       gap_code: finding.gap_code,
@@ -115,7 +115,7 @@ export class ReportComposerService {
 
   async composePoamSection(reportVersionId: string, context: ReportingContext): Promise<ReportSectionResponse[]> {
     const report = await this.requireReport(reportVersionId, context);
-    const items = report.source_poam_version_id && this.deps.poam ? await this.deps.poam.repositories.items.listByVersion(report.source_poam_version_id, context.tenantId) : [];
+    const items = report.source_poam_version_id && this.deps.poam ? await this.deps.poam.repositories.items.listByVersion(report.source_poam_version_id, context.organizationId) : [];
     const details = items.map((item) => ({
       poam_item_id: item.poam_item_id,
       poam_code: item.poam_code,
@@ -142,7 +142,7 @@ export class ReportComposerService {
 
   async composeEvidenceIndex(reportVersionId: string, context: ReportingContext): Promise<ReportSectionResponse[]> {
     const report = await this.requireReport(reportVersionId, context);
-    const findings = report.source_gap_analysis_version_id ? await this.deps.gapAnalysis.repositories.gapFindings.listByVersion(report.source_gap_analysis_version_id, context.tenantId) : [];
+    const findings = report.source_gap_analysis_version_id ? await this.deps.gapAnalysis.repositories.gapFindings.listByVersion(report.source_gap_analysis_version_id, context.organizationId) : [];
     const entries = findings.map((finding) => ({
       evidence_finding_id: finding.evidence_finding_id,
       source_location: finding.soa_item_id,
@@ -152,7 +152,7 @@ export class ReportComposerService {
   }
 
   private async requireReport(reportVersionId: string, context: ReportingContext) {
-    const report = await this.deps.repositories.versions.get(reportVersionId, context.tenantId);
+    const report = await this.deps.repositories.versions.get(reportVersionId, context.organizationId);
     if (!report || report.assessment_id !== context.assessmentId) throw new ReportingWorkflowError("REPORT_NOT_FOUND", "Report version not found.");
     return report;
   }

@@ -93,7 +93,7 @@ pnpm install && pnpm cf:deploy:staging  # ou production
 ### Regras de Rollback
 - Migration irreversível bloqueia rollback simples → requer plano específico
 - Rollback não pode apagar audit logs
-- Rollback deve preservar tenant isolation
+- Rollback deve preservar organization isolation
 - Comunicação interna deve ser registrada
 - Após rollback, executar smoke tests
 

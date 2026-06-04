@@ -2,7 +2,7 @@
 
 ## 1. Definição
 
-O **Agentic Runtime** do Standard é o conjunto de componentes responsáveis por executar agentes, orquestrar workflows, acessar tools e manter estado, garantindo escalabilidade, isolamento multi-tenant e rastreabilidade.
+O **Agentic Runtime** do Standard é o conjunto de componentes responsáveis por executar agentes, orquestrar workflows, acessar tools e manter estado, garantindo escalabilidade, isolamento multi-organization e rastreabilidade.
 
 Ele transforma o Standard SCF Agentic Assessment Model em um modelo operacional Cloudflare-oriented, API-first e SaaS-ready.
 
@@ -23,7 +23,7 @@ Responsabilidades principais:
 - API-first.
 - Stateless execution sempre que possível.
 - State externalizado.
-- Multi-tenant isolation obrigatório.
+- Multi-organization isolation obrigatório.
 - Execution desacoplada.
 - Observabilidade obrigatória.
 - Retry e idempotência.
@@ -79,7 +79,7 @@ Logs estruturados, métricas, traces, audit events, security events e cost recor
 
 ### 8. Security Layer
 
-Auth, RBAC, tenant isolation, Tool Permission Guard, prompt injection defense e audit controls.
+Auth, RBAC, organization isolation, Tool Permission Guard, prompt injection defense e audit controls.
 
 ## 4. Arquitetura de Execução
 
@@ -121,7 +121,7 @@ Características:
 Responsável por:
 
 - autenticação;
-- tenant resolution;
+- organization resolution;
 - RBAC;
 - validação de requests;
 - roteamento;
@@ -135,7 +135,7 @@ Nunca deve:
 
 - executar lógica de negócio pesada;
 - executar agentes diretamente;
-- consultar dados sem tenant scope;
+- consultar dados sem organization scope;
 - alterar lifecycle state sem Assessment Engine;
 - aprovar artefatos;
 - expor dados sensíveis em erros/logs.
@@ -222,7 +222,7 @@ Estado permitido:
 
 - apenas contexto da execução atual em memória efêmera;
 - nenhum cache com dados de cliente fora de escopo;
-- nenhuma memória compartilhada entre tenants.
+- nenhuma memória compartilhada entre organizations.
 
 ## 9. Execução de Agentes
 
@@ -261,7 +261,7 @@ Cada execução deve registrar:
 - `agent_run_id`;
 - `agent_name`;
 - `task_type`;
-- `tenant_id`;
+- `organization_id`;
 - `organization_id`;
 - `assessment_id`;
 - input hash;
@@ -289,7 +289,7 @@ Regras:
 - agentes não acessam PostgreSQL, R2 ou Vectorize diretamente;
 - cada tool deve ter contrato explícito;
 - tools são deny-by-default;
-- tools exigem tenant/organization/assessment scope;
+- tools exigem organization/organization/assessment scope;
 - tools `final_write` e `admin` não ficam disponíveis para agentes;
 - external calls permanecem bloqueadas por default.
 
@@ -312,7 +312,7 @@ Armazena:
 
 Regras:
 
-- toda query crítica filtra por `tenant_id`;
+- toda query crítica filtra por `organization_id`;
 - fluxos críticos incluem `organization_id` e `assessment_id`;
 - approvals e artifacts aprovados são imutáveis;
 - alterações estruturais exigem migration.
@@ -331,7 +331,7 @@ Armazena:
 
 Regras:
 
-- keys preservam tenant/organization/assessment no prefixo lógico;
+- keys preservam organization/organization/assessment no prefixo lógico;
 - documentos reais nunca entram em fixtures;
 - produção não compartilha buckets com dev/staging.
 
@@ -344,13 +344,13 @@ Armazena:
 - embeddings;
 - chunks indexáveis;
 - metadados de recuperação;
-- namespaces por tenant/assessment.
+- namespaces por organization/assessment.
 
 Regras:
 
 - Vectorize não é fonte normativa;
 - ausência de resultado significa `not_evidenced`, não `not_implemented`;
-- metadata deve preservar tenant/organization/assessment/source/hash.
+- metadata deve preservar organization/organization/assessment/source/hash.
 
 ## 12. Queue Layer
 
@@ -383,7 +383,7 @@ Filas previstas:
 
 Cada mensagem deve incluir:
 
-- `tenant_id`;
+- `organization_id`;
 - `organization_id`;
 - `assessment_id`;
 - `trace_id`;
@@ -425,21 +425,21 @@ Regra:
 Operação longa não bloqueia request HTTP.
 ```
 
-## 14. Multi-Tenant Isolation
+## 14. Multi-Organization Isolation
 
 Garantir:
 
 - separação lógica;
-- `tenant_id` obrigatório;
-- storage separado por tenant;
+- `organization_id` obrigatório;
+- storage separado por organization;
 - queries filtradas;
 - validação em todas camadas;
-- R2 keys com prefixos por tenant;
-- Vectorize namespaces/metadados por tenant;
+- R2 keys com prefixos por organization;
+- Vectorize namespaces/metadados por organization;
 - logs sem conteúdo sensível;
 - audit events sempre escopados.
 
-Camadas que devem validar tenant:
+Camadas que devem validar organization:
 
 - API Gateway;
 - Workflow;
@@ -454,7 +454,7 @@ Camadas que devem validar tenant:
 Regra:
 
 ```text
-Nenhum fluxo crítico executa sem tenant_id, organization_id, assessment_id e trace_id.
+Nenhum fluxo crítico executa sem organization_id, organization_id, assessment_id e trace_id.
 ```
 
 ## 15. Escalabilidade
@@ -473,7 +473,7 @@ Estratégias:
 - paginar consultas;
 - processar documentos em jobs;
 - controlar fan-out de embeddings;
-- aplicar quotas por tenant;
+- aplicar quotas por organization;
 - usar idempotência para retries seguros.
 
 Limites específicos de Cloudflare devem ser verificados na documentação oficial antes de decisões de capacidade, pricing ou SLA.
@@ -531,7 +531,7 @@ Não usar no MVP sem decisão formal:
 
 - D1 como substituto de PostgreSQL crítico;
 - Durable Objects para estado de assessment sem requisito específico;
-- Workers for Platforms para tenants sem necessidade de workloads isolados.
+- Workers for Platforms para organizations sem necessidade de workloads isolados.
 
 ## 18. Runtime Boundaries
 
@@ -566,7 +566,7 @@ Controles:
 
 - RBAC na API;
 - Tool permissions no runtime;
-- tenant isolation;
+- organization isolation;
 - audit logs;
 - zero trust via Cloudflare Access para consoles/admin;
 - prompt injection protection;
@@ -602,7 +602,7 @@ Registrar:
 
 Correlação mínima:
 
-- `tenant_id`;
+- `organization_id`;
 - `organization_id`;
 - `assessment_id`;
 - `workflow_run_id`;
@@ -635,7 +635,7 @@ Tipos de falha:
 
 - schema failure;
 - guardrail failure;
-- tenant mismatch;
+- organization mismatch;
 - tool access denied;
 - workflow retry exhausted;
 - queue dead-letter;
@@ -691,12 +691,12 @@ Estratégias:
 - executar jobs pesados via Queue;
 - paginar outputs;
 - resumir outputs de agentes;
-- limitar fan-out por tenant;
+- limitar fan-out por organization;
 - aplicar quotas por ambiente.
 
 Cuidados:
 
-- cache não pode cruzar tenant;
+- cache não pode cruzar organization;
 - performance não justifica omitir guardrails;
 - latency baixa não justifica execução pesada no API Gateway;
 - contexto menor não pode remover limitations/sources obrigatórias.
@@ -717,7 +717,7 @@ Registrar uso de:
 
 Dimensões:
 
-- tenant;
+- organization;
 - organization;
 - assessment;
 - workflow run;
@@ -728,7 +728,7 @@ Dimensões:
 
 Objetivos:
 
-- budget por tenant;
+- budget por organization;
 - alertas de custo;
 - chargeback/showback futuro;
 - detecção de loops;
@@ -790,7 +790,7 @@ Production deploy deve exigir:
 - validação staging;
 - rollback plan;
 - runbook operacional;
-- checks de tenant isolation e approval gates.
+- checks de organization isolation e approval gates.
 
 ## 27. Runtime Configuration
 
@@ -861,9 +861,9 @@ Local nunca deve exigir:
 - Sem autoscaling customizado.
 - Sem AI Gateway obrigatório em runtime.
 - Sem LLM real obrigatório no CI.
-- Sem worker sharding por tenant.
+- Sem worker sharding por organization.
 - Sem Durable Objects para locks por assessment.
-- Sem Workers for Platforms para workloads de tenant.
+- Sem Workers for Platforms para workloads de organization.
 - Sem avaliação contínua em produção.
 
 Impacto no projeto: o MVP prioriza controle, isolamento, testabilidade e deployment seguro em staging antes de otimizações de escala e autonomia.
@@ -873,7 +873,7 @@ Impacto no projeto: o MVP prioriza controle, isolamento, testabilidade e deploym
 Evoluções previstas:
 
 - multi-region deployment;
-- worker sharding por tenant;
+- worker sharding por organization;
 - parallel agent execution;
 - streaming responses;
 - real-time monitoring;
@@ -881,14 +881,14 @@ Evoluções previstas:
 - Durable Objects para locks por assessment quando necessário;
 - AI Gateway com políticas de DLP/cost/rate;
 - shadow-mode agent execution;
-- queue prioritization por tenant;
+- queue prioritization por organization;
 - anomaly detection de custo e qualidade;
 - dashboards operacionais de agent runtime;
 - deployment canário por agente/prompt.
 
 Condições:
 
-- manter tenant isolation;
+- manter organization isolation;
 - manter approval gates;
 - manter evals e safety thresholds;
 - manter audit trail;
@@ -919,7 +919,7 @@ Diagrama expandido:
 Client
   ↓
 Cloudflare Worker API Gateway
-  ├── Auth / RBAC / Tenant Resolution
+  ├── Auth / RBAC / Organization Resolution
   └── Request Validation / trace_id
         ↓
 Cloudflare Workflows
@@ -958,7 +958,7 @@ Este documento permite:
 - escalar;
 - manter segurança;
 - integrar todos os componentes;
-- preservar isolamento multi-tenant;
+- preservar isolamento multi-organization;
 - operar com observabilidade e custo controlado;
 - evoluir de MVP determinístico para execução agentic mais avançada.
 
@@ -971,7 +971,7 @@ Definition of done para implementação futura:
 - idempotência por execução;
 - observability events;
 - cost records;
-- tenant isolation tests;
+- organization isolation tests;
 - queue adapters reais;
 - R2/Vectorize adapters reais;
 - staging deployment validado;

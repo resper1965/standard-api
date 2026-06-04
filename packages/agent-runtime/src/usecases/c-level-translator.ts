@@ -7,7 +7,7 @@ export const AGENT_VERSION_BOARD_TRANSLATOR = "1.0.0";
 export type BoardTranslatorInput = {
   poamPlan: PoamRemediationOutput;
   regulatoryContext: string;
-  tenantId: string;
+  organizationId: string;
 };
 
 export type BoardTranslatorOutput = {
@@ -33,7 +33,7 @@ const boardTranslatorSchema = {
 };
 
 export class CLevelBoardTranslatorUseCase {
-  constructor(private provider: LlmProvider, private defaultModel: string = "gpt-4o") {}
+  constructor(private provider: LlmProvider, private defaultModel: string = "gpt-4o-mini") {}
 
   async translate(input: BoardTranslatorInput): Promise<BoardTranslatorOutput> {
     const systemPrompt = `You are a CISO / Executive Board Translator.
@@ -59,7 +59,7 @@ Please translate this into a Board-ready structured output.`;
     return await generateStructuredOutput<BoardTranslatorOutput>({
       provider: this.provider,
       model: this.defaultModel,
-      tenantId: input.tenantId,
+      organizationId: input.organizationId,
       systemPrompt,
       userPrompt,
       schemaName: "board_translation_report",

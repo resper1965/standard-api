@@ -58,7 +58,7 @@ const API_REFERENCE: EndpointGroup[] = [
       {
         method: "POST", path: "/assessments", desc: "Create a new assessment",
         body: `{ "organization_id": "uuid", "name": "ISO 27001 Gap Analysis", "scf_version_id": "uuid" }`,
-        response: `{ "assessment_id": "uuid", "state": "draft", "name": "...", "tenant_id": "uuid" }`
+        response: `{ "assessment_id": "uuid", "state": "draft", "name": "...", "organization_id": "uuid" }`
       },
       { method: "GET", path: "/assessments", desc: "List all assessments for tenant", response: `{ "data": [{ "assessment_id": "uuid", "name": "...", "state": "draft" }] }` },
       { method: "GET", path: "/assessments/:id", desc: "Get assessment by ID" },
@@ -285,7 +285,7 @@ const methodColor: Record<string, string> = {
 }
 
 // ─── LLM System Prompt Generator ─────────────────────────────
-function buildLlmSystemPrompt(tenantId: string): string {
+function buildLlmSystemPrompt(organizationId: string): string {
   let prompt = `# Standard API — System Context for AI Agents
 
 ## Identity
@@ -303,7 +303,7 @@ Standard is a DATA PLATFORM, not an analysis engine. The division of responsibil
 Base URL: ${API_URL}/api/v1
 Headers:
   Authorization: Bearer <API_KEY>
-  x-standard-tenant-id: ${tenantId}
+  x-standard-tenant-id: ${organizationId}
   Content-Type: application/json
 
 ## Available Endpoints\n`
@@ -336,7 +336,7 @@ Step 2: Get the SCF version
 
 Step 3: Create an assessment
   POST /api/v1/assessments
-  Body: { "organization_id": "${tenantId}", "name": "LGPD ROPA Analysis", "scf_version_id": "<version_id>" }
+  Body: { "organization_id": "${organizationId}", "name": "LGPD ROPA Analysis", "scf_version_id": "<version_id>" }
 
 Step 4: Upload the ROPA document
   POST /api/v1/assessments/<assessment_id>/documents (multipart/form-data)

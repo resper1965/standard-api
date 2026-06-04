@@ -53,14 +53,14 @@ export const createDrizzleDocumentRepository = (db: DbClient): DocumentRecordRep
       }).onConflictDoNothing();
     },
 
-    async getDocument(documentId: string, tenantId: string) {
+    async getDocument(documentId: string, organizationId: string) {
       const [row] = await db.select().from(documents)
         .where(eq(documents.id, documentId))
         .limit(1);
       return row ? mapDocumentRow(row) : null;
     },
 
-    async listDocuments(assessmentId: string, tenantId: string) {
+    async listDocuments(assessmentId: string, organizationId: string) {
       const rows = await db.select().from(documents)
         .where(eq(documents.assessmentId, assessmentId));
       return rows.map(mapDocumentRow);
@@ -76,11 +76,11 @@ export const createDrizzleDocumentRepository = (db: DbClient): DocumentRecordRep
       }).where(eq(documents.id, doc.document_id));
     },
 
-    withTenant(tenantId: string) {
+    withOrganization(organizationId: string) {
       return {
         saveDocument: (doc: DocumentResponse) => repo.saveDocument(doc),
-        getDocument: (documentId: string) => repo.getDocument(documentId, tenantId),
-        listDocuments: (assessmentId: string) => repo.listDocuments(assessmentId, tenantId),
+        getDocument: (documentId: string) => repo.getDocument(documentId, organizationId),
+        listDocuments: (assessmentId: string) => repo.listDocuments(assessmentId, organizationId),
         updateDocument: (doc: DocumentResponse) => repo.updateDocument(doc),
       };
     }
@@ -91,7 +91,6 @@ export const createDrizzleDocumentRepository = (db: DbClient): DocumentRecordRep
 type DocumentRow = typeof documents.$inferSelect;
 const mapDocumentRow = (row: DocumentRow): DocumentResponse => ({
   document_id: row.id,
-  tenant_id: row.organizationId,
   organization_id: row.organizationId,
   assessment_id: row.assessmentId ?? "",
   original_filename: row.originalFilename,
@@ -137,20 +136,20 @@ export const createDrizzleDocumentJobRepository = (db: DbClient): DocumentJobRep
       }).onConflictDoNothing();
     },
 
-    async getJob(jobId: string, tenantId: string) {
+    async getJob(jobId: string, organizationId: string) {
       const [row] = await db.select().from(documentExtractionJobs)
         .where(eq(documentExtractionJobs.id, jobId))
         .limit(1);
       return row ? mapJobRow(row) : null;
     },
 
-    async listJobsByDocument(documentId: string, tenantId: string) {
+    async listJobsByDocument(documentId: string, organizationId: string) {
       const rows = await db.select().from(documentExtractionJobs)
         .where(eq(documentExtractionJobs.documentId, documentId));
       return rows.map(mapJobRow);
     },
 
-    async listJobsByAssessment(assessmentId: string, tenantId: string) {
+    async listJobsByAssessment(assessmentId: string, organizationId: string) {
       const rows = await db.select().from(documentExtractionJobs)
         .where(eq(documentExtractionJobs.assessmentId, assessmentId));
       return rows.map(mapJobRow);
@@ -169,12 +168,12 @@ export const createDrizzleDocumentJobRepository = (db: DbClient): DocumentJobRep
       }).where(eq(documentExtractionJobs.id, job.job_id));
     },
 
-    withTenant(tenantId: string) {
+    withOrganization(organizationId: string) {
       return {
         saveJob: (job: DocumentJobResponse) => repo.saveJob(job),
-        getJob: (jobId: string) => repo.getJob(jobId, tenantId),
-        listJobsByDocument: (documentId: string) => repo.listJobsByDocument(documentId, tenantId),
-        listJobsByAssessment: (assessmentId: string) => repo.listJobsByAssessment(assessmentId, tenantId),
+        getJob: (jobId: string) => repo.getJob(jobId, organizationId),
+        listJobsByDocument: (documentId: string) => repo.listJobsByDocument(documentId, organizationId),
+        listJobsByAssessment: (assessmentId: string) => repo.listJobsByAssessment(assessmentId, organizationId),
         updateJob: (job: DocumentJobResponse) => repo.updateJob(job),
       };
     }
@@ -185,7 +184,6 @@ export const createDrizzleDocumentJobRepository = (db: DbClient): DocumentJobRep
 type JobRow = typeof documentExtractionJobs.$inferSelect;
 const mapJobRow = (row: JobRow): DocumentJobResponse => ({
   job_id: row.id,
-  tenant_id: row.organizationId,
   organization_id: row.organizationId,
   assessment_id: row.assessmentId ?? "",
   document_id: row.documentId,
@@ -225,17 +223,17 @@ export const createDrizzleDocumentChunkRepository = (db: DbClient): DocumentChun
       ).onConflictDoNothing();
     },
 
-    async listChunks(documentId: string, tenantId: string, limit: number, cursor?: string) {
+    async listChunks(documentId: string, organizationId: string, limit: number, cursor?: string) {
       const rows = await db.select().from(documentChunks)
         .where(eq(documentChunks.documentId, documentId))
         .limit(limit);
       return rows.map(mapChunkRow);
     },
 
-    withTenant(tenantId: string) {
+    withOrganization(organizationId: string) {
       return {
         saveChunks: (chunks: DocumentChunk[]) => repo.saveChunks(chunks),
-        listChunks: (documentId: string, limit: number, cursor?: string) => repo.listChunks(documentId, tenantId, limit, cursor),
+        listChunks: (documentId: string, limit: number, cursor?: string) => repo.listChunks(documentId, organizationId, limit, cursor),
       };
     }
   };
@@ -245,7 +243,6 @@ export const createDrizzleDocumentChunkRepository = (db: DbClient): DocumentChun
 type ChunkRow = typeof documentChunks.$inferSelect;
 const mapChunkRow = (row: ChunkRow): DocumentChunk => ({
   chunk_id: row.id,
-  tenant_id: row.organizationId,
   organization_id: row.organizationId,
   assessment_id: row.assessmentId ?? "",
   document_id: row.documentId,
@@ -287,7 +284,6 @@ export const createDrizzleIngestionAuditSink = (db: DbClient): AuditSink => {
 
   return {
     async record(event: string, metadata: Record<string, unknown>) {
-      const tenantId = typeof metadata.tenant_id === "string" && isUuid(metadata.tenant_id) ? metadata.tenant_id : null;
       const organizationId = typeof metadata.organization_id === "string" && isUuid(metadata.organization_id) ? metadata.organization_id : null;
       const actorId = typeof metadata.actor_id === "string" && isUuid(metadata.actor_id) ? metadata.actor_id : null;
       const resourceId = typeof metadata.document_id === "string" && isUuid(metadata.document_id) ? metadata.document_id : null;
@@ -299,7 +295,6 @@ export const createDrizzleIngestionAuditSink = (db: DbClient): AuditSink => {
           safeMeta[key] = metadata[key];
         }
       }
-      if (tenantId) delete safeMeta.tenant_id;
       if (organizationId) delete safeMeta.organization_id;
       if (actorId) delete safeMeta.actor_id;
       if (resourceId) delete safeMeta.document_id;

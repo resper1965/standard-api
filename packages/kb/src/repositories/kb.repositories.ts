@@ -11,21 +11,21 @@ export class InMemoryKbEmbeddingJobRepository implements KbEmbeddingJobRepositor
     this.records.set(job.job_id, job);
   }
 
-  async getJob(jobId: string, tenantId: string): Promise<KbEmbeddingJobResponse | null> {
+  async getJob(jobId: string, organizationId: string): Promise<KbEmbeddingJobResponse | null> {
     const job = this.records.get(jobId);
-    return job?.tenant_id === tenantId ? job : null;
+    return job?.organization_id === organizationId ? job : null;
   }
 
-  async listJobsByAssessment(assessmentId: string, tenantId: string): Promise<KbEmbeddingJobResponse[]> {
-    return [...this.records.values()].filter((job) => job.assessment_id === assessmentId && job.tenant_id === tenantId);
+  async listJobsByAssessment(assessmentId: string, organizationId: string): Promise<KbEmbeddingJobResponse[]> {
+    return [...this.records.values()].filter((job) => job.assessment_id === assessmentId && job.organization_id === organizationId);
   }
 
-  async listJobsByDocument(documentId: string, tenantId: string): Promise<KbEmbeddingJobResponse[]> {
-    return [...this.records.values()].filter((job) => job.document_id === documentId && job.tenant_id === tenantId);
+  async listJobsByDocument(documentId: string, organizationId: string): Promise<KbEmbeddingJobResponse[]> {
+    return [...this.records.values()].filter((job) => job.document_id === documentId && job.organization_id === organizationId);
   }
 
-  async findQueuedJobForChunk(chunkId: string, tenantId: string): Promise<KbEmbeddingJobResponse | null> {
-    return [...this.records.values()].find((job) => job.chunk_id === chunkId && job.tenant_id === tenantId && ["queued", "running", "retrying"].includes(job.status)) ?? null;
+  async findQueuedJobForChunk(chunkId: string, organizationId: string): Promise<KbEmbeddingJobResponse | null> {
+    return [...this.records.values()].find((job) => job.chunk_id === chunkId && job.organization_id === organizationId && ["queued", "running", "retrying"].includes(job.status)) ?? null;
   }
 }
 
@@ -40,21 +40,21 @@ export class InMemoryKbVectorReferenceRepository implements KbVectorReferenceRep
     this.records.set(reference.vector_reference_id, reference);
   }
 
-  async get(referenceId: string, tenantId: string): Promise<KbVectorReferenceResponse | null> {
+  async get(referenceId: string, organizationId: string): Promise<KbVectorReferenceResponse | null> {
     const reference = this.records.get(referenceId);
-    return reference?.tenant_id === tenantId ? reference : null;
+    return reference?.organization_id === organizationId ? reference : null;
   }
 
-  async findByChunk(chunkId: string, tenantId: string): Promise<KbVectorReferenceResponse | null> {
-    return [...this.records.values()].find((reference) => reference.chunk_id === chunkId && reference.tenant_id === tenantId) ?? null;
+  async findByChunk(chunkId: string, organizationId: string): Promise<KbVectorReferenceResponse | null> {
+    return [...this.records.values()].find((reference) => reference.chunk_id === chunkId && reference.organization_id === organizationId) ?? null;
   }
 
-  async listByAssessment(assessmentId: string, tenantId: string): Promise<KbVectorReferenceResponse[]> {
-    return [...this.records.values()].filter((reference) => reference.assessment_id === assessmentId && reference.tenant_id === tenantId);
+  async listByAssessment(assessmentId: string, organizationId: string): Promise<KbVectorReferenceResponse[]> {
+    return [...this.records.values()].filter((reference) => reference.assessment_id === assessmentId && reference.organization_id === organizationId);
   }
 
-  async listByDocument(documentId: string, tenantId: string): Promise<KbVectorReferenceResponse[]> {
-    return [...this.records.values()].filter((reference) => reference.document_id === documentId && reference.tenant_id === tenantId);
+  async listByDocument(documentId: string, organizationId: string): Promise<KbVectorReferenceResponse[]> {
+    return [...this.records.values()].filter((reference) => reference.document_id === documentId && reference.organization_id === organizationId);
   }
 }
 
@@ -63,7 +63,6 @@ export class InMemoryKbSearchLogRepository implements KbSearchLogRepository {
 
   async record(log: {
     id: string;
-    tenant_id: string;
     organization_id: string;
     assessment_id: string;
     actor_id?: string;

@@ -13,7 +13,7 @@ title: "Ambientes"
 | Ambiente | Propósito | Dados |
 |----------|-----------|-------|
 | **Local** | Desenvolvimento e testes | Sintéticos (fixtures/seeds) |
-| **Production** | Operação real | Reais (isolados por tenant) |
+| **Production** | Operação real | Reais (isolados por organization) |
 
 ## Local
 

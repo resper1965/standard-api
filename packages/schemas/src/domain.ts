@@ -71,7 +71,6 @@ export const DocumentClassificationSchema = z.enum(["public", "internal", "confi
 export const DocumentTypeSchema = z.enum(["policy", "procedure", "standard", "evidence", "soa", "report", "other"]);
 
 export const TraceContextSchema = z.object({
-  tenantId: uuidSchema,
   organizationId: uuidSchema,
   assessmentId: uuidSchema.optional(),
   scfVersionId: uuidSchema.optional(),
@@ -89,7 +88,7 @@ export const TenantSchema = z.object({
 
 export const OrganizationSchema = z.object({
   id: uuidSchema,
-  tenantId: uuidSchema,
+  organizationId: uuidSchema,
   slug: z.string().min(2),
   name: z.string().min(1),
   status: z.string().default("active")
@@ -97,7 +96,6 @@ export const OrganizationSchema = z.object({
 
 export const AssessmentSchema = z.object({
   id: uuidSchema,
-  tenantId: uuidSchema,
   organizationId: uuidSchema,
   name: z.string().min(1),
   state: AssessmentLifecycleStateSchema,
@@ -107,7 +105,6 @@ export const AssessmentSchema = z.object({
 
 export const DocumentSchema = z.object({
   id: uuidSchema,
-  tenantId: uuidSchema,
   organizationId: uuidSchema,
   assessmentId: uuidSchema.optional(),
   originalFilename: z.string().min(1),
@@ -125,7 +122,6 @@ export const DocumentSchema = z.object({
 
 export const DocumentChunkSchema = z.object({
   id: uuidSchema,
-  tenantId: uuidSchema,
   organizationId: uuidSchema,
   assessmentId: uuidSchema.optional(),
   documentId: uuidSchema,
@@ -137,7 +133,6 @@ export const DocumentChunkSchema = z.object({
 
 export const VectorReferenceSchema = z.object({
   id: uuidSchema,
-  tenantId: uuidSchema,
   organizationId: uuidSchema,
   assessmentId: uuidSchema,
   kbEntryId: uuidSchema,
@@ -168,7 +163,6 @@ export const ScfMappingSchema = z.object({
 
 export const SoaItemSchema = z.object({
   id: uuidSchema,
-  tenantId: uuidSchema,
   organizationId: uuidSchema,
   assessmentId: uuidSchema,
   soaVersionId: uuidSchema,
@@ -180,7 +174,6 @@ export const SoaItemSchema = z.object({
 
 export const EvidenceFindingSchema = z.object({
   id: uuidSchema,
-  tenantId: uuidSchema,
   organizationId: uuidSchema,
   assessmentId: uuidSchema,
   soaItemId: uuidSchema.optional(),
@@ -196,7 +189,6 @@ export const EvidenceFindingSchema = z.object({
 
 export const GapFindingSchema = z.object({
   id: uuidSchema,
-  tenantId: uuidSchema,
   organizationId: uuidSchema,
   assessmentId: uuidSchema,
   findingCode: z.string().regex(/^GAP-\d{3,}$/),
@@ -215,7 +207,6 @@ export const GapFindingSchema = z.object({
 
 export const MaturityScoreSchema = z.object({
   id: uuidSchema,
-  tenantId: uuidSchema,
   organizationId: uuidSchema,
   assessmentId: uuidSchema,
   maturityAssessmentVersionId: uuidSchema,
@@ -228,7 +219,6 @@ export const MaturityScoreSchema = z.object({
 
 export const PoamItemSchema = z.object({
   id: uuidSchema,
-  tenantId: uuidSchema,
   organizationId: uuidSchema,
   assessmentId: uuidSchema,
   poamVersionId: uuidSchema,
@@ -249,7 +239,6 @@ export const PoamItemSchema = z.object({
 
 export const AgentRunSchema = z.object({
   id: uuidSchema,
-  tenantId: uuidSchema,
   organizationId: uuidSchema,
   assessmentId: uuidSchema.optional(),
   agentName: z.string().min(1),

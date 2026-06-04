@@ -34,7 +34,7 @@ export class MockAuthProvider implements AuthProvider {
     return {
       actor_id: input.actorId,
       actor_type: roles.includes("system") ? "system" : "user",
-      ...(input.tenantId ? { tenant_id: input.tenantId } : {}),
+      ...(input.organizationId ? { organization_id: input.organizationId } : {}),
       organization_ids: input.organizationIds ?? [],
       roles,
       permissions,

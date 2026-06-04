@@ -12,7 +12,7 @@
  * AGENTS.md §10: All outputs are schema-validated via structured output.
  * AGENTS.md §9:  KB is evidence source, not normative authority.
  * AGENTS.md §8:  SCF structured data is normative truth.
- * AGENTS.md §7:  All data carries tenant_id, assessment_id, trace_id.
+ * AGENTS.md §7:  All data carries organization_id, assessment_id, trace_id.
  */
 import type { LlmProvider, LlmResponseCache } from "@standard/agent-runtime";
 import {
@@ -126,16 +126,15 @@ export class GapAnalysisExecutionService {
     const soaVersion = await this.getApprovedSoa(soaVersionId, context);
 
     // 2. Get all SoA items
-    const soaItems = await this.deps.soa.repositories.items.listByVersion(soaVersionId, context.tenantId);
+    const soaItems = await this.deps.soa.repositories.items.listByVersion(soaVersionId, context.organizationId);
     if (soaItems.length === 0) {
       throw new GapAnalysisWorkflowError("EMPTY_SOA", "SoA contains no items to analyze.");
     }
 
     // 3. Create gap analysis version
-    const existingVersions = await this.deps.repositories.gapVersions.listByAssessment(assessmentId, context.tenantId);
+    const existingVersions = await this.deps.repositories.gapVersions.listByAssessment(assessmentId, context.organizationId);
     const version: GapAnalysisVersionResponse = {
       gap_analysis_version_id: crypto.randomUUID(),
-      tenant_id: context.tenantId,
       organization_id: context.organizationId,
       assessment_id: assessmentId,
       version_number: existingVersions.length + 1,
@@ -172,7 +171,7 @@ export class GapAnalysisExecutionService {
     // 5. Persist everything
     await this.deps.repositories.gapVersions.save(version);
     for (const ef of allEvidenceFindings) {
-      const existing = await this.deps.repositories.evidenceFindings.findBySoaItem(ef.soa_item_id, context.tenantId);
+      const existing = await this.deps.repositories.evidenceFindings.findBySoaItem(ef.soa_item_id, context.organizationId);
       if (existing) await this.deps.repositories.evidenceFindings.update(ef);
       else await this.deps.repositories.evidenceFindings.save(ef);
     }
@@ -211,10 +210,9 @@ export class GapAnalysisExecutionService {
     const classification = classificationResult.data;
 
     // Step 3: Build and persist evidence finding
-    const existingFinding = await this.deps.repositories.evidenceFindings.findBySoaItem(soaItem.soa_item_id, context.tenantId);
+    const existingFinding = await this.deps.repositories.evidenceFindings.findBySoaItem(soaItem.soa_item_id, context.organizationId);
     const evidenceFinding: EvidenceFindingResponse = {
       evidence_finding_id: existingFinding?.evidence_finding_id ?? crypto.randomUUID(),
-      tenant_id: context.tenantId,
       organization_id: context.organizationId,
       assessment_id: context.assessmentId,
       soa_version_id: soaVersion.soa_version_id,
@@ -245,7 +243,6 @@ export class GapAnalysisExecutionService {
     // Step 5: Build gap finding
     const gapFinding: GapFindingResponse = {
       gap_finding_id: crypto.randomUUID(),
-      tenant_id: context.tenantId,
       organization_id: context.organizationId,
       assessment_id: context.assessmentId,
       gap_analysis_version_id: gapVersion.gap_analysis_version_id,
@@ -278,7 +275,6 @@ export class GapAnalysisExecutionService {
     if (!this.deps.kb) return [];
     try {
       const response = await new KbSearchService(this.deps.kb).semanticSearch({
-        tenantId: context.tenantId,
         organizationId: context.organizationId,
         assessmentId: context.assessmentId,
         ...(context.actorId ? { actorId: context.actorId } : {}),
@@ -313,7 +309,7 @@ export class GapAnalysisExecutionService {
         source: r.document_title ?? r.document_id,
         retrievalScore: r.score
       })),
-      tenantId: context.tenantId
+      organizationId: context.organizationId
     });
   }
 
@@ -337,7 +333,7 @@ export class GapAnalysisExecutionService {
       },
       soaApplicabilityStatus: soaItem.applicability_status ?? "applicable",
       ...(soaItem.non_applicability_rationale !== undefined ? { soaNonApplicabilityRationale: soaItem.non_applicability_rationale } : {}),
-      tenantId: context.tenantId
+      organizationId: context.organizationId
     });
   }
 
@@ -346,7 +342,6 @@ export class GapAnalysisExecutionService {
   private toSources(finding: EvidenceFindingResponse, kbResults: KbSearchResult[], context: GapAnalysisContext) {
     return kbResults.map((result) => ({
       evidence_source_id: crypto.randomUUID(),
-      tenant_id: context.tenantId,
       organization_id: context.organizationId,
       assessment_id: context.assessmentId,
       evidence_finding_id: finding.evidence_finding_id,
@@ -390,7 +385,7 @@ export class GapAnalysisExecutionService {
   }
 
   private async getApprovedSoa(soaVersionId: string, context: GapAnalysisContext): Promise<SoaVersionResponse> {
-    const soaVersion = await this.deps.soa.repositories.versions.get(soaVersionId, context.tenantId);
+    const soaVersion = await this.deps.soa.repositories.versions.get(soaVersionId, context.organizationId);
     if (!soaVersion || soaVersion.assessment_id !== context.assessmentId || soaVersion.status !== "approved") {
       throw new GapAnalysisWorkflowError("APPROVED_SOA_REQUIRED", "Gap Analysis requires an approved SoA.");
     }

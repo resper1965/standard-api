@@ -6,7 +6,6 @@ import type { AssessmentSnapshot } from "@standard/assessment-engine";
 
 const buildDefaultSnapshot = (id: string, organizationId: string, documentCount: number): AssessmentSnapshot => ({
   id,
-  tenantId: organizationId,
   organizationId,
   state: "draft",
   documentCount,
@@ -35,37 +34,37 @@ export const createAssessmentRepository = (): AssessmentRepositoryAdapter => {
     async create(input) {
       const record: AssessmentRecord = {
         ...input,
-        // tenant_id aliases organization_id
-        tenant_id: input.tenant_id ?? input.organization_id,
+        // organization_id aliases organization_id
+        organization_id: input.organization_id ?? input.organization_id,
         snapshot: buildDefaultSnapshot(input.assessment_id, input.organization_id, input.documentCount)
       };
       records.set(record.assessment_id, record);
       return record;
     },
-    async get(assessmentId, tenantId) {
+    async get(assessmentId, organizationId) {
       const record = records.get(assessmentId);
-      // tenant_id === organization_id, accept either
-      return record && (record.tenant_id === tenantId || record.organization_id === tenantId) ? record : null;
+      // organization_id === organization_id, accept either
+      return record && (record.organization_id === organizationId || record.organization_id === organizationId) ? record : null;
     },
-    async listByOrganization(organizationId, _tenantId) {
+    async listByOrganization(organizationId) {
       return [...records.values()].filter(
         (record) => record.organization_id === organizationId
       );
     },
-    async listAll(tenantId) {
+    async listAll(organizationId) {
       return [...records.values()].filter(
-        (record) => record.organization_id === tenantId || record.tenant_id === tenantId
+        (record) => record.organization_id === organizationId || record.organization_id === organizationId
       );
     },
     async save(record) {
       records.set(record.assessment_id, record);
     },
-    withTenant(tenantId) {
+    withOrganization(organizationId) {
       return {
-        create: async (input) => this.create({ ...input, tenant_id: tenantId }),
-        get: async (id) => this.get(id, tenantId),
-        listByOrganization: async (orgId) => this.listByOrganization(orgId, tenantId),
-        listAll: async () => this.listAll(tenantId),
+        create: async (input) => this.create({ ...input, organization_id: organizationId }),
+        get: async (id) => this.get(id, organizationId),
+        listByOrganization: async (orgId) => this.listByOrganization(orgId),
+        listAll: async () => this.listAll(organizationId),
         save: async (record) => this.save(record)
       };
     }
@@ -90,7 +89,6 @@ export const createDrizzleAssessmentRepository = (db: DbClient): AssessmentRepos
 
       return {
         assessment_id: inserted!.id,
-        tenant_id: inserted!.organizationId,
         organization_id: inserted!.organizationId,
         name: inserted!.name,
         scf_version_id: inserted!.scfVersionId,
@@ -109,7 +107,6 @@ export const createDrizzleAssessmentRepository = (db: DbClient): AssessmentRepos
 
       return {
         assessment_id: found.id,
-        tenant_id: found.organizationId,
         organization_id: found.organizationId,
         name: found.name,
         scf_version_id: found.scfVersionId,
@@ -119,13 +116,12 @@ export const createDrizzleAssessmentRepository = (db: DbClient): AssessmentRepos
         snapshot: buildDefaultSnapshot(found.id, found.organizationId, 0)
       };
     },
-    async listByOrganization(organizationId, _tenantId) {
+    async listByOrganization(organizationId) {
       const results = await db.select().from(assessments)
         .where(eq(assessments.organizationId, organizationId));
 
       return results.map(found => ({
         assessment_id: found.id,
-        tenant_id: found.organizationId,
         organization_id: found.organizationId,
         name: found.name,
         scf_version_id: found.scfVersionId,
@@ -140,7 +136,6 @@ export const createDrizzleAssessmentRepository = (db: DbClient): AssessmentRepos
 
       return results.map(found => ({
         assessment_id: found.id,
-        tenant_id: found.organizationId,
         organization_id: found.organizationId,
         name: found.name,
         scf_version_id: found.scfVersionId,
@@ -159,12 +154,12 @@ export const createDrizzleAssessmentRepository = (db: DbClient): AssessmentRepos
         })
         .where(eq(assessments.id, record.assessment_id));
     },
-    withTenant(tenantId) {
+    withOrganization(organizationId) {
       return {
-        create: async (input) => this.create({ ...input, tenant_id: tenantId }),
-        get: async (id) => this.get(id, tenantId),
-        listByOrganization: async (orgId) => this.listByOrganization(orgId, tenantId),
-        listAll: async () => this.listAll(tenantId),
+        create: async (input) => this.create({ ...input, organization_id: organizationId }),
+        get: async (id) => this.get(id, organizationId),
+        listByOrganization: async (orgId) => this.listByOrganization(orgId),
+        listAll: async () => this.listAll(organizationId),
         save: async (record) => this.save(record)
       };
     }

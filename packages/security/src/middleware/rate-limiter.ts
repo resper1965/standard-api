@@ -44,7 +44,7 @@ export class RateLimiter {
   }
 
   /**
-   * Check and consume a request for the given key (typically tenantId).
+   * Check and consume a request for the given key (typically organizationId).
    * Returns whether the request is allowed and rate limit metadata.
    */
   check(key: string): RateLimitResult {

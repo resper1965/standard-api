@@ -24,7 +24,6 @@ export type AlertRule = {
 export type AlertEvent = {
   rule: AlertRule;
   message: string;
-  tenantId?: string | undefined;
   organizationId?: string | undefined;
   assessmentId?: string | undefined;
   actorId?: string | undefined;
@@ -87,7 +86,6 @@ export class AlertService {
   async fire(alert: AlertEvent): Promise<void> {
     // 1. Persist as security event
     const input: RecordSecurityEventInput = {
-      tenant_id: alert.tenantId,
       organization_id: alert.organizationId,
       assessment_id: alert.assessmentId,
       actor_id: alert.actorId,
@@ -117,22 +115,22 @@ export class AlertService {
 
   // ─── Convenience Methods ────────────────────────────────
 
-  async fireTenantMismatch(opts: { tenantId: string; expectedTenantId: string; traceId: string; actorId?: string }): Promise<void> {
+  async fireTenantMismatch(opts: { organizationId: string; expectedTenantId: string; traceId: string; actorId?: string }): Promise<void> {
     await this.fire({
       rule: ALERT_RULES.TENANT_MISMATCH,
-      message: `Tenant ${opts.tenantId} attempted operation scoped to tenant ${opts.expectedTenantId}.`,
-      tenantId: opts.tenantId,
+      message: `Tenant ${opts.organizationId} attempted operation scoped to tenant ${opts.expectedTenantId}.`,
+      organizationId: opts.organizationId,
       actorId: opts.actorId,
       traceId: opts.traceId,
       metadata: { expected_tenant_id: opts.expectedTenantId }
     });
   }
 
-  async fireApprovalBypass(opts: { tenantId: string; assessmentId: string; artifactType: string; traceId: string; actorId?: string }): Promise<void> {
+  async fireApprovalBypass(opts: { organizationId: string; assessmentId: string; artifactType: string; traceId: string; actorId?: string }): Promise<void> {
     await this.fire({
       rule: ALERT_RULES.APPROVAL_BYPASS_ATTEMPT,
       message: `Unauthorized approval attempt on ${opts.artifactType} for assessment ${opts.assessmentId}.`,
-      tenantId: opts.tenantId,
+      organizationId: opts.organizationId,
       assessmentId: opts.assessmentId,
       actorId: opts.actorId,
       traceId: opts.traceId,
@@ -158,11 +156,11 @@ export class AlertService {
     });
   }
 
-  async fireCostAnomaly(opts: { tenantId: string; currentCost: number; averageCost: number; traceId: string }): Promise<void> {
+  async fireCostAnomaly(opts: { organizationId: string; currentCost: number; averageCost: number; traceId: string }): Promise<void> {
     await this.fire({
       rule: ALERT_RULES.COST_ANOMALY,
-      message: `Tenant ${opts.tenantId} cost $${opts.currentCost.toFixed(2)} exceeds 2x average $${opts.averageCost.toFixed(2)}.`,
-      tenantId: opts.tenantId,
+      message: `Tenant ${opts.organizationId} cost $${opts.currentCost.toFixed(2)} exceeds 2x average $${opts.averageCost.toFixed(2)}.`,
+      organizationId: opts.organizationId,
       traceId: opts.traceId,
       metadata: { current_cost: opts.currentCost, average_cost: opts.averageCost, ratio: opts.currentCost / opts.averageCost }
     });
@@ -192,7 +190,6 @@ export class WebhookAlertSink implements AlertSink {
           alert_details: {
             rule_id: alert.rule.ruleId,
             severity: alert.rule.severity,
-            tenant_id: alert.tenantId,
             organization_id: alert.organizationId,
             trace_id: alert.traceId,
             metadata: alert.metadata

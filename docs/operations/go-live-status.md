@@ -10,7 +10,7 @@
 | Gate | Status | Evidência | Data |
 |------|--------|-----------|------|
 | P0 Auth & RBAC | ✅ PASS | Standard Native Auth ativo, RBAC session-based, approvals por gate | 2026-05-26 |
-| P0 Tenant Isolation | ✅ PASS | Todos os repos filtram por tenant_id | 2026-05-26 |
+| P0 Organization Isolation | ✅ PASS | Todos os repos filtram por organization_id | 2026-05-26 |
 | P0 Approval Gates | ✅ PASS | SoA/Gap/Maturity/POA&M exigem approval gate | 2026-05-26 |
 | P0 Secrets | ✅ PASS | Nenhum secret no repo; .env no .gitignore | 2026-05-25 |
 | P0 Rate Limiting / WAF / CORS | ✅ PASS | KV rate limiting ativo; ALLOWED_ORIGINS configurado | 2026-05-26 |
@@ -41,19 +41,19 @@
 | Standard Native Auth ativo em produção | ✅ | `index.ts` — auth.handler() ativo |
 | MockAuthProvider desabilitado | ✅ | `index.ts` — sem MOCK_AUTH flag; DB obrigatório |
 | RBAC por endpoint crítico revisado | ✅ | `approvals.routes.ts` — `gateRoleMap` session-based |
-| API keys escopadas por tenant | ✅ | `api-keys.routes.ts` — todas as rotas filtram por `organizationId` |
+| API keys escopadas por organization | ✅ | `api-keys.routes.ts` — todas as rotas filtram por `organizationId` |
 | Failfast produção sem DATABASE_URL | ✅ | `index.ts` — throw se `STANDARD_ENV=production` e sem `DATABASE_URL` |
 | Admin protegido por Cloudflare Access | ⚠️ | Configuração CF Access não verificada programaticamente |
 
-### Tenant Isolation ✅
+### Organization Isolation ✅
 
 | Item | Status | Evidência |
 |------|--------|-----------|
-| Assessments filtram por tenant_id | ✅ | `assessment.repository.ts` — `.withTenant()` em todas as ops |
-| Memberships escopados por tenant | ✅ | `membership.repository.ts` — `WHERE tenant_id = $1` em todas as queries |
-| Audit logs incluem tenant | ✅ | `audit.repository.ts` — `tenant_id` obrigatório |
-| R2 keys prefixadas por tenant/org/assessment | ✅ | `r2.adapter.ts` — path inclui `${tenantId}/${orgId}/${assessmentId}` |
-| Cross-tenant test | ⚠️ | Testes unitários existem; smoke test E2E cross-tenant pendente |
+| Assessments filtram por organization_id | ✅ | `assessment.repository.ts` — `.withTenant()` em todas as ops |
+| Memberships escopados por organization | ✅ | `membership.repository.ts` — `WHERE organization_id = $1` em todas as queries |
+| Audit logs incluem organization | ✅ | `audit.repository.ts` — `organization_id` obrigatório |
+| R2 keys prefixadas por organization/org/assessment | ✅ | `r2.adapter.ts` — path inclui `${organizationId}/${orgId}/${assessmentId}` |
+| Cross-organization test | ⚠️ | Testes unitários existem; smoke test E2E cross-organization pendente |
 
 ### Approval Gates ✅
 
@@ -73,7 +73,7 @@
 
 ### Rate Limiting / WAF / CORS ✅
 
-- KV namespace provisionado; rate limiting ativo por `clientIp + tenantId`
+- KV namespace provisionado; rate limiting ativo por `clientIp + organizationId`
 - `ALLOWED_ORIGINS` configurado em `wrangler.toml`
 - WAF Cloudflare: verificar no dashboard CF (fora do escopo de código)
 
@@ -105,13 +105,13 @@
 
 > Qualquer uma das condições abaixo bloqueia go-live imediato:
 
-- [ ] Qualquer falha cross-tenant verificável
+- [ ] Qualquer falha cross-organization verificável
 - [ ] MockAuthProvider ativo em produção
 - [ ] SECRET ou TOKEN exposto no repositório
 - [ ] DATABASE_URL ausente (produção faz failfast)
 - [ ] Approval gate bypassável sem role `owner`/`admin`/`platform_admin`
 - [ ] Agente LLM gravando findings finais sem schema validation
-- [ ] Audit log sem `tenant_id`
+- [ ] Audit log sem `organization_id`
 - [ ] `pnpm typecheck` com erros
 - [ ] `pnpm test` com falhas
 
@@ -124,12 +124,12 @@
 1. `[x]` Revisão jurídica de `docs/legal/` — legal sign-off (Aprovado pelo usuário)
 2. `[x]` k6 smoke test executado e aprovado (P95 < 1s) — performance preliminar OK
 3. `[x]` `pnpm audit` executado — ver ADR-012, ADR-013 para riscos aceitos; drizzle-orm atualizado
-4. `[x]` Smoke test E2E cross-tenant — isolation sign-off (Dispensado temporariamente: isolamento garantido e auditado via ORM `.withTenant` e middlewares, 1º tenant seguro)
+4. `[x]` Smoke test E2E cross-organization — isolation sign-off (Dispensado temporariamente: isolamento garantido e auditado via ORM `.withTenant` e middlewares, 1º organization seguro)
 5. `[x]` Verificar Cloudflare Access no console CF — admin protection (Validado pelo usuário no CF Dashboard)
-6. `[ ]` Onboarding do primeiro tenant real — script pronto: `scripts/onboard-tenant.mjs`
+6. `[ ]` Onboarding do primeiro organization real — script pronto: `scripts/onboard-organization.mjs`
 7. `[ ]` `pnpm install` fora de OneDrive para aplicar wrangler ^3.114.17
 8. `[x]` §6 Webhook — secret rotation + test delivery + schema_version implementados
 9. `[x]` §8 Cost Governance — documentado em `docs/operations/cost-governance.md`
 10. `[x]` §12 Rollback Plan — `docs/operations/rollback-plan.md`
 11. `[x]` §13 First 24h Monitoring — `docs/operations/first-24h-monitoring.md`
-12. `[x]` Tenant onboarding script — `scripts/onboard-tenant.mjs`
+12. `[x]` Organization onboarding script — `scripts/onboard-organization.mjs`

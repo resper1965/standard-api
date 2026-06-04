@@ -12,7 +12,7 @@ export class PolicyEngine {
     if (!input.tenant && input.required_permissions.some((permission) => !permission.startsWith("scf:"))) {
       return this.deny("missing_tenant_context", input.required_permissions, input.auth.permissions, input.trace_id);
     }
-    if (input.auth.tenant_id && input.tenant && input.auth.tenant_id !== input.tenant.tenant_id) {
+    if (input.auth.organization_id && input.tenant && input.auth.organization_id !== input.tenant.organization_id) {
       return this.deny("tenant_mismatch", input.required_permissions, input.auth.permissions, input.trace_id);
     }
 

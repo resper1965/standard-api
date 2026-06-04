@@ -63,7 +63,7 @@ export async function api<T = unknown>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const tenantId = await getOrFetchTenantId();
+  const organizationId = await getOrFetchTenantId();
 
   const headers = new Headers(options.headers ?? {});
 
@@ -74,8 +74,8 @@ export async function api<T = unknown>(
   }
 
   // Inject tenant header only on API routes (not on auth routes)
-  if (tenantId && !endpoint.includes("/api/auth/")) {
-    headers.set("x-standard-tenant-id", tenantId);
+  if (organizationId && !endpoint.includes("/api/auth/")) {
+    headers.set("x-standard-tenant-id", organizationId);
   }
 
   const fetchUrl = endpoint.startsWith("/") ? `${API_URL}${endpoint}` : endpoint;
