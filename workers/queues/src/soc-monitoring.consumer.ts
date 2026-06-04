@@ -51,7 +51,7 @@ export type SocAlertMessage = DlqAlertMessage | TenantMismatchAlertMessage;
 
 // ── DLQ Alert Handler ──────────────────────────────────────────────────────
 
-export async function processDlqAlert(
+async function processDlqAlert(
   body: DlqAlertMessage,
   env: Env
 ): Promise<void> {
@@ -170,7 +170,7 @@ export async function processDlqAlert(
 
 // ── Tenant Mismatch Alert Handler ──────────────────────────────────────────
 
-export async function processTenantMismatchAlert(
+async function processTenantMismatchAlert(
   body: TenantMismatchAlertMessage,
   env: Env
 ): Promise<void> {

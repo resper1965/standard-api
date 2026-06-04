@@ -5,11 +5,11 @@ type TestCase = {
 
 const tests: TestCase[] = [];
 
-export const test = (name: string, run: () => void): void => {
+const test = (name: string, run: () => void): void => {
   tests.push({ name, run });
 };
 
-export const expect = <T>(actual: T) => ({
+const expect = <T>(actual: T) => ({
   toBe(expected: T): void {
     if (actual !== expected) {
       throw new Error(`Expected ${String(expected)}, received ${String(actual)}`);
@@ -27,7 +27,7 @@ export const expect = <T>(actual: T) => ({
   }
 });
 
-export const expectErrorCode = (run: () => void, code: string): void => {
+const expectErrorCode = (run: () => void, code: string): void => {
   try {
     run();
   } catch (error) {

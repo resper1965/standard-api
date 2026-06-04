@@ -10,7 +10,7 @@ import type { WorkflowRepository, WorkflowAuditAdapter, WorkflowAuditEvent, Work
 import { executeTransition } from "@standard/assessment-engine";
 import type { DbClient } from "./db";
 
-export const createDrizzleWorkflowRepository = (db: DbClient): WorkflowRepository => {
+const createDrizzleWorkflowRepository = (db: DbClient): WorkflowRepository => {
   const repo: WorkflowRepository = {
     async create(input: WorkflowRunRecord) {
       await db.insert(workflowRuns).values({
@@ -77,7 +77,7 @@ export const createDrizzleWorkflowRepository = (db: DbClient): WorkflowRepositor
   return repo;
 };
 
-export const createDrizzleWorkflowAuditAdapter = (db: DbClient): WorkflowAuditAdapter => ({
+const createDrizzleWorkflowAuditAdapter = (db: DbClient): WorkflowAuditAdapter => ({
   async record(event: WorkflowAuditEvent) {
     await db.insert(workflowAuditEvents).values({
       organizationId: event.organization_id,
@@ -93,7 +93,7 @@ export const createDrizzleWorkflowAuditAdapter = (db: DbClient): WorkflowAuditAd
   },
 });
 
-export const createDrizzleAssessmentEngineAdapter = (): AssessmentEngineAdapter => ({
+const createDrizzleAssessmentEngineAdapter = (): AssessmentEngineAdapter => ({
   transitions: [],
   transition(assessment, nextState, context) {
     const result = executeTransition(assessment, nextState, context);

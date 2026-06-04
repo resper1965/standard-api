@@ -27,6 +27,20 @@ const buildDefaultSnapshot = (id: string, organizationId: string, documentCount:
   reportApproved: false
 });
 
+type AssessmentSelect = typeof assessments.$inferSelect;
+const mapAssessmentRow = (found: AssessmentSelect, documentCount = 0): AssessmentRecord => ({
+  assessment_id: found.id,
+  organization_id: found.organizationId,
+  name: found.name,
+  scf_version_id: found.scfVersionId,
+  trace_id: found.traceId,
+  observation_start_date: found.observationStartDate ?? undefined,
+  observation_end_date: found.observationEndDate ?? undefined,
+  created_at: found.createdAt.toISOString(),
+  updated_at: found.updatedAt.toISOString(),
+  snapshot: buildDefaultSnapshot(found.id, found.organizationId, documentCount)
+});
+
 export const createAssessmentRepository = (): AssessmentRepositoryAdapter => {
   const records = new Map<string, AssessmentRecord>();
 
@@ -81,22 +95,15 @@ export const createDrizzleAssessmentRepository = (db: DbClient): AssessmentRepos
         scfVersionId: input.scf_version_id,
         state: "draft" as const,
         traceId: input.trace_id,
+        observationStartDate: input.observation_start_date ?? null,
+        observationEndDate: input.observation_end_date ?? null,
         createdAt: new Date(),
         updatedAt: new Date()
       };
 
       const [inserted] = await db.insert(assessments).values(record).returning();
 
-      return {
-        assessment_id: inserted!.id,
-        organization_id: inserted!.organizationId,
-        name: inserted!.name,
-        scf_version_id: inserted!.scfVersionId,
-        trace_id: inserted!.traceId,
-        created_at: inserted!.createdAt.toISOString(),
-        updated_at: inserted!.updatedAt.toISOString(),
-        snapshot: buildDefaultSnapshot(inserted!.id, inserted!.organizationId, input.documentCount)
-      };
+      return mapAssessmentRow(inserted!, input.documentCount);
     },
     async get(assessmentId, _tenantId) {
       const [found] = await db.select().from(assessments)
@@ -105,51 +112,26 @@ export const createDrizzleAssessmentRepository = (db: DbClient): AssessmentRepos
 
       if (!found) return null;
 
-      return {
-        assessment_id: found.id,
-        organization_id: found.organizationId,
-        name: found.name,
-        scf_version_id: found.scfVersionId,
-        trace_id: found.traceId,
-        created_at: found.createdAt.toISOString(),
-        updated_at: found.updatedAt.toISOString(),
-        snapshot: buildDefaultSnapshot(found.id, found.organizationId, 0)
-      };
+      return mapAssessmentRow(found);
     },
     async listByOrganization(organizationId) {
       const results = await db.select().from(assessments)
         .where(eq(assessments.organizationId, organizationId));
 
-      return results.map(found => ({
-        assessment_id: found.id,
-        organization_id: found.organizationId,
-        name: found.name,
-        scf_version_id: found.scfVersionId,
-        trace_id: found.traceId,
-        created_at: found.createdAt.toISOString(),
-        updated_at: found.updatedAt.toISOString(),
-        snapshot: buildDefaultSnapshot(found.id, found.organizationId, 0)
-      }));
+      return results.map(found => mapAssessmentRow(found));
     },
     async listAll(_tenantId) {
       const results = await db.select().from(assessments);
 
-      return results.map(found => ({
-        assessment_id: found.id,
-        organization_id: found.organizationId,
-        name: found.name,
-        scf_version_id: found.scfVersionId,
-        trace_id: found.traceId,
-        created_at: found.createdAt.toISOString(),
-        updated_at: found.updatedAt.toISOString(),
-        snapshot: buildDefaultSnapshot(found.id, found.organizationId, 0)
-      }));
+      return results.map(found => mapAssessmentRow(found));
     },
     async save(record) {
       await db.update(assessments)
         .set({
           name: record.name,
           state: record.snapshot.state,
+          observationStartDate: record.observation_start_date ?? null,
+          observationEndDate: record.observation_end_date ?? null,
           updatedAt: new Date()
         })
         .where(eq(assessments.id, record.assessment_id));

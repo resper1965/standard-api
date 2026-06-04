@@ -4,28 +4,29 @@
 
 ## Docs
 
-- [Functional Guide](https://standard-api.bekaa.eu/docs/api/GUIDE.md): Architecture, concepts, assessment lifecycle, AI agents
-- [API Reference](https://standard-api.bekaa.eu/docs/api/API_REFERENCE.md): Full endpoint documentation with auth, errors, rate limits
-- [Full Context for LLMs](https://standard-api.bekaa.eu/llms-full.txt): Complete API context in a single file
-- [OpenAPI Spec (JSON)](https://standard-api.bekaa.eu/docs/openapi.json): Machine-readable OpenAPI 3.0 specification
-- [Interactive Docs](https://standard-api.bekaa.eu/docs): Scalar API explorer with try-it-out
+- [Full Context for LLMs](https://standard-api.bekaa.eu/llms-full.txt): Complete API context in a single file (auto-generated from OpenAPI)
+- [OpenAPI Spec (JSON)](https://standard-api.bekaa.eu/docs/openapi.json): Machine-readable OpenAPI 3.1 specification
+- [Interactive Docs](https://standard-api.bekaa.eu/docs): Scalar API explorer
 
 ## API
 
 Base URL: `https://standard-api.bekaa.eu`
-Auth: Bearer API key (`standard_live_...`) or session cookie. The API Key automatically resolves to your Root Organization.
-Organization: Implicitly resolved via API Key. Use `organization_id` in paths for Sub-Organization isolation.
+Auth: Bearer API key (`standard_live_...`) or session cookie
+Tenant: `x-standard-tenant-id` header (required)
 
 ## Sections
 
 - [SCF Catalog](#scf-catalog): 1,468 controls, 231 frameworks, 33 domains
-- [Assessments](#assessments): Full lifecycle CRUD
+- [Assessments](#assessments): Full lifecycle CRUD + summary KPIs
 - [Documents](#documents): Upload, ingest, chunk
 - [Knowledge Base](#knowledge-base): Semantic search
 - [Scope & SoA](#scope--soa): Scope definition, Statement of Applicability
 - [Gap Analysis](#gap-analysis): Findings, approval
 - [POA&M](#poam): Remediation planning
-- [Reports](#reports): Generate, download
+- [Reports](#reports): Generate, download, audit package
+- [Dashboard KPIs](#dashboard-kpis): Server-computed compliance metrics
+- [Audit Trail](#audit-trail): Tenant/org-wide audit event log
+- [Members](#members): Organization membership RBAC (invite, role, remove)
 - [AI Agents](#ai-agents): 7 specialized agents
 - [Intelligence Council](#intelligence-council): Async multi-agent workflow dispatch
 - [Jobs](#jobs): Job polling for async jobs
@@ -36,11 +37,5 @@ Organization: Implicitly resolved via API Key. Use `organization_id` in paths fo
 
 ## Optional
 
-- [B2B Integration Guide](https://standard-api.bekaa.eu/docs/api/B2B_INTEGRATION_GUIDE.md): Organization provisioning, SSO, white-label
+- [B2B Integration Guide](https://standard-api.bekaa.eu/docs/api/B2B_INTEGRATION_GUIDE.md): Tenant provisioning, SSO, white-label
 - [Privacy SDK Guide](https://standard-api.bekaa.eu/docs/api/privacy-ropa-sdk.md): RoPA, DPIA, vendor scanning
-
-## MCP Integration
-
-- https://standard-api.bekaa.eu/mcp (MCP server endpoint — JSON-RPC 2.0)
-- https://standard-api.bekaa.eu/docs/mcp (MCP integration guide)
-- docs/api/mcp-integration-guide.md

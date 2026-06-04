@@ -5,7 +5,7 @@ import { AgentExecutor, AgentRuntimeService, createDrizzleAgentRuntimeDependenci
 import { z } from "zod";
 import type { Env } from "./index";
 
-export const AgentRunQueueMessageSchema = z.object({
+const AgentRunQueueMessageSchema = z.object({
   agent_run_id: z.string().uuid(),
   organization_id: z.string().uuid(),
   assessment_id: z.string().uuid(),

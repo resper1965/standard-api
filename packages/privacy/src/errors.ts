@@ -9,12 +9,12 @@ export class PrivacyError extends Error {
   }
 }
 
-export const assertPrivacyContext = (context: { organizationId?: string; traceId?: string }): void => {
+const assertPrivacyContext = (context: { organizationId?: string; traceId?: string }): void => {
   if (!context.organizationId || !context.traceId) {
     throw new PrivacyError("TENANT_CONTEXT_REQUIRED", "Privacy operations require tenant and trace context.");
   }
 };
 
-export const assertPrivacyActor = (context: { actorId?: string }): void => {
+const assertPrivacyActor = (context: { actorId?: string }): void => {
   if (!context.actorId) throw new PrivacyError("ACTOR_REQUIRED", "Privacy mutation requires actor context.");
 };

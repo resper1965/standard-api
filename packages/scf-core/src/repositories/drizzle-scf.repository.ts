@@ -216,6 +216,13 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
       conditions.push(sql`${scfControlMetadata.threatTags} @> ${JSON.stringify(query.tags)}::jsonb`);
     }
 
+    if (query.limit) {
+      dbQuery = dbQuery.limit(query.limit);
+    }
+    if (query.offset) {
+      dbQuery = dbQuery.offset(query.offset);
+    }
+
     const rows = await dbQuery.where(and(...conditions)).orderBy(asc(scfControls.controlCode));
     return rows.map((r: any) => mapControl(r.control));
   },

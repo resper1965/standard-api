@@ -9,7 +9,7 @@ import type { ReportVersionResponse, ReportArtifactResponse, ExportJobResponse }
 import type { ReportVersionRepository, ReportArtifactRepository, ExportJobRepository, ReportRepositories } from "@standard/reporting";
 import type { DbClient } from "./db";
 
-export const createDrizzleReportVersionRepository = (db: DbClient): ReportVersionRepository => ({
+const createDrizzleReportVersionRepository = (db: DbClient): ReportVersionRepository => ({
   async save(version: ReportVersionResponse) {
     await db.insert(reportVersions).values({
       id: version.report_version_id,
@@ -58,7 +58,7 @@ export const createDrizzleReportVersionRepository = (db: DbClient): ReportVersio
   },
 });
 
-export const createDrizzleReportArtifactRepository = (db: DbClient): ReportArtifactRepository => ({
+const createDrizzleReportArtifactRepository = (db: DbClient): ReportArtifactRepository => ({
   async save(artifact: ReportArtifactResponse) {
     await db.insert(reportArtifacts).values({
       id: artifact.report_artifact_id,
@@ -89,7 +89,7 @@ export const createDrizzleReportArtifactRepository = (db: DbClient): ReportArtif
   },
 });
 
-export const createDrizzleExportJobRepository = (db: DbClient): ExportJobRepository => ({
+const createDrizzleExportJobRepository = (db: DbClient): ExportJobRepository => ({
   async save(job: ExportJobResponse) {
     await db.insert(exportJobs).values({
       id: job.export_job_id,

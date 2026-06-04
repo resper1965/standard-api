@@ -6,7 +6,7 @@ export const ids = {
   organizationId: "11111111-1111-4111-8111-111111111111"
 };
 
-export const jsonRequest = (path: string, method: string, body?: unknown, headers: Record<string, string> = {}) =>
+const jsonRequest = (path: string, method: string, body?: unknown, headers: Record<string, string> = {}) =>
   new Request(`https://api.test${path}`, {
     method,
     headers: {
@@ -17,7 +17,7 @@ export const jsonRequest = (path: string, method: string, body?: unknown, header
     body: body === undefined ? undefined : JSON.stringify(body)
   });
 
-export const multipartRequest = (path: string, form: FormData, headers: Record<string, string> = {}) =>
+const multipartRequest = (path: string, form: FormData, headers: Record<string, string> = {}) =>
   new Request(`https://api.test${path}`, {
     method: "POST",
     headers: {

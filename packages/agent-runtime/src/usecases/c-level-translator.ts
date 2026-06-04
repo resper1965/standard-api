@@ -2,7 +2,7 @@ import type { LlmProvider } from "../llm";
 import { generateStructuredOutput } from "../structured-output";
 import type { PoamRemediationOutput } from "./poam-architect";
 
-export const AGENT_VERSION_BOARD_TRANSLATOR = "1.0.0";
+const AGENT_VERSION_BOARD_TRANSLATOR = "1.0.0";
 
 export type BoardTranslatorInput = {
   poamPlan: PoamRemediationOutput;

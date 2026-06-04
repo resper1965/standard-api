@@ -40,7 +40,7 @@ export const BlastRadiusRequestSchema = z.object({
   control_id: z.string().max(100),
 }).openapi("BlastRadiusRequest");
 
-export const BlastRadiusOutputSchema = z.object({
+const BlastRadiusOutputSchema = z.object({
   control_id: z.string(),
   linked_entities: z.object({
     risks: z.array(z.object({ category: z.string(), risk: z.string() })),
@@ -50,24 +50,24 @@ export const BlastRadiusOutputSchema = z.object({
   })
 }).openapi("BlastRadiusOutput");
 
-export const GapAnalysisOutputSchema = z.object({
+const GapAnalysisOutputSchema = z.object({
   missing_controls: z.array(z.string())
 }).openapi("GapAnalysisOutput");
 
-export const ComplianceScoreOutputSchema = z.object({
+const ComplianceScoreOutputSchema = z.object({
   total_required: z.number(),
   implemented: z.number(),
   missing: z.number(),
   score: z.number()
 }).openapi("ComplianceScoreOutput");
 
-export const DpiaScoreOutputSchema = z.object({
+const DpiaScoreOutputSchema = z.object({
   dpia_trigger_count: z.number(),
   is_dpia_required: z.boolean(),
   triggering_controls: z.array(z.string())
 }).openapi("DpiaScoreOutput");
 
-export const CrossCoverageOutputSchema = z.object({
+const CrossCoverageOutputSchema = z.object({
   source_framework: z.string(),
   target_framework: z.string(),
   total_target_controls: z.number(),
@@ -87,7 +87,7 @@ export const BreachSlaRequestSchema = z.object({
   severity: z.enum(["critical", "high", "medium", "low"]),
 }).openapi("BreachSlaRequest");
 
-export const RoiPathOutputSchema = z.object({
+const RoiPathOutputSchema = z.object({
   recommended_controls: z.array(z.object({
     control_id: z.string(),
     roi_score: z.number(),
