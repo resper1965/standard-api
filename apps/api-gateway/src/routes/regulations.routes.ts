@@ -15,7 +15,7 @@
  * All fields link to SCF via scf_controls[] or scf_domain.
  */
 import type { RouteDefinition } from "../http";
-import { json, routeParam } from "../http";
+import { json, routeParam, routeUuidParam } from "../http";
 import { ApiError } from "../errors/api-error";
 import { flattenI18n } from "../utils/i18n";
 
@@ -63,7 +63,7 @@ export const regulationsRoutes: RouteDefinition[] = [
     tenantRequired: false,
     handler: async ({ request, params, traceId }) => {
       const locale = (new URL(request.url).searchParams.get("locale") || "pt") as any;
-      const reg = REGULATION_INDEX.get(routeParam(params, "regulationId"));
+      const reg = REGULATION_INDEX.get(routeUuidParam(params, "regulationId"));
       if (!reg) throw new ApiError("NOT_FOUND", "Regulation not found.", 404);
       return json({ data: flattenI18n(reg, locale), trace_id: traceId });
     },
@@ -75,7 +75,7 @@ export const regulationsRoutes: RouteDefinition[] = [
     tenantRequired: false,
     handler: async ({ request, params, traceId }) => {
       const locale = new URL(request.url).searchParams.get("locale") || "pt";
-      const reg = REGULATION_INDEX.get(routeParam(params, "regulationId"));
+      const reg = REGULATION_INDEX.get(routeUuidParam(params, "regulationId"));
       if (!reg) throw new ApiError("NOT_FOUND", "Regulation not found.", 404);
       const data = { legal_bases: reg.legal_bases, sensitive_legal_bases: reg.sensitive_legal_bases };
       return json({ data: flattenI18n(data, locale), regulation: reg.id, trace_id: traceId });
@@ -88,7 +88,7 @@ export const regulationsRoutes: RouteDefinition[] = [
     tenantRequired: false,
     handler: async ({ request, params, traceId }) => {
       const locale = new URL(request.url).searchParams.get("locale") || "pt";
-      const reg = REGULATION_INDEX.get(routeParam(params, "regulationId"));
+      const reg = REGULATION_INDEX.get(routeUuidParam(params, "regulationId"));
       if (!reg) throw new ApiError("NOT_FOUND", "Regulation not found.", 404);
       return json({ data: flattenI18n(reg.data_subject_rights, locale), regulation: reg.id, trace_id: traceId });
     },
@@ -100,7 +100,7 @@ export const regulationsRoutes: RouteDefinition[] = [
     tenantRequired: false,
     handler: async ({ request, params, traceId }) => {
       const locale = new URL(request.url).searchParams.get("locale") || "pt";
-      const reg = REGULATION_INDEX.get(routeParam(params, "regulationId"));
+      const reg = REGULATION_INDEX.get(routeUuidParam(params, "regulationId"));
       if (!reg) throw new ApiError("NOT_FOUND", "Regulation not found.", 404);
       return json({ data: flattenI18n(reg.dsar_statuses, locale), regulation: reg.id, trace_id: traceId });
     },
@@ -112,7 +112,7 @@ export const regulationsRoutes: RouteDefinition[] = [
     tenantRequired: false,
     handler: async ({ request, params, traceId }) => {
       const locale = new URL(request.url).searchParams.get("locale") || "pt";
-      const reg = REGULATION_INDEX.get(routeParam(params, "regulationId"));
+      const reg = REGULATION_INDEX.get(routeUuidParam(params, "regulationId"));
       if (!reg) throw new ApiError("NOT_FOUND", "Regulation not found.", 404);
       return json({ data: flattenI18n(reg.breach_rules, locale), breach_statuses: flattenI18n(reg.breach_statuses, locale), regulation: reg.id, trace_id: traceId });
     },
@@ -124,7 +124,7 @@ export const regulationsRoutes: RouteDefinition[] = [
     tenantRequired: false,
     handler: async ({ request, params, traceId }) => {
       const locale = new URL(request.url).searchParams.get("locale") || "pt";
-      const reg = REGULATION_INDEX.get(routeParam(params, "regulationId"));
+      const reg = REGULATION_INDEX.get(routeUuidParam(params, "regulationId"));
       if (!reg) throw new ApiError("NOT_FOUND", "Regulation not found.", 404);
       return json({ data: flattenI18n(reg.international_transfer, locale), dpa: flattenI18n(reg.dpa_requirements, locale), regulation: reg.id, trace_id: traceId });
     },
@@ -136,7 +136,7 @@ export const regulationsRoutes: RouteDefinition[] = [
     tenantRequired: false,
     handler: async ({ request, params, traceId }) => {
       const locale = new URL(request.url).searchParams.get("locale") || "pt";
-      const reg = REGULATION_INDEX.get(routeParam(params, "regulationId"));
+      const reg = REGULATION_INDEX.get(routeUuidParam(params, "regulationId"));
       if (!reg) throw new ApiError("NOT_FOUND", "Regulation not found.", 404);
       return json({ data: flattenI18n(reg.consent_rules, locale), regulation: reg.id, trace_id: traceId });
     },
@@ -148,7 +148,7 @@ export const regulationsRoutes: RouteDefinition[] = [
     tenantRequired: false,
     handler: async ({ request, params, traceId }) => {
       const locale = new URL(request.url).searchParams.get("locale") || "pt";
-      const reg = REGULATION_INDEX.get(routeParam(params, "regulationId"));
+      const reg = REGULATION_INDEX.get(routeUuidParam(params, "regulationId"));
       if (!reg) throw new ApiError("NOT_FOUND", "Regulation not found.", 404);
       return json({ data: flattenI18n(reg.dpia_triggers, locale), regulation: reg.id, trace_id: traceId });
     },
@@ -160,7 +160,7 @@ export const regulationsRoutes: RouteDefinition[] = [
     tenantRequired: false,
     handler: async ({ params, request, traceId }) => {
       const locale = (new URL(request.url).searchParams.get("locale") || "pt") as any;
-      const reg = REGULATION_INDEX.get(routeParam(params, "regulationId"));
+      const reg = REGULATION_INDEX.get(routeUuidParam(params, "regulationId"));
       if (!reg) throw new ApiError("NOT_FOUND", "Regulation not found.", 404);
       return json({ data: flattenI18n(reg.penalties, locale), regulation: reg.id, trace_id: traceId });
     },

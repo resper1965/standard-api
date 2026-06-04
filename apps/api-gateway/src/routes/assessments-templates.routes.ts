@@ -4,7 +4,7 @@
  * Replaces the legacy tpra.routes.ts.
  */
 import type { RouteDefinition } from "../http";
-import { json, routeParam } from "../http";
+import { json, routeParam, routeUuidParam } from "../http";
 import { ApiError } from "../errors/api-error";
 import { flattenI18n } from "../utils/i18n";
 import type { AssessmentTemplate } from "@standard/schemas";
@@ -106,7 +106,7 @@ export const assessmentsTemplatesRoutes: RouteDefinition[] = [
     tenantRequired: false,
     handler: async ({ request, params, traceId }) => {
       const locale = new URL(request.url).searchParams.get("locale") ?? "";
-      const q = TEMPLATES_INDEX.get(routeParam(params, "templateId"));
+      const q = TEMPLATES_INDEX.get(routeUuidParam(params, "templateId"));
       if (!q) throw new ApiError("NOT_FOUND", "Template not found.", 404);
       return json(flattenI18n({ data: q, trace_id: traceId }, locale));
     },

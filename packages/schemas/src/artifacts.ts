@@ -5,22 +5,22 @@ import { ApprovalGateSchema } from "./approvals";
 export const ArtifactTypeSchema = z.enum(["scope", "soa", "gap_analysis", "maturity_assessment", "poam", "report"]);
 export const ArtifactVersionStatusSchema = z.enum(["draft", "under_review", "approved", "superseded", "archived"]);
 
-export const CreateArtifactVersionRequestSchema = z.object({
+export const CreateArtifactVersionRequestSchema = z.strictObject({
   source_agent_run_id: UuidSchema.optional(),
   metadata: z.record(z.string(), z.unknown()).optional()
 });
 
-export const SubmitArtifactReviewRequestSchema = z.object({
+export const SubmitArtifactReviewRequestSchema = z.strictObject({
   reason: z.string().min(1)
 });
 
-export const ApproveArtifactRequestSchema = z.object({
+export const ApproveArtifactRequestSchema = z.strictObject({
   approval_id: UuidSchema.optional(),
   gate: ApprovalGateSchema,
   reason: z.string().min(1)
 });
 
-export const SupersedeArtifactRequestSchema = z.object({
+export const SupersedeArtifactRequestSchema = z.strictObject({
   reason: z.string().min(1)
 });
 

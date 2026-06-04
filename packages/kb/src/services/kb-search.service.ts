@@ -87,7 +87,7 @@ export class KbSearchService {
     for (const result of results) {
       if (result.metadata.organization_id !== context.organizationId || result.metadata.assessment_id !== context.assessmentId) continue;
       const document = await this.deps.documentIngestion.repositories.documents.getDocument(result.metadata.document_id, context.organizationId);
-      if (!document || document.assessment_id !== context.assessmentId) continue;
+      if (!document || document.assessment_id !== context.assessmentId || document.status === "archived") continue;
       const chunks = await this.deps.documentIngestion.repositories.chunks.listChunks(document.document_id, context.organizationId, 1000);
       const chunk = chunks.find((candidate) => candidate.chunk_id === result.metadata.chunk_id);
       if (!chunk) continue;

@@ -66,9 +66,18 @@ export const assertRbac = async (context: RequestContext, requiredPermissions: P
   let reason = "";
   
   // If no auth context exists at all, explicitly deny.
-  if (!context.auth && !context.session) {
+  if (!context.auth && !context.session && !context.m2mScopes) {
     allowed = false;
     reason = "missing_auth_context";
+  } else if (context.m2mScopes) {
+    // Machine-to-Machine API Key authentication
+    for (const reqPerm of requiredPermissions) {
+      if (!context.m2mScopes.includes(reqPerm)) {
+        allowed = false;
+        reason = "permission_missing";
+        break;
+      }
+    }
   } else if (context.auth) {
     // Legacy MockAuthProvider or API Key auth — check permissions directly from auth context.
     // This path also applies in dev/test mode where context.auth and context.session coexist.

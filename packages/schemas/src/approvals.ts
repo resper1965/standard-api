@@ -5,7 +5,7 @@ export const ApprovalDecisionSchema = z.enum(["approved", "rejected", "changes_r
 export const ApprovalTargetTypeSchema = z.enum(["assessment_state", "artifact_version"]);
 export const ApprovalGateSchema = z.enum(["soa", "gap_analysis", "maturity_assessment", "poam", "report"]);
 
-export const CreateApprovalRequestSchema = z.object({
+export const CreateApprovalRequestSchema = z.strictObject({
   gate: ApprovalGateSchema,
   target_type: ApprovalTargetTypeSchema,
   target_id: UuidSchema,

@@ -1,7 +1,7 @@
 import { CreateApprovalRequestSchema } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";
-import { json, newId, parseJson, routeParam } from "../http";
+import { json, newId, parseJson, routeParam, routeUuidParam } from "../http";
 import { approvalResponse } from "../presenters";
 
 export const approvalsRoutes: RouteDefinition[] = [
@@ -13,7 +13,7 @@ export const approvalsRoutes: RouteDefinition[] = [
     permissions: ["approval:create"],
     handler: async ({ request, deps, params, organizationId, actorId, traceId, session }) => {
       const body = await parseJson(request, CreateApprovalRequestSchema);
-      const assessmentId = routeParam(params, "assessmentId");
+      const assessmentId = routeUuidParam(params, "assessmentId");
 
       // Validate target_type / target_id consistency first (400 before 403)
       if (body.target_type === "assessment_state" && body.target_id !== assessmentId) {
@@ -80,7 +80,7 @@ export const approvalsRoutes: RouteDefinition[] = [
     permissions: ["approval:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
       const tenantApprovalsDb = deps.approvals.withOrganization(organizationId!);
-      const approvals = await tenantApprovalsDb.listByAssessment(routeParam(params, "assessmentId"));
+      const approvals = await tenantApprovalsDb.listByAssessment(routeUuidParam(params, "assessmentId"));
       return json({ data: approvals.map(approvalResponse), trace_id: traceId });
     }
   },
@@ -91,7 +91,7 @@ export const approvalsRoutes: RouteDefinition[] = [
     permissions: ["approval:read"],
     handler: async ({ deps, params, organizationId }) => {
       const tenantApprovalsDb = deps.approvals.withOrganization(organizationId!);
-      const approval = await tenantApprovalsDb.get(routeParam(params, "approvalId"));
+      const approval = await tenantApprovalsDb.get(routeUuidParam(params, "approvalId"));
       if (!approval) throw new ApiError("NOT_FOUND", "Approval not found.", 404);
       return json(approvalResponse(approval));
     }

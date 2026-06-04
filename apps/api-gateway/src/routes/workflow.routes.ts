@@ -10,7 +10,7 @@ import {
 import { ApiError } from "../errors/api-error";
 import type { ApiErrorCode } from "../errors/error-codes";
 import type { AppDependencies, AssessmentRecord, RouteDefinition } from "../http";
-import { json, parseJson, routeParam } from "../http";
+import { json, parseJson, routeParam, routeUuidParam } from "../http";
 import type { TenantScopedWorkflowDependencies } from "@standard/workflows";
 
 const toApiError = (error: unknown): never => {
@@ -58,12 +58,13 @@ const syncAssessmentState = async (deps: AppDependencies, assessment: Assessment
 export const workflowRoutes: RouteDefinition[] = [
   {
     method: "POST",
+    idempotencyRequired: true,
     path: "/api/v1/assessments/:assessmentId/workflows/lifecycle/start",
     protected: true,
     requireActor: true,
     permissions: ["assessment:run_workflow"],
     handler: async ({ request, params, deps, organizationId, actorId, traceId }) => {
-      const assessment = await requireAssessment(deps, routeParam(params, "assessmentId"), organizationId!);
+      const assessment = await requireAssessment(deps, routeUuidParam(params, "assessmentId"), organizationId!);
       const body = await parseJson(request, StartLifecycleWorkflowRequestSchema);
 
       try {
@@ -110,7 +111,7 @@ export const workflowRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["assessment:read"],
     handler: async ({ params, deps, organizationId }) => {
-      const assessment = await requireAssessment(deps, routeParam(params, "assessmentId"), organizationId!);
+      const assessment = await requireAssessment(deps, routeUuidParam(params, "assessmentId"), organizationId!);
       const runs = await new AssessmentLifecycleOrchestrator(getTenantWorkflowDeps(deps, organizationId!)).listByAssessment(assessment.assessment_id);
       return json({ workflow_runs: runs });
     }
@@ -121,13 +122,14 @@ export const workflowRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["assessment:read"],
     handler: async ({ params, deps, organizationId }) => {
-      const run = await new AssessmentLifecycleOrchestrator(getTenantWorkflowDeps(deps, organizationId!)).get(routeParam(params, "workflowRunId"));
+      const run = await new AssessmentLifecycleOrchestrator(getTenantWorkflowDeps(deps, organizationId!)).get(routeUuidParam(params, "workflowRunId"));
       if (!run) throw new ApiError("NOT_FOUND", "Workflow run not found.", 404);
       return json(run);
     }
   },
   {
     method: "POST",
+    idempotencyRequired: true,
     path: "/api/v1/workflows/:workflowRunId/cancel",
     protected: true,
     requireActor: true,
@@ -135,7 +137,7 @@ export const workflowRoutes: RouteDefinition[] = [
     handler: async ({ request, params, deps, organizationId }) => {
       const body = await parseJson(request, CancelWorkflowRequestSchema);
       try {
-        return json(await new AssessmentLifecycleOrchestrator(getTenantWorkflowDeps(deps, organizationId!)).cancel(routeParam(params, "workflowRunId"), body));
+        return json(await new AssessmentLifecycleOrchestrator(getTenantWorkflowDeps(deps, organizationId!)).cancel(routeUuidParam(params, "workflowRunId"), body));
       } catch (error) {
         return toApiError(error);
       }
@@ -143,6 +145,7 @@ export const workflowRoutes: RouteDefinition[] = [
   },
   {
     method: "POST",
+    idempotencyRequired: true,
     path: "/api/v1/workflows/:workflowRunId/resume",
     protected: true,
     requireActor: true,
@@ -150,7 +153,7 @@ export const workflowRoutes: RouteDefinition[] = [
     handler: async ({ request, params, deps, organizationId }) => {
       const body = await parseJson(request, ResumeWorkflowRequestSchema);
       try {
-        return json(await new AssessmentLifecycleOrchestrator(getTenantWorkflowDeps(deps, organizationId!)).resume(routeParam(params, "workflowRunId"), body));
+        return json(await new AssessmentLifecycleOrchestrator(getTenantWorkflowDeps(deps, organizationId!)).resume(routeUuidParam(params, "workflowRunId"), body));
       } catch (error) {
         return toApiError(error);
       }
@@ -158,6 +161,7 @@ export const workflowRoutes: RouteDefinition[] = [
   },
   {
     method: "POST",
+    idempotencyRequired: true,
     path: "/api/v1/workflows/:workflowRunId/signals",
     protected: true,
     requireActor: true,
@@ -165,7 +169,7 @@ export const workflowRoutes: RouteDefinition[] = [
     handler: async ({ request, params, deps, organizationId, traceId }) => {
       const body = await parseJson(request, WorkflowSignalRequestSchema);
       const orchestrator = new AssessmentLifecycleOrchestrator(getTenantWorkflowDeps(deps, organizationId!));
-      const run = await orchestrator.get(routeParam(params, "workflowRunId"));
+      const run = await orchestrator.get(routeUuidParam(params, "workflowRunId"));
       if (!run) throw new ApiError("NOT_FOUND", "Workflow run not found.", 404);
       const assessment = await requireAssessment(deps, run.state.assessment_id, organizationId!);
       const gate = approvalGateForSignal(body.signal_type);
@@ -174,11 +178,11 @@ export const workflowRoutes: RouteDefinition[] = [
 
       const stepStartMs = Date.now();
       try {
-        const result = await orchestrator.signal(routeParam(params, "workflowRunId"), {
+        const result = await orchestrator.signal(routeUuidParam(params, "workflowRunId"), {
           ...body,
           trace_id: body.trace_id ?? traceId
         }, assessment.snapshot, approvalEvent ?? undefined);
-        const updated = await orchestrator.get(routeParam(params, "workflowRunId"));
+        const updated = await orchestrator.get(routeUuidParam(params, "workflowRunId"));
         if (updated) await syncAssessmentState(deps, assessment, updated.state.assessment_state, organizationId!);
         await new AuditEventService(deps.observability).record({
           organization_id: assessment.organization_id,

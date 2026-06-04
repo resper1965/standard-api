@@ -41,9 +41,9 @@ const resolveLimit = (route: string): RateLimitConfig => {
 /**
  * Builds a unique rate-limit key: tenant:actor:route-category:window
  */
-const buildKey = (organizationId: string | undefined, actorId: string | undefined, route: string, windowSeconds: number): string => {
+const buildKey = (organizationId: string | undefined, actorId: string | undefined, ip: string, route: string, windowSeconds: number): string => {
   const t = organizationId ?? "anonymous";
-  const a = actorId ?? "anonymous";
+  const a = actorId ?? ip; // Fallback to IP if anonymous
   const window = Math.floor(Date.now() / (windowSeconds * 1000));
   const routeCategory = Object.keys(ROUTE_LIMITS).find((pattern) => route.includes(pattern)) ?? "default";
   return `rl:${t}:${a}:${routeCategory}:${window}`;
@@ -92,13 +92,13 @@ export const assertRateLimit = async (
     return;
   }
 
+  const ip = context.request.headers.get("cf-connecting-ip") ?? context.request.headers.get("x-forwarded-for") ?? "unknown_ip";
   const config = resolveLimit(route);
-  const key = buildKey(context.organizationId, context.actorId, route, config.windowSeconds);
+  const key = buildKey(context.organizationId, context.actorId, ip, route, config.windowSeconds);
   const counter = getOrCreateCounter(key, config.windowSeconds);
 
   // Check limit in-memory (0ms, no I/O)
   if (counter.count >= config.maxRequests) {
-    const ip = context.request.headers.get("cf-connecting-ip") ?? context.request.headers.get("x-forwarded-for") ?? "unknown_ip";
     
     await context.deps.audit.record("security_rate_limit_exceeded", {
       route,

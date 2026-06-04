@@ -341,6 +341,9 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
       await recordAuditEvent(context, route.path);
 
       // ── Idempotency replay ────────────────────────────────────
+      if (route.idempotencyRequired && !request.headers.get("Idempotency-Key")) {
+        throw new ApiError("VALIDATION_ERROR", "Idempotency-Key header is required for this operation.", 400);
+      }
       const idempotentReplay = await checkIdempotency(request, context.organizationId, env?.STANDARD_CACHE);
       if (idempotentReplay) return withSecurityHeaders(idempotentReplay);
 

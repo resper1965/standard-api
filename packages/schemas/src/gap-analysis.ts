@@ -48,7 +48,7 @@ export const EvidenceSourceResponseSchema = z.object({
   created_at: z.string()
 });
 
-export const RunEvidenceAnalysisRequestSchema = z.object({
+export const RunEvidenceAnalysisRequestSchema = z.strictObject({
   soa_version_id: UuidSchema
 });
 
@@ -59,7 +59,7 @@ export const RunEvidenceAnalysisResponseSchema = z.object({
   trace_id: TraceIdSchema
 });
 
-export const RefreshEvidenceFindingRequestSchema = z.object({
+export const RefreshEvidenceFindingRequestSchema = z.strictObject({
   top_k: z.number().int().min(1).max(10).default(5)
 });
 
@@ -112,11 +112,11 @@ export const GapFindingResponseSchema = z.object({
   updated_at: z.string()
 });
 
-export const CreateGapAnalysisDraftRequestSchema = z.object({
+export const CreateGapAnalysisDraftRequestSchema = z.strictObject({
   soa_version_id: UuidSchema
 });
 
-export const UpdateGapFindingRequestSchema = z.object({
+export const UpdateGapFindingRequestSchema = z.strictObject({
   assessment_status: AssessmentStatusSchema.optional(),
   gap_type: GapFindingTypeSchema.optional(),
   severity: GapSeveritySchema.optional(),
@@ -137,11 +137,11 @@ export const GapAnalysisValidationResponseSchema = z.object({
   trace_id: TraceIdSchema
 });
 
-export const SubmitGapAnalysisReviewRequestSchema = z.object({
+export const SubmitGapAnalysisReviewRequestSchema = z.strictObject({
   exception_rationale: z.string().optional()
 });
 
-export const ApproveGapAnalysisRequestSchema = z.object({
+export const ApproveGapAnalysisRequestSchema = z.strictObject({
   approval_event_id: UuidSchema
 });
 

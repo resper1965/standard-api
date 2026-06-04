@@ -31,7 +31,7 @@ export const FileValidationResultSchema = z.object({
   warnings: z.array(z.string()).default([])
 });
 
-export const CreateDocumentRequestSchema = z.object({
+export const CreateDocumentRequestSchema = z.strictObject({
   original_filename: z.string().min(1),
   mime_type: z.string().min(1),
   file_size: z.number().int().positive(),
@@ -112,7 +112,7 @@ export const DocumentJobResponseSchema = z.object({
   metadata: z.record(z.string(), z.unknown()).default({})
 });
 
-export const ReprocessDocumentRequestSchema = z.object({
+export const ReprocessDocumentRequestSchema = z.strictObject({
   reason: z.string().min(1),
   strategy: z.enum(["append_new_chunks", "replace_previous_chunks"]).default("append_new_chunks")
 });

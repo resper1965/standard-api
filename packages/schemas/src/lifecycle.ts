@@ -2,7 +2,7 @@ import { z } from "zod";
 import { AssessmentLifecycleStateSchema } from "./domain";
 import { UuidSchema } from "./common";
 
-export const TransitionRequestSchema = z.object({
+export const TransitionRequestSchema = z.strictObject({
   next_state: AssessmentLifecycleStateSchema,
   reason: z.string().min(1),
   approval_event_id: UuidSchema.optional(),

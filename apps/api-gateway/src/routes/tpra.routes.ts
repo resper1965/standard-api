@@ -7,7 +7,7 @@
  * Tudo linka ao SCF via scf_controls[].
  */
 import type { RouteDefinition } from "../http";
-import { json, routeParam } from "../http";
+import { json, routeParam, routeUuidParam } from "../http";
 import { ApiError } from "../errors/api-error";
 import { flattenI18n } from "../utils/i18n";
 
@@ -159,7 +159,7 @@ export const tpraRoutes: RouteDefinition[] = [
     tenantRequired: false,
     handler: async ({ request, params, traceId }) => {
       const locale = (new URL(request.url).searchParams.get("locale") || "pt") as any;
-      const q = TPRA_INDEX.get(routeParam(params, "questionnaireId"));
+      const q = TPRA_INDEX.get(routeUuidParam(params, "questionnaireId"));
       if (!q) throw new ApiError("NOT_FOUND", "Questionnaire not found. Available: standard_v1", 404);
       return json({ data: flattenI18n(q, locale), trace_id: traceId });
     },
@@ -172,9 +172,9 @@ export const tpraRoutes: RouteDefinition[] = [
     tenantRequired: false,
     handler: async ({ request, params, traceId }) => {
       const locale = (new URL(request.url).searchParams.get("locale") || "pt") as any;
-      const q = TPRA_INDEX.get(routeParam(params, "questionnaireId"));
+      const q = TPRA_INDEX.get(routeUuidParam(params, "questionnaireId"));
       if (!q) throw new ApiError("NOT_FOUND", "Questionnaire not found.", 404);
-      const section = q.sections.find(s => s.id === routeParam(params, "sectionId"));
+      const section = q.sections.find(s => s.id === routeUuidParam(params, "sectionId"));
       if (!section) throw new ApiError("NOT_FOUND", `Section not found. Available: ${q.sections.map(s => s.id).join(", ")}`, 404);
       return json({ data: flattenI18n(section, locale), trace_id: traceId });
     },

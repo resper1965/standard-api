@@ -16,7 +16,7 @@ import { eq, ilike, or, sql, desc, and } from "drizzle-orm";
 import { baUser, baSession, baAccount, baMember, baOrganization } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition, RequestContext } from "../http";
-import { json, parseJson, routeParam } from "../http";
+import { json, parseJson, routeParam, routeUuidParam } from "../http";
 import { requirePlatformAdmin } from "../middleware/rbac.middleware";
 import type { DbClient } from "../adapters/db";
 import { resolveOrganizationContext } from "../adapters/tenant-mapping";
@@ -99,7 +99,7 @@ export const adminUsersRoutes: RouteDefinition[] = [
       const db = getDb(context);
       const url = new URL(context.request.url);
       const query = ListUsersQuerySchema.parse({
-        limit: url.searchParams.get("limit") ?? undefined,
+        limit: url.searchParams.has("limit") ? Math.min(Number(url.searchParams.get("limit")), 100) : undefined,
         offset: url.searchParams.get("offset") ?? undefined,
         search: url.searchParams.get("search") ?? undefined,
       });
@@ -147,7 +147,7 @@ export const adminUsersRoutes: RouteDefinition[] = [
       await requirePlatformAdmin(context);
 
       const db = getDb(context);
-      const userId = routeParam(context.params, "userId");
+      const userId = routeUuidParam(context.params, "userId");
       const body = await parseJson(context.request, UpdateUserBodySchema);
 
       // Verify user exists
@@ -195,7 +195,7 @@ export const adminUsersRoutes: RouteDefinition[] = [
       await requirePlatformAdmin(context);
 
       const db = getDb(context);
-      const userId = routeParam(context.params, "userId");
+      const userId = routeUuidParam(context.params, "userId");
       const body = await parseJson(context.request, BanUserBodySchema);
 
       // Verify user exists
@@ -257,7 +257,7 @@ export const adminUsersRoutes: RouteDefinition[] = [
       await requirePlatformAdmin(context);
 
       const db = getDb(context);
-      const userId = routeParam(context.params, "userId");
+      const userId = routeUuidParam(context.params, "userId");
 
       // Verify user exists
       const [existing] = await db
@@ -302,7 +302,7 @@ export const adminUsersRoutes: RouteDefinition[] = [
       await requirePlatformAdmin(context);
 
       const db = getDb(context);
-      const userId = routeParam(context.params, "userId");
+      const userId = routeUuidParam(context.params, "userId");
       const body = await parseJson(context.request, ApproveUserBodySchema);
 
       // Verify user exists and is not already approved
@@ -395,7 +395,7 @@ export const adminUsersRoutes: RouteDefinition[] = [
       await requirePlatformAdmin(context);
 
       const db = getDb(context);
-      const userId = routeParam(context.params, "userId");
+      const userId = routeUuidParam(context.params, "userId");
 
       const [existing] = await db
         .select({ id: baUser.id, email: baUser.email, approved: baUser.approved, platformAdmin: baUser.platformAdmin })
@@ -464,7 +464,7 @@ export const adminUsersRoutes: RouteDefinition[] = [
       await requirePlatformAdmin(context);
 
       const db = getDb(context);
-      const userId = routeParam(context.params, "userId");
+      const userId = routeUuidParam(context.params, "userId");
 
       // Verify user exists
       const [existing] = await db
