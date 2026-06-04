@@ -81,7 +81,7 @@ export const AgentToolInvocationResponseSchema = z.object({
   created_at: z.string()
 });
 
-export const StartAgentRunRequestSchema = z.object({
+export const StartAgentRunRequestSchema = z.strictObject({
   agent_id: FunctionalAgentIdSchema,
   agent_version: z.string().min(1),
   prompt_version: z.string().min(1),
@@ -91,7 +91,7 @@ export const StartAgentRunRequestSchema = z.object({
   input: z.record(z.string(), z.unknown()).default({})
 });
 
-export const CompleteAgentRunRequestSchema = z.object({
+export const CompleteAgentRunRequestSchema = z.strictObject({
   output: AgentOutputSchema,
   usage: z.object({
     model_provider: z.string().min(1).default("unknown"),
@@ -103,7 +103,7 @@ export const CompleteAgentRunRequestSchema = z.object({
   }).optional()
 });
 
-export const InvokeAgentToolRequestSchema = z.object({
+export const InvokeAgentToolRequestSchema = z.strictObject({
   tool_name: AgentToolNameSchema,
   input: z.record(z.string(), z.unknown()).default({})
 });

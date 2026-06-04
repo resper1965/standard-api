@@ -2,7 +2,7 @@ import { executeTransition, getAllowedNextStates, type ApprovalGate } from "@sta
 import { TransitionRequestSchema } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";
-import { json, parseJson, routeParam } from "../http";
+import { json, parseJson, routeParam, routeUuidParam } from "../http";
 import { lifecycleEventResponse } from "../presenters";
 
 const gateForState: Partial<Record<string, ApprovalGate>> = {
@@ -23,7 +23,7 @@ export const lifecycleRoutes: RouteDefinition[] = [
     handler: async ({ request, deps, params, organizationId, actorId, traceId }) => {
       const body = await parseJson(request, TransitionRequestSchema);
       const tenantAssessmentsDb = deps.assessments.withOrganization(organizationId!);
-      const assessment = await tenantAssessmentsDb.get(routeParam(params, "assessmentId"));
+      const assessment = await tenantAssessmentsDb.get(routeUuidParam(params, "assessmentId"));
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
 
       const gate = gateForState[body.next_state];
@@ -63,7 +63,7 @@ export const lifecycleRoutes: RouteDefinition[] = [
     permissions: ["assessment:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
       const tenantAssessmentsDb = deps.assessments.withOrganization(organizationId!);
-      const assessment = await tenantAssessmentsDb.get(routeParam(params, "assessmentId"));
+      const assessment = await tenantAssessmentsDb.get(routeUuidParam(params, "assessmentId"));
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
 
       return json({
@@ -82,7 +82,7 @@ export const lifecycleRoutes: RouteDefinition[] = [
     permissions: ["assessment:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
       const tenantLifecycleDb = deps.lifecycleEvents.withOrganization(organizationId!);
-      const events = await tenantLifecycleDb.listByAssessment(routeParam(params, "assessmentId"));
+      const events = await tenantLifecycleDb.listByAssessment(routeUuidParam(params, "assessmentId"));
       return json({ data: events.map(lifecycleEventResponse), trace_id: traceId });
     }
   }

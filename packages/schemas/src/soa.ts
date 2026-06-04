@@ -9,7 +9,7 @@ export const EvidenceCoverageStatusSchema = z.enum(["strong", "partial", "weak",
 export const SoaMappingStatusSchema = z.enum(["official_mapping", "no_official_mapping"]);
 export const ResponsibilityTypeSchema = z.enum(["internal", "customer", "third_party_provider", "shared"]);
 
-export const CreateScopeRequestSchema = z.object({
+export const CreateScopeRequestSchema = z.strictObject({
   title: z.string().min(1),
   description: z.string().min(1),
   business_units: z.array(z.string()).default([]),
@@ -39,7 +39,7 @@ export const ScopeResponseSchema = CreateScopeRequestSchema.extend({
   trace_id: TraceIdSchema
 });
 
-export const CreateSoaDraftRequestSchema = z.object({
+export const CreateSoaDraftRequestSchema = z.strictObject({
   framework_id: UuidSchema,
   scf_version_id: UuidSchema,
   source_scope_id: UuidSchema.optional()
@@ -94,7 +94,7 @@ export const SoaItemResponseSchema = z.object({
   updated_at: z.string()
 });
 
-export const UpdateSoaItemRequestSchema = z.object({
+export const UpdateSoaItemRequestSchema = z.strictObject({
   applicability_status: SoaItemApplicabilityStatusSchema.optional(),
   implementation_status: SoaItemImplementationStatusSchema.optional(),
   applicability_rationale: z.string().optional(),
@@ -108,19 +108,19 @@ export const UpdateSoaItemRequestSchema = z.object({
   responsibility_type: ResponsibilityTypeSchema.optional()
 });
 
-export const BulkUpdateSoaItemsRequestSchema = z.object({
+export const BulkUpdateSoaItemsRequestSchema = z.strictObject({
   items: z.array(z.object({ soa_item_id: UuidSchema, patch: UpdateSoaItemRequestSchema })).min(1)
 });
 
-export const SubmitSoaReviewRequestSchema = z.object({
+export const SubmitSoaReviewRequestSchema = z.strictObject({
   exception_rationale: z.string().optional()
 });
 
-export const ApproveSoaRequestSchema = z.object({
+export const ApproveSoaRequestSchema = z.strictObject({
   approval_event_id: UuidSchema
 });
 
-export const RefreshSoaEvidenceRequestSchema = z.object({
+export const RefreshSoaEvidenceRequestSchema = z.strictObject({
   top_k: z.number().int().min(1).max(10).default(3)
 });
 

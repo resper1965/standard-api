@@ -2,7 +2,7 @@ import { z } from "zod";
 import { CreateOrganizationRequestSchema } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";
-import { json, parseJson, routeParam } from "../http";
+import { json, parseJson, routeParam, routeUuidParam } from "../http";
 
 export const organizationsRoutes: RouteDefinition[] = [
   {
@@ -40,7 +40,7 @@ export const organizationsRoutes: RouteDefinition[] = [
     permissions: ["organization:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
       const tenantDb = deps.organizations.withOrganization(organizationId!);
-      const organization = await tenantDb.get(routeParam(params, "organizationId"));
+      const organization = await tenantDb.get(routeUuidParam(params, "organizationId"));
       if (!organization) throw new ApiError("NOT_FOUND", "Organization not found.", 404);
       return json({ ...organization, trace_id: traceId });
     }

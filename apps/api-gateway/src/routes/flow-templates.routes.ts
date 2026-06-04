@@ -13,7 +13,7 @@
  * - vendor_review template (new)
  */
 import type { RouteDefinition } from "../http";
-import { json, routeParam } from "../http";
+import { json, routeParam, routeUuidParam } from "../http";
 import { flattenI18n } from "../utils/i18n";
 import { ApiError } from "../errors/api-error";
 
@@ -236,7 +236,7 @@ export const flowTemplateRoutes: RouteDefinition[] = [
     authRequired: true, tenantRequired: false,
     handler: async ({ request, params, traceId }) => {
       const locale = (new URL(request.url).searchParams.get("locale") || "pt") as any;
-      const template = FLOW_TEMPLATES.find(t => t.id === routeParam(params, "templateId"));
+      const template = FLOW_TEMPLATES.find(t => t.id === routeUuidParam(params, "templateId"));
       if (!template) {
         return json({ error: "Template not found", trace_id: traceId }, { status: 404 });
       }

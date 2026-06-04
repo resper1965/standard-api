@@ -96,7 +96,7 @@ export const MembershipSchema = z.object({
 
 export type Membership = z.infer<typeof MembershipSchema>;
 
-export const InviteMemberRequestSchema = z.object({
+export const InviteMemberRequestSchema = z.strictObject({
   email: z.string().email(),
   role: z.string(),
   display_name: z.string().optional(),
@@ -104,7 +104,7 @@ export const InviteMemberRequestSchema = z.object({
 
 export type InviteMemberRequest = z.infer<typeof InviteMemberRequestSchema>;
 
-export const UpdateMemberRoleRequestSchema = z.object({
+export const UpdateMemberRoleRequestSchema = z.strictObject({
   role: z.string(),
 });
 

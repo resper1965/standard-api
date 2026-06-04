@@ -11,7 +11,7 @@ import { eq } from "drizzle-orm";
 import { baMember, baUser } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";
-import { json, parseJson, routeParam } from "../http";
+import { json, parseJson, routeParam, routeUuidParam } from "../http";
 import type { DbClient } from "../adapters/db";
 
 export const memberRoutes: RouteDefinition[] = [
@@ -24,7 +24,7 @@ export const memberRoutes: RouteDefinition[] = [
     permissions: ["membership:manage"],
     handler: async (context) => {
       const { request, deps, params, organizationId, actorId, traceId } = context;
-      const orgId = routeParam(params, "organizationId");
+      const orgId = routeUuidParam(params, "organizationId");
       const org = await deps.organizations.get(orgId);
       if (!org) throw new ApiError("NOT_FOUND", "Organization not found.", 404);
 
@@ -98,7 +98,7 @@ export const memberRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["organization:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
-      const orgId = routeParam(params, "organizationId");
+      const orgId = routeUuidParam(params, "organizationId");
       const org = await deps.organizations.get(orgId);
       if (!org) throw new ApiError("NOT_FOUND", "Organization not found.", 404);
       const members = await deps.members.listByOrganization(orgId);
@@ -114,7 +114,7 @@ export const memberRoutes: RouteDefinition[] = [
     requireActor: true,
     permissions: ["membership:manage"],
     handler: async ({ request, deps, params, organizationId, traceId }) => {
-      const memberId = routeParam(params, "memberId");
+      const memberId = routeUuidParam(params, "memberId");
       const member = await deps.members.getById(memberId, organizationId!);
       if (!member) throw new ApiError("NOT_FOUND", "Membership not found.", 404);
 
@@ -140,7 +140,7 @@ export const memberRoutes: RouteDefinition[] = [
     requireActor: true,
     permissions: ["membership:manage"],
     handler: async ({ deps, params, organizationId, traceId }) => {
-      const memberId = routeParam(params, "memberId");
+      const memberId = routeUuidParam(params, "memberId");
       const member = await deps.members.getById(memberId, organizationId!);
       if (!member) throw new ApiError("NOT_FOUND", "Membership not found.", 404);
 
@@ -163,7 +163,7 @@ export const memberRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["organization:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
-      const memberId = routeParam(params, "memberId");
+      const memberId = routeUuidParam(params, "memberId");
       const member = await deps.members.getById(memberId, organizationId!);
       if (!member) throw new ApiError("NOT_FOUND", "Membership not found.", 404);
       return json(member, { headers: { "x-trace-id": traceId } });

@@ -3,7 +3,7 @@ import { AuditEventService, MetricsService } from "@standard/observability";
 import { AnalyzeRawTextRequestSchema } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { AppDependencies, AssessmentRecord, RouteDefinition } from "../http";
-import { json, parseJson, routeParam } from "../http";
+import { json, parseJson, routeParam, routeUuidParam } from "../http";
 
 const requireAssessment = async (deps: AppDependencies, assessmentId: string, organizationId: string): Promise<AssessmentRecord> => {
   const assessment = await deps.assessments.withOrganization(organizationId).get(assessmentId);
@@ -19,7 +19,7 @@ export const integrationRoutes: RouteDefinition[] = [
     permissions: ["organization:create"],
     requireActor: true,
     handler: async ({ request, deps, params, organizationId, actorId, traceId }) => {
-      const assessment = await requireAssessment(deps, routeParam(params, "assessmentId"), organizationId!);
+      const assessment = await requireAssessment(deps, routeUuidParam(params, "assessmentId"), organizationId!);
       const body = await parseJson(request, AnalyzeRawTextRequestSchema);
 
       try {

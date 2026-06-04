@@ -2,7 +2,7 @@ import { z } from "zod";
 import { InviteMemberRequestSchema } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";
-import { json, parseJson, routeParam } from "../http";
+import { json, parseJson, routeParam, routeUuidParam } from "../http";
 import { assertRbac } from "../middleware/rbac.middleware";
 
 
@@ -26,7 +26,7 @@ export const organizationsMgmtRoutes: RouteDefinition[] = [
     requireActor: true,
     bodySchema: updateOrgInput,
     handler: async (context) => {
-      const organizationId = routeParam(context.params, "organizationId");
+      const organizationId = routeUuidParam(context.params, "organizationId");
       const body = context.validatedBody as z.infer<typeof updateOrgInput>;
 
       // Only owners/admins (organization:update) can change org settings.
@@ -66,7 +66,7 @@ export const organizationsMgmtRoutes: RouteDefinition[] = [
     requireActor: true,
     bodySchema: updateBillingInput,
     handler: async (context) => {
-      const organizationId = routeParam(context.params, "organizationId");
+      const organizationId = routeUuidParam(context.params, "organizationId");
       const body = context.validatedBody as z.infer<typeof updateBillingInput>;
 
       // Only owners/admins (organization:update) can change billing.
@@ -97,7 +97,7 @@ export const organizationsMgmtRoutes: RouteDefinition[] = [
     permissions: ["membership:manage"],
     bodySchema: InviteMemberRequestSchema,
     handler: async (context) => {
-      const orgId = routeParam(context.params, "organizationId");
+      const orgId = routeUuidParam(context.params, "organizationId");
       const org = await context.deps.organizations.get(orgId);
       if (!org) throw new ApiError("NOT_FOUND", "Organization not found.", 404);
 

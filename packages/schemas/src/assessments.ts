@@ -2,7 +2,7 @@ import { z } from "zod";
 import { AssessmentLifecycleStateSchema } from "./domain";
 import { UuidSchema } from "./common";
 
-export const CreateAssessmentRequestSchema = z.object({
+export const CreateAssessmentRequestSchema = z.strictObject({
   organization_id: z.string().min(1),
   name: z.string().min(1),
   scf_version_id: UuidSchema,
@@ -11,7 +11,7 @@ export const CreateAssessmentRequestSchema = z.object({
   observation_end_date: z.string().date().optional()
 });
 
-export const UpdateAssessmentRequestSchema = z.object({
+export const UpdateAssessmentRequestSchema = z.strictObject({
   name: z.string().min(1).optional(),
   observation_start_date: z.string().date().optional(),
   observation_end_date: z.string().date().optional()

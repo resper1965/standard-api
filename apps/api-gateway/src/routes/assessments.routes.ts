@@ -1,7 +1,7 @@
 import { CreateAssessmentRequestSchema, UpdateAssessmentRequestSchema, type ComplianceGateResponse, type ComplianceGateStatus } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";
-import { json, newId, parseJson, routeParam } from "../http";
+import { json, newId, parseJson, routeParam, routeUuidParam } from "../http";
 import { assessmentResponse, lifecycleEventResponse } from "../presenters";
 import { z } from "zod";
 
@@ -42,6 +42,7 @@ const AssessmentAutomationConfigSchema = z.object({
 export const assessmentsRoutes: RouteDefinition[] = [
   {
     method: "POST",
+    idempotencyRequired: true,
     path: "/api/v1/assessments",
     protected: true,
     requireActor: true,
@@ -89,7 +90,7 @@ export const assessmentsRoutes: RouteDefinition[] = [
       const resolvedTenantId = organizationId!;
 
       const tenantDb = deps.assessments.withOrganization(resolvedTenantId);
-      const assessment = await tenantDb.get(routeParam(params, "assessmentId"));
+      const assessment = await tenantDb.get(routeUuidParam(params, "assessmentId"));
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
       assertTenantOwnership(assessment.organization_id, resolvedTenantId);
 
@@ -130,7 +131,7 @@ export const assessmentsRoutes: RouteDefinition[] = [
       const resolvedTenantId = organizationId!;
 
       const tenantDb = deps.assessments.withOrganization(resolvedTenantId);
-      const assessments = await tenantDb.listByOrganization(routeParam(params, "organizationId"));
+      const assessments = await tenantDb.listByOrganization(routeUuidParam(params, "organizationId"));
       const versions = await deps.scf.versions.listVersions();
       const versionMap = new Map(versions.map(v => [v.id, v.version_label]));
       const enriched = assessments.map(a => {
@@ -153,7 +154,7 @@ export const assessmentsRoutes: RouteDefinition[] = [
       const body = validatedBody as import("@standard/schemas").UpdateAssessmentRequest;
       const resolvedTenantId = organizationId!;
       const tenantDb = deps.assessments.withOrganization(resolvedTenantId);
-      const assessment = await tenantDb.get(routeParam(params, "assessmentId"));
+      const assessment = await tenantDb.get(routeUuidParam(params, "assessmentId"));
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
       assertTenantOwnership(assessment.organization_id, resolvedTenantId);
 
@@ -175,7 +176,7 @@ export const assessmentsRoutes: RouteDefinition[] = [
     handler: async ({ deps, params, organizationId, traceId }) => {
       const resolvedTenantId = organizationId!;
       const tenantDb = deps.assessments.withOrganization(resolvedTenantId);
-      const assessment = await tenantDb.get(routeParam(params, "assessmentId"));
+      const assessment = await tenantDb.get(routeUuidParam(params, "assessmentId"));
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
       assertTenantOwnership(assessment.organization_id, resolvedTenantId);
       return json({
@@ -193,7 +194,7 @@ export const assessmentsRoutes: RouteDefinition[] = [
     permissions: ["assessment:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
       const resolvedTenantId = organizationId!;
-      const assessmentId = routeParam(params, "assessmentId");
+      const assessmentId = routeUuidParam(params, "assessmentId");
       const tenantDb = deps.assessments.withOrganization(resolvedTenantId);
       const assessment = await tenantDb.get(assessmentId);
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
@@ -214,7 +215,7 @@ export const assessmentsRoutes: RouteDefinition[] = [
     permissions: ["assessment:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
       const resolvedTenantId = organizationId!;
-      const assessmentId = routeParam(params, "assessmentId");
+      const assessmentId = routeUuidParam(params, "assessmentId");
       const tenantDb = deps.assessments.withOrganization(resolvedTenantId);
       const assessment = await tenantDb.get(assessmentId);
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
@@ -306,7 +307,7 @@ export const assessmentsRoutes: RouteDefinition[] = [
     handler: async ({ validatedBody, deps, params, organizationId, traceId }) => {
       const resolvedTenantId = organizationId!;
 
-      const assessmentId = routeParam(params, "assessmentId");
+      const assessmentId = routeUuidParam(params, "assessmentId");
       const assessment = await deps.assessments.withOrganization(resolvedTenantId).get(assessmentId);
       
       if (!assessment) {

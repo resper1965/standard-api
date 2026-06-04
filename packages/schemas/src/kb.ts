@@ -65,7 +65,7 @@ export const KbEmbeddingJobResponseSchema = z.object({
   metadata: z.record(z.string(), z.unknown()).default({})
 });
 
-export const KbIndexRequestSchema = z.object({
+export const KbIndexRequestSchema = z.strictObject({
   document_id: UuidSchema.optional(),
   force_reindex: z.boolean().default(false)
 });
@@ -78,7 +78,7 @@ export const KbIndexResponseSchema = z.object({
   trace_id: TraceIdSchema
 });
 
-export const KbReindexDocumentRequestSchema = z.object({
+export const KbReindexDocumentRequestSchema = z.strictObject({
   reason: z.string().min(1),
   force_reindex: z.boolean().default(true)
 });
@@ -92,7 +92,7 @@ export const KbSearchFiltersSchema = z.object({
   to_date: z.string().optional()
 });
 
-export const KbSearchRequestSchema = z.object({
+export const KbSearchRequestSchema = z.strictObject({
   query: z.string().min(1).max(2000),
   search_type: KbSearchTypeSchema.default("semantic"),
   filters: KbSearchFiltersSchema.default({}),

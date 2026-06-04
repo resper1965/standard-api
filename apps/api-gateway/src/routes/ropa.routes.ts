@@ -6,7 +6,7 @@
  * Todos linkam ao SCF via scf_controls[].
  */
 import type { RouteDefinition } from "../http";
-import { json, routeParam } from "../http";
+import { json, routeParam, routeUuidParam } from "../http";
 import { ApiError } from "../errors/api-error";
 import { flattenI18n } from "../utils/i18n";
 

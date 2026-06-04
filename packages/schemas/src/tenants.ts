@@ -1,12 +1,12 @@
 import { z } from "zod";
 import { UuidSchema } from "./common";
 
-export const CreateTenantRequestSchema = z.object({
+export const CreateTenantRequestSchema = z.strictObject({
   slug: z.string().min(2),
   name: z.string().min(1)
 });
 
-export const UpdateTenantRequestSchema = z.object({
+export const UpdateTenantRequestSchema = z.strictObject({
   name: z.string().min(1).optional(),
   status: z.string().min(1).optional()
 });

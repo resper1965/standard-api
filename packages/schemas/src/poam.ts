@@ -22,13 +22,13 @@ export const PoamEffortEstimateSchema = z.enum(["small", "medium", "large", "ext
 export const PoamDependencyTypeSchema = z.enum(["blocks", "related_to", "prerequisite", "duplicates", "depends_on_external_party"]);
 export const PoamMilestoneStatusSchema = z.enum(["draft", "approved", "in_progress", "blocked", "completed", "cancelled", "deferred"]);
 
-export const CreatePoamDraftRequestSchema = z.object({
+export const CreatePoamDraftRequestSchema = z.strictObject({
   gap_analysis_version_id: UuidSchema,
   maturity_assessment_version_id: UuidSchema.optional(),
   include_optional_improvements: z.boolean().default(false)
 });
 
-export const RegeneratePoamRequestSchema = z.object({
+export const RegeneratePoamRequestSchema = z.strictObject({
   reason: z.string().min(1).optional(),
   include_optional_improvements: z.boolean().default(false)
 });
@@ -95,7 +95,7 @@ export const PoamItemResponseSchema = z.object({
   updated_at: z.string()
 });
 
-export const UpdatePoamItemRequestSchema = z.object({
+export const UpdatePoamItemRequestSchema = z.strictObject({
   corrective_action: z.string().optional(),
   action_type: PoamActionTypeSchema.optional(),
   priority: PoamPrioritySchema.optional(),
@@ -132,7 +132,7 @@ export const PoamMilestoneResponseSchema = z.object({
   updated_at: z.string()
 });
 
-export const CreatePoamMilestoneRequestSchema = z.object({
+export const CreatePoamMilestoneRequestSchema = z.strictObject({
   title: z.string().min(1),
   description: z.string().min(1),
   due_date: z.string().optional(),
@@ -140,7 +140,7 @@ export const CreatePoamMilestoneRequestSchema = z.object({
   expected_evidence: z.array(z.string()).default([])
 });
 
-export const UpdatePoamMilestoneRequestSchema = z.object({
+export const UpdatePoamMilestoneRequestSchema = z.strictObject({
   title: z.string().optional(),
   description: z.string().optional(),
   due_date: z.string().optional(),
@@ -178,11 +178,11 @@ export const PoamSummaryResponseSchema = z.object({
   trace_id: TraceIdSchema
 });
 
-export const SubmitPoamReviewRequestSchema = z.object({
+export const SubmitPoamReviewRequestSchema = z.strictObject({
   exception_rationale: z.string().optional()
 });
 
-export const ApprovePoamRequestSchema = z.object({
+export const ApprovePoamRequestSchema = z.strictObject({
   approval_event_id: UuidSchema
 });
 

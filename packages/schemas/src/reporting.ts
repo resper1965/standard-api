@@ -16,7 +16,7 @@ export const ReportArtifactTypeSchema = z.enum(["report", "export", "evidence_in
 export const ReportFormatSchema = z.enum(["json", "markdown", "html", "docx", "pdf", "csv", "xlsx", "zip"]);
 export const ExportJobStatusSchema = z.enum(["queued", "running", "succeeded", "failed", "skipped", "cancelled", "retrying"]);
 
-export const CreateReportDraftRequestSchema = z.object({
+export const CreateReportDraftRequestSchema = z.strictObject({
   report_type: ReportTypeSchema,
   title: z.string().optional(),
   source_soa_version_id: UuidSchema.optional(),
@@ -27,7 +27,7 @@ export const CreateReportDraftRequestSchema = z.object({
   exception_rationale: z.string().optional()
 });
 
-export const RegenerateReportRequestSchema = z.object({
+export const RegenerateReportRequestSchema = z.strictObject({
   reason: z.string().optional()
 });
 
@@ -84,7 +84,7 @@ export const ReportValidationResponseSchema = z.object({
   trace_id: TraceIdSchema
 });
 
-export const RenderReportRequestSchema = z.object({
+export const RenderReportRequestSchema = z.strictObject({
   format: ReportFormatSchema,
   store_artifact: z.boolean().default(true)
 });
@@ -116,7 +116,7 @@ export const ReportArtifactResponseSchema = z.object({
   metadata: z.record(z.string(), z.unknown()).default({})
 });
 
-export const ExportRequestSchema = z.object({
+export const ExportRequestSchema = z.strictObject({
   report_version_id: UuidSchema.optional(),
   report_type: ReportTypeSchema.default("machine_readable_export"),
   format: ReportFormatSchema.default("json")
@@ -140,11 +140,11 @@ export const ExportJobResponseSchema = z.object({
   metadata: z.record(z.string(), z.unknown()).default({})
 });
 
-export const SubmitReportReviewRequestSchema = z.object({
+export const SubmitReportReviewRequestSchema = z.strictObject({
   exception_rationale: z.string().optional()
 });
 
-export const ApproveReportRequestSchema = z.object({
+export const ApproveReportRequestSchema = z.strictObject({
   approval_event_id: UuidSchema
 });
 

@@ -48,22 +48,22 @@ export const MaturityScoreResponseSchema = z.object({
 
 // ─── Request Schemas ────────────────────────────────────────────────
 
-export const CreateMaturityDraftRequestSchema = z.object({
+export const CreateMaturityDraftRequestSchema = z.strictObject({
   gap_analysis_version_id: UuidSchema
 });
 
-export const UpdateMaturityScoreRequestSchema = z.object({
+export const UpdateMaturityScoreRequestSchema = z.strictObject({
   score: MaturityScoreLevelSchema.optional(),
   rationale: z.string().min(1).optional(),
   evidence_coverage: z.number().min(0).max(1).optional(),
   confidence_score: z.number().min(0).max(1).optional()
 });
 
-export const SubmitMaturityReviewRequestSchema = z.object({
+export const SubmitMaturityReviewRequestSchema = z.strictObject({
   exception_rationale: z.string().optional()
 });
 
-export const ApproveMaturityRequestSchema = z.object({
+export const ApproveMaturityRequestSchema = z.strictObject({
   approval_event_id: UuidSchema
 });
 
