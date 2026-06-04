@@ -5,7 +5,7 @@ import { expect, test } from "./test-kit";
 
 test("rate limit: normal traffic under limit succeeds", async () => {
   const client = createTestClient();
-  const { organizationId, organizationId } = await client.createTenantOrg();
+  const { organizationId } = await client.createTenantOrg();
 
   // Send a few requests — should all succeed (default limit is 120/min)
   for (let i = 0; i < 3; i++) {

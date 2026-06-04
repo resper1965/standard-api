@@ -6,10 +6,19 @@ import { REGULATIONS } from "./regulations.routes";
 import { RISK_TAXONOMY } from "./risk.routes";
 import { DATA_CATEGORIES, RETENTION_RULES } from "./reference-data.routes";
 
-const requireVersionQuery = (request: Request, name = "scf_version"): string => {
+const resolveVersionId = async (deps: AppDependencies, versionParam: string): Promise<string> => {
+  if (versionParam === "latest") {
+    const latest = await deps.scf.versions.getLatestVersion();
+    if (!latest) throw new ApiError("NOT_FOUND", "No published SCF versions found.", 404);
+    return latest.id;
+  }
+  return versionParam;
+};
+
+const requireVersionQuery = async (request: Request, deps: AppDependencies, name = "scf_version"): Promise<string> => {
   const value = new URL(request.url).searchParams.get(name);
   if (!value) throw new ApiError("VALIDATION_ERROR", `Missing query parameter: ${name}.`, 400);
-  return value;
+  return resolveVersionId(deps, value);
 };
 
 const versionResponse = (version: ScfVersion) => ({
@@ -145,7 +154,8 @@ export const scfRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["scf:read"],
     handler: async ({ deps, params, traceId }) => {
-      const version = await deps.scf.versions.getVersion(routeParam(params, "scfVersionId"));
+      const resolvedId = await resolveVersionId(deps, routeParam(params, "scfVersionId"));
+      const version = await deps.scf.versions.getVersion(resolvedId);
       if (!version) throw new ApiError("NOT_FOUND", "SCF version not found.", 404);
       return json({ ...versionResponse(version), trace_id: traceId });
     }
@@ -156,7 +166,7 @@ export const scfRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["scf:read"],
     handler: async ({ deps, params, traceId }) => {
-      const scfVersionId = routeParam(params, "scfVersionId");
+      const scfVersionId = await resolveVersionId(deps, routeParam(params, "scfVersionId"));
       try {
         const domains = await deps.scf.domains.listDomains(scfVersionId);
         return json({ data: domains, scf_version_id: scfVersionId, trace_id: traceId });
@@ -172,7 +182,7 @@ export const scfRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["scf:read"],
     handler: async ({ deps, params, request, traceId }) => {
-      const scfVersionId = routeParam(params, "scfVersionId");
+      const scfVersionId = await resolveVersionId(deps, routeParam(params, "scfVersionId"));
       const url = new URL(request.url);
       
       const limitStr = url.searchParams.get("limit") || url.searchParams.get("per_page");
@@ -206,7 +216,7 @@ export const scfRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["scf:read"],
     handler: async ({ deps, params, request, traceId }) => {
-      const versionId = requireVersionQuery(request, "version");
+      const versionId = await requireVersionQuery(request, deps, "version");
       const control = await deps.scf.controls.getControlByCode(versionId, routeParam(params, "controlCode"));
       if (!control) throw new ApiError("NOT_FOUND", "SCF control not found.", 404);
       return json({ ...controlResponse(control), trace_id: traceId });
@@ -261,7 +271,7 @@ export const scfRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["scf:read"],
     handler: async ({ deps, params, request, traceId }) => {
-      const scfVersionId = requireVersionQuery(request);
+      const scfVersionId = await requireVersionQuery(request, deps);
       const mappings = await deps.scf.mappings.getMappingsForRequirement(routeParam(params, "requirementId"), scfVersionId);
       return json({ data: await deps.scf.mappings.enrichMappings(mappings), scf_version_id: scfVersionId, trace_id: traceId });
     }
@@ -324,7 +334,7 @@ export const scfRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["scf:read"],
     handler: async ({ deps, params, request, traceId }) => {
-      const scfVersionId = requireVersionQuery(request);
+      const scfVersionId = await requireVersionQuery(request, deps);
       const coverage = await deps.scf.mappings.getCoverageSummary(routeParam(params, "frameworkId"), scfVersionId);
       return json({ ...coverage, trace_id: traceId });
     }
@@ -335,7 +345,7 @@ export const scfRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["scf:read"],
     handler: async ({ deps, params, request, traceId }) => {
-      const scfVersionId = requireVersionQuery(request);
+      const scfVersionId = await requireVersionQuery(request, deps);
       const fwAId = routeParam(params, "frameworkA");
       const fwBId = routeParam(params, "frameworkB");
 
