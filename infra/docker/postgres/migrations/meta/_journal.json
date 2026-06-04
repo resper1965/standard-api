@@ -183,6 +183,13 @@
       "when": 1780423249426,
       "tag": "0025_blue_lord_hawal",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1780597170679,
+      "tag": "0026_purple_husk",
+      "breakpoints": true
     }
   ]
 }

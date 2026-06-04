@@ -140,6 +140,12 @@ export const poamActionTypeEnum = pgEnum("poam_action_type", [
 ]);
 export const poamEffortEstimateEnum = pgEnum("poam_effort_estimate", ["small", "medium", "large", "extra_large", "unknown"]);
 export const poamDependencyTypeEnum = pgEnum("poam_dependency_type", ["blocks", "related_to", "prerequisite", "duplicates", "depends_on_external_party"]);
+export const responsibilityTypeEnum = pgEnum("responsibility_type", [
+  "internal",
+  "customer",
+  "third_party_provider",
+  "shared"
+]);
 export const agentRunStatusEnum = pgEnum("agent_run_status", ["queued", "running", "completed", "failed", "cancelled", "poisoned_dlq"]);
 export const mappingSourceEnum = pgEnum("mapping_source", ["official_scf", "derived", "consultative"]);
 export const reportTypeEnum = pgEnum("report_type", ["full_assessment_report", "executive_summary", "soa_export", "gap_analysis_report", "maturity_report", "poam_report", "audit_package", "machine_readable_export"]);
@@ -423,6 +429,8 @@ export const assessments = pgTable("assessments", {
   state: assessmentStateEnum("state").default("draft").notNull(),
   scfVersionId: uuid("scf_version_id").notNull().references(() => scfVersions.id),
   createdBy: uuid("created_by").references(() => users.id),
+  observationStartDate: date("observation_start_date"),
+  observationEndDate: date("observation_end_date"),
   traceId: text("trace_id").notNull(),
   ...timestamps()
 }, (table) => [
@@ -706,6 +714,7 @@ export const soaItems = pgTable("soa_items", {
   mappingStatus: text("mapping_status").default("official_mapping").notNull(),
   relationshipType: text("relationship_type"),
   relationshipStrength: text("relationship_strength"),
+  responsibilityType: responsibilityTypeEnum("responsibility_type").default("internal"),
   ...timestamps()
 }, (table) => [
   index("soa_items_version_idx").on(table.soaVersionId),
@@ -866,6 +875,7 @@ export const gapFindings = pgTable("gap_findings", {
   recommendationSummary: text("recommendation_summary"),
   confidenceScore: numeric("confidence_score", { precision: 5, scale: 4 }),
   requiresUserValidation: boolean("requires_user_validation").default(true).notNull(),
+  responsibilityType: responsibilityTypeEnum("responsibility_type").default("internal"),
   ...timestamps()
 }, (table) => [
   index("gap_findings_assessment_idx").on(table.organizationId, table.assessmentId),
@@ -962,6 +972,7 @@ export const poamItems = pgTable("poam_items", {
   rationale: text("rationale").notNull(),
   confidenceScore: numeric("confidence_score", { precision: 5, scale: 4 }).notNull(),
   requiresUserValidation: boolean("requires_user_validation").default(false).notNull(),
+  riskAcceptanceExpiresAt: date("risk_acceptance_expires_at"),
   ...timestamps()
 }, (table) => [
   index("poam_items_version_idx").on(table.poamVersionId),

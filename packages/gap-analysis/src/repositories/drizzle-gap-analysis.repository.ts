@@ -280,6 +280,7 @@ const mapGapFindingRow = (row: any): GapFindingResponse => ({
   gap_summary: row.gapSummary,
   ...(row.gapRationale ? { gap_rationale: row.gapRationale } : {}),
   ...(row.recommendationSummary ? { recommendation_summary: row.recommendationSummary } : {}),
+  responsibility_type: row.responsibilityType ?? "internal",
   confidence_score: row.confidenceScore ? Number(row.confidenceScore) : 0,
   requires_user_validation: row.requiresUserValidation,
   created_at: row.createdAt?.toISOString?.() ?? row.createdAt,
@@ -311,6 +312,7 @@ export const createDrizzleGapFindingRepository = (db: AnyDrizzleClient): GapFind
         gapSummary: finding.gap_summary,
         gapRationale: finding.gap_rationale ?? null,
         recommendationSummary: finding.recommendation_summary ?? null,
+        responsibilityType: finding.responsibility_type,
         confidenceScore: finding.confidence_score?.toString(),
         requiresUserValidation: finding.requires_user_validation
       }))
@@ -327,6 +329,7 @@ export const createDrizzleGapFindingRepository = (db: AnyDrizzleClient): GapFind
       gapSummary: finding.gap_summary,
       gapRationale: finding.gap_rationale ?? null,
       recommendationSummary: finding.recommendation_summary ?? null,
+      responsibilityType: finding.responsibility_type,
       confidenceScore: finding.confidence_score?.toString(),
       requiresUserValidation: finding.requires_user_validation
     }).where(

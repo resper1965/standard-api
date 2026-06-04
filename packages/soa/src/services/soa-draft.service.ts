@@ -117,6 +117,7 @@ export class SoaDraftService {
       mapping_status: mapping.mappingStatus,
       ...(mapping.relationshipType ? { relationship_type: mapping.relationshipType } : {}),
       ...(mapping.relationshipStrength ? { relationship_strength: mapping.relationshipStrength } : {}),
+      responsibility_type: "internal",
       created_at: now,
       updated_at: now
     };

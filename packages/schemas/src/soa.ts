@@ -7,6 +7,7 @@ export const SoaItemApplicabilityStatusSchema = z.enum(["applicable", "partially
 export const SoaItemImplementationStatusSchema = z.enum(["implemented", "partially_implemented", "not_implemented", "not_evidenced", "not_assessed", "not_applicable"]);
 export const EvidenceCoverageStatusSchema = z.enum(["strong", "partial", "weak", "absent", "conflicting", "not_checked"]);
 export const SoaMappingStatusSchema = z.enum(["official_mapping", "no_official_mapping"]);
+export const ResponsibilityTypeSchema = z.enum(["internal", "customer", "third_party_provider", "shared"]);
 
 export const CreateScopeRequestSchema = z.object({
   title: z.string().min(1),
@@ -88,6 +89,7 @@ export const SoaItemResponseSchema = z.object({
   mapping_status: SoaMappingStatusSchema,
   relationship_type: z.string().optional(),
   relationship_strength: z.string().optional(),
+  responsibility_type: ResponsibilityTypeSchema,
   created_at: z.string(),
   updated_at: z.string()
 });
@@ -102,7 +104,8 @@ export const UpdateSoaItemRequestSchema = z.object({
   evidence_coverage: EvidenceCoverageStatusSchema.optional(),
   confidence_score: z.number().min(0).max(1).optional(),
   requires_user_validation: z.boolean().optional(),
-  validation_notes: z.string().optional()
+  validation_notes: z.string().optional(),
+  responsibility_type: ResponsibilityTypeSchema.optional()
 });
 
 export const BulkUpdateSoaItemsRequestSchema = z.object({
@@ -136,12 +139,14 @@ export const SoaValidationResponseSchema = z.object({
   trace_id: TraceIdSchema
 });
 
+
 export type ScopeStatus = z.infer<typeof ScopeStatusSchema>;
 export type SoaVersionStatus = z.infer<typeof SoaVersionStatusSchema>;
 export type SoaItemApplicabilityStatus = z.infer<typeof SoaItemApplicabilityStatusSchema>;
 export type SoaItemImplementationStatus = z.infer<typeof SoaItemImplementationStatusSchema>;
 export type EvidenceCoverageStatus = z.infer<typeof EvidenceCoverageStatusSchema>;
 export type SoaMappingStatus = z.infer<typeof SoaMappingStatusSchema>;
+export type ResponsibilityType = z.infer<typeof ResponsibilityTypeSchema>;
 export type CreateScopeRequest = z.input<typeof CreateScopeRequestSchema>;
 export type UpdateScopeRequest = z.input<typeof UpdateScopeRequestSchema>;
 export type ScopeResponse = z.infer<typeof ScopeResponseSchema>;
