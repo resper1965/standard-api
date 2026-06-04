@@ -260,6 +260,7 @@ export class GapAnalysisExecutionService {
       gap_summary: gap.gap_summary,
       gap_rationale: gap.gap_rationale,
       recommendation_summary: gap.recommendation_summary,
+      responsibility_type: "internal",
       confidence_score: gap.confidence_score,
       requires_user_validation: gap.requires_user_validation,
       created_at: now,

@@ -175,6 +175,7 @@ export const createDrizzleGapFindingRepository = (db: DbClient): GapFindingRepos
       gapSummary: f.gap_summary,
       gapRationale: f.gap_rationale,
       recommendationSummary: f.recommendation_summary,
+      responsibilityType: f.responsibility_type,
       confidenceScore: String(f.confidence_score),
       requiresUserValidation: f.requires_user_validation,
     }))).onConflictDoNothing();
@@ -189,6 +190,7 @@ export const createDrizzleGapFindingRepository = (db: DbClient): GapFindingRepos
       gapSummary: finding.gap_summary,
       gapRationale: finding.gap_rationale,
       recommendationSummary: finding.recommendation_summary,
+      responsibilityType: finding.responsibility_type,
       confidenceScore: String(finding.confidence_score),
       requiresUserValidation: finding.requires_user_validation,
       updatedAt: new Date(),
@@ -310,6 +312,7 @@ const mapGapFindingRow = (row: GapFindingRow): GapFindingResponse => ({
   gap_summary: row.gapSummary,
   gap_rationale: row.gapRationale ?? undefined,
   recommendation_summary: row.recommendationSummary ?? undefined,
+  responsibility_type: row.responsibilityType ?? "internal",
   confidence_score: Number(row.confidenceScore ?? 0),
   requires_user_validation: row.requiresUserValidation,
   created_at: row.createdAt.toISOString(),

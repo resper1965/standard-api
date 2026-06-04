@@ -90,6 +90,7 @@ export const PoamItemResponseSchema = z.object({
   rationale: z.string(),
   confidence_score: z.number().min(0).max(1),
   requires_user_validation: z.boolean(),
+  risk_acceptance_expires_at: z.string().date().optional(),
   created_at: z.string(),
   updated_at: z.string()
 });
@@ -111,7 +112,8 @@ export const UpdatePoamItemRequestSchema = z.object({
   status: PoamItemStatusSchema.optional(),
   rationale: z.string().optional(),
   confidence_score: z.number().min(0).max(1).optional(),
-  requires_user_validation: z.boolean().optional()
+  requires_user_validation: z.boolean().optional(),
+  risk_acceptance_expires_at: z.string().date().optional()
 });
 
 export const PoamMilestoneResponseSchema = z.object({

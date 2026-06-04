@@ -6,11 +6,15 @@ export const CreateAssessmentRequestSchema = z.object({
   organization_id: z.string().min(1),
   name: z.string().min(1),
   scf_version_id: UuidSchema,
-  document_count: z.number().int().nonnegative().default(0)
+  document_count: z.number().int().nonnegative().default(0),
+  observation_start_date: z.string().date().optional(),
+  observation_end_date: z.string().date().optional()
 });
 
 export const UpdateAssessmentRequestSchema = z.object({
-  name: z.string().min(1).optional()
+  name: z.string().min(1).optional(),
+  observation_start_date: z.string().date().optional(),
+  observation_end_date: z.string().date().optional()
 });
 
 export const AssessmentResponseSchema = z.object({
@@ -19,6 +23,8 @@ export const AssessmentResponseSchema = z.object({
   name: z.string(),
   state: AssessmentLifecycleStateSchema,
   scf_version_id: UuidSchema,
+  observation_start_date: z.string().nullable().optional(),
+  observation_end_date: z.string().nullable().optional(),
   trace_id: z.string()
 });
 

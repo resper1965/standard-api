@@ -135,6 +135,7 @@ export const createDrizzleSoaItemRepository = (db: DbClient): SoaItemRepository 
       validationNotes: item.validation_notes,
       sourceMappingId: item.source_mapping_id,
       mappingStatus: item.mapping_status,
+      responsibilityType: item.responsibility_type,
       relationshipType: item.relationship_type,
       relationshipStrength: item.relationship_strength,
     }))).onConflictDoNothing();
@@ -151,6 +152,7 @@ export const createDrizzleSoaItemRepository = (db: DbClient): SoaItemRepository 
       confidenceScore: String(item.confidence_score),
       requiresUserValidation: item.requires_user_validation,
       validationNotes: item.validation_notes,
+      responsibilityType: item.responsibility_type,
       updatedAt: new Date(),
     }).where(eq(soaItems.id, item.soa_item_id));
   },
@@ -247,6 +249,7 @@ const mapSoaItemRow = (row: SoaItemRow): SoaItemResponse => ({
   validation_notes: row.validationNotes ?? undefined,
   source_mapping_id: row.sourceMappingId ?? undefined,
   mapping_status: row.mappingStatus as SoaItemResponse["mapping_status"],
+  responsibility_type: row.responsibilityType ?? "internal",
   relationship_type: row.relationshipType ?? undefined,
   relationship_strength: row.relationshipStrength ?? undefined,
   created_at: row.createdAt.toISOString(),
