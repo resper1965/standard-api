@@ -66,6 +66,7 @@ export class GapDraftService {
       gap_summary: assessment.summary,
       ...(assessment.rationale ? { gap_rationale: assessment.rationale } : {}),
       recommendation_summary: assessment.recommendation,
+      responsibility_type: "internal",
       confidence_score: evidenceFinding?.confidence_score ?? 0,
       requires_user_validation: assessment.requiresUserValidation,
       created_at: now,

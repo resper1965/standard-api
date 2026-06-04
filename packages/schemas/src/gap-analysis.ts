@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { TraceIdSchema, UuidSchema } from "./common";
+import { ResponsibilityTypeSchema } from "./soa";
 
 export const GapEvidenceStrengthSchema = z.enum(["strong", "partial", "weak", "absent", "conflicting", "not_checked"]);
 export const EvidenceStatusSchema = z.enum(["candidate", "accepted", "rejected", "insufficient", "conflicting", "not_evidenced"]);
@@ -106,6 +107,7 @@ export const GapFindingResponseSchema = z.object({
   recommendation_summary: z.string().optional(),
   confidence_score: z.number().min(0).max(1),
   requires_user_validation: z.boolean(),
+  responsibility_type: ResponsibilityTypeSchema,
   created_at: z.string(),
   updated_at: z.string()
 });
@@ -124,7 +126,8 @@ export const UpdateGapFindingRequestSchema = z.object({
   gap_rationale: z.string().optional(),
   recommendation_summary: z.string().optional(),
   confidence_score: z.number().min(0).max(1).optional(),
-  requires_user_validation: z.boolean().optional()
+  requires_user_validation: z.boolean().optional(),
+  responsibility_type: ResponsibilityTypeSchema.optional()
 });
 
 export const GapAnalysisValidationResponseSchema = z.object({
