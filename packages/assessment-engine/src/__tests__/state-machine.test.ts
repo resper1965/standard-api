@@ -18,7 +18,6 @@ const ASSESS_ID = "30000000-0000-0000-0000-000000000001";
 function makeSnapshot(state: AssessmentSnapshot["state"], overrides: Partial<AssessmentSnapshot> = {}): AssessmentSnapshot {
   return {
     id: ASSESS_ID,
-    tenantId: TENANT_ID,
     organizationId: ORG_ID,
     state,
     documentCount: 0,
@@ -44,7 +43,6 @@ function makeSnapshot(state: AssessmentSnapshot["state"], overrides: Partial<Ass
 
 function makeContext(overrides: Partial<TransitionContext> = {}): TransitionContext {
   return {
-    tenantId: TENANT_ID,
     organizationId: ORG_ID,
     assessmentId: ASSESS_ID,
     reason: "test",
@@ -89,9 +87,9 @@ describe("assessmentStates catalogue", () => {
 // ─── Tenant Isolation Tests ────────────────────────────────────────────────
 
 describe("validateTransition — tenant isolation", () => {
-  it("throws TENANT_CONTEXT_MISMATCH when tenantId differs", () => {
+  it("throws TENANT_CONTEXT_MISMATCH when organizationId differs", () => {
     const snapshot = makeSnapshot("draft", { documentCount: 1 });
-    const ctx = makeContext({ tenantId: "99999999-0000-0000-0000-000000000001" });
+    const ctx = makeContext({ organizationId: "99999999-0000-0000-0000-000000000001" });
 
     expect(() => validateTransition(snapshot, "documents_uploaded", ctx)).toThrow("does not match assessment tenancy");
   });

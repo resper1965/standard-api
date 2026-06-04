@@ -68,7 +68,7 @@ O Orchestrator não executa a análise que pertence ao agente especialista.
 
 ### Orchestrator vs Tools
 
-Orchestrator não usa tools diretamente. O acesso a tools acontece por agentes ou services controlados, sempre com allowlist, schema validation, tenant scope e audit trail.
+Orchestrator não usa tools diretamente. O acesso a tools acontece por agentes ou services controlados, sempre com allowlist, schema validation, organization scope e audit trail.
 
 ```text
 Orchestrator → Agent Runtime → Agent → allowed tools/services
@@ -101,8 +101,8 @@ O Orchestrator não pode:
 - aprovar SoA, Gap Analysis, Maturity Assessment, POA&M ou Report;
 - escrever diretamente em artefatos finais;
 - ignorar Assessment Engine;
-- ignorar tenant context;
-- acessar dados de outro tenant;
+- ignorar organization context;
+- acessar dados de outro organization;
 - inventar mappings SCF;
 - usar KB como fonte normativa;
 - executar tools administrativas;
@@ -116,7 +116,7 @@ O Orchestrator não pode:
 
 Inputs obrigatórios:
 
-- `tenant_id`;
+- `organization_id`;
 - `organization_id`;
 - `assessment_id`;
 - `current_state`;
@@ -132,7 +132,7 @@ Input opcional:
 
 Regras de input:
 
-- `tenant_id`, `organization_id` e `assessment_id` são obrigatórios em qualquer fluxo crítico.
+- `organization_id`, `organization_id` e `assessment_id` são obrigatórios em qualquer fluxo crítico.
 - `current_state` deve vir do Assessment Engine ou de repositório validado por ele.
 - `approval_status` deve referenciar approval events verificáveis quando o estado exigir gate.
 - `available_artifacts` deve conter versões e status, não apenas nomes.
@@ -178,7 +178,7 @@ Esta tabela define a core logic determinística do MVP. Os nomes de estado devem
 
 | Estado | Pré-condições | Ação | Agente | Resultado esperado |
 | --- | --- | --- | --- | --- |
-| `draft` | Assessment criado com tenant/organization válidos | `block` ou aguardar documentos | Nenhum | Solicitar upload/documentos |
+| `draft` | Assessment criado com organization/organization válidos | `block` ou aguardar documentos | Nenhum | Solicitar upload/documentos |
 | `documents_uploaded` | Documentos associados ao assessment | `invoke_agent` para `run_ingestion` | Standard Knowledge Steward | Ingestion/KB preparation draft |
 | `documents_ingested` | Ingestion concluída sem erro crítico | `invoke_agent` para `index_kb` | Standard Knowledge Steward | KB indexing decision/context |
 | `kb_ready` ou `documents_ingested` com KB indexada | KB index disponível | `invoke_agent` para `scf_pre_analysis` | Standard SCF Control Analyst | SCF pre-analysis draft |
@@ -215,7 +215,7 @@ Schema lógico:
 ```text
 OrchestrationDecision
 ├── decision_id
-├── tenant_id
+├── organization_id
 ├── organization_id
 ├── assessment_id
 ├── current_state
@@ -239,7 +239,7 @@ OrchestrationDecision
 Field rules:
 
 - `decision_id`: unique decision identifier.
-- `tenant_id`: required for tenant isolation.
+- `organization_id`: required for organization isolation.
 - `organization_id`: required for organization scoping.
 - `assessment_id`: required for assessment scoping.
 - `current_state`: state observed before the decision.
@@ -268,7 +268,7 @@ AgentRuntimeInvocation
 ├── agent_name
 ├── task_type
 ├── context
-│   ├── tenant_id
+│   ├── organization_id
 │   ├── organization_id
 │   ├── assessment_id
 │   ├── current_state
@@ -362,7 +362,7 @@ Approval checks:
 - approval event exists;
 - actor is authorized;
 - artifact version matches approved version;
-- approval belongs to same `tenant_id`, `organization_id` and `assessment_id`;
+- approval belongs to same `organization_id`, `organization_id` and `assessment_id`;
 - approval has `trace_id` and audit record;
 - Assessment Engine accepts transition.
 
@@ -377,7 +377,7 @@ The Orchestrator must handle failure as a first-class decision.
 | Inconsistent state | `block` | current state, expected state, trace |
 | Agent failure | `retry` or `block` | retry count, agent_run_id, failure type |
 | Schema failure | `block` | `blocked_reason: "validation_failed"` |
-| Tenant mismatch | `block` | `blocked_reason: "tenant_context_mismatch"` |
+| Organization mismatch | `block` | `blocked_reason: "organization_context_mismatch"` |
 | Tool policy mismatch | `block` | required vs allowed tools |
 | Prompt injection signal | `block` or restricted retry | security event id |
 | Retry exhausted | `block` and escalate | retry history |
@@ -396,14 +396,14 @@ Retry rules:
 - Nunca avançar sem approval quando requerido.
 - Nunca pular estado.
 - Nunca executar agente fora de ordem lógica.
-- Nunca usar dados de outro tenant.
+- Nunca usar dados de outro organization.
 - Nunca inferir mapping oficial.
 - Nunca transformar `not_evidenced` em `not_implemented`.
 - Sempre registrar decisão.
 - Sempre preservar `trace_id`.
 - Sempre validar pré-condições.
 - Sempre exigir `expected_output_schema` para `invoke_agent`.
-- Sempre bloquear quando `tenant_id`, `organization_id` ou `assessment_id` estiver ausente.
+- Sempre bloquear quando `organization_id`, `organization_id` ou `assessment_id` estiver ausente.
 - Sempre tratar KB e Vectorize como suporte evidencial, não fonte normativa.
 
 ## 14. Observabilidade
@@ -412,7 +412,7 @@ Cada decisão deve registrar:
 
 - `trace_id`;
 - `decision_id`;
-- `tenant_id`;
+- `organization_id`;
 - `organization_id`;
 - `assessment_id`;
 - `state`;
@@ -469,7 +469,7 @@ Dry-run behavior:
 
 Dry-run must still enforce:
 
-- tenant context;
+- organization context;
 - approval gates;
 - state order;
 - schema presence;
@@ -482,7 +482,7 @@ Testes mínimos:
 - `state -> decisão correta`;
 - approval bloqueia avanço;
 - ausência de dados bloqueia;
-- tenant isolation;
+- organization isolation;
 - não chama agente errado;
 - não pula etapas;
 - retry controlado;
@@ -499,7 +499,7 @@ Additional regression cases:
 - `not_evidenced` remains distinct from `not_implemented`.
 - KB result never creates official mapping.
 - Missing `organization_id` blocks decision.
-- Cross-tenant artifact in `available_artifacts` blocks decision.
+- Cross-organization artifact in `available_artifacts` blocks decision.
 - Schema failure creates `validation_failed` decision.
 
 Evaluation metrics:
@@ -508,7 +508,7 @@ Evaluation metrics:
 - approval bypass count;
 - wrong agent selection count;
 - skipped state count;
-- tenant violation count;
+- organization violation count;
 - missing trace count;
 - retry policy violation count.
 
@@ -577,7 +577,7 @@ Cloudflare Workflow Step
    ▼
 Orchestrator Agent
    │
-   ├── validates tenant context
+   ├── validates organization context
    ├── checks state decision table
    ├── checks approval gate requirements
    ├── selects next_action
@@ -610,7 +610,7 @@ Definition of done para implementação futura:
 - decision schema validado;
 - state decision table coberta por testes;
 - approval gates impossíveis de pular;
-- tenant isolation obrigatório;
+- organization isolation obrigatório;
 - dry-run suportado;
 - decisões auditáveis;
 - integração com workflow sem substituir Workflow;

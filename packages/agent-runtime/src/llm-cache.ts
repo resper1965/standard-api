@@ -76,14 +76,14 @@ export class LlmResponseCache {
    * Promotes Tier 1 (Exact Match) then Tier 2 (Semantic Match).
    * Enforces tenant isolation.
    */
-  async get(tenantId: string, input: LlmGenerateInput): Promise<LlmGenerateOutput | null> {
+  async get(organizationId: string, input: LlmGenerateInput): Promise<LlmGenerateOutput | null> {
     if (!this.enabled) return null;
 
     try {
       const hash = await hashInput(input);
       
       // Tier 1: Exact Match (Tenant Isolated)
-      const raw = await this.config.store.get(`llm:cache:${tenantId}:${hash}`);
+      const raw = await this.config.store.get(`llm:cache:${organizationId}:${hash}`);
       if (raw) return JSON.parse(raw) as LlmGenerateOutput;
 
       // Tier 2: Semantic Match
@@ -100,11 +100,11 @@ export class LlmResponseCache {
           const vector = await embeddingsProvider.embed(userContent);
           const topMatches = await vectorStore.query(vector, { 
             topK: 1, 
-            filter: { tenant_id: tenantId } 
+            filter: { organization_id: organizationId } 
           });
           
           if (topMatches.length > 0 && topMatches[0] && topMatches[0].score >= this.similarityThreshold) {
-            const semanticRaw = await this.config.store.get(`llm:cache:${tenantId}:${topMatches[0].id}`);
+            const semanticRaw = await this.config.store.get(`llm:cache:${organizationId}:${topMatches[0].id}`);
             if (semanticRaw) return JSON.parse(semanticRaw) as LlmGenerateOutput;
           }
         }
@@ -121,7 +121,7 @@ export class LlmResponseCache {
    * Store a response in the cache. Fire-and-forget — never blocks the caller.
    * Enforces tenant isolation.
    */
-  async set(tenantId: string, input: LlmGenerateInput, output: LlmGenerateOutput): Promise<void> {
+  async set(organizationId: string, input: LlmGenerateInput, output: LlmGenerateOutput): Promise<void> {
     if (!this.enabled) return;
 
     try {
@@ -131,7 +131,7 @@ export class LlmResponseCache {
       const hash = await hashInput(input);
       
       // Store in KV (Tier 1 - Tenant Isolated)
-      await this.config.store.put(`llm:cache:${tenantId}:${hash}`, serialized, {
+      await this.config.store.put(`llm:cache:${organizationId}:${hash}`, serialized, {
         expirationTtl: this.ttl,
       });
 
@@ -152,7 +152,7 @@ export class LlmResponseCache {
             values: vector,
             metadata: { 
               model: input.model,
-              tenant_id: tenantId
+              organization_id: organizationId
             }
           }]);
         }

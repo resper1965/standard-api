@@ -13,12 +13,12 @@ export type ResolveTenantInput = {
 
 export class TenantResolver {
   resolve(input: ResolveTenantInput): SecurityTenantContext | null {
-    const tenantId =
+    const organizationId =
       input.headerTenantId ??
       input.pathTenantId ??
       input.sessionTenantId ??
       input.apiKeyTenantId;
-    if (!tenantId) return null;
+    if (!organizationId) return null;
 
     let source: "jwt" | "api_key" | "hostname" | "header" | "route_param" | "internal_worker" = "route_param";
     if (input.headerTenantId) {
@@ -32,7 +32,7 @@ export class TenantResolver {
     }
 
     return {
-      tenant_id: tenantId,
+      organization_id: organizationId,
       ...(input.organizationId ? { organization_id: input.organizationId } : {}),
       ...(input.assessmentId ? { assessment_id: input.assessmentId } : {}),
       ...(input.hostname ? { hostname: input.hostname } : {}),

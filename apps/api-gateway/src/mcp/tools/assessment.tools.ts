@@ -40,14 +40,14 @@ export async function handleListAssessments(
   ctx: RequestContext
 ): Promise<McpToolResult> {
   try {
-    const tenantId = ctx.tenantId;
-    if (!tenantId) return fail("Tenant context required.");
+    const organizationId = ctx.organizationId;
+    if (!organizationId) return fail("Tenant context required.");
 
     const orgId = (args["organization_id"] as string | undefined) ?? ctx.organizationId;
     if (!orgId) return fail("organization_id is required (or must be set in context).");
 
     const repo = ctx.deps.assessments;
-    const all = await repo.listByOrganization(orgId, tenantId);
+    const all = await repo.listByOrganization(orgId);
 
     // Optional status filter applied in-memory (adapter doesn't support it yet)
     const statusFilter = args["status"] as string | undefined;
@@ -71,10 +71,10 @@ export async function handleGetAssessment(
     const id = args["assessment_id"] as string;
     if (!id) return fail("assessment_id is required.");
 
-    const tenantId = ctx.tenantId;
-    if (!tenantId) return fail("Tenant context required.");
+    const organizationId = ctx.organizationId;
+    if (!organizationId) return fail("Tenant context required.");
 
-    const assessment = await ctx.deps.assessments.get(id, tenantId);
+    const assessment = await ctx.deps.assessments.get(id, organizationId);
     if (!assessment) return fail(`Assessment ${id} not found.`);
 
     return ok(mapAssessment(assessment));
@@ -91,10 +91,10 @@ export async function handleGetAssessmentStatus(
     const id = args["assessment_id"] as string;
     if (!id) return fail("assessment_id is required.");
 
-    const tenantId = ctx.tenantId;
-    if (!tenantId) return fail("Tenant context required.");
+    const organizationId = ctx.organizationId;
+    if (!organizationId) return fail("Tenant context required.");
 
-    const assessment = await ctx.deps.assessments.get(id, tenantId);
+    const assessment = await ctx.deps.assessments.get(id, organizationId);
     if (!assessment) return fail(`Assessment ${id} not found.`);
 
     return ok({
@@ -119,16 +119,16 @@ export async function handleListAssessmentDocuments(
     const id = args["assessment_id"] as string;
     if (!id) return fail("assessment_id is required.");
 
-    const tenantId = ctx.tenantId;
-    if (!tenantId) return fail("Tenant context required.");
+    const organizationId = ctx.organizationId;
+    if (!organizationId) return fail("Tenant context required.");
 
     // Verify assessment ownership before listing docs
-    const assessment = await ctx.deps.assessments.get(id, tenantId);
+    const assessment = await ctx.deps.assessments.get(id, organizationId);
     if (!assessment) return fail(`Assessment ${id} not found.`);
 
     // Documents are retrieved via the evidence findings repository
     const gapRepo = ctx.deps.gapAnalysis.repositories;
-    const docs = await gapRepo.evidenceFindings.listByAssessment(id, tenantId);
+    const docs = await gapRepo.evidenceFindings.listByAssessment(id, organizationId);
 
     return ok({
       assessment_id: id,

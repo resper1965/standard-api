@@ -138,7 +138,7 @@ export const useSession = () => authClient.useSession();
 **Step 2:** Create router with:
 - Public: `/login`
 - Protected (any authenticated): `/dashboard`, `/assessments`, `/documents`, `/gap-analysis`, `/reports`, `/settings`
-- Admin-only: `/admin/tenants`, `/admin/users`, `/admin/license-keys`, `/admin/audit`, `/admin/system`
+- Admin-only: `/admin/organizations`, `/admin/users`, `/admin/license-keys`, `/admin/audit`, `/admin/system`
 
 **Step 3:** Create `Sidebar` component:
 - User sections always visible
@@ -247,10 +247,10 @@ export const useSession = () => authClient.useSession();
 
 ## Phase 3: Admin Pages (Tasks 11–15)
 
-### Task 11: Tenant/Organization Management
+### Task 11: Organization/Organization Management
 
 **Files:**
-- Create: `apps/web/src/pages/admin/Tenants.tsx`
+- Create: `apps/web/src/pages/admin/Organizations.tsx`
 - Create: `apps/web/src/components/admin/CreateOrgModal.tsx`
 
 **Step 1:** Organizations table: name, slug, member count, created

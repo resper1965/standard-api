@@ -20,7 +20,6 @@ export const ApprovalEventSchema = z.object({
 
 export const AssessmentSnapshotSchema = z.object({
   id: z.string().uuid(),
-  tenantId: z.string().uuid(),
   organizationId: z.string().uuid(),
   state: AssessmentStateSchema,
   documentCount: z.number().int().nonnegative(),
@@ -43,7 +42,6 @@ export const AssessmentSnapshotSchema = z.object({
 });
 
 export const TransitionContextSchema = z.object({
-  tenantId: z.string().uuid(),
   organizationId: z.string().uuid(),
   assessmentId: z.string().uuid(),
   actorId: z.string().uuid().optional(),
@@ -58,7 +56,6 @@ export const TransitionContextSchema = z.object({
 
 export const ArtifactVersionSchema = z.object({
   id: z.string().min(1),
-  tenantId: z.string().uuid(),
   organizationId: z.string().uuid(),
   assessmentId: z.string().uuid(),
   artifactType: ArtifactTypeSchema,

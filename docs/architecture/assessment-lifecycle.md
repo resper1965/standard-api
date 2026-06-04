@@ -63,4 +63,4 @@ Cada gate de aprovação humana pode resultar em rejeição, retornando o assess
 - Workflows é o único componente responsável por avanço durável de estado.
 - Jobs assíncronos devem ser idempotentes.
 - Falhas recuperáveis devem usar retry; falhas definitivas devem registrar `failed` com motivo rastreável.
-- Nenhum achado final pode existir sem `tenant_id`, `assessment_id`, `scf_version`, `framework_id`, `control_id`, `evidence_id`, `agent_run_id` e `confidence`.
+- Nenhum achado final pode existir sem `organization_id`, `assessment_id`, `scf_version`, `framework_id`, `control_id`, `evidence_id`, `agent_run_id` e `confidence`.

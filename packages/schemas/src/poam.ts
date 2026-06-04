@@ -35,7 +35,6 @@ export const RegeneratePoamRequestSchema = z.object({
 
 export const PoamVersionResponseSchema = z.object({
   poam_version_id: UuidSchema,
-  tenant_id: UuidSchema,
   organization_id: UuidSchema,
   assessment_id: UuidSchema,
   version_number: z.number().int().positive(),
@@ -62,7 +61,6 @@ export const PoamVersionResponseSchema = z.object({
 
 export const PoamItemResponseSchema = z.object({
   poam_item_id: UuidSchema,
-  tenant_id: UuidSchema,
   organization_id: UuidSchema,
   assessment_id: UuidSchema,
   poam_version_id: UuidSchema,
@@ -118,7 +116,6 @@ export const UpdatePoamItemRequestSchema = z.object({
 
 export const PoamMilestoneResponseSchema = z.object({
   poam_milestone_id: UuidSchema,
-  tenant_id: UuidSchema,
   organization_id: UuidSchema,
   assessment_id: UuidSchema,
   poam_item_id: UuidSchema,
@@ -152,7 +149,6 @@ export const UpdatePoamMilestoneRequestSchema = z.object({
 
 export const PoamDependencyResponseSchema = z.object({
   poam_dependency_id: UuidSchema,
-  tenant_id: UuidSchema,
   organization_id: UuidSchema,
   assessment_id: UuidSchema,
   poam_item_id: UuidSchema,

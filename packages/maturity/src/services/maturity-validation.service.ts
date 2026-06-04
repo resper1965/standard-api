@@ -12,12 +12,12 @@ export const validateMaturityVersion = async (
   ctx: MaturityContext,
   deps: MaturityDependencies
 ): Promise<{ valid: boolean; blocking_errors: string[]; warnings: string[]; trace_id: string }> => {
-  const version = await deps.repositories.versions.get(versionId, ctx.tenantId);
+  const version = await deps.repositories.versions.get(versionId, ctx.organizationId);
   if (!version || version.assessmentId !== ctx.assessmentId) {
     throw new MaturityError("VERSION_NOT_FOUND", "Maturity assessment version not found.", { versionId });
   }
 
-  const scores = await deps.repositories.scores.listByVersion(versionId, ctx.tenantId);
+  const scores = await deps.repositories.scores.listByVersion(versionId, ctx.organizationId);
   const errors: string[] = [];
   const warnings: string[] = [];
 

@@ -10,7 +10,7 @@
  * Usage: DATABASE_URL="..." pnpm db:seed
  *
  * AGENTS.md compliance:
- *   - §7: All data carries tenant_id, organization_id, assessment_id
+ *   - §7: All data carries organization_id, organization_id, assessment_id
  *   - §8: SCF data is normative and versioned
  *   - §14: Only synthetic data used
  *   - §17: No real customer data
@@ -25,7 +25,7 @@ import * as schema from "./db/schema";
 // Stable synthetic slugs / natural keys
 // ──────────────────────────────────────────────
 const SYNTH = {
-  tenantSlug:       "tenant_synth_a",
+  organizationSlug:       "tenant_synth_a",
   orgSlug:          "org_synth_healthtech",
   userEmail:        "synth-operator@standard.test",
   roleKey:          "org_admin",
@@ -61,14 +61,14 @@ async function main() {
   // tenants table removed; organizations IS the tenant.
   console.log("  → Seeding organization (was tenant)...");
   await db.insert(schema.organizations).values({
-    slug: SYNTH.tenantSlug,
+    slug: SYNTH.organizationSlug,
     name: "Synthetic Tenant A",
     status: "active",
   }).onConflictDoNothing();
 
   const [tenant] = await db.select()
     .from(schema.organizations)
-    .where(eq(schema.organizations.slug, SYNTH.tenantSlug))
+    .where(eq(schema.organizations.slug, SYNTH.organizationSlug))
     .limit(1);
   if (!tenant) throw new Error("Organization (tenant) not found after insert");
   console.log(`     organizationId = ${tenant.id}`);

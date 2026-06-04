@@ -73,6 +73,6 @@ Standard SCF Agentic Assessment Model
 - **Evidence Qualification Procedure**: diferenciar evidência direta, indireta, contraditória e não evidenciada.
 - **Human Approval Gate Procedure**: bloquear conclusão de SoA, Gap Analysis, Maturity e POA&M sem aprovação humana.
 - **Traceability Enforcement Procedure**: rejeitar achados sem contexto completo.
-- **LLM Call Governance Procedure**: toda chamada LLM futura deve passar pelo AI Gateway com metadados de tenant, assessment e agent run.
-- **Tenant Isolation Procedure**: filtrar dados por `tenant_id` em PostgreSQL, R2 keys, Vectorize namespaces e logs.
+- **LLM Call Governance Procedure**: toda chamada LLM futura deve passar pelo AI Gateway com metadados de organization, assessment e agent run.
+- **Organization Isolation Procedure**: filtrar dados por `organization_id` em PostgreSQL, R2 keys, Vectorize namespaces e logs.
 

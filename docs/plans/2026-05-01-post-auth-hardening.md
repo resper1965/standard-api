@@ -170,7 +170,7 @@ curl https://<deployed-url>/api/v1/health
 ---
 
 ## Fase 4: Seed de Dados e Validação
-*Criar o primeiro admin, a primeira organization/tenant e validar o fluxo completo.*
+*Criar o primeiro admin, a primeira organization/organization e validar o fluxo completo.*
 
 ### Task 4.1: Criar primeiro admin user
 
@@ -186,7 +186,7 @@ curl -X POST https://<deployed-url>/api/auth/sign-up/email \
 UPDATE "user" SET role = 'admin' WHERE email = 'admin@bekaa.eu';
 ```
 
-### Task 4.2: Criar primeira organization (tenant)
+### Task 4.2: Criar primeira organization (organization)
 
 **Step 1: Autenticar e criar org via API**
 ```bash

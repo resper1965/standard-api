@@ -11,10 +11,9 @@ export class ScopeService {
     assertContext(context);
     assertActor(context);
     const now = new Date().toISOString();
-    const existing = await this.deps.repositories.scopes.listByAssessment(context.assessmentId, context.tenantId);
+    const existing = await this.deps.repositories.scopes.listByAssessment(context.assessmentId, context.organizationId);
     const scope: ScopeResponse = {
       scope_id: crypto.randomUUID(),
-      tenant_id: context.tenantId,
       organization_id: context.organizationId,
       assessment_id: context.assessmentId,
       scope_version: existing.length + 1,
@@ -77,13 +76,13 @@ export class ScopeService {
 
   async getScope(scopeId: string, context: SoaWorkflowContext): Promise<ScopeResponse> {
     assertContext(context);
-    const scope = await this.deps.repositories.scopes.get(scopeId, context.tenantId);
+    const scope = await this.deps.repositories.scopes.get(scopeId, context.organizationId);
     if (!scope || scope.assessment_id !== context.assessmentId) throw new SoaWorkflowError("SCOPE_NOT_FOUND", "Scope not found.");
     return scope;
   }
 
   listScopes(assessmentId: string, context: SoaWorkflowContext): Promise<ScopeResponse[]> {
     assertContext(context);
-    return this.deps.repositories.scopes.listByAssessment(assessmentId, context.tenantId);
+    return this.deps.repositories.scopes.listByAssessment(assessmentId, context.organizationId);
   }
 }

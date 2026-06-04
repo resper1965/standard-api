@@ -4,7 +4,7 @@
 
 **Agent Memory** é o conjunto de dados estruturados e não estruturados que os agentes utilizam para tomar decisões, gerar outputs e manter continuidade ao longo do lifecycle do assessment.
 
-No Standard, memória é suporte operacional. Ela não é autoridade normativa, não substitui estado oficial e não pode burlar tenant isolation.
+No Standard, memória é suporte operacional. Ela não é autoridade normativa, não substitui estado oficial e não pode burlar organization isolation.
 
 Separações obrigatórias:
 
@@ -23,7 +23,7 @@ Human approval controla artefatos finais.
 
 ## 2. Princípios
 
-- isolamento por tenant obrigatório;
+- isolamento por organization obrigatório;
 - isolamento por assessment obrigatório;
 - memory não é global;
 - SCF é fonte normativa;
@@ -40,7 +40,7 @@ Human approval controla artefatos finais.
 
 ### 1. System Memory
 
-Memória imutável ou controlada pelo sistema. Não é tenant-specific, exceto configurações globais versionadas.
+Memória imutável ou controlada pelo sistema. Não é organization-specific, exceto configurações globais versionadas.
 
 Inclui:
 
@@ -78,7 +78,7 @@ Inclui artefatos:
 
 Características:
 
-- escopada por `tenant_id`, `organization_id` e `assessment_id`;
+- escopada por `organization_id`, `organization_id` e `assessment_id`;
 - não reutilizável entre assessments;
 - inclui drafts e versões aprovadas;
 - deve preservar versionamento e fonte.
@@ -131,7 +131,7 @@ Características:
 Níveis:
 
 - **Global**: somente SCF oficial, schemas, configs e contracts versionados.
-- **Tenant**: configurações e políticas do tenant.
+- **Organization**: configurações e políticas do organization.
 - **Organization**: contexto organizacional permitido.
 - **Assessment**: escopo principal de artifacts, KB e decisões.
 - **Agent Run**: memória isolada de uma execução.
@@ -140,13 +140,13 @@ Níveis:
 Regra crítica:
 
 ```text
-Nenhum acesso cross-tenant permitido.
+Nenhum acesso cross-organization permitido.
 ```
 
 Regras adicionais:
 
 - Assessment memory de um assessment não deve ser usada em outro sem autorização explícita e trilha auditável.
-- Agent run memory não pode ser reutilizada como contexto de outro tenant.
+- Agent run memory não pode ser reutilizada como contexto de outro organization.
 - Request memory deve ser descartada ao fim da execução.
 - Global memory não pode conter dados de cliente.
 
@@ -203,7 +203,7 @@ Schema lógico:
 
 ```text
 InputContext
-├── tenant_id
+├── organization_id
 ├── organization_id
 ├── assessment_id
 ├── agent_name
@@ -223,7 +223,7 @@ Regras:
 
 - limitar tamanho do contexto;
 - incluir apenas dados relevantes;
-- nunca incluir dados de outro tenant;
+- nunca incluir dados de outro organization;
 - nunca incluir logs completos;
 - nunca incluir documentos completos sem controle;
 - sempre incluir `trace_id`;
@@ -238,7 +238,7 @@ KB fornece chunks relevantes para apoiar análise.
 
 Cada chunk deve carregar:
 
-- `tenant_id`;
+- `organization_id`;
 - `organization_id`;
 - `assessment_id`;
 - `document_id`;
@@ -297,19 +297,19 @@ Restrições:
 
 - não usar output anterior como verdade oficial;
 - não armazenar prompt completo com dados sensíveis quando hash/redaction for suficiente;
-- não reutilizar contexto entre tenants;
+- não reutilizar contexto entre organizations;
 - não promover memory para artifact sem workflow e schema validation.
 
 ## 10. Context Leakage Prevention
 
 Regras obrigatórias:
 
-- nunca incluir dados de outro tenant;
+- nunca incluir dados de outro organization;
 - nunca misturar assessments;
 - nunca reutilizar contexto entre execuções;
 - limpar memória efêmera após execução;
 - validar escopo antes de montar contexto;
-- filtrar por `tenant_id`, `organization_id` e `assessment_id`;
+- filtrar por `organization_id`, `organization_id` e `assessment_id`;
 - refiltrar resultados Vectorize no backend;
 - evitar logs completos no contexto;
 - usar hashes para referência quando possível;
@@ -317,11 +317,11 @@ Regras obrigatórias:
 
 Bloqueios:
 
-- tenant ausente;
+- organization ausente;
 - organization ausente;
 - assessment ausente;
 - artifact pertence a assessment diferente;
-- chunk pertence a tenant diferente;
+- chunk pertence a organization diferente;
 - prior agent run pertence a outro assessment;
 - context size excede limite;
 - tool retorna dados fora do escopo.
@@ -353,7 +353,7 @@ Regras:
 
 Antes de executar agente, validar:
 
-- `tenant_id`;
+- `organization_id`;
 - `organization_id`;
 - `assessment_id`;
 - artifacts pertencentes ao assessment;
@@ -417,7 +417,7 @@ Agent Runtime checks allowed tools
   ↓
 Tool retrieves scoped memory/context
   ↓
-Tool validates tenant and schema
+Tool validates organization and schema
   ↓
 Context Builder assembles minimal context
   ↓
@@ -427,7 +427,7 @@ Agent receives validated context
 Regras:
 
 - Tool controla acesso e filtragem.
-- Tool deve aplicar tenant/assessment filters.
+- Tool deve aplicar organization/assessment filters.
 - Tool output deve ter schema validado.
 - Tool call deve ser auditável.
 - Tool não deve retornar conteúdo sensível além do necessário.
@@ -475,8 +475,8 @@ Eventos sugeridos:
 Regras:
 
 - PostgreSQL é fonte transacional crítica.
-- R2 keys devem preservar tenant/organization/assessment.
-- Vectorize deve usar metadata e filtros de tenant/assessment.
+- R2 keys devem preservar organization/organization/assessment.
+- Vectorize deve usar metadata e filtros de organization/assessment.
 - Logs devem usar redaction e hashes.
 - SCF oficial deve ser versionado e imutável por import run.
 
@@ -508,7 +508,7 @@ Failure modes:
 - contexto insuficiente;
 - contexto excessivo;
 - evidência irrelevante;
-- mistura de tenants;
+- mistura de organizations;
 - uso indevido da KB;
 - dependência de outputs anteriores inválidos;
 - SCF ausente do contexto;
@@ -522,7 +522,7 @@ Mitigações:
 
 - context validation;
 - trust hierarchy;
-- tenant guard;
+- organization guard;
 - source metadata;
 - context size limits;
 - prompt injection filtering;
@@ -534,7 +534,7 @@ Mitigações:
 
 Testes mínimos:
 
-- tenant isolation no contexto;
+- organization isolation no contexto;
 - KB não usada como normativa;
 - SCF sempre disponível quando necessário;
 - contexto limitado corretamente;
@@ -542,7 +542,7 @@ Testes mínimos:
 - artefatos corretos usados;
 - contexto não contém dados externos;
 - prior agent run de outro assessment é bloqueado;
-- artifact de outro tenant é bloqueado;
+- artifact de outro organization é bloqueado;
 - context hash é registrado;
 - logs completos não entram no contexto;
 - ausência de KB vira `not_evidenced`, não `not_implemented`.
@@ -562,7 +562,7 @@ Testes por agente:
 - Sem ranking adaptativo.
 - Sem compressão avançada de contexto.
 - Sem knowledge graph temporal.
-- Sem long-term memory por tenant além de artifacts/agent runs/audit.
+- Sem long-term memory por organization além de artifacts/agent runs/audit.
 - Sem feedback loop automático para alterar comportamento.
 
 Impacto no projeto: o MVP privilegia isolamento, rastreabilidade e controle. A memória é explícita e conservadora, reduzindo risco de vazamento e decisões incorretas.
@@ -573,19 +573,19 @@ Evoluções possíveis:
 
 - memory ranking inteligente;
 - adaptive context selection;
-- long-term memory por tenant;
+- long-term memory por organization;
 - embeddings híbridos;
 - contextual summarization;
 - retrieval tuning por agente;
 - temporal knowledge graph para auditabilidade;
 - entity memory para assets, sistemas e controles;
 - context quality scoring;
-- memory retention policies por tenant;
+- memory retention policies por organization;
 - DLP antes de context assembly.
 
 Condições para evolução:
 
-- manter isolamento por tenant;
+- manter isolamento por organization;
 - manter Assessment Engine como state authority;
 - manter SCF como fonte normativa;
 - manter KB como evidence candidate;
@@ -621,7 +621,7 @@ Context Builder
   └── Workflow state tools
   ↓
 Context Validation
-  ├── tenant scope
+  ├── organization scope
   ├── assessment scope
   ├── trust hierarchy
   ├── size limits
@@ -643,7 +643,7 @@ Este documento permite:
 - montar contexto corretamente;
 - evitar vazamento de dados;
 - garantir qualidade das decisões;
-- suportar multi-tenant;
+- suportar multi-organization;
 - integrar com KB e SCF;
 - separar memory, state, KB, logs e SCF;
 - criar testes de isolamento e qualidade;
@@ -653,12 +653,12 @@ Definition of done para implementação futura:
 
 - Context Builder com schema validado;
 - trust hierarchy aplicada;
-- tenant/assessment guard obrigatório;
+- organization/assessment guard obrigatório;
 - KB marcada como candidate evidence;
 - SCF sempre normativo;
 - context hashes registrados;
 - ephemeral context descartado;
 - context limits configuráveis;
 - prompt injection defense ativa;
-- testes de leakage e cross-tenant passando.
+- testes de leakage e cross-organization passando.
 

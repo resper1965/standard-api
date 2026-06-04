@@ -142,7 +142,7 @@ describe("scf_control_lookup tool", () => {
     };
     const tool = createScfControlLookupTool(mockScfCore);
     const result = await tool.execute({
-      tenant_id: "t1", organization_id: "o1", assessment_id: "a1",
+      organization_id: "t1", organization_id: "o1", assessment_id: "a1",
       trace_id: "tr1", query: "asset management"
     });
     expect(result.controls).toHaveLength(1);
@@ -153,7 +153,7 @@ describe("scf_control_lookup tool", () => {
     const mockScfCore = { searchControls: async () => [] };
     const tool = createScfControlLookupTool(mockScfCore);
     const result = await tool.execute({
-      tenant_id: "t1", organization_id: "o1", assessment_id: "a1",
+      organization_id: "t1", organization_id: "o1", assessment_id: "a1",
       trace_id: "tr1", query: "nonexistent"
     });
     expect(result.controls).toHaveLength(0);
@@ -176,7 +176,7 @@ Expected: FAIL (module not found)
 import type { ScfCoreDependencies } from "@standard/scf-core";
 
 export type ScfControlLookupArgs = {
-  tenant_id: string;
+  organization_id: string;
   organization_id: string;
   assessment_id: string;
   trace_id: string;
@@ -242,14 +242,14 @@ import { createKbEvidenceSearchTool } from "../src/tools/kb-evidence-search.tool
 describe("kb_evidence_search tool", () => {
   it("returns evidence matching semantic query", async () => {
     const mockKb = {
-      semanticSearch: async (query: string, tenantId: string, assessmentId: string) => [{
+      semanticSearch: async (query: string, organizationId: string, assessmentId: string) => [{
         chunk_id: "c1", document_id: "d1", content: "Policy v3.1",
         score: 0.92, metadata: { filename: "security-policy.pdf" }
       }]
     };
     const tool = createKbEvidenceSearchTool(mockKb);
     const result = await tool.execute({
-      tenant_id: "t1", organization_id: "o1", assessment_id: "a1",
+      organization_id: "t1", organization_id: "o1", assessment_id: "a1",
       trace_id: "tr1", query: "security policy"
     });
     expect(result.evidence).toHaveLength(1);
@@ -325,7 +325,7 @@ git commit --no-gpg-sign -m "feat(agent-runtime): wire real tool registry into e
 
 **Step 1: Create the queue consumer**
 
-The consumer receives `{ agent_run_id, tenant_id }`, loads the run, and calls `executor.resumeRun()`.
+The consumer receives `{ agent_run_id, organization_id }`, loads the run, and calls `executor.resumeRun()`.
 
 **Step 2: Modify the API route to enqueue instead of executing synchronously**
 
@@ -336,7 +336,7 @@ In `apps/api-gateway/src/routes/agent-runtime.routes.ts`, replace:
 const result = await executor.execute(input);
 
 // AFTER (async):
-await env.AGENT_TASK_QUEUE.send({ agent_run_id: run.agent_run_id, tenant_id: input.context.tenant_id });
+await env.AGENT_TASK_QUEUE.send({ agent_run_id: run.agent_run_id, organization_id: input.context.organization_id });
 return c.json({ data: run, status: "queued" }, 202);
 ```
 

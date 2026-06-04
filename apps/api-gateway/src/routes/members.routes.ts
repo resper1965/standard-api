@@ -23,15 +23,15 @@ export const memberRoutes: RouteDefinition[] = [
     requireActor: true,
     permissions: ["membership:manage"],
     handler: async (context) => {
-      const { request, deps, params, tenantId, actorId, traceId } = context;
+      const { request, deps, params, organizationId, actorId, traceId } = context;
       const orgId = routeParam(params, "organizationId");
-      const org = await deps.organizations.get(orgId, tenantId!);
+      const org = await deps.organizations.get(orgId);
       if (!org) throw new ApiError("NOT_FOUND", "Organization not found.", 404);
 
       const body = await parseJson(request, InviteMemberRequestSchema);
 
       // Check duplicate within this org
-      const existing = await deps.members.listByOrganization(orgId, tenantId!);
+      const existing = await deps.members.listByOrganization(orgId);
       if (existing.some(m => m.email === body.email)) {
         throw new ApiError("CONFLICT", `Member with email ${body.email} already exists.`, 409);
       }
@@ -72,7 +72,6 @@ export const memberRoutes: RouteDefinition[] = [
       const now = new Date().toISOString();
       const membership = await deps.members.create({
         membership_id: crypto.randomUUID(),
-        tenant_id: tenantId!,
         organization_id: orgId,
         user_id: null,
         email: body.email,
@@ -83,7 +82,6 @@ export const memberRoutes: RouteDefinition[] = [
       });
 
       await deps.audit.record("member.invited", {
-        tenant_id: tenantId,
         organization_id: orgId,
         email: body.email,
         role: body.role,
@@ -99,11 +97,11 @@ export const memberRoutes: RouteDefinition[] = [
     path: "/api/v1/organizations/:organizationId/members",
     protected: true,
     permissions: ["organization:read"],
-    handler: async ({ deps, params, tenantId, traceId }) => {
+    handler: async ({ deps, params, organizationId, traceId }) => {
       const orgId = routeParam(params, "organizationId");
-      const org = await deps.organizations.get(orgId, tenantId!);
+      const org = await deps.organizations.get(orgId);
       if (!org) throw new ApiError("NOT_FOUND", "Organization not found.", 404);
-      const members = await deps.members.listByOrganization(orgId, tenantId!);
+      const members = await deps.members.listByOrganization(orgId);
       return json({ data: members, trace_id: traceId });
     },
   },
@@ -115,17 +113,16 @@ export const memberRoutes: RouteDefinition[] = [
     protected: true,
     requireActor: true,
     permissions: ["membership:manage"],
-    handler: async ({ request, deps, params, tenantId, traceId }) => {
+    handler: async ({ request, deps, params, organizationId, traceId }) => {
       const memberId = routeParam(params, "memberId");
-      const member = await deps.members.getById(memberId, tenantId!);
+      const member = await deps.members.getById(memberId, organizationId!);
       if (!member) throw new ApiError("NOT_FOUND", "Membership not found.", 404);
 
       const body = await parseJson(request, UpdateMemberRoleRequestSchema);
-      const updated = await deps.members.updateRole(memberId, tenantId!, body.role);
+      const updated = await deps.members.updateRole(memberId, organizationId!, body.role);
       if (!updated) throw new ApiError("NOT_FOUND", "Membership not found.", 404);
 
       await deps.audit.record("member.role_updated", {
-        tenant_id: tenantId,
         organization_id: member.organization_id,
         member_id: memberId,
         role: body.role,
@@ -142,16 +139,15 @@ export const memberRoutes: RouteDefinition[] = [
     protected: true,
     requireActor: true,
     permissions: ["membership:manage"],
-    handler: async ({ deps, params, tenantId, traceId }) => {
+    handler: async ({ deps, params, organizationId, traceId }) => {
       const memberId = routeParam(params, "memberId");
-      const member = await deps.members.getById(memberId, tenantId!);
+      const member = await deps.members.getById(memberId, organizationId!);
       if (!member) throw new ApiError("NOT_FOUND", "Membership not found.", 404);
 
-      const removed = await deps.members.remove(memberId, tenantId!);
+      const removed = await deps.members.remove(memberId, organizationId!);
       if (!removed) throw new ApiError("NOT_FOUND", "Membership not found.", 404);
 
       await deps.audit.record("member.removed", {
-        tenant_id: tenantId,
         organization_id: member.organization_id,
         member_id: memberId,
         trace_id: traceId,
@@ -166,9 +162,9 @@ export const memberRoutes: RouteDefinition[] = [
     path: "/api/v1/members/:memberId",
     protected: true,
     permissions: ["organization:read"],
-    handler: async ({ deps, params, tenantId, traceId }) => {
+    handler: async ({ deps, params, organizationId, traceId }) => {
       const memberId = routeParam(params, "memberId");
-      const member = await deps.members.getById(memberId, tenantId!);
+      const member = await deps.members.getById(memberId, organizationId!);
       if (!member) throw new ApiError("NOT_FOUND", "Membership not found.", 404);
       return json(member, { headers: { "x-trace-id": traceId } });
     },

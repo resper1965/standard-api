@@ -72,7 +72,7 @@ describe("SDK models", () => {
   it("Assessment type has required fields", () => {
     const assessment: Assessment = {
       id: "uuid",
-      tenant_id: "uuid",
+      organization_id: "uuid",
       organization_id: "uuid",
       name: "Test",
       state: "draft",
@@ -128,7 +128,7 @@ Expected: FAIL with "Cannot find module '../models'"
 // ── Assessments ──────────────────────────────────────────────
 export type Assessment = {
   id: string;
-  tenant_id: string;
+  organization_id: string;
   organization_id: string;
   name: string;
   state: string;
@@ -446,7 +446,7 @@ export type WebhookDelivery = {
 // ── Organizations ────────────────────────────────────────────
 export type Organization = {
   organization_id: string;
-  tenant_id: string;
+  organization_id: string;
   name: string;
   slug: string;
   status: string;
@@ -503,7 +503,7 @@ import type { PaginatedResponse, StandardResponse } from "../types";
 import { describe, it, expectTypeOf } from "vitest";
 
 describe("SDK client type-safety", () => {
-  const client = new StandardClient({ apiKey: "test", tenantId: "test", baseUrl: "http://localhost" });
+  const client = new StandardClient({ apiKey: "test", organizationId: "test", baseUrl: "http://localhost" });
 
   it("assessments.list returns PaginatedResponse<Assessment>", () => {
     expectTypeOf(client.assessments.list()).toEqualTypeOf<Promise<PaginatedResponse<Assessment>>>();
@@ -697,7 +697,7 @@ describe("WebhookDispatcher", () => {
     const result = await dispatcher.deliver({
       endpoint_url: "https://example.com/webhook",
       signing_secret: "whsec_test",
-      payload: { event_id: "e1", event_type: "assessment.created", timestamp: new Date().toISOString(), tenant_id: "t1", organization_id: "o1", data: {}, trace_id: "tr1" },
+      payload: { event_id: "e1", event_type: "assessment.created", timestamp: new Date().toISOString(), organization_id: "t1", organization_id: "o1", data: {}, trace_id: "tr1" },
     });
     expect(result.success).toBe(true);
     expect(result.http_status).toBe(200);
@@ -713,7 +713,7 @@ describe("WebhookDispatcher", () => {
     const result = await dispatcher.deliver({
       endpoint_url: "https://example.com/webhook",
       signing_secret: "whsec_test",
-      payload: { event_id: "e2", event_type: "assessment.created", timestamp: new Date().toISOString(), tenant_id: "t1", organization_id: "o1", data: {}, trace_id: "tr2" },
+      payload: { event_id: "e2", event_type: "assessment.created", timestamp: new Date().toISOString(), organization_id: "t1", organization_id: "o1", data: {}, trace_id: "tr2" },
     });
     expect(result.success).toBe(false);
     expect(result.http_status).toBe(500);

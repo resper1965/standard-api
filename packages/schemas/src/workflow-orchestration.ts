@@ -66,7 +66,6 @@ export const WorkflowBlockedReasonSchema = z.enum([
 ]);
 
 export const AssessmentLifecycleWorkflowInputSchema = z.object({
-  tenant_id: UuidSchema,
   organization_id: UuidSchema,
   assessment_id: UuidSchema,
   requested_by: UuidSchema,
@@ -76,7 +75,6 @@ export const AssessmentLifecycleWorkflowInputSchema = z.object({
 });
 
 export const AssessmentLifecycleWorkflowStateSchema = z.object({
-  tenant_id: UuidSchema,
   organization_id: UuidSchema,
   assessment_id: UuidSchema,
   current_step: AssessmentLifecycleStepSchema,

@@ -31,11 +31,11 @@ export const executiveRoutes: RouteDefinition[] = [
           technicalRiskDescription: body.technicalRiskDescription,
           riskCategory: body.riskCategory,
           ...(body.businessContext ? { businessContext: body.businessContext } : {}),
-          tenantId: ctx.tenantId!
+          organizationId: ctx.organizationId!
         });
         
         await ctx.deps.audit.record("executive.risk.translated", { 
-          tenant_id: ctx.tenantId, 
+          organization_id: ctx.organizationId, 
           trace_id: ctx.traceId, 
           category: body.riskCategory,
           urgency: result.urgency_metric
@@ -49,7 +49,7 @@ export const executiveRoutes: RouteDefinition[] = [
           "INTERNAL_ERROR",
           `Agent Board Translation failed: ${e instanceof Error ? e.message : String(e)}`,
           500,
-          e instanceof Error && e.stack ? [e.stack] : []
+          e instanceof Error ? [e.message] : []
         );
       }
     },

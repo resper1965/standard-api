@@ -13,7 +13,7 @@ import {
 import { expect, expectRejects, test } from "./test-kit";
 
 const ids = {
-  tenantId: "11111111-1111-4111-8111-111111111111",
+  organizationId: "11111111-1111-4111-8111-111111111111",
   organizationId: "22222222-2222-4222-8222-222222222222",
   assessmentId: "33333333-3333-4333-8333-333333333333",
   actorId: "44444444-4444-4444-8444-444444444444",
@@ -53,13 +53,12 @@ test("content_hash é calculado", async () => {
 
 test("storage_key segue padrão seguro", () => {
   const key = buildStorageKey({
-    tenantId: ids.tenantId,
     organizationId: ids.organizationId,
     assessmentId: ids.assessmentId,
     documentId: ids.documentId,
     safeFilename: "evidence.txt"
   });
-  expect(key).toBe(`tenants/${ids.tenantId}/organizations/${ids.organizationId}/assessments/${ids.assessmentId}/documents/${ids.documentId}/evidence.txt`);
+  expect(key).toBe(`tenants/${ids.organizationId}/organizations/${ids.organizationId}/assessments/${ids.assessmentId}/documents/${ids.documentId}/evidence.txt`);
 });
 
 test("PlainTextExtractor extrai texto", async () => {
@@ -71,7 +70,6 @@ test("chunker não gera chunks vazios e preserva ordem", async () => {
   const chunks = await chunkExtractedDocument({
     extracted: { text: "primeiro parágrafo\n\nsegundo parágrafo", metadata: {}, warnings: [] },
     config: { max_tokens_estimate: 50, overlap_tokens_estimate: 0, strategy: "by_tokens_estimate", preserve_headings: true, preserve_pages: true },
-    tenantId: ids.tenantId,
     organizationId: ids.organizationId,
     assessmentId: ids.assessmentId,
     documentId: ids.documentId,
@@ -83,7 +81,7 @@ test("chunker não gera chunks vazios e preserva ordem", async () => {
   expect(chunks[0]!.text_hash.length).toBe(64);
 });
 
-test("job message contém tenant_id, assessment_id e trace_id", async () => {
+test("job message contém organization_id, assessment_id e trace_id", async () => {
   const deps = createInMemoryDocumentIngestionDependencies();
   const service = new DocumentIngestionService(deps);
   const result = await service.uploadDocument({
@@ -91,7 +89,6 @@ test("job message contém tenant_id, assessment_id e trace_id", async () => {
     jobId: ids.jobId,
     file: { originalFilename: "evidence.txt", mimeType: "text/plain", bytes: textBytes("evidence") },
     context: {
-      tenantId: ids.tenantId,
       organizationId: ids.organizationId,
       assessmentId: ids.assessmentId,
       actorId: ids.actorId,
@@ -99,7 +96,7 @@ test("job message contém tenant_id, assessment_id e trace_id", async () => {
       now: "2026-04-28T00:00:00.000Z"
     }
   });
-  expect(result.message.tenant_id).toBe(ids.tenantId);
+  expect(result.message.organization_id).toBe(ids.organizationId);
   expect(result.message.assessment_id).toBe(ids.assessmentId);
   expect(result.message.trace_id).toBe("trace-test-0001");
 });
@@ -112,7 +109,6 @@ test("consumer mock processa documento TXT e gera chunks", async () => {
     jobId: ids.jobId,
     file: { originalFilename: "evidence.txt", mimeType: "text/plain", bytes: textBytes("texto de evidência para chunking") },
     context: {
-      tenantId: ids.tenantId,
       organizationId: ids.organizationId,
       assessmentId: ids.assessmentId,
       actorId: ids.actorId,
@@ -121,8 +117,8 @@ test("consumer mock processa documento TXT e gera chunks", async () => {
     }
   });
   await processDocumentIngestionJob(result.message, deps);
-  const chunks = await deps.repositories.chunks.listChunks(ids.documentId, ids.tenantId, 10);
-  const job = await deps.repositories.jobs.getJob(ids.jobId, ids.tenantId);
+  const chunks = await deps.repositories.chunks.listChunks(ids.documentId, ids.organizationId, 10);
+  const job = await deps.repositories.jobs.getJob(ids.jobId, ids.organizationId);
   expect(chunks.length).toBe(1);
   expect(job!.status).toBe("succeeded");
 });
@@ -141,7 +137,6 @@ test("erro no extractor marca job como failed com safe error message", async () 
     jobId: ids.jobId,
     file: { originalFilename: "evidence.txt", mimeType: "text/plain", bytes: textBytes("texto") },
     context: {
-      tenantId: ids.tenantId,
       organizationId: ids.organizationId,
       assessmentId: ids.assessmentId,
       actorId: ids.actorId,
@@ -150,7 +145,7 @@ test("erro no extractor marca job como failed com safe error message", async () 
     }
   });
   await processDocumentIngestionJob(result.message, deps);
-  const job = await deps.repositories.jobs.getJob(ids.jobId, ids.tenantId);
+  const job = await deps.repositories.jobs.getJob(ids.jobId, ids.organizationId);
   expect(job!.status).toBe("failed");
   expect(job!.error_message_safe!.length).toBe(240);
 });

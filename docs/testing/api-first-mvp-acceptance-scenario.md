@@ -20,7 +20,7 @@ O cenário valida que a API consegue:
 - passar por approval;
 - gerar Report;
 - registrar audit trail;
-- manter tenant isolation;
+- manter organization isolation;
 - manter traceabilidade completa.
 
 Este documento é um cenário de aceitação MVP. Ele deve poder ser automatizado como teste API-driven usando adapters locais, repositórios in-memory, fixtures sintéticas, `MockLLMProvider` e `MockVectorStore`.
@@ -36,14 +36,14 @@ Este documento é um cenário de aceitação MVP. Ele deve poder ser automatizad
 - Nenhuma dependência obrigatória de Cloudflare real.
 - Nenhum documento real.
 - Nenhum prompt/output sensível persistido.
-- Todos os requests carregam tenant context.
+- Todos os requests carregam organization context.
 - Todos os responses críticos incluem `trace_id`.
 
 Headers mínimos recomendados:
 
 ```text
 Authorization: Bearer synthetic-token
-x-standard-tenant-id: tenant_synth_a
+x-standard-organization-id: tenant_synth_a
 x-standard-organization-id: org_synth_healthtech
 x-standard-actor-id: assessor_user
 x-standard-trace-id: trace_acceptance_001
@@ -58,7 +58,7 @@ x-standard-actor-id: approver_user
 
 ## 3. Entidades do Cenário
 
-Tenant:
+Organization:
 
 - `tenant_synth_a`
 
@@ -94,7 +94,7 @@ Documentos sintéticos:
 
 Fluxo padrão:
 
-1. Criar tenant, se aplicável.
+1. Criar organization, se aplicável.
 2. Criar organização.
 3. Criar assessment.
 4. Upload/registro de documentos.
@@ -138,18 +138,18 @@ Documents → KB → Framework → SoA → Approval
 
 ## 5. Contrato de Cada Etapa
 
-### 1. Criar Tenant
+### 1. Criar Organization
 
 | Campo | Valor |
 | --- | --- |
 | Método | `POST` |
-| Endpoint | `/api/v1/tenants` |
-| Payload | `{ "tenant_id": "tenant_synth_a", "name": "Synthetic Tenant A" }` |
-| Resposta esperada | `201` ou `202`, tenant criado ou aceito |
-| Estado esperado | Tenant disponível |
-| Validações obrigatórias | `tenant_id` sintético, `trace_id`, sem dados reais |
+| Endpoint | `/api/v1/organizations` |
+| Payload | `{ "organization_id": "tenant_synth_a", "name": "Synthetic Organization A" }` |
+| Resposta esperada | `201` ou `202`, organization criado ou aceito |
+| Estado esperado | Organization disponível |
+| Validações obrigatórias | `organization_id` sintético, `trace_id`, sem dados reais |
 
-Observação: se o ambiente de teste já injeta tenant via fixture/header, esta etapa pode ser marcada como precondition e não executada.
+Observação: se o ambiente de teste já injeta organization via fixture/header, esta etapa pode ser marcada como precondition e não executada.
 
 ### 2. Criar Organização
 
@@ -157,10 +157,10 @@ Observação: se o ambiente de teste já injeta tenant via fixture/header, esta 
 | --- | --- |
 | Método | `POST` |
 | Endpoint | `/api/v1/organizations` |
-| Payload | `{ "organization_id": "org_synth_healthtech", "tenant_id": "tenant_synth_a", "name": "Synthetic HealthTech Org" }` |
+| Payload | `{ "organization_id": "org_synth_healthtech", "organization_id": "tenant_synth_a", "name": "Synthetic HealthTech Org" }` |
 | Resposta esperada | `201` ou `202` |
 | Estado esperado | Organização disponível |
-| Validações obrigatórias | organização vinculada ao tenant correto |
+| Validações obrigatórias | organização vinculada ao organization correto |
 
 ### 3. Criar Assessment
 
@@ -169,7 +169,7 @@ Observação: se o ambiente de teste já injeta tenant via fixture/header, esta 
 | Método | `POST` |
 | Endpoint | `/api/v1/assessments` |
 | Payload | `{ "organization_id": "org_synth_healthtech", "name": "Synthetic MVP Acceptance Assessment", "scf_version_id": "SCF-SYNTH-1", "document_count": 0 }` |
-| Resposta esperada | `202`, `assessment_id`, `tenant_id`, `organization_id`, `state`, `trace_id` |
+| Resposta esperada | `202`, `assessment_id`, `organization_id`, `organization_id`, `state`, `trace_id` |
 | Estado esperado | `draft` |
 | Validações obrigatórias | assessment pertence a `tenant_synth_a`; `trace_id` presente |
 
@@ -182,7 +182,7 @@ Observação: se o ambiente de teste já injeta tenant via fixture/header, esta 
 | Payload | metadata sintética do documento, hash e tipo |
 | Resposta esperada | `202`, `document_id`, ingestion job ou status registrado |
 | Estado esperado | `documents_uploaded` após transição/workflow |
-| Validações obrigatórias | arquivo/metadata sintético; tenant correto; audit event |
+| Validações obrigatórias | arquivo/metadata sintético; organization correto; audit event |
 
 Payload exemplo:
 
@@ -216,7 +216,7 @@ Payload exemplo:
 | Payload | `{ "idempotency_key": "ingest-doc-synth-001" }` |
 | Resposta esperada | job aceito ou signal aceito |
 | Estado esperado | `documents_ingested` quando concluído |
-| Validações obrigatórias | chunks possuem `document_id`, `chunk_id`, hash, tenant, assessment |
+| Validações obrigatórias | chunks possuem `document_id`, `chunk_id`, hash, organization, assessment |
 
 Signal alternativo:
 
@@ -243,7 +243,7 @@ POST /api/v1/workflows/:workflowRunId/signals
 | Payload | `{ "idempotency_key": "kb-index-asm-synth-001" }` |
 | Resposta esperada | indexing job criado/aceito |
 | Estado esperado | KB pronta para busca; lifecycle pode avançar para `scf_pre_analysis_ready` |
-| Validações obrigatórias | Vector references por tenant/assessment; KB não normativa |
+| Validações obrigatórias | Vector references por organization/assessment; KB não normativa |
 
 Processamento local/mock:
 
@@ -487,7 +487,7 @@ GET /api/v1/assessments/:assessmentId/lifecycle-events
 
 Durante o fluxo validar:
 
-- tenant isolation;
+- organization isolation;
 - schema validation;
 - approval gates;
 - audit logs;
@@ -502,9 +502,9 @@ Durante o fluxo validar:
 
 ## 8. Cenários Negativos Obrigatórios
 
-### Acessar Assessment de Outro Tenant
+### Acessar Assessment de Outro Organization
 
-- Request com `x-standard-tenant-id: tenant_synth_b`.
+- Request com `x-standard-organization-id: tenant_synth_b`.
 - Endpoint: `GET /api/v1/assessments/asm_synth_001`.
 - Esperado: `403` ou `404` seguro.
 - Validar security event `cross_tenant_access_blocked` ou equivalente.
@@ -540,9 +540,9 @@ Durante o fluxo validar:
 - Payload tenta `admin`, `final_write`, `raw_database_query` ou external call não allowlisted.
 - Esperado: `403`, `tool_access_denied`.
 
-### Executar sem `tenant_id`
+### Executar sem `organization_id`
 
-- Remover `x-standard-tenant-id` e tenant do payload.
+- Remover `x-standard-organization-id` e organization do payload.
 - Esperado: `400` ou `401/403` seguro.
 - Validar erro com `trace_id`.
 
@@ -614,7 +614,7 @@ Checks:
 - Gap finding contém `evidence_finding_id`, `source_document_id` ou source equivalente.
 - POA&M item contém `related_gap_finding_id`.
 - Report contém references para `soa_version_id`, `gap_analysis_version_id`, `maturity_assessment_version_id`, `poam_version_id`.
-- Todos os artifacts possuem `tenant_id`, `organization_id`, `assessment_id`, `trace_id`.
+- Todos os artifacts possuem `organization_id`, `organization_id`, `assessment_id`, `trace_id`.
 
 ## 12. Teste de Consistência
 
@@ -699,7 +699,7 @@ Criar assessment:
 ```bash
 curl -X POST "$API_BASE/api/v1/assessments" \
   -H "content-type: application/json" \
-  -H "x-standard-tenant-id: $TENANT_ID" \
+  -H "x-standard-organization-id: $TENANT_ID" \
   -H "x-standard-organization-id: $ORG_ID" \
   -H "x-standard-actor-id: $ASSESSOR" \
   -H "x-standard-trace-id: $TRACE_ID" \
@@ -716,7 +716,7 @@ Iniciar workflow:
 ```bash
 curl -X POST "$API_BASE/api/v1/assessments/asm_synth_001/workflows/lifecycle/start" \
   -H "content-type: application/json" \
-  -H "x-standard-tenant-id: $TENANT_ID" \
+  -H "x-standard-organization-id: $TENANT_ID" \
   -H "x-standard-organization-id: $ORG_ID" \
   -H "x-standard-actor-id: $ASSESSOR" \
   -H "x-standard-trace-id: $TRACE_ID" \
@@ -728,7 +728,7 @@ Enviar signal de framework:
 ```bash
 curl -X POST "$API_BASE/api/v1/workflows/workflow_synth_001/signals" \
   -H "content-type: application/json" \
-  -H "x-standard-tenant-id: $TENANT_ID" \
+  -H "x-standard-organization-id: $TENANT_ID" \
   -H "x-standard-organization-id: $ORG_ID" \
   -H "x-standard-actor-id: $ASSESSOR" \
   -H "x-standard-trace-id: $TRACE_ID" \
@@ -751,7 +751,7 @@ O cenário é válido se:
 - fluxo completo executa sem erro crítico;
 - todos approval gates respeitados;
 - nenhum bypass detectado;
-- nenhum vazamento de tenant;
+- nenhum vazamento de organization;
 - outputs válidos por schema;
 - audit trail completo;
 - traceabilidade completa;
@@ -763,7 +763,7 @@ O cenário é válido se:
 
 No-Go:
 
-- tenant leakage;
+- organization leakage;
 - approval bypass;
 - output sem schema válido;
 - mapping SCF oficial inventado;

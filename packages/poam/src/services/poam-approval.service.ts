@@ -31,7 +31,7 @@ export class PoamApprovalService {
   }
 
   async supersedePreviousApprovedPoam(assessmentId: string, approvedPoamVersionId: string, context: PoamContext): Promise<void> {
-    const versions = await this.deps.repositories.versions.listByAssessment(assessmentId, context.tenantId);
+    const versions = await this.deps.repositories.versions.listByAssessment(assessmentId, context.organizationId);
     for (const version of versions) {
       if (version.poam_version_id !== approvedPoamVersionId && version.status === "approved") {
         await this.deps.repositories.versions.update({
@@ -45,7 +45,7 @@ export class PoamApprovalService {
   }
 
   private async getVersion(poamVersionId: string, context: PoamContext): Promise<PoamVersionResponse> {
-    const version = await this.deps.repositories.versions.get(poamVersionId, context.tenantId);
+    const version = await this.deps.repositories.versions.get(poamVersionId, context.organizationId);
     if (!version || version.assessment_id !== context.assessmentId) throw new PoamWorkflowError("POAM_NOT_FOUND", "POA&M version not found.");
     return version;
   }

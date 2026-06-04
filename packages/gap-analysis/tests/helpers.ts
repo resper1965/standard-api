@@ -5,7 +5,6 @@ import { createInMemoryGapAnalysisDependencies } from "../src/index";
 import { createKbFixture, ids as kbIds } from "../../kb/tests/helpers";
 
 export const ids = {
-  tenantId: kbIds.tenantId,
   organizationId: kbIds.organizationId,
   assessmentId: kbIds.assessmentId,
   actorId: kbIds.actorId,
@@ -18,7 +17,6 @@ export const ids = {
 };
 
 export const context = {
-  tenantId: ids.tenantId,
   organizationId: ids.organizationId,
   assessmentId: ids.assessmentId,
   actorId: ids.actorId,
@@ -31,7 +29,6 @@ export const createApprovedSoaFixture = async (withKbEvidence = false) => {
     const indexed = await new KbIndexingService(kb).indexAssessment(context, { force_reindex: false });
     await processKbEmbeddingJob({
       job_id: indexed.queued_job_ids[0]!,
-      tenant_id: ids.tenantId,
       organization_id: ids.organizationId,
       assessment_id: ids.assessmentId,
       document_id: ids.documentId,

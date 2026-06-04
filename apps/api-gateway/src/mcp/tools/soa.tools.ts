@@ -60,11 +60,11 @@ export async function handleListSoaVersions(
   try {
     const assessmentId = args["assessment_id"] as string;
     if (!assessmentId) return fail("assessment_id is required.");
-    const tenantId = ctx.tenantId;
-    if (!tenantId) return fail("Tenant context required.");
+    const organizationId = ctx.organizationId;
+    if (!organizationId) return fail("Tenant context required.");
 
     const versions = await ctx.deps.soa.repositories.versions
-      .listByAssessment(assessmentId, tenantId);
+      .listByAssessment(assessmentId, organizationId);
 
     return ok({ assessment_id: assessmentId, total: versions.length, versions: versions.map(mapVersion) });
   } catch (e) {
@@ -81,10 +81,10 @@ export async function handleGetSoaVersion(
   try {
     const soaVersionId = args["soa_version_id"] as string;
     if (!soaVersionId) return fail("soa_version_id is required.");
-    const tenantId = ctx.tenantId;
-    if (!tenantId) return fail("Tenant context required.");
+    const organizationId = ctx.organizationId;
+    if (!organizationId) return fail("Tenant context required.");
 
-    const version = await ctx.deps.soa.repositories.versions.get(soaVersionId, tenantId);
+    const version = await ctx.deps.soa.repositories.versions.get(soaVersionId, organizationId);
     if (!version) return fail(`SoA version ${soaVersionId} not found.`);
 
     return ok(mapVersion(version));
@@ -102,8 +102,8 @@ export async function handleListSoaItems(
   try {
     const soaVersionId = args["soa_version_id"] as string;
     if (!soaVersionId) return fail("soa_version_id is required.");
-    const tenantId = ctx.tenantId;
-    if (!tenantId) return fail("Tenant context required.");
+    const organizationId = ctx.organizationId;
+    if (!organizationId) return fail("Tenant context required.");
 
     const applicabilityFilter = args["applicability_status"] as string | undefined;
     const implementationFilter = args["implementation_status"] as string | undefined;
@@ -111,7 +111,7 @@ export async function handleListSoaItems(
     const limit = Math.min(Number(args["limit"] ?? 50), 200);
 
     let items: SoaItemResponse[] = await ctx.deps.soa.repositories.items
-      .listByVersion(soaVersionId, tenantId);
+      .listByVersion(soaVersionId, organizationId);
 
     if (applicabilityFilter) items = items.filter((i) => i.applicability_status === applicabilityFilter);
     if (implementationFilter) items = items.filter((i) => i.implementation_status === implementationFilter);
@@ -134,10 +134,10 @@ export async function handleGetSoaItem(
   try {
     const soaItemId = args["soa_item_id"] as string;
     if (!soaItemId) return fail("soa_item_id is required.");
-    const tenantId = ctx.tenantId;
-    if (!tenantId) return fail("Tenant context required.");
+    const organizationId = ctx.organizationId;
+    if (!organizationId) return fail("Tenant context required.");
 
-    const item = await ctx.deps.soa.repositories.items.get(soaItemId, tenantId);
+    const item = await ctx.deps.soa.repositories.items.get(soaItemId, organizationId);
     if (!item) return fail(`SoA item ${soaItemId} not found.`);
 
     return ok(mapItem(item));
@@ -157,14 +157,12 @@ export async function handleValidateSoa(
     if (!soaVersionId) return fail("soa_version_id is required.");
     const assessmentId = args["assessment_id"] as string;
     if (!assessmentId) return fail("assessment_id is required.");
-    const tenantId = ctx.tenantId;
     const organizationId = ctx.organizationId;
-    if (!tenantId || !organizationId) return fail("Tenant and organization context required.");
+    if (!organizationId || !organizationId) return fail("Tenant and organization context required.");
 
     const { SoaReviewService } = await import("@standard/soa");
     const reviewService = new SoaReviewService(ctx.deps.soa);
     const validation = await reviewService.validateSoaForReview(soaVersionId, {
-      tenantId,
       organizationId,
       assessmentId,
       traceId: `mcp-validate-${Date.now()}`,
@@ -193,22 +191,22 @@ export async function handleGetSoaSummary(
   try {
     const assessmentId = args["assessment_id"] as string;
     if (!assessmentId) return fail("assessment_id is required.");
-    const tenantId = ctx.tenantId;
-    if (!tenantId) return fail("Tenant context required.");
+    const organizationId = ctx.organizationId;
+    if (!organizationId) return fail("Tenant context required.");
 
     const soaVersionId = args["soa_version_id"] as string | undefined;
     let version: SoaVersionResponse | null | undefined;
 
     if (soaVersionId) {
-      version = await ctx.deps.soa.repositories.versions.get(soaVersionId, tenantId);
+      version = await ctx.deps.soa.repositories.versions.get(soaVersionId, organizationId);
     } else {
-      const versions = await ctx.deps.soa.repositories.versions.listByAssessment(assessmentId, tenantId);
+      const versions = await ctx.deps.soa.repositories.versions.listByAssessment(assessmentId, organizationId);
       version = versions[versions.length - 1] ?? null;
     }
 
     if (!version) return fail(`No SoA found for assessment ${assessmentId}.`);
 
-    const items = await ctx.deps.soa.repositories.items.listByVersion(version.soa_version_id, tenantId);
+    const items = await ctx.deps.soa.repositories.items.listByVersion(version.soa_version_id, organizationId);
 
     const applicabilityCounts: Record<string, number> = {};
     const implementationCounts: Record<string, number> = {};

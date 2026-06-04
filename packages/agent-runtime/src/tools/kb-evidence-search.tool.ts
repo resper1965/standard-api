@@ -16,14 +16,13 @@ export type KbEvidenceResult = {
 export type KbEvidenceSearchDependencies = {
   semanticSearch: (
     query: string,
-    tenantId: string,
+    organizationId: string,
     assessmentId: string,
     topK?: number
   ) => Promise<KbEvidenceResult[]>;
 };
 
 export type KbEvidenceSearchArgs = {
-  tenant_id: string;
   organization_id: string;
   assessment_id: string;
   trace_id: string;
@@ -44,7 +43,7 @@ export function createKbEvidenceSearchTool(kb: KbEvidenceSearchDependencies) {
       const topK = args.top_k ?? 5;
       const evidence = await kb.semanticSearch(
         args.query,
-        args.tenant_id,
+        args.organization_id,
         args.assessment_id,
         topK
       );

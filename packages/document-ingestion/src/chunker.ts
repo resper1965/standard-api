@@ -45,7 +45,6 @@ const splitByTokenEstimate = (text: string, maxTokens: number): string[] => {
 export const chunkExtractedDocument = async (input: {
   extracted: ExtractedDocument;
   config: ChunkingConfig;
-  tenantId: string;
   organizationId: string;
   assessmentId: string;
   documentId: string;
@@ -65,7 +64,6 @@ export const chunkExtractedDocument = async (input: {
       if (!normalized) continue;
       chunks.push({
         chunk_id: input.idFactory(),
-        tenant_id: input.tenantId,
         organization_id: input.organizationId,
         assessment_id: input.assessmentId,
         document_id: input.documentId,

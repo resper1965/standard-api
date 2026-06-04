@@ -34,7 +34,7 @@ const run = async () => {
 
   const TENANT = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
   const ACTOR = "cccccccc-cccc-cccc-cccc-cccccccccccc";
-  const ctx = { tenantId: TENANT, actorId: ACTOR, traceId: "test-trace" };
+  const ctx = { organizationId: TENANT, actorId: ACTOR, traceId: "test-trace" };
 
   {
     const deps = createInMemoryPrivacyDependencies();
@@ -277,8 +277,8 @@ const run = async () => {
     const TENANT_A = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
     const TENANT_B = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb";
 
-    const actA = await crud.createActivity({ name: "Tenant A Activity" }, { tenantId: TENANT_A, actorId: ACTOR, traceId: "t" });
-    const actB = await crud.createActivity({ name: "Tenant B Activity" }, { tenantId: TENANT_B, actorId: ACTOR, traceId: "t" });
+    const actA = await crud.createActivity({ name: "Tenant A Activity" }, { organizationId: TENANT_A, actorId: ACTOR, traceId: "t" });
+    const actB = await crud.createActivity({ name: "Tenant B Activity" }, { organizationId: TENANT_B, actorId: ACTOR, traceId: "t" });
 
     // Cross-tenant access denied
     assert("tenant A cannot see tenant B activity", await crud.getActivity(actB.id, TENANT_A) === null);
@@ -288,12 +288,12 @@ const run = async () => {
     assert("tenant A sees own activity", (await crud.getActivity(actA.id, TENANT_A))?.id === actA.id);
 
     // Third parties isolated
-    await crud.addThirdParties(actA.id, [{ name: "Vendor A" }], { tenantId: TENANT_A, actorId: ACTOR, traceId: "t" });
+    await crud.addThirdParties(actA.id, [{ name: "Vendor A" }], { organizationId: TENANT_A, actorId: ACTOR, traceId: "t" });
     const partiesB = await crud.listThirdParties(actA.id, TENANT_B);
     assert("third parties isolated by tenant", partiesB.length === 0);
 
     // Field reviews isolated
-    await crud.addFieldReview(actA.id, { field_name: "test", source: "human" }, { tenantId: TENANT_A, actorId: ACTOR, traceId: "t" });
+    await crud.addFieldReview(actA.id, { field_name: "test", source: "human" }, { organizationId: TENANT_A, actorId: ACTOR, traceId: "t" });
     const reviewsB = await crud.listFieldReviews(actA.id, TENANT_B);
     assert("field reviews isolated by tenant", reviewsB.length === 0);
   }

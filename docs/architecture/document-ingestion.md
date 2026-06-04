@@ -8,14 +8,14 @@ O pipeline de ingestão documental registra documentos de assessment, armazena o
 
 O MVP usa `POST /api/v1/assessments/:assessmentId/documents` com `multipart/form-data`. O campo `file` é obrigatório. Metadados opcionais: `classification`, `document_type`, `language`, `version_label` e `effective_date`.
 
-O API Gateway valida `tenant_id` via contexto, exige `actor_id`, verifica o assessment do tenant e chama `packages/document-ingestion`.
+O API Gateway valida `organization_id` via contexto, exige `actor_id`, verifica o assessment do organization e chama `packages/document-ingestion`.
 
 ## Fluxo de Armazenamento
 
 O pacote calcula `content_hash`, normaliza filename e gera storage key segura:
 
 ```text
-tenants/{tenant_id}/organizations/{organization_id}/assessments/{assessment_id}/documents/{document_id}/{safe_filename}
+organizations/{organization_id}/organizations/{organization_id}/assessments/{assessment_id}/documents/{document_id}/{safe_filename}
 ```
 
 O adapter atual é mock/local para testes. O worker de ingestão inclui um adapter inicial para R2, mas a persistência transacional real ainda será conectada depois.
@@ -65,7 +65,7 @@ Embeddings reais não são gerados nesta etapa.
 
 ## Multi-Tenancy
 
-Todo documento, job, chunk e vector reference carrega `tenant_id`, `organization_id`, `assessment_id` e `trace_id`. A API não lista documentos fora do tenant resolvido.
+Todo documento, job, chunk e vector reference carrega `organization_id`, `organization_id`, `assessment_id` e `trace_id`. A API não lista documentos fora do organization resolvido.
 
 ## Rastreabilidade
 
@@ -101,7 +101,7 @@ O upload incrementa o snapshot mock do assessment com `documentCount`. Isso prep
 ## Decisões em Aberto
 
 - Escolher entre multipart direto e signed upload URL para produção.
-- Definir limite máximo oficial por tenant/plano.
+- Definir limite máximo oficial por organization/plano.
 - Conectar adapters PostgreSQL para documents, jobs, chunks e vector references.
 - Adicionar file scanning real antes de extração.
 - Implementar extractors PDF/DOCX em ambiente compatível.

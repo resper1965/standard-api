@@ -57,7 +57,7 @@ O módulo `transitions.ts` contém a lista explícita de transições permitidas
 
 Cada evento contém:
 
-- `tenantId`
+- `organizationId`
 - `organizationId`
 - `assessmentId`
 - `previousState`
@@ -124,14 +124,14 @@ Alterações após aprovação devem usar `createNextArtifactVersion`, gerando u
 
 Toda operação crítica exige contexto explícito:
 
-- `tenantId`
+- `organizationId`
 - `organizationId`
 - `assessmentId`
 - `traceId`
 - `reason`
 - `actorId` ou `systemActor`
 
-O engine valida que o `TransitionContext` corresponde ao snapshot do assessment antes de permitir qualquer transição. Isso evita mistura acidental entre tenants, organizações e assessments.
+O engine valida que o `TransitionContext` corresponde ao snapshot do assessment antes de permitir qualquer transição. Isso evita mistura acidental entre organizations, organizações e assessments.
 
 ## Consumo Por API, Workflows e Workers
 
@@ -170,7 +170,7 @@ Os testes ficam em `packages/assessment-engine/tests` e cobrem:
 - Gates de aprovação.
 - Versionamento de artefatos.
 - Imutabilidade de versões aprovadas.
-- Preservação de `tenantId`, `organizationId`, `assessmentId` e `traceId`.
+- Preservação de `organizationId`, `organizationId`, `assessmentId` e `traceId`.
 
 Comando:
 

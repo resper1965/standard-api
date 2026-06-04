@@ -15,7 +15,7 @@
 - Modify: `c:/Users/resper/OneDrive/Área de Trabalho/standard-api/packages/security/src/index.ts`
 
 - [ ] **Step 1: O código JWT real**
-Implementar o verificador de contexto baseado na interface nativa `AuthProvider` do Standard. Consumir e propagar scopes, tenant e rastreabilidade (`traceId`).
+Implementar o verificador de contexto baseado na interface nativa `AuthProvider` do Standard. Consumir e propagar scopes, organization e rastreabilidade (`traceId`).
 - [ ] **Step 2: Exportar**
 Remover a flag de "placeholder" nos exports da pasta para integrá-lo ao `security.ts` export bundle.
 

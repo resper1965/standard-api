@@ -8,7 +8,6 @@ export const KbSearchTypeSchema = z.enum(["semantic", "hybrid", "text"]);
 export const KbRetrievalMethodSchema = z.enum(["vector", "hybrid", "text"]);
 
 export const VectorStoreMetadataSchema = z.object({
-  tenant_id: UuidSchema,
   organization_id: UuidSchema,
   assessment_id: UuidSchema,
   document_id: UuidSchema,
@@ -29,7 +28,6 @@ export const EmbeddingProviderConfigSchema = z.object({
 
 export const KbVectorReferenceResponseSchema = z.object({
   vector_reference_id: UuidSchema,
-  tenant_id: UuidSchema,
   organization_id: UuidSchema,
   assessment_id: UuidSchema,
   document_id: UuidSchema,
@@ -48,7 +46,6 @@ export const KbVectorReferenceResponseSchema = z.object({
 
 export const KbEmbeddingJobResponseSchema = z.object({
   job_id: UuidSchema,
-  tenant_id: UuidSchema,
   organization_id: UuidSchema,
   assessment_id: UuidSchema,
   document_id: UuidSchema,
@@ -104,7 +101,6 @@ export const KbSearchRequestSchema = z.object({
 });
 
 export const KbSearchResultSchema = z.object({
-  tenant_id: UuidSchema,
   organization_id: UuidSchema,
   assessment_id: UuidSchema,
   document_id: UuidSchema,
@@ -130,7 +126,6 @@ export const KbSearchResponseSchema = z.object({
 });
 
 export const ChunkContextResponseSchema = z.object({
-  tenant_id: UuidSchema,
   organization_id: UuidSchema,
   assessment_id: UuidSchema,
   document_id: UuidSchema,
@@ -143,7 +138,6 @@ export const ChunkContextResponseSchema = z.object({
 });
 
 export const KbEmbeddingJobMessageSchema = z.object({
-  tenant_id: UuidSchema,
   organization_id: UuidSchema,
   assessment_id: UuidSchema,
   document_id: UuidSchema,

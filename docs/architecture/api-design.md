@@ -18,7 +18,7 @@ Os endpoints de lifecycle chamam `packages/assessment-engine` para validar e exe
 
 ## Multi-Tenancy
 
-Rotas protegidas exigem `tenant_id` resolvido por placeholder via `x-standard-tenant-id` ou path `:tenantId`. Quando os dois aparecem, a API rejeita divergência. `assessment_id` é sempre validado contra `tenant_id` e `organization_id` nos mocks.
+Rotas protegidas exigem `organization_id` resolvido por placeholder via `x-standard-organization-id` ou path `:organizationId`. Quando os dois aparecem, a API rejeita divergência. `assessment_id` é sempre validado contra `organization_id` e `organization_id` nos mocks.
 
 ## Approvals
 
@@ -37,7 +37,7 @@ Toda request recebe ou reutiliza `x-trace-id`. Erros, responses críticas, lifec
 - Auth implementado via Standard Native Auth v1.6.11 (ADR 0005) com modelo dual: sessões (cookies) para Platform Console e M2M API Keys (SHA-256 hash) para acesso programático.
 - RBAC/ABAC baseado em roles (owner/admin/member/viewer) com permissions por recurso.
 - Persistência PostgreSQL via Drizzle ORM (ADR 0006).
-- Rate limiting/quota por tenant.
+- Rate limiting/quota por organization.
 - SCF real e parser SCF integrado.
 - OpenAPI gerado automaticamente a partir de schemas.
 

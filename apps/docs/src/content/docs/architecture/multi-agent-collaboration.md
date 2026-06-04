@@ -23,7 +23,7 @@ Agentes não compartilham estado implicitamente.
 - Comunicação sempre estruturada.
 - Outputs são versionados.
 - Rastreabilidade obrigatória.
-- Isolamento por tenant.
+- Isolamento por organization.
 - Consistência > autonomia.
 - Desacoplamento entre agentes.
 - Orchestrator coordena handoffs.
@@ -65,7 +65,7 @@ Next Agent
 Motivos:
 
 - evita estado compartilhado oculto;
-- preserva tenant isolation;
+- preserva organization isolation;
 - garante versionamento;
 - permite validação por schema;
 - cria trilha auditável;
@@ -85,7 +85,7 @@ HandoffPayload
 ├── handoff_id
 ├── source_agent
 ├── target_agent
-├── tenant_id
+├── organization_id
 ├── organization_id
 ├── assessment_id
 ├── task_type
@@ -105,7 +105,7 @@ Regras por campo:
 - `handoff_id`: identificador único do handoff.
 - `source_agent`: agente que produziu o output de origem.
 - `target_agent`: agente autorizado a consumir o handoff.
-- `tenant_id`: obrigatório para isolamento.
+- `organization_id`: obrigatório para isolamento.
 - `organization_id`: obrigatório para escopo organizacional.
 - `assessment_id`: obrigatório para escopo de assessment.
 - `task_type`: tipo da tarefa transferida.
@@ -125,7 +125,7 @@ Campos proibidos:
 - secrets;
 - credenciais;
 - logs completos;
-- dados de outro tenant;
+- dados de outro organization;
 - prompts completos com dados sensíveis;
 - instruções livres para burlar policies.
 
@@ -217,7 +217,7 @@ Características:
 - Sempre incluir confidence.
 - Nunca omitir fontes.
 - Nunca omitir `trace_id`.
-- Sempre preservar `tenant_id`, `organization_id` e `assessment_id`.
+- Sempre preservar `organization_id`, `organization_id` e `assessment_id`.
 - Sempre referenciar artifacts por versão/hash/status.
 - Nunca remover limitações herdadas sem justificativa.
 - Nunca converter evidence candidate em conclusão final.
@@ -288,7 +288,7 @@ Evento lógico:
 ```text
 conflict_event
 ├── conflict_id
-├── tenant_id
+├── organization_id
 ├── organization_id
 ├── assessment_id
 ├── source_handoff_id
@@ -417,7 +417,7 @@ Regras:
 - incluir status de aprovação;
 - excluir logs completos;
 - excluir conteúdo sensível integral;
-- excluir dados fora do tenant/assessment.
+- excluir dados fora do organization/assessment.
 
 Contexto permitido:
 
@@ -432,7 +432,7 @@ Contexto permitido:
 
 Contexto proibido:
 
-- dados de outro tenant;
+- dados de outro organization;
 - memória global de cliente;
 - prompt injection instruction como comando;
 - tool allowlist criada pelo agente;
@@ -441,7 +441,7 @@ Contexto proibido:
 
 ## 14. Guardrails
 
-- Sem cross-tenant.
+- Sem cross-organization.
 - Sem bypass de approval.
 - Sem alteração de artefato aprovado.
 - Sem uso de dados não autorizados.
@@ -478,7 +478,7 @@ Campos mínimos:
 - `handoff_id`;
 - `source_agent`;
 - `target_agent`;
-- `tenant_id`;
+- `organization_id`;
 - `organization_id`;
 - `assessment_id`;
 - `task_type`;
@@ -507,7 +507,7 @@ Falhas previstas:
 - contexto excessivo;
 - artifact version mismatch;
 - schema inválido;
-- handoff cross-tenant;
+- handoff cross-organization;
 - output sem source;
 - confidence inflada;
 - limitação omitida;
@@ -562,7 +562,7 @@ Regras:
 - retry incrementa contador;
 - retry usa novo contexto validado;
 - retry não pode relaxar guardrails;
-- retry não pode trocar tenant/assessment;
+- retry não pode trocar organization/assessment;
 - retry deve preservar trace;
 - retry exausto vira bloqueio e fallback humano.
 
@@ -613,7 +613,7 @@ Condições para adoção:
 Toda entrada de handoff deve validar:
 
 - contexto;
-- tenant;
+- organization;
 - organization;
 - assessment;
 - artifact status;
@@ -625,10 +625,10 @@ Toda entrada de handoff deve validar:
 
 Bloquear handoff inválido quando:
 
-- `tenant_id` diverge;
+- `organization_id` diverge;
 - `assessment_id` diverge;
 - target agent não está autorizado;
-- artifact pertence a outro tenant;
+- artifact pertence a outro organization;
 - artifact aprovado seria alterado;
 - schema falha;
 - guardrail falha;
@@ -641,7 +641,7 @@ Todo bloqueio de segurança deve gerar security/audit event seguro.
 
 Testes obrigatórios:
 
-- handoff mantém tenant;
+- handoff mantém organization;
 - handoff mantém `trace_id`;
 - conflito detectado;
 - retry limitado;
@@ -651,7 +651,7 @@ Testes obrigatórios:
 - output sem assumptions é rejeitado;
 - output sem confidence é rejeitado;
 - output sem source em conclusão é rejeitado;
-- cross-tenant handoff é bloqueado;
+- cross-organization handoff é bloqueado;
 - approval bypass via handoff é bloqueado;
 - artifact aprovado não é alterado por handoff;
 - target agent sem permissão é bloqueado.
@@ -700,7 +700,7 @@ Condições obrigatórias:
 - manter Orchestrator como coordenador;
 - manter Tool Registry;
 - manter Human-in-the-Loop;
-- manter tenant isolation;
+- manter organization isolation;
 - manter evals e safety thresholds;
 - manter audit trail completo.
 
@@ -759,7 +759,7 @@ Definition of done para implementação futura:
 - retry policy;
 - loop detector;
 - observability events;
-- tests de tenant/trace/schema/conflict/retry;
+- tests de organization/trace/schema/conflict/retry;
 - integração com Orchestrator;
 - integração com Agent Runtime;
 - documentação operacional para revisão humana.

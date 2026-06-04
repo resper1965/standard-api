@@ -87,7 +87,7 @@ standard-api-standard/
 Todo achado deve carregar:
 
 - `assessment_id`
-- `tenant_id`
+- `organization_id`
 - `scf_version`
 - `framework_id`
 - `control_id`
@@ -149,12 +149,12 @@ Nesta fase, os agentes são papéis arquiteturais e contratos de runtime governa
 - **Evidence Qualification Procedure**: diferenciar evidência direta, indireta, contraditória e não evidenciada.
 - **Human Approval Gate Procedure**: bloquear conclusão de SoA, Gap Analysis, Maturity e POA&M sem aprovação humana.
 - **Traceability Enforcement Procedure**: rejeitar achados sem contexto completo.
-- **LLM Call Governance Procedure**: toda chamada LLM deve passar pelo AI Gateway com metadados de tenant, assessment e agent run.
-- **Tenant Isolation Procedure**: filtrar dados por `tenant_id` em PostgreSQL, R2 keys, Vectorize namespaces e logs.
+- **LLM Call Governance Procedure**: toda chamada LLM deve passar pelo AI Gateway com metadados de organization, assessment e agent run.
+- **Organization Isolation Procedure**: filtrar dados por `organization_id` em PostgreSQL, R2 keys, Vectorize namespaces e logs.
 
 ## Decisões Iniciais
 
-1. PostgreSQL externo é a fonte transacional para assessments, tenants, evidências, aprovações e achados.
+1. PostgreSQL externo é a fonte transacional para assessments, organizations, evidências, aprovações e achados.
 2. R2 armazena documentos e relatórios; o banco guarda metadados e ponteiros.
 3. Vectorize é auxiliar para busca semântica e RAG, não fonte normativa.
 4. Workflows governam o lifecycle e estados, não o frontend.
@@ -167,14 +167,14 @@ Nesta fase, os agentes são papéis arquiteturais e contratos de runtime governa
 - Mapeamentos SCF exigem controle de versão rigoroso para evitar drift normativo.
 - Multi-tenancy precisa ser testada desde o primeiro milestone.
 - Extração de documentos pode gerar falsos negativos; por isso o status `not_evidenced` é obrigatório.
-- Custos de LLM e embeddings podem crescer rápido sem AI Gateway, cache e quotas por tenant.
+- Custos de LLM e embeddings podem crescer rápido sem AI Gateway, cache e quotas por organization.
 
 ## Decisões em Aberto
 
 - ~~Provedor de autenticação e modelo de RBAC/ABAC.~~ **Decisão tomada:** Standard Native Auth v1.6.11 como provedor de autenticação (ADR 0005). RBAC baseado em roles (owner/admin/member/viewer) com permissions granulares por recurso.
 - ~~ORM ou query builder para PostgreSQL.~~ **Decisão tomada:** Drizzle ORM como query builder PostgreSQL (ADR 0006).
 - Formato oficial de importação do SCF estruturado.
-- Estratégia de criptografia por tenant para objetos sensíveis em R2.
+- Estratégia de criptografia por organization para objetos sensíveis em R2.
 - Modelo de maturidade inicial por framework.
 - Critérios de confidence e calibração humana.
 

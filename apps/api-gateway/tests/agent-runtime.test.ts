@@ -3,10 +3,10 @@ import { expect, test } from "./test-kit";
 
 test("Agent Runtime API lista agentes funcionais e contratos de tools", async () => {
   const client = createTestClient();
-  const { tenantId } = await client.createTenantOrg();
+  const { organizationId } = await client.createTenantOrg();
 
   const result = await client.send("/api/v1/agent-runtime/agents", "GET", undefined, {
-    "x-standard-tenant-id": tenantId,
+    "x-standard-tenant-id": organizationId,
     "x-standard-actor-id": ids.actorId
   });
 
@@ -19,7 +19,7 @@ test("Agent Runtime API cria run rastreável e bloqueia tool não permitida", as
   const client = createTestClient();
   const assessment = await client.createAssessment(1);
   const headers = {
-    "x-standard-tenant-id": assessment.tenantId,
+    "x-standard-tenant-id": assessment.organizationId,
     "x-standard-actor-id": ids.actorId
   };
 
@@ -40,7 +40,6 @@ test("Agent Runtime API cria run rastreável e bloqueia tool não permitida", as
   const toolResult = await client.send(`/api/v1/agent-runs/${runResult.body.agent_run_id}/tool-calls`, "POST", {
     tool_name: "approval_event_create",
     input: {
-      tenant_id: assessment.tenantId,
       organization_id: assessment.organizationId,
       assessment_id: assessment.assessmentId,
       framework_id: ids.scfVersionId,
@@ -58,7 +57,7 @@ test("Agent Runtime API completa run com output schema-validado", async () => {
   const client = createTestClient();
   const assessment = await client.createAssessment(1);
   const headers = {
-    "x-standard-tenant-id": assessment.tenantId,
+    "x-standard-tenant-id": assessment.organizationId,
     "x-standard-actor-id": ids.actorId
   };
 

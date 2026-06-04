@@ -18,7 +18,6 @@ export class PoamSchedulingService {
     return [
       {
         poam_milestone_id: crypto.randomUUID(),
-        tenant_id: poamItem.tenant_id,
         organization_id: poamItem.organization_id,
         assessment_id: poamItem.assessment_id,
         poam_item_id: poamItem.poam_item_id,
@@ -44,7 +43,6 @@ export class PoamSchedulingService {
       if (relatedTechnical) {
         dependencies.push({
           poam_dependency_id: crypto.randomUUID(),
-          tenant_id: evidenceItem.tenant_id,
           organization_id: evidenceItem.organization_id,
           assessment_id: evidenceItem.assessment_id,
           poam_item_id: evidenceItem.poam_item_id,

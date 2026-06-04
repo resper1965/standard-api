@@ -21,7 +21,7 @@ export type RopaReport = {
   generated_at: string;
   format: RopaReportFormat;
   activity_id: string;
-  tenant_id: string;
+  organization_id: string;
   compliance_assertion: false; // ALWAYS false. System NEVER asserts compliance.
   completeness: {
     score: number;
@@ -58,21 +58,21 @@ export class PrivacyReportService {
 
   async generateReport(
     activityId: string,
-    tenantId: string,
+    organizationId: string,
     format: RopaReportFormat = "json"
   ): Promise<RopaReport> {
-    const activity = await this.deps.repositories.activities.get(activityId, tenantId);
+    const activity = await this.deps.repositories.activities.get(activityId, organizationId);
     if (!activity) throw new PrivacyError("ACTIVITY_NOT_FOUND", `Activity ${activityId} not found.`);
 
     const [subjects, categories, thirdParties, screenings, fieldReviews, scfControls, completenessResult] =
       await Promise.all([
-        this.deps.repositories.dataSubjects.listByActivity(activityId, tenantId),
-        this.deps.repositories.dataCategories.listByActivity(activityId, tenantId),
-        this.deps.repositories.thirdParties.listByActivity(activityId, tenantId),
-        this.deps.repositories.screenings.listByActivity(activityId, tenantId),
-        this.deps.repositories.fieldReviews.listByActivity(activityId, tenantId),
-        this.deps.repositories.scfControls.listByActivity(activityId, tenantId),
-        this.completeness.analyze(activityId, tenantId),
+        this.deps.repositories.dataSubjects.listByActivity(activityId, organizationId),
+        this.deps.repositories.dataCategories.listByActivity(activityId, organizationId),
+        this.deps.repositories.thirdParties.listByActivity(activityId, organizationId),
+        this.deps.repositories.screenings.listByActivity(activityId, organizationId),
+        this.deps.repositories.fieldReviews.listByActivity(activityId, organizationId),
+        this.deps.repositories.scfControls.listByActivity(activityId, organizationId),
+        this.completeness.analyze(activityId, organizationId),
       ]);
 
     // Build field origin map from field reviews
@@ -141,7 +141,7 @@ export class PrivacyReportService {
       generated_at: new Date().toISOString(),
       format,
       activity_id: activityId,
-      tenant_id: tenantId,
+      organization_id: organizationId,
       compliance_assertion: false,
       completeness: {
         score: completenessResult.completeness_score,

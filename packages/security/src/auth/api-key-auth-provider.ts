@@ -21,7 +21,6 @@ type ApiKeysDbClient = {
     apiKeys: {
       findFirst: (opts: { where: ReturnType<typeof eq> }) => Promise<{
         id: string;
-        tenantId: string;
         organizationId: string;
         keyHash: string;
         scopes: string[] | null;
@@ -89,7 +88,7 @@ export class ApiKeyAuthProvider implements AuthProvider {
     return {
       actor_id: `apikey:${record.id}`,
       actor_type: "service_account",
-      tenant_id: record.tenantId,
+      organization_id: record.organizationId,
       organization_ids: [record.organizationId],
       roles: ["integration_service"],
       permissions: this.resolvePermissions(record.scopes ?? []),

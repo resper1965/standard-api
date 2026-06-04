@@ -6,7 +6,7 @@ export const TraceIdSchema = z.string().min(8);
 export const SupportedLocaleSchema = z.enum(["pt-BR", "en"]).default("pt-BR");
 
 export const TenantContextSchema = z.object({
-  tenantId: UuidSchema
+  organizationId: UuidSchema
 });
 
 export const ActorContextSchema = z.object({
@@ -31,7 +31,7 @@ export const ApiResponseSchema = <T extends z.ZodType>(dataSchema: T) =>
     trace_id: TraceIdSchema
   });
 
-export type TenantContext = z.infer<typeof TenantContextSchema>;
+export type OrganizationContext = z.infer<typeof TenantContextSchema>;
 export type ActorContext = z.infer<typeof ActorContextSchema>;
 export type ApiTraceContext = z.infer<typeof ApiTraceContextSchema>;
 export type PaginationParams = z.infer<typeof PaginationParamsSchema>;

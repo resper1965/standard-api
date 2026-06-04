@@ -4,7 +4,6 @@ import type { DbClient } from "./db";
 
 export type ApiKeyRecord = {
   id: string;
-  tenantId: string;
   organizationId: string;
   name: string;
   keyHash: string;
@@ -19,7 +18,6 @@ export type ApiKeyRecord = {
 };
 
 export type CreateApiKeyInput = {
-  tenantId: string;
   organizationId: string;
   name: string;
   keyHash: string;
@@ -60,7 +58,7 @@ export const createDrizzleApiKeysRepository = (db: DbClient): ApiKeysRepositoryA
           })
           .returning();
         if (!record) throw new Error("Failed to create API key — no record returned");
-        return { ...record, tenantId: record.organizationId };
+        return { ...record, organizationId: record.organizationId };
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         // Surface FK violation clearly — the most common cause is an invalid organizationId
@@ -80,7 +78,7 @@ export const createDrizzleApiKeysRepository = (db: DbClient): ApiKeysRepositoryA
         .from(apiKeys)
         .where(and(eq(apiKeys.id, id), eq(apiKeys.organizationId, organizationId)))
         .limit(1);
-      return record ? { ...record, tenantId: record.organizationId } : null;
+      return record ? { ...record, organizationId: record.organizationId } : null;
     },
     async update(id, organizationId, patch) {
       const set: Record<string, unknown> = { updatedAt: new Date() };
@@ -92,7 +90,7 @@ export const createDrizzleApiKeysRepository = (db: DbClient): ApiKeysRepositoryA
         .set(set)
         .where(and(eq(apiKeys.id, id), eq(apiKeys.organizationId, organizationId)))
         .returning();
-      return updated ? { ...updated, tenantId: updated.organizationId } : null;
+      return updated ? { ...updated, organizationId: updated.organizationId } : null;
     },
     async verifyKey(keyHash) {
       const records = await db
@@ -117,7 +115,7 @@ export const createDrizzleApiKeysRepository = (db: DbClient): ApiKeysRepositoryA
       // Reject soft-deleted (revoked) keys
       if (record.revokedAt) return null;
       
-      return { ...record, tenantId: record.organizationId };
+      return { ...record, organizationId: record.organizationId };
     },
     async markUsed(id) {
       await db.update(apiKeys).set({ lastUsedAt: new Date() }).where(eq(apiKeys.id, id));
@@ -134,7 +132,7 @@ export const createDrizzleApiKeysRepository = (db: DbClient): ApiKeysRepositoryA
     },
     async listByOrganization(organizationId, activeOnly = false) {
       const rows = await db.select().from(apiKeys).where(eq(apiKeys.organizationId, organizationId));
-      const mapped = rows.map(r => ({ ...r, tenantId: r.organizationId }));
+      const mapped = rows.map(r => ({ ...r, organizationId: r.organizationId }));
       return activeOnly ? mapped.filter(k => !k.revokedAt) : mapped;
     }
   };
@@ -146,7 +144,6 @@ export const createMockApiKeysRepository = (): ApiKeysRepositoryAdapter => {
     async create(input) {
       const record: ApiKeyRecord = {
         id: crypto.randomUUID(),
-        tenantId: input.tenantId,
         organizationId: input.organizationId,
         name: input.name,
         keyHash: input.keyHash,

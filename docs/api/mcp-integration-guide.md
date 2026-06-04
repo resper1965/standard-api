@@ -10,7 +10,7 @@ The Standard GRC Platform exposes a **Model Context Protocol (MCP)** endpoint wi
 
 ### Step 1: Generate your API Key
 
-1. Log in to the **Standard Developer Console** (your Root Tenant).
+1. Log in to the **Standard Developer Console** (your Root Organization).
 2. Navigate to **API Keys**.
 3. Click **Generate New Key** and choose a descriptive name (e.g. `mcp-claude-desktop`).
 4. Select the required **scopes** — at minimum `assessments:read` and `scf:read`.
@@ -43,7 +43,7 @@ Add the following block to your MCP client configuration file (e.g. `claude_desk
 
 Replace `standard_live_YOUR_RAW_KEY` with the key you generated in Step 1.
 
-> **Note:** The MCP endpoint connects directly using your Root Tenant API Key. Any Sub-Tenant data (Organizations) your key has access to will be seamlessly available to the AI.
+> **Note:** The MCP endpoint connects directly using your Root Organization API Key. Any Sub-Organization data (Organizations) your key has access to will be seamlessly available to the AI.
 
 ---
 
@@ -77,7 +77,7 @@ Interact with the full lifecycle of your GRC assessments — from listing active
 | Tool | Description |
 |------|-------------|
 | `list-assessments` | Returns all assessments for your organization, with optional filters for state and framework. |
-| `get-assessment` | Returns full details of a single assessment, including lifecycle state, framework, and tenant metadata. |
+| `get-assessment` | Returns full details of a single assessment, including lifecycle state, framework, and organization metadata. |
 | `get-assessment-status` | Returns the current lifecycle state and last-updated timestamp for a given assessment. |
 | `list-assessment-documents` | Lists all documents uploaded as evidence for a given assessment. |
 
@@ -273,9 +273,9 @@ Check real-time platform health and, for admins, active SOC alerts.
 
 - **Never embed API keys in source code or commit them to version control.** Use environment variables or your client's secret store.
 - **Use the minimum required scopes.** For read-only integrations (browsing assessments, searching controls), the `assessments:read` and `scf:read` scopes are sufficient.
-- **Each API key is scoped to a single tenant.** There is no cross-tenant access.
+- **Each API key is scoped to a single organization.** There is no cross-organization access.
 - **Rotate keys regularly** and revoke any key that may have been exposed.
-- **Audit log.** Every MCP tool call is recorded in your tenant's audit log with timestamp, tool name, actor (key ID), and assessment context.
+- **Audit log.** Every MCP tool call is recorded in your organization's audit log with timestamp, tool name, actor (key ID), and assessment context.
 
 ---
 

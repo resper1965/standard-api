@@ -15,7 +15,6 @@ export class AssessmentLifecycleWorkflow extends WorkflowEntrypoint<Env, unknown
       return {
         assessment_id: input.assessment_id,
         state: {
-          tenant_id: input.tenant_id,
           organization_id: input.organization_id,
           assessment_id: input.assessment_id,
           current_step: "validate_assessment",

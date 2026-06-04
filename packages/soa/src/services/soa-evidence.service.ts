@@ -11,16 +11,15 @@ export class SoaEvidenceService {
 
   async refreshEvidenceCoverage(soaVersionId: string, context: SoaWorkflowContext, topK = 3): Promise<SoaItemResponse[]> {
     assertContext(context);
-    const version = await this.deps.repositories.versions.get(soaVersionId, context.tenantId);
+    const version = await this.deps.repositories.versions.get(soaVersionId, context.organizationId);
     if (!version || version.assessment_id !== context.assessmentId) throw new SoaWorkflowError("SOA_VERSION_NOT_FOUND", "SoA version not found.");
-    const items = await this.deps.repositories.items.listByVersion(soaVersionId, context.tenantId);
+    const items = await this.deps.repositories.items.listByVersion(soaVersionId, context.organizationId);
     const search = this.deps.kb ? new KbSearchService(this.deps.kb) : null;
     const updated: SoaItemResponse[] = [];
 
     for (const item of items) {
       const response = search
         ? await search.semanticSearch({
-          tenantId: context.tenantId,
           organizationId: context.organizationId,
           assessmentId: context.assessmentId,
           ...(context.actorId ? { actorId: context.actorId } : {}),
@@ -53,13 +52,13 @@ export class SoaEvidenceService {
   }
 
   async summarizeEvidenceForItem(soaItemId: string, context: SoaWorkflowContext): Promise<string> {
-    const item = await this.deps.repositories.items.get(soaItemId, context.tenantId);
+    const item = await this.deps.repositories.items.get(soaItemId, context.organizationId);
     if (!item || item.assessment_id !== context.assessmentId) throw new SoaWorkflowError("SOA_ITEM_NOT_FOUND", "SoA item not found.");
     return item.evidence_summary ?? "No evidence summary has been generated.";
   }
 
   async markEvidenceCoverage(soaItemId: string, coverage: EvidenceCoverageStatus, context: SoaWorkflowContext): Promise<SoaItemResponse> {
-    const item = await this.deps.repositories.items.get(soaItemId, context.tenantId);
+    const item = await this.deps.repositories.items.get(soaItemId, context.organizationId);
     if (!item || item.assessment_id !== context.assessmentId) throw new SoaWorkflowError("SOA_ITEM_NOT_FOUND", "SoA item not found.");
     const updated = { ...item, evidence_coverage: coverage, updated_at: new Date().toISOString() };
     await this.deps.repositories.items.update(updated);

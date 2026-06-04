@@ -31,7 +31,7 @@ export class SoaApprovalService {
   }
 
   async supersedePreviousApprovedVersions(assessmentId: string, approvedSoaVersionId: string, context: SoaWorkflowContext): Promise<void> {
-    const versions = await this.deps.repositories.versions.listByAssessment(assessmentId, context.tenantId);
+    const versions = await this.deps.repositories.versions.listByAssessment(assessmentId, context.organizationId);
     for (const version of versions) {
       if (version.soa_version_id !== approvedSoaVersionId && version.status === "approved") {
         await this.deps.repositories.versions.update({
@@ -67,7 +67,7 @@ export class SoaApprovalService {
   }
 
   private async getVersion(soaVersionId: string, context: SoaWorkflowContext): Promise<SoaVersionResponse> {
-    const version = await this.deps.repositories.versions.get(soaVersionId, context.tenantId);
+    const version = await this.deps.repositories.versions.get(soaVersionId, context.organizationId);
     if (!version || version.assessment_id !== context.assessmentId) throw new SoaWorkflowError("SOA_VERSION_NOT_FOUND", "SoA version not found.");
     return version;
   }

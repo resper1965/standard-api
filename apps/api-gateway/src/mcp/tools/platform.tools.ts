@@ -22,7 +22,7 @@ export async function handleGetPlatformHealth(
 
     // Use metrics repository — list operational metrics from last 1h
     const recentMetrics = await ctx.deps.observability.metrics.list({
-      tenant_id: ctx.tenantId ?? undefined,
+      organization_id: ctx.organizationId ?? undefined,
       limit: 100,
     });
     const inWindow = recentMetrics.filter((m: any) =>
@@ -68,7 +68,7 @@ export async function handleListSocAlerts(
       new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
     const alerts = await ctx.deps.observability.securityEvents.list({
-      tenant_id: undefined, // platform admin — all tenants
+      organization_id: undefined, // platform admin — all tenants
       limit,
     });
     const filtered = alerts.filter((a: any) =>

@@ -9,9 +9,9 @@ Ser a plataforma de referência para assessments automatizados de segurança, co
 ## Proposta de Valor
 - **Um assessment, múltiplos frameworks**: o motor SCF permite mapear controles para ISO 27001, NIST 800-53, SOC2, LGPD, GDPR, QNRCS e dezenas de outros frameworks simultaneamente.
 - **IA com governança**: agentes especializados analisam evidências e propõem resultados, mas nunca decidem — toda conclusão crítica passa por approval gates humanos.
-- **Rastreabilidade total**: cada achado carrega `assessment_id`, `tenant_id`, `scf_version`, `control_id`, `evidence_id`, `agent_run_id` e `confidence`.
+- **Rastreabilidade total**: cada achado carrega `assessment_id`, `organization_id`, `scf_version`, `control_id`, `evidence_id`, `agent_run_id` e `confidence`.
 - **API-first**: todo o valor é acessível via API. O frontend é consumidor, não detentor de lógica.
-- **Multi-tenant nativo**: isolamento de dados, storage, vetores, logs e quotas desde o desenho.
+- **Multi-organization nativo**: isolamento de dados, storage, vetores, logs e quotas desde o desenho.
 
 ## Personas
 
@@ -25,7 +25,7 @@ Executa assessments para clientes, precisa de eficiência operacional, relatóri
 Valida evidências, aprova SoA e Gap Analysis, precisa de imutabilidade de artefatos aprovados e histórico de versões.
 
 ### Operador da Plataforma (Bekaa)
-Gerencia tenants, provisiona resources, monitora saúde do sistema, controla licenças e quotas.
+Gerencia organizations, provisiona resources, monitora saúde do sistema, controla licenças e quotas.
 
 ## Modelo de Negócio (Preliminar)
 
@@ -35,11 +35,11 @@ Gerencia tenants, provisiona resources, monitora saúde do sistema, controla lic
 - **Enterprise**: SSO, custom domains, multi-organização, suporte dedicado, SLA, data residency
 
 ### Métricas-chave
-- Assessments iniciados e concluídos por tenant
+- Assessments iniciados e concluídos por organization
 - Frameworks mapeados por assessment
 - Findings gerados e aprovados
 - Tempo médio de ciclo (draft → closed)
-- Consumo de AI calls por tenant
+- Consumo de AI calls por organization
 
 ## Diferencial Competitivo
 - Base normativa é o SCF oficial (não derivações proprietárias)

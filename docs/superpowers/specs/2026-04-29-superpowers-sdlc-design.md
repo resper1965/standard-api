@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Formalizar o uso do Superpowers como processo de desenvolvimento do `standard-api-standard`, sem comprometer as regras já definidas em `AGENTS.md`, `CONTEXT.md`, `.cursor/rules/`, arquitetura API-first, tenant isolation, approval gates e governança de segurança.
+Formalizar o uso do Superpowers como processo de desenvolvimento do `standard-api-standard`, sem comprometer as regras já definidas em `AGENTS.md`, `CONTEXT.md`, `.cursor/rules/`, arquitetura API-first, organization isolation, approval gates e governança de segurança.
 
 ## Decisão de Precedência
 
@@ -29,7 +29,7 @@ O Superpowers deve ser tratado como gate estrito para tarefas relevantes:
 - refactors;
 - mudanças de arquitetura;
 - mudanças de API ou contratos;
-- mudanças de segurança, tenant isolation, observabilidade ou approval gates;
+- mudanças de segurança, organization isolation, observabilidade ou approval gates;
 - mudanças em agent runtime, prompts, evals ou workflows;
 - documentação estrutural que altera processo ou governança.
 
@@ -124,7 +124,7 @@ Usar para fechamento de branch, resumo, opções de PR/merge/push e pendências.
 O Superpowers não pode:
 
 - burlar approval gates humanos;
-- alterar tenant isolation;
+- alterar organization isolation;
 - transformar KB ou Vectorize em fonte normativa;
 - inventar mappings SCF oficiais;
 - mover lógica crítica para o frontend;

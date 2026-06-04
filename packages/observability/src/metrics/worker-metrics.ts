@@ -15,14 +15,14 @@ export const recordApiLatency = async (
     method: string;
     statusCode: number;
     durationMs: number;
-    tenantId?: string;
+    organizationId?: string;
     traceId: string;
   }
 ): Promise<void> => {
   try {
     await deps.metrics.create({
       id: crypto.randomUUID(),
-      tenant_id: input.tenantId,
+      organization_id: input.organizationId,
       metric_name: "api.request.latency_ms",
       metric_type: "histogram" as const,
       metric_value: input.durationMs,
@@ -47,14 +47,14 @@ export const recordQueueProcessingTime = async (
     queueName: string;
     durationMs: number;
     outcome: "success" | "dlq" | "retry";
-    tenantId?: string;
+    organizationId?: string;
     traceId: string;
   }
 ): Promise<void> => {
   try {
     await deps.metrics.create({
       id: crypto.randomUUID(),
-      tenant_id: input.tenantId,
+      organization_id: input.organizationId,
       metric_name: "queue.processing.duration_ms",
       metric_type: "histogram" as const,
       metric_value: input.durationMs,
@@ -79,14 +79,14 @@ export const recordMalwareScanResult = async (
     outcome: "clean" | "blocked";
     threatCount: number;
     durationMs: number;
-    tenantId?: string;
+    organizationId?: string;
     traceId: string;
   }
 ): Promise<void> => {
   try {
     await deps.metrics.create({
       id: crypto.randomUUID(),
-      tenant_id: input.tenantId,
+      organization_id: input.organizationId,
       metric_name: "malware.scan.result",
       metric_type: "counter" as const,
       metric_value: 1,
@@ -112,14 +112,14 @@ export const recordLlmTokenUsage = async (
     model: string;
     inputTokens: number;
     outputTokens: number;
-    tenantId?: string;
+    organizationId?: string;
     traceId: string;
   }
 ): Promise<void> => {
   try {
     await deps.metrics.create({
       id: crypto.randomUUID(),
-      tenant_id: input.tenantId,
+      organization_id: input.organizationId,
       metric_name: "llm.token.usage",
       metric_type: "counter" as const,
       metric_value: input.inputTokens + input.outputTokens,

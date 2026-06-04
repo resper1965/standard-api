@@ -30,7 +30,7 @@ Requisitos:
 
 - protegida por auth real;
 - não exposta como API pública;
-- RBAC e tenant scope;
+- RBAC e organization scope;
 - Cloudflare Access quando aplicável.
 
 ### 2. Partner/Public API
@@ -101,7 +101,7 @@ Requisitos:
 - assinatura HMAC ou autenticação equivalente;
 - replay protection;
 - idempotency;
-- tenant binding;
+- organization binding;
 - payload validation.
 
 ## 3. API Authentication Model
@@ -116,20 +116,20 @@ Modelos:
 
 Regras:
 
-- API keys devem ser escopadas por tenant;
+- API keys devem ser escopadas por organization;
 - API keys devem ter permissões específicas;
 - API keys devem expirar ou ser rotacionáveis;
 - service accounts seguem least privilege;
 - tokens nunca aparecem em logs;
 - credenciais de conectores são criptografadas;
-- credenciais podem ser revogadas por tenant.
+- credenciais podem ser revogadas por organization.
 
 API key metadata mínima:
 
 ```text
 ApiKey
 ├── key_id
-├── tenant_id
+├── organization_id
 ├── organization_id
 ├── name
 ├── scopes
@@ -146,18 +146,18 @@ Autorização deve combinar:
 
 - RBAC para usuários;
 - scoped permissions para API keys;
-- tenant-bound access;
+- organization-bound access;
 - resource-level authorization;
 - approval-specific permissions.
 
 Regras:
 
 - API key não aprova artifact por padrão;
-- API key só acessa resources do tenant;
+- API key só acessa resources do organization;
 - service account recebe escopos mínimos;
 - integração pode ler artifacts aprovados, não drafts sensíveis, salvo permissão explícita;
-- admin cross-tenant exige role e audit trail;
-- webhooks inbound devem resolver tenant antes de processar payload.
+- admin cross-organization exige role e audit trail;
+- webhooks inbound devem resolver organization antes de processar payload.
 
 ## 5. Inbound Integration Model
 
@@ -181,7 +181,7 @@ API key / OIDC
   ↓
 /api/v1
   ↓
-Tenant-scoped operation
+Organization-scoped operation
   ↓
 Audit event
 ```
@@ -189,7 +189,7 @@ Audit event
 Controles:
 
 - idempotency para writes;
-- rate limits por key/tenant;
+- rate limits por key/organization;
 - schema validation;
 - upload validation;
 - audit logs;
@@ -227,7 +227,7 @@ Delivery Audit
 Regras:
 
 - outbound nunca envia dados além do escopo configurado;
-- cada entrega tem `event_id`, `tenant_id`, `trace_id`;
+- cada entrega tem `event_id`, `organization_id`, `trace_id`;
 - retry controlado;
 - DLQ para falhas persistentes;
 - payload sensível deve ser minimizado.
@@ -256,7 +256,7 @@ Requisitos:
 - `event_id`;
 - timestamp;
 - idempotency;
-- `tenant_id`;
+- `organization_id`;
 - `assessment_id`;
 - `trace_id`.
 
@@ -266,7 +266,7 @@ Envelope:
 WebhookEvent
 ├── event_id
 ├── event_type
-├── tenant_id
+├── organization_id
 ├── organization_id
 ├── assessment_id
 ├── occurred_at
@@ -288,7 +288,7 @@ X-Standard-Trace-Id
 
 Assinatura:
 
-- HMAC com secret por endpoint/tenant;
+- HMAC com secret por endpoint/organization;
 - timestamp participa da assinatura;
 - rejeitar replay fora da janela configurada;
 - secret rotacionável.
@@ -381,7 +381,7 @@ Campos:
 - `permissions`: escopos internos do Standard e externos.
 - `supported_events`: eventos que o conector emite/recebe.
 - `supported_actions`: ações permitidas.
-- `tenant_scope`: tenant/org/assessment autorizado.
+- `tenant_scope`: organization/org/assessment autorizado.
 - `rate_limits`: limites específicos do conector.
 - `retry_policy`: tentativas, backoff, DLQ.
 - `audit_events`: eventos auditáveis do ciclo de vida.
@@ -413,7 +413,7 @@ Fluxo:
 
 Regras:
 
-- connectors por tenant;
+- connectors por organization;
 - secrets criptografados;
 - escopos mínimos;
 - logs sem payload sensível;
@@ -427,7 +427,7 @@ Regras:
 Proibido:
 
 - conector global com dados de cliente;
-- secret compartilhado entre tenants;
+- secret compartilhado entre organizations;
 - logs de token;
 - envio de documents completos por webhook sem política explícita;
 - connector executar approval humano;
@@ -460,7 +460,7 @@ Regras:
 - downloads são auditados;
 - dados sensíveis podem exigir masking;
 - report aprovado tem preferência sobre drafts;
-- export cross-tenant é proibido.
+- export cross-organization é proibido.
 
 ## 14. Data Retention para Integrações
 
@@ -529,7 +529,7 @@ Antes de liberar API externa:
 - rate limits;
 - idempotency;
 - audit logs;
-- tenant scoping;
+- organization scoping;
 - sandbox environment;
 - connector lifecycle;
 - revogação de credenciais;
@@ -559,7 +559,7 @@ Prioridade sugerida:
 - legal/privacy review;
 - enterprise SSO;
 - OAuth app ownership;
-- per-tenant encryption strategy;
+- per-organization encryption strategy;
 - webhook replay UI;
 - connector marketplace futuro;
 - SLA para delivery externa.
@@ -571,7 +571,7 @@ Este modelo permite:
 - expor API externa com segurança;
 - operar webhooks assinados;
 - conectar sistemas externos sem acoplamento;
-- manter tenant isolation;
+- manter organization isolation;
 - auditar entregas e ações;
 - controlar retenção e exports;
 - preparar roadmap de conectores;

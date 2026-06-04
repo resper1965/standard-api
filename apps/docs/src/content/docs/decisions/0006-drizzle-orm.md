@@ -10,7 +10,7 @@ Aceita.
 
 ## Contexto
 
-Precisamos de uma ferramenta de modelagem relacional (ORM) de alto desempenho, compatível com execução na Edge (Cloudflare Workers) e com TypeScript estrito, para gerenciar as entidades de assessments, organizações, tenants, logs e autenticação no Neon PostgreSQL.
+Precisamos de uma ferramenta de modelagem relacional (ORM) de alto desempenho, compatível com execução na Edge (Cloudflare Workers) e com TypeScript estrito, para gerenciar as entidades de assessments, organizações, organizations, logs e autenticação no Neon PostgreSQL.
 
 ## Decisão
 

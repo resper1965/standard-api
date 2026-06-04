@@ -20,8 +20,8 @@ type CachedResponse = {
   contentType: string;
 };
 
-const buildKvKey = (tenantId: string | undefined, idempotencyKey: string): string =>
-  `idem:${tenantId ?? "anon"}:${idempotencyKey}`;
+const buildKvKey = (organizationId: string | undefined, idempotencyKey: string): string =>
+  `idem:${organizationId ?? "anon"}:${idempotencyKey}`;
 
 /**
  * Checks KV for a previously stored response for this idempotency key.
@@ -29,7 +29,7 @@ const buildKvKey = (tenantId: string | undefined, idempotencyKey: string): strin
  */
 export const checkIdempotency = async (
   request: Request,
-  tenantId: string | undefined,
+  organizationId: string | undefined,
   kv: KVNamespace | undefined
 ): Promise<Response | null> => {
   if (!kv || request.method !== "POST") return null;
@@ -37,7 +37,7 @@ export const checkIdempotency = async (
   const key = request.headers.get("Idempotency-Key");
   if (!key) return null;
 
-  const cached = await kv.get(buildKvKey(tenantId, key)).catch(() => null);
+  const cached = await kv.get(buildKvKey(organizationId, key)).catch(() => null);
   if (!cached) return null;
 
   try {
@@ -61,7 +61,7 @@ export const checkIdempotency = async (
 export const storeIdempotencyResult = (
   request: Request,
   response: Response,
-  tenantId: string | undefined,
+  organizationId: string | undefined,
   kv: KVNamespace | undefined
 ): void => {
   if (!kv || request.method !== "POST") return;
@@ -72,7 +72,7 @@ export const storeIdempotencyResult = (
   // Don't cache server errors — the client should retry those
   if (response.status >= 500) return;
 
-  const kvKey = buildKvKey(tenantId, key);
+  const kvKey = buildKvKey(organizationId, key);
   const contentType = response.headers.get("Content-Type") ?? "application/json";
 
   response

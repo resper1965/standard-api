@@ -91,7 +91,7 @@ function Step({ n, title }: { n: number; title: string }) {
 export function SdkPage() {
   useDocumentTitle("SDK & Docs");
   const { data: session } = useSession();
-  const tenantId =
+  const organizationId =
     ((session?.session as Record<string, unknown>)?.activeOrganizationId as string) ||
     "<your-tenant-id>";
 
@@ -100,28 +100,28 @@ export function SdkPage() {
 
   const curlAuth = `curl -X GET "${API_URL}/api/v1/assessments" \\
   -H "Authorization: Bearer standard_live_..." \\
-  -H "x-standard-tenant-id: ${tenantId}" \\
+  -H "x-standard-tenant-id: ${organizationId}" \\
   -H "Content-Type: application/json"`;
 
   const curlCreateAssessment = `curl -X POST "${API_URL}/api/v1/assessments" \\
   -H "Authorization: Bearer standard_live_..." \\
-  -H "x-standard-tenant-id: ${tenantId}" \\
+  -H "x-standard-tenant-id: ${organizationId}" \\
   -H "Content-Type: application/json" \\
   -d '{
     "name": "ISO 27001 Gap Analysis",
-    "organization_id": "${tenantId}",
+    "organization_id": "${organizationId}",
     "scf_version_id": "<scf-version-uuid>"
   }'`;
 
   const curlSCF = `# List all 231 compliance frameworks
 curl "${API_URL}/api/v1/scf/frameworks" \\
   -H "Authorization: Bearer standard_live_..." \\
-  -H "x-standard-tenant-id: ${tenantId}"
+  -H "x-standard-tenant-id: ${organizationId}"
 
 # Get 1,468 controls for a specific SCF version
 curl "${API_URL}/api/v1/scf/versions/latest/controls" \\
   -H "Authorization: Bearer standard_live_..." \\
-  -H "x-standard-tenant-id: ${tenantId}"`;
+  -H "x-standard-tenant-id: ${organizationId}"`;
 
   // ── SDK snippets ──────────────────────────────────────────────
   const sdkInstall = `npm install @standard/sdk`;
@@ -130,14 +130,14 @@ curl "${API_URL}/api/v1/scf/versions/latest/controls" \\
 
 const client = new StandardClient({
   apiKey: process.env.STANDARD_API_KEY,  // standard_live_...
-  tenantId: "${tenantId}",
+  organizationId: "${organizationId}",
   baseUrl: "${API_URL}",                 // optional — defaults to production
 });`;
 
   const sdkAssessment = `// Create and advance an assessment lifecycle
 const { data: assessment } = await client.assessments.create({
   name: "ISO 27001 Gap Analysis",
-  organization_id: "${tenantId}",
+  organization_id: "${organizationId}",
   scf_version_id: await client.scf.getLatestVersionId(),
 });
 
@@ -168,7 +168,7 @@ console.log(\`\${mappings.data.length} control mappings\`);`;
 
   const sdkWebhook = `// Register a webhook to receive lifecycle events
 const { data: webhook } = await client.webhooks.create({
-  organization_id: "${tenantId}",
+  organization_id: "${organizationId}",
   url: "https://your-app.com/webhooks/standard",
   events: [
     "assessment.created",
@@ -185,13 +185,13 @@ console.log("Signing secret:", webhook.signing_secret);`;
   const mcpDocker = `docker run -i --rm \\
   -e STANDARD_API_URL="${API_URL}" \\
   -e STANDARD_API_KEY="standard_live_..." \\
-  -e STANDARD_TENANT_ID="${tenantId}" \\
+  -e STANDARD_TENANT_ID="${organizationId}" \\
   standard-mcp`;
 
   const mcpNpx = `npx @standard/mcp-server \\
   --api-url "${API_URL}" \\
   --api-key "standard_live_..." \\
-  --tenant-id "${tenantId}"`;
+  --tenant-id "${organizationId}"`;
 
   const mcpCursorConfig = `// cursor.json / .cursor/mcp.json
 {
@@ -202,7 +202,7 @@ console.log("Signing secret:", webhook.signing_secret);`;
         "@standard/mcp-server",
         "--api-url", "${API_URL}",
         "--api-key", "standard_live_...",
-        "--tenant-id", "${tenantId}"
+        "--tenant-id", "${organizationId}"
       ]
     }
   }
@@ -212,11 +212,11 @@ console.log("Signing secret:", webhook.signing_secret);`;
   const promptSetup = `# Standard GRC — AI Integration Context
 
 Base URL: ${API_URL}/api/v1
-Tenant ID: ${tenantId}
+Tenant ID: ${organizationId}
 
 Required headers on EVERY request:
   Authorization: Bearer <API_KEY>
-  x-standard-tenant-id: ${tenantId}
+  x-standard-tenant-id: ${organizationId}
   Content-Type: application/json
 
 Full context map (endpoints, lifecycle states, examples):
@@ -228,7 +228,7 @@ I need you to perform a gap analysis for ISO 27001 compliance.
 
 Context:
 - Platform: Standard SCF Assessment Engine
-- Tenant: ${tenantId}
+- Tenant: ${organizationId}
 - API: ${API_URL}/api/v1
 - Documentation: ${API_URL}/llms.txt
 
@@ -383,7 +383,7 @@ Return findings in this format per control:
             <Zap className="h-3.5 w-3.5 text-primary shrink-0" />
             <span>
               Your Tenant ID is pre-filled:{" "}
-              <code className="font-mono text-foreground text-[11px]">{tenantId}</code>
+              <code className="font-mono text-foreground text-[11px]">{organizationId}</code>
             </span>
           </div>
         </TabsContent>

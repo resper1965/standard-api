@@ -10,7 +10,7 @@ export class SoaReviewService {
   async updateSoaItemDecision(soaItemId: string, patch: UpdateSoaItemRequest, context: SoaWorkflowContext): Promise<SoaItemResponse> {
     assertContext(context);
     assertActor(context);
-    const item = await this.deps.repositories.items.get(soaItemId, context.tenantId);
+    const item = await this.deps.repositories.items.get(soaItemId, context.organizationId);
     if (!item || item.assessment_id !== context.assessmentId) throw new SoaWorkflowError("SOA_ITEM_NOT_FOUND", "SoA item not found.");
     const version = await this.getVersion(item.soa_version_id, context);
     if (version.status === "approved") throw new SoaWorkflowError("SOA_VERSION_IMMUTABLE", "Approved SoA versions are immutable.");
@@ -29,7 +29,7 @@ export class SoaReviewService {
 
   async validateSoaForReview(soaVersionId: string, context: SoaWorkflowContext): Promise<SoaValidationResponse> {
     assertContext(context);
-    const items = await this.deps.repositories.items.listByVersion(soaVersionId, context.tenantId);
+    const items = await this.deps.repositories.items.listByVersion(soaVersionId, context.organizationId);
     const blocking = items.flatMap((item) => this.itemReviewErrors(item));
     return {
       valid: blocking.length === 0,
@@ -76,7 +76,7 @@ export class SoaReviewService {
   }
 
   private async getVersion(soaVersionId: string, context: SoaWorkflowContext): Promise<SoaVersionResponse> {
-    const version = await this.deps.repositories.versions.get(soaVersionId, context.tenantId);
+    const version = await this.deps.repositories.versions.get(soaVersionId, context.organizationId);
     if (!version || version.assessment_id !== context.assessmentId) throw new SoaWorkflowError("SOA_VERSION_NOT_FOUND", "SoA version not found.");
     return version;
   }

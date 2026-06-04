@@ -7,7 +7,6 @@
 
 export type AssessmentStateSnapshot = {
   assessment_id: string;
-  tenant_id: string;
   organization_id: string;
   state: string;
   framework_id: string;
@@ -20,12 +19,11 @@ export type AssessmentStateSnapshot = {
 export type AssessmentStateReadDependencies = {
   getAssessmentSnapshot: (
     assessmentId: string,
-    tenantId: string
+    organizationId: string
   ) => Promise<AssessmentStateSnapshot | null>;
 };
 
 export type AssessmentStateReadArgs = {
-  tenant_id: string;
   organization_id: string;
   assessment_id: string;
   trace_id: string;
@@ -41,7 +39,7 @@ export function createAssessmentStateReadTool(deps: AssessmentStateReadDependenc
     execute: async (args: AssessmentStateReadArgs): Promise<AssessmentStateReadOutput> => {
       const snapshot = await deps.getAssessmentSnapshot(
         args.assessment_id,
-        args.tenant_id
+        args.organization_id
       );
       return {
         snapshot,

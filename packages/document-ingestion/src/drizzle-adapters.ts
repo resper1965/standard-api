@@ -28,10 +28,10 @@ export class DrizzleDocumentRepository implements DocumentRecordRepository {
     });
   }
 
-  async getDocument(documentId: string, tenantId: string): Promise<DocumentResponse | null> {
+  async getDocument(documentId: string, organizationId: string): Promise<DocumentResponse | null> {
     const results = await this.db.select()
       .from(schema.documents)
-      .where(and(eq(schema.documents.id, documentId), eq(schema.documents.organizationId, tenantId)))
+      .where(and(eq(schema.documents.id, documentId), eq(schema.documents.organizationId, organizationId)))
       .limit(1);
     
     if (results.length === 0) return null;
@@ -39,7 +39,6 @@ export class DrizzleDocumentRepository implements DocumentRecordRepository {
     
     return {
       document_id: r.id,
-      tenant_id: r.organizationId,
       organization_id: r.organizationId,
       assessment_id: r.assessmentId ?? "",
       original_filename: r.originalFilename,
@@ -63,15 +62,14 @@ export class DrizzleDocumentRepository implements DocumentRecordRepository {
     };
   }
 
-  async listDocuments(assessmentId: string, tenantId: string): Promise<DocumentResponse[]> {
+  async listDocuments(assessmentId: string, organizationId: string): Promise<DocumentResponse[]> {
     const results = await this.db.select()
       .from(schema.documents)
-      .where(and(eq(schema.documents.assessmentId, assessmentId), eq(schema.documents.organizationId, tenantId)))
+      .where(and(eq(schema.documents.assessmentId, assessmentId), eq(schema.documents.organizationId, organizationId)))
       .orderBy(schema.documents.createdAt);
       
     return results.map(r => ({
       document_id: r.id,
-      tenant_id: r.organizationId,
       organization_id: r.organizationId,
       assessment_id: r.assessmentId ?? "",
       original_filename: r.originalFilename,
@@ -103,11 +101,11 @@ export class DrizzleDocumentRepository implements DocumentRecordRepository {
       .where(eq(schema.documents.id, document.document_id));
   }
 
-  withTenant(tenantId: string) {
+  withOrganization(organizationId: string) {
     return {
       saveDocument: async (document: DocumentResponse) => this.saveDocument(document),
-      getDocument: async (documentId: string) => this.getDocument(documentId, tenantId),
-      listDocuments: async (assessmentId: string) => this.listDocuments(assessmentId, tenantId),
+      getDocument: async (documentId: string) => this.getDocument(documentId, organizationId),
+      listDocuments: async (assessmentId: string) => this.listDocuments(assessmentId, organizationId),
       updateDocument: async (document: DocumentResponse) => this.updateDocument(document)
     };
   }
@@ -140,10 +138,10 @@ export class DrizzleDocumentJobRepository implements DocumentJobRepository {
     });
   }
 
-  async getJob(jobId: string, tenantId: string): Promise<DocumentJobResponse | null> {
+  async getJob(jobId: string, organizationId: string): Promise<DocumentJobResponse | null> {
     const results = await this.db.select()
       .from(schema.documentExtractionJobs)
-      .where(and(eq(schema.documentExtractionJobs.id, jobId), eq(schema.documentExtractionJobs.organizationId, tenantId)))
+      .where(and(eq(schema.documentExtractionJobs.id, jobId), eq(schema.documentExtractionJobs.organizationId, organizationId)))
       .limit(1);
 
     if (results.length === 0) return null;
@@ -151,7 +149,6 @@ export class DrizzleDocumentJobRepository implements DocumentJobRepository {
     
     return {
       job_id: r.id,
-      tenant_id: r.organizationId,
       organization_id: r.organizationId,
       assessment_id: r.assessmentId ?? "",
       document_id: r.documentId,
@@ -168,15 +165,14 @@ export class DrizzleDocumentJobRepository implements DocumentJobRepository {
     };
   }
 
-  async listJobsByDocument(documentId: string, tenantId: string): Promise<DocumentJobResponse[]> {
+  async listJobsByDocument(documentId: string, organizationId: string): Promise<DocumentJobResponse[]> {
     const results = await this.db.select()
       .from(schema.documentExtractionJobs)
-      .where(and(eq(schema.documentExtractionJobs.documentId, documentId), eq(schema.documentExtractionJobs.organizationId, tenantId)))
+      .where(and(eq(schema.documentExtractionJobs.documentId, documentId), eq(schema.documentExtractionJobs.organizationId, organizationId)))
       .orderBy(schema.documentExtractionJobs.createdAt);
       
     return results.map(r => ({
       job_id: r.id,
-      tenant_id: r.organizationId,
       organization_id: r.organizationId,
       assessment_id: r.assessmentId ?? "",
       document_id: r.documentId,
@@ -193,15 +189,14 @@ export class DrizzleDocumentJobRepository implements DocumentJobRepository {
     }));
   }
 
-  async listJobsByAssessment(assessmentId: string, tenantId: string): Promise<DocumentJobResponse[]> {
+  async listJobsByAssessment(assessmentId: string, organizationId: string): Promise<DocumentJobResponse[]> {
     const results = await this.db.select()
       .from(schema.documentExtractionJobs)
-      .where(and(eq(schema.documentExtractionJobs.assessmentId, assessmentId), eq(schema.documentExtractionJobs.organizationId, tenantId)))
+      .where(and(eq(schema.documentExtractionJobs.assessmentId, assessmentId), eq(schema.documentExtractionJobs.organizationId, organizationId)))
       .orderBy(schema.documentExtractionJobs.createdAt);
       
     return results.map(r => ({
       job_id: r.id,
-      tenant_id: r.organizationId,
       organization_id: r.organizationId,
       assessment_id: r.assessmentId ?? "",
       document_id: r.documentId,
@@ -222,12 +217,12 @@ export class DrizzleDocumentJobRepository implements DocumentJobRepository {
     await this.saveJob(job);
   }
 
-  withTenant(tenantId: string) {
+  withOrganization(organizationId: string) {
     return {
       saveJob: async (job: DocumentJobResponse) => this.saveJob(job),
-      getJob: async (jobId: string) => this.getJob(jobId, tenantId),
-      listJobsByDocument: async (documentId: string) => this.listJobsByDocument(documentId, tenantId),
-      listJobsByAssessment: async (assessmentId: string) => this.listJobsByAssessment(assessmentId, tenantId),
+      getJob: async (jobId: string) => this.getJob(jobId, organizationId),
+      listJobsByDocument: async (documentId: string) => this.listJobsByDocument(documentId, organizationId),
+      listJobsByAssessment: async (assessmentId: string) => this.listJobsByAssessment(assessmentId, organizationId),
       updateJob: async (job: DocumentJobResponse) => this.updateJob(job)
     };
   }
@@ -252,14 +247,14 @@ export class DrizzleDocumentChunkRepository implements DocumentChunkRepository {
     }))).onConflictDoNothing();
   }
 
-  async listChunks(documentId: string, tenantId: string, limit: number, cursor?: string): Promise<DocumentChunk[]> {
+  async listChunks(documentId: string, organizationId: string, limit: number, cursor?: string): Promise<DocumentChunk[]> {
     return []; // For now not deeply needed by workers if only inserting
   }
 
-  withTenant(tenantId: string) {
+  withOrganization(organizationId: string) {
     return {
       saveChunks: async (chunks: DocumentChunk[]) => this.saveChunks(chunks),
-      listChunks: async (documentId: string, limit: number, cursor?: string) => this.listChunks(documentId, tenantId, limit, cursor)
+      listChunks: async (documentId: string, limit: number, cursor?: string) => this.listChunks(documentId, organizationId, limit, cursor)
     };
   }
 }

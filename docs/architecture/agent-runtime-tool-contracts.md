@@ -50,14 +50,14 @@ Tools iniciais:
 - `validation_result_write`
 - `approval_event_create`
 
-Cada tool declara descrição, risco e schema Zod de input. Inputs devem carregar contexto explícito de tenant, organização, assessment, framework, SCF version e trace.
+Cada tool declara descrição, risco e schema Zod de input. Inputs devem carregar contexto explícito de organization, organização, assessment, framework, SCF version e trace.
 
 ## Guardrails
 
 O runtime bloqueia:
 
 - uso de tool fora da allowlist do agente;
-- mismatch de `tenant_id`, `organization_id` ou `assessment_id`;
+- mismatch de `organization_id`, `organization_id` ou `assessment_id`;
 - output sem `assumptions`, `limitations`, `sources` e `confidence_score`;
 - escrita direta de achados finais;
 - criação de mappings oficiais por agente;
@@ -68,7 +68,7 @@ O runtime bloqueia:
 Cada `agent_run` registra:
 
 - `agent_run_id`
-- `tenant_id`
+- `organization_id`
 - `organization_id`
 - `assessment_id`
 - `agent_id`

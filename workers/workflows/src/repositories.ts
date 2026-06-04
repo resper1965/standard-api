@@ -15,31 +15,31 @@ export const createInMemoryWorkflowRepository = (): WorkflowRepository => {
       const record = records.get(workflowRunId);
       return record ? clone(record) : null;
     },
-    async getActiveByAssessment(assessmentId, tenantId) {
+    async getActiveByAssessment(assessmentId, organizationId) {
       const active = [...records.values()].find((record) =>
         record.state.assessment_id === assessmentId &&
-        record.state.tenant_id === tenantId &&
+        record.state.organization_id === organizationId &&
         !["completed", "cancelled"].includes(record.status)
       );
       return active ? clone(active) : null;
     },
-    async listByAssessment(assessmentId, tenantId) {
+    async listByAssessment(assessmentId, organizationId) {
       return [...records.values()]
-        .filter((record) => record.state.assessment_id === assessmentId && record.state.tenant_id === tenantId)
+        .filter((record) => record.state.assessment_id === assessmentId && record.state.organization_id === organizationId)
         .map(clone);
     },
     async save(record) {
       records.set(record.workflow_run_id, clone(record));
     },
-    withTenant(tenantId: string) {
+    withOrganization(organizationId: string) {
       return {
         create: async (input) => repo.create(input),
         get: async (workflowRunId) => {
           const run = await repo.get(workflowRunId);
-          return run && run.state.tenant_id === tenantId ? run : null;
+          return run && run.state.organization_id === organizationId ? run : null;
         },
-        getActiveByAssessment: async (assessmentId: string) => repo.getActiveByAssessment(assessmentId, tenantId),
-        listByAssessment: async (assessmentId: string) => repo.listByAssessment(assessmentId, tenantId),
+        getActiveByAssessment: async (assessmentId: string) => repo.getActiveByAssessment(assessmentId, organizationId),
+        listByAssessment: async (assessmentId: string) => repo.listByAssessment(assessmentId, organizationId),
         save: async (record) => repo.save(record),
       };
     }

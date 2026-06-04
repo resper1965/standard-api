@@ -7,7 +7,7 @@ import type { Env } from "./index";
 
 export const AgentRunQueueMessageSchema = z.object({
   agent_run_id: z.string().uuid(),
-  tenant_id: z.string().uuid(),
+  organization_id: z.string().uuid(),
   assessment_id: z.string().uuid(),
 });
 
@@ -59,7 +59,7 @@ export const processAgentRunQueueMessage = async (messageBody: unknown, env: Env
   const executor = new AgentExecutor(runtimeService, agentDeps);
 
   // Fetch run early to determine route
-  const run = await runtimeService.getRun(parsed.data.agent_run_id, parsed.data.tenant_id);
+  const run = await runtimeService.getRun(parsed.data.agent_run_id, parsed.data.organization_id);
   if (!run) {
      console.warn(`Agent Run ${parsed.data.agent_run_id} not found in DB!`);
      return;
@@ -69,5 +69,5 @@ export const processAgentRunQueueMessage = async (messageBody: unknown, env: Env
       console.warn(`Agent Run ${parsed.data.agent_run_id} is a council DAG. Workflows engine must handle this. Skipping queue execution.`);
       return;
   }
-  await executor.resumeRun(parsed.data.agent_run_id, parsed.data.tenant_id);
+  await executor.resumeRun(parsed.data.agent_run_id, parsed.data.organization_id);
 };

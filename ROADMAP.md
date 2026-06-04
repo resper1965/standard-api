@@ -29,7 +29,7 @@
 - [ ] `pnpm lint` + `pnpm typecheck` sem erros
 - [ ] Drizzle ORM conectado ao Neon (driver `@neondatabase/serverless`)
 - [ ] Auth real (Standard Native Auth) validado em staging Cloudflare
-- [ ] Mapeamento GRC (Tenants e Orgs) estabelecido (não placeholder)
+- [ ] Mapeamento GRC (Organizations e Orgs) estabelecido (não placeholder)
 - [ ] Cloudflare resources staging separados (R2, Queues, Vectorize)
 - [ ] Backup/restore PostgreSQL documentado e testado
 - [ ] `feature/architecture-refactoring` avaliada (merge ou descarte)
@@ -55,7 +55,7 @@
 
 ### Fase 3: Frontend SaaS
 
-**Objetivo**: Transformar o frontend de admin console em plataforma SaaS multi-tenant com self-service.
+**Objetivo**: Transformar o frontend de admin console em plataforma SaaS multi-organization com self-service.
 
 **Critérios de entrada**: Fase 2 concluída (ou Fase 1 concluída se frontend for priorizado antes).
 
@@ -65,7 +65,7 @@
 - [ ] API Keys Self-Service (criação, revogação, monitoramento)
 - [ ] Billing/Plans dashboard (mockup ou integração real)
 - [ ] Onboarding wizard para primeiro acesso
-- [ ] Separação clara: Master Admin vs Tenant Admin vs User
+- [ ] Separação clara: Master Admin vs Organization Admin vs User
 
 ---
 
@@ -82,7 +82,7 @@
 - [ ] Data retention e legal holds definidos
 - [ ] SOC/SIEM integration (pelo menos logging)
 - [ ] Revisão legal/privacy concluída
-- [ ] Primeiro tenant real onboarded
+- [ ] Primeiro organization real onboarded
 
 ---
 

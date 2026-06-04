@@ -6,14 +6,12 @@ test("Indexing service cria jobs para chunks pendentes sem duplicar", async () =
   const deps = await createKbFixture();
   const service = new KbIndexingService(deps);
   const first = await service.indexAssessment({
-    tenantId: ids.tenantId,
     organizationId: ids.organizationId,
     assessmentId: ids.assessmentId,
     actorId: ids.actorId,
     traceId: "trace-test"
   });
   const second = await service.indexAssessment({
-    tenantId: ids.tenantId,
     organizationId: ids.organizationId,
     assessmentId: ids.assessmentId,
     actorId: ids.actorId,
@@ -27,15 +25,13 @@ test("Consumer processa chunk e atualiza vector_reference", async () => {
   const deps = await createKbFixture();
   const service = new KbIndexingService(deps);
   const result = await service.indexAssessment({
-    tenantId: ids.tenantId,
     organizationId: ids.organizationId,
     assessmentId: ids.assessmentId,
     actorId: ids.actorId,
     traceId: "trace-test"
   });
-  const job = await deps.repositories.embeddingJobs.getJob(result.queued_job_ids[0]!, ids.tenantId);
+  const job = await deps.repositories.embeddingJobs.getJob(result.queued_job_ids[0]!, ids.organizationId);
   await processKbEmbeddingJob({
-    tenant_id: ids.tenantId,
     organization_id: ids.organizationId,
     assessment_id: ids.assessmentId,
     document_id: ids.documentId,
@@ -48,7 +44,7 @@ test("Consumer processa chunk e atualiza vector_reference", async () => {
     requested_by: ids.actorId,
     created_at: job!.queued_at
   }, deps);
-  const updated = await deps.repositories.vectorReferences.get(result.vector_reference_ids[0]!, ids.tenantId);
+  const updated = await deps.repositories.vectorReferences.get(result.vector_reference_ids[0]!, ids.organizationId);
   expect(updated?.embedding_status).toBe("embedded");
   expect(updated?.vector_id).toBeDefined();
 });

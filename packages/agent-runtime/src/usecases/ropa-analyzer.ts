@@ -3,7 +3,7 @@ import { generateStructuredOutput } from "../structured-output";
 
 export type RopaAnalysisInput = {
   naturalLanguageDescription: string;
-  tenantId: string;
+  organizationId: string;
 };
 
 export type PrivacyRequiredControl = {
@@ -44,7 +44,7 @@ const ropaSchema = {
 };
 
 export class RopaAnalyzerUseCase {
-  constructor(private provider: LlmProvider, private defaultModel: string = "gpt-4o") {}
+  constructor(private provider: LlmProvider, private defaultModel: string = "gpt-4o-mini") {}
 
   async analyze(input: RopaAnalysisInput): Promise<RopaAnalysisOutput> {
     const systemPrompt = `You are a Privacy Architect specializing in Data Governance frameworks.

@@ -17,10 +17,9 @@ export class SoaDraftService {
     assertContext(context);
     assertActor(context);
     const now = new Date().toISOString();
-    const existing = await this.deps.repositories.versions.listByAssessment(context.assessmentId, context.tenantId);
+    const existing = await this.deps.repositories.versions.listByAssessment(context.assessmentId, context.organizationId);
     const version: SoaVersionResponse = {
       soa_version_id: crypto.randomUUID(),
-      tenant_id: context.tenantId,
       organization_id: context.organizationId,
       assessment_id: context.assessmentId,
       version_number: existing.length + 1,
@@ -46,19 +45,19 @@ export class SoaDraftService {
 
   async getSoaVersion(soaVersionId: string, context: SoaWorkflowContext): Promise<SoaVersionResponse> {
     assertContext(context);
-    const version = await this.deps.repositories.versions.get(soaVersionId, context.tenantId);
+    const version = await this.deps.repositories.versions.get(soaVersionId, context.organizationId);
     if (!version || version.assessment_id !== context.assessmentId) throw new SoaWorkflowError("SOA_VERSION_NOT_FOUND", "SoA version not found.");
     return version;
   }
 
   listSoaVersions(assessmentId: string, context: SoaWorkflowContext): Promise<SoaVersionResponse[]> {
     assertContext(context);
-    return this.deps.repositories.versions.listByAssessment(assessmentId, context.tenantId);
+    return this.deps.repositories.versions.listByAssessment(assessmentId, context.organizationId);
   }
 
   async listSoaItems(soaVersionId: string, filters: SoaItemFilters, context: SoaWorkflowContext): Promise<SoaItemResponse[]> {
     await this.getSoaVersion(soaVersionId, context);
-    const items = await this.deps.repositories.items.listByVersion(soaVersionId, context.tenantId);
+    const items = await this.deps.repositories.items.listByVersion(soaVersionId, context.organizationId);
     return filters.applicability_status ? items.filter((item) => item.applicability_status === filters.applicability_status) : items;
   }
 
@@ -101,7 +100,6 @@ export class SoaDraftService {
   ): SoaItemResponse {
     return {
       soa_item_id: crypto.randomUUID(),
-      tenant_id: version.tenant_id,
       organization_id: version.organization_id,
       assessment_id: version.assessment_id,
       soa_version_id: version.soa_version_id,

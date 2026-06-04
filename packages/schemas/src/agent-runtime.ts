@@ -32,7 +32,6 @@ export const AgentToolNameSchema = z.enum([
 ]);
 
 export const AgentRuntimeContextSchema = z.object({
-  tenant_id: UuidSchema,
   organization_id: UuidSchema,
   assessment_id: UuidSchema,
   framework_id: UuidSchema,
@@ -55,7 +54,6 @@ export const AgentOutputSchema = z.object({
 
 export const AgentRunResponseSchema = z.object({
   agent_run_id: UuidSchema,
-  tenant_id: UuidSchema,
   organization_id: UuidSchema,
   assessment_id: UuidSchema,
   agent_id: FunctionalAgentIdSchema,
@@ -75,7 +73,6 @@ export const AgentRunResponseSchema = z.object({
 export const AgentToolInvocationResponseSchema = z.object({
   tool_call_id: UuidSchema,
   agent_run_id: UuidSchema,
-  tenant_id: UuidSchema,
   organization_id: UuidSchema,
   assessment_id: UuidSchema,
   tool_name: AgentToolNameSchema,

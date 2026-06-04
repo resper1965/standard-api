@@ -13,8 +13,8 @@
 ## API
 
 Base URL: `https://standard-api.bekaa.eu`
-Auth: Bearer API key (`standard_live_...`) or session cookie. The API Key automatically resolves to your Root Tenant.
-Tenant: Implicitly resolved via API Key. Use `organization_id` in paths for Sub-Tenant isolation.
+Auth: Bearer API key (`standard_live_...`) or session cookie. The API Key automatically resolves to your Root Organization.
+Organization: Implicitly resolved via API Key. Use `organization_id` in paths for Sub-Organization isolation.
 
 ## Sections
 
@@ -36,7 +36,7 @@ Tenant: Implicitly resolved via API Key. Use `organization_id` in paths for Sub-
 
 ## Optional
 
-- [B2B Integration Guide](https://standard-api.bekaa.eu/docs/api/B2B_INTEGRATION_GUIDE.md): Tenant provisioning, SSO, white-label
+- [B2B Integration Guide](https://standard-api.bekaa.eu/docs/api/B2B_INTEGRATION_GUIDE.md): Organization provisioning, SSO, white-label
 - [Privacy SDK Guide](https://standard-api.bekaa.eu/docs/api/privacy-ropa-sdk.md): RoPA, DPIA, vendor scanning
 
 ## MCP Integration

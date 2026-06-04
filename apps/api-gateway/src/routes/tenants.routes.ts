@@ -19,6 +19,7 @@ export const tenantsRoutes: RouteDefinition[] = [
     method: "POST",
     path: "/api/v1/tenants",
     protected: true,      // was: requireActor: false — SECURITY FIX: must be authenticated
+    permissions: ["admin:write"],
     requireActor: true,
     handler: async (context) => {
       await requirePlatformAdmin(context);
@@ -26,32 +27,34 @@ export const tenantsRoutes: RouteDefinition[] = [
       const body = await parseJson(context.request, CreateTenantRequestSchema);
       const tenant = await context.deps.tenants.create(body);
       await context.deps.audit.record("tenant.created", {
-        tenant_id: tenant.tenant_id,
+        organization_id: tenant.organization_id,
         actor_id: context.actorId,
         trace_id: context.traceId,
       });
       return json({ ...tenant, trace_id: context.traceId }, { status: 201 });
     }
   },
-  // ── GET /api/v1/tenants/:tenantId ────────────────────────────
+  // ── GET /api/v1/tenants/:organizationId ────────────────────────────
   {
     method: "GET",
-    path: "/api/v1/tenants/:tenantId",
+    path: "/api/v1/tenants/:organizationId",
     protected: true,
+    permissions: ["admin:read"],
     requireActor: true,
     handler: async (context) => {
       await requirePlatformAdmin(context);
 
-      const tenant = await context.deps.tenants.get(routeParam(context.params, "tenantId"));
+      const tenant = await context.deps.tenants.get(routeParam(context.params, "organizationId"));
       if (!tenant) throw new ApiError("NOT_FOUND", "Tenant not found.", 404);
       return json({ ...tenant, trace_id: context.traceId });
     }
   },
-  // ── PATCH /api/v1/tenants/:tenantId ──────────────────────────
+  // ── PATCH /api/v1/tenants/:organizationId ──────────────────────────
   {
     method: "PATCH",
-    path: "/api/v1/tenants/:tenantId",
+    path: "/api/v1/tenants/:organizationId",
     protected: true,
+    permissions: ["admin:write"],
     requireActor: true,
     handler: async (context) => {
       await requirePlatformAdmin(context);
@@ -61,10 +64,10 @@ export const tenantsRoutes: RouteDefinition[] = [
         ...(body.name ? { name: body.name } : {}),
         ...(body.status ? { status: body.status } : {})
       };
-      const tenant = await context.deps.tenants.update(routeParam(context.params, "tenantId"), patch);
+      const tenant = await context.deps.tenants.update(routeParam(context.params, "organizationId"), patch);
       if (!tenant) throw new ApiError("NOT_FOUND", "Tenant not found.", 404);
       await context.deps.audit.record("tenant.updated", {
-        tenant_id: tenant.tenant_id,
+        organization_id: tenant.organization_id,
         actor_id: context.actorId,
         trace_id: context.traceId,
         changes: patch,

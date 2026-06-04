@@ -9,8 +9,8 @@ export class PrivacyError extends Error {
   }
 }
 
-export const assertPrivacyContext = (context: { tenantId?: string; traceId?: string }): void => {
-  if (!context.tenantId || !context.traceId) {
+export const assertPrivacyContext = (context: { organizationId?: string; traceId?: string }): void => {
+  if (!context.organizationId || !context.traceId) {
     throw new PrivacyError("TENANT_CONTEXT_REQUIRED", "Privacy operations require tenant and trace context.");
   }
 };

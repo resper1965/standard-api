@@ -205,7 +205,7 @@ export type ScfMappingLookupDependencies = {
 };
 
 export type ScfMappingLookupArgs = {
-  tenant_id: string;
+  organization_id: string;
   organization_id: string;
   assessment_id: string;
   trace_id: string;
@@ -281,18 +281,18 @@ export type ArtifactVersion = {
 export type ArtifactVersionReadDependencies = {
   getArtifactVersion: (
     artifactVersionId: string,
-    tenantId: string,
+    organizationId: string,
     assessmentId: string
   ) => Promise<ArtifactVersion | null>;
   listArtifactVersions: (
     assessmentId: string,
-    tenantId: string,
+    organizationId: string,
     artifactType?: string
   ) => Promise<ArtifactVersion[]>;
 };
 
 export type ArtifactVersionReadArgs = {
-  tenant_id: string;
+  organization_id: string;
   organization_id: string;
   assessment_id: string;
   trace_id: string;
@@ -305,12 +305,12 @@ export function createArtifactVersionReadTool(deps: ArtifactVersionReadDependenc
     execute: async (args: ArtifactVersionReadArgs) => {
       if (args.artifact_version_id) {
         const version = await deps.getArtifactVersion(
-          args.artifact_version_id, args.tenant_id, args.assessment_id
+          args.artifact_version_id, args.organization_id, args.assessment_id
         );
         return { versions: version ? [version] : [], count: version ? 1 : 0 };
       }
       const versions = await deps.listArtifactVersions(
-        args.assessment_id, args.tenant_id, args.artifact_type
+        args.assessment_id, args.organization_id, args.artifact_type
       );
       return { versions, count: versions.length };
     },
@@ -335,7 +335,7 @@ export function createArtifactVersionReadTool(deps: ArtifactVersionReadDependenc
 export type ArtifactDraftCreateDependencies = {
   createDraft: (input: {
     assessmentId: string;
-    tenantId: string;
+    organizationId: string;
     organizationId: string;
     artifactType: string;
     content: Record<string, unknown>;
@@ -344,7 +344,7 @@ export type ArtifactDraftCreateDependencies = {
 };
 
 export type ArtifactDraftCreateArgs = {
-  tenant_id: string;
+  organization_id: string;
   organization_id: string;
   assessment_id: string;
   trace_id: string;
@@ -355,10 +355,10 @@ export type ArtifactDraftCreateArgs = {
 export function createArtifactDraftCreateTool(deps: ArtifactDraftCreateDependencies) {
   return {
     execute: async (args: ArtifactDraftCreateArgs) => {
-      const { tenant_id, organization_id, assessment_id, artifact_type, trace_id, ...content } = args;
+      const { organization_id, organization_id, assessment_id, artifact_type, trace_id, ...content } = args;
       const result = await deps.createDraft({
         assessmentId: assessment_id,
-        tenantId: tenant_id,
+        organizationId: organization_id,
         organizationId: organization_id,
         artifactType: artifact_type ?? "unknown",
         content,
@@ -395,7 +395,7 @@ export type ValidationResult = {
 export type ValidationResultWriteDependencies = {
   writeValidation: (input: {
     artifactVersionId: string;
-    tenantId: string;
+    organizationId: string;
     validationType: string;
     isValid: boolean;
     errors: string[];
@@ -409,7 +409,7 @@ export function createValidationResultWriteTool(deps: ValidationResultWriteDepen
     execute: async (args: Record<string, unknown>) => {
       const result = await deps.writeValidation({
         artifactVersionId: String(args.artifact_version_id ?? ""),
-        tenantId: String(args.tenant_id ?? ""),
+        organizationId: String(args.organization_id ?? ""),
         validationType: String(args.artifact_type ?? "schema_validation"),
         isValid: Boolean(args.query?.toString().includes("valid")),
         errors: [],
@@ -433,7 +433,7 @@ export function createValidationResultWriteTool(deps: ValidationResultWriteDepen
 export type ApprovalEventCreateDependencies = {
   createApprovalEvent: (input: {
     assessmentId: string;
-    tenantId: string;
+    organizationId: string;
     gate: string;
     decision: "approved" | "rejected";
     actorId: string;

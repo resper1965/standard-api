@@ -42,24 +42,24 @@ export class InMemoryDocumentRepository implements DocumentRecordRepository {
     this.records.set(document.document_id, document);
   }
 
-  async getDocument(documentId: string, tenantId: string): Promise<DocumentResponse | null> {
+  async getDocument(documentId: string, organizationId: string): Promise<DocumentResponse | null> {
     const record = this.records.get(documentId);
-    return record?.tenant_id === tenantId ? record : null;
+    return record?.organization_id === organizationId ? record : null;
   }
 
-  async listDocuments(assessmentId: string, tenantId: string): Promise<DocumentResponse[]> {
-    return [...this.records.values()].filter((record) => record.assessment_id === assessmentId && record.tenant_id === tenantId);
+  async listDocuments(assessmentId: string, organizationId: string): Promise<DocumentResponse[]> {
+    return [...this.records.values()].filter((record) => record.assessment_id === assessmentId && record.organization_id === organizationId);
   }
 
   async updateDocument(document: DocumentResponse): Promise<void> {
     this.records.set(document.document_id, document);
   }
 
-  withTenant(tenantId: string) {
+  withOrganization(organizationId: string) {
     return {
       saveDocument: async (document: DocumentResponse) => this.saveDocument(document),
-      getDocument: async (documentId: string) => this.getDocument(documentId, tenantId),
-      listDocuments: async (assessmentId: string) => this.listDocuments(assessmentId, tenantId),
+      getDocument: async (documentId: string) => this.getDocument(documentId, organizationId),
+      listDocuments: async (assessmentId: string) => this.listDocuments(assessmentId, organizationId),
       updateDocument: async (document: DocumentResponse) => this.updateDocument(document)
     };
   }
@@ -72,29 +72,29 @@ export class InMemoryDocumentJobRepository implements DocumentJobRepository {
     this.records.set(job.job_id, job);
   }
 
-  async getJob(jobId: string, tenantId: string): Promise<DocumentJobResponse | null> {
+  async getJob(jobId: string, organizationId: string): Promise<DocumentJobResponse | null> {
     const record = this.records.get(jobId);
-    return record?.tenant_id === tenantId ? record : null;
+    return record?.organization_id === organizationId ? record : null;
   }
 
-  async listJobsByDocument(documentId: string, tenantId: string): Promise<DocumentJobResponse[]> {
-    return [...this.records.values()].filter((record) => record.document_id === documentId && record.tenant_id === tenantId);
+  async listJobsByDocument(documentId: string, organizationId: string): Promise<DocumentJobResponse[]> {
+    return [...this.records.values()].filter((record) => record.document_id === documentId && record.organization_id === organizationId);
   }
 
-  async listJobsByAssessment(assessmentId: string, tenantId: string): Promise<DocumentJobResponse[]> {
-    return [...this.records.values()].filter((record) => record.assessment_id === assessmentId && record.tenant_id === tenantId);
+  async listJobsByAssessment(assessmentId: string, organizationId: string): Promise<DocumentJobResponse[]> {
+    return [...this.records.values()].filter((record) => record.assessment_id === assessmentId && record.organization_id === organizationId);
   }
 
   async updateJob(job: DocumentJobResponse): Promise<void> {
     this.records.set(job.job_id, job);
   }
 
-  withTenant(tenantId: string) {
+  withOrganization(organizationId: string) {
     return {
       saveJob: async (job: DocumentJobResponse) => this.saveJob(job),
-      getJob: async (jobId: string) => this.getJob(jobId, tenantId),
-      listJobsByDocument: async (documentId: string) => this.listJobsByDocument(documentId, tenantId),
-      listJobsByAssessment: async (assessmentId: string) => this.listJobsByAssessment(assessmentId, tenantId),
+      getJob: async (jobId: string) => this.getJob(jobId, organizationId),
+      listJobsByDocument: async (documentId: string) => this.listJobsByDocument(documentId, organizationId),
+      listJobsByAssessment: async (assessmentId: string) => this.listJobsByAssessment(assessmentId, organizationId),
       updateJob: async (job: DocumentJobResponse) => this.updateJob(job)
     };
   }
@@ -107,18 +107,18 @@ export class InMemoryDocumentChunkRepository implements DocumentChunkRepository 
     this.records.push(...chunks);
   }
 
-  async listChunks(documentId: string, tenantId: string, limit: number, cursor?: string): Promise<DocumentChunk[]> {
+  async listChunks(documentId: string, organizationId: string, limit: number, cursor?: string): Promise<DocumentChunk[]> {
     const start = cursor ? Number.parseInt(cursor, 10) : 0;
     return this.records
-      .filter((record) => record.document_id === documentId && record.tenant_id === tenantId)
+      .filter((record) => record.document_id === documentId && record.organization_id === organizationId)
       .sort((a, b) => a.chunk_index - b.chunk_index)
       .slice(start, start + limit);
   }
 
-  withTenant(tenantId: string) {
+  withOrganization(organizationId: string) {
     return {
       saveChunks: async (chunks: DocumentChunk[]) => this.saveChunks(chunks),
-      listChunks: async (documentId: string, limit: number, cursor?: string) => this.listChunks(documentId, tenantId, limit, cursor)
+      listChunks: async (documentId: string, limit: number, cursor?: string) => this.listChunks(documentId, organizationId, limit, cursor)
     };
   }
 }

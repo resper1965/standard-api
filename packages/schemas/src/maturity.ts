@@ -7,7 +7,6 @@ export const MaturityVersionStatusSchema = z.enum(["draft", "under_review", "app
 
 export const MaturityAssessmentVersionResponseSchema = z.object({
   maturity_assessment_version_id: UuidSchema,
-  tenant_id: UuidSchema,
   organization_id: UuidSchema,
   assessment_id: UuidSchema,
   version_number: z.number().int().positive(),
@@ -33,7 +32,6 @@ export const MaturityScoreLevelSchema = z.number().int().min(0).max(5);
 
 export const MaturityScoreResponseSchema = z.object({
   maturity_score_id: UuidSchema,
-  tenant_id: UuidSchema,
   organization_id: UuidSchema,
   assessment_id: UuidSchema,
   maturity_assessment_version_id: UuidSchema,

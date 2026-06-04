@@ -6,9 +6,9 @@ export class PoamValidationService {
 
   async validatePoamForReview(poamVersionId: string, context: PoamContext): Promise<PoamValidationResponse> {
     assertContext(context);
-    const version = await this.deps.repositories.versions.get(poamVersionId, context.tenantId);
+    const version = await this.deps.repositories.versions.get(poamVersionId, context.organizationId);
     if (!version || version.assessment_id !== context.assessmentId) throw new PoamWorkflowError("POAM_NOT_FOUND", "POA&M version not found.");
-    const items = await this.deps.repositories.items.listByVersion(poamVersionId, context.tenantId);
+    const items = await this.deps.repositories.items.listByVersion(poamVersionId, context.organizationId);
     const errors: string[] = [];
     const warnings: string[] = [];
     const itemsRequiringValidation: string[] = [];
@@ -30,7 +30,7 @@ export class PoamValidationService {
 
   async validatePoamItem(poamItemId: string, context: PoamContext): Promise<PoamValidationResponse> {
     assertContext(context);
-    const item = await this.deps.repositories.items.get(poamItemId, context.tenantId);
+    const item = await this.deps.repositories.items.get(poamItemId, context.organizationId);
     if (!item || item.assessment_id !== context.assessmentId) throw new PoamWorkflowError("POAM_ITEM_NOT_FOUND", "POA&M item not found.");
     const issues = this.validatePoamItemObject(item);
     return {
@@ -43,17 +43,17 @@ export class PoamValidationService {
   }
 
   async detectGenericActions(poamVersionId: string, context: PoamContext): Promise<string[]> {
-    const items = await this.deps.repositories.items.listByVersion(poamVersionId, context.tenantId);
+    const items = await this.deps.repositories.items.listByVersion(poamVersionId, context.organizationId);
     return items.filter((item) => this.isGeneric(item)).map((item) => item.poam_item_id);
   }
 
   async detectMissingTraceability(poamVersionId: string, context: PoamContext): Promise<string[]> {
-    const items = await this.deps.repositories.items.listByVersion(poamVersionId, context.tenantId);
+    const items = await this.deps.repositories.items.listByVersion(poamVersionId, context.organizationId);
     return items.filter((item) => !item.related_gap_finding_id || !item.framework_requirement_id || !item.scf_control_id).map((item) => item.poam_item_id);
   }
 
   async detectItemsRequiringValidation(poamVersionId: string, context: PoamContext): Promise<string[]> {
-    const items = await this.deps.repositories.items.listByVersion(poamVersionId, context.tenantId);
+    const items = await this.deps.repositories.items.listByVersion(poamVersionId, context.organizationId);
     return items.filter((item) => item.requires_user_validation).map((item) => item.poam_item_id);
   }
 

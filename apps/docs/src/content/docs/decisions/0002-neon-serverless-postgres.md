@@ -12,7 +12,7 @@ title: "ADR-0002: PostgreSQL Gerenciado via Neon Serverless"
 
 ## Contexto
 
-O Standard requer um banco PostgreSQL transacional externo como fonte de verdade para tenants, assessments, approvals, findings, audit logs e estado persistente. A arquitetura Cloudflare-oriented exige que o banco seja acessível a Workers via URL segura, sem infraestrutura gerenciada pelo time de desenvolvimento.
+O Standard requer um banco PostgreSQL transacional externo como fonte de verdade para organizations, assessments, approvals, findings, audit logs e estado persistente. A arquitetura Cloudflare-oriented exige que o banco seja acessível a Workers via URL segura, sem infraestrutura gerenciada pelo time de desenvolvimento.
 
 ## Decisão
 
@@ -42,7 +42,7 @@ A string de conexão (`DATABASE_URL`) é injetada como secret nos Workers via `w
 - O schema é gerenciado via Drizzle ORM (`packages/schemas/src/db/schema.ts`).
 - Migrations estão em `infra/docker/postgres/migrations/`.
 - O runner de migração é `packages/schemas/migrate.ts` (script `postgres-js` customizado), pois o `drizzle-kit` CLI requer resolução de dependências peer que conflitam com o ambiente monorepo pnpm.
-- Toda consulta ao banco deve incluir `tenant_id` no escopo — nunca dados sem isolamento.
+- Toda consulta ao banco deve incluir `organization_id` no escopo — nunca dados sem isolamento.
 - O banco de branch de desenvolvimento (`local`) continua via Docker conforme `infra/docker/docker-compose.yml`.
 
 ## Alternativas Consideradas

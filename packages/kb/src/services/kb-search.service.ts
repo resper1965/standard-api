@@ -26,7 +26,6 @@ export class KbSearchService {
     const vectorResults = await this.deps.vectorStore.query(
       embedding.vector,
       {
-        tenant_id: context.tenantId,
         organization_id: context.organizationId,
         assessment_id: context.assessmentId,
         ...(request.filters.document_id ? { document_id: request.filters.document_id } : {}),
@@ -40,7 +39,6 @@ export class KbSearchService {
 
     await this.deps.repositories.searchLogs.record({
       id: crypto.randomUUID(),
-      tenant_id: context.tenantId,
       organization_id: context.organizationId,
       assessment_id: context.assessmentId,
       ...(context.actorId ? { actor_id: context.actorId } : {}),
@@ -68,9 +66,9 @@ export class KbSearchService {
     next?: DocumentChunk;
     document: DocumentResponse;
   } | null> {
-    const documents = await this.deps.documentIngestion.repositories.documents.listDocuments(context.assessmentId, context.tenantId);
+    const documents = await this.deps.documentIngestion.repositories.documents.listDocuments(context.assessmentId, context.organizationId);
     for (const document of documents) {
-      const chunks = await this.deps.documentIngestion.repositories.chunks.listChunks(document.document_id, context.tenantId, 1000);
+      const chunks = await this.deps.documentIngestion.repositories.chunks.listChunks(document.document_id, context.organizationId, 1000);
       const index = chunks.findIndex((chunk) => chunk.chunk_id === chunkId && chunk.assessment_id === context.assessmentId);
       if (index >= 0) {
         return {
@@ -87,16 +85,15 @@ export class KbSearchService {
   private async hydrateResults(results: VectorSearchResult[], context: KbRequestContext, searchType: KbSearchRequest["search_type"]): Promise<KbSearchResult[]> {
     const hydrated: KbSearchResult[] = [];
     for (const result of results) {
-      if (result.metadata.tenant_id !== context.tenantId || result.metadata.assessment_id !== context.assessmentId) continue;
-      const document = await this.deps.documentIngestion.repositories.documents.getDocument(result.metadata.document_id, context.tenantId);
+      if (result.metadata.organization_id !== context.organizationId || result.metadata.assessment_id !== context.assessmentId) continue;
+      const document = await this.deps.documentIngestion.repositories.documents.getDocument(result.metadata.document_id, context.organizationId);
       if (!document || document.assessment_id !== context.assessmentId) continue;
-      const chunks = await this.deps.documentIngestion.repositories.chunks.listChunks(document.document_id, context.tenantId, 1000);
+      const chunks = await this.deps.documentIngestion.repositories.chunks.listChunks(document.document_id, context.organizationId, 1000);
       const chunk = chunks.find((candidate) => candidate.chunk_id === result.metadata.chunk_id);
       if (!chunk) continue;
-      const reference = await this.deps.repositories.vectorReferences.findByChunk(chunk.chunk_id, context.tenantId);
+      const reference = await this.deps.repositories.vectorReferences.findByChunk(chunk.chunk_id, context.organizationId);
 
       hydrated.push({
-        tenant_id: chunk.tenant_id,
         organization_id: chunk.organization_id,
         assessment_id: chunk.assessment_id,
         document_id: chunk.document_id,

@@ -26,7 +26,7 @@ curl https://standard-api.bekaa.eu/api/auth/get-session \
 
 ---
 
-## 🏢 Organizações (Tenants)
+## 🏢 Organizações (Organizations)
 
 ### Listar minhas organizações
 ```bash
@@ -44,7 +44,7 @@ curl -X POST https://standard-api.bekaa.eu/api/v1/users/me/orgs/{orgId}/activate
 ```bash
 curl https://standard-api.bekaa.eu/api/v1/organizations/{orgId}/dashboard \
   -H "Cookie: ..." \
-  -H "x-standard-tenant-id: {orgId}"
+  -H "x-standard-organization-id: {orgId}"
 ```
 
 ---
@@ -55,42 +55,42 @@ curl https://standard-api.bekaa.eu/api/v1/organizations/{orgId}/dashboard \
 ```bash
 curl https://standard-api.bekaa.eu/api/v1/scf/domains \
   -H "Cookie: ..." \
-  -H "x-standard-tenant-id: {orgId}"
+  -H "x-standard-organization-id: {orgId}"
 ```
 
 ### Buscar controles por domínio
 ```bash
 curl "https://standard-api.bekaa.eu/api/v1/scf/controls?domain=ACC" \
   -H "Cookie: ..." \
-  -H "x-standard-tenant-id: {orgId}"
+  -H "x-standard-organization-id: {orgId}"
 ```
 
 ### Buscar controles de um framework (ex: ISO 27001)
 ```bash
 curl "https://standard-api.bekaa.eu/api/v1/scf/controls?framework=ISO+27001" \
   -H "Cookie: ..." \
-  -H "x-standard-tenant-id: {orgId}"
+  -H "x-standard-organization-id: {orgId}"
 ```
 
 ### Controle específico
 ```bash
 curl https://standard-api.bekaa.eu/api/v1/scf/controls/{controlId} \
   -H "Cookie: ..." \
-  -H "x-standard-tenant-id: {orgId}"
+  -H "x-standard-organization-id: {orgId}"
 ```
 
 ### Frameworks disponíveis
 ```bash
 curl https://standard-api.bekaa.eu/api/v1/scf/frameworks \
   -H "Cookie: ..." \
-  -H "x-standard-tenant-id: {orgId}"
+  -H "x-standard-organization-id: {orgId}"
 ```
 
 ### Crosswalks (mappings entre frameworks)
 ```bash
 curl "https://standard-api.bekaa.eu/api/v1/scf/crosswalks?framework=ISO+27001" \
   -H "Cookie: ..." \
-  -H "x-standard-tenant-id: {orgId}"
+  -H "x-standard-organization-id: {orgId}"
 ```
 
 ---
@@ -102,38 +102,38 @@ curl "https://standard-api.bekaa.eu/api/v1/scf/crosswalks?framework=ISO+27001" \
 curl -X POST https://standard-api.bekaa.eu/api/v1/assessments \
   -H "Content-Type: application/json" \
   -H "Cookie: ..." \
-  -H "x-standard-tenant-id: {orgId}" \
+  -H "x-standard-organization-id: {orgId}" \
   -d '{"name": "ISO 27001 Q3", "framework_id": "iso-27001"}'
 ```
 
 ### Listar
 ```bash
 curl https://standard-api.bekaa.eu/api/v1/assessments \
-  -H "Cookie: ..." -H "x-standard-tenant-id: {orgId}"
+  -H "Cookie: ..." -H "x-standard-organization-id: {orgId}"
 ```
 
 ### Detalhe
 ```bash
 curl https://standard-api.bekaa.eu/api/v1/assessments/{id} \
-  -H "Cookie: ..." -H "x-standard-tenant-id: {orgId}"
+  -H "Cookie: ..." -H "x-standard-organization-id: {orgId}"
 ```
 
 ### Status
 ```bash
 curl https://standard-api.bekaa.eu/api/v1/assessments/{id}/status \
-  -H "Cookie: ..." -H "x-standard-tenant-id: {orgId}"
+  -H "Cookie: ..." -H "x-standard-organization-id: {orgId}"
 ```
 
 ### Resumo (dashboard)
 ```bash
 curl https://standard-api.bekaa.eu/api/v1/assessments/{id}/summary \
-  -H "Cookie: ..." -H "x-standard-tenant-id: {orgId}"
+  -H "Cookie: ..." -H "x-standard-organization-id: {orgId}"
 ```
 
 ### Timeline
 ```bash
 curl https://standard-api.bekaa.eu/api/v1/assessments/{id}/timeline \
-  -H "Cookie: ..." -H "x-standard-tenant-id: {orgId}"
+  -H "Cookie: ..." -H "x-standard-organization-id: {orgId}"
 ```
 
 ---
@@ -143,26 +143,26 @@ curl https://standard-api.bekaa.eu/api/v1/assessments/{id}/timeline \
 ### Upload
 ```bash
 curl -X POST https://standard-api.bekaa.eu/api/v1/assessments/{id}/documents \
-  -H "Cookie: ..." -H "x-standard-tenant-id: {orgId}" \
+  -H "Cookie: ..." -H "x-standard-organization-id: {orgId}" \
   -F "file=@policy.pdf" -F "category=policy"
 ```
 
 ### Listar
 ```bash
 curl https://standard-api.bekaa.eu/api/v1/assessments/{id}/documents \
-  -H "Cookie: ..." -H "x-standard-tenant-id: {orgId}"
+  -H "Cookie: ..." -H "x-standard-organization-id: {orgId}"
 ```
 
 ### Chunks (pós-ingestão)
 ```bash
 curl https://standard-api.bekaa.eu/api/v1/documents/{docId}/chunks \
-  -H "Cookie: ..." -H "x-standard-tenant-id: {orgId}"
+  -H "Cookie: ..." -H "x-standard-organization-id: {orgId}"
 ```
 
 ### Reprocessar
 ```bash
 curl -X POST https://standard-api.bekaa.eu/api/v1/documents/{docId}/reprocess \
-  -H "Cookie: ..." -H "x-standard-tenant-id: {orgId}"
+  -H "Cookie: ..." -H "x-standard-organization-id: {orgId}"
 ```
 
 ---
@@ -173,7 +173,7 @@ curl -X POST https://standard-api.bekaa.eu/api/v1/documents/{docId}/reprocess \
 ```bash
 curl -X POST https://standard-api.bekaa.eu/api/v1/kb/search \
   -H "Content-Type: application/json" \
-  -H "Cookie: ..." -H "x-standard-tenant-id: {orgId}" \
+  -H "Cookie: ..." -H "x-standard-organization-id: {orgId}" \
   -d '{"query": "access control policy for privileged accounts", "assessment_id": "{id}", "top_k": 10}'
 ```
 
@@ -184,14 +184,14 @@ curl -X POST https://standard-api.bekaa.eu/api/v1/kb/search \
 ### Listar gaps
 ```bash
 curl https://standard-api.bekaa.eu/api/v1/assessments/{id}/gaps \
-  -H "Cookie: ..." -H "x-standard-tenant-id: {orgId}"
+  -H "Cookie: ..." -H "x-standard-organization-id: {orgId}"
 ```
 
 ### Criar gap
 ```bash
 curl -X POST https://standard-api.bekaa.eu/api/v1/assessments/{id}/gaps \
   -H "Content-Type: application/json" \
-  -H "Cookie: ..." -H "x-standard-tenant-id: {orgId}" \
+  -H "Cookie: ..." -H "x-standard-organization-id: {orgId}" \
   -d '{"control_id": "ACC-01", "status": "not_implemented", "severity": "high"}'
 ```
 
@@ -202,20 +202,20 @@ curl -X POST https://standard-api.bekaa.eu/api/v1/assessments/{id}/gaps \
 ### SoA
 ```bash
 curl https://standard-api.bekaa.eu/api/v1/assessments/{id}/soa \
-  -H "Cookie: ..." -H "x-standard-tenant-id: {orgId}"
+  -H "Cookie: ..." -H "x-standard-organization-id: {orgId}"
 ```
 
 ### POA&M
 ```bash
 curl https://standard-api.bekaa.eu/api/v1/assessments/{id}/poam \
-  -H "Cookie: ..." -H "x-standard-tenant-id: {orgId}"
+  -H "Cookie: ..." -H "x-standard-organization-id: {orgId}"
 ```
 
 ### Gerar relatório
 ```bash
 curl -X POST https://standard-api.bekaa.eu/api/v1/assessments/{id}/reports \
   -H "Content-Type: application/json" \
-  -H "Cookie: ..." -H "x-standard-tenant-id: {orgId}" \
+  -H "Cookie: ..." -H "x-standard-organization-id: {orgId}" \
   -d '{"format": "pdf", "template": "executive_summary"}'
 ```
 
@@ -226,14 +226,14 @@ curl -X POST https://standard-api.bekaa.eu/api/v1/assessments/{id}/reports \
 ### Listar agentes
 ```bash
 curl https://standard-api.bekaa.eu/api/v1/agent-runtime/agents \
-  -H "Cookie: ..." -H "x-standard-tenant-id: {orgId}"
+  -H "Cookie: ..." -H "x-standard-organization-id: {orgId}"
 ```
 
 ### Executar agente
 ```bash
 curl -X POST https://standard-api.bekaa.eu/api/v1/assessments/{id}/agent-runs \
   -H "Content-Type: application/json" \
-  -H "Cookie: ..." -H "x-standard-tenant-id: {orgId}" \
+  -H "Cookie: ..." -H "x-standard-organization-id: {orgId}" \
   -d '{"agent_id": "standard-gap-analyst"}'
 ```
 
@@ -241,7 +241,7 @@ curl -X POST https://standard-api.bekaa.eu/api/v1/assessments/{id}/agent-runs \
 ```bash
 curl -X POST https://standard-api.bekaa.eu/api/v1/assessments/{id}/workflows \
   -H "Content-Type: application/json" \
-  -H "Cookie: ..." -H "x-standard-tenant-id: {orgId}" \
+  -H "Cookie: ..." -H "x-standard-organization-id: {orgId}" \
   -d '{"workflow_type": "full_assessment"}'
 ```
 
@@ -249,7 +249,7 @@ curl -X POST https://standard-api.bekaa.eu/api/v1/assessments/{id}/workflows \
 ```bash
 curl -X POST https://standard-api.bekaa.eu/api/v1/assessments/{id}/lifecycle/transition \
   -H "Content-Type: application/json" \
-  -H "Cookie: ..." -H "x-standard-tenant-id: {orgId}" \
+  -H "Cookie: ..." -H "x-standard-organization-id: {orgId}" \
   -d '{"target_state": "documents_uploaded"}'
 ```
 
@@ -260,14 +260,14 @@ curl -X POST https://standard-api.bekaa.eu/api/v1/assessments/{id}/lifecycle/tra
 ### Listar membros
 ```bash
 curl https://standard-api.bekaa.eu/api/v1/organizations/{orgId}/members \
-  -H "Cookie: ..." -H "x-standard-tenant-id: {orgId}"
+  -H "Cookie: ..." -H "x-standard-organization-id: {orgId}"
 ```
 
 ### Convidar membro
 ```bash
 curl -X POST https://standard-api.bekaa.eu/api/v1/organizations/{orgId}/members/invite \
   -H "Content-Type: application/json" \
-  -H "Cookie: ..." -H "x-standard-tenant-id: {orgId}" \
+  -H "Cookie: ..." -H "x-standard-organization-id: {orgId}" \
   -d '{"email": "analyst@co.com", "role": "member"}'
 ```
 
@@ -275,7 +275,7 @@ curl -X POST https://standard-api.bekaa.eu/api/v1/organizations/{orgId}/members/
 ```bash
 curl -X POST https://standard-api.bekaa.eu/api/v1/organizations/{orgId}/api-keys \
   -H "Content-Type: application/json" \
-  -H "Cookie: ..." -H "x-standard-tenant-id: {orgId}" \
+  -H "Cookie: ..." -H "x-standard-organization-id: {orgId}" \
   -d '{"name": "CI Pipeline", "scopes": ["assessment:read", "scf:read"]}'
 ```
 
@@ -300,8 +300,8 @@ curl https://standard-api.bekaa.eu/api/v1/health/detailed \
 # Listar usuários
 curl https://standard-api.bekaa.eu/api/v1/admin/users -H "Cookie: ..."
 
-# Listar tenants
-curl https://standard-api.bekaa.eu/api/v1/tenants -H "Cookie: ..."
+# Listar organizations
+curl https://standard-api.bekaa.eu/api/v1/organizations -H "Cookie: ..."
 
 # Banir usuário
 curl -X POST https://standard-api.bekaa.eu/api/v1/admin/users/{userId}/ban \
@@ -317,7 +317,7 @@ curl -X POST https://standard-api.bekaa.eu/api/v1/admin/users/{userId}/ban \
 |--------|--------|-------|
 | `Cookie` | Browser | `standard-native-auth.session_token=...` |
 | `Authorization` | M2M | `Bearer standard_live_...` |
-| `x-standard-tenant-id` | Rotas tenant-scoped | UUID da org ativa |
+| `x-standard-organization-id` | Rotas organization-scoped | UUID da org ativa |
 | `Content-Type` | POST/PUT/PATCH | `application/json` |
 
 ## ⚠️ Erros

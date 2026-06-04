@@ -68,7 +68,7 @@ Domínios pertencem a uma versão SCF. Controles pertencem simultaneamente a uma
 
 ## Guardrails
 
-- Não usar tenant em SCF oficial global.
+- Não usar organization em SCF oficial global.
 - Não criar crosswalks por inferência nesta etapa.
 - Não misturar versões sem declarar `scf_version_id`.
 - Não tratar fixture sintética como dataset oficial.

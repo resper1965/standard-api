@@ -21,7 +21,6 @@ declare global { interface Queue { send(message: unknown): Promise<void>; } }
 
 
 export interface WebhookDispatchContext {
-  tenant_id: string;
   organization_id: string;
   assessment_id?: string;
   trace_id: string;
@@ -48,7 +47,6 @@ export async function dispatchWebhookEvent(
   data: Record<string, unknown>
 ): Promise<{ dispatched: number; errors: string[] }> {
   const subscribers = await deps.webhooks.findSubscribers(
-    context.tenant_id,
     context.organization_id,
     event_type
   );
@@ -65,7 +63,6 @@ export async function dispatchWebhookEvent(
     event_id,
     event_type,
     timestamp,
-    tenant_id: context.tenant_id,
     organization_id: context.organization_id,
     ...(context.assessment_id ? { assessment_id: context.assessment_id } : {}),
     data,

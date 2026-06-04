@@ -28,9 +28,8 @@ export async function handleSearchKb(
     if (!assessmentId) return err("assessment_id is required.");
     if (!query) return err("query is required (e.g. 'access control policy').");
 
-    const tenantId = ctx.tenantId;
     const organizationId = ctx.organizationId ?? "00000000-0000-0000-0000-000000000000";
-    if (!tenantId) return err("Tenant context required.");
+    if (!organizationId) return err("Tenant context required.");
 
     const topK = Math.min(Number(args["top_k"] ?? 10), 30);
 
@@ -50,7 +49,6 @@ export async function handleSearchKb(
 
     const result = await searchService.search(
       {
-        tenantId,
         organizationId,
         assessmentId,
         traceId: ctx.traceId,

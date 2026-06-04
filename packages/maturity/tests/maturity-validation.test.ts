@@ -3,7 +3,7 @@ import { validateMaturityVersion } from "../src";
 import type { MaturityAssessmentVersion, MaturityContext, MaturityDependencies, MaturityScore } from "../src/types";
 
 const ids = {
-  tenantId: "11111111-1111-4111-8111-111111111111",
+  organizationId: "11111111-1111-4111-8111-111111111111",
   organizationId: "22222222-2222-4222-8222-222222222222",
   assessmentId: "33333333-3333-4333-8333-333333333333",
   versionId: "44444444-4444-4444-8444-444444444444",
@@ -11,7 +11,6 @@ const ids = {
 };
 
 const context = (): MaturityContext => ({
-  tenantId: ids.tenantId,
   organizationId: ids.organizationId,
   assessmentId: ids.assessmentId,
   actorId: ids.actorId,
@@ -20,7 +19,6 @@ const context = (): MaturityContext => ({
 
 const versionFixture = (patch: Partial<MaturityAssessmentVersion> = {}): MaturityAssessmentVersion => ({
   id: ids.versionId,
-  tenantId: ids.tenantId,
   organizationId: ids.organizationId,
   assessmentId: ids.assessmentId,
   versionNumber: 1,
@@ -30,7 +28,6 @@ const versionFixture = (patch: Partial<MaturityAssessmentVersion> = {}): Maturit
 
 const scoreFixture = (patch: Partial<MaturityScore> = {}): MaturityScore => ({
   id: "score-id",
-  tenantId: ids.tenantId,
   organizationId: ids.organizationId,
   assessmentId: ids.assessmentId,
   maturityAssessmentVersionId: ids.versionId,

@@ -55,6 +55,7 @@ export const mcpRoutes: RouteDefinition[] = [
     method: "POST",
     path: "/mcp",
     protected: true,
+    permissions: ["agent:create"],
     requireActor: true,
     authRequired: true,
     tenantRequired: false, // tenant resolved from API key, not required header

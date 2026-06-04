@@ -27,7 +27,7 @@ export class ReportValidationService {
 
   async validateReportForReview(reportVersionId: string, context: ReportingContext): Promise<ReportValidationResponse> {
     assertContext(context);
-    const report = await this.deps.repositories.versions.get(reportVersionId, context.tenantId);
+    const report = await this.deps.repositories.versions.get(reportVersionId, context.organizationId);
     if (!report || report.assessment_id !== context.assessmentId) throw new ReportingWorkflowError("REPORT_NOT_FOUND", "Report version not found.");
     const unapproved = await this.detectUnapprovedSources(reportVersionId, context);
     const missingTraceability = await this.detectMissingTraceability(reportVersionId, context);
@@ -43,26 +43,26 @@ export class ReportValidationService {
   }
 
   async detectUnapprovedSources(reportVersionId: string, context: ReportingContext): Promise<string[]> {
-    const report = await this.deps.repositories.versions.get(reportVersionId, context.tenantId);
+    const report = await this.deps.repositories.versions.get(reportVersionId, context.organizationId);
     if (!report) throw new ReportingWorkflowError("REPORT_NOT_FOUND", "Report version not found.");
     const unapproved: string[] = [];
     if (report.source_soa_version_id) {
-      const soa = await this.deps.soa.repositories.versions.get(report.source_soa_version_id, context.tenantId);
+      const soa = await this.deps.soa.repositories.versions.get(report.source_soa_version_id, context.organizationId);
       if (!soa || soa.status !== "approved") unapproved.push("soa");
     }
     if (report.source_gap_analysis_version_id) {
-      const gap = await this.deps.gapAnalysis.repositories.gapVersions.get(report.source_gap_analysis_version_id, context.tenantId);
+      const gap = await this.deps.gapAnalysis.repositories.gapVersions.get(report.source_gap_analysis_version_id, context.organizationId);
       if (!gap || gap.status !== "approved") unapproved.push("gap_analysis");
     }
     if (report.source_poam_version_id && this.deps.poam) {
-      const poam = await this.deps.poam.repositories.versions.get(report.source_poam_version_id, context.tenantId);
+      const poam = await this.deps.poam.repositories.versions.get(report.source_poam_version_id, context.organizationId);
       if (!poam || poam.status !== "approved") unapproved.push("poam");
     }
     return unapproved;
   }
 
   async detectMissingTraceability(reportVersionId: string, context: ReportingContext): Promise<string[]> {
-    const report = await this.deps.repositories.versions.get(reportVersionId, context.tenantId);
+    const report = await this.deps.repositories.versions.get(reportVersionId, context.organizationId);
     if (!report) throw new ReportingWorkflowError("REPORT_NOT_FOUND", "Report version not found.");
     const missing: string[] = [];
     if (report.report_type === "full_assessment_report" && !report.source_soa_version_id) missing.push("source_soa_version_id");

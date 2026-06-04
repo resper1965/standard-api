@@ -6,7 +6,7 @@ title: "MVP Security Review"
 
 ## Escopo da Revisão
 
-Esta revisão cobre o MVP do `standard-api-standard` para staging controlado com dados sintéticos. O foco é validar guardrails mínimos antes de deploy interno: autenticação, autorização, tenant isolation, approval gates, upload security, prompt injection defenses, secure logging, auditability, CI e proteção de deploy.
+Esta revisão cobre o MVP do `standard-api-standard` para staging controlado com dados sintéticos. O foco é validar guardrails mínimos antes de deploy interno: autenticação, autorização, organization isolation, approval gates, upload security, prompt injection defenses, secure logging, auditability, CI e proteção de deploy.
 
 Fora do escopo:
 
@@ -20,7 +20,7 @@ Fora do escopo:
 
 Ameaças principais:
 
-- cross-tenant data access;
+- cross-organization data access;
 - approval gate bypass;
 - mapping SCF oficial inventado por LLM;
 - prompt injection via documentos/evidências;
@@ -43,8 +43,8 @@ Ameaças principais:
 ## Controles Implementados
 
 - RBAC route-level com permissões explícitas em rotas críticas.
-- Tenant resolution e tenant guard.
-- Rejeição de tenant mismatch.
+- Organization resolution e organization guard.
+- Rejeição de organization mismatch.
 - Secure error responses com `trace_id`.
 - Upload validation por tamanho, extensão, MIME, assinatura e filename normalization.
 - Prompt security com conteúdo de KB tratado como `untrusted_evidence`.
@@ -53,7 +53,7 @@ Ameaças principais:
 - Guardrail contra mappings oficiais inferidos.
 - Approval gates obrigatórios no assessment engine/workflows.
 - Logs estruturados com redaction para campos sensíveis.
-- Audit/security events para auth, tenant e RBAC failures.
+- Audit/security events para auth, organization e RBAC failures.
 - `.env.example` com placeholders.
 - Lint básico para secrets óbvios.
 - Production deploy manual com environment `production`.
@@ -107,7 +107,7 @@ Ameaças principais:
 
 - [x] Sem secrets reais conhecidos em `.env.example`.
 - [x] Lint básico escaneia padrões de secrets.
-- [x] Tenant mismatch bloqueado.
+- [x] Organization mismatch bloqueado.
 - [x] RBAC testado.
 - [x] Approval gates testados.
 - [x] Prompt injection tratado como evidência não confiável.

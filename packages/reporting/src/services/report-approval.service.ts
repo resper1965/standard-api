@@ -14,7 +14,7 @@ export class ReportApprovalService {
     assertContext(context);
     assertActor(context);
     if (!approvalEvent.approval_event_id) throw new ReportingWorkflowError("APPROVAL_EVENT_REQUIRED", "Report approval requires a formal approval_event_id.");
-    const report = await this.deps.repositories.versions.get(reportVersionId, context.tenantId);
+    const report = await this.deps.repositories.versions.get(reportVersionId, context.organizationId);
     if (!report || report.assessment_id !== context.assessmentId) throw new ReportingWorkflowError("REPORT_NOT_FOUND", "Report version not found.");
     if (report.status !== "under_review") throw new ReportingWorkflowError("REPORT_APPROVAL_BLOCKED", "Only under_review reports can be approved.");
     const validation = await this.validateReportForApproval(reportVersionId, context);
@@ -33,7 +33,7 @@ export class ReportApprovalService {
   }
 
   async supersedePreviousApprovedReports(assessmentId: string, approvedReportVersionId: string, reportType: string, context: ReportingContext): Promise<void> {
-    const versions = await this.deps.repositories.versions.listByAssessment(assessmentId, context.tenantId);
+    const versions = await this.deps.repositories.versions.listByAssessment(assessmentId, context.organizationId);
     for (const version of versions) {
       if (version.report_version_id !== approvedReportVersionId && version.report_type === reportType && version.status === "approved") {
         await this.deps.repositories.versions.update({ ...version, status: "superseded", superseded_by: approvedReportVersionId, trace_id: context.traceId });

@@ -20,11 +20,11 @@ import type { AssessmentSnapshot } from "@standard/assessment-engine";
 import type { DbClient } from "./db";
 
 export type AssessmentSnapshotBuilder = {
-  build(assessmentId: string, tenantId: string, organizationId: string): Promise<AssessmentSnapshot | null>;
+  build(assessmentId: string, organizationId: string): Promise<AssessmentSnapshot | null>;
 };
 
 export const createDrizzleAssessmentSnapshotBuilder = (db: DbClient): AssessmentSnapshotBuilder => ({
-  async build(assessmentId, tenantId, organizationId) {
+  async build(assessmentId, organizationId) {
     // 1. Get base assessment
     const [assessment] = await db.select().from(assessments)
       .where(and(
@@ -91,7 +91,6 @@ export const createDrizzleAssessmentSnapshotBuilder = (db: DbClient): Assessment
 
     return {
       id: assessment.id,
-      tenantId: assessment.organizationId,
       organizationId: assessment.organizationId,
       state: assessment.state,
       documentCount,

@@ -26,7 +26,7 @@ Documentos de cliente podem estar incompletos, desatualizados, conflitantes ou c
 ## Fluxo De Indexação
 
 1. A ingestão documental cria `documents` e `document_chunks`.
-2. `POST /api/v1/assessments/:assessmentId/kb/index` lista chunks do assessment no tenant.
+2. `POST /api/v1/assessments/:assessmentId/kb/index` lista chunks do assessment no organization.
 3. Para cada chunk pendente, o serviço cria ou reutiliza `vector_reference`.
 4. O serviço cria `kb_embedding_jobs` e enfileira `KbEmbeddingJobMessage`.
 5. Jobs duplicados são evitados quando já existe job `queued`, `running` ou `retrying` para o chunk.
@@ -65,7 +65,7 @@ O MVP usa `MockVectorStore` local. `CloudflareVectorizeStore` é compatível com
 
 Metadata mínima enviada ao índice:
 
-- `tenant_id`
+- `organization_id`
 - `organization_id`
 - `assessment_id`
 - `document_id`
@@ -92,14 +92,14 @@ Após chunking, a etapa de KB deve ser acionada por API, workflow ou queue. O wo
 
 ## Multi-Tenancy
 
-Toda operação de KB exige `tenant_id`. Toda busca exige `assessment_id` e é limitada por:
+Toda operação de KB exige `organization_id`. Toda busca exige `assessment_id` e é limitada por:
 
-- tenant;
+- organization;
 - organization;
 - assessment;
 - filtros opcionais de documento e tipo documental.
 
-Mesmo quando o Vectorize suporta filtro de metadata, o backend refiltra resultados por tenant e assessment antes de responder. Não há busca global cross-tenant.
+Mesmo quando o Vectorize suporta filtro de metadata, o backend refiltra resultados por organization e assessment antes de responder. Não há busca global cross-organization.
 
 ## Segurança
 
@@ -107,14 +107,14 @@ Mesmo quando o Vectorize suporta filtro de metadata, o backend refiltra resultad
 - Resultados retornam snippets curtos, não chunks completos por padrão.
 - Conteúdo dos documentos não é logado em eventos operacionais.
 - O adapter real não deve carregar secrets no código; usar bindings/secret manager.
-- Rate limiting por tenant fica como placeholder de API Gateway.
+- Rate limiting por organization fica como placeholder de API Gateway.
 - Prompt injection deve ser tratado por classificação posterior; conteúdo recuperado nunca deve ser executado como instrução.
 
 ## Rastreabilidade
 
 Resultados de busca incluem:
 
-- `tenant_id`
+- `organization_id`
 - `organization_id`
 - `assessment_id`
 - `document_id`
@@ -127,7 +127,7 @@ Resultados de busca incluem:
 
 Jobs de embedding incluem:
 
-- `tenant_id`
+- `organization_id`
 - `organization_id`
 - `assessment_id`
 - `document_id`
@@ -167,7 +167,7 @@ Eventos auditáveis previstos:
 
 ## Decisões Em Aberto
 
-- Definir modelo final de namespaces/índices Vectorize por ambiente e tenant.
+- Definir modelo final de namespaces/índices Vectorize por ambiente e organization.
 - Escolher provider real de embeddings e dimensão oficial.
 - Definir política de reembedding por mudança de `text_hash` e versão de modelo.
 - Implementar adapters PostgreSQL para jobs, search logs e vector references.

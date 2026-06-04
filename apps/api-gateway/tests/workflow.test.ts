@@ -19,7 +19,7 @@ test("workflow start cria execução e bloqueia duplicado ativo", async () => {
   const client = createTestClient();
   const created = await client.createAssessment(1);
   const headers = {
-    "x-standard-tenant-id": created.tenantId,
+    "x-standard-tenant-id": created.organizationId,
     "x-standard-actor-id": ids.actorId
   };
 
@@ -44,7 +44,7 @@ test("workflow signal framework-selected avança para wait de SoA e approval inv
   const client = createTestClient();
   const created = await client.createAssessment(1);
   const headers = {
-    "x-standard-tenant-id": created.tenantId,
+    "x-standard-tenant-id": created.organizationId,
     "x-standard-actor-id": ids.actorId
   };
 
@@ -81,7 +81,7 @@ test("workflow aceita approval_event válido e permite cancelamento", async () =
   const client = createTestClient();
   const created = await client.createAssessment(1);
   const headers = {
-    "x-standard-tenant-id": created.tenantId,
+    "x-standard-tenant-id": created.organizationId,
     "x-standard-actor-id": ids.actorId
   };
 

@@ -12,7 +12,7 @@ import { assertRateLimit } from "./middleware/rate-limit.middleware";
 import { recordRequestObservability } from "./middleware/request-observability.middleware";
 import { assertRbac } from "./middleware/rbac.middleware";
 import { assertApiKeyScopes } from "./middleware/scope.middleware";
-import { resolveTenantContext } from "./middleware/tenant.middleware";
+import { resolveOrganizationContext } from "./middleware/tenant.middleware";
 import { resolveTraceId } from "./middleware/trace.middleware";
 import { checkIdempotency, storeIdempotencyResult } from "./middleware/idempotency.middleware";
 import { agentRuntimeRoutes } from "./routes/agent-runtime.routes";
@@ -291,7 +291,7 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
           const mockAuth = new MockAuthProvider("development");
           const authCtx = await mockAuth.authenticate({
             actorId: legacyActor,
-            ...(context.tenantId ? { tenantId: context.tenantId } : {}),
+            ...(context.organizationId ? { organizationId: context.organizationId } : {}),
             authHeader: request.headers.get("authorization") ?? undefined,
             traceId
           });
@@ -333,7 +333,7 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
       }
 
       const tenantRequired = route.tenantRequired ?? defaultTenantRequired(route);
-      await resolveTenantContext(context, tenantRequired);
+      await resolveOrganizationContext(context, tenantRequired);
 
       await assertRbac(context, route.permissions);
       assertApiKeyScopes(context, route.path, request.method, authRequired);
@@ -341,7 +341,7 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
       await recordAuditEvent(context, route.path);
 
       // ── Idempotency replay ────────────────────────────────────
-      const idempotentReplay = await checkIdempotency(request, context.tenantId, env?.STANDARD_CACHE);
+      const idempotentReplay = await checkIdempotency(request, context.organizationId, env?.STANDARD_CACHE);
       if (idempotentReplay) return withSecurityHeaders(idempotentReplay);
 
       // ── Declarative body validation ───────────────────────────
@@ -351,7 +351,7 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
       }
 
       const response = await route.handler(context);
-      storeIdempotencyResult(request, response, context.tenantId, env?.STANDARD_CACHE);
+      storeIdempotencyResult(request, response, context.organizationId, env?.STANDARD_CACHE);
       // Fire-and-forget observability — never blocks the response
       const obsPromise = recordRequestObservability(context, route.path, response, startedAt)
         .catch((obsErr) => console.error("[standard:observability] Failed to record metrics:", obsErr instanceof Error ? obsErr.message : obsErr));

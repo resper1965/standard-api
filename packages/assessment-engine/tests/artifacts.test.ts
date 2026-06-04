@@ -9,8 +9,7 @@ import { baseContext } from "./fixtures";
 
 const baseVersion = {
   id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
-  tenantId: "11111111-1111-4111-8111-111111111111",
-  organizationId: "22222222-2222-4222-8222-222222222222",
+  organizationId: "11111111-1111-4111-8111-111111111111",
   assessmentId: "33333333-3333-4333-8333-333333333333",
   artifactType: "soa" as const,
   versionNumber: 1,
@@ -73,7 +72,7 @@ describe("Artifact Versions — imutabilidade e versionamento", () => {
     expect(next.supersedesVersionId).toBe(baseVersion.id);
   });
 
-  it("nova versão herda tenantId, organizationId, assessmentId da versão anterior", () => {
+  it("nova versão herda organizationId, organizationId, assessmentId da versão anterior", () => {
     const next = createNextArtifactVersion(
       {
         ...baseVersion,
@@ -84,7 +83,6 @@ describe("Artifact Versions — imutabilidade e versionamento", () => {
       baseContext()
     );
 
-    expect(next.tenantId).toBe(baseVersion.tenantId);
     expect(next.organizationId).toBe(baseVersion.organizationId);
     expect(next.assessmentId).toBe(baseVersion.assessmentId);
   });

@@ -15,7 +15,7 @@ The Standard API assumes secure external B2B integration using **API Keys**. It 
     *   *Example prefix:* `Bearer standard_live_...`
 
 > [!WARNING]
-> Requests authenticated via this method resolve the actor natively as `m2m-agent` and inherit the Organization/Tenant context directly from the Key issuing authority. Because of this security restriction, M2M agents **cannot** modify or generate other API keys.
+> Requests authenticated via this method resolve the actor natively as `m2m-agent` and inherit the Organization/Organization context directly from the Key issuing authority. Because of this security restriction, M2M agents **cannot** modify or generate other API keys.
 
 ## Raw Text Analysis (ROPA & Privacy Data Integration)
 
@@ -65,17 +65,17 @@ Once the `analyze-text` response is received, external systems shall retrieve th
 Your external systems invoke this using the M2M Key to fetch the final Output JSON containing `not_met` gaps or fully mapped findings ready for consumption in your native UI.
 
 > [!TIP]
-> **Token Cost Tracking**: Standard records metric limits (`integration_text_analysis_requests`) based on API Key volume. LLM tokens expended through M2M integrations are charged globally per Tenant via the native Cloudflare AI Gateway telemetry logs. Keep polling intervals logical (e.g., every 5 seconds) until `status` equals `completed`. 
+> **Token Cost Tracking**: Standard records metric limits (`integration_text_analysis_requests`) based on API Key volume. LLM tokens expended through M2M integrations are charged globally per Organization via the native Cloudflare AI Gateway telemetry logs. Keep polling intervals logical (e.g., every 5 seconds) until `status` equals `completed`. 
 
-## SaaS Management API: Tenants, Organizations & Subscriptions
+## SaaS Management API: Organizations, Organizations & Subscriptions
 
 For platforms that white-label Standard or need to provision SaaS isolation dynamically without human intervention, Standard provides a master core API. 
 *(Note: These routes require a root Administrator or Service Account with provisioning permission).*
 
-### 1. Provisioning a Subscription (Tenant)
-A **Tenant** represents an isolated instance of billing, configuration, and data isolation.
+### 1. Provisioning a Subscription (Organization)
+A **Organization** represents an isolated instance of billing, configuration, and data isolation.
 ```http
-POST /api/v1/tenants
+POST /api/v1/organizations
 {
   "name": "Customer Corp LLC",
   "slug": "customer-corp",
@@ -84,18 +84,18 @@ POST /api/v1/tenants
 ```
 
 ### 2. Issuing an Organization
-Organizations (Sub-Tenants) group assessments beneath your Root Tenant. M2M API Keys are issued globally to your Root Tenant, but assessments are bound to specific Organizations.
+Organizations (Sub-Organizations) group assessments beneath your Root Organization. M2M API Keys are issued globally to your Root Organization, but assessments are bound to specific Organizations.
 ```http
 POST /api/v1/organizations
 {
-  "tenant_id": "<uuid>",
+  "organization_id": "<uuid>",
   "name": "Headquarters",
   "slug": "hq"
 }
 ```
 
 ### 3. Key Governance
-Administrators can programmatically list, issue, and revoke keys mapped to their Root Tenant. M2M endpoints themselves are forbidden from creating new keys to prevent privilege escalation.
+Administrators can programmatically list, issue, and revoke keys mapped to their Root Organization. M2M endpoints themselves are forbidden from creating new keys to prevent privilege escalation.
 ```http
 GET    /api/v1/api-keys
 POST   /api/v1/api-keys
@@ -106,18 +106,18 @@ DELETE /api/v1/api-keys/:keyId
 
 Standard enforces strict Role-Based Access Control out-of-the-box. There are two primary domains of administrative visibility:
 
-1. **Global Superadmin (`resper@bekaa.eu`)**: Operates on the absolute Top-Level. Capable of executing Cross-Tenant queries, registering new Tenants (subscriptions), injecting Official SCF Catalogs, and overseeing the entire Master Infrastructure.
-2. **Organization/Tenant Admin**: This is the owner of a specific customer instance (e.g., the CISO of *Customer Corp LLC*). This administrator focuses solely on their isolated domain. They have access to:
+1. **Global Superadmin (`resper@bekaa.eu`)**: Operates on the absolute Top-Level. Capable of executing Cross-Organization queries, registering new Organizations (subscriptions), injecting Official SCF Catalogs, and overseeing the entire Master Infrastructure.
+2. **Organization/Organization Admin**: This is the owner of a specific customer instance (e.g., the CISO of *Customer Corp LLC*). This administrator focuses solely on their isolated domain. They have access to:
    * View Subscription status and expiration.
    * Provision Organization-specific **M2M API Keys**.
    * Retrieve Integration Documentation.
-   * Manage users mapped to their specific `tenantId`/`organizationId`.
+   * Manage users mapped to their specific `organizationId`/`organizationId`.
 
 ---
 
 ## 🤖 AI Vibe-Coding Prompt (Integration Fast-Track)
 
-If a **Tenant Admin** wishes to integrate their internal system (e.g., an internal Privacy App or GRC tool) with Standard using an AI Coding Assistant (Cursor, Claude Code, GitHub Copilot), they can simply copy and paste the universal prompt below into their AI dev tool to instantly generate the correct boilerplate.
+If a **Organization Admin** wishes to integrate their internal system (e.g., an internal Privacy App or GRC tool) with Standard using an AI Coding Assistant (Cursor, Claude Code, GitHub Copilot), they can simply copy and paste the universal prompt below into their AI dev tool to instantly generate the correct boilerplate.
 
 <details>
 <summary><b>Click to copy the AI Prompt Template</b></summary>

@@ -9,12 +9,12 @@
 - Secrets fora do repositório.
 - Security events persistentes e monitorados.
 
-## Tenant Isolation
+## Organization Isolation
 
-- Tenant guard aplicado em rotas de cliente.
-- Repositories e storage keys escopados por tenant/organization/assessment.
-- KB, reports, workflows e agent runs filtrados por tenant.
-- Testes cross-tenant verdes.
+- Organization guard aplicado em rotas de cliente.
+- Repositories e storage keys escopados por organization/organization/assessment.
+- KB, reports, workflows e agent runs filtrados por organization.
+- Testes cross-organization verdes.
 - Admin/support access com trilha auditável e menor privilégio.
 
 ## Backup/Restore
@@ -39,7 +39,7 @@
 - Trace propagation validado.
 - Metrics por endpoint, workflow, queue e job.
 - Audit/security events persistentes.
-- Alertas para tenant mismatch, approval bypass attempt, DLQ, erro 5xx e custo anômalo.
+- Alertas para organization mismatch, approval bypass attempt, DLQ, erro 5xx e custo anômalo.
 
 ## Incident Response
 
@@ -52,7 +52,7 @@
 
 ## Rate Limiting
 
-- Rate limiting real por tenant/organization.
+- Rate limiting real por organization/organization.
 - Quotas para uploads, KB search, agents, reports e admin imports.
 - Proteção contra abuse em endpoints públicos.
 - Métricas e alertas de throttling.
@@ -68,7 +68,7 @@
 ## Data Retention
 
 - Política por documentos, chunks, embeddings, reports e audit logs.
-- Exclusão controlada por tenant/assessment.
+- Exclusão controlada por organization/assessment.
 - Legal hold definido.
 - Retenção de logs compatível com privacy/compliance.
 
@@ -102,19 +102,19 @@
 - Limites de upload documentados.
 - Backpressure em queues.
 - Budget de latência por endpoint crítico.
-- Capacity plan para tenants iniciais.
+- Capacity plan para organizations iniciais.
 
 ## Cost Budgets
 
 - Budgets Cloudflare por ambiente.
 - AI Gateway cost tracking.
-- Alertas por tenant/assessment.
+- Alertas por organization/assessment.
 - Quotas para LLM/embedding/reporting.
 - Revisão FinOps antes de clientes reais.
 
 ## Support Process
 
-- Processo de suporte tenant-aware.
+- Processo de suporte organization-aware.
 - Acesso support readonly auditado.
 - Runbooks por incidente comum.
 - SLA/SLO inicial.

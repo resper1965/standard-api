@@ -2,7 +2,7 @@
  * Drizzle-backed Membership Repository
  *
  * Replaces the in-memory Map in members.routes.ts.
- * Scoped by tenant_id on every operation.
+ * Scoped by organization_id on every operation.
  */
 import { sql } from "drizzle-orm";
 import type { DbClient } from "./db";
@@ -10,7 +10,6 @@ import { ApiError } from "../errors/api-error";
 
 export type MembershipRecord = {
   membership_id: string;
-  tenant_id: string;
   organization_id: string;
   user_id: string | null;
   email: string | null;
@@ -25,7 +24,6 @@ export type MembershipRecord = {
 
 export type MembershipCreateInput = {
   membership_id: string;
-  tenant_id: string;
   organization_id: string;
   user_id?: string | null;
   email?: string | null;
@@ -38,10 +36,10 @@ export type MembershipCreateInput = {
 
 export type MembershipRepositoryAdapter = {
   create(input: MembershipCreateInput): Promise<MembershipRecord>;
-  listByOrganization(organizationId: string, tenantId: string): Promise<MembershipRecord[]>;
-  getById(membershipId: string, tenantId: string): Promise<MembershipRecord | null>;
-  updateRole(membershipId: string, tenantId: string, role: string): Promise<MembershipRecord | null>;
-  remove(membershipId: string, tenantId: string): Promise<boolean>;
+  listByOrganization(organizationId: string): Promise<MembershipRecord[]>;
+  getById(membershipId: string, organizationId: string): Promise<MembershipRecord | null>;
+  updateRole(membershipId: string, organizationId: string, role: string): Promise<MembershipRecord | null>;
+  remove(membershipId: string, organizationId: string): Promise<boolean>;
   /**
    * Counts the number of active org memberships for a user in the Standard domain.
    * Used to enforce the one-org-per-non-admin rule.
@@ -54,10 +52,9 @@ export function createDrizzleMembershipRepository(db: DbClient): MembershipRepos
   return {
     async create(input): Promise<MembershipRecord> {
       const rows = await db.execute(
-        sql`INSERT INTO memberships (id, tenant_id, organization_id, user_id, email, display_name, role, status, invited_at, accepted_at, created_at, updated_at)
+        sql`INSERT INTO memberships (id, organization_id, organization_id, user_id, email, display_name, role, status, invited_at, accepted_at, created_at, updated_at)
             VALUES (
               ${input.membership_id}::uuid,
-              ${input.tenant_id}::uuid,
               ${input.organization_id}::uuid,
               ${input.user_id ?? null}::uuid,
               ${input.email ?? null},
@@ -69,7 +66,7 @@ export function createDrizzleMembershipRepository(db: DbClient): MembershipRepos
               NOW(),
               NOW()
             )
-            RETURNING id AS membership_id, tenant_id, organization_id, user_id, email, display_name, role, status,
+            RETURNING id AS membership_id, organization_id, organization_id, user_id, email, display_name, role, status,
                       invited_at, accepted_at, created_at, updated_at`
       );
       const row = (rows as any)[0] ?? (rows as any).rows?.[0];
@@ -77,13 +74,13 @@ export function createDrizzleMembershipRepository(db: DbClient): MembershipRepos
       return mapRow(row);
     },
 
-    async listByOrganization(organizationId, tenantId): Promise<MembershipRecord[]> {
+    async listByOrganization(organizationId): Promise<MembershipRecord[]> {
       const rows = await db.execute(
-        sql`SELECT id AS membership_id, tenant_id, organization_id, user_id, email, display_name, role, status,
+        sql`SELECT id AS membership_id, organization_id, organization_id, user_id, email, display_name, role, status,
                    invited_at, accepted_at, created_at, updated_at
             FROM memberships
             WHERE organization_id = ${organizationId}::uuid
-              AND tenant_id = ${tenantId}::uuid
+              AND organization_id = ${organizationId}::uuid
               AND deleted_at IS NULL
               AND status != 'removed'
             ORDER BY created_at DESC`
@@ -92,13 +89,13 @@ export function createDrizzleMembershipRepository(db: DbClient): MembershipRepos
       return Array.isArray(list) ? list.map(mapRow) : [];
     },
 
-    async getById(membershipId, tenantId): Promise<MembershipRecord | null> {
+    async getById(membershipId, organizationId): Promise<MembershipRecord | null> {
       const rows = await db.execute(
-        sql`SELECT id AS membership_id, tenant_id, organization_id, user_id, email, display_name, role, status,
+        sql`SELECT id AS membership_id, organization_id, organization_id, user_id, email, display_name, role, status,
                    invited_at, accepted_at, created_at, updated_at
             FROM memberships
             WHERE id = ${membershipId}::uuid
-              AND tenant_id = ${tenantId}::uuid
+              AND organization_id = ${organizationId}::uuid
               AND deleted_at IS NULL
             LIMIT 1`
       );
@@ -107,14 +104,14 @@ export function createDrizzleMembershipRepository(db: DbClient): MembershipRepos
       return row ? mapRow(row) : null;
     },
 
-    async updateRole(membershipId, tenantId, role): Promise<MembershipRecord | null> {
+    async updateRole(membershipId, organizationId, role): Promise<MembershipRecord | null> {
       const rows = await db.execute(
         sql`UPDATE memberships
             SET role = ${role}, updated_at = NOW()
             WHERE id = ${membershipId}::uuid
-              AND tenant_id = ${tenantId}::uuid
+              AND organization_id = ${organizationId}::uuid
               AND deleted_at IS NULL
-            RETURNING id AS membership_id, tenant_id, organization_id, user_id, email, display_name, role, status,
+            RETURNING id AS membership_id, organization_id, organization_id, user_id, email, display_name, role, status,
                       invited_at, accepted_at, created_at, updated_at`
       );
       const list = (rows as any).rows ?? rows as any;
@@ -122,12 +119,12 @@ export function createDrizzleMembershipRepository(db: DbClient): MembershipRepos
       return row ? mapRow(row) : null;
     },
 
-    async remove(membershipId, tenantId): Promise<boolean> {
+    async remove(membershipId, organizationId): Promise<boolean> {
       const rows = await db.execute(
         sql`UPDATE memberships
             SET status = 'removed', updated_at = NOW()
             WHERE id = ${membershipId}::uuid
-              AND tenant_id = ${tenantId}::uuid
+              AND organization_id = ${organizationId}::uuid
               AND deleted_at IS NULL
             RETURNING id`
       );
@@ -155,7 +152,6 @@ export function createDrizzleMembershipRepository(db: DbClient): MembershipRepos
 function mapRow(row: Record<string, unknown>): MembershipRecord {
   return {
     membership_id: String(row['membership_id'] ?? row['id'] ?? ''),
-    tenant_id: String(row['tenant_id'] ?? ''),
     organization_id: String(row['organization_id'] ?? ''),
     user_id: row['user_id'] ? String(row['user_id']) : null,
     email: row['email'] ? String(row['email']) : null,
@@ -176,7 +172,6 @@ export function createMockMembershipRepository(): MembershipRepositoryAdapter {
       const now = new Date().toISOString();
       const record: MembershipRecord = {
         membership_id: input.membership_id,
-        tenant_id: input.tenant_id,
         organization_id: input.organization_id,
         user_id: input.user_id ?? null,
         email: input.email ?? null,
@@ -191,25 +186,25 @@ export function createMockMembershipRepository(): MembershipRepositoryAdapter {
       store.set(record.membership_id, record);
       return record;
     },
-    async listByOrganization(organizationId, tenantId) {
+    async listByOrganization(organizationId) {
       return [...store.values()].filter(
-        m => m.organization_id === organizationId && m.tenant_id === tenantId && m.status !== 'removed'
+        m => m.organization_id === organizationId && m.organization_id === organizationId && m.status !== 'removed'
       );
     },
-    async getById(id, tenantId) {
+    async getById(id, organizationId) {
       const m = store.get(id);
-      return m && m.tenant_id === tenantId ? m : null;
+      return m && m.organization_id === organizationId ? m : null;
     },
-    async updateRole(id, tenantId, role) {
+    async updateRole(id, organizationId, role) {
       const m = store.get(id);
-      if (!m || m.tenant_id !== tenantId) return null;
+      if (!m || m.organization_id !== organizationId) return null;
       m.role = role; m.updated_at = new Date().toISOString();
       store.set(id, m);
       return m;
     },
-    async remove(id, tenantId) {
+    async remove(id, organizationId) {
       const m = store.get(id);
-      if (!m || m.tenant_id !== tenantId) return false;
+      if (!m || m.organization_id !== organizationId) return false;
       m.status = 'removed'; m.updated_at = new Date().toISOString();
       store.set(id, m);
       return true;

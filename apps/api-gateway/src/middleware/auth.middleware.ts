@@ -3,7 +3,7 @@
  * @description Resolves authentication context from Standard Native Auth session.
  *
  * Standard Native Auth sessions are resolved from cookies (browser) or API keys (programmatic).
- * The active organization in the session maps to the Standard tenant_id.
+ * The active organization in the session maps to the Standard organization_id.
  *
  * Type safety contract:
  * - Session user fields are read via `StandardUser` (packages/auth/src/types.ts)
@@ -46,7 +46,7 @@ function resolveSessionFields(rawSession: { user: unknown; session: unknown }): 
 /**
  * Resolve auth context from Standard Native Auth session.
  *
- * Sets `context.actorId`, `context.tenantId`, and `context.session`.
+ * Sets `context.actorId`, `context.organizationId`, and `context.session`.
  * If `requireAuth` is true and no valid session exists, throws 401.
  */
 export const resolveAuthContext = async (
@@ -72,7 +72,7 @@ export const resolveAuthContext = async (
       if (apiKeyRecord) {
         context.actorId = `m2m:${apiKeyRecord.id}`;
         context.organizationId = apiKeyRecord.organizationId;
-        context.tenantId = apiKeyRecord.organizationId; // tenant_id === organization_id (ADR 0002 Phase 2/3)
+        context.organizationId = apiKeyRecord.organizationId; // organization_id === organization_id (ADR 0002 Phase 2/3)
 
         // Store scopes for downstream scope enforcement middleware
         context.m2mScopes = apiKeyRecord.scopes;
@@ -89,7 +89,6 @@ export const resolveAuthContext = async (
           module: "auth",
           environment: "production",
           trace_id: context.traceId,
-          tenant_id: apiKeyRecord.organizationId,
           organization_id: apiKeyRecord.organizationId,
           metadata: { actor_id: `m2m:${apiKeyRecord.id}`, key_id: apiKeyRecord.id }
         });
@@ -115,8 +114,8 @@ export const resolveAuthContext = async (
             module: "auth",
             environment: "production",
             trace_id: context.traceId,
-            tenant_id: isUuid(context.tenantId) ? context.tenantId : undefined,
-            metadata: { actor_id: rawSession.user.id, raw_tenant_id: context.tenantId }
+            organization_id: isUuid(context.organizationId) ? context.organizationId : undefined,
+            metadata: { actor_id: rawSession.user.id, raw_tenant_id: context.organizationId }
           });
           throw new ApiError("UNAUTHORIZED", "Token has been revoked.", 401);
         }
@@ -294,7 +293,6 @@ export const resolveAuthContext = async (
       }
 
       if (resolvedOrgId) {
-        context.tenantId = resolvedOrgId;
         context.organizationId = resolvedOrgId;
 
         // Resolve Better-Auth string ID / slug to database UUIDs (read-only).
@@ -302,14 +300,13 @@ export const resolveAuthContext = async (
         // it now: the ID comes from the authenticated BA session (the user's
         // active organization), so this is legitimate first-touch provisioning,
         // not arbitrary "phantom" creation.
-        if (context.deps.resolveTenantContext) {
+        if (context.deps.resolveOrganizationContext) {
           try {
-            let resolved = await context.deps.resolveTenantContext(resolvedOrgId);
-            if (!resolved && context.deps.provisionTenantContext) {
-              resolved = await context.deps.provisionTenantContext(resolvedOrgId);
+            let resolved = await context.deps.resolveOrganizationContext(resolvedOrgId);
+            if (!resolved && context.deps.provisionOrganizationContext) {
+              resolved = await context.deps.provisionOrganizationContext(resolvedOrgId);
             }
             if (resolved) {
-              context.tenantId = resolved.tenant_id;
               context.organizationId = resolved.organization_id;
             }
           } catch (e) {
@@ -328,7 +325,6 @@ export const resolveAuthContext = async (
             // CRITICAL: Clear tenant context to prevent raw BA org ID (nanoid)
             // from being used downstream as a domain UUID. Handlers should
             // treat this as "no org context" and re-resolve or reject.
-            context.tenantId = undefined;
             context.organizationId = undefined;
           }
         }
@@ -359,7 +355,7 @@ export const resolveAuthContext = async (
         module: "auth",
         environment: "production",
         trace_id: context.traceId,
-        tenant_id: isUuid(context.tenantId) ? context.tenantId : undefined,
+        organization_id: isUuid(context.organizationId) ? context.organizationId : undefined,
         metadata: {
           actor_id: user.id,
           session_id: session.id,
@@ -379,10 +375,10 @@ export const resolveAuthContext = async (
       module: "auth",
       environment: "production",
       trace_id: context.traceId,
-      tenant_id: isUuid(context.tenantId) ? context.tenantId : undefined,
+      organization_id: isUuid(context.organizationId) ? context.organizationId : undefined,
       metadata: { 
         error: err instanceof Error ? err.message : String(err),
-        raw_tenant_id: context.tenantId
+        raw_tenant_id: context.organizationId
       }
     });
   }
@@ -397,7 +393,7 @@ export const resolveAuthContext = async (
 
       const sendOp = context.deps.SOC_TRIAGE_QUEUE.send({
         job_id: crypto.randomUUID(),
-        tenantId: "system",
+        organizationId: "system",
         traceId: context.traceId,
         systemModuleName: "API Gateway - Identity Service",
         rawLogsExcerpt: `[Auth Rejection] Access denied to protected route.\nIP: ${ip}\nUser-Agent: ${userAgent}\nAuth Header Size: ${authHeaderSize} bytes\nAction: HTTP 401 Unauthorized triggered. Possible credential stuffing, expired session, or unauthenticated probing.`

@@ -26,7 +26,6 @@ export const assessmentResponse = (record: AssessmentRecord) => {
 
   return {
     assessment_id: record.assessment_id,
-    tenant_id: record.tenant_id,
     organization_id: record.organization_id,
     name: record.name,
     status: record.snapshot.state, // Renamed from state for frontend consistency
@@ -42,7 +41,6 @@ export const assessmentResponse = (record: AssessmentRecord) => {
 
 
 export const lifecycleEventResponse = (event: AssessmentLifecycleEvent) => ({
-  tenant_id: event.tenantId,
   organization_id: event.organizationId,
   assessment_id: event.assessmentId,
   previous_state: event.previousState,
@@ -58,7 +56,6 @@ export const lifecycleEventResponse = (event: AssessmentLifecycleEvent) => ({
 
 export const approvalResponse = (record: ApprovalRecord) => ({
   approval_id: record.id,
-  tenant_id: record.tenantId,
   organization_id: record.organizationId,
   assessment_id: record.assessmentId,
   gate: record.gate,
@@ -73,7 +70,6 @@ export const approvalResponse = (record: ApprovalRecord) => ({
 
 export const artifactVersionResponse = (version: ArtifactVersion) => ({
   artifact_version_id: version.id,
-  tenant_id: version.tenantId,
   organization_id: version.organizationId,
   assessment_id: version.assessmentId,
   artifact_type: version.artifactType,

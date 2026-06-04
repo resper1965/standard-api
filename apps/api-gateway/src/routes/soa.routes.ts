@@ -27,15 +27,14 @@ const toApiError = (error: unknown): never => {
   throw error;
 };
 
-const requireAssessment = async (deps: AppDependencies, assessmentId: string, tenantId: string): Promise<AssessmentRecord> => {
-  const tenantAssessmentsDb = deps.assessments.withTenant(tenantId);
+const requireAssessment = async (deps: AppDependencies, assessmentId: string, organizationId: string): Promise<AssessmentRecord> => {
+  const tenantAssessmentsDb = deps.assessments.withOrganization(organizationId);
   const assessment = await tenantAssessmentsDb.get(assessmentId);
   if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
   return assessment;
 };
 
 const contextFor = (assessment: AssessmentRecord, traceId: string, actorId?: string) => ({
-  tenantId: assessment.tenant_id,
   organizationId: assessment.organization_id,
   assessmentId: assessment.assessment_id,
   ...(actorId ? { actorId } : {}),
@@ -52,7 +51,6 @@ const applyTransitionIfAllowed = async (
 ): Promise<void> => {
   if (!getAllowedNextStates(assessment.snapshot.state).includes(nextState)) return;
   const result = executeTransition(assessment.snapshot, nextState, {
-    tenantId: assessment.tenant_id,
     organizationId: assessment.organization_id,
     assessmentId: assessment.assessment_id,
     actorId,
@@ -63,8 +61,8 @@ const applyTransitionIfAllowed = async (
   });
   assessment.snapshot = result.assessment;
   assessment.trace_id = traceId;
-  await deps.assessments.withTenant(assessment.tenant_id).save(assessment);
-  await deps.lifecycleEvents.withTenant(assessment.tenant_id).record(result.event);
+  await deps.assessments.withOrganization(assessment.organization_id).save(assessment);
+  await deps.lifecycleEvents.withOrganization(assessment.organization_id).record(result.event);
 };
 
 export const soaRoutes: RouteDefinition[] = [
@@ -73,13 +71,14 @@ export const soaRoutes: RouteDefinition[] = [
     path: "/api/v1/assessments/:assessmentId/scope",
     protected: true,
     requireActor: true,
-    handler: async ({ request, deps, params, tenantId, actorId, traceId }) => {
-      const assessment = await requireAssessment(deps, routeParam(params, "assessmentId"), tenantId!);
+    permissions: ["soa:create"],
+    handler: async ({ request, deps, params, organizationId, actorId, traceId }) => {
+      const assessment = await requireAssessment(deps, routeParam(params, "assessmentId"), organizationId!);
       const body = await parseJson(request, CreateScopeRequestSchema);
       try {
         const scope = await new ScopeService(deps.soa).createDraftScope(body, contextFor(assessment, traceId, actorId!));
         assessment.snapshot.scopeDrafted = true;
-        await deps.assessments.withTenant(assessment.tenant_id).save(assessment);
+        await deps.assessments.withOrganization(assessment.organization_id).save(assessment);
         await applyTransitionIfAllowed(deps, assessment, "scope_drafted", traceId, actorId!);
         return json(scope, { status: 201 });
       } catch (error) {
@@ -91,8 +90,9 @@ export const soaRoutes: RouteDefinition[] = [
     method: "GET",
     path: "/api/v1/assessments/:assessmentId/scope",
     protected: true,
-    handler: async ({ deps, params, tenantId, traceId }) => {
-      const assessment = await requireAssessment(deps, routeParam(params, "assessmentId"), tenantId!);
+    permissions: ["soa:read"],
+    handler: async ({ deps, params, organizationId, traceId }) => {
+      const assessment = await requireAssessment(deps, routeParam(params, "assessmentId"), organizationId!);
       const data = await new ScopeService(deps.soa).listScopes(assessment.assessment_id, contextFor(assessment, traceId));
       return json({ data, trace_id: traceId });
     }
@@ -101,9 +101,10 @@ export const soaRoutes: RouteDefinition[] = [
     method: "GET",
     path: "/api/v1/scopes/:scopeId",
     protected: true,
-    handler: async ({ deps, params, tenantId, traceId }) => {
-      const scopes = await deps.soa.repositories.scopes.listByAssessment("", tenantId!);
-      const direct = await deps.soa.repositories.scopes.get(routeParam(params, "scopeId"), tenantId!);
+    permissions: ["soa:read"],
+    handler: async ({ deps, params, organizationId, traceId }) => {
+      const scopes = await deps.soa.repositories.scopes.listByAssessment("", organizationId!);
+      const direct = await deps.soa.repositories.scopes.get(routeParam(params, "scopeId"), organizationId!);
       void scopes;
       if (!direct) throw new ApiError("NOT_FOUND", "Scope not found.", 404);
       return json({ ...direct, trace_id: traceId });
@@ -114,10 +115,11 @@ export const soaRoutes: RouteDefinition[] = [
     path: "/api/v1/scopes/:scopeId",
     protected: true,
     requireActor: true,
-    handler: async ({ request, deps, params, tenantId, actorId, traceId }) => {
-      const direct = await deps.soa.repositories.scopes.get(routeParam(params, "scopeId"), tenantId!);
+    permissions: ["soa:update"],
+    handler: async ({ request, deps, params, organizationId, actorId, traceId }) => {
+      const direct = await deps.soa.repositories.scopes.get(routeParam(params, "scopeId"), organizationId!);
       if (!direct) throw new ApiError("NOT_FOUND", "Scope not found.", 404);
-      const assessment = await requireAssessment(deps, direct.assessment_id, tenantId!);
+      const assessment = await requireAssessment(deps, direct.assessment_id, organizationId!);
       const body = await parseJson(request, UpdateScopeRequestSchema);
       try {
         return json(await new ScopeService(deps.soa).updateDraftScope(direct.scope_id, body, contextFor(assessment, traceId, actorId!)));
@@ -131,10 +133,11 @@ export const soaRoutes: RouteDefinition[] = [
     path: "/api/v1/scopes/:scopeId/submit-review",
     protected: true,
     requireActor: true,
-    handler: async ({ deps, params, tenantId, actorId, traceId }) => {
-      const scope = await deps.soa.repositories.scopes.get(routeParam(params, "scopeId"), tenantId!);
+    permissions: ["soa:update"],
+    handler: async ({ deps, params, organizationId, actorId, traceId }) => {
+      const scope = await deps.soa.repositories.scopes.get(routeParam(params, "scopeId"), organizationId!);
       if (!scope) throw new ApiError("NOT_FOUND", "Scope not found.", 404);
-      const assessment = await requireAssessment(deps, scope.assessment_id, tenantId!);
+      const assessment = await requireAssessment(deps, scope.assessment_id, organizationId!);
       try {
         return json(await new ScopeService(deps.soa).submitScopeForReview(scope.scope_id, contextFor(assessment, traceId, actorId!)));
       } catch (error) {
@@ -147,10 +150,11 @@ export const soaRoutes: RouteDefinition[] = [
     path: "/api/v1/scopes/:scopeId/approve",
     protected: true,
     requireActor: true,
-    handler: async ({ request, deps, params, tenantId, actorId, traceId }) => {
-      const scope = await deps.soa.repositories.scopes.get(routeParam(params, "scopeId"), tenantId!);
+    permissions: ["soa:approve"],
+    handler: async ({ request, deps, params, organizationId, actorId, traceId }) => {
+      const scope = await deps.soa.repositories.scopes.get(routeParam(params, "scopeId"), organizationId!);
       if (!scope) throw new ApiError("NOT_FOUND", "Scope not found.", 404);
-      const assessment = await requireAssessment(deps, scope.assessment_id, tenantId!);
+      const assessment = await requireAssessment(deps, scope.assessment_id, organizationId!);
       const body = await parseJson(request, ApproveSoaRequestSchema);
       try {
         return json(await new ScopeService(deps.soa).approveScope(scope.scope_id, body, contextFor(assessment, traceId, actorId!)));
@@ -164,13 +168,14 @@ export const soaRoutes: RouteDefinition[] = [
     path: "/api/v1/assessments/:assessmentId/soa/draft",
     protected: true,
     requireActor: true,
-    handler: async ({ request, deps, params, tenantId, actorId, traceId }) => {
-      const assessment = await requireAssessment(deps, routeParam(params, "assessmentId"), tenantId!);
+    permissions: ["soa:create"],
+    handler: async ({ request, deps, params, organizationId, actorId, traceId }) => {
+      const assessment = await requireAssessment(deps, routeParam(params, "assessmentId"), organizationId!);
       const body = await parseJson(request, CreateSoaDraftRequestSchema);
       try {
         const draft = await new SoaDraftService(deps.soa).createDraftFromFramework(assessment.assessment_id, body.framework_id, body.scf_version_id, contextFor(assessment, traceId, actorId!));
         assessment.snapshot.soaDraftVersionComplete = true;
-        await deps.assessments.withTenant(assessment.tenant_id).save(assessment);
+        await deps.assessments.withOrganization(assessment.organization_id).save(assessment);
         await applyTransitionIfAllowed(deps, assessment, "soa_drafted", traceId, actorId!);
         return json(draft, { status: 201 });
       } catch (error) {
@@ -182,8 +187,9 @@ export const soaRoutes: RouteDefinition[] = [
     method: "GET",
     path: "/api/v1/assessments/:assessmentId/soa",
     protected: true,
-    handler: async ({ deps, params, tenantId, traceId }) => {
-      const assessment = await requireAssessment(deps, routeParam(params, "assessmentId"), tenantId!);
+    permissions: ["soa:read"],
+    handler: async ({ deps, params, organizationId, traceId }) => {
+      const assessment = await requireAssessment(deps, routeParam(params, "assessmentId"), organizationId!);
       const data = await new SoaDraftService(deps.soa).listSoaVersions(assessment.assessment_id, contextFor(assessment, traceId));
       return json({ data, trace_id: traceId });
     }
@@ -192,8 +198,9 @@ export const soaRoutes: RouteDefinition[] = [
     method: "GET",
     path: "/api/v1/soa/:soaVersionId",
     protected: true,
-    handler: async ({ deps, params, tenantId, traceId }) => {
-      const version = await deps.soa.repositories.versions.get(routeParam(params, "soaVersionId"), tenantId!);
+    permissions: ["soa:read"],
+    handler: async ({ deps, params, organizationId, traceId }) => {
+      const version = await deps.soa.repositories.versions.get(routeParam(params, "soaVersionId"), organizationId!);
       if (!version) throw new ApiError("NOT_FOUND", "SoA version not found.", 404);
       return json({ ...version, trace_id: traceId });
     }
@@ -202,10 +209,11 @@ export const soaRoutes: RouteDefinition[] = [
     method: "GET",
     path: "/api/v1/soa/:soaVersionId/items",
     protected: true,
-    handler: async ({ request, deps, params, tenantId, traceId }) => {
-      const version = await deps.soa.repositories.versions.get(routeParam(params, "soaVersionId"), tenantId!);
+    permissions: ["soa:read"],
+    handler: async ({ request, deps, params, organizationId, traceId }) => {
+      const version = await deps.soa.repositories.versions.get(routeParam(params, "soaVersionId"), organizationId!);
       if (!version) throw new ApiError("NOT_FOUND", "SoA version not found.", 404);
-      const assessment = await requireAssessment(deps, version.assessment_id, tenantId!);
+      const assessment = await requireAssessment(deps, version.assessment_id, organizationId!);
       const page = parsePagination(request);
       const allItems = await new SoaDraftService(deps.soa).listSoaItems(version.soa_version_id, {}, contextFor(assessment, traceId));
       const result = applyPagination(allItems, page, "soa_item_id");
@@ -217,15 +225,16 @@ export const soaRoutes: RouteDefinition[] = [
     path: "/api/v1/soa/items/:soaItemId",
     protected: true,
     requireActor: true,
-    handler: async ({ request, deps, params, tenantId, actorId, traceId }) => {
-      const item = await deps.soa.repositories.items.get(routeParam(params, "soaItemId"), tenantId!);
+    permissions: ["soa:update"],
+    handler: async ({ request, deps, params, organizationId, actorId, traceId }) => {
+      const item = await deps.soa.repositories.items.get(routeParam(params, "soaItemId"), organizationId!);
       if (!item) throw new ApiError("NOT_FOUND", "SoA item not found.", 404);
       // Immutability guard: reject mutations on approved versions
-      const parentVersion = await deps.soa.repositories.versions.get(item.soa_version_id, tenantId!);
+      const parentVersion = await deps.soa.repositories.versions.get(item.soa_version_id, organizationId!);
       if (parentVersion && parentVersion.status === "approved") {
         throw new ApiError("SOA_VERSION_IMMUTABLE" as any, "Cannot modify items in an approved SoA version. Create a new draft instead.", 409);
       }
-      const assessment = await requireAssessment(deps, item.assessment_id, tenantId!);
+      const assessment = await requireAssessment(deps, item.assessment_id, organizationId!);
       const body = await parseJson(request, UpdateSoaItemRequestSchema);
       try {
         return json(await new SoaReviewService(deps.soa).updateSoaItemDecision(item.soa_item_id, body, contextFor(assessment, traceId, actorId!)));
@@ -239,10 +248,11 @@ export const soaRoutes: RouteDefinition[] = [
     path: "/api/v1/soa/:soaVersionId/evidence/refresh",
     protected: true,
     requireActor: true,
-    handler: async ({ request, deps, params, tenantId, actorId, traceId }) => {
-      const version = await deps.soa.repositories.versions.get(routeParam(params, "soaVersionId"), tenantId!);
+    permissions: ["soa:update"],
+    handler: async ({ request, deps, params, organizationId, actorId, traceId }) => {
+      const version = await deps.soa.repositories.versions.get(routeParam(params, "soaVersionId"), organizationId!);
       if (!version) throw new ApiError("NOT_FOUND", "SoA version not found.", 404);
-      const assessment = await requireAssessment(deps, version.assessment_id, tenantId!);
+      const assessment = await requireAssessment(deps, version.assessment_id, organizationId!);
       const body = await parseJson(request, RefreshSoaEvidenceRequestSchema);
       const data = await new SoaEvidenceService(deps.soa).refreshEvidenceCoverage(version.soa_version_id, contextFor(assessment, traceId, actorId!), body.top_k);
       return json({ data, candidate_evidence: true, trace_id: traceId });
@@ -253,15 +263,16 @@ export const soaRoutes: RouteDefinition[] = [
     path: "/api/v1/soa/:soaVersionId/submit-review",
     protected: true,
     requireActor: true,
-    handler: async ({ request, deps, params, tenantId, actorId, traceId }) => {
-      const version = await deps.soa.repositories.versions.get(routeParam(params, "soaVersionId"), tenantId!);
+    permissions: ["soa:update"],
+    handler: async ({ request, deps, params, organizationId, actorId, traceId }) => {
+      const version = await deps.soa.repositories.versions.get(routeParam(params, "soaVersionId"), organizationId!);
       if (!version) throw new ApiError("NOT_FOUND", "SoA version not found.", 404);
-      const assessment = await requireAssessment(deps, version.assessment_id, tenantId!);
+      const assessment = await requireAssessment(deps, version.assessment_id, organizationId!);
       const body = await parseJson(request, SubmitSoaReviewRequestSchema);
       try {
         const submitted = await new SoaReviewService(deps.soa).submitSoaForReview(version.soa_version_id, contextFor(assessment, traceId, actorId!), body.exception_rationale);
         assessment.snapshot.soaDraftVersionComplete = true;
-        await deps.assessments.withTenant(assessment.tenant_id).save(assessment);
+        await deps.assessments.withOrganization(assessment.organization_id).save(assessment);
         await applyTransitionIfAllowed(deps, assessment, "soa_under_review", traceId, actorId!);
         return json(submitted);
       } catch (error) {
@@ -274,17 +285,18 @@ export const soaRoutes: RouteDefinition[] = [
     path: "/api/v1/soa/:soaVersionId/approve",
     protected: true,
     requireActor: true,
-    handler: async ({ request, deps, params, tenantId, actorId, traceId }) => {
-      const version = await deps.soa.repositories.versions.get(routeParam(params, "soaVersionId"), tenantId!);
+    permissions: ["soa:approve"],
+    handler: async ({ request, deps, params, organizationId, actorId, traceId }) => {
+      const version = await deps.soa.repositories.versions.get(routeParam(params, "soaVersionId"), organizationId!);
       if (!version) throw new ApiError("NOT_FOUND", "SoA version not found.", 404);
-      const assessment = await requireAssessment(deps, version.assessment_id, tenantId!);
+      const assessment = await requireAssessment(deps, version.assessment_id, organizationId!);
       const body = await parseJson(request, ApproveSoaRequestSchema);
-      const approvalEvent = await deps.approvals.withTenant(tenantId!).getForGate(body.approval_event_id, "soa");
+      const approvalEvent = await deps.approvals.withOrganization(organizationId!).getForGate(body.approval_event_id, "soa");
       if (!approvalEvent || approvalEvent.approvedBy !== actorId) throw new ApiError("APPROVAL_REQUIRED", "Valid human SoA approval_event is required.", 409);
       try {
         const approved = await new SoaApprovalService(deps.soa).approveSoa(version.soa_version_id, body, contextFor(assessment, traceId, actorId!));
         assessment.snapshot.soaApproved = true;
-        await deps.assessments.withTenant(assessment.tenant_id).save(assessment);
+        await deps.assessments.withOrganization(assessment.organization_id).save(assessment);
         await applyTransitionIfAllowed(deps, assessment, "soa_approved", traceId, actorId!, approvalEvent);
         return json(approved);
       } catch (error) {
@@ -297,13 +309,14 @@ export const soaRoutes: RouteDefinition[] = [
     path: "/api/v1/soa/:soaVersionId/mark-ingested",
     protected: true,
     requireActor: true,
-    handler: async ({ deps, params, tenantId, actorId, traceId }) => {
-      const version = await deps.soa.repositories.versions.get(routeParam(params, "soaVersionId"), tenantId!);
+    permissions: ["soa:update"],
+    handler: async ({ deps, params, organizationId, actorId, traceId }) => {
+      const version = await deps.soa.repositories.versions.get(routeParam(params, "soaVersionId"), organizationId!);
       if (!version) throw new ApiError("NOT_FOUND", "SoA version not found.", 404);
-      const assessment = await requireAssessment(deps, version.assessment_id, tenantId!);
+      const assessment = await requireAssessment(deps, version.assessment_id, organizationId!);
       const marked = await new SoaApprovalService(deps.soa).markSoaIngested(version.soa_version_id, contextFor(assessment, traceId, actorId!));
       assessment.snapshot.soaIngested = true;
-      await deps.assessments.withTenant(assessment.tenant_id).save(assessment);
+      await deps.assessments.withOrganization(assessment.organization_id).save(assessment);
       await applyTransitionIfAllowed(deps, assessment, "soa_ingested", traceId, actorId!);
       return json(marked);
     }
@@ -313,10 +326,11 @@ export const soaRoutes: RouteDefinition[] = [
     path: "/api/v1/soa/:soaVersionId/mark-ingestion-required",
     protected: true,
     requireActor: true,
-    handler: async ({ deps, params, tenantId, actorId, traceId }) => {
-      const version = await deps.soa.repositories.versions.get(routeParam(params, "soaVersionId"), tenantId!);
+    permissions: ["soa:update"],
+    handler: async ({ deps, params, organizationId, actorId, traceId }) => {
+      const version = await deps.soa.repositories.versions.get(routeParam(params, "soaVersionId"), organizationId!);
       if (!version) throw new ApiError("NOT_FOUND", "SoA version not found.", 404);
-      const assessment = await requireAssessment(deps, version.assessment_id, tenantId!);
+      const assessment = await requireAssessment(deps, version.assessment_id, organizationId!);
       return json(await new SoaApprovalService(deps.soa).markSoaIngestionRequired(version.soa_version_id, contextFor(assessment, traceId, actorId!)));
     }
   },
@@ -324,11 +338,12 @@ export const soaRoutes: RouteDefinition[] = [
     method: "POST",
     path: "/api/v1/soa/:soaVersionId/regenerate",
     protected: true,
+    permissions: ["soa:update"],
     requireActor: true,
-    handler: async ({ deps, params, tenantId, actorId, traceId }) => {
-      const version = await deps.soa.repositories.versions.get(routeParam(params, "soaVersionId"), tenantId!);
+    handler: async ({ deps, params, organizationId, actorId, traceId }) => {
+      const version = await deps.soa.repositories.versions.get(routeParam(params, "soaVersionId"), organizationId!);
       if (!version) throw new ApiError("NOT_FOUND", "SoA version not found.", 404);
-      const assessment = await requireAssessment(deps, version.assessment_id, tenantId!);
+      const assessment = await requireAssessment(deps, version.assessment_id, organizationId!);
       return json(await new SoaDraftService(deps.soa).regenerateDraft(assessment.assessment_id, {
         frameworkId: version.source_framework_id,
         scfVersionId: version.scf_version_id
@@ -339,10 +354,11 @@ export const soaRoutes: RouteDefinition[] = [
     method: "GET",
     path: "/api/v1/soa/:soaVersionId/validation",
     protected: true,
-    handler: async ({ deps, params, tenantId, traceId }) => {
-      const version = await deps.soa.repositories.versions.get(routeParam(params, "soaVersionId"), tenantId!);
+    permissions: ["soa:read"],
+    handler: async ({ deps, params, organizationId, traceId }) => {
+      const version = await deps.soa.repositories.versions.get(routeParam(params, "soaVersionId"), organizationId!);
       if (!version) throw new ApiError("NOT_FOUND", "SoA version not found.", 404);
-      const assessment = await requireAssessment(deps, version.assessment_id, tenantId!);
+      const assessment = await requireAssessment(deps, version.assessment_id, organizationId!);
       return json(await new SoaReviewService(deps.soa).validateSoaForReview(version.soa_version_id, contextFor(assessment, traceId)));
     }
   }

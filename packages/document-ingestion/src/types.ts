@@ -14,7 +14,6 @@ export type FileDescriptor = {
 };
 
 export type UploadContext = {
-  tenantId: string;
   organizationId: string;
   assessmentId: string;
   actorId: string;
@@ -79,10 +78,10 @@ export interface TenantScopedDocumentRecordRepository {
 
 export type DocumentRecordRepository = {
   saveDocument(document: DocumentResponse): Promise<void>;
-  getDocument(documentId: string, tenantId: string): Promise<DocumentResponse | null>;
-  listDocuments(assessmentId: string, tenantId: string): Promise<DocumentResponse[]>;
+  getDocument(documentId: string, organizationId: string): Promise<DocumentResponse | null>;
+  listDocuments(assessmentId: string, organizationId: string): Promise<DocumentResponse[]>;
   updateDocument(document: DocumentResponse): Promise<void>;
-  withTenant(tenantId: string): TenantScopedDocumentRecordRepository;
+  withOrganization(organizationId: string): TenantScopedDocumentRecordRepository;
 };
 
 export interface TenantScopedDocumentJobRepository {
@@ -95,11 +94,11 @@ export interface TenantScopedDocumentJobRepository {
 
 export type DocumentJobRepository = {
   saveJob(job: DocumentJobResponse): Promise<void>;
-  getJob(jobId: string, tenantId: string): Promise<DocumentJobResponse | null>;
-  listJobsByDocument(documentId: string, tenantId: string): Promise<DocumentJobResponse[]>;
-  listJobsByAssessment(assessmentId: string, tenantId: string): Promise<DocumentJobResponse[]>;
+  getJob(jobId: string, organizationId: string): Promise<DocumentJobResponse | null>;
+  listJobsByDocument(documentId: string, organizationId: string): Promise<DocumentJobResponse[]>;
+  listJobsByAssessment(assessmentId: string, organizationId: string): Promise<DocumentJobResponse[]>;
   updateJob(job: DocumentJobResponse): Promise<void>;
-  withTenant(tenantId: string): TenantScopedDocumentJobRepository;
+  withOrganization(organizationId: string): TenantScopedDocumentJobRepository;
 };
 
 export interface TenantScopedDocumentChunkRepository {
@@ -109,8 +108,8 @@ export interface TenantScopedDocumentChunkRepository {
 
 export type DocumentChunkRepository = {
   saveChunks(chunks: DocumentChunk[]): Promise<void>;
-  listChunks(documentId: string, tenantId: string, limit: number, cursor?: string): Promise<DocumentChunk[]>;
-  withTenant(tenantId: string): TenantScopedDocumentChunkRepository;
+  listChunks(documentId: string, organizationId: string, limit: number, cursor?: string): Promise<DocumentChunk[]>;
+  withOrganization(organizationId: string): TenantScopedDocumentChunkRepository;
 };
 
 export type VectorReferenceRepository = {
@@ -123,7 +122,6 @@ export type AuditSink = {
 
 export type DocumentChunk = {
   chunk_id: string;
-  tenant_id: string;
   organization_id: string;
   assessment_id: string;
   document_id: string;

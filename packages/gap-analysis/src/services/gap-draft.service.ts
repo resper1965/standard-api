@@ -10,10 +10,9 @@ export class GapDraftService {
     if (assessmentId !== context.assessmentId) throw new GapAnalysisWorkflowError("TENANT_CONTEXT_MISMATCH", "Assessment id does not match context.");
     const soaVersion = await this.getApprovedSoa(soaVersionId, context);
     const now = new Date().toISOString();
-    const existingVersions = await this.deps.repositories.gapVersions.listByAssessment(assessmentId, context.tenantId);
+    const existingVersions = await this.deps.repositories.gapVersions.listByAssessment(assessmentId, context.organizationId);
     const version: GapAnalysisVersionResponse = {
       gap_analysis_version_id: crypto.randomUUID(),
-      tenant_id: context.tenantId,
       organization_id: context.organizationId,
       assessment_id: assessmentId,
       version_number: existingVersions.length + 1,
@@ -26,11 +25,11 @@ export class GapDraftService {
       trace_id: context.traceId,
       metadata: {}
     };
-    const items = await this.deps.soa.repositories.items.listByVersion(soaVersionId, context.tenantId);
+    const items = await this.deps.soa.repositories.items.listByVersion(soaVersionId, context.organizationId);
     const findings: GapFindingResponse[] = [];
     let index = 1;
     for (const item of items) {
-      const evidenceFinding = await this.deps.repositories.evidenceFindings.findBySoaItem(item.soa_item_id, context.tenantId);
+      const evidenceFinding = await this.deps.repositories.evidenceFindings.findBySoaItem(item.soa_item_id, context.organizationId);
       findings.push(await this.generateGapFindingForSoaItem(item, evidenceFinding ?? undefined, context, version, index));
       index += 1;
     }
@@ -50,7 +49,6 @@ export class GapDraftService {
     const assessment = this.assess(soaItem, evidenceFinding);
     return {
       gap_finding_id: crypto.randomUUID(),
-      tenant_id: context.tenantId,
       organization_id: context.organizationId,
       assessment_id: context.assessmentId,
       gap_analysis_version_id: version?.gap_analysis_version_id ?? crypto.randomUUID(),
@@ -81,14 +79,14 @@ export class GapDraftService {
   }
 
   async listGapFindings(gapAnalysisVersionId: string, filters: GapFindingFilters, context: GapAnalysisContext): Promise<GapFindingResponse[]> {
-    const version = await this.deps.repositories.gapVersions.get(gapAnalysisVersionId, context.tenantId);
+    const version = await this.deps.repositories.gapVersions.get(gapAnalysisVersionId, context.organizationId);
     if (!version) return [];
-    const findings = await this.deps.repositories.gapFindings.listByVersion(gapAnalysisVersionId, context.tenantId);
+    const findings = await this.deps.repositories.gapFindings.listByVersion(gapAnalysisVersionId, context.organizationId);
     return filters.assessment_status ? findings.filter((finding) => finding.assessment_status === filters.assessment_status) : findings;
   }
 
   async getGapFinding(gapFindingId: string, context: GapAnalysisContext): Promise<GapFindingResponse> {
-    const finding = await this.deps.repositories.gapFindings.get(gapFindingId, context.tenantId);
+    const finding = await this.deps.repositories.gapFindings.get(gapFindingId, context.organizationId);
     if (!finding || finding.assessment_id !== context.assessmentId) throw new GapAnalysisWorkflowError("GAP_FINDING_NOT_FOUND", "Gap finding not found.");
     return finding;
   }
@@ -161,7 +159,7 @@ export class GapDraftService {
   }
 
   private async getApprovedSoa(soaVersionId: string, context: GapAnalysisContext): Promise<SoaVersionResponse> {
-    const soaVersion = await this.deps.soa.repositories.versions.get(soaVersionId, context.tenantId);
+    const soaVersion = await this.deps.soa.repositories.versions.get(soaVersionId, context.organizationId);
     if (!soaVersion || soaVersion.assessment_id !== context.assessmentId || soaVersion.status !== "approved") {
       throw new GapAnalysisWorkflowError("APPROVED_SOA_REQUIRED", "Gap Analysis requires an approved SoA.");
     }
@@ -169,7 +167,7 @@ export class GapDraftService {
   }
 
   private async getGapVersion(gapAnalysisVersionId: string, context: GapAnalysisContext): Promise<GapAnalysisVersionResponse> {
-    const version = await this.deps.repositories.gapVersions.get(gapAnalysisVersionId, context.tenantId);
+    const version = await this.deps.repositories.gapVersions.get(gapAnalysisVersionId, context.organizationId);
     if (!version || version.assessment_id !== context.assessmentId) throw new GapAnalysisWorkflowError("GAP_ANALYSIS_NOT_FOUND", "Gap Analysis version not found.");
     return version;
   }

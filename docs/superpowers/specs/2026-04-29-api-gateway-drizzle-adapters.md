@@ -18,7 +18,7 @@ O gateway especifica os seguintes adapters cruciais no arquivo `src/http.ts` e i
 - `LifecycleEventRepositoryAdapter`
 - `AuditRepositoryAdapter`
 
-Os repositórios na pasta `apps/api-gateway/src/adapters` (ex: `tenant.repository.ts`, `assessment.repository.ts`) serão convertidos de instâncias em `Map<string, Record>` para classes usando os seletores e mutadores do `drizzle` combinados om transações Drizzle DB (`tx`).
+Os repositórios na pasta `apps/api-gateway/src/adapters` (ex: `organization.repository.ts`, `assessment.repository.ts`) serão convertidos de instâncias em `Map<string, Record>` para classes usando os seletores e mutadores do `drizzle` combinados om transações Drizzle DB (`tx`).
 
 ### 3. Integração na Camada de Factory (`adapters/index.ts`)
 A função `createMockRepositories()` persistirá até implementarmos todos os pacotes, porém a invocação principal injetará uma variante `createDrizzleRepositories()` que provê a pipeline completa em staging e production.

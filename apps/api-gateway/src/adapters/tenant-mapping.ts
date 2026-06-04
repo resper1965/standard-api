@@ -2,12 +2,12 @@
  * @module tenant-mapping
  * @description Bridge between Standard Native Auth identity (text IDs) and Standard domain (UUID IDs).
  *
- * ADR 0002 Phase 2/3 — tenants table removed. tenant_id === organization_id.
+ * ADR 0002 Phase 2/3 — tenants table removed. organization_id === organization_id.
  *
  * Two responsibilities, deliberately split (see ADR 0002):
- *  - `resolveTenantContext`  — READ-ONLY lookup. Returns `null` when the org has
+ *  - `resolveOrganizationContext`  — READ-ONLY lookup. Returns `null` when the org has
  *    not been provisioned. Never writes. Safe to call on every request.
- *  - `provisionTenantContext` — explicit creation. Call this only at well-defined
+ *  - `provisionOrganizationContext` — explicit creation. Call this only at well-defined
  *    provisioning points (org creation, platform-admin bootstrap).
  *
  * Request-time code must NOT create domain rows: silent JIT provisioning used to
@@ -18,8 +18,6 @@ import { organizations, baOrganization } from "@standard/schemas";
 import type { DbClient } from "./db";
 
 export interface ResolvedTenantContext {
-  /** @deprecated Alias of organization_id — kept for backward compat with callers */
-  tenant_id: string;
   organization_id: string; // UUID from `organizations` table
   ba_org_id: string;       // Original Org ID
   org_name: string;        // Organization display name
@@ -32,7 +30,7 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
  * domain UUIDs. Returns `null` if the org has not been provisioned — callers
  * decide whether that is a 404 or a trigger to provision explicitly.
  */
-export async function resolveTenantContext(
+export async function resolveOrganizationContext(
   db: DbClient,
   orgId: string
 ): Promise<ResolvedTenantContext | null> {
@@ -46,7 +44,6 @@ export async function resolveTenantContext(
 
     if (existingOrg) {
       return {
-        tenant_id: existingOrg.id,
         organization_id: existingOrg.id,
         ba_org_id: existingOrg.slug,
         org_name: existingOrg.name,
@@ -73,7 +70,6 @@ export async function resolveTenantContext(
 
   if (existingOrg) {
     return {
-      tenant_id: existingOrg.id,
       organization_id: existingOrg.id,
       ba_org_id: orgId,
       org_name: existingOrg.name,
@@ -88,11 +84,11 @@ export async function resolveTenantContext(
  * missing. Idempotent and keyed on slug. Call ONLY from deliberate provisioning
  * points (org creation, platform-admin bootstrap).
  */
-export async function provisionTenantContext(
+export async function provisionOrganizationContext(
   db: DbClient,
   orgId: string
 ): Promise<ResolvedTenantContext> {
-  const existing = await resolveTenantContext(db, orgId);
+  const existing = await resolveOrganizationContext(db, orgId);
   if (existing) return existing;
 
   // Translate BA org ID → slug so provisioning is keyed deterministically.
@@ -119,7 +115,6 @@ export async function provisionTenantContext(
   );
 
   return {
-    tenant_id: newOrg!.id,
     organization_id: newOrg!.id,
     ba_org_id: orgId,
     org_name: name,

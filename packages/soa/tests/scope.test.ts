@@ -14,7 +14,6 @@ test("Criar escopo draft preserva tenant, organization e assessment", async () =
     assumptions: ["Synthetic only"]
   }, context);
 
-  expect(scope.tenant_id).toBe(ids.tenantId);
   expect(scope.organization_id).toBe(ids.organizationId);
   expect(scope.assessment_id).toBe(ids.assessmentId);
   expect(scope.status).toBe("draft");
@@ -28,5 +27,5 @@ test("Bloqueia escopo sem tenant context", async () => {
     description: "Missing tenant",
     exclusions: [],
     assumptions: []
-  }, { ...context, tenantId: "" }), "TENANT_CONTEXT_REQUIRED");
+  }, { ...context, organizationId: "" }), "TENANT_CONTEXT_REQUIRED");
 });

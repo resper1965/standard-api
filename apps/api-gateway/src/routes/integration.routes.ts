@@ -5,8 +5,8 @@ import { ApiError } from "../errors/api-error";
 import type { AppDependencies, AssessmentRecord, RouteDefinition } from "../http";
 import { json, parseJson, routeParam } from "../http";
 
-const requireAssessment = async (deps: AppDependencies, assessmentId: string, tenantId: string): Promise<AssessmentRecord> => {
-  const assessment = await deps.assessments.withTenant(tenantId).get(assessmentId);
+const requireAssessment = async (deps: AppDependencies, assessmentId: string, organizationId: string): Promise<AssessmentRecord> => {
+  const assessment = await deps.assessments.withOrganization(organizationId).get(assessmentId);
   if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
   return assessment;
 };
@@ -16,9 +16,10 @@ export const integrationRoutes: RouteDefinition[] = [
     method: "POST",
     path: "/api/v1/integrations/assessments/:assessmentId/analyze-text",
     protected: true,
+    permissions: ["organization:create"],
     requireActor: true,
-    handler: async ({ request, deps, params, tenantId, actorId, traceId }) => {
-      const assessment = await requireAssessment(deps, routeParam(params, "assessmentId"), tenantId!);
+    handler: async ({ request, deps, params, organizationId, actorId, traceId }) => {
+      const assessment = await requireAssessment(deps, routeParam(params, "assessmentId"), organizationId!);
       const body = await parseJson(request, AnalyzeRawTextRequestSchema);
 
       try {
@@ -38,7 +39,6 @@ export const integrationRoutes: RouteDefinition[] = [
             "context_focus": body.context_focus || []
           },
           context: {
-            tenant_id: assessment.tenant_id,
             organization_id: assessment.organization_id,
             assessment_id: assessment.assessment_id,
             framework_id: body.framework_id || "scf",
@@ -53,14 +53,13 @@ export const integrationRoutes: RouteDefinition[] = [
           await deps.AGENT_RUN_QUEUE.send({
             queue_type: "agent_run",
             agent_run_id: run.agent_run_id,
-            tenant_id: run.tenant_id,
+            organization_id: run.organization_id,
             assessment_id: run.assessment_id
           });
         }
 
         // Emit observability logs without overkill
         await new AuditEventService(deps.observability).record({
-          tenant_id: assessment.tenant_id,
           organization_id: assessment.organization_id,
           assessment_id: assessment.assessment_id,
           actor_id: actorId!,
@@ -73,7 +72,6 @@ export const integrationRoutes: RouteDefinition[] = [
         });
 
         await new MetricsService(deps.observability).record({
-          tenant_id: assessment.tenant_id,
           organization_id: assessment.organization_id,
           assessment_id: assessment.assessment_id,
           metric_name: "integration_text_analysis_requests",

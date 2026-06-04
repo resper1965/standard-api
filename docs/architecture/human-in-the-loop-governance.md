@@ -41,7 +41,7 @@ Nenhum output agentic vira artefato oficial sem aprovação humana quando o life
 
 Artefatos com approval gate:
 
-- Scope, opcional dependendo da política do tenant ou framework;
+- Scope, opcional dependendo da política do organization ou framework;
 - SoA;
 - Gap Analysis;
 - Maturity Assessment;
@@ -54,7 +54,7 @@ Regra:
 Nenhum desses artefatos pode ser aprovado por agente.
 ```
 
-Para o MVP, SoA, Gap Analysis, Maturity Assessment, POA&M e Final Report são gates obrigatórios. Scope pode ser tratado como gate opcional ou como parte do SoA approval, conforme política do tenant.
+Para o MVP, SoA, Gap Analysis, Maturity Assessment, POA&M e Final Report são gates obrigatórios. Scope pode ser tratado como gate opcional ou como parte do SoA approval, conforme política do organization.
 
 ## 4. Tipos de Aprovação
 
@@ -115,7 +115,7 @@ Schema lógico:
 ```text
 Approval
 ├── approval_id
-├── tenant_id
+├── organization_id
 ├── organization_id
 ├── assessment_id
 ├── artifact_type
@@ -138,7 +138,7 @@ Approval
 Campos:
 
 - `approval_id`: identificador único.
-- `tenant_id`: escopo obrigatório de tenant.
+- `organization_id`: escopo obrigatório de organization.
 - `organization_id`: escopo obrigatório de organização.
 - `assessment_id`: assessment associado.
 - `artifact_type`: Scope, SoA, Gap Analysis, Maturity, POA&M ou Report.
@@ -183,7 +183,7 @@ Workflow deve:
 - emitir evento `waiting_for_approval`;
 - aguardar signal humano;
 - validar approval no banco/repositório transacional;
-- validar tenant, organization, assessment e artifact version;
+- validar organization, organization, assessment e artifact version;
 - continuar somente após approval válido.
 
 Workflow nunca deve:
@@ -191,7 +191,7 @@ Workflow nunca deve:
 - auto-approve;
 - bypass approval;
 - aceitar signal sem approval event;
-- aceitar approval de outro tenant;
+- aceitar approval de outro organization;
 - avançar com artifact version diferente da aprovada;
 - fechar assessment sem report acceptance.
 
@@ -291,7 +291,7 @@ Pode:
 Deve:
 
 - ter permissão explícita;
-- pertencer ao mesmo tenant;
+- pertencer ao mesmo organization;
 - ter acesso ao assessment;
 - ser humano identificável.
 
@@ -318,7 +318,7 @@ Responsável por gestão do sistema, políticas e configuração.
 Pode:
 
 - configurar papéis e permissões;
-- gerenciar tenants conforme política;
+- gerenciar organizations conforme política;
 - operar controles administrativos.
 
 Não deve:
@@ -358,7 +358,7 @@ Para aprovar, o usuário precisa:
 
 - role apropriada;
 - permissão explícita;
-- mesmo `tenant_id`;
+- mesmo `organization_id`;
 - acesso ao `organization_id`;
 - acesso ao `assessment_id`;
 - assignment ou escopo de responsabilidade válido;
@@ -377,7 +377,7 @@ Permissões mínimas:
 Regras de bloqueio:
 
 - usuário sem permissão → deny;
-- tenant divergente → deny + security event;
+- organization divergente → deny + security event;
 - artifact version divergente → deny;
 - approval duplicado → deny/idempotent no-op conforme policy;
 - artefato já aprovado → deny para alteração direta.
@@ -440,7 +440,7 @@ Registrar:
 - comentários;
 - decisão: approve, reject ou requires revision;
 - `trace_id`;
-- tenant/organization/assessment;
+- organization/organization/assessment;
 - role e permissões relevantes;
 - origem do signal;
 - artifact hash, quando disponível.
@@ -513,7 +513,7 @@ Accountability exige non-repudiation: a decisão precisa ser vinculada a identid
 Controles obrigatórios:
 
 - impedir aprovação via API sem auth;
-- impedir aprovação cross-tenant;
+- impedir aprovação cross-organization;
 - impedir aprovação duplicada;
 - impedir alteração pós-approval;
 - validar role e permission;
@@ -562,7 +562,7 @@ Informações mínimas para a tarefa de aprovação:
 Failure modes críticos:
 
 - aprovação sem permissão;
-- aprovação cruzada de tenant;
+- aprovação cruzada de organization;
 - aprovação duplicada;
 - bypass de workflow;
 - artefato alterado após aprovação;
@@ -592,7 +592,7 @@ Testes mínimos:
 
 - agente não aprova artefato;
 - usuário sem permissão não aprova;
-- aprovação requer tenant correto;
+- aprovação requer organization correto;
 - aprovação muda estado;
 - rejeição bloqueia workflow;
 - artefato aprovado não pode ser editado;
@@ -609,7 +609,7 @@ Testes adicionais:
 - admin sem assignment não aprova artefato de cliente;
 - auditor_readonly não aprova;
 - agent runtime não possui approval tools;
-- cross-tenant approval gera security event.
+- cross-organization approval gera security event.
 
 ## 21. Integração com Observabilidade
 
@@ -632,14 +632,14 @@ Métricas:
 - approvals rejected count;
 - approval cycle time;
 - approval denial count;
-- cross-tenant approval attempt count;
+- cross-organization approval attempt count;
 - revision rate;
 - stale approval count, futuro.
 
 Cada evento deve carregar:
 
 - `trace_id`;
-- `tenant_id`;
+- `organization_id`;
 - `organization_id`;
 - `assessment_id`;
 - `artifact_type`;
@@ -662,7 +662,7 @@ Gerar security events:
 Integração com segurança:
 
 - Auth middleware valida identidade.
-- Tenant middleware resolve tenant.
+- Organization middleware resolve organization.
 - RBAC valida permissão.
 - TenantGuard bloqueia divergência.
 - Assessment Engine valida gate.
@@ -693,7 +693,7 @@ Evoluções previstas:
 - assinatura digital;
 - aprovação via identidade corporativa e SSO;
 - trilha de auditoria compatível com ISO/SOC2;
-- approval policies por tenant/framework;
+- approval policies por organization/framework;
 - conflict-of-interest checks;
 - delegation com validade temporal;
 - evidence package para auditoria;

@@ -14,7 +14,6 @@ export class ExportJobService {
     const now = new Date().toISOString();
     const job: ExportJobResponse = {
       export_job_id: crypto.randomUUID(),
-      tenant_id: context.tenantId,
       organization_id: context.organizationId,
       assessment_id: assessmentId,
       job_type: "report_export",
@@ -59,14 +58,14 @@ export class ExportJobService {
 
   async getExportJob(exportJobId: string, context: ReportingContext): Promise<ExportJobResponse> {
     assertContext(context);
-    const job = await this.deps.repositories.exportJobs.get(exportJobId, context.tenantId);
+    const job = await this.deps.repositories.exportJobs.get(exportJobId, context.organizationId);
     if (!job || job.assessment_id !== context.assessmentId) throw new ReportingWorkflowError("EXPORT_JOB_NOT_FOUND", "Export job not found.");
     return job;
   }
 
   async listExportJobs(assessmentId: string, context: ReportingContext): Promise<ExportJobResponse[]> {
     assertContext(context);
-    return this.deps.repositories.exportJobs.listByAssessment(assessmentId, context.tenantId);
+    return this.deps.repositories.exportJobs.listByAssessment(assessmentId, context.organizationId);
   }
 }
 

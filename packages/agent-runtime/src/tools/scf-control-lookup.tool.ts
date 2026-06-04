@@ -17,7 +17,6 @@ export type ScfControlLookupDependencies = {
 };
 
 export type ScfControlLookupArgs = {
-  tenant_id: string;
   organization_id: string;
   assessment_id: string;
   trace_id: string;

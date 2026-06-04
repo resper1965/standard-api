@@ -30,12 +30,12 @@ All protected endpoints require a valid session. Authentication is handled via *
 | Browser Session | Cookie | `standard-native-auth.session_token=<token>` |
 | API Key (M2M) | `Authorization` | `Bearer standard_live_<key>` |
 
-### Tenant Context
+### Organization Context
 
-Most endpoints require a tenant/organization context, sent via header:
+Most endpoints require a organization/organization context, sent via header:
 
 ```
-x-standard-tenant-id: <organization_id>
+x-standard-organization-id: <organization_id>
 ```
 
 This is automatically set from the active organization in the user's session.
@@ -58,7 +58,7 @@ This is automatically set from the active organization in the user's session.
 | `UNAUTHORIZED` | 401 | Missing or invalid authentication |
 | `FORBIDDEN` | 403 | Insufficient permissions |
 | `NOT_FOUND` | 404 | Resource does not exist |
-| `TENANT_CONTEXT_REQUIRED` | 400 | Missing tenant header |
+| `TENANT_CONTEXT_REQUIRED` | 400 | Missing organization header |
 | `VALIDATION_ERROR` | 400 | Invalid request body/params |
 | `RATE_LIMIT_EXCEEDED` | 429 | Too many requests |
 
@@ -120,13 +120,13 @@ The SCF catalog is the normative data layer. All controls, domains, frameworks, 
 
 ## 3. Multi-Tenancy
 
-### Tenants
+### Organizations
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/v1/tenants` | GET | List tenants |
-| `/api/v1/tenants/:tenantId` | GET | Get tenant |
-| `/api/v1/tenants/:tenantId` | PUT | Update tenant |
+| `/api/v1/organizations` | GET | List organizations |
+| `/api/v1/organizations/:organizationId` | GET | Get organization |
+| `/api/v1/organizations/:organizationId` | PUT | Update organization |
 
 ### Organizations
 
@@ -450,7 +450,7 @@ Allowed origins:
 - `https://standard-web.pages.dev`
 - `http://localhost:5173`
 
-Allowed headers: `Content-Type`, `Authorization`, `X-Trace-Id`, `X-Tenant-Id`, `x-standard-tenant-id`
+Allowed headers: `Content-Type`, `Authorization`, `X-Trace-Id`, `X-Organization-Id`, `x-standard-organization-id`
 
 ---
 
@@ -461,13 +461,13 @@ Allowed headers: `Content-Type`, `Authorization`, `X-Trace-Id`, `X-Tenant-Id`, `
 
 # 2. List SCF frameworks
 curl -H "Authorization: Bearer standard_live_YOUR_KEY" \
-     -H "x-standard-tenant-id: YOUR_ORG_ID" \
+     -H "x-standard-organization-id: YOUR_ORG_ID" \
      https://standard-api.bekaa.eu/api/v1/scf/frameworks
 
 # 3. Create an assessment
 curl -X POST \
      -H "Authorization: Bearer standard_live_YOUR_KEY" \
-     -H "x-standard-tenant-id: YOUR_ORG_ID" \
+     -H "x-standard-organization-id: YOUR_ORG_ID" \
      -H "Content-Type: application/json" \
      -d '{"name": "ISO 27001 Assessment", "scf_version_id": "..."}' \
      https://standard-api.bekaa.eu/api/v1/assessments
@@ -475,7 +475,7 @@ curl -X POST \
 # 4. Upload a document
 curl -X POST \
      -H "Authorization: Bearer standard_live_YOUR_KEY" \
-     -H "x-standard-tenant-id: YOUR_ORG_ID" \
+     -H "x-standard-organization-id: YOUR_ORG_ID" \
      -F "file=@policy.pdf" \
      https://standard-api.bekaa.eu/api/v1/assessments/ASSESSMENT_ID/documents
 ```

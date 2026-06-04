@@ -51,8 +51,32 @@ export const createAuth = (env: AuthEnv, db: any) => {
 
     emailAndPassword: {
       enabled: true,
-      requireEmailVerification: false,
-      sendResetPassword: async ({ user, url, token }, request) => {
+      requireEmailVerification: true,
+      sendVerificationEmail: async ({ user, url, token }: { user: { email: string; name: string | null }; url: string; token: string }, request?: Request) => {
+        const emailService = env.email;
+        if (emailService) {
+          try {
+            await sendStandardEmail(
+              emailService,
+              {
+                type: "verification",
+                to: user.email,
+                firstName: user.name || "User",
+                verificationUrl: url,
+                expiresIn: "24 hours",
+              },
+              {
+                domain: "bekaa.eu",
+              }
+            );
+          } catch (err) {
+            console.error("[standard:auth] Failed to send verification email:", err);
+          }
+        } else {
+          console.log(`[standard:auth:dev] Email verification requested for ${user.email}. Link: ${url}`);
+        }
+      },
+      sendResetPassword: async ({ user, url, token }: { user: { email: string; name: string | null }; url: string; token: string }, request?: Request) => {
         const emailService = env.email;
         if (emailService) {
           try {

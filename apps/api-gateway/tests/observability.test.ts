@@ -13,20 +13,20 @@ test("audit logs endpoint exige audit:read e retorna eventos do assessment", asy
     scf_version_id: ids.scfVersionId,
     input: { document_id: "88888888-8888-4888-8888-888888888888" }
   }, {
-    "x-standard-tenant-id": created.tenantId,
+    "x-standard-tenant-id": created.organizationId,
     "x-standard-actor-id": ids.actorId
   });
   expect(start.response.status).toBe(201);
 
   const denied = await client.send(`/api/v1/assessments/${created.assessmentId}/audit-logs`, "GET", undefined, {
-    "x-standard-tenant-id": created.tenantId,
+    "x-standard-tenant-id": created.organizationId,
     "x-standard-actor-id": ids.actorId,
     authorization: "Bearer dev:assessor"
   });
   expect(denied.response.status).toBe(403);
 
   const allowed = await client.send(`/api/v1/assessments/${created.assessmentId}/audit-logs`, "GET", undefined, {
-    "x-standard-tenant-id": created.tenantId,
+    "x-standard-tenant-id": created.organizationId,
     "x-standard-actor-id": ids.actorId,
     authorization: "Bearer dev:auditor_readonly"
   });
@@ -41,14 +41,14 @@ test("permission denied gera security event consultável por admin", async () =>
     query: "access control",
     top_k: 3
   }, {
-    "x-standard-tenant-id": created.tenantId,
+    "x-standard-tenant-id": created.organizationId,
     "x-standard-actor-id": ids.actorId,
     authorization: "Bearer dev:auditor_readonly"
   });
   expect(denied.response.status).toBe(403);
 
   const events = await client.send("/api/v1/admin/security-events", "GET", undefined, {
-    "x-standard-tenant-id": created.tenantId,
+    "x-standard-tenant-id": created.organizationId,
     "x-standard-actor-id": ids.actorId,
     authorization: "Bearer dev:platform_admin"
   });
@@ -63,13 +63,13 @@ test("KB search registra métricas e usage sem query integral", async () => {
     query: "access control",
     top_k: 3
   }, {
-    "x-standard-tenant-id": created.tenantId,
+    "x-standard-tenant-id": created.organizationId,
     "x-standard-actor-id": ids.actorId
   });
   expect(search.response.status).toBe(200);
 
   const metrics = await client.send(`/api/v1/assessments/${created.assessmentId}/metrics`, "GET", undefined, {
-    "x-standard-tenant-id": created.tenantId,
+    "x-standard-tenant-id": created.organizationId,
     "x-standard-actor-id": ids.actorId
   });
   expect(metrics.response.status).toBe(200);
@@ -77,7 +77,7 @@ test("KB search registra métricas e usage sem query integral", async () => {
   expect(JSON.stringify(metrics.body.data).includes("access control")).toBe(false);
 
   const usage = await client.send(`/api/v1/assessments/${created.assessmentId}/usage`, "GET", undefined, {
-    "x-standard-tenant-id": created.tenantId,
+    "x-standard-tenant-id": created.organizationId,
     "x-standard-actor-id": ids.actorId
   });
   expect(usage.response.status).toBe(200);
@@ -88,7 +88,7 @@ test("agent complete registra usage quando tokens são informados", async () => 
   const client = createTestClient();
   const created = await client.createAssessment(1);
   const headers = {
-    "x-standard-tenant-id": created.tenantId,
+    "x-standard-tenant-id": created.organizationId,
     "x-standard-actor-id": ids.actorId
   };
   const run = await client.send(`/api/v1/assessments/${created.assessmentId}/agent-runs`, "POST", {

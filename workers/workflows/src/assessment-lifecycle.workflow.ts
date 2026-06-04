@@ -35,7 +35,6 @@ const toResponse = (run: WorkflowRunRecord): WorkflowRunResponse => ({
 
 const assertSameContext = (input: AssessmentLifecycleWorkflowInput, assessment: AssessmentSnapshot): void => {
   if (
-    input.tenant_id !== assessment.tenantId ||
     input.organization_id !== assessment.organizationId ||
     input.assessment_id !== assessment.id
   ) {
@@ -78,7 +77,6 @@ export class AssessmentLifecycleOrchestrator {
 
     const timestamp = now();
     const initialState: AssessmentLifecycleWorkflowState = {
-      tenant_id: input.tenant_id,
       organization_id: input.organization_id,
       assessment_id: input.assessment_id,
       current_step: "validate_assessment",
@@ -224,7 +222,7 @@ export class AssessmentLifecycleOrchestrator {
     // AGENTS.md §9: absence of evidence != absence of implementation.
     // NOTE: AssessmentDocumentCountAdapter contract requires MUST NOT throw —
     // the try/catch here is a last-resort defence against non-conformant impls.
-    if (currentAssessment.id && currentAssessment.tenantId) {
+    if (currentAssessment.id && currentAssessment.organizationId) {
       try {
         const freshCount = await this.deps.assessments?.getDocumentCount(currentAssessment.id);
         if (typeof freshCount === "number") {
@@ -235,7 +233,6 @@ export class AssessmentLifecycleOrchestrator {
         // and emit a structured audit event for observability — NOT console.warn.
         await this.deps.audit.record({
           event_type: "lifecycle_workflow_step_started",
-          tenant_id: currentRun.state.tenant_id,
           organization_id: currentRun.state.organization_id,
           assessment_id: currentRun.state.assessment_id,
           workflow_run_id: currentRun.workflow_run_id,
@@ -360,7 +357,6 @@ export class AssessmentLifecycleOrchestrator {
       await this.audit(currentRun, "lifecycle_workflow_step_started", actorId, { next_state: nextState });
 
       const transitionContext = {
-        tenantId: currentRun.state.tenant_id,
         organizationId: currentRun.state.organization_id,
         assessmentId: currentRun.state.assessment_id,
         actorId,
@@ -506,7 +502,6 @@ export class AssessmentLifecycleOrchestrator {
 
   private assertRunAssessmentContext(run: WorkflowRunRecord, assessment: AssessmentSnapshot): void {
     if (
-      run.state.tenant_id !== assessment.tenantId ||
       run.state.organization_id !== assessment.organizationId ||
       run.state.assessment_id !== assessment.id
     ) {
@@ -535,7 +530,6 @@ export class AssessmentLifecycleOrchestrator {
   ): Promise<void> {
     await this.deps.audit.record({
       event_type: eventType,
-      tenant_id: run.state.tenant_id,
       organization_id: run.state.organization_id,
       assessment_id: run.state.assessment_id,
       workflow_run_id: run.workflow_run_id,

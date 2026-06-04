@@ -19,12 +19,12 @@ export async function handleGetGapAnalysis(
     const assessmentId = args["assessment_id"] as string;
     if (!assessmentId) return err("assessment_id is required.");
 
-    const tenantId = ctx.tenantId;
-    if (!tenantId) return err("Tenant context required.");
+    const organizationId = ctx.organizationId;
+    if (!organizationId) return err("Tenant context required.");
 
     // Get latest gap analysis version for this assessment
     const versions = await ctx.deps.gapAnalysis.repositories.gapVersions
-      .listByAssessment(assessmentId, tenantId);
+      .listByAssessment(assessmentId, organizationId);
     const gap = versions[versions.length - 1] ?? null;
     if (!gap) return err(`No gap analysis found for assessment ${assessmentId}.`);
 
@@ -45,17 +45,17 @@ export async function handleListFindings(
     const severity = args["severity"] as string | undefined;
     const limit = Math.min(Number(args["limit"] ?? 50), 200);
 
-    const tenantId = ctx.tenantId;
-    if (!tenantId) return err("Tenant context required.");
+    const organizationId = ctx.organizationId;
+    if (!organizationId) return err("Tenant context required.");
 
     // Get the latest gap version then list findings
     const versions = await ctx.deps.gapAnalysis.repositories.gapVersions
-      .listByAssessment(assessmentId, tenantId);
+      .listByAssessment(assessmentId, organizationId);
     const latestVersion = versions[versions.length - 1];
     if (!latestVersion) return ok({ assessment_id: assessmentId, total: 0, findings: [] });
 
     const allFindings = await ctx.deps.gapAnalysis.repositories.gapFindings
-      .listByVersion(latestVersion.gap_analysis_version_id, tenantId);
+      .listByVersion(latestVersion.gap_analysis_version_id, organizationId);
     const filtered = severity
       ? allFindings.filter((f: any) => f.gap_severity === severity || f.severity === severity)
       : allFindings;
@@ -87,11 +87,11 @@ export async function handleGetFinding(
     const findingId = args["finding_id"] as string;
     if (!findingId) return err("finding_id is required.");
 
-    const tenantId = ctx.tenantId;
-    if (!tenantId) return err("Tenant context required.");
+    const organizationId = ctx.organizationId;
+    if (!organizationId) return err("Tenant context required.");
 
     const finding = await ctx.deps.gapAnalysis.repositories.gapFindings
-      .get(findingId, tenantId);
+      .get(findingId, organizationId);
     if (!finding) return err(`Finding ${findingId} not found.`);
 
     return ok(finding);

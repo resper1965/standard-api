@@ -34,7 +34,7 @@ title: "Monitoring & Alerting Strategy"
 | Métrica | Fonte | Alerta |
 |---------|-------|--------|
 | Permission denied events | Security events API | > 10 do mesmo ator em 5min |
-| Cross-tenant access blocked | Security events API | Qualquer ocorrência |
+| Cross-organization access blocked | Security events API | Qualquer ocorrência |
 | Approval bypass blocked | Security events API | Qualquer ocorrência |
 | Rate limit hits | Cloudflare WAF | > 50 do mesmo IP em 1min |
 | Auth failures | Standard Native Auth logs | > 20 para mesmo email em 5min |
@@ -54,7 +54,7 @@ title: "Monitoring & Alerting Strategy"
 |---------|:-------------------:|------|
 | Workers requests/month | > 80% do plano | Avaliar upgrade ou otimização |
 | R2 storage | > 50GB (ou threshold definido) | Revisar data retention |
-| AI Gateway tokens (quando LLM real) | > budget mensal por tenant | Throttle ou comunicar |
+| AI Gateway tokens (quando LLM real) | > budget mensal por organization | Throttle ou comunicar |
 
 ## 6. Dashboards
 
@@ -68,12 +68,12 @@ title: "Monitoring & Alerting Strategy"
 ### Dashboard 2: Segurança
 - Auth failures
 - Permission denied events
-- Cross-tenant blocks
+- Cross-organization blocks
 - Rate limit hits
 
 ### Dashboard 3: Negócio
 - Assessments criados/concluídos
-- Tenants ativos
+- Organizations ativos
 - AI tokens consumidos
 - Reports gerados
 

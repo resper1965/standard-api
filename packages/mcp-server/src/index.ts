@@ -15,7 +15,7 @@ program
   .description("MCP server for Standard GRC Platform Intelligence")
   .option("-u, --url <url>", "Standard API base URL", process.env.STANDARD_API_URL || "http://127.0.0.1:8787")
   .option("-t, --token <token>", "Standard API Bearer token", process.env.STANDARD_API_KEY)
-  .option("--tenant-id <tenantId>", "Standard tenant/org UUID (x-standard-tenant-id)", process.env.STANDARD_TENANT_ID)
+  .option("--organization-id <organizationId>", "Standard organization/org UUID (x-standard-organization-id)", process.env.STANDARD_ORGANIZATION_ID)
   .parse(process.argv);
 
 const options = program.opts();
@@ -27,14 +27,14 @@ if (!options.token) {
 
 const API_URL = options.url.replace(/\/$/, "");
 const API_TOKEN = options.token as string;
-const TENANT_ID = (options.tenantId as string | undefined) ?? "";
+const ORGANIZATION_ID = (options.organizationId as string | undefined) ?? "";
 
 async function fetchFromApi(path: string, method: string = "GET", body?: unknown) {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     "Authorization": `Bearer ${API_TOKEN}`,
   };
-  if (TENANT_ID) headers["x-standard-tenant-id"] = TENANT_ID;
+  if (ORGANIZATION_ID) headers["x-standard-organization-id"] = ORGANIZATION_ID;
 
   const response = await fetch(`${API_URL}${path}`, {
     method,

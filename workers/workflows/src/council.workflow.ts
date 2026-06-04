@@ -13,14 +13,14 @@ export interface Env {
 
 type CouncilWorkflowParams = {
   runId: string;
-  tenantId: string;
+  organizationId: string;
   agents: string[];
   inputData: any;
 };
 
 export class CouncilOrchestrationWorkflow extends WorkflowEntrypoint<Env, CouncilWorkflowParams> {
   async run(event: WorkflowEvent<CouncilWorkflowParams>, step: WorkflowStep) {
-    const { runId, tenantId, agents, inputData } = event.payload;
+    const { runId, organizationId, agents, inputData } = event.payload;
 
     // Load Database and runtime inside workflow
     const sql = neon(this.env.DATABASE_URL);
@@ -58,7 +58,7 @@ export class CouncilOrchestrationWorkflow extends WorkflowEntrypoint<Env, Counci
     const run = await step.do("fetch-run-context", {
         retries: { limit: 3, delay: 5000, backoff: "exponential" }
     }, async () => {
-        const rawRun = await runtimeService.getRun(runId, tenantId);
+        const rawRun = await runtimeService.getRun(runId, organizationId);
         return rawRun ? JSON.parse(JSON.stringify(rawRun)) : null;
     });
 
@@ -113,21 +113,21 @@ export class CouncilOrchestrationWorkflow extends WorkflowEntrypoint<Env, Counci
          
          // Execute
          if (agentName === "evidence_evaluator") {
-             currentPayload = await council.executeEvidenceEvaluator(tenantId, currentPayload);
+             currentPayload = await council.executeEvidenceEvaluator(organizationId, currentPayload);
          } else if (agentName === "poam_architect") {
-             currentPayload = await council.executePoamArchitect(tenantId, currentPayload, inputData);
+             currentPayload = await council.executePoamArchitect(organizationId, currentPayload, inputData);
          } else if (agentName === "board_translator") {
-             currentPayload = await council.executeBoardTranslator(tenantId, currentPayload, inputData);
+             currentPayload = await council.executeBoardTranslator(organizationId, currentPayload, inputData);
          } else if (agentName === "incident_triager") {
-             currentPayload = await council.executeIncidentTriager(tenantId, currentPayload, inputData);
+             currentPayload = await council.executeIncidentTriager(organizationId, currentPayload, inputData);
          } else if (agentName === "vendor_scanner") {
-             currentPayload = await council.executeVendorScanner(tenantId, currentPayload, inputData);
+             currentPayload = await council.executeVendorScanner(organizationId, currentPayload, inputData);
          } else if (agentName === "ropa_analyzer") {
-             currentPayload = await council.executeRopaAnalyzer(tenantId, currentPayload, inputData);
+             currentPayload = await council.executeRopaAnalyzer(organizationId, currentPayload, inputData);
          } else if (agentName === "dpia_assessor") {
-             currentPayload = await council.executeDpiaAssessor(tenantId, currentPayload, inputData);
+             currentPayload = await council.executeDpiaAssessor(organizationId, currentPayload, inputData);
          } else {
-             currentPayload = await council.executeGenericAgent(tenantId, agentName, currentPayload, run, inputData);
+             currentPayload = await council.executeGenericAgent(organizationId, agentName, currentPayload, run, inputData);
          }
          
          // Claim-Check: Save mutated payload
@@ -164,7 +164,7 @@ export class CouncilOrchestrationWorkflow extends WorkflowEntrypoint<Env, Counci
         const stateStr = await this.env.STANDARD_CACHE.get(stateKey);
         const finalPayload = stateStr ? JSON.parse(stateStr) : inputData;
         const sumStr: string = finalSummary || "Council durable execution completed.";
-        await council.finalizeCouncilRun(runId, tenantId, finalPayload, sumStr, inputData);
+        await council.finalizeCouncilRun(runId, organizationId, finalPayload, sumStr, inputData);
         // Optional Cleanup: await this.env.STANDARD_CACHE.delete(stateKey);
         return { finalized: true };
     });

@@ -37,7 +37,7 @@ Standard API implements defense-in-depth:
 - **Data at Rest**: Neon PostgreSQL (AES-256) and Cloudflare R2 encryption
 - **Authentication**: Standard Native Auth with token revocation caching on Cloudflare KV
 - **Access Control**: Role-Based Access Control (RBAC) at the route and service level
-- **Tenant Isolation**: All queries scoped by `tenant_id` — no cross-tenant data leakage
+- **Organization Isolation**: All queries scoped by `organization_id` — no cross-organization data leakage
 - **Input Validation**: Zod schema validation on all API boundaries
 - **Upload Security**: Anti-malware scanning, file type validation, size limits
 - **Prompt Security**: AI Gateway anti-prompt-injection for all LLM calls

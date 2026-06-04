@@ -31,7 +31,7 @@ Este documento compila a lista de verificações operacionais e configurações 
   - [ ] Limitar `Access-Control-Allow-Origin` aos domínios estritamente permitidos (`https://standard.bekaa.eu` e aliases autorizados).
   - [ ] Bloquear wildcards (`*`) em cabeçalhos de CORS em produção.
 - [ ] **R2 Storage & Buckets**: Criar e associar os bindings dos buckets R2 definitivos no `wrangler.toml` do gateway para armazenamento isolado de evidências e documentos.
-- [ ] **AI Gateway & Vectorize**: Configurar os namespaces de produção separados por tenant e registrar chaves seguras para acesso às APIs de inferência LLM.
+- [ ] **AI Gateway & Vectorize**: Configurar os namespaces de produção separados por organization e registrar chaves seguras para acesso às APIs de inferência LLM.
 
 ---
 

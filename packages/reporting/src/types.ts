@@ -33,7 +33,6 @@ export type {
 };
 
 export type ReportingContext = {
-  tenantId: string;
   organizationId: string;
   assessmentId: string;
   actorId?: string;
@@ -41,27 +40,27 @@ export type ReportingContext = {
 };
 
 export type MaturityReportProvider = {
-  findApprovedByAssessment(assessmentId: string, tenantId: string): Promise<{ maturity_assessment_version_id: string; status: "approved"; summary?: Record<string, unknown> } | null>;
+  findApprovedByAssessment(assessmentId: string, organizationId: string): Promise<{ maturity_assessment_version_id: string; status: "approved"; summary?: Record<string, unknown> } | null>;
 };
 
 export type ReportVersionRepository = {
   save(version: ReportVersionResponse): Promise<void>;
   update(version: ReportVersionResponse): Promise<void>;
-  get(reportVersionId: string, tenantId: string): Promise<ReportVersionResponse | null>;
-  listByAssessment(assessmentId: string, tenantId: string): Promise<ReportVersionResponse[]>;
+  get(reportVersionId: string, organizationId: string): Promise<ReportVersionResponse | null>;
+  listByAssessment(assessmentId: string, organizationId: string): Promise<ReportVersionResponse[]>;
 };
 
 export type ReportArtifactRepository = {
   save(artifact: ReportArtifactResponse): Promise<void>;
-  get(artifactId: string, tenantId: string): Promise<ReportArtifactResponse | null>;
-  listByReport(reportVersionId: string, tenantId: string): Promise<ReportArtifactResponse[]>;
+  get(artifactId: string, organizationId: string): Promise<ReportArtifactResponse | null>;
+  listByReport(reportVersionId: string, organizationId: string): Promise<ReportArtifactResponse[]>;
 };
 
 export type ExportJobRepository = {
   save(job: ExportJobResponse): Promise<void>;
   update(job: ExportJobResponse): Promise<void>;
-  get(exportJobId: string, tenantId: string): Promise<ExportJobResponse | null>;
-  listByAssessment(assessmentId: string, tenantId: string): Promise<ExportJobResponse[]>;
+  get(exportJobId: string, organizationId: string): Promise<ExportJobResponse | null>;
+  listByAssessment(assessmentId: string, organizationId: string): Promise<ExportJobResponse[]>;
 };
 
 export type ReportRepositories = {

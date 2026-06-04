@@ -12,7 +12,7 @@ export const UpdateTenantRequestSchema = z.object({
 });
 
 export const TenantResponseSchema = z.object({
-  tenant_id: UuidSchema,
+  organization_id: UuidSchema,
   slug: z.string(),
   name: z.string(),
   status: z.string()

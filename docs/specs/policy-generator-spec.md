@@ -1,6 +1,6 @@
 # Especificação Técnica: Geração de Políticas de Segurança com IA (AI-Powered GRC Policy Generator)
 
-Esta especificação define o design arquitetural e funcional do módulo `packages/policy-generator`, projetado para automatizar a criação de rascunhos (drafts) de políticas de segurança corporativas. Ele correlaciona os gaps de conformidade identificados em assessments contra templates normativos do Secure Controls Framework (SCF) utilizando modelos de IA generativa com total isolamento multi-tenant e supervisão humana.
+Esta especificação define o design arquitetural e funcional do módulo `packages/policy-generator`, projetado para automatizar a criação de rascunhos (drafts) de políticas de segurança corporativas. Ele correlaciona os gaps de conformidade identificados em assessments contra templates normativos do Secure Controls Framework (SCF) utilizando modelos de IA generativa com total isolamento multi-organization e supervisão humana.
 
 ---
 
@@ -43,8 +43,8 @@ O pipeline de geração segue as seguintes etapas:
    `POST /api/v1/assessments/:assessmentId/gaps/:gapId/policy/draft`
 2. **Resolução de Contexto (Context Resolver)**:
    * O serviço carrega o GAP (controles SCF associados, falhas evidenciadas).
-   * Recupera o contexto da Organização e do Assessment (Tenant ID, nome, escopo).
-   * Realiza busca semântica no Vectorize (`kb.search()`) usando o namespace isolado do tenant para extrair evidências internas úteis para customizar a política.
+   * Recupera o contexto da Organização e do Assessment (Organization ID, nome, escopo).
+   * Realiza busca semântica no Vectorize (`kb.search()`) usando o namespace isolado do organization para extrair evidências internas úteis para customizar a política.
 3. **Construção do Prompt (Prompt Builder)**:
    * Carrega o template estruturado markdown do domínio SCF correspondente (ex: Controle de Acesso, Criptografia).
    * Monta o prompt delimitando claramente instruções estáticas de IA de dados variáveis para **prevenir injeção de prompt** (prompt injection).
@@ -58,10 +58,10 @@ O pipeline de geração segue as seguintes etapas:
 
 ---
 
-## 3. Prevenção de Vazamento Cross-Tenant (Tenancy Isolation)
+## 3. Prevenção de Vazamento Cross-Organization (Tenancy Isolation)
 
-* **Busca no Vectorize**: Consultas vetoriais para extração de contexto de evidência são executadas obrigatoriamente informando o namespace ou filtro de metadados estrito por `tenant_id`.
-* **Isolamento de Prompts**: Não há compartilhamento de histórico de conversação ou cache de sessões de LLM entre requisições de diferentes tenants.
+* **Busca no Vectorize**: Consultas vetoriais para extração de contexto de evidência são executadas obrigatoriamente informando o namespace ou filtro de metadados estrito por `organization_id`.
+* **Isolamento de Prompts**: Não há compartilhamento de histórico de conversação ou cache de sessões de LLM entre requisições de diferentes organizations.
 * **Higienização de Dados**: O Logger estruturado do AI Gateway é configurado para expurgar dados sensíveis de cliente (PII) antes da gravação de métricas operacionais.
 
 ---
@@ -72,11 +72,11 @@ Proposta de tabelas Drizzle a serem inseridas no arquivo `packages/schemas/src/d
 
 ```typescript
 import { pgTable, uuid, text, timestamp, jsonb } from "drizzle-orm/pg-core";
-import { assessments, tenants, organizations } from "./schema";
+import { assessments, organizations, organizations } from "./schema";
 
 export const policyDrafts = pgTable("policy_drafts", {
   id: uuid("id").primaryKey().defaultRandom(),
-  tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
+  organizationId: uuid("organization_id").notNull().references(() => organizations.id),
   organizationId: uuid("organization_id").notNull().references(() => organizations.id),
   assessmentId: uuid("assessment_id").notNull().references(() => assessments.assessment_id),
   controlCode: text("control_code").notNull(), // ex: "AC-1"
@@ -119,5 +119,5 @@ Gaps identificados: {gap_details}
 ## 6. Critérios de Aceite para Validação do Módulo
 
 1. **Compilação**: `pnpm typecheck` deve rodar sem erros após a inclusão de `packages/policy-generator` no workspace.
-2. **Isolamento**: Testes unitários devem validar que uma chamada ao gerador de políticas rejeita requisições se houver mismatch de `tenant_id` entre o assessment e o usuário logado.
+2. **Isolamento**: Testes unitários devem validar que uma chamada ao gerador de políticas rejeita requisições se houver mismatch de `organization_id` entre o assessment e o usuário logado.
 3. **Sanitização**: Qualquer tentativa de injeção de scripts HTML ou comandos de prompt no rascunho de política deve ser neutralizada ou recusada pelo parser de Markdown.

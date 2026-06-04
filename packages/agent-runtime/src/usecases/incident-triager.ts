@@ -6,7 +6,7 @@ export const AGENT_VERSION_INCIDENT = "1.0.0";
 export type IncidentTriagerInput = {
   rawLogsExcerpt: string;
   systemModuleName: string;
-  tenantId: string;
+  organizationId: string;
 };
 
 export type IncidentTriagerOutput = {
@@ -40,7 +40,7 @@ const incidentTriagerSchema = {
 };
 
 export class IncidentTriagerUseCase {
-  constructor(private provider: LlmProvider, private defaultModel: string = "gpt-4o") {}
+  constructor(private provider: LlmProvider, private defaultModel: string = "gpt-4o-mini") {}
 
   async triage(input: IncidentTriagerInput): Promise<IncidentTriagerOutput> {
     const systemPrompt = `You are an L3 SOC analyst specializing in cyber incident triage.

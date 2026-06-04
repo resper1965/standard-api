@@ -27,7 +27,7 @@ export class PrivacyCrudService {
     const now = new Date().toISOString();
     const activity: PrivacyActivityResponse = {
       id: crypto.randomUUID(),
-      tenant_id: context.tenantId,
+      organization_id: context.organizationId,
       assessment_id: request.assessment_id ?? null,
       name: request.name,
       description: request.description ?? null,
@@ -65,12 +65,12 @@ export class PrivacyCrudService {
     return activity;
   }
 
-  async getActivity(id: string, tenantId: string): Promise<PrivacyActivityResponse | null> {
-    return this.deps.repositories.activities.get(id, tenantId);
+  async getActivity(id: string, organizationId: string): Promise<PrivacyActivityResponse | null> {
+    return this.deps.repositories.activities.get(id, organizationId);
   }
 
-  async listActivities(tenantId: string, filters?: PrivacyActivityFilters): Promise<PrivacyActivityResponse[]> {
-    return this.deps.repositories.activities.list(tenantId, filters);
+  async listActivities(organizationId: string, filters?: PrivacyActivityFilters): Promise<PrivacyActivityResponse[]> {
+    return this.deps.repositories.activities.list(organizationId, filters);
   }
 
   async updateActivity(
@@ -78,7 +78,7 @@ export class PrivacyCrudService {
     patch: UpdatePrivacyActivityRequest,
     context: PrivacyContext
   ): Promise<PrivacyActivityResponse> {
-    const existing = await this.deps.repositories.activities.get(id, context.tenantId);
+    const existing = await this.deps.repositories.activities.get(id, context.organizationId);
     if (!existing) throw new PrivacyError("ACTIVITY_NOT_FOUND", `Activity ${id} not found.`);
     if (existing.status === "archived") {
       throw new PrivacyError("ACTIVITY_ARCHIVED", "Cannot update an archived activity.");
@@ -97,9 +97,9 @@ export class PrivacyCrudService {
   }
 
   async deleteActivity(id: string, context: PrivacyContext): Promise<void> {
-    const existing = await this.deps.repositories.activities.get(id, context.tenantId);
+    const existing = await this.deps.repositories.activities.get(id, context.organizationId);
     if (!existing) throw new PrivacyError("ACTIVITY_NOT_FOUND", `Activity ${id} not found.`);
-    await this.deps.repositories.activities.softDelete(id, context.tenantId);
+    await this.deps.repositories.activities.softDelete(id, context.organizationId);
   }
 
   // ─── Data Subjects ────────────────────────────────────────────
@@ -109,13 +109,13 @@ export class PrivacyCrudService {
     subjects: CreatePrivacyDataSubjectRequest[],
     context: PrivacyContext
   ): Promise<PrivacyDataSubjectResponse[]> {
-    const activity = await this.deps.repositories.activities.get(activityId, context.tenantId);
+    const activity = await this.deps.repositories.activities.get(activityId, context.organizationId);
     if (!activity) throw new PrivacyError("ACTIVITY_NOT_FOUND", `Activity ${activityId} not found.`);
 
     const now = new Date().toISOString();
     const records: PrivacyDataSubjectResponse[] = subjects.map((s) => ({
       id: crypto.randomUUID(),
-      tenant_id: context.tenantId,
+      organization_id: context.organizationId,
       activity_id: activityId,
       category: s.category,
       description: s.description ?? null,
@@ -130,12 +130,12 @@ export class PrivacyCrudService {
     return records;
   }
 
-  async listDataSubjects(activityId: string, tenantId: string): Promise<PrivacyDataSubjectResponse[]> {
-    return this.deps.repositories.dataSubjects.listByActivity(activityId, tenantId);
+  async listDataSubjects(activityId: string, organizationId: string): Promise<PrivacyDataSubjectResponse[]> {
+    return this.deps.repositories.dataSubjects.listByActivity(activityId, organizationId);
   }
 
-  async removeDataSubject(subjectId: string, tenantId: string): Promise<void> {
-    await this.deps.repositories.dataSubjects.remove(subjectId, tenantId);
+  async removeDataSubject(subjectId: string, organizationId: string): Promise<void> {
+    await this.deps.repositories.dataSubjects.remove(subjectId, organizationId);
   }
 
   // ─── Data Categories ──────────────────────────────────────────
@@ -145,13 +145,13 @@ export class PrivacyCrudService {
     categories: CreatePrivacyDataCategoryRequest[],
     context: PrivacyContext
   ): Promise<PrivacyDataCategoryResponse[]> {
-    const activity = await this.deps.repositories.activities.get(activityId, context.tenantId);
+    const activity = await this.deps.repositories.activities.get(activityId, context.organizationId);
     if (!activity) throw new PrivacyError("ACTIVITY_NOT_FOUND", `Activity ${activityId} not found.`);
 
     const now = new Date().toISOString();
     const records: PrivacyDataCategoryResponse[] = categories.map((c) => ({
       id: crypto.randomUUID(),
-      tenant_id: context.tenantId,
+      organization_id: context.organizationId,
       activity_id: activityId,
       category_name: c.category_name,
       sensitivity: c.sensitivity ?? "personal",
@@ -166,12 +166,12 @@ export class PrivacyCrudService {
     return records;
   }
 
-  async listDataCategories(activityId: string, tenantId: string): Promise<PrivacyDataCategoryResponse[]> {
-    return this.deps.repositories.dataCategories.listByActivity(activityId, tenantId);
+  async listDataCategories(activityId: string, organizationId: string): Promise<PrivacyDataCategoryResponse[]> {
+    return this.deps.repositories.dataCategories.listByActivity(activityId, organizationId);
   }
 
-  async removeDataCategory(categoryId: string, tenantId: string): Promise<void> {
-    await this.deps.repositories.dataCategories.remove(categoryId, tenantId);
+  async removeDataCategory(categoryId: string, organizationId: string): Promise<void> {
+    await this.deps.repositories.dataCategories.remove(categoryId, organizationId);
   }
 
   // ─── Phase 2: Third Parties ───────────────────────────────────
@@ -181,13 +181,13 @@ export class PrivacyCrudService {
     parties: CreatePrivacyThirdPartyRequest[],
     context: PrivacyContext
   ): Promise<PrivacyThirdPartyResponse[]> {
-    const activity = await this.deps.repositories.activities.get(activityId, context.tenantId);
+    const activity = await this.deps.repositories.activities.get(activityId, context.organizationId);
     if (!activity) throw new PrivacyError("ACTIVITY_NOT_FOUND", `Activity ${activityId} not found.`);
 
     const now = new Date().toISOString();
     const records: PrivacyThirdPartyResponse[] = parties.map((p) => ({
       id: crypto.randomUUID(),
-      tenant_id: context.tenantId,
+      organization_id: context.organizationId,
       activity_id: activityId,
       name: p.name,
       role: p.role ?? "processor",
@@ -206,12 +206,12 @@ export class PrivacyCrudService {
     return records;
   }
 
-  async listThirdParties(activityId: string, tenantId: string): Promise<PrivacyThirdPartyResponse[]> {
-    return this.deps.repositories.thirdParties.listByActivity(activityId, tenantId);
+  async listThirdParties(activityId: string, organizationId: string): Promise<PrivacyThirdPartyResponse[]> {
+    return this.deps.repositories.thirdParties.listByActivity(activityId, organizationId);
   }
 
-  async removeThirdParty(partyId: string, tenantId: string): Promise<void> {
-    await this.deps.repositories.thirdParties.remove(partyId, tenantId);
+  async removeThirdParty(partyId: string, organizationId: string): Promise<void> {
+    await this.deps.repositories.thirdParties.remove(partyId, organizationId);
   }
 
   // ─── Phase 4: Field Reviews ───────────────────────────────────
@@ -221,13 +221,13 @@ export class PrivacyCrudService {
     request: CreatePrivacyFieldReviewRequest,
     context: PrivacyContext
   ): Promise<PrivacyFieldReviewResponse> {
-    const activity = await this.deps.repositories.activities.get(activityId, context.tenantId);
+    const activity = await this.deps.repositories.activities.get(activityId, context.organizationId);
     if (!activity) throw new PrivacyError("ACTIVITY_NOT_FOUND", `Activity ${activityId} not found.`);
 
     const now = new Date().toISOString();
     const review: PrivacyFieldReviewResponse = {
       id: crypto.randomUUID(),
-      tenant_id: context.tenantId,
+      organization_id: context.organizationId,
       activity_id: activityId,
       field_name: request.field_name,
       review_status: "pending",
@@ -250,7 +250,7 @@ export class PrivacyCrudService {
     update: UpdatePrivacyFieldReviewRequest,
     context: PrivacyContext
   ): Promise<PrivacyFieldReviewResponse> {
-    const review = await this.deps.repositories.fieldReviews.get(reviewId, context.tenantId);
+    const review = await this.deps.repositories.fieldReviews.get(reviewId, context.organizationId);
     if (!review) throw new PrivacyError("FIELD_REVIEW_NOT_FOUND", `Field review ${reviewId} not found.`);
 
     const updated: PrivacyFieldReviewResponse = {
@@ -266,7 +266,7 @@ export class PrivacyCrudService {
     return updated;
   }
 
-  async listFieldReviews(activityId: string, tenantId: string): Promise<PrivacyFieldReviewResponse[]> {
-    return this.deps.repositories.fieldReviews.listByActivity(activityId, tenantId);
+  async listFieldReviews(activityId: string, organizationId: string): Promise<PrivacyFieldReviewResponse[]> {
+    return this.deps.repositories.fieldReviews.listByActivity(activityId, organizationId);
   }
 }

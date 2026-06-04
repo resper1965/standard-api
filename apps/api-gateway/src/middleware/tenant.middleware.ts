@@ -3,8 +3,8 @@ import { TenantResolver } from "@standard/security";
 import { ApiError } from "../errors/api-error";
 import type { RequestContext } from "../http";
 
-export const resolveTenantContext = async (context: RequestContext, protectedRoute: boolean): Promise<void> => {
-  const pathTenantId = context.params.tenantId;
+export const resolveOrganizationContext = async (context: RequestContext, protectedRoute: boolean): Promise<void> => {
+  const pathTenantId = context.params.organizationId;
   const headerTenantId =
     context.request.headers.get("x-standard-tenant-id") ??
     context.request.headers.get("x-tenant-id") ??
@@ -12,9 +12,9 @@ export const resolveTenantContext = async (context: RequestContext, protectedRou
 
   const isPlatformAdmin = context.session?.user?.platformAdmin === true;
 
-  // Isolation checks are moved to the bottom after resolving tenantId and organizationId.
+  // Isolation checks are moved to the bottom after resolving organizationId and organizationId.
 
-  const rawTenantId = headerTenantId ?? pathTenantId ?? context.tenantId;
+  const rawTenantId = headerTenantId ?? pathTenantId ?? context.organizationId;
 
   if (protectedRoute && !rawTenantId) {
     // Only enforce tenant requirement when there IS an authenticated actor.
@@ -36,11 +36,11 @@ export const resolveTenantContext = async (context: RequestContext, protectedRou
   // Resolve Standard Native Auth Org text ID to standard UUID if resolver is available
   let resolvedTenantId = rawTenantId;
   let resolvedOrgId = context.params.organizationId;
-  if (context.deps.resolveTenantContext && rawTenantId) {
+  if (context.deps.resolveOrganizationContext && rawTenantId) {
     try {
-      const resolved = await context.deps.resolveTenantContext(rawTenantId);
+      const resolved = await context.deps.resolveOrganizationContext(rawTenantId);
       if (resolved) {
-        resolvedTenantId = resolved.tenant_id;
+        resolvedTenantId = resolved.organization_id;
         resolvedOrgId = resolved.organization_id;
       }
     } catch (e) {
@@ -65,7 +65,7 @@ export const resolveTenantContext = async (context: RequestContext, protectedRou
     // Fire via AlertService if configured (high-fidelity path)
     if (context.deps.alerts) {
       void context.deps.alerts.fireTenantMismatch({
-        tenantId: headerTenantId,
+        organizationId: headerTenantId,
         expectedTenantId: pathTenantId,
         traceId: context.traceId,
         ...(context.actorId ? { actorId: context.actorId } : {})
@@ -79,7 +79,7 @@ export const resolveTenantContext = async (context: RequestContext, protectedRou
 
     // SecurityEventService fallback (always record locally)
     void new SecurityEventService(context.deps.observability).record({
-      tenant_id: headerTenantId,
+      organization_id: headerTenantId,
       event_type: "tenant_context_mismatch",
       severity: "critical",
       outcome: "blocked",
@@ -91,25 +91,25 @@ export const resolveTenantContext = async (context: RequestContext, protectedRou
     throw new ApiError("FORBIDDEN", "Tenant context mismatch.", 403);
   }
 
-  context.tenantId = resolvedTenantId;
+  context.organizationId = resolvedTenantId;
   if (resolvedOrgId) {
     context.organizationId = resolvedOrgId;
   }
 
   // Enforce tenant isolation for authenticated requests (after resolving context)
-  if (context.tenantId && pathTenantId && !isPlatformAdmin) {
+  if (context.organizationId && pathTenantId && !isPlatformAdmin) {
     let resolvedPathTenantId = pathTenantId;
-    if (context.deps.resolveTenantContext) {
+    if (context.deps.resolveOrganizationContext) {
       try {
-        const resolved = await context.deps.resolveTenantContext(pathTenantId);
+        const resolved = await context.deps.resolveOrganizationContext(pathTenantId);
         if (resolved) {
-          resolvedPathTenantId = resolved.tenant_id;
+          resolvedPathTenantId = resolved.organization_id;
         }
       } catch (e) {
         // ignore
       }
     }
-    if (resolvedPathTenantId !== context.tenantId) {
+    if (resolvedPathTenantId !== context.organizationId) {
       throw new ApiError("FORBIDDEN", "Tenant context mismatch.", 403);
     }
   }
@@ -118,9 +118,9 @@ export const resolveTenantContext = async (context: RequestContext, protectedRou
   const pathOrgId = context.params.organizationId;
   if (context.organizationId && pathOrgId && !isPlatformAdmin) {
     let resolvedPathOrgId = pathOrgId;
-    if (context.deps.resolveTenantContext) {
+    if (context.deps.resolveOrganizationContext) {
       try {
-        const resolved = await context.deps.resolveTenantContext(pathOrgId);
+        const resolved = await context.deps.resolveOrganizationContext(pathOrgId);
         if (resolved) {
           resolvedPathOrgId = resolved.organization_id;
         }

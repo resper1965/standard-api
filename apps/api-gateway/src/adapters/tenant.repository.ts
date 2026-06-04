@@ -14,18 +14,18 @@ export const createTenantRepository = (): TenantRepositoryAdapter => {
   const records = new Map<string, TenantRecord>();
   return {
     async create(input) {
-      const record = { tenant_id: newId(), status: "active" as const, ...input };
-      records.set(record.tenant_id, record);
+      const record = { organization_id: newId(), status: "active" as const, ...input };
+      records.set(record.organization_id, record);
       return record;
     },
-    async get(tenantId) {
-      return records.get(tenantId) ?? null;
+    async get(organizationId) {
+      return records.get(organizationId) ?? null;
     },
-    async update(tenantId, patch) {
-      const record = records.get(tenantId);
+    async update(organizationId, patch) {
+      const record = records.get(organizationId);
       if (!record) return null;
       const updated = { ...record, ...patch };
-      records.set(tenantId, updated);
+      records.set(organizationId, updated);
       return updated;
     }
   };
@@ -39,35 +39,35 @@ export const createDrizzleTenantRepository = (db: DbClient): TenantRepositoryAda
         .values({ slug: input.slug, name: input.name, status: "active" })
         .returning();
       return {
-        tenant_id: inserted!.id,
+        organization_id: inserted!.id,
         slug: inserted!.slug,
         name: inserted!.name,
         status: inserted!.status as "active" | "inactive"
       };
     },
-    async get(tenantId) {
+    async get(organizationId) {
       const [found] = await db
         .select()
         .from(organizations)
-        .where(eq(organizations.id, tenantId))
+        .where(eq(organizations.id, organizationId))
         .limit(1);
       if (!found) return null;
       return {
-        tenant_id: found.id,
+        organization_id: found.id,
         slug: found.slug,
         name: found.name,
         status: found.status as "active" | "inactive"
       };
     },
-    async update(tenantId, patch) {
+    async update(organizationId, patch) {
       const [updated] = await db
         .update(organizations)
         .set({ ...patch })
-        .where(eq(organizations.id, tenantId))
+        .where(eq(organizations.id, organizationId))
         .returning();
       if (!updated) return null;
       return {
-        tenant_id: updated.id,
+        organization_id: updated.id,
         slug: updated.slug,
         name: updated.name,
         status: updated.status as "active" | "inactive"

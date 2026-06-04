@@ -18,7 +18,6 @@ import type { DbClient } from "./db";
 function toEndpointRecord(row: typeof webhookEndpoints.$inferSelect): WebhookEndpointRecord {
   return {
     id: row.id,
-    tenant_id: row.organizationId,
     organization_id: row.organizationId,
     url: row.url,
     events: row.events as WebhookEventType[],
@@ -63,19 +62,19 @@ export const createDrizzleWebhookRepository = (db: DbClient): WebhookRepositoryA
     return toEndpointRecord(row);
   },
 
-  async getEndpoint(id, tenant_id) {
+  async getEndpoint(id, organization_id) {
     const [row] = await db.select().from(webhookEndpoints)
       .where(eq(webhookEndpoints.id, id));
     return row ? toEndpointRecord(row) : null;
   },
 
-  async listEndpoints(tenant_id, organization_id) {
+  async listEndpoints(organization_id) {
     const rows = await db.select().from(webhookEndpoints)
       .where(eq(webhookEndpoints.organizationId, organization_id));
     return rows.map(toEndpointRecord);
   },
 
-  async updateEndpoint(id, tenant_id, patch) {
+  async updateEndpoint(id, organization_id, patch) {
     const updates: Record<string, unknown> = { updatedAt: new Date() };
     if (patch.url !== undefined) updates["url"] = patch.url;
     if (patch.events !== undefined) updates["events"] = patch.events;
@@ -89,14 +88,14 @@ export const createDrizzleWebhookRepository = (db: DbClient): WebhookRepositoryA
     return row ? toEndpointRecord(row) : null;
   },
 
-  async deleteEndpoint(id, tenant_id) {
+  async deleteEndpoint(id, organization_id) {
     const [deleted] = await db.delete(webhookEndpoints)
       .where(eq(webhookEndpoints.id, id))
       .returning({ id: webhookEndpoints.id });
     return !!deleted;
   },
 
-  async findSubscribers(tenant_id, organization_id, event_type) {
+  async findSubscribers(organization_id, event_type) {
     const rows = await db.select().from(webhookEndpoints)
       .where(and(
         eq(webhookEndpoints.organizationId, organization_id),
@@ -132,7 +131,7 @@ export const createDrizzleWebhookRepository = (db: DbClient): WebhookRepositoryA
     return rows.map(toDeliveryLog);
   },
 
-  async rotateSecret(id, tenant_id, newSecretHash, newSecretMasked) {
+  async rotateSecret(id, organization_id, newSecretHash, newSecretMasked) {
     const [row] = await db.update(webhookEndpoints)
       .set({ signingSecretHash: newSecretHash, signingSecretMasked: newSecretMasked, updatedAt: new Date() })
       .where(eq(webhookEndpoints.id, id))
@@ -150,7 +149,6 @@ export const createInMemoryWebhookRepository = (): WebhookRepositoryAdapter => {
     async createEndpoint(input) {
       const record: WebhookEndpointRecord = {
         id: crypto.randomUUID(),
-        tenant_id: input.tenant_id,
         organization_id: input.organization_id,
         url: input.url,
         events: input.events,
@@ -165,35 +163,35 @@ export const createInMemoryWebhookRepository = (): WebhookRepositoryAdapter => {
       return record;
     },
 
-    async getEndpoint(id, tenant_id) {
+    async getEndpoint(id, organization_id) {
       const ep = endpoints.get(id);
-      return ep && ep.tenant_id === tenant_id ? ep : null;
+      return ep && ep.organization_id === organization_id ? ep : null;
     },
 
-    async listEndpoints(tenant_id, organization_id) {
+    async listEndpoints(organization_id) {
       return [...endpoints.values()].filter(
-        e => e.tenant_id === tenant_id && e.organization_id === organization_id
+        e => e.organization_id === organization_id && e.organization_id === organization_id
       );
     },
 
-    async updateEndpoint(id, tenant_id, patch) {
+    async updateEndpoint(id, organization_id, patch) {
       const ep = endpoints.get(id);
-      if (!ep || ep.tenant_id !== tenant_id) return null;
+      if (!ep || ep.organization_id !== organization_id) return null;
       const updated = { ...ep, ...patch, updated_at: new Date().toISOString() };
       endpoints.set(id, updated);
       return updated;
     },
 
-    async deleteEndpoint(id, tenant_id) {
+    async deleteEndpoint(id, organization_id) {
       const ep = endpoints.get(id);
-      if (!ep || ep.tenant_id !== tenant_id) return false;
+      if (!ep || ep.organization_id !== organization_id) return false;
       endpoints.delete(id);
       return true;
     },
 
-    async findSubscribers(tenant_id, organization_id, event_type) {
+    async findSubscribers(organization_id, event_type) {
       return [...endpoints.values()].filter(
-        e => e.tenant_id === tenant_id &&
+        e => e.organization_id === organization_id &&
              e.organization_id === organization_id &&
              e.enabled &&
              (e.events.length === 0 || e.events.includes(event_type))
@@ -211,9 +209,9 @@ export const createInMemoryWebhookRepository = (): WebhookRepositoryAdapter => {
         .slice(0, limit);
     },
 
-    async rotateSecret(id, tenant_id, newSecretHash, newSecretMasked) {
+    async rotateSecret(id, organization_id, newSecretHash, newSecretMasked) {
       const ep = endpoints.get(id);
-      if (!ep || ep.tenant_id !== tenant_id) return null;
+      if (!ep || ep.organization_id !== organization_id) return null;
       const updated = {
         ...ep,
         signing_secret_hash: newSecretHash,

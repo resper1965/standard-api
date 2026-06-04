@@ -5,12 +5,11 @@ export class KbReferenceService {
   constructor(private readonly deps: KbServiceDependencies) {}
 
   async getOrCreatePendingReference(chunk: DocumentChunk, now: string): Promise<KbVectorReferenceResponse> {
-    const existing = await this.deps.repositories.vectorReferences.findByChunk(chunk.chunk_id, chunk.tenant_id);
+    const existing = await this.deps.repositories.vectorReferences.findByChunk(chunk.chunk_id, chunk.organization_id);
     if (existing) return existing;
 
     const reference: KbVectorReferenceResponse = {
       vector_reference_id: crypto.randomUUID(),
-      tenant_id: chunk.tenant_id,
       organization_id: chunk.organization_id,
       assessment_id: chunk.assessment_id,
       document_id: chunk.document_id,

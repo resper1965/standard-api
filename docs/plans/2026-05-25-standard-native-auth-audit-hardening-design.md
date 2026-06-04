@@ -154,7 +154,7 @@ logger.auth("sign-in.failed", {
   reason: "invalid_credentials",
   email_domain: "bekaa.eu",     // nunca email completo
   trace_id: ctx.traceId,
-  tenant_id: ctx.tenantId,
+  organization_id: ctx.organizationId,
 });
 ```
 

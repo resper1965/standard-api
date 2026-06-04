@@ -26,9 +26,9 @@ async function resolveOrgCtx(context: any, organizationId: string) {
   if (context.actorId?.startsWith("m2m:")) {
     throw new ApiError("FORBIDDEN", "M2M agents cannot manage API keys.", 403);
   }
-  // Prefer already-resolved context from auth middleware (tenant_id + organization_id are Standard domain UUIDs).
-  // The auth middleware resolves the BA org → Standard domain via resolveTenantContext on every request.
-  if (context.tenantId && context.organizationId) {
+  // Prefer already-resolved context from auth middleware (organization_id + organization_id are Standard domain UUIDs).
+  // The auth middleware resolves the BA org → Standard domain via resolveOrganizationContext on every request.
+  if (context.organizationId && context.organizationId) {
     // GUARD: Verify resolved IDs are valid UUIDs — prevent raw BA nanoids from reaching FK constraints
     if (!UUID_RE.test(context.organizationId)) {
       console.error(
@@ -38,7 +38,6 @@ async function resolveOrgCtx(context: any, organizationId: string) {
       // Fall through to explicit resolution below instead of passing a nanoid to the DB
     } else {
       return {
-        tenant_id: context.tenantId,
         organization_id: context.organizationId,
         ba_org_id: organizationId,
         org_name: "",
@@ -46,21 +45,21 @@ async function resolveOrgCtx(context: any, organizationId: string) {
     }
   }
 
-  const orgRef = context.tenantId ?? organizationId;
-  let tenantCtx = await context.deps.resolveTenantContext?.(orgRef);
+  const orgRef = context.organizationId ?? organizationId;
+  let tenantCtx = await context.deps.resolveOrganizationContext?.(orgRef);
   // First-touch provisioning: the org reference comes from the authenticated
   // session / validated route, so provision the domain org if it does not exist
   // yet (e.g. org seeded only in the Better Auth tables).
-  if (!tenantCtx && context.deps.provisionTenantContext) {
+  if (!tenantCtx && context.deps.provisionOrganizationContext) {
     console.log(
       `[standard:api-keys] resolveOrgCtx: provisioning org for orgRef="${orgRef}", ba_org_id="${organizationId}", trace=${context.traceId}`
     );
-    tenantCtx = await context.deps.provisionTenantContext(orgRef);
+    tenantCtx = await context.deps.provisionOrganizationContext(orgRef);
   }
   if (!tenantCtx) {
     console.error(
       `[standard:api-keys] resolveOrgCtx: could not resolve or provision org. orgRef="${orgRef}", organizationId="${organizationId}", ` +
-      `tenantId=${context.tenantId}, trace=${context.traceId}`
+      `organizationId=${context.organizationId}, trace=${context.traceId}`
     );
     throw new ApiError("NOT_FOUND", "Organization not found or not provisioned.", 404);
   }
@@ -200,7 +199,6 @@ export const apiKeysRoutes: RouteDefinition[] = [
         .join("");
 
       const record = await context.deps.apiKeys.create({
-        tenantId: tenantCtx.tenant_id,
         organizationId: tenantCtx.organization_id,
         name: input.name,
         keyHash,
@@ -210,7 +208,6 @@ export const apiKeysRoutes: RouteDefinition[] = [
       });
 
       await context.deps.audit.record("api_key.created", {
-        tenant_id: tenantCtx.tenant_id,
         organization_id: tenantCtx.organization_id,
         actor_id: context.actorId,
         key_id: record.id,
@@ -313,7 +310,6 @@ export const apiKeysRoutes: RouteDefinition[] = [
       if (!updated) throw new ApiError("INTERNAL_ERROR", "Update failed.", 500);
 
       await context.deps.audit.record("api_key.updated", {
-        tenant_id: tenantCtx.tenant_id,
         organization_id: tenantCtx.organization_id,
         actor_id: context.actorId,
         key_id: keyId,
@@ -350,7 +346,6 @@ export const apiKeysRoutes: RouteDefinition[] = [
       if (!revoked) throw new ApiError("NOT_FOUND", "API key not found.", 404);
 
       await context.deps.audit.record("api_key.revoked", {
-        tenant_id: tenantCtx.tenant_id,
         organization_id: tenantCtx.organization_id,
         actor_id: context.actorId,
         key_id: keyId,

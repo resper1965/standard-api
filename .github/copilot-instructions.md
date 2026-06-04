@@ -34,9 +34,9 @@ export const myRoutes: RouteDefinition[] = [{
   path: "/api/v1/resource/:id",
   protected: true,
   permissions: ["resource:read"],
-  handler: async ({ deps, params, tenantId, traceId }) => {
+  handler: async ({ deps, params, organizationId, traceId }) => {
     const id = routeParam(params, "id");
-    const item = await deps.resource.get(id, tenantId!);
+    const item = await deps.resource.get(id, organizationId!);
     if (!item) throw new ApiError("NOT_FOUND", "Not found.", 404);
     return json(item, { headers: { "x-trace-id": traceId } });
   }
@@ -74,7 +74,7 @@ report_generated → closed
 - POA&M: draft, items, milestones, dependencies, review, approve
 - Reports: generate, download, export-jobs
 - Dashboard: assessment summary, org dashboard
-- Audit: tenant audit-logs, org audit-logs
+- Audit: organization audit-logs, org audit-logs
 - Members: invite, list, get, update-role, remove
 - Agent Runtime: agents, runs, tool-calls
 

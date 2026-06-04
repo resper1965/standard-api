@@ -15,7 +15,6 @@ export const UpdateAssessmentRequestSchema = z.object({
 
 export const AssessmentResponseSchema = z.object({
   assessment_id: UuidSchema,
-  tenant_id: UuidSchema,
   organization_id: UuidSchema,
   name: z.string(),
   state: AssessmentLifecycleStateSchema,
@@ -25,7 +24,6 @@ export const AssessmentResponseSchema = z.object({
 
 export const AssessmentStatusResponseSchema = z.object({
   assessment_id: UuidSchema,
-  tenant_id: UuidSchema,
   organization_id: UuidSchema,
   state: AssessmentLifecycleStateSchema,
   trace_id: z.string()
@@ -33,7 +31,6 @@ export const AssessmentStatusResponseSchema = z.object({
 
 export const AssessmentTimelineResponseSchema = z.object({
   assessment_id: UuidSchema,
-  tenant_id: UuidSchema,
   organization_id: UuidSchema,
   events: z.array(z.unknown()),
   trace_id: z.string()

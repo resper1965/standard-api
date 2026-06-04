@@ -6,6 +6,7 @@ export const agentToolsRoutes: RouteDefinition[] = [
     method: "GET",
     path: "/api/v1/agent-tools/scf-controls",
     protected: true, // Only accessible via M2M or user authenticated
+    permissions: ["agent:read"],
     handler: async ({ request, traceId }) => {
       // The tool provides the caller with the description and JSON schema
       // of how to properly invoke the main Standard SCF Search API.

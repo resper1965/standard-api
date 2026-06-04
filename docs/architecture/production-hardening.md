@@ -2,7 +2,7 @@
 
 ## 1. Objetivo
 
-Este documento define o modelo de hardening de produção do `standard-api-standard` para operar como API SaaS multi-tenant, Cloudflare-oriented e integrável por sistemas externos.
+Este documento define o modelo de hardening de produção do `standard-api-standard` para operar como API SaaS multi-organization, Cloudflare-oriented e integrável por sistemas externos.
 
 Produção só é aceitável quando segurança, isolamento, observabilidade, continuidade operacional, governança de custo e controles de abuso estiverem ativos e testados.
 
@@ -12,7 +12,7 @@ Requisitos obrigatórios:
 
 - auth real;
 - RBAC completo;
-- tenant isolation validado;
+- organization isolation validado;
 - secrets management;
 - rate limiting;
 - WAF;
@@ -31,7 +31,7 @@ Requisitos obrigatórios:
 Regra:
 
 ```text
-Nenhum tenant real entra em produção com mock auth, CORS wildcard, audit logs in-memory ou resources compartilhados com dev/staging.
+Nenhum organization real entra em produção com mock auth, CORS wildcard, audit logs in-memory ou resources compartilhados com dev/staging.
 ```
 
 ## 3. Auth Real
@@ -59,7 +59,7 @@ Requisitos:
 
 RBAC deve cobrir:
 
-- tenant admin;
+- organization admin;
 - organization admin;
 - assessment owner;
 - assessor;
@@ -74,11 +74,11 @@ Regras:
 
 - cada endpoint crítico declara permissões explícitas;
 - approvals exigem permissões específicas por gate;
-- support/admin cross-tenant exige trilha auditável;
+- support/admin cross-organization exige trilha auditável;
 - `integration_service` não recebe permissões humanas de approval por padrão;
-- acesso admin não bypassa tenant/audit.
+- acesso admin não bypassa organization/audit.
 
-## 5. Tenant Isolation
+## 5. Organization Isolation
 
 Obrigatório em todas as camadas:
 
@@ -95,18 +95,18 @@ Obrigatório em todas as camadas:
 
 Controles:
 
-- `tenant_id` obrigatório;
+- `organization_id` obrigatório;
 - `organization_id` e `assessment_id` obrigatórios em fluxos críticos;
-- queries filtradas por tenant;
-- R2 keys prefixadas por tenant/organization/assessment;
-- Vectorize namespaces/metadados por tenant/assessment;
+- queries filtradas por organization;
+- R2 keys prefixadas por organization/organization/assessment;
+- Vectorize namespaces/metadados por organization/assessment;
 - logs sem payload sensível;
-- testes cross-tenant obrigatórios em CI.
+- testes cross-organization obrigatórios em CI.
 
 No-Go:
 
 ```text
-Qualquer falha cross-tenant bloqueia produção.
+Qualquer falha cross-organization bloqueia produção.
 ```
 
 ## 6. Secrets Management
@@ -139,7 +139,7 @@ Processos:
 
 Rate limiting deve existir por:
 
-- tenant;
+- organization;
 - organization;
 - API key;
 - endpoint;
@@ -162,7 +162,7 @@ Requisitos:
 - resposta estável para throttling;
 - headers de rate limit quando aplicável;
 - métricas e alertas de throttling;
-- quotas configuráveis por plano/tenant;
+- quotas configuráveis por plano/organization;
 - proteção contra burst de jobs pesados.
 
 ## 8. WAF e Abuse Prevention
@@ -174,7 +174,7 @@ Controles mínimos:
 - WAF em rotas públicas;
 - bloqueio de padrões conhecidos de abuso;
 - proteção contra payloads anômalos;
-- limites por IP/tenant/key;
+- limites por IP/organization/key;
 - proteção de endpoints de upload;
 - monitoramento de 4xx/5xx incomuns;
 - regras específicas para admin/internal;
@@ -204,7 +204,7 @@ Nenhuma rota authenticated em produção usa Access-Control-Allow-Origin: *.
 Audit logs obrigatórios para:
 
 - login/auth events relevantes;
-- criação/alteração de tenant/org/assessment;
+- criação/alteração de organization/org/assessment;
 - uploads;
 - workflow transitions;
 - approvals;
@@ -219,8 +219,8 @@ Audit logs obrigatórios para:
 Security events obrigatórios para:
 
 - permission denied;
-- tenant mismatch;
-- cross-tenant attempt;
+- organization mismatch;
+- cross-organization attempt;
 - approval bypass attempt;
 - prompt injection signal;
 - tool access denied;
@@ -228,7 +228,7 @@ Security events obrigatórios para:
 - rate limit abuse;
 - data export anomaly.
 
-Logs devem preservar `trace_id`, `tenant_id`, actor e resource references, sem conteúdo sensível integral.
+Logs devem preservar `trace_id`, `organization_id`, actor e resource references, sem conteúdo sensível integral.
 
 ## 11. Backup, Restore e DR
 
@@ -252,7 +252,7 @@ Vectorize:
 
 - índice vetorial é rebuildable;
 - fonte de reconstrução vem de documentos/chunks/metadados persistidos;
-- rebuild deve preservar tenant/assessment scope.
+- rebuild deve preservar organization/assessment scope.
 
 DR:
 
@@ -279,7 +279,7 @@ Políticas devem cobrir:
 
 Regras:
 
-- retenção por tenant/plan/contrato;
+- retenção por organization/plan/contrato;
 - exclusão controlada;
 - legal hold;
 - expiração de URLs assinadas;
@@ -291,7 +291,7 @@ Regras:
 Incidentes cobertos:
 
 - vazamento potencial;
-- cross-tenant alert;
+- cross-organization alert;
 - falha de approval gate;
 - API key comprometida;
 - prompt injection;
@@ -321,9 +321,9 @@ Dashboards mínimos:
 - workflow health;
 - queue depth;
 - error rate;
-- tenant usage;
+- organization usage;
 - LLM/embedding usage;
-- cost by tenant;
+- cost by organization;
 - security events;
 - failed jobs;
 - DLQ;
@@ -333,7 +333,7 @@ Dashboards mínimos:
 Alertas mínimos:
 
 - aumento de 5xx;
-- tenant mismatch;
+- organization mismatch;
 - approval bypass attempt;
 - DLQ acima do limite;
 - custo anômalo;
@@ -352,17 +352,17 @@ Governança de custo deve registrar:
 - Vectorize queries/storage;
 - LLM/embedding usage futuro;
 - report/export jobs;
-- usage por tenant/assessment.
+- usage por organization/assessment.
 
 Controles:
 
 - budgets por ambiente;
-- quotas por tenant;
+- quotas por organization;
 - alertas por anomalia;
 - kill switch para jobs pesados;
 - limites de tool calls;
 - limites de agent runs;
-- revisão FinOps antes de tenants reais.
+- revisão FinOps antes de organizations reais.
 
 ## 16. Cloudflare Production Controls
 
@@ -376,8 +376,8 @@ Controles documentados:
 - Cloudflare Queues DLQ para mensagens com retries excedidos;
 - Cloudflare AI Gateway para governança futura de LLM/embedding;
 - Cloudflare Logs / Analytics para tráfego, Workers e segurança;
-- Cloudflare for SaaS para domínios/custom hostnames por tenant, futuro;
-- Workers for Platforms para workloads isolados por tenant, futuro.
+- Cloudflare for SaaS para domínios/custom hostnames por organization, futuro;
+- Workers for Platforms para workloads isolados por organization, futuro.
 
 Nota: limites, pricing, APIs e disponibilidade de features devem ser confirmados na documentação oficial Cloudflare antes de compromisso de produção.
 
@@ -385,7 +385,7 @@ Nota: limites, pricing, APIs e disponibilidade de features devem ser confirmados
 
 Produção só pode ocorrer se:
 
-- tenant isolation testado;
+- organization isolation testado;
 - RBAC ativo;
 - secrets fora do repo;
 - production deploy manual;
@@ -420,7 +420,7 @@ Riscos e decisões abertas:
 - enterprise SSO;
 - DLP no AI Gateway;
 - estratégia de custom hostnames;
-- modelo de suporte cross-tenant;
+- modelo de suporte cross-organization;
 - RPO/RTO finais;
 - WAF ruleset final por ambiente.
 
@@ -429,7 +429,7 @@ Riscos e decisões abertas:
 Este documento orienta:
 
 - endurecer produção;
-- preservar isolamento multi-tenant;
+- preservar isolamento multi-organization;
 - operar com segurança;
 - reduzir abuso;
 - monitorar qualidade/custo;

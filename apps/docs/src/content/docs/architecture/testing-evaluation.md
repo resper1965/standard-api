@@ -33,7 +33,7 @@ Packages com testes existentes:
 - `packages/security`
 - `packages/observability`
 
-Esses testes cobrem state machine, approval gates, imutabilidade, tenant isolation, KB, report generation, RBAC, redaction e observability.
+Esses testes cobrem state machine, approval gates, imutabilidade, organization isolation, KB, report generation, RBAC, redaction e observability.
 
 ## Contract Tests
 
@@ -56,14 +56,14 @@ Security tests rodam em:
 Critérios:
 
 - auth required;
-- tenant required;
+- organization required;
 - permission required;
-- tenant mismatch bloqueado;
+- organization mismatch bloqueado;
 - prompt injection tratado como untrusted;
 - tool allowlist enforced;
 - redaction de campos sensíveis.
 
-## Tenant Isolation Tests
+## Organization Isolation Tests
 
 Os pacotes de domínio e API testam isolamento para:
 
@@ -106,7 +106,7 @@ Invariantes:
 
 ## Golden Datasets Sintéticos
 
-`evals/fixtures` contém tenant, organization, assessment, documentos, SCF sintético, framework sintético, mappings oficiais e resultados de KB.
+`evals/fixtures` contém organization, organization, assessment, documentos, SCF sintético, framework sintético, mappings oficiais e resultados de KB.
 
 `evals/golden` contém outputs esperados para:
 
@@ -167,7 +167,7 @@ Ficam fora do CI principal. Devem:
 Testes devem falhar se:
 
 - output de agente não valida schema;
-- tenant isolation falha;
+- organization isolation falha;
 - approval gate é burlado;
 - mapping oficial é inventado;
 - `not_evidenced` vira `not_implemented` sem rationale;

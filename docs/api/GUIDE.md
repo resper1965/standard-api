@@ -56,7 +56,7 @@ report_generated → closed
 
 ### Organizations & Multi-Tenancy
 
-Every API call is scoped to an organization (tenant). Data isolation is enforced at every layer — database queries, storage paths, vector namespaces, and logs.
+Every API call is scoped to an organization (organization). Data isolation is enforced at every layer — database queries, storage paths, vector namespaces, and logs.
 
 ### Knowledge Base (KB)
 
@@ -79,12 +79,12 @@ Two methods:
 | **Session** | Browser/interactive | Cookie-based via Standard Native Auth |
 | **API Key** | Machine-to-machine | `Authorization: Bearer standard_live_...` |
 
-### Tenant Context
+### Organization Context
 
 All requests must include the organization scope:
 
 ```
-x-standard-tenant-id: <organization_id>
+x-standard-organization-id: <organization_id>
 ```
 
 ### Typical Integration Flow
@@ -267,7 +267,7 @@ Standard ships with 7 specialized AI agents that power the automated analysis pi
 ```bash
 curl -X POST \
      -H "Authorization: Bearer standard_live_YOUR_KEY" \
-     -H "x-standard-tenant-id: YOUR_ORG_ID" \
+     -H "x-standard-organization-id: YOUR_ORG_ID" \
      -H "Content-Type: application/json" \
      -d '{
        "controlRequirement": "Backup data must be stored at rest with AES-256 encryption.",
@@ -419,13 +419,13 @@ All errors follow a consistent format:
 
 # 2. Get the SCF version
 curl -H "Authorization: Bearer standard_live_YOUR_KEY" \
-     -H "x-standard-tenant-id: YOUR_ORG_ID" \
+     -H "x-standard-organization-id: YOUR_ORG_ID" \
      https://standard-api.bekaa.eu/api/v1/scf/versions/latest
 
 # 3. Create an assessment
 curl -X POST \
      -H "Authorization: Bearer standard_live_YOUR_KEY" \
-     -H "x-standard-tenant-id: YOUR_ORG_ID" \
+     -H "x-standard-organization-id: YOUR_ORG_ID" \
      -H "Content-Type: application/json" \
      -d '{"name": "ISO 27001 Assessment Q2 2026"}' \
      https://standard-api.bekaa.eu/api/v1/assessments
@@ -433,7 +433,7 @@ curl -X POST \
 # 4. Upload evidence
 curl -X POST \
      -H "Authorization: Bearer standard_live_YOUR_KEY" \
-     -H "x-standard-tenant-id: YOUR_ORG_ID" \
+     -H "x-standard-organization-id: YOUR_ORG_ID" \
      -F "file=@security-policy.pdf" \
      https://standard-api.bekaa.eu/api/v1/assessments/ASSESSMENT_ID/documents
 ```

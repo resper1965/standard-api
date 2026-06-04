@@ -33,7 +33,6 @@ export const RegenerateReportRequestSchema = z.object({
 
 export const ReportVersionResponseSchema = z.object({
   report_version_id: UuidSchema,
-  tenant_id: UuidSchema,
   organization_id: UuidSchema,
   assessment_id: UuidSchema,
   version_number: z.number().int().positive(),
@@ -101,7 +100,6 @@ export const RenderReportResponseSchema = z.object({
 
 export const ReportArtifactResponseSchema = z.object({
   report_artifact_id: UuidSchema,
-  tenant_id: UuidSchema,
   organization_id: UuidSchema,
   assessment_id: UuidSchema,
   report_version_id: UuidSchema,
@@ -126,7 +124,6 @@ export const ExportRequestSchema = z.object({
 
 export const ExportJobResponseSchema = z.object({
   export_job_id: UuidSchema,
-  tenant_id: UuidSchema,
   organization_id: UuidSchema,
   assessment_id: UuidSchema,
   report_version_id: UuidSchema.optional(),

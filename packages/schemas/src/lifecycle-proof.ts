@@ -12,7 +12,7 @@
  * Usage: pnpm db:lifecycle-proof
  *
  * AGENTS.md compliance:
- *   §7: All data carries tenant_id, organization_id, assessment_id
+ *   §7: All data carries organization_id, organization_id, assessment_id
  *   §11: State transitions follow the lifecycle enum
  *   §13: Audit logs for state changes
  *   §14: Synthetic data only
@@ -72,7 +72,7 @@ async function main() {
   const storageKey = `${IDS.tenant}/${IDS.organization}/${IDS.assessment}/${documentId}/synthetic-policy.pdf`;
   await db.insert(schema.documents).values({
     id: documentId,
-    tenantId: IDS.tenant,
+    organizationId: IDS.tenant,
     organizationId: IDS.organization,
     assessmentId: IDS.assessment,
     originalFilename: "synthetic-governance-policy.pdf",
@@ -99,7 +99,7 @@ async function main() {
   // ── Step 4: Record assessment event ──
   console.log("  [4/6] Recording assessment event...");
   await db.insert(schema.assessmentEvents).values({
-    tenantId: IDS.tenant,
+    organizationId: IDS.tenant,
     organizationId: IDS.organization,
     assessmentId: IDS.assessment,
     previousState: "draft",
@@ -118,7 +118,7 @@ async function main() {
   console.log("  [5/6] Recording audit log...");
   await db.insert(schema.auditLogs).values({
     action: "assessment_state_transition",
-    tenantId: IDS.tenant,
+    organizationId: IDS.tenant,
     organizationId: IDS.organization,
     actorId: IDS.user,
     resourceType: "assessment",

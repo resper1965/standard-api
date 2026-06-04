@@ -8,7 +8,6 @@ export type LogInput = {
   service: string;
   module?: string | undefined;
   environment: string;
-  tenant_id?: string | undefined;
   organization_id?: string | undefined;
   assessment_id?: string | undefined;
   metadata?: Record<string, unknown> | undefined;
@@ -29,7 +28,6 @@ export class StructuredLogger {
       service: input.service,
       ...(input.module ? { module: input.module } : {}),
       environment: input.environment,
-      ...(input.tenant_id && isUuid(input.tenant_id) ? { tenant_id: input.tenant_id } : {}),
       ...(input.organization_id && isUuid(input.organization_id) ? { organization_id: input.organization_id } : {}),
       ...(input.assessment_id && isUuid(input.assessment_id) ? { assessment_id: input.assessment_id } : {}),
       metadata_safe: redactValue(input.metadata ?? {})

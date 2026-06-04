@@ -7,7 +7,7 @@ export const runPrivacyCompletenessTests = async (
 
   const TENANT = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
   const ACTOR = "cccccccc-cccc-cccc-cccc-cccccccccccc";
-  const ctx = { tenantId: TENANT, actorId: ACTOR, traceId: "test-trace-002" };
+  const ctx = { organizationId: TENANT, actorId: ACTOR, traceId: "test-trace-002" };
 
   // ── Empty Activity ──────────────────────────────────────────────
 

@@ -6,15 +6,13 @@ test("Search limita top_k, retorna candidate evidence e registra hash", async ()
   const deps = await createKbFixture();
   const indexing = new KbIndexingService(deps);
   const indexResult = await indexing.indexAssessment({
-    tenantId: ids.tenantId,
     organizationId: ids.organizationId,
     assessmentId: ids.assessmentId,
     actorId: ids.actorId,
     traceId: "trace-test"
   });
-  const job = await deps.repositories.embeddingJobs.getJob(indexResult.queued_job_ids[0]!, ids.tenantId);
+  const job = await deps.repositories.embeddingJobs.getJob(indexResult.queued_job_ids[0]!, ids.organizationId);
   await processKbEmbeddingJob({
-    tenant_id: ids.tenantId,
     organization_id: ids.organizationId,
     assessment_id: ids.assessmentId,
     document_id: ids.documentId,
@@ -30,7 +28,6 @@ test("Search limita top_k, retorna candidate evidence e registra hash", async ()
 
   const search = new KbSearchService(deps);
   const result = await search.semanticSearch({
-    tenantId: ids.tenantId,
     organizationId: ids.organizationId,
     assessmentId: ids.assessmentId,
     actorId: ids.actorId,

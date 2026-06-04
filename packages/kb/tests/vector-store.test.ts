@@ -17,8 +17,7 @@ test("MockVectorStore faz upsert e query com filtro de tenant", async () => {
       id: "vec-1",
       values: embedding.vector,
       metadata: {
-        tenant_id: "11111111-1111-4111-8111-111111111111",
-        organization_id: "22222222-2222-4222-8222-222222222222",
+        organization_id: "11111111-1111-4111-8111-111111111111",
         assessment_id: "33333333-3333-4333-8333-333333333333",
         document_id: "44444444-4444-4444-8444-444444444444",
         chunk_id: "55555555-5555-4555-8555-555555555555",
@@ -29,6 +28,6 @@ test("MockVectorStore faz upsert e query com filtro de tenant", async () => {
       }
     }
   ]);
-  const results = await store.query(embedding.vector, { tenant_id: "11111111-1111-4111-8111-111111111111" }, { topK: 5 });
+  const results = await store.query(embedding.vector, { organization_id: "11111111-1111-4111-8111-111111111111" }, { topK: 5 });
   expect(results.length).toBe(1);
 });

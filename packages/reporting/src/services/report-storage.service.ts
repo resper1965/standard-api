@@ -13,12 +13,12 @@ export class ReportStorageService {
   async storeArtifact(reportVersionId: string, artifact: RenderReportResponse, context: ReportingContext): Promise<ReportArtifactResponse> {
     assertContext(context);
     assertActor(context);
-    const report = await this.deps.repositories.versions.get(reportVersionId, context.tenantId);
+    const report = await this.deps.repositories.versions.get(reportVersionId, context.organizationId);
     if (!report || report.assessment_id !== context.assessmentId) throw new ReportingWorkflowError("REPORT_NOT_FOUND", "Report version not found.");
     const now = new Date().toISOString();
     const storageKey = [
       "tenants",
-      context.tenantId,
+      context.organizationId,
       "organizations",
       context.organizationId,
       "assessments",
@@ -29,7 +29,6 @@ export class ReportStorageService {
     ].join("/");
     const stored: ReportArtifactResponse = {
       report_artifact_id: crypto.randomUUID(),
-      tenant_id: context.tenantId,
       organization_id: context.organizationId,
       assessment_id: context.assessmentId,
       report_version_id: reportVersionId,
@@ -51,19 +50,19 @@ export class ReportStorageService {
 
   async getArtifact(artifactId: string, context: ReportingContext): Promise<ReportArtifactResponse> {
     assertContext(context);
-    const artifact = await this.deps.repositories.artifacts.get(artifactId, context.tenantId);
+    const artifact = await this.deps.repositories.artifacts.get(artifactId, context.organizationId);
     if (!artifact || artifact.assessment_id !== context.assessmentId) throw new ReportingWorkflowError("REPORT_ARTIFACT_NOT_FOUND", "Report artifact not found.");
     return artifact;
   }
 
   async listArtifacts(reportVersionId: string, context: ReportingContext): Promise<ReportArtifactResponse[]> {
     assertContext(context);
-    return this.deps.repositories.artifacts.listByReport(reportVersionId, context.tenantId);
+    return this.deps.repositories.artifacts.listByReport(reportVersionId, context.organizationId);
   }
 
   async generateDownloadUrl(artifactId: string, context: ReportingContext): Promise<string> {
     const artifact = await this.getArtifact(artifactId, context);
-    return `standard-r2://download/${artifact.report_artifact_id}?tenant_id=${context.tenantId}&assessment_id=${context.assessmentId}&expires_in=900`;
+    return `standard-r2://download/${artifact.report_artifact_id}?organization_id=${context.organizationId}&assessment_id=${context.assessmentId}&expires_in=900`;
   }
 }
 

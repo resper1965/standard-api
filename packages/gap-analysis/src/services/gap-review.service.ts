@@ -11,7 +11,7 @@ export class GapReviewService {
   async updateGapFinding(gapFindingId: string, patch: UpdateGapFindingRequest, context: GapAnalysisContext): Promise<GapFindingResponse> {
     assertContext(context);
     assertActor(context);
-    const finding = await this.deps.repositories.gapFindings.get(gapFindingId, context.tenantId);
+    const finding = await this.deps.repositories.gapFindings.get(gapFindingId, context.organizationId);
     if (!finding || finding.assessment_id !== context.assessmentId) throw new GapAnalysisWorkflowError("GAP_FINDING_NOT_FOUND", "Gap finding not found.");
     const version = await this.getGapVersion(finding.gap_analysis_version_id, context);
     if (version.status === "approved") throw new GapAnalysisWorkflowError("GAP_ANALYSIS_IMMUTABLE", "Approved Gap Analysis versions are immutable.");
@@ -22,7 +22,7 @@ export class GapReviewService {
   }
 
   async bulkUpdateGapFindings(gapAnalysisVersionId: string, patch: UpdateGapFindingRequest, context: GapAnalysisContext): Promise<GapFindingResponse[]> {
-    const findings = await this.deps.repositories.gapFindings.listByVersion(gapAnalysisVersionId, context.tenantId);
+    const findings = await this.deps.repositories.gapFindings.listByVersion(gapAnalysisVersionId, context.organizationId);
     const updated: GapFindingResponse[] = [];
     for (const finding of findings) updated.push(await this.updateGapFinding(finding.gap_finding_id, patch, context));
     return updated;
@@ -53,7 +53,7 @@ export class GapReviewService {
   }
 
   private async getGapVersion(gapAnalysisVersionId: string, context: GapAnalysisContext): Promise<GapAnalysisVersionResponse> {
-    const version = await this.deps.repositories.gapVersions.get(gapAnalysisVersionId, context.tenantId);
+    const version = await this.deps.repositories.gapVersions.get(gapAnalysisVersionId, context.organizationId);
     if (!version || version.assessment_id !== context.assessmentId) throw new GapAnalysisWorkflowError("GAP_ANALYSIS_NOT_FOUND", "Gap Analysis version not found.");
     return version;
   }

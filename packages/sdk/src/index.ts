@@ -6,7 +6,7 @@
  *
  *   const client = new StandardClient({
  *     apiKey: "standard_live_...",
- *     tenantId: "your-tenant-uuid",
+ *     organizationId: "your-organization-uuid",
  *   });
  *
  *   const assessments = await client.assessments.list();

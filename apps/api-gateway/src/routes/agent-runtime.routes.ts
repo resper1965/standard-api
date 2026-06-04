@@ -24,14 +24,13 @@ const toApiError = (error: unknown): never => {
   throw error;
 };
 
-const requireAssessment = async (deps: AppDependencies, assessmentId: string, tenantId: string): Promise<AssessmentRecord> => {
-  const assessment = await deps.assessments.withTenant(tenantId).get(assessmentId);
+const requireAssessment = async (deps: AppDependencies, assessmentId: string, organizationId: string): Promise<AssessmentRecord> => {
+  const assessment = await deps.assessments.withOrganization(organizationId).get(assessmentId);
   if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
   return assessment;
 };
 
 const contextFor = (assessment: AssessmentRecord, traceId: string, frameworkId: string, scfVersionId: string, actorId?: string, locale?: string) => ({
-  tenant_id: assessment.tenant_id,
   organization_id: assessment.organization_id,
   assessment_id: assessment.assessment_id,
   framework_id: frameworkId,
@@ -52,6 +51,7 @@ export const agentRuntimeRoutes: RouteDefinition[] = [
     method: "GET",
     path: "/api/v1/agent-runtime/agents",
     protected: true,
+    permissions: ["agent:read"],
     handler: () => json({ agents: FUNCTIONAL_AGENT_CONTRACTS, tools: safeTools() })
   },
   {
@@ -61,8 +61,8 @@ export const agentRuntimeRoutes: RouteDefinition[] = [
     requireActor: true,
     permissions: ["agent:run"],
     bodySchema: StartAgentRunRequestSchema,
-    handler: async ({ validatedBody, params, deps, tenantId, actorId, traceId, request }) => {
-      const assessment = await requireAssessment(deps, routeParam(params, "assessmentId"), tenantId!);
+    handler: async ({ validatedBody, params, deps, organizationId, actorId, traceId, request }) => {
+      const assessment = await requireAssessment(deps, routeParam(params, "assessmentId"), organizationId!);
       const body = validatedBody as import("@standard/schemas").StartAgentRunRequest;
       const locale = new URL(request.url).searchParams.get("locale") ?? undefined;
       try {
@@ -80,13 +80,12 @@ export const agentRuntimeRoutes: RouteDefinition[] = [
           await deps.AGENT_RUN_QUEUE.send({
             queue_type: "agent_run",
             agent_run_id: run.agent_run_id,
-            tenant_id: run.tenant_id,
+            organization_id: run.organization_id,
             assessment_id: run.assessment_id
           });
         }
 
         await new AuditEventService(deps.observability).record({
-          tenant_id: assessment.tenant_id,
           organization_id: assessment.organization_id,
           assessment_id: assessment.assessment_id,
           actor_id: actorId!,
@@ -98,7 +97,6 @@ export const agentRuntimeRoutes: RouteDefinition[] = [
           metadata_safe: { agent_id: run.agent_id, model: run.model }
         });
         await new MetricsService(deps.observability).record({
-          tenant_id: assessment.tenant_id,
           organization_id: assessment.organization_id,
           assessment_id: assessment.assessment_id,
           metric_name: "agent_run_count",
@@ -119,17 +117,18 @@ export const agentRuntimeRoutes: RouteDefinition[] = [
     path: "/api/v1/assessments/:assessmentId/agent-runs",
     protected: true,
     permissions: ["agent:read_runs"],
-    handler: async ({ params, deps, tenantId }) => {
-      const assessment = await requireAssessment(deps, routeParam(params, "assessmentId"), tenantId!);
-      return json(await new AgentRuntimeService(deps.agentRuntime).listRuns(assessment.assessment_id, tenantId!));
+    handler: async ({ params, deps, organizationId }) => {
+      const assessment = await requireAssessment(deps, routeParam(params, "assessmentId"), organizationId!);
+      return json(await new AgentRuntimeService(deps.agentRuntime).listRuns(assessment.assessment_id, organizationId!));
     }
   },
   {
     method: "GET",
     path: "/api/v1/agent-runs/:agentRunId",
     protected: true,
-    handler: async ({ params, deps, tenantId }) => {
-      const run = await new AgentRuntimeService(deps.agentRuntime).getRun(routeParam(params, "agentRunId"), tenantId!);
+    permissions: ["agent:read"],
+    handler: async ({ params, deps, organizationId }) => {
+      const run = await new AgentRuntimeService(deps.agentRuntime).getRun(routeParam(params, "agentRunId"), organizationId!);
       if (!run) throw new ApiError("NOT_FOUND", "Agent run not found.", 404);
       return json(run);
     }
@@ -138,9 +137,10 @@ export const agentRuntimeRoutes: RouteDefinition[] = [
     method: "POST",
     path: "/api/v1/agent-runs/:agentRunId/tool-calls",
     protected: true,
+    permissions: ["agent:create"],
     requireActor: true,
-    handler: async ({ request, params, deps, tenantId, traceId }) => {
-      const run = await new AgentRuntimeService(deps.agentRuntime).getRun(routeParam(params, "agentRunId"), tenantId!);
+    handler: async ({ request, params, deps, organizationId, traceId }) => {
+      const run = await new AgentRuntimeService(deps.agentRuntime).getRun(routeParam(params, "agentRunId"), organizationId!);
       if (!run) throw new ApiError("NOT_FOUND", "Agent run not found.", 404);
       const body = await parseJson(request, InvokeAgentToolRequestSchema);
       try {
@@ -148,7 +148,6 @@ export const agentRuntimeRoutes: RouteDefinition[] = [
           tool_name: body.tool_name,
           input: body.input,
           context: {
-            tenant_id: run.tenant_id,
             organization_id: run.organization_id,
             assessment_id: run.assessment_id,
             framework_id: String(run.metadata.framework_id),
@@ -159,7 +158,6 @@ export const agentRuntimeRoutes: RouteDefinition[] = [
       } catch (error) {
         if (error instanceof AgentRuntimeError && error.code === "TOOL_NOT_ALLOWED") {
           await new SecurityEventService(deps.observability).record({
-            tenant_id: run.tenant_id,
             organization_id: run.organization_id,
             assessment_id: run.assessment_id,
             event_type: "tool_use_blocked",
@@ -181,16 +179,16 @@ export const agentRuntimeRoutes: RouteDefinition[] = [
     method: "POST",
     path: "/api/v1/agent-runs/:agentRunId/complete",
     protected: true,
+    permissions: ["agent:create"],
     requireActor: true,
-    handler: async ({ request, params, deps, tenantId, traceId }) => {
-      const run = await new AgentRuntimeService(deps.agentRuntime).getRun(routeParam(params, "agentRunId"), tenantId!);
+    handler: async ({ request, params, deps, organizationId, traceId }) => {
+      const run = await new AgentRuntimeService(deps.agentRuntime).getRun(routeParam(params, "agentRunId"), organizationId!);
       if (!run) throw new ApiError("NOT_FOUND", "Agent run not found.", 404);
       const body = await parseJson(request, CompleteAgentRunRequestSchema);
       try {
         const completed = await new AgentRuntimeService(deps.agentRuntime).completeRun(run.agent_run_id, {
           output: body.output,
           context: {
-            tenant_id: run.tenant_id,
             organization_id: run.organization_id,
             assessment_id: run.assessment_id,
             framework_id: String(run.metadata.framework_id),
@@ -199,7 +197,6 @@ export const agentRuntimeRoutes: RouteDefinition[] = [
           }
         });
         await new AuditEventService(deps.observability).record({
-          tenant_id: run.tenant_id,
           organization_id: run.organization_id,
           assessment_id: run.assessment_id,
           action: "agent_run_completed",
@@ -212,7 +209,6 @@ export const agentRuntimeRoutes: RouteDefinition[] = [
         if (body.usage) {
           const totalTokens = body.usage.prompt_tokens + body.usage.completion_tokens + body.usage.embedding_tokens;
           await new CostTrackingService(deps.observability).recordAgentUsage({
-            tenant_id: run.tenant_id,
             organization_id: run.organization_id,
             assessment_id: run.assessment_id,
             agent_run_id: run.agent_run_id,
@@ -231,7 +227,6 @@ export const agentRuntimeRoutes: RouteDefinition[] = [
       } catch (error) {
         if (error instanceof AgentRuntimeError && error.code.includes("GUARDRAIL")) {
           await new SecurityEventService(deps.observability).record({
-            tenant_id: run.tenant_id,
             organization_id: run.organization_id,
             assessment_id: run.assessment_id,
             event_type: "agent_guardrail_triggered",
