@@ -39,7 +39,7 @@ const poamSchema = {
 };
 
 export class PoamArchitectUseCase {
-  constructor(private provider: LlmProvider, private defaultModel: string = "gpt-4o") {}
+  constructor(private provider: LlmProvider, private defaultModel: string = "dynamic/critical-analysis") {}
 
   async architect(input: PoamRemediationInput): Promise<PoamRemediationOutput> {
     if (input.evidenceContext.is_compliant) {

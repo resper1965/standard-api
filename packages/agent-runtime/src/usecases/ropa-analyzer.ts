@@ -44,7 +44,7 @@ const ropaSchema = {
 };
 
 export class RopaAnalyzerUseCase {
-  constructor(private provider: LlmProvider, private defaultModel: string = "gpt-4o-mini") {}
+  constructor(private provider: LlmProvider, private defaultModel: string = "dynamic/assessment-general") {}
 
   async analyze(input: RopaAnalysisInput): Promise<RopaAnalysisOutput> {
     const systemPrompt = `You are a Privacy Architect specializing in Data Governance frameworks.

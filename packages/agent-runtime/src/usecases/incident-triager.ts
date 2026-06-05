@@ -40,7 +40,7 @@ const incidentTriagerSchema = {
 };
 
 export class IncidentTriagerUseCase {
-  constructor(private provider: LlmProvider, private defaultModel: string = "gpt-4o-mini") {}
+  constructor(private provider: LlmProvider, private defaultModel: string = "dynamic/assessment-general") {}
 
   async triage(input: IncidentTriagerInput): Promise<IncidentTriagerOutput> {
     const systemPrompt = `You are an L3 SOC analyst specializing in cyber incident triage.

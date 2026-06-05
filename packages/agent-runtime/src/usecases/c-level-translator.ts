@@ -33,7 +33,7 @@ const boardTranslatorSchema = {
 };
 
 export class CLevelBoardTranslatorUseCase {
-  constructor(private provider: LlmProvider, private defaultModel: string = "gpt-4o-mini") {}
+  constructor(private provider: LlmProvider, private defaultModel: string = "dynamic/assessment-general") {}
 
   async translate(input: BoardTranslatorInput): Promise<BoardTranslatorOutput> {
     const systemPrompt = `You are a CISO / Executive Board Translator.
