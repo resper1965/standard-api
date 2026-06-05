@@ -16,6 +16,7 @@ This file provides the single source of truth for the architecture and technical
 ### 3. Frontend Architecture
 - **Application (`apps/web`):** This is a **Platform Console** for managing Orgs, Users, API keys, and System Health. 
 - **Rule:** It is **NOT** a GRC Dashboard for end-users. The assessment features are primarily consumed via our API (`apps/api-gateway`).
+- **Users Page:** `apps/web/src/pages/admin/Users.tsx` is composed of 5 sub-components in `apps/web/src/pages/admin/components/` (e.g., `UserTable`, `UserForm`, `UserFilters`, `UserActions`, `UserDetails`). Do NOT inline large blocks back into `Users.tsx`.
 
 ### 4. Core Stack
 - **Edge:** Cloudflare Workers, Workflows, Queues.
@@ -23,4 +24,21 @@ This file provides the single source of truth for the architecture and technical
 - **AI/Vector:** Cloudflare Vectorize + R2 for documents.
 - **Package Manager:** pnpm workspaces.
 
+### 5. Backend Architecture (Post-Refactoring)
+- **API Gateway (`apps/api-gateway`):**
+  - `app.ts` delegates CORS configuration, security headers, and auth resolution to `app-helpers.ts`. Do NOT inline these concerns back into `app.ts`.
+  - `index.ts` delegates bindings resolution, dependency injection bootstrapping, and auth route handling to `index-helpers.ts`. Do NOT inline these concerns back into `index.ts`.
+- **Agent Runtime (`packages/agent-runtime`):**
+  - `council.ts` uses a **dispatch map pattern** (`AgentDispatchMap`) to route agent names to handler functions. Do NOT replace this with `if/else` or `switch` chains.
+- **SCF Core (`packages/scf-core`):**
+  - `importers/csv-importer.ts` uses an `ImportContext` object + row-handler functions for CSV ingestion. Do NOT replace this with monolithic parsing loops.
+- **Assessment Engine (`packages/assessment-engine`):**
+  - `prerequisites.ts` uses a **declarative lookup table** for prerequisite resolution. Do NOT replace this with `switch` statements.
+
+### 6. Assessment Engine & Services (Declarative Patterns)
+- **Gap Analysis service:** Uses declarative validation rule arrays for finding validation. Do NOT replace with imperative validation logic.
+- **POA&M service:** Uses declarative validation rule arrays for item and milestone validation. Do NOT replace with imperative validation logic.
+- **Rule:** When extending validation, add entries to the rule arrays instead of adding new `if` blocks.
+
 If you are modifying code, ensure you use `organizationId` instead of `tenantId`. If you encounter any remnant of `tenantId` in the codebase, you should immediately refactor it to `organizationId`.
+

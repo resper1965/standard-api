@@ -51,6 +51,12 @@ O módulo `transitions.ts` contém a lista explícita de transições permitidas
 - `validateTransition`: valida tenancy, transição permitida, pré-requisitos e approval gate.
 - `executeTransition`: valida e retorna o novo snapshot do assessment com um `AssessmentLifecycleEvent`.
 
+## Pré-requisitos Declarativos
+
+O módulo `prerequisites.ts` usa uma **tabela de lookup declarativa** (`prerequisiteRules`) que mapeia cada estado-alvo às verificações obrigatórias antes de entrar nele. Estados ausentes da tabela não têm pré-requisitos. Cada regra é um par `{ check, label }` onde `check` avalia o `AssessmentSnapshot` e `label` identifica o pré-requisito para mensagens de erro.
+
+Essa abordagem substitui cadeias `if/else` imperativas e permite adicionar novas regras de pré-requisito sem alterar a lógica de controle em `engine.ts`.
+
 Cada evento contém:
 
 - `organizationId`
