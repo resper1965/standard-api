@@ -20,6 +20,8 @@ import "./intelligence.test";
 import "./organizations-mgmt.test";
 import "./mcp.test";
 import "./critical.test"; // adversarial: tenant isolation, concurrency, security, contracts
+import "./m2m-rbac-integration.test"; // regression: M2M wildcard key + RBAC + SecurityEvent logging
+import "./llm-provider-validation.test"; // regression: mock LLM fallback + evidence evaluation
 import { runTests } from "./test-kit";
 
 await runTests();
