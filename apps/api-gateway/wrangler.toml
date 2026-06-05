@@ -129,7 +129,7 @@ binding = "AI"
 
 [[env.production.kv_namespaces]]
 binding = "STANDARD_CACHE"
-id = "4e027e07e0e5440a8666c3f8ee419333"
+id = "55f97abbf9794b0196bdf51e8c1dedec"
 
 [[env.production.vectorize]]
 binding = "STANDARD_KB_INDEX"
