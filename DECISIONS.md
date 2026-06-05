@@ -18,6 +18,7 @@ Este arquivo é o índice central de decisões arquiteturais e operacionais rele
 - `docs/decisions/0008-scf-official-xlsx-2026.md`: SCF Official XLSX 2026.1.1 como fonte de dados.
 - `docs/decisions/0009-superpowers-sdlc.md`: Superpowers SDLC como processo de desenvolvimento.
 - `docs/decisions/adr-0010-discard-architecture-refactoring-branch.md`: Descarte da branch feature/architecture-refactoring.
+- `docs/decisions/adr-refactoring-sprint-2026-06-05.md`: Sprint de refatoração — declarative patterns, helper extraction, component decomposition.
 
 ## Como Registrar Nova Decisão
 

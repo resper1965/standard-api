@@ -2,7 +2,7 @@
 
 > **Produto:** Standard
 > **Repositório:** `standard-api-standard`
-> **Última atualização:** 2026-05-25
+> **Última atualização:** 2026-06-05
 > **Status:** Documento normativo de arquitetura atual
 
 ---
@@ -21,7 +21,7 @@ Todo comportamento de valor está na API. O frontend é apenas um consumidor. In
 
 | Camada | Tecnologia |
 |---|---|
-| API Gateway | Cloudflare Workers (roteamento via `RouteDefinition`) |
+| API Gateway | Cloudflare Workers (roteamento via `RouteDefinition`); helpers em `app-helpers.ts` e `index-helpers.ts` |
 | Auth | Standard Native Auth 1.6.11 — Drizzle adapter, plugin `organization`, plugin `admin` |
 | Banco transacional | Neon PostgreSQL via Drizzle ORM |
 | Storage | Cloudflare R2 (documentos de cliente, evidências, artefatos, relatórios) |
@@ -31,7 +31,7 @@ Todo comportamento de valor está na API. O frontend é apenas um consumidor. In
 | SCF Core | `packages/scf-core` + `packages/scf-catalog` — 1.468 controles, fonte normativa |
 | Observability | `packages/observability` — `StructuredLogger`, `MetricsService` (janela 1h) |
 | Schemas compartilhados | `packages/schemas` — contratos TypeScript estrito para toda a API |
-| Assessment Engine | `packages/assessment-engine` — regras do lifecycle isoladas de UI |
+| Assessment Engine | `packages/assessment-engine` — regras do lifecycle isoladas de UI; prerequisite lookup table declarativo |
 
 ---
 
@@ -82,6 +82,9 @@ Todos os endpoints de aplicação seguem o prefixo `/api/v1`. O Standard Native 
 
 ### API-first
 Todo valor reutilizável existe como API, serviço, pacote ou contrato. Frontend, integrações e automações são consumidores — nunca fontes de lógica crítica.
+
+### Declarative-first patterns
+Prerequisites (assessment-engine), council agent routing (agent-runtime) e validation rules (gap-analysis, poam) usam tabelas/mapas declarativos em vez de cadeias imperativas. Isso reduz complexidade ciclomática e facilita adição de novas regras sem alterar lógica de controle.
 
 ### Multi-tenancy por design
 Nenhum fluxo crítico sem `organization_id`, `organization_id` e `assessment_id`. Isolamento preservado em banco, storage (R2 keys), Vectorize namespaces, cache e logs.

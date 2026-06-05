@@ -55,6 +55,10 @@ Versões usam `draft`, `under_review`, `approved`, `superseded` e `archived`. Ac
 
 Ausência de evidência indica que a KB consultada não trouxe material suficiente. Isso não prova que o controle não existe ou não foi implementado. `not_met` só deve ser usado quando houver evidência explícita de não atendimento ou lacuna clara com rationale.
 
+## Validação Declarativa
+
+O módulo `gap-validation.service.ts` implementa regras de validação via **lista declarativa composível**. Cada regra é uma função pura que recebe um gap finding e retorna erros de validação. Adicionar uma nova regra requer apenas inserir uma entrada na lista — sem alterar lógica de controle. Isso reduz a complexidade ciclomática e facilita testes unitários isolados.
+
 ## Fluxo de Criação
 
 1. O serviço recebe `assessment_id` e `soa_version_id`.

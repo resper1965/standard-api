@@ -6,9 +6,10 @@ O Standard é API-first, SaaS-ready, multi-organization e Cloudflare-oriented. O
 
 ## Camadas Principais
 
-- API Gateway: endpoints versionados, auth, RBAC, organization guard e validação.
-- Assessment Engine: state machine, transitions, approval gates e invariantes.
-- Packages: schemas, domain, contracts, SCF core, SCF catalog, KB, SoA, Gap, POA&M, Reporting, Security, Observability e Agent Runtime.
+- API Gateway: endpoints versionados, auth, RBAC, organization guard e validação. Helpers em `app-helpers.ts` (rotas) e `index-helpers.ts` (bootstrap).
+- Assessment Engine: state machine, transitions, approval gates, invariantes e prerequisite lookup table declarativo.
+- Agent Runtime: Council com dispatch map pattern para roteamento de agentes.
+- Packages: schemas, domain, contracts, SCF core, SCF catalog, KB, SoA, Gap (validação declarativa), POA&M (validação e action-type declarativos), Reporting, Security, Observability e Agent Runtime.
 - Data Layer: Dependência fixa em PostgreSQL transacional (via Drizzle ORM) para Lifecycle artifacts, Standard Native Auth, persistência de Orquestração, Logs de Auditoria e Estado de Agent Runs. O armazenamento de docs usa R2, e KB apoia-se em Vectorize.
 ## Princípios
 
