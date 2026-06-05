@@ -33,7 +33,7 @@ const evidenceSchema = {
 };
 
 export class EvidenceEvaluatorUseCase {
-  constructor(private provider: LlmProvider, private defaultModel: string = "gpt-4o") {}
+  constructor(private provider: LlmProvider, private defaultModel: string = "dynamic/evidence-evaluation") {}
 
   async evaluate(input: EvidenceEvaluationInput): Promise<EvidenceEvaluationOutput> {
     const systemPrompt = `You are a Senior SCF Auditor. Evaluate submitted evidence against a control requirement.

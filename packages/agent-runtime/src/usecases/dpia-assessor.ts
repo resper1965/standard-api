@@ -39,7 +39,7 @@ const dpiaSchema = {
 };
 
 export class DpiaAssessorUseCase {
-  constructor(private provider: LlmProvider, private defaultModel: string = "gpt-4o") {}
+  constructor(private provider: LlmProvider, private defaultModel: string = "dynamic/critical-analysis") {}
 
   async assess(input: DpiaAssessorInput): Promise<DpiaAssessorOutput> {
     const systemPrompt = `You are a Senior Privacy Analyst validating a Data Protection Impact Assessment (DPIA/RIPD).

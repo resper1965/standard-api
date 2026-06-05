@@ -37,7 +37,7 @@ const vendorScannerSchema = {
 };
 
 export class VendorScannerUseCase {
-  constructor(private provider: LlmProvider, private defaultModel: string = "gpt-4o") {}
+  constructor(private provider: LlmProvider, private defaultModel: string = "dynamic/critical-analysis") {}
 
   async scan(input: VendorScannerInput): Promise<VendorScannerOutput> {
     const systemPrompt = `You are a DPO Attorney specializing in LGPD and GDPR Vendor Risk Management, acting as "Contract Screener".
