@@ -5,7 +5,8 @@ Este documento descreve o modelo transacional consolidado para o Enterprise-Grad
 
 O modelo foi organizado em domínios:
 
-- Tenancy e Auth: O sistema adota rigorosamente a arquitetura estendida do Standard Native Auth. `user`, `session`, `account`, `verification`, `organization`, `member`, `invitation`, `jwks` e `apikey` consolidam identidades, cross-tenancy, sessões web e tokens M2M.- Assessment: `assessments`, `assessment_frameworks`, `assessment_events`, `approval_events`.
+- Tenancy e Auth: O sistema adota rigorosamente a arquitetura 1:1 User=Tenant. `users`, `organizations`, `api_keys` consolidam identidades, cross-tenancy e tokens M2M.
+- Assessment: `assessments`, `assessment_frameworks`, `assessment_events`, `approval_events`.
 - Documentos e KB: `documents`, `document_versions`, `document_chunks`, `document_extraction_jobs`, `kb_entries`, `vector_references`.
 - SCF estruturado: `scf_versions`, `scf_domains`, `scf_controls`, `scf_frameworks`, `scf_framework_requirements`, `scf_mappings`, `scf_strm_relationships`, `scf_control_metadata`.
 - Escopo e SoA: `assessment_scope`, `soa_versions`, `soa_items`.
@@ -28,7 +29,7 @@ Implementação:
 ```text
 organization
   -> organizations
-  -> memberships -> users + roles
+  -> users
   -> assessments
        -> assessment_frameworks -> scf_frameworks
        -> documents -> document_versions -> document_chunks

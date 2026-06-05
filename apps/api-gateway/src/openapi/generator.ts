@@ -1,8 +1,25 @@
 import { OpenApiGeneratorV3 } from "@asteasolutions/zod-to-openapi";
 import { registry } from "./registry";
-import { routes } from "../app";
+import type { RouteDefinition } from "../http";
 
 let cachedSpec: any = null;
+
+/**
+ * Registers all routes with OpenAPI configurations into the central registry.
+ * This should be called once at startup (e.g., from app.ts) to break circular dependencies.
+ */
+export function registerRoutesForOpenApi(routes: RouteDefinition[]) {
+  routes.forEach(route => {
+    if (route.openapi) {
+      const openapiPath = route.path.replace(/:([a-zA-Z0-9_]+)/g, "{$1}");
+      registry.registerPath({
+        method: route.method.toLowerCase() as any,
+        path: openapiPath,
+        ...route.openapi
+      });
+    }
+  });
+}
 
 /**
  * Dynamically generates the final OpenAPI specification JSON by aggregating 
@@ -12,19 +29,6 @@ export function generateOpenApiSpec() {
   if (cachedSpec) {
     return cachedSpec;
   }
-  // Dynamically register modern API-First routes from Hono routes wrapper
-  routes.forEach(route => {
-    if (route.openapi) {
-      // Replace Express-style `:param` with OpenAPI-style `{param}`
-      const openapiPath = route.path.replace(/:([a-zA-Z0-9_]+)/g, "{$1}");
-      
-      registry.registerPath({
-        method: route.method.toLowerCase() as any,
-        path: openapiPath,
-        ...route.openapi
-      });
-    }
-  });
 
   const generator = new OpenApiGeneratorV3(registry.definitions);
   

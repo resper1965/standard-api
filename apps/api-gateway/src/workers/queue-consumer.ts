@@ -81,6 +81,144 @@ const assertTenantIntegrity = (payload: SocTriagePayload): void => {
 
 // ──── Consumer Export ────
 
+async function processMessage(
+  message: QueueMessage,
+  audit: { record: (event: string, payload: any) => Promise<void> },
+  llm: any
+): Promise<void> {
+  const raw = message.body;
+  const msgStartedAt = Date.now();
+
+  // ── Step 0: Structural validation ──
+  if (!isSocTriagePayload(raw)) {
+    console.error(
+      `[soc:queue] ❌ Malformed payload — cannot parse. Sending to DLQ.`,
+      JSON.stringify(raw).slice(0, 200),
+    );
+    await audit.record("soc.dlq.event", {
+      reason: "malformed_payload",
+      raw_preview: JSON.stringify(raw).slice(0, 500),
+      timestamp: new Date().toISOString(),
+    });
+    message.ack(); // Don't retry garbage — it will never become valid.
+    return;
+  }
+
+  const payload = raw;
+
+  try {
+    // ── Step 1: Tenant Integrity Gate ──
+    assertTenantIntegrity(payload);
+
+    // ── Step 2: LLM Triage ──
+    console.log(
+      `[soc:queue] 🔍 Processing job ${payload.job_id} for tenant ${payload.organizationId} (trace: ${payload.traceId})`,
+    );
+    const usecase = new IncidentTriagerUseCase(llm as any);
+    const result = await usecase.triage({
+      systemModuleName: payload.systemModuleName,
+      rawLogsExcerpt: payload.rawLogsExcerpt,
+      organizationId: payload.organizationId,
+    });
+
+    // ── Step 3: Audit success ──
+    await audit.record("soc.incident.triaged", {
+      job_id: payload.job_id,
+      organization_id: payload.organizationId,
+      trace_id: payload.traceId,
+      module: payload.systemModuleName,
+      severity: result.severity_level,
+      is_false_positive: result.is_false_positive,
+      requires_dpo_notification: result.requires_dpo_breach_notification,
+      processed_by: "queue-consumer",
+      timestamp: new Date().toISOString(),
+    });
+
+    console.log(
+      `[soc:queue] ✅ Job ${payload.job_id} completed. Severity: ${result.severity_level}`,
+    );
+
+    // ── Metric: successful processing duration ──
+    const processingMs = Date.now() - msgStartedAt;
+    console.log(JSON.stringify({
+      metric: "queue.processing.duration_ms",
+      queue: "SOC_TRIAGE_QUEUE",
+      outcome: "success",
+      value: processingMs,
+      organization_id: payload.organizationId,
+      trace_id: payload.traceId,
+      job_id: payload.job_id,
+      timestamp: new Date().toISOString(),
+    }));
+
+    message.ack();
+  } catch (error) {
+    const isFatal =
+      error instanceof TenantMismatchError ||
+      (message.attempts ?? 0) >= 3;
+
+    if (isFatal) {
+      // ── DLQ: Grave no banco, não tente de novo ──
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown fatal error";
+      const errorName =
+        error instanceof Error ? error.name : "UnknownError";
+
+      console.error(
+        `[soc:queue] ☠️ POISONED — Job ${payload.job_id} sent to DLQ after ${message.attempts ?? "?"} attempts. Reason: ${errorName}`,
+      );
+
+      await audit.record("soc.dlq.event", {
+        job_id: payload.job_id,
+        organization_id: payload.organizationId,
+        trace_id: payload.traceId,
+        module: payload.systemModuleName,
+        error_name: errorName,
+        error_message: errorMessage,
+        attempts: message.attempts ?? 0,
+        is_tenant_mismatch: error instanceof TenantMismatchError,
+        status: "poisoned_dlq",
+        timestamp: new Date().toISOString(),
+      });
+
+      message.ack(); // Acknowledge to stop retries — it's in the DB now.
+
+      // ── Metric: DLQ processing duration ──
+      console.log(JSON.stringify({
+        metric: "queue.processing.duration_ms",
+        queue: "SOC_TRIAGE_QUEUE",
+        outcome: "dlq",
+        value: Date.now() - msgStartedAt,
+        organization_id: payload.organizationId,
+        trace_id: payload.traceId,
+        job_id: payload.job_id,
+        timestamp: new Date().toISOString(),
+      }));
+    } else {
+      // ── Transient failure: let Cloudflare retry ──
+      const errMsg =
+        error instanceof Error ? error.message : String(error);
+      console.warn(
+        `[soc:queue] ⚠️ Job ${payload.job_id} failed (attempt ${message.attempts ?? "?"}). Will retry. Error: ${errMsg}`,
+      );
+
+      // ── Metric: retry processing duration ──
+      console.log(JSON.stringify({
+        metric: "queue.processing.duration_ms",
+        queue: "SOC_TRIAGE_QUEUE",
+        outcome: "retry",
+        value: Date.now() - msgStartedAt,
+        organization_id: payload.organizationId,
+        trace_id: payload.traceId,
+        job_id: payload.job_id,
+        timestamp: new Date().toISOString(),
+      }));
+
+      message.retry();
+    }
+  }
+}
+
 export default {
   async queue(
     batch: MessageBatch,
@@ -110,137 +248,7 @@ export default {
           })();
 
     for (const message of batch.messages) {
-      const raw = message.body;
-      const msgStartedAt = Date.now();
-
-      // ── Step 0: Structural validation ──
-      if (!isSocTriagePayload(raw)) {
-        console.error(
-          `[soc:queue] ❌ Malformed payload — cannot parse. Sending to DLQ.`,
-          JSON.stringify(raw).slice(0, 200),
-        );
-        await audit.record("soc.dlq.event", {
-          reason: "malformed_payload",
-          raw_preview: JSON.stringify(raw).slice(0, 500),
-          timestamp: new Date().toISOString(),
-        });
-        message.ack(); // Don't retry garbage — it will never become valid.
-        continue;
-      }
-
-      const payload = raw;
-
-      try {
-        // ── Step 1: Tenant Integrity Gate ──
-        assertTenantIntegrity(payload);
-
-        // ── Step 2: LLM Triage ──
-        console.log(
-          `[soc:queue] 🔍 Processing job ${payload.job_id} for tenant ${payload.organizationId} (trace: ${payload.traceId})`,
-        );
-        const usecase = new IncidentTriagerUseCase(llm as any);
-        const result = await usecase.triage({
-          systemModuleName: payload.systemModuleName,
-          rawLogsExcerpt: payload.rawLogsExcerpt,
-          organizationId: payload.organizationId,
-        });
-
-        // ── Step 3: Audit success ──
-        await audit.record("soc.incident.triaged", {
-          job_id: payload.job_id,
-          organization_id: payload.organizationId,
-          trace_id: payload.traceId,
-          module: payload.systemModuleName,
-          severity: result.severity_level,
-          is_false_positive: result.is_false_positive,
-          requires_dpo_notification: result.requires_dpo_breach_notification,
-          processed_by: "queue-consumer",
-          timestamp: new Date().toISOString(),
-        });
-
-        console.log(
-          `[soc:queue] ✅ Job ${payload.job_id} completed. Severity: ${result.severity_level}`,
-        );
-
-        // ── Metric: successful processing duration ──
-        const processingMs = Date.now() - msgStartedAt;
-        console.log(JSON.stringify({
-          metric: "queue.processing.duration_ms",
-          queue: "SOC_TRIAGE_QUEUE",
-          outcome: "success",
-          value: processingMs,
-          organization_id: payload.organizationId,
-          trace_id: payload.traceId,
-          job_id: payload.job_id,
-          timestamp: new Date().toISOString(),
-        }));
-
-        message.ack();
-      } catch (error) {
-        const isFatal =
-          error instanceof TenantMismatchError ||
-          (message.attempts ?? 0) >= 3;
-
-        if (isFatal) {
-          // ── DLQ: Grave no banco, não tente de novo ──
-          const errorMessage =
-            error instanceof Error ? error.message : "Unknown fatal error";
-          const errorName =
-            error instanceof Error ? error.name : "UnknownError";
-
-          console.error(
-            `[soc:queue] ☠️ POISONED — Job ${payload.job_id} sent to DLQ after ${message.attempts ?? "?"} attempts. Reason: ${errorName}`,
-          );
-
-          await audit.record("soc.dlq.event", {
-            job_id: payload.job_id,
-            organization_id: payload.organizationId,
-            trace_id: payload.traceId,
-            module: payload.systemModuleName,
-            error_name: errorName,
-            error_message: errorMessage,
-            attempts: message.attempts ?? 0,
-            is_tenant_mismatch: error instanceof TenantMismatchError,
-            status: "poisoned_dlq",
-            timestamp: new Date().toISOString(),
-          });
-
-          message.ack(); // Acknowledge to stop retries — it's in the DB now.
-
-          // ── Metric: DLQ processing duration ──
-          console.log(JSON.stringify({
-            metric: "queue.processing.duration_ms",
-            queue: "SOC_TRIAGE_QUEUE",
-            outcome: "dlq",
-            value: Date.now() - msgStartedAt,
-            organization_id: payload.organizationId,
-            trace_id: payload.traceId,
-            job_id: payload.job_id,
-            timestamp: new Date().toISOString(),
-          }));
-        } else {
-          // ── Transient failure: let Cloudflare retry ──
-          const errMsg =
-            error instanceof Error ? error.message : String(error);
-          console.warn(
-            `[soc:queue] ⚠️ Job ${payload.job_id} failed (attempt ${message.attempts ?? "?"}). Will retry. Error: ${errMsg}`,
-          );
-
-          // ── Metric: retry processing duration ──
-          console.log(JSON.stringify({
-            metric: "queue.processing.duration_ms",
-            queue: "SOC_TRIAGE_QUEUE",
-            outcome: "retry",
-            value: Date.now() - msgStartedAt,
-            organization_id: payload.organizationId,
-            trace_id: payload.traceId,
-            job_id: payload.job_id,
-            timestamp: new Date().toISOString(),
-          }));
-
-          message.retry();
-        }
-      }
+      await processMessage(message as QueueMessage, audit, llm);
     }
   },
 };

@@ -27,7 +27,6 @@ export const baUser = pgTable("user", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   // Admin plugin fields
-  role: text("role").default("member"),  // ADR-AUTH-001: was 'user' (invalid). Corrected to 'member'.
   banned: boolean("banned").default(false),
   banReason: text("ban_reason"),
   banExpires: timestamp("ban_expires"),
@@ -54,8 +53,6 @@ export const baSession = pgTable("session", {
   userId: text("user_id").notNull().references(() => baUser.id, { onDelete: "cascade" }),
   // Admin plugin
   impersonatedBy: text("impersonated_by"),
-  // Organization plugin
-  activeOrganizationId: text("active_organization_id"),
 }, (table) => [
   index("ba_session_user_idx").on(table.userId),
   index("ba_session_token_idx").on(table.token),
@@ -87,53 +84,6 @@ export const baVerification = pgTable("verification", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
-
-// ── Organization Plugin Tables ────────────────────────────────────────
-
-export const baOrganization = pgTable("organization", {
-  id: text("id").primaryKey(),
-  name: text("name").notNull(),
-  slug: text("slug").unique(),
-  logo: text("logo"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  metadata: text("metadata"),
-  // Billing & contact fields for invoicing
-  taxId: text("tax_id"),              // CNPJ / Tax ID
-  billingEmail: text("billing_email"),
-  phone: text("phone"),
-  address: text("address"),
-  city: text("city"),
-  state: text("state"),
-  country: text("country"),
-  postalCode: text("postal_code"),
-  industry: text("industry"),
-  employeeCount: text("employee_count"),
-});
-
-export const baMember = pgTable("member", {
-  id: text("id").primaryKey(),
-  organizationId: text("organization_id").notNull().references(() => baOrganization.id, { onDelete: "cascade" }),
-  userId: text("user_id").notNull().references(() => baUser.id, { onDelete: "cascade" }),
-  role: text("role").notNull().default("member"),
-  teamId: text("team_id"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-}, (table) => [
-  index("ba_member_org_idx").on(table.organizationId),
-  index("ba_member_user_idx").on(table.userId),
-]);
-
-export const baInvitation = pgTable("invitation", {
-  id: text("id").primaryKey(),
-  organizationId: text("organization_id").notNull().references(() => baOrganization.id, { onDelete: "cascade" }),
-  email: text("email").notNull(),
-  role: text("role"),
-  status: text("status").notNull().default("pending"),
-  expiresAt: timestamp("expires_at").notNull(),
-  inviterId: text("inviter_id").notNull().references(() => baUser.id, { onDelete: "cascade" }),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-}, (table) => [
-  index("ba_invitation_org_idx").on(table.organizationId),
-]);
 
 // ── API Key Plugin Tables ─────────────────────────────────────────────
 

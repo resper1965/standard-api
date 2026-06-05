@@ -1,4 +1,4 @@
-﻿---
+---
 title: "Security, Auth and RBAC"
 ---
 
@@ -57,8 +57,7 @@ Regra: `organization_id` vindo do body nunca é suficiente isoladamente. Diverg�
 Roles iniciais:
 
 - `owner`
-- `admin`
-- `member`
+- `contributor`
 - `auditor`
 - `system`
 
@@ -162,7 +161,7 @@ Não logar documento completo, chunks completos, prompt completo, tokens, secret
 ## Maturidade do MVP Enterprise-Grade
 
 - **Auth real (Session e DB Persistence):** Utiliza Standard Native Auth (`@standard-native-auth/api-key` encapsulados no PostgreSQL pelo Schema Drizzle).
-- **Membership context:** Standard Native Auth provê multi-organization assignment e organizações associadas nas claims.
+- **Tenant Context:** O sistema implementa o modelo 1:1 User=Tenant. Não há assignment multi-organization no core do MVP API-first. A identidade está atrelada à API Key gerada para o Tenant.
 - **RBAC Ativo:** Funcionalidades seguras integradas via `rbac.middleware.ts` para checar `context.auth.roles`.
 - **API Keys / Revogações:** Plugin nativo que interage com as tabelas na DB garantindo segurança transacional.
 - Toda lógica in-memory simulada foi deprecada na fase Enterprise-Grade e desativada nas rotas de produção operando na porta 3000 do Gateway.

@@ -1,4 +1,4 @@
-﻿---
+---
 title: "Standard API — Cookbook"
 ---
 
@@ -255,21 +255,7 @@ curl -X POST https://standard-api.bekaa.eu/api/v1/assessments/{id}/lifecycle/tra
 
 ---
 
-## 👥 Membros / 🔑 API Keys
-
-### Listar membros
-```bash
-curl https://standard-api.bekaa.eu/api/v1/organizations/{orgId}/members \
-  -H "Cookie: ..." -H "x-standard-organization-id: {orgId}"
-```
-
-### Convidar membro
-```bash
-curl -X POST https://standard-api.bekaa.eu/api/v1/organizations/{orgId}/members/invite \
-  -H "Content-Type: application/json" \
-  -H "Cookie: ..." -H "x-standard-organization-id: {orgId}" \
-  -d '{"email": "analyst@co.com", "role": "member"}'
-```
+## 🔑 API Keys
 
 ### Criar API key
 ```bash
