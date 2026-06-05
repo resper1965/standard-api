@@ -128,7 +128,7 @@ export const resolveAuthContext = async (
       // New users are created with approved=false. Block access until a
       // platform admin approves the account. Platform admins themselves
       // are always allowed through.
-      const isPlatformAdminUser = user.platformAdmin === true || (user as any).platform_admin === true;
+      const isPlatformAdminUser = user.platformAdmin === true || user.platform_admin === true;
       if (user.approved === false && !isPlatformAdminUser) {
         logger.log({
           level: "warn",
@@ -177,7 +177,7 @@ export const resolveAuthContext = async (
           email: user.email,
           name: user.name,
           role: user.role ?? "viewer",
-          platformAdmin: user.platformAdmin ?? (user as any).platform_admin ?? false,
+          platformAdmin: user.platformAdmin ?? user.platform_admin ?? false,
           approved: user.approved ?? false,
         },
         session: {
