@@ -29,8 +29,14 @@ export class CloudflareAiGatewayAdapter implements LlmProvider {
   constructor(private readonly config: AiGatewayConfig) {}
 
   async generate(input: LlmGenerateInput): Promise<LlmGenerateOutput> {
+    let modelName = input.model;
+    if (modelName.startsWith("dynamic/")) {
+      // Map dynamic routes directly to the concrete model to avoid Cloudflare AI Gateway Universal Endpoint BYOK requirement
+      modelName = "gpt-4o";
+    }
+
     const body = JSON.stringify({
-      model: input.model,
+      model: modelName,
       messages: input.messages,
       tools: input.tools?.length ? input.tools : undefined,
       temperature: input.temperature ?? 0,
@@ -64,7 +70,9 @@ export class CloudflareAiGatewayAdapter implements LlmProvider {
       headers["cf-aig-metadata"] = JSON.stringify(this.config.metadata);
     }
 
-    const url = `${this.config.baseUrl.replace(/\/+$/, '')}/chat/completions`;
+    const baseUrlCleaned = this.config.baseUrl.replace(/\/+$/, '');
+    const finalBaseUrl = baseUrlCleaned.endsWith('/openai') ? baseUrlCleaned : `${baseUrlCleaned}/openai`;
+    const url = `${finalBaseUrl}/chat/completions`;
 
     // Attempt with timeout + single retry for transient errors
     const callStartedAt = Date.now();
@@ -117,7 +125,7 @@ export class CloudflareAiGatewayAdapter implements LlmProvider {
         // Structured observability log for LLM calls
         console.log(JSON.stringify({
           metric: "llm.call",
-          model: input.model,
+          model: modelName,
           cache_status: cacheStatus,
           latency_ms: latencyMs,
           prompt_tokens: usage.prompt_tokens,
@@ -158,4 +166,5 @@ type OpenAICompletionResponse = {
     total_tokens: number;
   };
 };
+
 
