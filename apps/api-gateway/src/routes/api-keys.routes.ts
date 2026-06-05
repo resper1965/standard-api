@@ -2,7 +2,7 @@ import { z } from "zod";
 import { extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
 extendZodWithOpenApi(z);
 import { M2mScopesArraySchema } from "@standard/schemas";
-import type { RouteDefinition } from "../http";
+import type { RouteDefinition, RequestContext } from "../http";
 import { json } from "../http";
 import { ApiError } from "../errors/api-error";
 
@@ -22,7 +22,7 @@ const updateApiKeyInput = z.object({
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Shared helper: resolve Standard Native Auth orgId → Standard UUIDs and block M2M self-management */
-async function resolveOrgCtx(context: any, organizationId: string) {
+async function resolveOrgCtx(context: RequestContext, organizationId: string) {
   if (context.actorId?.startsWith("m2m:")) {
     throw new ApiError("FORBIDDEN", "M2M agents cannot manage API keys.", 403);
   }
