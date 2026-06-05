@@ -242,11 +242,18 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
 
     const securityHeaders: Record<string, string> = {
       ...corsHeaders,
+      // ── OWASP Enterprise-Grade Security Headers ──────────────
+      "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",
       "X-Content-Type-Options": "nosniff",
       "X-Frame-Options": "DENY",
-      "X-XSS-Protection": "1; mode=block",
-      "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+      "X-XSS-Protection": "0", // Deprecated; CSP is the modern replacement
       "Content-Security-Policy": cspValue,
+      "Referrer-Policy": "strict-origin-when-cross-origin",
+      "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=()",
+      "X-Download-Options": "noopen",
+      "X-Permitted-Cross-Domain-Policies": "none",
+      "Cross-Origin-Opener-Policy": "same-origin",
+      "Cross-Origin-Resource-Policy": "same-origin",
     };
 
     // Helper to attach headers to any response

@@ -1,0 +1,5 @@
+Contact: mailto:security@standard-grc.com
+Expires: 2027-06-01T00:00:00.000Z
+Preferred-Languages: en, pt-BR
+Canonical: https://standard-api.bekaa.eu/.well-known/security.txt
+Policy: https://github.com/resper1965/standard-api/security/policy

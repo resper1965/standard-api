@@ -1,56 +1,35 @@
 version: 2
 updates:
+  # ─── npm (pnpm) dependencies ──────────────────────────────────
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
       interval: "weekly"
       day: "monday"
-    open-pull-requests-limit: 10
-    labels:
-      - "dependencies"
-      - "automated"
-    reviewers:
-      - "resper1965"
-    commit-message:
-      prefix: "chore(deps):"
-    # Block major version bumps on core deps that require manual migration
-    ignore:
-      - dependency-name: "zod"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "drizzle-orm"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "drizzle-kit"
-        update-types: ["version-update:semver-major"]
-      # Standard Native Auth — npm package is 'better-auth', block major bumps
-      - dependency-name: "better-auth"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "@hono/*"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "typescript"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "@types/node"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "tailwindcss"
-        update-types: ["version-update:semver-major"]
     groups:
-      production-dependencies:
-        dependency-type: "production"
-        exclude-patterns:
-          - "zod"
-          - "drizzle-*"
-          - "better-auth"  # Standard Native Auth — npm package name
-      development-dependencies:
-        dependency-type: "development"
+      minor-and-patch:
+        update-types: ["minor", "patch"]
+    open-pull-requests-limit: 10
+    labels: ["dependencies", "automated"]
+    commit-message:
+      prefix: "deps"
+      include: "scope"
 
+  # ─── GitHub Actions ───────────────────────────────────────────
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
       day: "monday"
-    labels:
-      - "ci/cd"
-      - "automated"
-    reviewers:
-      - "resper1965"
+    labels: ["ci", "automated"]
     commit-message:
-      prefix: "chore(ci):"
+      prefix: "ci"
+
+  # ─── Docker (infra) ──────────────────────────────────────────
+  - package-ecosystem: "docker"
+    directory: "/infra/docker"
+    schedule:
+      interval: "monthly"
+    labels: ["infrastructure", "automated"]
+    commit-message:
+      prefix: "infra"
