@@ -8,7 +8,7 @@ compatibility_flags = [ "nodejs_compat" ]
 STANDARD_ENV = "development"
 LOG_LEVEL = "info"
 AI_GATEWAY_NAME = "standard-dev"
-AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/0a6c490dd5fe9051422c15c9e133138e/standard-dev/openai"
+AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/0a6c490dd5fe9051422c15c9e133138e/standard-dev"
 
 [[queues.consumers]]
 queue = "standard-kb-embedding-dev"
@@ -85,7 +85,7 @@ crons = ["0 2 * * SUN"]
 STANDARD_ENV = "staging"
 LOG_LEVEL = "info"
 AI_GATEWAY_NAME = "standard-staging"
-AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/0a6c490dd5fe9051422c15c9e133138e/standard-staging/openai"
+AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/0a6c490dd5fe9051422c15c9e133138e/standard-staging"
 
 [[env.staging.queues.consumers]]
 queue = "standard-agent-run-staging"
@@ -165,7 +165,7 @@ crons = ["0 2 * * SUN"]
 STANDARD_ENV = "production"
 LOG_LEVEL = "info"
 AI_GATEWAY_NAME = "standard-prod"
-AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/0a6c490dd5fe9051422c15c9e133138e/standard-prod/openai"
+AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/0a6c490dd5fe9051422c15c9e133138e/standard-prod"
 
 
 [[env.production.queues.consumers]]
