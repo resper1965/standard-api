@@ -38,7 +38,7 @@ const boardTranslatorSchema = {
 };
 
 export class BoardTranslatorUseCase {
-  constructor(private provider: LlmProvider, private defaultModel: string = "gpt-4o-mini") {}
+  constructor(private provider: LlmProvider, private defaultModel: string = "dynamic/assessment-general") {}
 
   async translate(input: BoardTranslatorInput): Promise<BoardTranslatorOutput> {
     const systemPrompt = `You are the virtual CISO/DPO of a large corporation, acting as a "Board Translator".
