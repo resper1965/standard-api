@@ -65,10 +65,50 @@ export const assertRbac = async (context: RequestContext, requiredPermissions: P
   let allowed = true;
   let reason = "";
   
-  // Application is API-first: any valid session/API key for the tenant has full access.
+  // Step 1: Verify auth context exists
   if (!context.auth && !context.session && !context.m2mScopes) {
     allowed = false;
     reason = "missing_auth_context";
+  }
+
+  // Step 2: Check that the actor's permissions include ALL required permissions.
+  // M2M scopes are checked first (API keys); then auth.permissions (session-based roles).
+  if (allowed && requiredPermissions.length > 0) {
+    // M2M wildcard key bypass: empty scopes array = full access (all permissions granted).
+    // This is by design: scope.middleware.ts already validates scoped keys; RBAC respects the convention.
+    if (context.m2mScopes && context.m2mScopes.length === 0) {
+      return; // Wildcard M2M key — bypass all permission checks
+    }
+
+    const actorPermissions: string[] = [];
+
+    // M2M API key scopes (highest priority — explicit scope grants)
+    if (context.m2mScopes && context.m2mScopes.length > 0) {
+      actorPermissions.push(...context.m2mScopes);
+    }
+
+    // Auth context permissions (from MockAuthProvider or Standard Native Auth)
+    if (context.auth?.permissions) {
+      actorPermissions.push(...context.auth.permissions);
+    }
+
+    // Session-based role resolution: if we have a session but no auth.permissions,
+    // resolve permissions from the role via DEFAULT_ROLE_PERMISSIONS lookup.
+    // This covers Standard Native Auth sessions where permissions come from the user's role.
+    if (context.session?.user?.role && actorPermissions.length === 0) {
+      const { DEFAULT_ROLE_PERMISSIONS } = await import("@standard/security");
+      const rolePerms = DEFAULT_ROLE_PERMISSIONS[context.session.user.role as keyof typeof DEFAULT_ROLE_PERMISSIONS];
+      if (rolePerms) actorPermissions.push(...rolePerms);
+    }
+
+    const missingPermissions = requiredPermissions.filter(
+      (perm) => !actorPermissions.includes(perm)
+    );
+
+    if (missingPermissions.length > 0) {
+      allowed = false;
+      reason = "insufficient_permissions";
+    }
   }
 
   if (!allowed) {
