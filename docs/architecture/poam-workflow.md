@@ -39,6 +39,10 @@ Mapeamento inicial de ação:
 - `governance_gap`: `governance_improvement`
 - `contractual_gap`: `third_party_action`
 
+## Validação e Mapeamento Declarativos
+
+Os serviços `poam-validation.service.ts` e `poam-prioritization.service.ts` usam **listas declarativas** de regras. Validação por item é definida como uma lista de regras composíveis executadas em sequência. O mapeamento de `action_type` (ex.: `evidence_collection`, `technical_implementation`) é uma tabela declarativa indexada por tipo de gap. Adicionar novas regras ou tipos de ação requer apenas inserir uma entrada — sem alterar lógica de controle.
+
 ## Priorização
 
 A prioridade considera severidade, tipo de gap, confiança de evidência, maturidade e metadados SCF disponíveis. Regras conservadoras do MVP:

@@ -69,7 +69,8 @@ export const createTestClient = () => {
     const orgResult = await send("/api/v1/organizations", "POST", {
       organization_id: organizationId,
       slug,
-      name: "Org Test"
+      name: "Org Test",
+      user_id: ids.actorId
     }, {
       "x-standard-tenant-id": organizationId,
       "x-standard-actor-id": ids.actorId

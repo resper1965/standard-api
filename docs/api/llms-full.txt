@@ -17,7 +17,7 @@ Authorization: Bearer standard_live_abc123def456
 
 - **Bearer API Key**: Machine-to-machine key from the dashboard (prefix: \`standard_live_\` or \`standard_test_\`)
 - **Session Cookie**: Alternative — set by Standard Native Auth after \`POST /api/auth/sign-in/email\`
-- **Tenant Header**: Your organization ID from Standard Native Auth (format: \`org_xxxxx\`, required for all data-scoped endpoints)
+- **Organization Resolution**: Automatically resolved from API Key or Session. No custom headers required. All data-scoped endpoints are isolated by \`organizationId\`.
 
 ## Internationalization (i18n)
 
@@ -618,11 +618,11 @@ curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/kb/search \\
 
 ### Cookbook: Audit Trail (read-only)
 
-> All API operations are automatically logged. Query audit logs per tenant or organization.
+> All API operations are automatically logged. Query audit logs per organization.
 
-**By tenant:**
+**By organization:**
 \`\`\`bash
-curl -X GET "${baseUrl}/api/v1/tenants/TENANT_ID/audit-logs?limit=50" \\
+curl -X GET "${baseUrl}/api/v1/organizations/YOUR_ORG_ID/audit-logs?limit=50" \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
  
 \`\`\`
@@ -635,7 +635,7 @@ curl -X GET "${baseUrl}/api/v1/tenants/TENANT_ID/audit-logs?limit=50" \\
 
 **Create Organization**
 
-Creates an organization under the authenticated tenant.
+Creates a new organization under the authenticated user's account.
 
 **Request Body:**
 ```json
@@ -650,11 +650,11 @@ Creates an organization under the authenticated tenant.
 
 ---
 
-### GET `/api/v1/tenants/{organizationId}/organizations`
+### GET `/api/v1/organizations`
 
-**List Organizations by Tenant**
+**List Organizations**
 
-Returns all organizations for the specified tenant.
+Returns all organizations accessible to the authenticated user.
 
 **200**: Organization list
 
@@ -766,7 +766,7 @@ Initiates an account deletion request. The account is flagged for deletion immed
 
 **SOC pipeline health status**
 
-Returns SOC monitoring pipeline status: queue binding health, alert service configuration, and pipeline readiness. A arquitetura é Multi-Tenant 1:1. Cada User_id é dono do seu Tenant. O Platform Admin é a única exceção global.
+Returns SOC monitoring pipeline status: queue binding health, alert service configuration, and pipeline readiness. A arquitetura é Multi-Organization. O Platform Admin cria a organização e cede acesso ao administrador.
 
 **200**: SOC pipeline status
 
@@ -820,7 +820,7 @@ Returns SOC monitoring pipeline status: queue binding health, alert service conf
 | SOA (Statement of Applicability) | \`/api/v1/soa/*\` | Draft, review, approve |
 | Scope | \`/api/v1/assessments/:id/scope\` | CRUD + review workflow |
 | TPRA (Third Party Risk) | \`/api/v1/tpra/*\` | Questionnaires, scoring, SCF mapping |
-| Tenants | \`/api/v1/tenants\` | CRUD (Platform Admin only. A arquitetura é Multi-Tenant 1:1. Cada User_id é dono do seu Tenant) |
+| Organizations | \`/api/v1/organizations\` | CRUD (Platform Admin only. A arquitetura é Multi-Organization. O Platform Admin cria a organização e cede acesso ao administrador) |
 | Webhooks | \`/api/v1/webhooks\` | CRUD + delivery logs |
 | Workflows | \`/api/v1/workflows/*\` | Start, cancel, resume, signal |
 | Reporting | \`/api/v1/reports\` | Generate assessments reports |

@@ -12,7 +12,7 @@
 
 Base URL: `https://standard-api.bekaa.eu`
 Auth: Bearer API key (`standard_live_...`) or session cookie
-Tenant/Organization: Automatically resolved from API Key or Session. No custom headers required.
+Organization: Automatically resolved from API Key or Session. No custom headers required.
 
 ## Sections
 
@@ -26,7 +26,7 @@ Tenant/Organization: Automatically resolved from API Key or Session. No custom h
 - [Reports](#reports): Generate, download, audit package
 - [Dashboard KPIs](#dashboard-kpis): Server-computed compliance metrics
 - [Audit Trail](#audit-trail): Organization-wide audit event log
-- [Tenancy](#tenancy): A arquitetura é Multi-Organization. O Platform Admin cria a organização e cede acesso ao administrador. Não existem members.
+- [Organizations](#organizations): A arquitetura é Multi-Organization. O Platform Admin cria a organização e cede acesso ao administrador. Não existem members.
 - [AI Agents](#ai-agents): 7 specialized agents
 - [Intelligence Council](#intelligence-council): Async multi-agent workflow dispatch
 - [Jobs](#jobs): Job polling for async jobs
@@ -37,5 +37,5 @@ Tenant/Organization: Automatically resolved from API Key or Session. No custom h
 
 ## Optional
 
-- [B2B Integration Guide](https://standard-api.bekaa.eu/docs/api/B2B_INTEGRATION_GUIDE.md): Tenant provisioning, SSO, white-label
+- [B2B Integration Guide](https://standard-api.bekaa.eu/docs/api/B2B_INTEGRATION_GUIDE.md): Organization provisioning, SSO, white-label
 - [Privacy SDK Guide](https://standard-api.bekaa.eu/docs/api/privacy-ropa-sdk.md): RoPA, DPIA, vendor scanning
