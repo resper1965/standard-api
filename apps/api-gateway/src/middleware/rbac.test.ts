@@ -64,7 +64,7 @@ function checkRbac(ctx: any, permissions: Permission[]): { allowed: boolean; rea
     const rawRole = ctx.session.user?.role ?? "viewer";
     const role = rawRole === "user" ? "member" : rawRole;
     for (const perm of permissions) {
-      const [resource, action] = perm.split(":");
+      const [resource = "", action = ""] = perm.split(":");
       if (!roleHasPermission(role, resource, action)) {
         return { allowed: false, reason: "permission_missing" };
       }
