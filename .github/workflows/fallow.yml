@@ -1,0 +1,77 @@
+# ──────────────────────────────────────────────────────────────────────
+# Fallow — Codebase Intelligence for TypeScript/JavaScript
+# https://github.com/marketplace/actions/fallow-codebase-intelligence
+#
+# Deterministic static analysis: unused code, duplication, circular deps,
+# complexity hotspots, and architecture boundary drift.
+# Rust-native, sub-second, zero-config framework support.
+# ──────────────────────────────────────────────────────────────────────
+
+name: Fallow Codebase Intelligence
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write   # For PR comments with analysis results
+
+concurrency:
+  group: fallow-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ─── Full Codebase Health Report (main only) ──────────────────────
+  codebase-health:
+    name: "🌾 Codebase Health Report"
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for hotspot analysis
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Run Fallow Health Analysis
+        run: npx -y fallow health --format json > fallow-health.json || true
+
+      - name: Run Fallow Full Analysis
+        run: npx -y fallow --format json > fallow-full.json || true
+
+      - name: Upload Fallow Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: fallow-codebase-report
+          path: |
+            fallow-health.json
+            fallow-full.json
+          retention-days: 30
+
+  # ─── PR Risk Audit (PRs only) ─────────────────────────────────────
+  pr-audit:
+    name: "🔍 PR Risk Audit"
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Run Fallow Audit on PR
+        run: npx -y fallow audit
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
