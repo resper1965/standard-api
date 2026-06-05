@@ -40,8 +40,15 @@ export interface StandardUser {
    * Platform-level admin flag (Bekaa operator).
    * Populated from `platform_admin` column via Standard Native Auth `additionalFields`.
    * Checked by `isPlatformAdmin()` in `rbac.middleware.ts`.
+   * camelCase variant set by Standard Native Auth additionalFields mapping.
    */
   platformAdmin?: boolean;
+  /**
+   * Snake_case variant of the platform admin flag.
+   * Standard Native Auth may serialize additionalFields as snake_case depending on
+   * plugin/serializer version. Both forms are declared so middleware never needs `as any`.
+   */
+  platform_admin?: boolean;
   /**
    * Account approval gate. New users default to `false` and require
    * platform admin approval before gaining access. Pre-existing users
