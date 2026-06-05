@@ -71,11 +71,16 @@ export const assertRbac = async (context: RequestContext, requiredPermissions: P
     reason = "missing_auth_context";
   } else if (context.m2mScopes) {
     // Machine-to-Machine API Key authentication
-    for (const reqPerm of requiredPermissions) {
-      if (!context.m2mScopes.includes(reqPerm)) {
-        allowed = false;
-        reason = "permission_missing";
-        break;
+    // Wildcard keys (empty scopes array) bypass all permission/scope checks
+    if (context.m2mScopes.length === 0) {
+      allowed = true;
+    } else {
+      for (const reqPerm of requiredPermissions) {
+        if (!context.m2mScopes.includes(reqPerm)) {
+          allowed = false;
+          reason = "permission_missing";
+          break;
+        }
       }
     }
   } else if (context.auth) {

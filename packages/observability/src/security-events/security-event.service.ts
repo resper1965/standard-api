@@ -27,12 +27,18 @@ export class SecurityEventService {
 
   async record(input: RecordSecurityEventInput): Promise<SecurityEventRecord> {
     assertMetadataSafe(input.metadata_safe ?? {});
+    const actorId = input.actor_id && isUuid(input.actor_id) ? input.actor_id : undefined;
+    const originalActorId = input.actor_id && !isUuid(input.actor_id) ? input.actor_id : undefined;
     return this.deps.securityEvents.create(SecurityEventRecordSchema.parse({
       id: crypto.randomUUID(),
       ...input,
       organization_id: input.organization_id && isUuid(input.organization_id) ? input.organization_id : undefined,
       assessment_id: input.assessment_id && isUuid(input.assessment_id) ? input.assessment_id : undefined,
-      metadata_safe: input.metadata_safe ?? {},
+      actor_id: actorId,
+      metadata_safe: {
+        ...(input.metadata_safe ?? {}),
+        ...(originalActorId ? { original_actor_id: originalActorId } : {})
+      },
       created_at: new Date().toISOString()
     }));
   }
