@@ -1,39 +1,34 @@
-# Platform — Core architecture and infrastructure
+# ──────────────────────────────────────────────────────────────────
+# CODEOWNERS — Standard API Monorepo
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+# ──────────────────────────────────────────────────────────────────
+
+# Default owner for everything
 * @resper1965
 
-# API Gateway — Routes, middleware, auth
-/apps/api-gateway/ @resper1965
+# ─── Critical Packages ──────────────────────────────────────────
+packages/assessment-engine/  @resper1965
+packages/scf-core/           @resper1965
+packages/scf-catalog/        @resper1965
+packages/agent-runtime/      @resper1965
+packages/observability/      @resper1965
+packages/schemas/            @resper1965
+packages/security/           @resper1965
+packages/domain/             @resper1965
+packages/contracts/          @resper1965
 
-# Frontend — Web application
-/apps/web/ @resper1965
+# ─── Applications ───────────────────────────────────────────────
+apps/api-gateway/            @resper1965
+apps/web/                    @resper1965
 
-# Domain packages — Business logic
-/packages/assessment-engine/ @resper1965
-/packages/domain/ @resper1965
-/packages/schemas/ @resper1965
+# ─── Workers ────────────────────────────────────────────────────
+workers/                     @resper1965
 
-# Security-critical
-/packages/security/ @resper1965
-/packages/observability/ @resper1965
-SECURITY.md @resper1965
+# ─── Infrastructure & CI/CD ─────────────────────────────────────
+infra/                       @resper1965
+.github/                     @resper1965
+scripts/                     @resper1965
 
-# SCF & Compliance
-/packages/scf-core/ @resper1965
-/packages/scf-catalog/ @resper1965
-/packages/soa/ @resper1965
-/packages/gap-analysis/ @resper1965
-/packages/poam/ @resper1965
-
-# AI & Agent Runtime
-/packages/agent-runtime/ @resper1965
-/packages/kb/ @resper1965
-
-# Infrastructure
-/infra/ @resper1965
-/.github/workflows/ @resper1965
-/workers/ @resper1965
-
-# Documentation
-/docs/ @resper1965
-README.md @resper1965
-CONTRIBUTING.md @resper1965
+# ─── Documentation ──────────────────────────────────────────────
+docs/                        @resper1965
+AGENTS.md                    @resper1965

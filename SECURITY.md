@@ -4,55 +4,64 @@
 
 | Version | Supported          |
 | ------- | ------------------ |
-| main    | :white_check_mark: |
-| < main  | :x:                |
+| 1.x     | ✅ Active support  |
+| < 1.0   | ❌ End of life     |
 
 ## Reporting a Vulnerability
 
-**Do NOT open public issues for security vulnerabilities.**
+We take security seriously at Standard. If you discover a security vulnerability, please report it responsibly.
 
-If you discover a security vulnerability within Standard API, please report it responsibly:
+### How to Report
 
-1. **Email**: Send a detailed report to **security@bekaa.eu**
-2. **Subject**: `[SECURITY] Standard API — <brief description>`
-3. **Include**:
-   - Description of the vulnerability
-   - Steps to reproduce
-   - Potential impact assessment
-   - Suggested fix (if any)
+**DO NOT** open a public GitHub issue for security vulnerabilities.
+
+1. **Email**: Send details to **security@standard-grc.com**
+2. **GitHub**: Use [GitHub Security Advisories](https://github.com/resper1965/standard-api/security/advisories/new) for private disclosure
+
+### What to Include
+
+- Description of the vulnerability
+- Steps to reproduce
+- Affected endpoints/components
+- Potential impact assessment
+- Suggested fix (if any)
 
 ### Response Timeline
 
-| Action                    | SLA          |
-| ------------------------- | ------------ |
-| Acknowledgment            | 24 hours     |
-| Initial assessment        | 72 hours     |
-| Fix development           | 7–14 days    |
-| Security advisory publish | After fix    |
+| Stage | SLA |
+|-------|-----|
+| Acknowledgment | **24 hours** |
+| Triage & severity assessment | **72 hours** |
+| Fix for critical/high | **7 days** |
+| Fix for medium/low | **30 days** |
+| Public disclosure | After fix is deployed |
 
-## Security Architecture
+### Scope
 
-Standard API implements defense-in-depth:
+**In scope:**
+- API Gateway (`standard-api.bekaa.eu`)
+- Authentication and authorization (API keys, RBAC, M2M)
+- Data isolation (multi-tenancy breaches)
+- SCF data integrity
+- Assessment lifecycle approval bypasses
+- Agent runtime prompt injection
+- Infrastructure (Cloudflare Workers, R2, Vectorize)
 
-- **Data at Rest**: Neon PostgreSQL (AES-256) and Cloudflare R2 encryption
-- **Authentication**: Standard Native Auth with token revocation caching on Cloudflare KV
-- **Access Control**: Role-Based Access Control (RBAC) at the route and service level
-- **Organization Isolation**: All queries scoped by `organization_id` — no cross-organization data leakage
-- **Input Validation**: Zod schema validation on all API boundaries
-- **Upload Security**: Anti-malware scanning, file type validation, size limits
-- **Prompt Security**: AI Gateway anti-prompt-injection for all LLM calls
-- **Audit Trail**: Immutable structured audit logs with `trace_id` correlation
-- **Secret Management**: No secrets in code — environment-only via Cloudflare Workers secrets
-- **Error Handling**: Safe error messages — no stack traces or internal state in API responses
+**Out of scope:**
+- Social engineering attacks
+- Denial of service (volumetric)
+- Issues in third-party dependencies (report upstream)
+- Issues requiring physical access
 
-## Security Testing
+### Safe Harbor
 
-```bash
-pnpm test:security
-```
+We support responsible disclosure. If you follow this policy:
 
-Our CI pipeline runs security tests automatically on every push to `main` and on every pull request.
+- We will not pursue legal action against you
+- We will work with you to understand and resolve the issue
+- We will credit you in the advisory (if desired)
+- We will not disclose your identity without permission
 
-## Disclosure Policy
+### Recognition
 
-We follow [responsible disclosure](https://en.wikipedia.org/wiki/Responsible_disclosure). Security researchers who report valid vulnerabilities will be credited in our security advisories (unless anonymity is requested).
+We maintain a [Security Hall of Fame](https://github.com/resper1965/standard-api/blob/main/docs/security/hall-of-fame.md) for researchers who help us improve our security posture.
