@@ -1,6 +1,96 @@
 import { assertContext, PoamWorkflowError } from "../errors";
 import type { PoamContext, PoamDependencies, PoamItemResponse, PoamValidationResponse } from "../types";
 
+// --- Pure validation rules ---
+
+type ValidationIssues = { errors: string[]; warnings: string[] };
+
+/** A single validation rule applied to a POAM item. */
+type PoamItemValidationRule = {
+  check: (item: PoamItemResponse) => boolean;
+  severity: "error" | "warning";
+  message: (item: PoamItemResponse) => string;
+};
+
+/** Known generic/placeholder corrective action texts. */
+const GENERIC_ACTION_TEXTS: ReadonlySet<string> = new Set(["fix issue", "remediate gap", "improve control", ""]);
+
+/** Checks if a POAM item has a generic corrective action without traceability. */
+function isGenericAction(item: PoamItemResponse): boolean {
+  const text = item.corrective_action.trim().toLowerCase();
+  return (!item.related_gap_finding_id || !item.framework_requirement_id || !item.scf_control_id) && GENERIC_ACTION_TEXTS.has(text);
+}
+
+/** Checks if a POAM item is missing required traceability fields. */
+function isMissingTraceability(item: PoamItemResponse): boolean {
+  return !item.related_gap_finding_id || !item.framework_requirement_id || !item.scf_control_id;
+}
+
+/**
+ * Declarative list of validation rules applied per POAM item.
+ * Order matches the original validation sequence for deterministic output.
+ */
+const ITEM_VALIDATION_RULES: readonly PoamItemValidationRule[] = [
+  {
+    check: (item) => !item.related_gap_finding_id && !item.rationale,
+    severity: "error",
+    message: (item) => `${item.poam_code}: related_gap_finding_id is required unless an administrative exception is justified.`,
+  },
+  {
+    check: (item) => !item.corrective_action.trim(),
+    severity: "error",
+    message: (item) => `${item.poam_code}: corrective_action is required.`,
+  },
+  {
+    check: (item) => item.expected_evidence.length === 0,
+    severity: "error",
+    message: (item) => `${item.poam_code}: expected_evidence is required.`,
+  },
+  {
+    check: (item) => item.acceptance_criteria.length === 0,
+    severity: "error",
+    message: (item) => `${item.poam_code}: acceptance_criteria is required.`,
+  },
+  {
+    check: (item) => !item.owner_role && !item.suggested_owner,
+    severity: "error",
+    message: (item) => `${item.poam_code}: owner_role or suggested_owner is required.`,
+  },
+  {
+    check: (item) => item.action_type === "validation_required" && !item.requires_user_validation,
+    severity: "error",
+    message: (item) => `${item.poam_code}: validation_required actions must require user validation.`,
+  },
+  {
+    check: (item) => isGenericAction(item),
+    severity: "error",
+    message: (item) => `${item.poam_code}: generic action without traceability is not allowed.`,
+  },
+  {
+    check: (item) => item.confidence_score < 0.5,
+    severity: "warning",
+    message: (item) => `${item.poam_code}: low confidence requires reviewer validation.`,
+  },
+];
+
+/** Runs all declarative validation rules against a single POAM item. */
+function validatePoamItemObject(item: PoamItemResponse): ValidationIssues {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+  for (const rule of ITEM_VALIDATION_RULES) {
+    if (rule.check(item)) {
+      if (rule.severity === "error") {
+        errors.push(rule.message(item));
+      } else {
+        warnings.push(rule.message(item));
+      }
+    }
+  }
+  return { errors, warnings };
+}
+
+// --- Service class (delegates to pure functions) ---
+
 export class PoamValidationService {
   constructor(private readonly deps: PoamDependencies) {}
 
@@ -13,7 +103,7 @@ export class PoamValidationService {
     const warnings: string[] = [];
     const itemsRequiringValidation: string[] = [];
     for (const item of items) {
-      const itemIssues = this.validatePoamItemObject(item);
+      const itemIssues = validatePoamItemObject(item);
       errors.push(...itemIssues.errors);
       warnings.push(...itemIssues.warnings);
       if (item.requires_user_validation) itemsRequiringValidation.push(item.poam_item_id);
@@ -32,7 +122,7 @@ export class PoamValidationService {
     assertContext(context);
     const item = await this.deps.repositories.items.get(poamItemId, context.organizationId);
     if (!item || item.assessment_id !== context.assessmentId) throw new PoamWorkflowError("POAM_ITEM_NOT_FOUND", "POA&M item not found.");
-    const issues = this.validatePoamItemObject(item);
+    const issues = validatePoamItemObject(item);
     return {
       valid: issues.errors.length === 0,
       errors: issues.errors,
@@ -44,35 +134,16 @@ export class PoamValidationService {
 
   async detectGenericActions(poamVersionId: string, context: PoamContext): Promise<string[]> {
     const items = await this.deps.repositories.items.listByVersion(poamVersionId, context.organizationId);
-    return items.filter((item) => this.isGeneric(item)).map((item) => item.poam_item_id);
+    return items.filter((item) => isGenericAction(item)).map((item) => item.poam_item_id);
   }
 
   async detectMissingTraceability(poamVersionId: string, context: PoamContext): Promise<string[]> {
     const items = await this.deps.repositories.items.listByVersion(poamVersionId, context.organizationId);
-    return items.filter((item) => !item.related_gap_finding_id || !item.framework_requirement_id || !item.scf_control_id).map((item) => item.poam_item_id);
+    return items.filter((item) => isMissingTraceability(item)).map((item) => item.poam_item_id);
   }
 
   async detectItemsRequiringValidation(poamVersionId: string, context: PoamContext): Promise<string[]> {
     const items = await this.deps.repositories.items.listByVersion(poamVersionId, context.organizationId);
     return items.filter((item) => item.requires_user_validation).map((item) => item.poam_item_id);
-  }
-
-  private validatePoamItemObject(item: PoamItemResponse): { errors: string[]; warnings: string[] } {
-    const errors: string[] = [];
-    const warnings: string[] = [];
-    if (!item.related_gap_finding_id && !item.rationale) errors.push(`${item.poam_code}: related_gap_finding_id is required unless an administrative exception is justified.`);
-    if (!item.corrective_action.trim()) errors.push(`${item.poam_code}: corrective_action is required.`);
-    if (item.expected_evidence.length === 0) errors.push(`${item.poam_code}: expected_evidence is required.`);
-    if (item.acceptance_criteria.length === 0) errors.push(`${item.poam_code}: acceptance_criteria is required.`);
-    if (!item.owner_role && !item.suggested_owner) errors.push(`${item.poam_code}: owner_role or suggested_owner is required.`);
-    if (item.action_type === "validation_required" && !item.requires_user_validation) errors.push(`${item.poam_code}: validation_required actions must require user validation.`);
-    if (this.isGeneric(item)) errors.push(`${item.poam_code}: generic action without traceability is not allowed.`);
-    if (item.confidence_score < 0.5) warnings.push(`${item.poam_code}: low confidence requires reviewer validation.`);
-    return { errors, warnings };
-  }
-
-  private isGeneric(item: PoamItemResponse): boolean {
-    const text = item.corrective_action.trim().toLowerCase();
-    return (!item.related_gap_finding_id || !item.framework_requirement_id || !item.scf_control_id) && ["fix issue", "remediate gap", "improve control", ""].includes(text);
   }
 }

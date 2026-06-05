@@ -1,4 +1,4 @@
-﻿---
+---
 title: "Proposta Técnica Inicial"
 ---
 
@@ -175,7 +175,7 @@ Nesta fase, os agentes são papéis arquiteturais e contratos de runtime governa
 
 ## Decisões em Aberto
 
-- ~~Provedor de autenticação e modelo de RBAC/ABAC.~~ **Decisão tomada:** Standard Native Auth v1.6.11 como provedor de autenticação (ADR 0005). RBAC baseado em roles (owner/admin/member/viewer) com permissions granulares por recurso.
+- ~~Provedor de autenticação e modelo de RBAC/ABAC.~~ **Decisão tomada:** Standard Native Auth v1.6.11 como provedor de autenticação (ADR 0005). RBAC baseado em roles (owner/contributor/auditor) com permissions granulares por recurso.
 - ~~ORM ou query builder para PostgreSQL.~~ **Decisão tomada:** Drizzle ORM como query builder PostgreSQL (ADR 0006).
 - Formato oficial de importação do SCF estruturado.
 - Estratégia de criptografia por organization para objetos sensíveis em R2.

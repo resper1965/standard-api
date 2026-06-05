@@ -1,6 +1,46 @@
 import { GapAnalysisWorkflowError } from "../errors";
 import type { GapAnalysisContext, GapAnalysisDependencies, GapAnalysisValidationResponse, GapFindingResponse } from "../types";
 
+// ─── Validation Rule Pattern ─────────────────────────────────────────
+// Each rule is a pure predicate + error message factory.
+// Rules are composed declaratively; adding a new rule requires no
+// changes to the validation loop itself.
+
+type FindingValidationRule = {
+  readonly matches: (finding: GapFindingResponse) => boolean;
+  readonly error: (finding: GapFindingResponse) => string;
+};
+
+const notMetRequiresRationale: FindingValidationRule = {
+  matches: (f) => f.assessment_status === "not_met" && !f.gap_rationale,
+  error: (f) => `Finding ${f.gap_finding_id} missing gap_rationale for not_met.`
+};
+
+const metRequiresEvidenceOrRationale: FindingValidationRule = {
+  matches: (f) => f.assessment_status === "met" && !f.evidence_finding_id && !f.gap_rationale,
+  error: (f) => `Finding ${f.gap_finding_id} missing evidence or explicit rationale for met.`
+};
+
+const notEvidencedMustBeEvidenceGap: FindingValidationRule = {
+  matches: (f) => f.assessment_status === "not_evidenced" && f.gap_type !== "evidence_gap",
+  error: (f) => `Finding ${f.gap_finding_id} must mark not_evidenced as evidence_gap.`
+};
+
+const metRequiresOfficialScfControl: FindingValidationRule = {
+  matches: (f) => f.assessment_status === "met" && !f.scf_control_id,
+  error: (f) =>
+    `Finding ${f.gap_finding_id} cannot be legally assessed as 'met' without an assigned and official scf_control_id. Inferred crosswalks are strictly forbidden.`
+};
+
+const FINDING_VALIDATION_RULES: readonly FindingValidationRule[] = [
+  notMetRequiresRationale,
+  metRequiresEvidenceOrRationale,
+  notEvidencedMustBeEvidenceGap,
+  metRequiresOfficialScfControl
+] as const;
+
+// ─── Service ─────────────────────────────────────────────────────────
+
 export class GapValidationService {
   constructor(private readonly deps: GapAnalysisDependencies) {}
 
@@ -33,11 +73,9 @@ export class GapValidationService {
   }
 
   private validateFindingErrors(finding: GapFindingResponse): string[] {
-    const errors: string[] = [];
-    if (finding.assessment_status === "not_met" && !finding.gap_rationale) errors.push(`Finding ${finding.gap_finding_id} missing gap_rationale for not_met.`);
-    if (finding.assessment_status === "met" && !finding.evidence_finding_id && !finding.gap_rationale) errors.push(`Finding ${finding.gap_finding_id} missing evidence or explicit rationale for met.`);
-    if (finding.assessment_status === "not_evidenced" && finding.gap_type !== "evidence_gap") errors.push(`Finding ${finding.gap_finding_id} must mark not_evidenced as evidence_gap.`);
-    if (finding.assessment_status === "met" && !finding.scf_control_id) errors.push(`Finding ${finding.gap_finding_id} cannot be legally assessed as 'met' without an assigned and official scf_control_id. Inferred crosswalks are strictly forbidden.`);
-    return errors;
+    return FINDING_VALIDATION_RULES
+      .filter((rule) => rule.matches(finding))
+      .map((rule) => rule.error(finding));
   }
 }
+

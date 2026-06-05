@@ -99,11 +99,7 @@ report_generated → closed
 - `GET /organizations/:id/audit-logs` → Organization audit trail
 - `GET /organizations/:id/audit-logs` → Org audit trail
 
-### Member Management
-- `POST /organizations/:id/members` → Invite member
-- `GET /organizations/:id/members` → List members
-- `PATCH /members/:id` → Update role
-- `DELETE /members/:id` → Remove member
+
 
 ### CI/CD
 - `GET /assessments/:id/compliance-gate` → pass/fail
@@ -118,8 +114,7 @@ const client = new StandardClient({ apiKey: "standard_live_...", organizationId:
 const { data } = await client.assessments.summary("assessment-id");
 // Dashboard
 const { data } = await client.organizations.dashboard("org-id");
-// Members
-await client.organizations.inviteMember("org-id", { email: "x@y.com", role: "assessor" });
+
 ```
 
 ## Documentation

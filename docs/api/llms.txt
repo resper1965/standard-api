@@ -12,7 +12,7 @@
 
 Base URL: `https://standard-api.bekaa.eu`
 Auth: Bearer API key (`standard_live_...`) or session cookie
-Tenant: `x-standard-tenant-id` header (required)
+Tenant/Organization: Automatically resolved from API Key or Session. No custom headers required.
 
 ## Sections
 
@@ -25,8 +25,8 @@ Tenant: `x-standard-tenant-id` header (required)
 - [POA&M](#poam): Remediation planning
 - [Reports](#reports): Generate, download, audit package
 - [Dashboard KPIs](#dashboard-kpis): Server-computed compliance metrics
-- [Audit Trail](#audit-trail): Tenant/org-wide audit event log
-- [Members](#members): Organization membership RBAC (invite, role, remove)
+- [Audit Trail](#audit-trail): Organization-wide audit event log
+- [Tenancy](#tenancy): A arquitetura é Multi-Organization. O Platform Admin cria a organização e cede acesso ao administrador. Não existem members.
 - [AI Agents](#ai-agents): 7 specialized agents
 - [Intelligence Council](#intelligence-council): Async multi-agent workflow dispatch
 - [Jobs](#jobs): Job polling for async jobs

@@ -50,7 +50,7 @@
 | Item | Status | Evidência |
 |------|--------|-----------|
 | Assessments filtram por organization_id | ✅ | `assessment.repository.ts` — `.withTenant()` em todas as ops |
-| Memberships escopados por organization | ✅ | `membership.repository.ts` — `WHERE organization_id = $1` em todas as queries |
+| API Keys escopadas por organization | ✅ | `api-keys.routes.ts` — filtra por `organizationId` |
 | Audit logs incluem organization | ✅ | `audit.repository.ts` — `organization_id` obrigatório |
 | R2 keys prefixadas por organization/org/assessment | ✅ | `r2.adapter.ts` — path inclui `${organizationId}/${orgId}/${assessmentId}` |
 | Cross-organization test | ⚠️ | Testes unitários existem; smoke test E2E cross-organization pendente |

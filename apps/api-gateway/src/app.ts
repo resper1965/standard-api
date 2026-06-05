@@ -1,4 +1,3 @@
-import { MockAuthProvider } from "@standard/security";
 import { createMockRepositories } from "./adapters";
 import type { StandardAuth } from "@standard/auth";
 import type { Env } from "./index";
@@ -6,7 +5,6 @@ import { ApiError } from "./errors/api-error";
 import type { AppDependencies, RouteDefinition } from "./http";
 import { json, parseJson, type RequestContext } from "./http";
 import { recordAuditEvent } from "./middleware/audit.middleware";
-import { resolveAuthContext } from "./middleware/auth.middleware";
 import { errorResponse } from "./middleware/error.middleware";
 import { assertRateLimit } from "./middleware/rate-limit.middleware";
 import { recordRequestObservability } from "./middleware/request-observability.middleware";
@@ -15,6 +13,13 @@ import { assertApiKeyScopes } from "./middleware/scope.middleware";
 import { resolveOrganizationContext } from "./middleware/tenant.middleware";
 import { resolveTraceId } from "./middleware/trace.middleware";
 import { checkIdempotency, storeIdempotencyResult } from "./middleware/idempotency.middleware";
+import {
+  resolveAllowedOrigins,
+  buildCorsHeaders,
+  buildSecurityHeaders,
+  applySecurityHeaders,
+  resolveAuth,
+} from "./app-helpers";
 import { agentRuntimeRoutes } from "./routes/agent-runtime.routes";
 import { agentToolsRoutes } from "./routes/agent-tools.routes";
 import { apiKeysRoutes } from "./routes/api-keys.routes";
@@ -27,9 +32,9 @@ import { gapAnalysisRoutes } from "./routes/gap-analysis.routes";
 import { healthRoutes } from "./routes/health.routes";
 import { kbRoutes } from "./routes/kb.routes";
 import { lifecycleRoutes } from "./routes/lifecycle.routes";
-import { memberRoutes } from "./routes/members.routes";
+
 import { organizationsRoutes } from "./routes/organizations.routes";
-import { organizationsMgmtRoutes } from "./routes/organizations-mgmt.routes";
+
 import { observabilityRoutes } from "./routes/observability.routes";
 import { poamRoutes } from "./routes/poam.routes";
 import { reportingRoutes } from "./routes/reporting.routes";
@@ -45,6 +50,7 @@ import { socRoutes } from "./routes/soc.routes";
 import { executiveRoutes } from "./routes/executive.routes";
 import { openapiRoutes } from "./routes/openapi.routes";
 import { wellKnownRoutes } from "./routes/well-known.routes";
+import { registerRoutesForOpenApi } from "./openapi/generator";
 import { regulationsRoutes } from "./routes/regulations.routes";
 import { riskRoutes } from "./routes/risk.routes";
 import { projectionRoutes } from "./routes/projection.routes";
@@ -94,7 +100,7 @@ export const routes: RouteDefinition[] = [
   ...healthRoutes,
   ...tenantsRoutes,
   ...organizationsRoutes,
-  ...organizationsMgmtRoutes,
+
   ...apiKeysRoutes,
   ...assessmentsRoutes,
   ...documentsRoutes,
@@ -120,7 +126,7 @@ export const routes: RouteDefinition[] = [
   ...socRoutes,
   ...executiveRoutes,
   ...dashboardRoutes,
-  ...memberRoutes,
+
   ...wellKnownRoutes,
   ...regulationsRoutes,
   ...riskRoutes,
@@ -136,6 +142,8 @@ export const routes: RouteDefinition[] = [
   ...tpraRoutes,            // /api/v1/tpra/{questionnaires,tiers,score,...}
   ...adminUsersRoutes,      // /api/v1/admin/users — platform admin user management
 ];
+
+registerRoutesForOpenApi(routes);
 
 const matchRoute = (routePath: string, actualPath: string): Record<string, string> | null => {
   const routeParts = routePath.split("/").filter(Boolean);
@@ -193,79 +201,19 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
     const traceId = resolveTraceId(request);
 
     // ── CORS ────────────────────────────────────────────────
-    const isDevMode = env?.STANDARD_ENV === "development" || env?.STANDARD_ENV === "test";
-    // ALLOWED_ORIGINS env var overrides hardcoded list (comma-separated)
-    const envOrigins = env?.ALLOWED_ORIGINS?.split(",").map((o: string) => o.trim()).filter(Boolean) ?? [];
-    // Validate that no wildcard or malformed origins are in the list
-    const validatedOrigins = envOrigins.filter((o: string) => {
-      if (o === "*") {
-        console.warn("[SECURITY] ALLOWED_ORIGINS contains wildcard '*' — ignoring");
-        return false;
-      }
-      try {
-        const url = new URL(o);
-        return url.origin === o;
-      } catch {
-        console.warn(`[SECURITY] ALLOWED_ORIGINS contains invalid origin: ${o} — ignoring`);
-        return false;
-      }
-    });
-    const allowedOrigins = validatedOrigins.length > 0 ? validatedOrigins : [
-      "https://standard.bekaa.eu",
-      "https://standard-web.pages.dev",
-      "https://standard-web-production.pages.dev",
-      ...(isDevMode ? ["http://localhost:5173", "http://localhost:3000"] : []),
-    ];
-    const origin = request.headers.get("Origin") ?? "";
-    const isPagesDevAlias = origin.endsWith(".standard-web.pages.dev") || origin.endsWith(".standard-web-production.pages.dev");
-    const corsOrigin = allowedOrigins.includes(origin) || isPagesDevAlias ? origin : "";
-    const corsHeaders: Record<string, string> = corsOrigin
-      ? {
-          "Access-Control-Allow-Origin": corsOrigin,
-          "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Trace-Id, X-Tenant-Id, x-standard-tenant-id",
-          "Access-Control-Allow-Credentials": "true",
-          "Access-Control-Max-Age": "86400",
-        }
-      : {};
+    const allowedOrigins = resolveAllowedOrigins(env);
+    const corsHeaders = buildCorsHeaders(request, allowedOrigins);
 
     // Handle CORS preflight
     if (request.method === "OPTIONS") {
       return new Response(null, { status: 204, headers: corsHeaders });
     }
 
-    // Relax CSP for docs/llms routes so Scalar UI, fonts, and scripts load correctly
-    const isDocsRoute = url.pathname.startsWith("/docs") || url.pathname.startsWith("/llms");
-    const cspValue = isDocsRoute
-      ? "default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src fonts.gstatic.com; img-src 'self' data:; connect-src 'self';"
-      : "default-src 'none'; frame-ancestors 'none';";
-
-    const securityHeaders: Record<string, string> = {
-      ...corsHeaders,
-      // ── OWASP Enterprise-Grade Security Headers ──────────────
-      "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",
-      "X-Content-Type-Options": "nosniff",
-      "X-Frame-Options": "DENY",
-      "X-XSS-Protection": "0", // Deprecated; CSP is the modern replacement
-      "Content-Security-Policy": cspValue,
-      "Referrer-Policy": "strict-origin-when-cross-origin",
-      "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=()",
-      "X-Download-Options": "noopen",
-      "X-Permitted-Cross-Domain-Policies": "none",
-      "Cross-Origin-Opener-Policy": "same-origin",
-      "Cross-Origin-Resource-Policy": "same-origin",
-    };
+    const securityHeaders = buildSecurityHeaders(corsHeaders, url.pathname);
 
     // Helper to attach headers to any response
-    const withSecurityHeaders = (res: Response): Response => {
-      const newRes = new Response(res.body, res);
-      for (const [k, v] of Object.entries(securityHeaders)) {
-        newRes.headers.set(k, v);
-      }
-      return newRes;
-    };
-
-
+    const withSecurityHeaders = (res: Response): Response =>
+      applySecurityHeaders(res, securityHeaders);
 
     try {
       const route = findRoute(request.method, url.pathname);
@@ -282,68 +230,14 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
       const startedAt = Date.now();
 
       // ── Auth context resolution ──────────────────────────────
-      // Use Standard Native Auth session if available, fallback to legacy headers
-      const authRequired = route.authRequired ?? (Boolean(route.protected) || Boolean(route.requireActor) || Boolean(route.permissions?.length));
-      if (auth) {
-        await resolveAuthContext(context, auth, authRequired);
-      } else if (
-        (env?.STANDARD_ENV === "local" || env?.STANDARD_ENV === "development" || env?.STANDARD_ENV === "test") &&
-        env?.ALLOW_MOCK_AUTH === "true"
-      ) {
-        // Legacy header fallback — requires ALLOW_MOCK_AUTH=true AND a non-production STANDARD_ENV.
-        // Fail-closed: omitting ALLOW_MOCK_AUTH disables mock-auth even in dev.
-        const legacyActor = request.headers.get("x-standard-actor-id") ?? undefined;
-        if (legacyActor) {
-          context.actorId = legacyActor;
-          const mockAuth = new MockAuthProvider("development");
-          const authCtx = await mockAuth.authenticate({
-            actorId: legacyActor,
-            ...(context.organizationId ? { organizationId: context.organizationId } : {}),
-            authHeader: request.headers.get("authorization") ?? undefined,
-            traceId
-          });
-          if (authCtx) context.auth = authCtx;
-          // Populate a minimal mock session so session.user.role RBAC checks work in dev/test.
-          // Priority: x-standard-mock-role header > role from Bearer header > "admin" default.
-          const overrideRole = request.headers.get("x-standard-mock-role");
-          const authRoles = authCtx?.roles ?? [];
-          const firstAuthRole = authRoles[0] as string | undefined;
-          // We pass security-package roles through directly — they match
-          // STANDARD_ROLE_PERMISSIONS keys in permissions.ts (GRC roles).
-          // Only "system" maps to special handling (platform_admin flag).
-          const isPlatAdmin = (authRoles.includes("platform_admin" as any)
-            || authRoles.includes("system" as any)
-            || overrideRole === "platform_admin")
-            && overrideRole !== "owner"
-            && overrideRole !== "viewer"
-            && overrideRole !== "admin";
-          const mockRole = overrideRole ?? firstAuthRole ?? "admin";
-          context.session = {
-            user: {
-              id: legacyActor,
-              email: `${legacyActor}@mock.test`,
-              name: "Mock Test Actor",
-              role: mockRole,
-              platformAdmin: isPlatAdmin
-            },
-            session: { id: `mock-session-${legacyActor}` }
-          };
-        }
-        if (authRequired && !context.actorId) {
-          throw new ApiError("UNAUTHORIZED", "Authentication is required for this operation.", 401);
-        }
-      } else {
-        // Production without Standard Native Auth = always reject
-        if (authRequired) {
-          throw new ApiError("UNAUTHORIZED", "Authentication provider is not configured.", 401);
-        }
-      }
+      await resolveAuth(context, request, route, env, auth);
 
       const tenantRequired = route.tenantRequired ?? defaultTenantRequired(route);
       await resolveOrganizationContext(context, tenantRequired);
 
       await assertRbac(context, route.permissions);
-      assertApiKeyScopes(context, route.path, request.method, authRequired);
+      assertApiKeyScopes(context, route.path, request.method,
+        route.authRequired ?? (Boolean(route.protected) || Boolean(route.requireActor) || Boolean(route.permissions?.length)));
       await assertRateLimit(context, route.path, env?.STANDARD_CACHE);
       await recordAuditEvent(context, route.path);
 
@@ -392,5 +286,4 @@ const notImplemented = (traceId: string): Response =>
     },
     { status: 501 }
   );
-
 

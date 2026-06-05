@@ -69,9 +69,9 @@ Our system architecture is comprehensively documented using the **Arc42 Framewor
 
 ### Key Technical Pillars
 *   **API-First & SaaS-Ready**: Every functional lifecycle is exposed via API (`/api/v1`).
-*   **Multi-Organization Isolation**: Deep isolation across all PostgreSQL tables and Cloudflare assets.
+*   **Multi-Tenant Isolation (User=Tenant)**: Deep isolation across all PostgreSQL tables and Cloudflare assets.
 *   **Edge-Native Infrastructure**: Built heavily on Cloudflare (Workers, Workflows, Queues, R2, Vectorize).
-*   **Security & Guardrails**: Enforced API keys (SHA-256), AI Gateway for prompt injection defense, and role-based access control.
+*   **Security & Guardrails**: Enforced API keys (SHA-256), AI Gateway for prompt injection defense, and strict tenant boundary isolation.
 
 ---
 
@@ -136,3 +136,4 @@ Please review our [Contributing Guidelines](CONTRIBUTING.md) to understand our b
   Built with ❤️ for Security & Compliance Teams. <br>
   Licensed under the <a href="LICENSE">Business Source License 1.1</a>.
 </p>
+

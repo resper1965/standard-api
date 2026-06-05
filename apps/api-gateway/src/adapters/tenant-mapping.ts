@@ -13,33 +13,32 @@
  * Request-time code must NOT create domain rows: silent JIT provisioning used to
  * mask resolution bugs by inventing "phantom" tenants.
  */
-import { eq } from "drizzle-orm";
-import { organizations, baOrganization } from "@standard/schemas";
+import { eq, or } from "drizzle-orm";
+import { organizations } from "@standard/schemas";
 import type { DbClient } from "./db";
 
 export interface ResolvedTenantContext {
   organization_id: string; // UUID from `organizations` table
-  ba_org_id: string;       // Original Org ID
+  ba_org_id: string;       // Original Org ID or slug
   org_name: string;        // Organization display name
 }
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
- * READ-ONLY resolution of a Standard Native Auth org ID / slug into Standard
- * domain UUIDs. Returns `null` if the org has not been provisioned — callers
- * decide whether that is a 404 or a trigger to provision explicitly.
+ * READ-ONLY resolution of an identifier (UUID, slug, or baUser.id) into Standard
+ * domain UUIDs. Returns `null` if the org has not been provisioned.
  */
 export async function resolveOrganizationContext(
   db: DbClient,
-  orgId: string
+  identifier: string
 ): Promise<ResolvedTenantContext | null> {
-  if (UUID_RE.test(orgId)) {
+  if (UUID_RE.test(identifier)) {
     // Resolve by organization UUID directly.
     const [existingOrg] = await db
       .select()
       .from(organizations)
-      .where(eq(organizations.id, orgId))
+      .where(eq(organizations.id, identifier))
       .limit(1);
 
     if (existingOrg) {
@@ -52,26 +51,20 @@ export async function resolveOrganizationContext(
     return null;
   }
 
-  // Non-UUID: could be a BA org ID (nanoid) or a slug.
-  // Translate BA org ID → slug when applicable, then resolve by slug.
-  const [baOrg] = await db
-    .select({ slug: baOrganization.slug })
-    .from(baOrganization)
-    .where(eq(baOrganization.id, orgId))
-    .limit(1);
-
-  const slug = baOrg?.slug && baOrg.slug !== orgId ? baOrg.slug : orgId;
-
+  // Non-UUID: could be a baUser.id or a slug.
   const [existingOrg] = await db
     .select()
     .from(organizations)
-    .where(eq(organizations.slug, slug))
+    .where(or(
+      eq(organizations.userId, identifier),
+      eq(organizations.slug, identifier)
+    ))
     .limit(1);
 
   if (existingOrg) {
     return {
       organization_id: existingOrg.id,
-      ba_org_id: orgId,
+      ba_org_id: existingOrg.slug,
       org_name: existingOrg.name,
     };
   }
@@ -81,42 +74,40 @@ export async function resolveOrganizationContext(
 
 /**
  * Explicit provisioning: resolve the org, creating the domain organization when
- * missing. Idempotent and keyed on slug. Call ONLY from deliberate provisioning
- * points (org creation, platform-admin bootstrap).
+ * missing. Call ONLY from deliberate provisioning points (org creation, platform-admin bootstrap).
  */
 export async function provisionOrganizationContext(
   db: DbClient,
-  orgId: string
+  identifier: string
 ): Promise<ResolvedTenantContext> {
-  const existing = await resolveOrganizationContext(db, orgId);
+  const existing = await resolveOrganizationContext(db, identifier);
   if (existing) return existing;
 
-  // Translate BA org ID → slug so provisioning is keyed deterministically.
-  const [baOrg] = await db
-    .select({ slug: baOrganization.slug, name: baOrganization.name })
-    .from(baOrganization)
-    .where(eq(baOrganization.id, orgId))
-    .limit(1);
-
-  const slug = baOrg?.slug ?? orgId;
-  const name = baOrg?.name ?? `Org ${orgId.substring(0, 8)}`;
+  const slug = identifier;
+  const name = `Org ${identifier.substring(0, 8)}`;
 
   // ADR 0002 Phase 2/3: tenants table gone. Organizations IS the tenant.
-  // Reuse the BA org UUID as the organization ID when it's a UUID.
-  const convergedId = UUID_RE.test(orgId) ? orgId : undefined;
+  const convergedId = UUID_RE.test(identifier) ? identifier : undefined;
 
   const [newOrg] = await db
     .insert(organizations)
-    .values({ ...(convergedId ? { id: convergedId } : {}), slug, name, status: "active" })
+    .values({ 
+      ...(convergedId ? { id: convergedId } : {}), 
+      slug, 
+      name, 
+      status: "active",
+      userId: identifier // Set userId to baUser.id or identifier
+    })
     .returning();
 
   console.log(
-    `[standard:tenant-mapping] provisioned org=${newOrg!.id} for BA org=${orgId}`
+    `[standard:tenant-mapping] provisioned org=${newOrg!.id} for identifier=${identifier}`
   );
 
   return {
     organization_id: newOrg!.id,
-    ba_org_id: orgId,
+    ba_org_id: newOrg!.slug,
     org_name: name,
   };
 }
+

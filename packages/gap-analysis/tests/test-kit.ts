@@ -1,3 +1,7 @@
+// TODO: extract to shared test-utils — TestCase type, test(), runTests(),
+// core matchers (toBe, toBeGreaterThan), and expectRejects are duplicated
+// identically in the poam test-kit and partially in scf-core.
+
 type TestCase = {
   name: string;
   run: () => Promise<void> | void;
@@ -5,22 +9,33 @@ type TestCase = {
 
 const tests: TestCase[] = [];
 
+// --- Internal assertion helpers (not exported — reduces coupling surface) ---
+
+/** @internal Builds a descriptive assertion error */
+const assertionError = (actual: unknown, expectation: string): Error =>
+  new Error(`Expected ${String(actual)} ${expectation}`);
+
+// --- Public API ---
+
 export const test = (name: string, run: () => Promise<void> | void): void => {
   tests.push({ name, run });
 };
 
 export const expect = <T>(actual: T) => ({
   toBe(expected: T): void {
-    if (actual !== expected) throw new Error(`Expected ${String(actual)} to be ${String(expected)}`);
+    if (actual !== expected) throw assertionError(actual, `to be ${String(expected)}`);
   },
   toBeDefined(): void {
-    if (actual === undefined || actual === null) throw new Error("Expected value to be defined");
+    if (actual === undefined || actual === null)
+      throw new Error("Expected value to be defined");
   },
   toBeGreaterThan(expected: number): void {
-    if (typeof actual !== "number" || actual <= expected) throw new Error(`Expected ${String(actual)} to be greater than ${expected}`);
-  }
+    if (typeof actual !== "number" || actual <= expected)
+      throw assertionError(actual, `to be greater than ${expected}`);
+  },
 });
 
+// TODO: extract to shared test-utils — expectRejects is identical in poam test-kit.
 export const expectRejects = async (run: () => Promise<unknown>, code: string): Promise<void> => {
   try {
     await run();

@@ -15,7 +15,6 @@ import { api } from "./api";
 export const qk = {
   orgs: () => ["orgs"] as const,
   orgDetail: (id: string) => ["orgs", id] as const,
-  orgMembers: (id: string) => ["orgs", id, "members"] as const,
   orgApiKeys: (id: string) => ["orgs", id, "api-keys"] as const,
   orgWebhooks: (id: string) => ["orgs", id, "webhooks"] as const,
   webhookDeliveries: (orgId: string, endpointId: string) =>
@@ -54,14 +53,6 @@ export function useOrgDetail(orgId: string | undefined) {
   return useQuery({
     queryKey: qk.orgDetail(orgId ?? ""),
     queryFn: () => api<OrgListItem>(`/api/v1/organizations/${orgId}`),
-    enabled: !!orgId,
-  });
-}
-
-export function useOrgMembers(orgId: string | undefined) {
-  return useQuery({
-    queryKey: qk.orgMembers(orgId ?? ""),
-    queryFn: () => api<{ data: OrgMember[] }>(`/api/v1/organizations/${orgId}/members`),
     enabled: !!orgId,
   });
 }
@@ -420,15 +411,6 @@ type OrgListItem = {
   createdAt?: string;
   logo?: string | null;
   metadata?: Record<string, unknown>;
-};
-
-type OrgMember = {
-  userId?: string;
-  user?: { id: string; name: string; email: string };
-  name?: string;
-  email?: string;
-  role: string;
-  createdAt?: string;
 };
 
 type ApiKeyRecord = {

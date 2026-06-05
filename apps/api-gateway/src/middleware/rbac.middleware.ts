@@ -1,5 +1,5 @@
 import { SecurityEventService } from "@standard/observability";
-import { roleHasPermission, STANDARD_ROLE_PERMISSIONS, type StandardRole, type StandardResource } from "@standard/auth";
+
 import type { Permission } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RequestContext } from "../http";
@@ -59,58 +59,16 @@ export const requirePlatformAdmin = async (context: RequestContext): Promise<voi
 export const assertRbac = async (context: RequestContext, requiredPermissions: Permission[] = []): Promise<void> => {
   if (requiredPermissions.length === 0) return;
 
-  // Platform admins bypass all permission checks — they have implicit ALL_PERMISSIONS.
+  // Platform admins bypass all permission checks
   if (isPlatformAdmin(context)) return;
 
   let allowed = true;
   let reason = "";
   
-  // If no auth context exists at all, explicitly deny.
+  // Application is API-first: any valid session/API key for the tenant has full access.
   if (!context.auth && !context.session && !context.m2mScopes) {
     allowed = false;
     reason = "missing_auth_context";
-  } else if (context.m2mScopes) {
-    // Machine-to-Machine API Key authentication
-    // Wildcard keys (empty scopes array) bypass all permission/scope checks
-    if (context.m2mScopes.length === 0) {
-      allowed = true;
-    } else {
-      for (const reqPerm of requiredPermissions) {
-        if (!context.m2mScopes.includes(reqPerm)) {
-          allowed = false;
-          reason = "permission_missing";
-          break;
-        }
-      }
-    }
-  } else if (context.auth) {
-    // Legacy MockAuthProvider or API Key auth — check permissions directly from auth context.
-    // This path also applies in dev/test mode where context.auth and context.session coexist.
-    const grantedPermissions = context.auth.permissions ?? [];
-    for (const reqPerm of requiredPermissions) {
-      if (!grantedPermissions.includes(reqPerm)) {
-        allowed = false;
-        reason = "permission_missing";
-        break;
-      }
-    }
-  } else if (context.session) {
-    // Standard Native Auth session (production) — use role-based permission check.
-    // API access roles: owner, admin, member, viewer.
-    // Better Auth default "user" → "member". Unknown → "viewer" (least privilege).
-    const rawRole = context.session.user?.role ?? "viewer";
-    const role: StandardRole = (rawRole in STANDARD_ROLE_PERMISSIONS)
-      ? (rawRole as StandardRole)
-      : (rawRole === "user" ? "member" : "viewer");
-
-    for (const reqPerm of requiredPermissions) {
-      const [resource, action] = reqPerm.split(":") as [StandardResource, string];
-      if (!roleHasPermission(role, resource, action)) {
-        allowed = false;
-        reason = "permission_missing";
-        break;
-      }
-    }
   }
 
   if (!allowed) {

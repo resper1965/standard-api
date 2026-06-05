@@ -190,6 +190,13 @@
       "when": 1780597170679,
       "tag": "0026_purple_husk",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1780688862281,
+      "tag": "0027_moaning_karnak",
+      "breakpoints": true
     }
   ]
 }

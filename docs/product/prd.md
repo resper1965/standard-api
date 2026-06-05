@@ -72,7 +72,6 @@ Reduce compliance assessment time from **weeks → hours** while improving accur
 
 | Persona | Role | Needs |
 |---------|------|-------|
-| **Organization Admin** | Organization administrator | Manage members, roles, API keys, billing |
 | **Contributor** | Evidence provider | Upload documents, respond to information requests |
 
 ---
@@ -296,7 +295,7 @@ Upload → Validation → R2 Storage → Chunking → KB Indexing → Vector Emb
 |--------|----------|---------|
 | — | All `/api/v1/*` | Requires `Authorization: ApiKey <key>` or JWT session |
 
-**RBAC Roles** (hierarchical): `owner` > `admin` > `assessor` > `contributor` > `auditor_readonly`
+**RBAC Roles**: `owner` > `contributor` > `auditor_readonly`
 
 **Auth Methods:**
 - API Key authentication (SHA-256 hash + timing-safe comparison)
@@ -338,14 +337,11 @@ Upload → Validation → R2 Storage → Chunking → KB Indexing → Vector Emb
 | `GET` | `/api/v1/organizations/:id/audit-logs` | Organization audit trail |
 | `GET` | `/api/v1/organizations/:id/audit-logs` | Organization audit trail |
 
-### 6.5 Organization & Member Management
+### 6.5 Organization Management
 
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
-| `POST` | `/api/v1/organizations/:id/members` | Invite member |
-| `GET` | `/api/v1/organizations/:id/members` | List members |
-| `PATCH` | `/api/v1/members/:id` | Update role |
-| `DELETE` | `/api/v1/members/:id` | Remove member |
+| `GET` | `/api/v1/organizations/:id` | Get organization details |
 
 ### 6.6 Documentation Endpoints
 
@@ -401,14 +397,12 @@ Every critical data flow carries:
 ### 8.2 Authorization (RBAC)
 
 ```
-owner > admin > assessor > contributor > auditor_readonly
+owner > contributor > auditor_readonly
 ```
 
 | Role | Capabilities |
 |------|-------------|
-| `owner` | Full access, billing, delete org |
-| `admin` | Manage members, API keys, assessments |
-| `assessor` | Run assessments, approve artifacts |
+| `owner` | Full access, billing, API keys, manage assessments |
 | `contributor` | Upload documents, respond to requests |
 | `auditor_readonly` | View reports, audit trails (read-only) |
 
@@ -441,7 +435,7 @@ owner > admin > assessor > contributor > auditor_readonly
 | **Assessments List** | All assessments with status, filters, search |
 | **Assessment Detail** | Lifecycle progress, documents, artifacts, approval actions |
 | **SCF Explorer** | Browse controls, frameworks, crosswalk mappings |
-| **Organization Settings** | Members, roles, API keys, billing |
+| **Organization Settings** | API keys, billing |
 | **Reports** | Generated reports with download links |
 | **Audit Log** | Full audit trail with filterable events |
 | **Login** | Email/password + Google OAuth |
@@ -472,11 +466,6 @@ const { data } = await client.assessments.summary("assessment-id");
 // Dashboard
 const dashboard = await client.organizations.dashboard("org-id");
 
-// Invite member
-await client.organizations.inviteMember("org-id", {
-  email: "auditor@company.com",
-  role: "assessor"
-});
 
 // CI/CD compliance gate
 const gate = await client.assessments.complianceGate("assessment-id");
@@ -563,11 +552,9 @@ graph LR
 
 ### Phase 3: Frontend SaaS
 - API Playground
-- Organization self-service (profile, members, invites)
 - API Key self-service (create, revoke, monitor)
 - Billing/Plans dashboard
 - Onboarding wizard
-- Role separation (Master Admin vs Organization Admin vs User)
 
 ### Phase 4: Production Go-Live
 - Production checklist executed

@@ -36,7 +36,7 @@ export const createDrizzleTenantRepository = (db: DbClient): TenantRepositoryAda
     async create(input) {
       const [inserted] = await db
         .insert(organizations)
-        .values({ slug: input.slug, name: input.name, status: "active" })
+        .values({ slug: input.slug, name: input.name, status: "active", userId: "system" })
         .returning();
       return {
         organization_id: inserted!.id,

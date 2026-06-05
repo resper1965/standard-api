@@ -4,13 +4,13 @@
 This file provides the single source of truth for the architecture and technical stack to prevent hallucinations or references to legacy code.
 
 ### 1. Tenancy Model
-- **Concept:** Strict Organization-Based Tenancy. 
+- **Concept:** A arquitetura é Multi-Organization. O Platform Admin é quem faz a criação da organização e cede acesso ao administrador daquela organização. Só o administrador acessa a aplicação para criar suas chaves.
 - **Rule:** The concept of `tenant` or `tenant_id` **DOES NOT EXIST** in this application anymore. Multi-tenancy is exclusively handled via `organization_id` (or `organizationId`). All endpoints, middlewares, databases, and artifacts are strictly isolated by `organizationId`. 
 
 ### 2. Authentication Model
-- **Provider:** Standard Native Auth v1.6.11 (which wraps Better Auth).
+- **Provider:** Standard Native Auth v1.6.11.
 - **Rule:** Do NOT use or reference Clerk, Supabase, Auth0, or any other external provider.
-- **Storage:** Sessions, Users, and Organizations are managed via Standard Native Auth backed by Neon PostgreSQL (`sessions`, `users`, `organizations` tables).
+- **Storage:** Sessions and Users are managed via Standard Native Auth backed by Neon PostgreSQL (`sessions`, `users` tables). As funcionalidades atribuídas ao 'member' foram eliminadas, somos API only. O administrador da organização é a única pessoa com direito de acesso à mesma.
 - **API Keys:** Handled via `@standard-native-auth/api-key` plugin.
 
 ### 3. Frontend Architecture

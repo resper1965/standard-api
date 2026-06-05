@@ -3,6 +3,38 @@ import { AgentExecutor } from "./executor";
 import { AgentRuntimeError } from "./errors";
 import type { AgentRuntimeService } from "./runtime";
 
+// ---------------------------------------------------------------------------
+// Internal types for executeCouncilRun decomposition
+// ---------------------------------------------------------------------------
+
+/** Result of dynamically importing all UseCase modules. Null when import fails. */
+interface UseCaseModules {
+  EvidenceEvaluatorUseCase: (new (llm: any) => any) | null;
+  PoamArchitectUseCase: (new (llm: any) => any) | null;
+  CLevelBoardTranslatorUseCase: (new (llm: any) => any) | null;
+  IncidentTriagerUseCase: (new (llm: any) => any) | null;
+  VendorScannerUseCase: (new (llm: any) => any) | null;
+  RopaAnalyzerUseCase: (new (llm: any) => any) | null;
+  DpiaAssessorUseCase: (new (llm: any) => any) | null;
+}
+
+/** Return value from a single agent dispatch step. */
+interface AgentStepResult {
+  payload: any;
+  summaryOverride?: string;
+}
+
+/** Handler signature for a specialized agent in the dispatch map. */
+type AgentHandler = (
+  currentPayload: any,
+  inputData: Record<string, unknown>,
+  organizationId: string,
+  run: any
+) => Promise<AgentStepResult>;
+
+/** Map from agent name → handler function. */
+type AgentDispatchMap = Record<string, AgentHandler>;
+
 /**
  * The Council orchestrates multiple specialized Agents in a sequence.
  * E.g., an Analyst proposes findings, a Reviewer critiques them, and an Arbiter finalizes the score.
@@ -63,115 +95,27 @@ export class CouncilOrchestrator {
 
     const inputData = (run.metadata as Record<string, unknown>)?.input as Record<string, unknown>;
     const agents = (run.metadata as Record<string, unknown>)?.agents as string[] ?? [];
-    
+
+    // Dynamically load UseCases from the current context
+    const modules = await this.loadUseCaseModules();
+    const llmProvider = (this.runtimeService as any).deps.llm; // Safely grabbing the LLM from DI
+    const dispatch = this.buildAgentDispatcher(modules, llmProvider);
+
+    // Process pipeline sequentially
     let currentPayload: any = inputData;
     let finalSummary = "Council execution completed.";
 
-    // Dynamically load UseCases from the current context
-    const { EvidenceEvaluatorUseCase } = await import("./usecases/evidence-evaluator").catch(() => ({ EvidenceEvaluatorUseCase: null }));
-    const { PoamArchitectUseCase } = await import("./usecases/poam-architect").catch(() => ({ PoamArchitectUseCase: null }));
-    const { CLevelBoardTranslatorUseCase } = await import("./usecases/c-level-translator").catch(() => ({ CLevelBoardTranslatorUseCase: null }));
-    const { IncidentTriagerUseCase } = await import("./usecases/incident-triager").catch(() => ({ IncidentTriagerUseCase: null }));
-    const { VendorScannerUseCase } = await import("./usecases/vendor-scanner").catch(() => ({ VendorScannerUseCase: null }));
-    const { RopaAnalyzerUseCase } = await import("./usecases/ropa-analyzer").catch(() => ({ RopaAnalyzerUseCase: null }));
-    const { DpiaAssessorUseCase } = await import("./usecases/dpia-assessor").catch(() => ({ DpiaAssessorUseCase: null }));
-
-    const llmProvider = (this.runtimeService as any).deps.llm; // Safely grabbing the LLM from DI
-    
-    // Process pipeline sequentially
     for (const agentName of agents) {
-        if (agentName === "evidence_evaluator" && EvidenceEvaluatorUseCase) {
-           const evaluator = new EvidenceEvaluatorUseCase(llmProvider);
-           currentPayload = await evaluator.evaluate({
-               controlRequirement: currentPayload.controlObjective || "Ensure proper configuration",
-               evidenceDescription: currentPayload.evidenceText || "",
-               organizationId: organizationId
-           });
-        } 
-        else if (agentName === "poam_architect" && PoamArchitectUseCase) {
-           const architect = new PoamArchitectUseCase(llmProvider);
-           currentPayload = await architect.architect({
-               evidenceContext: currentPayload,
-               systemArchitectureDescription: inputData.systemArchitectureDescription as string || "Default Architecture",
-               organizationId: run.organization_id,
-               frameworkId: (run as any).framework_id ?? (run.metadata as any)?.framework_id
-           });
-        }
-        else if (agentName === "board_translator" && CLevelBoardTranslatorUseCase) {
-           const translator = new CLevelBoardTranslatorUseCase(llmProvider);
-           currentPayload = await translator.translate({
-               poamPlan: currentPayload,
-               regulatoryContext: inputData.regulatoryContext as string || "Standard Compliance Framework",
-               organizationId: organizationId
-           });
-           finalSummary = currentPayload.executive_summary;
-        }
-        else if (agentName === "incident_triager" && IncidentTriagerUseCase) {
-           const triager = new IncidentTriagerUseCase(llmProvider);
-           currentPayload = await triager.triage({
-               rawLogsExcerpt: currentPayload.rawLogsExcerpt || inputData.rawLogsExcerpt || "",
-               systemModuleName: currentPayload.systemModuleName || inputData.systemModuleName || "Unknown",
-               organizationId: organizationId
-           });
-           if (currentPayload.severity_level === "critical") finalSummary = "CRITICAL security incident triaged.";
-        }
-        else if (agentName === "vendor_scanner" && VendorScannerUseCase) {
-           const scanner = new VendorScannerUseCase(llmProvider);
-           currentPayload = await scanner.scan({
-               contractExcerpt: currentPayload.contractExcerpt || inputData.contractExcerpt || "",
-               vendorName: currentPayload.vendorName || inputData.vendorName || "Unknown Vendor",
-               organizationId: organizationId
-           });
-        }
-        else if (agentName === "ropa_analyzer" && RopaAnalyzerUseCase) {
-           const analyzer = new RopaAnalyzerUseCase(llmProvider);
-           currentPayload = await analyzer.analyze({
-               naturalLanguageDescription: currentPayload.naturalLanguageDescription || inputData.naturalLanguageDescription || "",
-               organizationId: organizationId
-           });
-        }
-        else if (agentName === "dpia_assessor" && DpiaAssessorUseCase) {
-           const assessor = new DpiaAssessorUseCase(llmProvider);
-           currentPayload = await assessor.assess({
-               ropaContext: currentPayload,
-               projectDescription: inputData.projectDescription as string || "General data processing project",
-               organizationId: organizationId
-           });
-           if (currentPayload.residual_risk_level === "high" || currentPayload.residual_risk_level === "critical") finalSummary = "High-Risk DPIA Requires Board Sign-off.";
-        }
-        else {
-           // Fallback to generic functional agent execution via executor
-           // For a deep DAG, we would enqueue it. Here we await it directly.
-           // This represents the Functional Tool-using Agent execution
-           const genericRun = await this.executor.execute({
-               agent_id: agentName as any,
-               agent_version: "1.0.0",
-               prompt_version: "1.0",
-               model: "orchestrator",
-               context: {
-                  organization_id: run.organization_id,
-                  assessment_id: run.assessment_id,
-                  framework_id: (run.metadata as any)?.framework_id ?? "",
-                  scf_version_id: "latest",
-                  trace_id: run.trace_id,
-               },
-               input: { prior_output: currentPayload }
-           });
-
-           currentPayload = (genericRun.metadata as any)?.FinalOutput || (genericRun as any).summary;
-        }
+      const result = await this.dispatchSingleAgent(
+        agentName, dispatch, currentPayload, inputData, organizationId, run
+      );
+      currentPayload = result.payload;
+      if (result.summaryOverride) {
+        finalSummary = result.summaryOverride;
+      }
     }
 
-    const finalOutput = {
-      summary: finalSummary,
-      assumptions: [],
-      limitations: [],
-      sources: agents,
-      confidence_score: 0.95,
-      writes_final_finding: false, // Council orchestrates agents; it does NOT write final findings directly (AGENTS.md §10)
-      creates_official_mapping: false,
-      metadata: { final_payload: currentPayload, input_data: inputData }
-    };
+    const finalOutput = this.buildCouncilOutput(finalSummary, agents, currentPayload, inputData);
 
     return await this.runtimeService.completeRun(runId, {
       context: {
@@ -183,6 +127,209 @@ export class CouncilOrchestrator {
       },
       output: finalOutput
     });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Private helpers extracted from executeCouncilRun to reduce cognitive complexity
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Dynamically imports all UseCase modules, returning null for any that fail to load.
+   */
+  private async loadUseCaseModules(): Promise<UseCaseModules> {
+    const [
+      evidenceEvaluator,
+      poamArchitect,
+      cLevelTranslator,
+      incidentTriager,
+      vendorScanner,
+      ropaAnalyzer,
+      dpiaAssessor,
+    ] = await Promise.all([
+      import("./usecases/evidence-evaluator").catch(() => ({ EvidenceEvaluatorUseCase: null })),
+      import("./usecases/poam-architect").catch(() => ({ PoamArchitectUseCase: null })),
+      import("./usecases/c-level-translator").catch(() => ({ CLevelBoardTranslatorUseCase: null })),
+      import("./usecases/incident-triager").catch(() => ({ IncidentTriagerUseCase: null })),
+      import("./usecases/vendor-scanner").catch(() => ({ VendorScannerUseCase: null })),
+      import("./usecases/ropa-analyzer").catch(() => ({ RopaAnalyzerUseCase: null })),
+      import("./usecases/dpia-assessor").catch(() => ({ DpiaAssessorUseCase: null })),
+    ]);
+
+    return {
+      EvidenceEvaluatorUseCase: evidenceEvaluator.EvidenceEvaluatorUseCase,
+      PoamArchitectUseCase: poamArchitect.PoamArchitectUseCase,
+      CLevelBoardTranslatorUseCase: cLevelTranslator.CLevelBoardTranslatorUseCase,
+      IncidentTriagerUseCase: incidentTriager.IncidentTriagerUseCase,
+      VendorScannerUseCase: vendorScanner.VendorScannerUseCase,
+      RopaAnalyzerUseCase: ropaAnalyzer.RopaAnalyzerUseCase,
+      DpiaAssessorUseCase: dpiaAssessor.DpiaAssessorUseCase,
+    };
+  }
+
+  /**
+   * Builds a dispatch map from agent name to handler function.
+   * Each handler receives (currentPayload, inputData, organizationId, run) and returns an AgentStepResult.
+   */
+  private buildAgentDispatcher(
+    modules: UseCaseModules,
+    llmProvider: any
+  ): AgentDispatchMap {
+    const dispatch: AgentDispatchMap = {};
+
+    if (modules.EvidenceEvaluatorUseCase) {
+      dispatch["evidence_evaluator"] = async (currentPayload, _inputData, organizationId) => {
+        const evaluator = new modules.EvidenceEvaluatorUseCase!(llmProvider);
+        const payload = await evaluator.evaluate({
+          controlRequirement: currentPayload.controlObjective || "Ensure proper configuration",
+          evidenceDescription: currentPayload.evidenceText || "",
+          organizationId: organizationId,
+        });
+        return { payload };
+      };
+    }
+
+    if (modules.PoamArchitectUseCase) {
+      dispatch["poam_architect"] = async (currentPayload, inputData, organizationId, run) => {
+        const architect = new modules.PoamArchitectUseCase!(llmProvider);
+        const payload = await architect.architect({
+          evidenceContext: currentPayload,
+          systemArchitectureDescription: inputData.systemArchitectureDescription as string || "Default Architecture",
+          organizationId: run.organization_id,
+          frameworkId: (run as any).framework_id ?? (run.metadata as any)?.framework_id,
+        });
+        return { payload };
+      };
+    }
+
+    if (modules.CLevelBoardTranslatorUseCase) {
+      dispatch["board_translator"] = async (currentPayload, inputData, organizationId) => {
+        const translator = new modules.CLevelBoardTranslatorUseCase!(llmProvider);
+        const payload = await translator.translate({
+          poamPlan: currentPayload,
+          regulatoryContext: inputData.regulatoryContext as string || "Standard Compliance Framework",
+          organizationId: organizationId,
+        });
+        return { payload, summaryOverride: payload.executive_summary };
+      };
+    }
+
+    if (modules.IncidentTriagerUseCase) {
+      dispatch["incident_triager"] = async (currentPayload, inputData, organizationId) => {
+        const triager = new modules.IncidentTriagerUseCase!(llmProvider);
+        const payload = await triager.triage({
+          rawLogsExcerpt: currentPayload.rawLogsExcerpt || inputData.rawLogsExcerpt || "",
+          systemModuleName: currentPayload.systemModuleName || inputData.systemModuleName || "Unknown",
+          organizationId: organizationId,
+        });
+        const result: AgentStepResult = { payload };
+        if (payload.severity_level === "critical") {
+          result.summaryOverride = "CRITICAL security incident triaged.";
+        }
+        return result;
+      };
+    }
+
+    if (modules.VendorScannerUseCase) {
+      dispatch["vendor_scanner"] = async (currentPayload, inputData, organizationId) => {
+        const scanner = new modules.VendorScannerUseCase!(llmProvider);
+        const payload = await scanner.scan({
+          contractExcerpt: currentPayload.contractExcerpt || inputData.contractExcerpt || "",
+          vendorName: currentPayload.vendorName || inputData.vendorName || "Unknown Vendor",
+          organizationId: organizationId,
+        });
+        return { payload };
+      };
+    }
+
+    if (modules.RopaAnalyzerUseCase) {
+      dispatch["ropa_analyzer"] = async (currentPayload, inputData, _organizationId, _run) => {
+        const analyzer = new modules.RopaAnalyzerUseCase!(llmProvider);
+        const payload = await analyzer.analyze({
+          naturalLanguageDescription: currentPayload.naturalLanguageDescription || inputData.naturalLanguageDescription || "",
+          organizationId: _organizationId,
+        });
+        return { payload };
+      };
+    }
+
+    if (modules.DpiaAssessorUseCase) {
+      dispatch["dpia_assessor"] = async (currentPayload, inputData, organizationId) => {
+        const assessor = new modules.DpiaAssessorUseCase!(llmProvider);
+        const payload = await assessor.assess({
+          ropaContext: currentPayload,
+          projectDescription: inputData.projectDescription as string || "General data processing project",
+          organizationId: organizationId,
+        });
+        const result: AgentStepResult = { payload };
+        if (payload.residual_risk_level === "high" || payload.residual_risk_level === "critical") {
+          result.summaryOverride = "High-Risk DPIA Requires Board Sign-off.";
+        }
+        return result;
+      };
+    }
+
+    return dispatch;
+  }
+
+  /**
+   * Dispatches a single agent step, falling back to the generic executor when
+   * no specialized handler is registered for the given agent name.
+   */
+  private async dispatchSingleAgent(
+    agentName: string,
+    dispatch: AgentDispatchMap,
+    currentPayload: any,
+    inputData: Record<string, unknown>,
+    organizationId: string,
+    run: any
+  ): Promise<AgentStepResult> {
+    const handler = dispatch[agentName];
+    if (handler) {
+      return handler(currentPayload, inputData, organizationId, run);
+    }
+
+    // Fallback to generic functional agent execution via executor
+    // For a deep DAG, we would enqueue it. Here we await it directly.
+    // This represents the Functional Tool-using Agent execution
+    const genericRun = await this.executor.execute({
+      agent_id: agentName as any,
+      agent_version: "1.0.0",
+      prompt_version: "1.0",
+      model: "orchestrator",
+      context: {
+        organization_id: run.organization_id,
+        assessment_id: run.assessment_id,
+        framework_id: (run.metadata as any)?.framework_id ?? "",
+        scf_version_id: "latest",
+        trace_id: run.trace_id,
+      },
+      input: { prior_output: currentPayload },
+    });
+
+    const payload = (genericRun.metadata as any)?.FinalOutput || (genericRun as any).summary;
+    return { payload };
+  }
+
+  /**
+   * Assembles the final council output object.
+   * Council orchestrates agents; it does NOT write final findings directly (AGENTS.md §10).
+   */
+  private buildCouncilOutput(
+    finalSummary: string,
+    agents: string[],
+    currentPayload: any,
+    inputData: Record<string, unknown>
+  ) {
+    return {
+      summary: finalSummary,
+      assumptions: [],
+      limitations: [],
+      sources: agents,
+      confidence_score: 0.95,
+      writes_final_finding: false, // Council orchestrates agents; it does NOT write final findings directly (AGENTS.md §10)
+      creates_official_mapping: false,
+      metadata: { final_payload: currentPayload, input_data: inputData },
+    };
   }
 
   // Atomic Steps for Cloudflare Workflows SDK Integration

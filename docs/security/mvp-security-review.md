@@ -57,7 +57,7 @@ Ameaças principais:
 ## Controles Pendentes
 
 - Auth real JWT/API key/Cloudflare Access.
-- Membership/assignment real por assessment.
+- Strict API Key assignment (1:1 User=Tenant) per assessment.
 - Rate limiting enforcement real.
 - Malware scanning real.
 - Persistência de audit/security events.

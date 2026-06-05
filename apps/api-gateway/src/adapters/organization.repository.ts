@@ -45,7 +45,8 @@ export const createDrizzleOrganizationRepository = (db: DbClient): OrganizationR
         status: "active" as const,
         name: input.name,
         slug: input.slug,
-        billingTier: "free"
+        billingTier: "free",
+        userId: "system", // Required by schema
       }).returning();
       return {
         organization_id: inserted!.id,
