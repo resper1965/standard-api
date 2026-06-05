@@ -13,10 +13,7 @@ import {
   baSession,
   baAccount,
   baVerification,
-  baApikey,
-  baOrganization,
-  baMember,
-  baInvitation
+  baApikey
 } from "@standard/schemas";
 import { sendStandardEmail, type SendEmail } from "@standard/email";
 
@@ -40,10 +37,7 @@ export const createAuth = (env: AuthEnv, db: any) => {
         session: baSession,
         account: baAccount,
         verification: baVerification,
-        apikey: baApikey,
-        organization: baOrganization,
-        member: baMember,
-        invitation: baInvitation
+        apikey: baApikey
       }
     }),
     secret: env.BETTER_AUTH_SECRET,
@@ -125,17 +119,7 @@ export const createAuth = (env: AuthEnv, db: any) => {
         metadata: {
           type: "string",
         },
-        /**
-         * API access role.
-         * Returned in session so the frontend can display it.
-         * Settable only via admin API (input: false on public endpoints).
-         */
-        role: {
-          type: "string",
-          defaultValue: "member",
-          returned: true,
-          input: false,
-        },
+
         /**
          * Platform-level admin flag.
          * When true, the user has cross-tenant access (Bekaa operator).

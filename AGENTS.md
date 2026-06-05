@@ -267,3 +267,4 @@ Quando o usuário digitar `reversa` sozinho em uma mensagem:
 Nunca apague, modifique ou sobrescreva arquivos pré-existentes do projeto legado.
 O Reversa escreve **apenas** em `.reversa/` e `_reversa_sdd/`.
 
+

@@ -1,4 +1,4 @@
-﻿---
+---
 title: "API Design"
 ---
 
@@ -39,7 +39,7 @@ Toda request recebe ou reutiliza `x-trace-id`. Erros, responses críticas, lifec
 ## Decisões Implementadas
 
 - Auth implementado via Standard Native Auth v1.6.11 (ADR 0005) com modelo dual: sessões (cookies) para Platform Console e M2M API Keys (SHA-256 hash) para acesso programático.
-- RBAC/ABAC baseado em roles (owner/admin/member/viewer) com permissions por recurso.
+- RBAC/ABAC baseado em roles (owner/contributor/auditor) com permissions por recurso.
 - Persistência PostgreSQL via Drizzle ORM (ADR 0006).
 - Rate limiting/quota por organization.
 - SCF real e parser SCF integrado.

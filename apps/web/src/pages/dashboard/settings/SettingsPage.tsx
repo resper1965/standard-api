@@ -1,7 +1,7 @@
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useState, useEffect } from "react"
 import { useSession } from "@/lib/auth-client"
-import { useOrgDetail, useOrgMembers, useOrgApiKeys, qk } from "@/lib/queries"
+import { useOrgDetail, useOrgApiKeys, qk } from "@/lib/queries"
 import { useQueryClient } from "@tanstack/react-query"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
@@ -9,7 +9,7 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Copy, Plus, Users, Building, Key, Check, BookOpen, Trash2, ChevronDown, ChevronRight, ExternalLink, Loader2, AlertTriangle } from "lucide-react"
+import { Copy, Plus, Building, Key, Check, BookOpen, Trash2, ChevronDown, ChevronRight, ExternalLink, Loader2, AlertTriangle } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import {
   Dialog,
@@ -460,14 +460,6 @@ interface OrgSummary {
   billing_tier: string
   status?: string
 }
-interface Member {
-  userId?: string
-  user?: { id: string; name: string; email: string }
-  name?: string
-  email?: string
-  role: string
-  createdAt?: string
-}
 interface ApiKeySummary {
   id: string
   name: string
@@ -490,11 +482,9 @@ export function SettingsPage() {
 
   const qc = useQueryClient()
   const { data: orgDetail } = useOrgDetail(orgId)
-  const { data: membersData } = useOrgMembers(orgId)
   const { data: apiKeysData } = useOrgApiKeys(orgId)
 
   const activeOrg = orgDetail as OrgSummary | null | undefined
-  const members = (membersData?.data ?? []) as Member[]
   const apiKeys = (apiKeysData?.data ?? []) as ApiKeySummary[]
 
   const [newKey, setNewKey] = useState<string | null>(null)
@@ -514,15 +504,7 @@ export function SettingsPage() {
   const [isUpdatingOrg, setIsUpdatingOrg] = useState(false)
   const [isUpdatingBilling, setIsUpdatingBilling] = useState(false)
 
-  // Invite states
-  const [inviteEmail, setInviteEmail] = useState("")
-  const [inviteRole, setInviteRole] = useState("member")
-  const [inviteName, setInviteName] = useState("")
-  const [isInviting, setIsInviting] = useState(false)
-  const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false)
 
-  const loggedMember = members.find(m => m.userId === session?.user?.id || m.user?.id === session?.user?.id);
-  const isOwner = loggedMember?.role === "owner" || session?.user?.role === "owner";
 
   useEffect(() => {
     if (activeOrg) {
@@ -576,32 +558,6 @@ export function SettingsPage() {
       toast({ title: "Update failed", description: e instanceof Error ? e.message : "Failed to update billing tier." })
     } finally {
       setIsUpdatingBilling(false)
-    }
-  }
-
-  const handleInviteMember = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!activeOrg?.id) return
-    setIsInviting(true)
-    try {
-      await api(`/api/v1/organizations/${activeOrg.id}/invites`, {
-        method: "POST",
-        body: JSON.stringify({
-          email: inviteEmail,
-          role: inviteRole,
-          display_name: inviteName || undefined
-        })
-      })
-      toast({ title: "Member invited", description: `Invitation sent to ${inviteEmail}.` })
-      qc.invalidateQueries({ queryKey: qk.orgMembers(activeOrg.id) })
-      setInviteEmail("")
-      setInviteName("")
-      setInviteRole("member")
-      setIsInviteDialogOpen(false)
-    } catch (e) {
-      toast({ title: "Invite failed", description: e instanceof Error ? e.message : "Failed to invite member." })
-    } finally {
-      setIsInviting(false)
     }
   }
 
@@ -663,7 +619,7 @@ export function SettingsPage() {
       <Tabs defaultValue="general" className="w-full">
         <TabsList className="mb-4 bg-muted/50">
           <TabsTrigger value="general"><Building className="w-4 h-4 mr-2" />General</TabsTrigger>
-          <TabsTrigger value="members"><Users className="w-4 h-4 mr-2" />Members</TabsTrigger>
+
           <TabsTrigger value="keys"><Key className="w-4 h-4 mr-2" />API Keys</TabsTrigger>
           <TabsTrigger value="docs"><BookOpen className="w-4 h-4 mr-2" />API Reference</TabsTrigger>
         </TabsList>
@@ -706,7 +662,6 @@ export function SettingsPage() {
                     id="orgName"
                     value={orgName}
                     onChange={(e) => setOrgName(e.target.value)}
-                    disabled={!isOwner}
                     placeholder="Organization Name"
                   />
                 </div>
@@ -716,22 +671,19 @@ export function SettingsPage() {
                     id="orgSlug"
                     value={orgSlug}
                     onChange={(e) => setOrgSlug(e.target.value)}
-                    disabled={!isOwner}
                     placeholder="organization-slug"
                   />
                 </div>
-                {isOwner && (
-                  <Button type="submit" disabled={isUpdatingOrg} className="bg-primary/80">
-                    {isUpdatingOrg ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Saving...
-                      </>
-                    ) : (
-                      "Save Settings"
-                    )}
-                  </Button>
-                )}
+                <Button type="submit" disabled={isUpdatingOrg} className="bg-primary/80">
+                  {isUpdatingOrg ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    "Save Settings"
+                  )}
+                </Button>
               </form>
             </CardContent>
           </Card>
@@ -748,7 +700,6 @@ export function SettingsPage() {
                   id="billingTier"
                   value={billingTier}
                   onChange={(e) => setBillingTier(e.target.value)}
-                  disabled={!isOwner}
                   className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <option value="free">Free - SCF & Local Assessments</option>
@@ -756,123 +707,20 @@ export function SettingsPage() {
                   <option value="enterprise">Enterprise - Dedicated Workspace & Support</option>
                 </select>
               </div>
-              {isOwner && (
-                <Button onClick={handleUpdateBilling} disabled={isUpdatingBilling} className="bg-primary/80">
-                  {isUpdatingBilling ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Updating Plan...
-                    </>
-                  ) : (
-                    "Update Plan"
-                  )}
-                </Button>
-              )}
+              <Button onClick={handleUpdateBilling} disabled={isUpdatingBilling} className="bg-primary/80">
+                {isUpdatingBilling ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Updating Plan...
+                  </>
+                ) : (
+                  "Update Plan"
+                )}
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* ─── Members ─── */}
-        <TabsContent value="members" className="space-y-4">
-          <Card className="border-border bg-card/60">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>Team Members</CardTitle>
-                <CardDescription>Users with access to this organization.</CardDescription>
-              </div>
-              {isOwner && (
-                <Dialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button className="bg-primary/80"><Plus className="w-4 h-4 mr-2" />Invite Member</Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[425px] border-border bg-card/95 backdrop-blur-md">
-                    <DialogHeader>
-                      <DialogTitle>Invite Team Member</DialogTitle>
-                      <DialogDescription>
-                        Send an invitation to join your organization.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <form onSubmit={handleInviteMember} className="space-y-4 py-2">
-                      <div className="grid gap-2">
-                        <Label htmlFor="inviteName">Name (Optional)</Label>
-                        <Input
-                          id="inviteName"
-                          value={inviteName}
-                          onChange={(e) => setInviteName(e.target.value)}
-                          placeholder="e.g. John Doe"
-                        />
-                      </div>
-                      <div className="grid gap-2">
-                        <Label htmlFor="inviteEmail">Email Address</Label>
-                        <Input
-                          id="inviteEmail"
-                          type="email"
-                          required
-                          value={inviteEmail}
-                          onChange={(e) => setInviteEmail(e.target.value)}
-                          placeholder="e.g. john@company.com"
-                        />
-                      </div>
-                      <div className="grid gap-2">
-                        <Label htmlFor="inviteRole">Role</Label>
-                        <select
-                          id="inviteRole"
-                          value={inviteRole}
-                          onChange={(e) => setInviteRole(e.target.value)}
-                          className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                        >
-                          <option value="member">Member</option>
-                          <option value="admin">Admin</option>
-                          <option value="owner">Owner</option>
-                        </select>
-                      </div>
-                      <DialogFooter className="pt-4">
-                        <DialogClose asChild>
-                          <Button type="button" variant="outline">Cancel</Button>
-                        </DialogClose>
-                        <Button type="submit" disabled={isInviting} className="bg-primary/80">
-                          {isInviting ? (
-                            <>
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                              Inviting...
-                            </>
-                          ) : (
-                            "Send Invitation"
-                          )}
-                        </Button>
-                      </DialogFooter>
-                    </form>
-                  </DialogContent>
-                </Dialog>
-              )}
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Joined</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {members.map((m) => (
-                    <TableRow key={m.id}>
-                      <TableCell className="font-medium">{m.user?.name || "Pending"}</TableCell>
-                      <TableCell>{m.user?.email || "—"}</TableCell>
-                      <TableCell><span className="capitalize px-2 py-0.5 bg-primary/10 text-primary rounded text-xs font-semibold">{m.role}</span></TableCell>
-                      <TableCell className="text-muted-foreground text-sm">{new Date(m.createdAt).toLocaleDateString()}</TableCell>
-                    </TableRow>
-                  ))}
-                  {members.length === 0 && (
-                    <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground h-24">No members yet. Invite your team above.</TableCell></TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
 
         {/* ─── API Keys ─── */}
         <TabsContent value="keys" className="space-y-4">

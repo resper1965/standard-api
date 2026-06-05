@@ -13,7 +13,7 @@
  */
 import { z } from "zod";
 import { eq, ilike, or, sql, desc, and } from "drizzle-orm";
-import { baUser, baSession, baAccount, baMember, baOrganization } from "@standard/schemas";
+import { baUser, baSession, baAccount, organizations } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition, RequestContext } from "../http";
 import { json, parseJson, routeParam, routeUuidParam } from "../http";
@@ -46,9 +46,8 @@ const ListUsersQuerySchema = z.object({
 /** Zod schema for the PATCH body. */
 const UpdateUserBodySchema = z.object({
   name: z.string().min(1).max(255).optional(),
-  role: z.string().min(1).max(50).optional(),
-}).refine((d) => d.name || d.role, {
-  message: "At least one of 'name' or 'role' must be provided.",
+}).refine((d) => d.name, {
+  message: "At least one of 'name' must be provided.",
 });
 
 /** Zod schema for the ban body. */
@@ -70,7 +69,6 @@ const userColumns = {
   email: baUser.email,
   emailVerified: baUser.emailVerified,
   image: baUser.image,
-  role: baUser.role,
   banned: baUser.banned,
   banReason: baUser.banReason,
   banExpires: baUser.banExpires,
@@ -164,7 +162,6 @@ export const adminUsersRoutes: RouteDefinition[] = [
         updatedAt: new Date(),
       };
       if (body.name) patch.name = body.name;
-      if (body.role) patch.role = body.role;
 
       const [updated] = await db
         .update(baUser)
@@ -175,7 +172,7 @@ export const adminUsersRoutes: RouteDefinition[] = [
       await context.deps.audit.record("admin.user.updated", {
         actor_id: context.actorId,
         target_user_id: userId,
-        changes: { name: body.name, role: body.role },
+        changes: { name: body.name },
         trace_id: context.traceId,
       });
 
@@ -320,9 +317,9 @@ export const adminUsersRoutes: RouteDefinition[] = [
 
       // Verify the target organization exists
       const [org] = await db
-        .select({ id: baOrganization.id, name: baOrganization.name })
-        .from(baOrganization)
-        .where(eq(baOrganization.id, body.organization_id))
+        .select({ id: organizations.id, name: organizations.name })
+        .from(organizations)
+        .where(eq(organizations.id, body.organization_id))
         .limit(1);
       if (!org) {
         throw new ApiError("NOT_FOUND", "Organization not found. Select a valid organization.", 404);
@@ -335,27 +332,12 @@ export const adminUsersRoutes: RouteDefinition[] = [
         .where(eq(baUser.id, userId))
         .returning(userColumns);
 
-      // 2. Create membership in the organization (baMember)
-      const [existingMembership] = await db
-        .select({ id: baMember.id })
-        .from(baMember)
-        .where(
-          and(
-            eq(baMember.userId, userId),
-            eq(baMember.organizationId, body.organization_id)
-          )
-        )
-        .limit(1);
-
-      if (!existingMembership) {
-        await db.insert(baMember).values({
-          id: crypto.randomUUID(),
-          organizationId: body.organization_id,
-          userId: userId,
-          role: body.role ?? "member",
-          createdAt: new Date(),
-        });
-      }
+      // 2. Assign user to the organization (since they can only have one, update organizations table)
+      // Note: organizations has a userId column. 
+      await db
+        .update(organizations)
+        .set({ userId: userId })
+        .where(eq(organizations.id, body.organization_id));
 
       // 3. JIT resolve tenant context for the org (idempotent)
       try {
@@ -364,12 +346,6 @@ export const adminUsersRoutes: RouteDefinition[] = [
         // Non-fatal — tenant may already exist
         console.warn("[admin:approve] resolveOrganizationContext warning:", err);
       }
-
-      // 4. Activate the org in user’s sessions (if any exist)
-      await db
-        .update(baSession)
-        .set({ activeOrganizationId: body.organization_id })
-        .where(eq(baSession.userId, userId));
 
       await context.deps.audit.record("admin.user.approved", {
         actor_id: context.actorId,

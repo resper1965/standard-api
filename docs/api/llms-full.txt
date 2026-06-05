@@ -12,7 +12,7 @@ Every request requires two headers:
 
 \`\`\`
 Authorization: Bearer standard_live_abc123def456
-x-standard-tenant-id: org_pa5khl
+
 \`\`\`
 
 - **Bearer API Key**: Machine-to-machine key from the dashboard (prefix: \`standard_live_\` or \`standard_test_\`)
@@ -73,7 +73,7 @@ Rate limits: 100 req/10s (general) · 5/min (sign-in) · 3/min (sign-up)
 \`\`\`bash
 curl -X POST ${baseUrl}/api/v1/gap/evaluate-evidence \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
-  -H "x-standard-tenant-id: YOUR_ORG_ID" \\
+ \
   -H "Content-Type: application/json" \\
   -d '{
     "controlRequirement": "Backup data must be encrypted at rest with AES-256.",
@@ -106,7 +106,7 @@ curl -X POST ${baseUrl}/api/v1/gap/evaluate-evidence \\
 \`\`\`bash
 curl -X POST ${baseUrl}/api/v1/soc/triage-incident \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
-  -H "x-standard-tenant-id: YOUR_ORG_ID" \\
+ \
   -H "Content-Type: application/json" \\
   -d '{
     "systemModuleName": "WAF Edge Firewall",
@@ -141,7 +141,7 @@ curl -X POST ${baseUrl}/api/v1/soc/triage-incident \\
 \`\`\`bash
 curl -X POST ${baseUrl}/api/v1/executive/translate-risk \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
-  -H "x-standard-tenant-id: YOUR_ORG_ID" \\
+ \
   -H "Content-Type: application/json" \\
   -d '{
     "technicalRiskDescription": "Kubernetes pod kube-system exposing port 10250 without authentication (CVE-2018-1002105).",
@@ -176,7 +176,7 @@ curl -X POST ${baseUrl}/api/v1/executive/translate-risk \\
 \`\`\`bash
 curl -X POST ${baseUrl}/api/v1/privacy/scan-vendor-contract \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
-  -H "x-standard-tenant-id: YOUR_ORG_ID" \\
+ \
   -H "Content-Type: application/json" \\
   -d '{
     "vendorName": "CloudSync Analytics Ltd.",
@@ -215,7 +215,7 @@ curl -X POST ${baseUrl}/api/v1/privacy/scan-vendor-contract \\
 \`\`\`bash
 curl -X POST ${baseUrl}/api/v1/intelligence/compliance-score \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
-  -H "x-standard-tenant-id: YOUR_ORG_ID" \\
+ \
   -H "Content-Type: application/json" \\
   -d '{
     "regulation_id": "lgpd",
@@ -250,7 +250,7 @@ curl -X POST ${baseUrl}/api/v1/intelligence/compliance-score \\
 \`\`\`bash
 curl -X POST ${baseUrl}/api/v1/intelligence/cross-coverage \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
-  -H "x-standard-tenant-id: YOUR_ORG_ID" \\
+ \
   -H "Content-Type: application/json" \\
   -d '{
     "source_framework": "iso27001",
@@ -287,7 +287,7 @@ curl -X POST ${baseUrl}/api/v1/intelligence/cross-coverage \\
 \`\`\`bash
 curl -X POST ${baseUrl}/api/v1/intelligence/roi-path \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
-  -H "x-standard-tenant-id: YOUR_ORG_ID" \\
+ \
   -H "Content-Type: application/json" \\
   -d '{
     "target_framework": "iso27001",
@@ -326,7 +326,7 @@ curl -X POST ${baseUrl}/api/v1/intelligence/roi-path \\
 \`\`\`bash
 curl -X POST ${baseUrl}/api/v1/intelligence/blast-radius \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
-  -H "x-standard-tenant-id: YOUR_ORG_ID" \\
+ \
   -H "Content-Type: application/json" \\
   -d '{"control_id": "PRI-01"}'
 \`\`\`
@@ -358,7 +358,7 @@ curl -X POST ${baseUrl}/api/v1/intelligence/blast-radius \\
 \`\`\`bash
 curl -X POST ${baseUrl}/api/v1/privacy/analyze-ropa \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
-  -H "x-standard-tenant-id: YOUR_ORG_ID" \\
+ \
   -H "Content-Type: application/json" \\
   -d '{"text": "We digitize medical records from patients at the reception desk and store them in a cloud database for 10 years."}'
 \`\`\`
@@ -368,7 +368,7 @@ curl -X POST ${baseUrl}/api/v1/privacy/analyze-ropa \\
 \`\`\`bash
 curl -X POST ${baseUrl}/api/v1/privacy/assess-dpia \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
-  -H "x-standard-tenant-id: YOUR_ORG_ID" \\
+ \
   -H "Content-Type: application/json" \\
   -d '{
     "projectDescription": "Digitization of medical records at reception desk",
@@ -393,7 +393,7 @@ curl -X POST ${baseUrl}/api/v1/privacy/assess-dpia \\
 \`\`\`bash
 curl -X POST ${baseUrl}/api/v1/privacy/processing-activities/from-text \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
-  -H "x-standard-tenant-id: YOUR_ORG_ID" \\
+ \
   -H "Content-Type: application/json" \\
   -d '{"text": "We collect customer emails... "}'
 \`\`\`
@@ -402,14 +402,14 @@ curl -X POST ${baseUrl}/api/v1/privacy/processing-activities/from-text \\
 \`\`\`bash
 curl -X POST ${baseUrl}/api/v1/privacy/processing-activities/ACTIVITY_ID/screen \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
-  -H "x-standard-tenant-id: YOUR_ORG_ID"
+ 
 \`\`\`
 
 **Step 3: Generate report**
 \`\`\`bash
 curl -X GET "${baseUrl}/api/v1/privacy/processing-activities/ACTIVITY_ID/report?format=markdown" \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
-  -H "x-standard-tenant-id: YOUR_ORG_ID"
+ 
 \`\`\`
 
 ---
@@ -429,7 +429,7 @@ curl -X GET "${baseUrl}/api/v1/privacy/processing-activities/ACTIVITY_ID/report?
 \`\`\`bash
 curl -X POST ${baseUrl}/api/v1/assessments \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
-  -H "x-standard-tenant-id: YOUR_ORG_ID" \\
+ \
   -H "Content-Type: application/json" \\
   -d '{"name": "ISO 27001 Q4 2026", "scf_version_id": "SCF_VERSION_UUID", "organization_id": "YOUR_ORG_ID"}'
 \`\`\`
@@ -439,7 +439,7 @@ curl -X POST ${baseUrl}/api/v1/assessments \\
 \`\`\`bash
 curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/scope \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
-  -H "x-standard-tenant-id: YOUR_ORG_ID" \\
+ \
   -H "Content-Type: application/json" \\
   -d '{"framework_id": "iso27001", "departments": ["IT", "HR"], "locations": ["HQ"]}'
 \`\`\`
@@ -449,7 +449,7 @@ curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/scope \\
 \`\`\`bash
 curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/soa/draft \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
-  -H "x-standard-tenant-id: YOUR_ORG_ID"
+ 
 \`\`\`
 
 **Step 4: Upload evidence documents**
@@ -457,7 +457,7 @@ curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/soa/draft \\
 \`\`\`bash
 curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/documents \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
-  -H "x-standard-tenant-id: YOUR_ORG_ID" \\
+ \
   -F "file=@security-policy.pdf" \\
   -F "file=@access-control-matrix.xlsx"
 \`\`\`
@@ -467,7 +467,7 @@ curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/documents \\
 \`\`\`bash
 curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/evidence-analysis/run \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
-  -H "x-standard-tenant-id: YOUR_ORG_ID"
+ 
 \`\`\`
 
 **Step 6: Generate Gap Analysis**
@@ -475,7 +475,7 @@ curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/evidence-analysis/run \
 \`\`\`bash
 curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/gap-analysis/draft \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
-  -H "x-standard-tenant-id: YOUR_ORG_ID"
+ 
 \`\`\`
 
 **Step 7: Generate POA&M (Plan of Action & Milestones)**
@@ -483,7 +483,7 @@ curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/gap-analysis/draft \\
 \`\`\`bash
 curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/poam/draft \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
-  -H "x-standard-tenant-id: YOUR_ORG_ID"
+ 
 \`\`\`
 
 **Step 8: Generate Report**
@@ -491,7 +491,7 @@ curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/poam/draft \\
 \`\`\`bash
 curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/reports/draft \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
-  -H "x-standard-tenant-id: YOUR_ORG_ID"
+ 
 \`\`\`
 
 **Step 9: Check Compliance Gate (Go/No-Go)**
@@ -499,7 +499,7 @@ curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/reports/draft \\
 \`\`\`bash
 curl -X GET ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/compliance-gate \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
-  -H "x-standard-tenant-id: YOUR_ORG_ID"
+ 
 \`\`\`
 
 **Notes**:
@@ -537,22 +537,22 @@ curl -X GET "${baseUrl}/api/v1/scf/versions/SCF_VERSION_ID/controls?domain=PRI&p
 # 1. Run AI evidence analysis
 curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/evidence-analysis/run \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
-  -H "x-standard-tenant-id: YOUR_ORG_ID"
+ 
 
 # 2. List evidence findings
 curl -X GET ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/evidence-findings \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
-  -H "x-standard-tenant-id: YOUR_ORG_ID"
+ 
 
 # 3. Generate gap analysis from findings
 curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/gap-analysis/draft \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
-  -H "x-standard-tenant-id: YOUR_ORG_ID"
+ 
 
 # 4. Review gap findings
 curl -X GET ${baseUrl}/api/v1/gap-analysis/GAP_VERSION_ID/findings \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
-  -H "x-standard-tenant-id: YOUR_ORG_ID"
+ 
 \`\`\`
 
 **Mode C — Gap to PoAM chain:**
@@ -560,7 +560,7 @@ curl -X GET ${baseUrl}/api/v1/gap-analysis/GAP_VERSION_ID/findings \\
 \`\`\`bash
 curl -X POST ${baseUrl}/api/v1/poam/architect-remediation \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
-  -H "x-standard-tenant-id: YOUR_ORG_ID" \\
+ \
   -H "Content-Type: application/json" \\
   -d '{"controlGap": "Missing encryption at rest for PII data", "context": "Cloud-hosted SaaS processing healthcare data"}'
 \`\`\`
@@ -575,7 +575,7 @@ curl -X POST ${baseUrl}/api/v1/poam/architect-remediation \\
 \`\`\`bash
 curl -X GET ${baseUrl}/api/v1/organizations/YOUR_ORG_ID/dashboard \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
-  -H "x-standard-tenant-id: YOUR_ORG_ID"
+ 
 \`\`\`
 
 **Stateless intelligence (no assessment required):**
@@ -594,7 +594,7 @@ curl -X GET ${baseUrl}/api/v1/organizations/YOUR_ORG_ID/dashboard \\
 \`\`\`bash
 curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/documents \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
-  -H "x-standard-tenant-id: YOUR_ORG_ID" \\
+ \
   -F "file=@policy-document.pdf"
 \`\`\`
 
@@ -602,14 +602,14 @@ curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/documents \\
 \`\`\`bash
 curl -X POST ${baseUrl}/api/v1/documents/DOC_ID/submit-for-embedding \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
-  -H "x-standard-tenant-id: YOUR_ORG_ID"
+ 
 \`\`\`
 
 **Semantic search in knowledge base:**
 \`\`\`bash
 curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/kb/search \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
-  -H "x-standard-tenant-id: YOUR_ORG_ID" \\
+ \
   -H "Content-Type: application/json" \\
   -d '{"query": "What is our data retention policy for PII?", "top_k": 5}'
 \`\`\`
@@ -624,7 +624,7 @@ curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/kb/search \\
 \`\`\`bash
 curl -X GET "${baseUrl}/api/v1/tenants/TENANT_ID/audit-logs?limit=50" \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
-  -H "x-standard-tenant-id: YOUR_ORG_ID"
+ 
 \`\`\`
 
 ## Endpoint Reference
@@ -766,7 +766,7 @@ Initiates an account deletion request. The account is flagged for deletion immed
 
 **SOC pipeline health status**
 
-Returns SOC monitoring pipeline status: queue binding health, alert service configuration, and pipeline readiness. Requires admin:write permission (platform admin only).
+Returns SOC monitoring pipeline status: queue binding health, alert service configuration, and pipeline readiness. A arquitetura é Multi-Tenant 1:1. Cada User_id é dono do seu Tenant. O Platform Admin é a única exceção global.
 
 **200**: SOC pipeline status
 
@@ -820,7 +820,7 @@ Returns SOC monitoring pipeline status: queue binding health, alert service conf
 | SOA (Statement of Applicability) | \`/api/v1/soa/*\` | Draft, review, approve |
 | Scope | \`/api/v1/assessments/:id/scope\` | CRUD + review workflow |
 | TPRA (Third Party Risk) | \`/api/v1/tpra/*\` | Questionnaires, scoring, SCF mapping |
-| Tenants | \`/api/v1/tenants\` | CRUD (admin only) |
+| Tenants | \`/api/v1/tenants\` | CRUD (Platform Admin only. A arquitetura é Multi-Tenant 1:1. Cada User_id é dono do seu Tenant) |
 | Webhooks | \`/api/v1/webhooks\` | CRUD + delivery logs |
 | Workflows | \`/api/v1/workflows/*\` | Start, cancel, resume, signal |
 | Reporting | \`/api/v1/reports\` | Generate assessments reports |

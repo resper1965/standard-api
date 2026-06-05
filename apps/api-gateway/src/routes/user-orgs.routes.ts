@@ -3,26 +3,18 @@
  *
  * Replicates better-auth organization.list() with direct Drizzle queries.
  * These routes are user-scoped: the authenticated user sees only their own
- * organizations (via baMember join) and can activate/deactivate an org session.
- *
- * Auth tables used:
- *   - baOrganization (id, name, slug, logo, createdAt, metadata)
- *   - baMember (organizationId, userId, role)
- *   - baSession (activeOrganizationId, userId)
+ * organizations.
  */
 import { eq, and } from "drizzle-orm";
-import { baOrganization, baMember, baSession } from "@standard/schemas";
+import { organizations, baSession } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";
-import { json, routeParam, routeUuidParam, parseJson } from "../http";
+import { json, routeUuidParam, parseJson } from "../http";
 import type { DbClient } from "../adapters/db";
 import { z } from "zod";
-import { provisionOrganizationContext } from "../adapters/tenant-mapping";
 
 /**
  * Type-safe accessor for the raw Drizzle DB client on deps._db.
- * The field is typed as `unknown` in AppDependencies to avoid coupling
- * the core type to Drizzle internals. This accessor narrows it safely.
  */
 const getDb = (deps: { _db?: unknown }): DbClient => {
   if (!deps._db) {
@@ -51,20 +43,18 @@ export const userOrgsRoutes: RouteDefinition[] = [
 
       const db = getDb(context.deps);
 
-      // Join baMember → baOrganization where userId matches the authenticated user
+      // Direct SQL select to organizations to return the orgs that belong to the user
       const rows = await db
         .select({
-          id: baOrganization.id,
-          name: baOrganization.name,
-          slug: baOrganization.slug,
-          logo: baOrganization.logo,
-          createdAt: baOrganization.createdAt,
-          metadata: baOrganization.metadata,
-          role: baMember.role,
+          id: organizations.id,
+          name: organizations.name,
+          slug: organizations.slug,
+          status: organizations.status,
+          billingTier: organizations.billingTier,
+          createdAt: organizations.createdAt,
         })
-        .from(baMember)
-        .innerJoin(baOrganization, eq(baMember.organizationId, baOrganization.id))
-        .where(eq(baMember.userId, userId));
+        .from(organizations)
+        .where(eq(organizations.userId, userId));
 
       return json(
         { data: rows, trace_id: context.traceId },
@@ -89,19 +79,19 @@ export const userOrgsRoutes: RouteDefinition[] = [
       const organizationId = routeUuidParam(context.params, "organizationId");
       const db = getDb(context.deps);
 
-      // Verify the user is actually a member of this organization
-      const [membership] = await db
-        .select({ id: baMember.id })
-        .from(baMember)
+      // Verify the user owns this organization
+      const [org] = await db
+        .select({ id: organizations.id })
+        .from(organizations)
         .where(
           and(
-            eq(baMember.userId, userId),
-            eq(baMember.organizationId, organizationId)
+            eq(organizations.userId, userId),
+            eq(organizations.id, organizationId)
           )
         )
         .limit(1);
 
-      if (!membership) {
+      if (!org) {
         throw new ApiError(
           "FORBIDDEN",
           "You are not a member of this organization.",
@@ -109,14 +99,8 @@ export const userOrgsRoutes: RouteDefinition[] = [
         );
       }
 
-      // Update ALL sessions for this user to set activeOrganizationId.
-      // This ensures consistency across tabs/devices. The session ID is
-      // available via context.session.session.id but updating all sessions
-      // is safer for multi-device scenarios.
-      await db
-        .update(baSession)
-        .set({ activeOrganizationId: organizationId })
-        .where(eq(baSession.userId, userId));
+      // activeOrganizationId is deprecated in API-first approach
+      // session update is skipped.
 
       // Audit the activation
       await context.deps.audit.record("user_org.activated", {
@@ -152,19 +136,19 @@ export const userOrgsRoutes: RouteDefinition[] = [
       const organizationId = routeUuidParam(context.params, "organizationId");
       const db = getDb(context.deps);
 
-      // Verify the user is actually a member of this organization
-      const [membership] = await db
-        .select({ id: baMember.id })
-        .from(baMember)
+      // Verify the user owns this organization
+      const [org] = await db
+        .select({ id: organizations.id })
+        .from(organizations)
         .where(
           and(
-            eq(baMember.userId, userId),
-            eq(baMember.organizationId, organizationId)
+            eq(organizations.userId, userId),
+            eq(organizations.id, organizationId)
           )
         )
         .limit(1);
 
-      if (!membership) {
+      if (!org) {
         throw new ApiError(
           "FORBIDDEN",
           "You are not a member of this organization.",
@@ -172,11 +156,8 @@ export const userOrgsRoutes: RouteDefinition[] = [
         );
       }
 
-      // Clear activeOrganizationId on ALL sessions for this user
-      await db
-        .update(baSession)
-        .set({ activeOrganizationId: null })
-        .where(eq(baSession.userId, userId));
+      // activeOrganizationId is deprecated in API-first approach
+      // session update is skipped.
 
       // Audit the deactivation
       await context.deps.audit.record("user_org.deactivated", {
@@ -195,6 +176,7 @@ export const userOrgsRoutes: RouteDefinition[] = [
       );
     },
   },
+  
   // ── POST /api/v1/users/me/organizations ─────────────────────────────
   {
     method: "POST",
@@ -212,13 +194,10 @@ export const userOrgsRoutes: RouteDefinition[] = [
         context.session?.user?.platformAdmin === true ||
         (context.session?.user as any)?.platform_admin === true;
 
-      // ── Platform-admin-only enforcement ────────────────────────────────
-      // Regular users cannot create organizations. A platform admin assigns
-      // users to organizations during the approval workflow.
       if (!isPlatformAdmin) {
         throw new ApiError(
           "FORBIDDEN",
-          "Organization creation is restricted to platform administrators. Contact your administrator to be assigned to an organization.",
+          "Organization creation is restricted to platform administrators.",
           403
         );
       }
@@ -230,50 +209,18 @@ export const userOrgsRoutes: RouteDefinition[] = [
 
       const db = getDb(context.deps);
 
-      // ── One-org-per-user enforcement ──────────────────────────────────
-      // Non-platform-admin users may only belong to a single organization.
-      // This check uses the Standard domain memberships table.
-      if (!isPlatformAdmin) {
-        const existingCount = await context.deps.members.countActiveOrgsByUser(
-          // countActiveOrgsByUser expects the Standard domain user UUID.
-          // context.actorId is set by auth.middleware to the resolved Standard UUID.
-          context.actorId ?? userId
-        );
-        if (existingCount > 0) {
-          throw new ApiError(
-            "SINGLE_ORG_LIMIT",
-            "Non-admin users may only belong to one organization. Leave your current organization before creating a new one.",
-            409,
-            [{ reason: "single_org_limit", current_membership_count: existingCount }]
-          );
-        }
-      }
-
-      // Create the organization in Standard Native Auth (baOrganization)
+      // Create the organization in the domain table
       const orgId = crypto.randomUUID();
       const [newOrg] = await db
-        .insert(baOrganization)
+        .insert(organizations)
         .values({
           id: orgId,
           name: body.name,
           slug: body.slug,
-          createdAt: new Date()
+          userId: userId,
+          status: "active",
         })
         .returning();
-
-      // Create the membership in baMember
-      await db
-        .insert(baMember)
-        .values({
-          id: crypto.randomUUID(),
-          organizationId: orgId,
-          userId: userId,
-          role: "owner",
-          createdAt: new Date()
-        });
-
-      // Provision the Standard domain tenant and organization for this new org.
-      await provisionOrganizationContext(db, orgId);
 
       // Audit the creation
       await context.deps.audit.record("user_org.created", {

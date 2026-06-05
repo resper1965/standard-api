@@ -18,14 +18,14 @@ type KeyStatus = "active" | "expired" | "revoked"
 type ApiKeyRecord = {
   id: string
   name: string
-  maskedKey: string
+  masked_key: string
   scopes: string[]
-  lastUsedAt: string | null
-  expiresAt: string | null
-  revokedAt: string | null
-  isRevoked: boolean
+  last_used_at: string | null
+  expires_at: string | null
+  revoked_at: string | null
+  is_revoked: boolean
   status: KeyStatus
-  createdAt: string
+  created_at: string
 }
 
 
@@ -56,7 +56,7 @@ function formatRelative(dateStr: string | null): string {
 }
 
 /** A key is considered active if it was used within the last 30 days. */
-function isRecentlyActive(lastUsedAt: string | null): boolean {
+function isRecentlyActive(last_used_at: string | null): boolean {
   if (!lastUsedAt) return false
   const diff = Date.now() - new Date(lastUsedAt).getTime()
   return diff < 30 * 86400000
@@ -483,17 +483,17 @@ export function ApiKeysPage() {
                 </tr>
               ) : (
                 displayedKeys.map(key => {
-                  const expiry = formatExpiry(key.expiresAt)
+                  const expiry = formatExpiry(key.expires_at)
                   return (
                     <tr key={key.id} className={`hover:bg-muted/20 transition-colors ${key.status === "revoked" ? "opacity-50" : ""}`}>
                       <td className="px-6 py-4">
                         <div className="font-medium text-foreground">{key.name}</div>
-                        <div className="text-[11px] text-muted-foreground mt-0.5">{new Date(key.createdAt).toLocaleDateString()}</div>
+                        <div className="text-[11px] text-muted-foreground mt-0.5">{new Date(key.created_at).toLocaleDateString()}</div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-1">
                           <code className="rounded bg-muted px-2 py-1 font-mono text-[12px] text-muted-foreground">
-                            {key.maskedKey}
+                            {key.masked_key}
                           </code>
                         </div>
                       </td>
@@ -506,10 +506,10 @@ export function ApiKeysPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-muted-foreground text-[13px]">
-                        {formatRelative(key.lastUsedAt)}
+                        {formatRelative(key.last_used_at)}
                       </td>
                       <td className="px-6 py-4">
-                        <ActivityBadge active={isRecentlyActive(key.lastUsedAt)} />
+                        <ActivityBadge active={isRecentlyActive(key.last_used_at)} />
                       </td>
                       <td className="px-6 py-4">
                         <StatusBadge status={key.status} />
@@ -569,3 +569,4 @@ export function ApiKeysPage() {
     </div>
   )
 }
+

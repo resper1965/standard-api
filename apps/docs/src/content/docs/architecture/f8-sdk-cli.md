@@ -1,4 +1,4 @@
-﻿---
+---
 title: "F8: SDK + CLI"
 description: "TypeScript SDK and CLI for programmatic consumption of the Standard API"
 ---
@@ -86,7 +86,7 @@ The `StandardClient` class provides namespaced resource access to all API endpoi
 | Namespace | Methods | Endpoint Prefix |
 |-----------|---------|----------------|
 | `client.assessments` | list, get, create, update, summary, complianceGate, auditLogs | `/assessments` |
-| `client.organizations` | create, get, dashboard, auditLogs, listMembers, inviteMember, updateMemberRole, removeMember | `/organizations` |
+| `client.organizations` | create, get, dashboard, auditLogs | `/organizations` |
 | `client.documents` | upload, list, get, reprocess, chunks | `/documents` |
 | `client.scf.versions` | list, latest, controls, domains | `/scf/versions` |
 | `client.scf.frameworks` | list, get, requirements, coverage | `/scf/frameworks` |

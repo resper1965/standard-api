@@ -553,12 +553,6 @@ paths:
                       - id
                       - email
                       - name
-                  memberships:
-                    type: array
-                    items:
-                      type: object
-                      additionalProperties:
-                        nullable: true
                   notices:
                     type: array
                     items:
@@ -568,7 +562,6 @@ paths:
                   - export_format
                   - subject
                   - profile
-                  - memberships
                   - notices
   /api/v1/me/account:
     delete:
@@ -610,8 +603,7 @@ paths:
       summary: SOC pipeline health status
       description: >-
         Returns SOC monitoring pipeline status: queue binding health, alert
-        service configuration, and pipeline readiness. Requires admin:write
-        permission (platform admin only).
+        service configuration, and pipeline readiness. A arquitetura é Multi-Tenant 1:1. Cada User_id é dono do seu Tenant. O Platform Admin é a única exceção global.
       responses:
         '200':
           description: SOC pipeline status

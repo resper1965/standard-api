@@ -169,9 +169,11 @@ export const organizations = pgTable("organizations", {
   name: text("name").notNull(),
   status: text("status").default("active").notNull(),
   billingTier: text("billing_tier").default("free").notNull(),
+  userId: text("user_id").notNull(),
   ...timestamps()
 }, (table) => [
-  uniqueIndex("organizations_slug_uidx").on(table.slug)
+  uniqueIndex("organizations_slug_uidx").on(table.slug),
+  uniqueIndex("organizations_user_uidx").on(table.userId)
 ]);
 
 export const users = pgTable("users", {

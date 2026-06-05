@@ -123,7 +123,7 @@ export function DashboardLayout() {
 
   // Pending approval count for admin badge
   const { data: pendingData } = usePendingUserCount()
-  const pendingCount = isPlatformAdmin ? (pendingData?.data?.count ?? 0) : 0
+  const pendingCount = pendingData?.data?.count ?? 0
   const adminBadges = pendingCount > 0 ? { "/dashboard/users": pendingCount } : undefined
 
   // Close mobile nav on route change
@@ -230,9 +230,7 @@ export function DashboardLayout() {
   if (!session?.user) return null
 
   const userInitial = session.user.name?.charAt(0).toUpperCase() ?? "?"
-  const userRole = isPlatformAdmin
-    ? "Platform Admin"
-    : ((session.user as Record<string, unknown>).role as string | undefined) ?? "member"
+  const userRole = "Admin"
 
   const sidebarContent = (
     <>
