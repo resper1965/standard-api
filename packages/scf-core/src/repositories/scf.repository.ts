@@ -103,6 +103,26 @@ export const createInMemoryScfRepository = (
   );
   const importRuns = new Map(initial.importRuns.map((item) => [item.id, item]));
 
+  const assessmentObjectives = new Map(
+    (initial.assessmentObjectives ?? []).map((item) => [item.id, item]),
+  );
+  const evidenceRequests = new Map(
+    (initial.evidenceRequests ?? []).map((item) => [item.id, item]),
+  );
+  const maturityCriteria = new Map(
+    (initial.maturityCriteria ?? []).map((item) => [item.id, item]),
+  );
+  const risks = new Map((initial.risks ?? []).map((item) => [item.id, item]));
+  const threats = new Map(
+    (initial.threats ?? []).map((item) => [item.id, item]),
+  );
+  const riskControlMappings = new Map(
+    (initial.riskControlMappings ?? []).map((item) => [item.id, item]),
+  );
+  const threatControlMappings = new Map(
+    (initial.threatControlMappings ?? []).map((item) => [item.id, item]),
+  );
+
   return {
     listVersions: async () => [...versions.values()],
     getVersion: async (id) => versions.get(id) ?? null,
@@ -154,9 +174,6 @@ export const createInMemoryScfRepository = (
         result = result.filter((c) => dIds.has(c.scf_domain_id));
       }
       if (query.tags && query.tags.length > 0) {
-        // Mock doesn't load metadata! So we'll skip filtering or filter by an empty array assumption for testing.
-        // Actually, without metadata in memory, tags search will just return 0 items if strictly mock.
-        // For simplicity, we just return empty array if tags are required and the mock has no metadata support.
         return [];
       }
       if (query.q) {
@@ -282,6 +299,15 @@ export const createInMemoryScfRepository = (
       mappings.clear();
       strmRelationships.clear();
       importRuns.clear();
+
+      assessmentObjectives.clear();
+      evidenceRequests.clear();
+      maturityCriteria.clear();
+      risks.clear();
+      threats.clear();
+      riskControlMappings.clear();
+      threatControlMappings.clear();
+
       dataset.versions.forEach((item) => versions.set(item.id, item));
       dataset.domains.forEach((item) => domains.set(item.id, item));
       dataset.controls.forEach((item) => controls.set(item.id, item));
@@ -292,12 +318,65 @@ export const createInMemoryScfRepository = (
         strmRelationships.set(item.id, item),
       );
       dataset.importRuns.forEach((item) => importRuns.set(item.id, item));
+
+      if (dataset.assessmentObjectives) {
+        dataset.assessmentObjectives.forEach((item) =>
+          assessmentObjectives.set(item.id, item),
+        );
+      }
+      if (dataset.evidenceRequests) {
+        dataset.evidenceRequests.forEach((item) =>
+          evidenceRequests.set(item.id, item),
+        );
+      }
+      if (dataset.maturityCriteria) {
+        dataset.maturityCriteria.forEach((item) =>
+          maturityCriteria.set(item.id, item),
+        );
+      }
+      if (dataset.risks) {
+        dataset.risks.forEach((item) => risks.set(item.id, item));
+      }
+      if (dataset.threats) {
+        dataset.threats.forEach((item) => threats.set(item.id, item));
+      }
+      if (dataset.riskControlMappings) {
+        dataset.riskControlMappings.forEach((item) =>
+          riskControlMappings.set(item.id, item),
+        );
+      }
+      if (dataset.threatControlMappings) {
+        dataset.threatControlMappings.forEach((item) =>
+          threatControlMappings.set(item.id, item),
+        );
+      }
     },
-    // ── New SCF Meta-Model Entity Methods (in-memory stub: no data) ───────────
-    listAssessmentObjectivesForControl: async (_controlId) => [],
-    listEvidenceRequestsForControl: async (_controlId) => [],
-    listMaturityCriteriaForControl: async (_controlId) => [],
-    listRisksForControl: async (_controlId) => [],
-    listThreatsForControl: async (_controlId) => [],
+    // ── New SCF Meta-Model Entity Methods ───────────────────────────
+    listAssessmentObjectivesForControl: async (controlId) =>
+      [...assessmentObjectives.values()].filter(
+        (item) => item.scf_control_id === controlId,
+      ),
+    listEvidenceRequestsForControl: async (controlId) =>
+      [...evidenceRequests.values()].filter(
+        (item) => item.scf_control_id === controlId,
+      ),
+    listMaturityCriteriaForControl: async (controlId) =>
+      [...maturityCriteria.values()].filter(
+        (item) => item.scf_control_id === controlId,
+      ),
+    listRisksForControl: async (controlId) => {
+      const riskIds = [...riskControlMappings.values()]
+        .filter((item) => item.scf_control_id === controlId)
+        .map((item) => item.scf_risk_id);
+      return [...risks.values()].filter((item) => riskIds.includes(item.id));
+    },
+    listThreatsForControl: async (controlId) => {
+      const threatIds = [...threatControlMappings.values()]
+        .filter((item) => item.scf_control_id === controlId)
+        .map((item) => item.scf_threat_id);
+      return [...threats.values()].filter((item) =>
+        threatIds.includes(item.id),
+      );
+    },
   };
 };

@@ -20,6 +20,10 @@ export type TabClassification =
   | { type: "crosswalk"; sheetName: string; frameworkHint: string }
   | { type: "metadata"; sheetName: string }
   | { type: "authoritative_sources"; sheetName: string }
+  | { type: "assessment_objectives"; sheetName: string }
+  | { type: "evidence_requests"; sheetName: string }
+  | { type: "risk_catalog"; sheetName: string }
+  | { type: "threat_catalog"; sheetName: string }
   | { type: "unknown"; sheetName: string };
 
 // ──── Header Normalization ────
@@ -94,11 +98,7 @@ const METADATA_TAB_NAMES = [
   // SCF 2026.1 specific non-control tabs
   "scf domains",
   "compensating controls",
-  "evidence request",
-  "assessment objectives",
   "data privacy",
-  "threat catalog",
-  "risk catalog",
   "lists",
 ];
 
@@ -147,6 +147,32 @@ export const classifyTab = (
 ): TabClassification => {
   const nameLower = sheetName.toLowerCase().trim();
   const normalizedHeaders = headers.map(normalizeHeader);
+
+  // Check specific SCF 2026.1 tabs
+  if (
+    nameLower.startsWith("assessment objectives") ||
+    nameLower.startsWith("assessment_objectives")
+  ) {
+    return { type: "assessment_objectives", sheetName };
+  }
+  if (
+    nameLower.startsWith("evidence request") ||
+    nameLower.startsWith("evidence_request")
+  ) {
+    return { type: "evidence_requests", sheetName };
+  }
+  if (
+    nameLower.startsWith("risk catalog") ||
+    nameLower.startsWith("risk_catalog")
+  ) {
+    return { type: "risk_catalog", sheetName };
+  }
+  if (
+    nameLower.startsWith("threat catalog") ||
+    nameLower.startsWith("threat_catalog")
+  ) {
+    return { type: "threat_catalog", sheetName };
+  }
 
   // Check if it's the authoritative sources tab (SCF 2026.1 structure)
   if (

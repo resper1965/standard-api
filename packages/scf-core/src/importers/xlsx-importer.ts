@@ -22,6 +22,11 @@ import type {
   ScfMapping,
   ScfStrmRelationship,
   ScfVersion,
+  ScfAssessmentObjective,
+  ScfEvidenceRequest,
+  ScfMaturityCriteria,
+  ScfRisk,
+  ScfThreat,
 } from "../types";
 import type { ScfImporter } from "./scf-importer";
 import { sha256Hex, validateBaseImportSource } from "./scf-importer";
@@ -62,30 +67,46 @@ const OPTIONAL_CONTROLS_COLUMNS = [
  * Validate that expected columns are present in the controls tab.
  * Returns warnings for missing optional columns and errors for missing required columns.
  */
-const validateExpectedColumns = (headers: string[]): { errors: string[]; warnings: string[] } => {
+const validateExpectedColumns = (
+  headers: string[],
+): { errors: string[]; warnings: string[] } => {
   const normalizedHeaders = new Set(headers.map(normalizeHeader));
   const errors: string[] = [];
   const warnings: string[] = [];
 
   // At least one control identifier column must be present
-  const hasControlId = ["scf_control_#", "scf_#", "control_#", "scf_control_identifier", "scf_identifier", "control_code"].some(
-    (col) => normalizedHeaders.has(col)
-  );
+  const hasControlId = [
+    "scf_control_#",
+    "scf_#",
+    "control_#",
+    "scf_control_identifier",
+    "scf_identifier",
+    "control_code",
+  ].some((col) => normalizedHeaders.has(col));
   if (!hasControlId) {
-    errors.push("Missing required column: SCF control identifier (e.g. 'SCF Control #', 'SCF #'). Cannot parse controls.");
+    errors.push(
+      "Missing required column: SCF control identifier (e.g. 'SCF Control #', 'SCF #'). Cannot parse controls.",
+    );
   }
 
   // At least one control name/title column must be present
-  const hasControlName = ["scf_control", "control_name", "control_title", "scf_control_name"].some(
-    (col) => normalizedHeaders.has(col)
-  );
+  const hasControlName = [
+    "scf_control",
+    "control_name",
+    "control_title",
+    "scf_control_name",
+  ].some((col) => normalizedHeaders.has(col));
   if (!hasControlName) {
-    errors.push("Missing required column: SCF control name/title (e.g. 'SCF Control', 'Control Name'). Cannot parse control titles.");
+    errors.push(
+      "Missing required column: SCF control name/title (e.g. 'SCF Control', 'Control Name'). Cannot parse control titles.",
+    );
   }
 
   for (const col of OPTIONAL_CONTROLS_COLUMNS) {
     if (!normalizedHeaders.has(col)) {
-      warnings.push(`Optional column missing: '${col}'. Import will proceed but this data will be empty.`);
+      warnings.push(
+        `Optional column missing: '${col}'. Import will proceed but this data will be empty.`,
+      );
     }
   }
 
@@ -125,7 +146,9 @@ const parseControlsTab = (
 
     const domainCode = extractDomainCode(controlCode);
     if (!domainCode) {
-      warnings.push(`Row skipped: cannot extract domain from control code "${controlCode}".`);
+      warnings.push(
+        `Row skipped: cannot extract domain from control code "${controlCode}".`,
+      );
       continue;
     }
 
@@ -163,7 +186,9 @@ const parseControlsTab = (
       scf_domain_id: domainId,
       control_code: controlCode,
       control_title: controlTitle,
-      ...(controlDescription ? { control_description: controlDescription } : {}),
+      ...(controlDescription
+        ? { control_description: controlDescription }
+        : {}),
       ...(controlQuestion ? { control_question: controlQuestion } : {}),
       ...(controlWeight !== undefined ? { control_weight: controlWeight } : {}),
       status: "active",
@@ -227,17 +252,21 @@ const parseCrosswalkTab = (
   }
 
   if (!scfColumnKey) {
-    warnings.push(`Crosswalk tab "${sheetName}": no SCF control code column detected.`);
+    warnings.push(
+      `Crosswalk tab "${sheetName}": no SCF control code column detected.`,
+    );
     return { framework, requirements, mappings, warnings };
   }
 
   // Find the framework reference columns (non-SCF columns with data)
   const referenceColumns = normalizedHeaders.filter(
-    (h) => h !== scfColumnKey && h.length > 0 && !h.startsWith("scf_")
+    (h) => h !== scfColumnKey && h.length > 0 && !h.startsWith("scf_"),
   );
 
   if (referenceColumns.length === 0) {
-    warnings.push(`Crosswalk tab "${sheetName}": no framework reference columns found.`);
+    warnings.push(
+      `Crosswalk tab "${sheetName}": no framework reference columns found.`,
+    );
     return { framework, requirements, mappings, warnings };
   }
 
@@ -259,7 +288,10 @@ const parseCrosswalkTab = (
     if (!reqCode) continue;
 
     // Split multiple requirement codes (some cells contain semicolons/newlines)
-    const reqCodes = reqCode.split(/[;\n\r]+/).map((s) => s.trim()).filter(Boolean);
+    const reqCodes = reqCode
+      .split(/[;\n\r]+/)
+      .map((s) => s.trim())
+      .filter(Boolean);
 
     for (const singleReqCode of reqCodes) {
       // Create requirement if not seen
@@ -298,6 +330,276 @@ const parseCrosswalkTab = (
   return { framework, requirements, mappings, warnings };
 };
 
+// ──── Extended Catalog Parsers ────
+
+const parseAssessmentObjectivesTab = (
+  rows: ParsedRow[],
+  versionId: string,
+  controlByCode: Map<string, string>,
+): ScfAssessmentObjective[] => {
+  const result: ScfAssessmentObjective[] = [];
+  for (const row of rows) {
+    const controlCode =
+      row["scf_#"] ||
+      row["scf_control_#"] ||
+      row["control_#"] ||
+      row["scf_control_identifier"];
+    if (!controlCode) continue;
+
+    const controlId = controlByCode.get(controlCode.trim());
+    if (!controlId) continue;
+
+    const objectiveCode =
+      row["scf_ao_#"] ||
+      row["assessment_objective_code"] ||
+      row["ao_#"] ||
+      row["objective_code"] ||
+      row["assessment_objective_#"];
+
+    // Find the text column by prefix match
+    let text = "";
+    for (const [key, value] of Object.entries(row)) {
+      if (
+        key.startsWith("scf_assessment_objective_ao") &&
+        value &&
+        value.trim().length > 0
+      ) {
+        text = value.trim();
+        break;
+      }
+    }
+
+    if (!text) {
+      text =
+        row["assessment_objective"] ||
+        row["objective_text"] ||
+        row["text"] ||
+        row["assessment_objectives"] ||
+        "";
+    }
+
+    if (objectiveCode && text) {
+      result.push({
+        id: crypto.randomUUID(),
+        scf_version_id: versionId,
+        scf_control_id: controlId,
+        objective_code: objectiveCode.trim(),
+        text: text.trim(),
+      });
+    }
+  }
+  return result;
+};
+
+const parseEvidenceRequestsTab = (
+  rows: ParsedRow[],
+  versionId: string,
+  controlByCode: Map<string, string>,
+): ScfEvidenceRequest[] => {
+  const result: ScfEvidenceRequest[] = [];
+  for (const row of rows) {
+    const scfControlMappings =
+      row["scf_control_mappings"] ||
+      row["scf_control_mappings_"] ||
+      row["scf_controls"] ||
+      row["controls"];
+    if (!scfControlMappings) continue;
+
+    const requestItem =
+      row["documentation_artifact"] ||
+      row["evidence_request_item"] ||
+      row["request_item"] ||
+      row["evidence_request"] ||
+      row["item"];
+    const evidenceType =
+      row["area_of_focus"] || row["evidence_type"] || row["type"];
+
+    if (!requestItem) continue;
+
+    // Split multiple control codes (some cells contain newlines or semicolons)
+    const codes = scfControlMappings
+      .split(/[;,\n\r]+/)
+      .map((c) => c.trim())
+      .filter(Boolean);
+    for (const code of codes) {
+      const controlId = controlByCode.get(code);
+      if (controlId) {
+        result.push({
+          id: crypto.randomUUID(),
+          scf_version_id: versionId,
+          scf_control_id: controlId,
+          request_item: requestItem.trim(),
+          evidence_type: evidenceType ? evidenceType.trim() : undefined,
+        });
+      }
+    }
+  }
+  return result;
+};
+
+const parseMaturityCriteriaFromControls = (
+  rows: ParsedRow[],
+  versionId: string,
+  controlByCode: Map<string, string>,
+): ScfMaturityCriteria[] => {
+  const result: ScfMaturityCriteria[] = [];
+
+  for (const row of rows) {
+    const controlCode = findControlCode(row);
+    if (!controlCode) continue;
+
+    const controlId = controlByCode.get(controlCode);
+    if (!controlId) continue;
+
+    for (let level = 0; level <= 5; level++) {
+      const keys = [
+        `scr-cmm_level_${level}`,
+        `scr_cmm_level_${level}`,
+        `maturity_level_${level}`,
+        `l${level}_criteria`,
+        `maturity_l${level}`,
+        `level_${level}_criteria`,
+        `cmmc_l${level}`,
+        `maturity_level_${level}_criteria`,
+      ];
+
+      let criteriaText = "";
+      for (const key of keys) {
+        for (const rowKey of Object.keys(row)) {
+          if (
+            rowKey.startsWith(key) &&
+            row[rowKey] &&
+            row[rowKey].trim().length > 0
+          ) {
+            criteriaText = row[rowKey].trim();
+            break;
+          }
+        }
+        if (criteriaText) break;
+      }
+
+      if (criteriaText) {
+        result.push({
+          id: crypto.randomUUID(),
+          scf_version_id: versionId,
+          scf_control_id: controlId,
+          level,
+          criteria_text: criteriaText,
+        });
+      }
+    }
+  }
+  return result;
+};
+
+const parseRisksTab = (rows: ParsedRow[], versionId: string): ScfRisk[] => {
+  const risks: ScfRisk[] = [];
+
+  for (const row of rows) {
+    const riskCode =
+      row["risk_#"] ||
+      row["risk_code"] ||
+      row["risk_id"] ||
+      row["cp-rmm_code"] ||
+      row["cp_rmm_code"];
+    if (!riskCode) continue;
+
+    const codeTrim = riskCode.trim();
+    if (
+      codeTrim.startsWith("*") ||
+      codeTrim.toLowerCase().includes("definition") ||
+      codeTrim.length === 0
+    )
+      continue;
+
+    // Find the title column by prefix match
+    let title = "";
+    for (const [key, value] of Object.entries(row)) {
+      if (
+        key.startsWith("risk") &&
+        ![
+          "risk_#",
+          "risk_code",
+          "risk_id",
+          "risk_grouping",
+          "risk_category",
+        ].includes(key) &&
+        !key.includes("description") &&
+        value &&
+        value.trim().length > 0
+      ) {
+        title = value.trim();
+        break;
+      }
+    }
+
+    if (!title) {
+      title = row["risk"] || row["risk_title"] || row["title"] || "";
+    }
+
+    if (!title) continue;
+
+    let description = "";
+    for (const [key, value] of Object.entries(row)) {
+      if (key.includes("description") && value && value.trim().length > 0) {
+        description = value.trim();
+        break;
+      }
+    }
+
+    const category = row["risk_grouping"] || row["category"] || row["grouping"];
+
+    risks.push({
+      id: crypto.randomUUID(),
+      scf_version_id: versionId,
+      risk_code: codeTrim,
+      title: title.trim(),
+      description: description || undefined,
+      category: category ? category.trim() : undefined,
+    });
+  }
+  return risks;
+};
+
+const parseThreatsTab = (rows: ParsedRow[], versionId: string): ScfThreat[] => {
+  const threats: ScfThreat[] = [];
+
+  for (const row of rows) {
+    const threatCode =
+      row["threat_#"] || row["threat_code"] || row["threat_id"];
+    const title = row["threat"] || row["threat_title"] || row["title"];
+    if (!threatCode || !title) continue;
+
+    const codeTrim = threatCode.trim();
+    if (
+      codeTrim.startsWith("*") ||
+      codeTrim.toLowerCase().includes("definition")
+    )
+      continue;
+
+    let description = "";
+    for (const [key, value] of Object.entries(row)) {
+      if (key.includes("description") && value && value.trim().length > 0) {
+        description = value.trim();
+        break;
+      }
+    }
+
+    const category =
+      row["threat_grouping"] || row["category"] || row["grouping"];
+
+    threats.push({
+      id: crypto.randomUUID(),
+      scf_version_id: versionId,
+      threat_code: codeTrim,
+      title: title.trim(),
+      description: description || undefined,
+      category: category ? category.trim() : undefined,
+    });
+  }
+  return threats;
+};
+
 // ──── Main XLSX Importer ────
 
 export const createXlsxScfImporter = (): ScfImporter => ({
@@ -309,11 +611,17 @@ export const createXlsxScfImporter = (): ScfImporter => ({
 
     try {
       // Attempt to parse the XLSX to validate structure
-      const data = Uint8Array.from(atob(source.content), (c) => c.charCodeAt(0));
+      const data = Uint8Array.from(atob(source.content), (c) =>
+        c.charCodeAt(0),
+      );
       const workbook = XLSX.read(data, { type: "array" });
 
       if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
-        return { valid: false, errors: ["XLSX workbook contains no sheets."], warnings: [] };
+        return {
+          valid: false,
+          errors: ["XLSX workbook contains no sheets."],
+          warnings: [],
+        };
       }
 
       // Check if at least one tab is classified as controls
@@ -332,7 +640,9 @@ export const createXlsxScfImporter = (): ScfImporter => ({
           if (columnValidation.errors.length > 0) {
             return {
               valid: false,
-              errors: [`Controls tab "${name}": ${columnValidation.errors.join("; ")}`],
+              errors: [
+                `Controls tab "${name}": ${columnValidation.errors.join("; ")}`,
+              ],
               warnings: columnValidation.warnings,
             };
           }
@@ -344,7 +654,9 @@ export const createXlsxScfImporter = (): ScfImporter => ({
       if (!hasControlsTab) {
         return {
           valid: false,
-          errors: ["No SCF controls catalog tab detected. Expected a tab with SCF control identifiers."],
+          errors: [
+            "No SCF controls catalog tab detected. Expected a tab with SCF control identifiers.",
+          ],
           warnings: [],
         };
       }
@@ -353,14 +665,18 @@ export const createXlsxScfImporter = (): ScfImporter => ({
     } catch (err) {
       return {
         valid: false,
-        errors: [`Failed to parse XLSX: ${err instanceof Error ? err.message : "unknown error"}`],
+        errors: [
+          `Failed to parse XLSX: ${err instanceof Error ? err.message : "unknown error"}`,
+        ],
         warnings: [],
       };
     }
   },
 
   parse: async (source: ScfImportSource) => {
-    const sourceHash = source.source_hash ?? `sha256:${await sha256Hex(source.content.slice(0, 1024))}`;
+    const sourceHash =
+      source.source_hash ??
+      `sha256:${await sha256Hex(source.content.slice(0, 1024))}`;
     const data = Uint8Array.from(atob(source.content), (c) => c.charCodeAt(0));
     const workbook = XLSX.read(data, { type: "array" });
 
@@ -388,6 +704,8 @@ export const createXlsxScfImporter = (): ScfImporter => ({
     const allMappings: ScfMapping[] = [];
     const allWarnings: string[] = [];
     const controlByCode = new Map<string, string>();
+    const rawRiskMappings: { controlCode: string; riskCode: string }[] = [];
+    const rawThreatMappings: { controlCode: string; threatCode: string }[] = [];
 
     // Phase 1: Parse controls tab(s) first — we need control IDs for crosswalk mapping
     for (const name of workbook.SheetNames) {
@@ -408,6 +726,34 @@ export const createXlsxScfImporter = (): ScfImporter => ({
         // Build lookup for crosswalk phase
         for (const ctrl of result.controls) {
           controlByCode.set(ctrl.control_code, ctrl.id);
+        }
+
+        // Collect raw risk/threat mappings from controls sheet columns
+        for (const row of rows) {
+          const controlCode = findControlCode(row);
+          if (!controlCode) continue;
+          for (const [key, value] of Object.entries(row)) {
+            if (value && value.trim().length > 0) {
+              const valTrim = value.trim();
+              if (
+                key.startsWith("risk_") &&
+                /^[r]-[a-z]+-\d+$/i.test(key.slice(5))
+              ) {
+                rawRiskMappings.push({
+                  controlCode,
+                  riskCode: valTrim.toUpperCase(),
+                });
+              } else if (
+                key.startsWith("threat_") &&
+                /^[mn]t-\d+$/i.test(key.slice(7))
+              ) {
+                rawThreatMappings.push({
+                  controlCode,
+                  threatCode: valTrim.toUpperCase(),
+                });
+              }
+            }
+          }
         }
       }
     }
@@ -444,11 +790,121 @@ export const createXlsxScfImporter = (): ScfImporter => ({
       }
     }
 
+    // Phase 1.5: Parse extended meta-model tabs (AOs, ERL, Risks, Threats, Maturity)
+    const allAssessmentObjectives: ScfAssessmentObjective[] = [];
+    const allEvidenceRequests: ScfEvidenceRequest[] = [];
+    const allMaturityCriteria: ScfMaturityCriteria[] = [];
+    const allRisks: ScfRisk[] = [];
+    const allThreats: ScfThreat[] = [];
+    const allRiskControlMappings: any[] = [];
+    const allThreatControlMappings: any[] = [];
+
+    const riskByCode = new Map<string, string>();
+    const threatByCode = new Map<string, string>();
+
+    // Extract maturity criteria from controls sheet
+    for (const name of workbook.SheetNames) {
+      const sheet = workbook.Sheets[name];
+      if (!sheet) continue;
+      const headers = getSheetHeaders(sheet);
+      const classification = classifyTab(name, headers);
+      if (classification.type === "controls") {
+        const rows = parseSheetToRows(sheet);
+        const mc = parseMaturityCriteriaFromControls(
+          rows,
+          versionId,
+          controlByCode,
+        );
+        allMaturityCriteria.push(...mc);
+      }
+    }
+
+    // Process specific catalog sheets
+    for (const name of workbook.SheetNames) {
+      const sheet = workbook.Sheets[name];
+      if (!sheet) continue;
+
+      const headers = getSheetHeaders(sheet);
+      const classification = classifyTab(name, headers);
+
+      if (classification.type === "assessment_objectives") {
+        const rows = parseSheetToRows(sheet);
+        const objectives = parseAssessmentObjectivesTab(
+          rows,
+          versionId,
+          controlByCode,
+        );
+        allAssessmentObjectives.push(...objectives);
+      } else if (classification.type === "evidence_requests") {
+        const rows = parseSheetToRows(sheet);
+        const requests = parseEvidenceRequestsTab(
+          rows,
+          versionId,
+          controlByCode,
+        );
+        allEvidenceRequests.push(...requests);
+      } else if (classification.type === "risk_catalog") {
+        // Shift range to row 5 (0-indexed) to skip headers and definition rows
+        const range = XLSX.utils.decode_range(sheet["!ref"] ?? "A1");
+        range.s.r = 5;
+        sheet["!ref"] = XLSX.utils.encode_range(range);
+
+        const rows = parseSheetToRows(sheet);
+        const risks = parseRisksTab(rows, versionId);
+        allRisks.push(...risks);
+        for (const r of risks) {
+          riskByCode.set(r.risk_code.toUpperCase(), r.id);
+        }
+      } else if (classification.type === "threat_catalog") {
+        // Shift range to row 5 (0-indexed) to skip headers and definition rows
+        const range = XLSX.utils.decode_range(sheet["!ref"] ?? "A1");
+        range.s.r = 5;
+        sheet["!ref"] = XLSX.utils.encode_range(range);
+
+        const rows = parseSheetToRows(sheet);
+        const threats = parseThreatsTab(rows, versionId);
+        allThreats.push(...threats);
+        for (const t of threats) {
+          threatByCode.set(t.threat_code.toUpperCase(), t.id);
+        }
+      }
+    }
+
+    // Resolve risk-control mappings
+    for (const raw of rawRiskMappings) {
+      const controlId = controlByCode.get(raw.controlCode);
+      const riskId = riskByCode.get(raw.riskCode);
+      if (controlId && riskId) {
+        allRiskControlMappings.push({
+          id: crypto.randomUUID(),
+          scf_version_id: versionId,
+          scf_risk_id: riskId,
+          scf_control_id: controlId,
+        });
+      }
+    }
+
+    // Resolve threat-control mappings
+    for (const raw of rawThreatMappings) {
+      const controlId = controlByCode.get(raw.controlCode);
+      const threatId = threatByCode.get(raw.threatCode);
+      if (controlId && threatId) {
+        allThreatControlMappings.push({
+          id: crypto.randomUUID(),
+          scf_version_id: versionId,
+          scf_threat_id: threatId,
+          scf_control_id: controlId,
+        });
+      }
+    }
+
     const importRun: ScfImportRun = {
       id: newId(),
       scf_version_id: versionId,
       source_type: "xlsx",
-      ...(source.source_filename ? { source_filename: source.source_filename } : {}),
+      ...(source.source_filename
+        ? { source_filename: source.source_filename }
+        : {}),
       source_hash: sourceHash,
       status: "succeeded",
       started_at: new Date().toISOString(),
@@ -463,6 +919,12 @@ export const createXlsxScfImporter = (): ScfImporter => ({
         strm_relationships: 0,
         warnings: allWarnings.length,
         synthetic_records: 0,
+        // Extended stats
+        assessment_objectives: allAssessmentObjectives.length,
+        evidence_requests: allEvidenceRequests.length,
+        maturity_criteria: allMaturityCriteria.length,
+        risks: allRisks.length,
+        threats: allThreats.length,
       },
       trace_id: `xlsx-importer-${Date.now()}`,
     };
@@ -479,9 +941,15 @@ export const createXlsxScfImporter = (): ScfImporter => ({
         mappings: allMappings,
         strmRelationships,
         importRuns: [importRun],
+        assessmentObjectives: allAssessmentObjectives,
+        evidenceRequests: allEvidenceRequests,
+        maturityCriteria: allMaturityCriteria,
+        risks: allRisks,
+        threats: allThreats,
+        riskControlMappings: allRiskControlMappings,
+        threatControlMappings: allThreatControlMappings,
       },
       warnings: allWarnings,
     };
   },
 });
-

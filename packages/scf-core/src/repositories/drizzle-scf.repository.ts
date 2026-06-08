@@ -556,198 +556,238 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
 
   // ─── Dataset Bulk Operation ──────────────────────────────
   replaceDataset: async (dataset) => {
-    // Upsert in dependency order: versions → domains → controls → frameworks → requirements → mappings
-    for (const v of dataset.versions) {
-      await db
-        .insert(scfVersions)
-        .values({
-          id: v.id,
-          version: v.version_label,
-          sourceUri: v.source_url,
-          contentHash: v.source_hash,
-          publishedAt: v.release_date ? new Date(v.release_date) : null,
-        })
-        .onConflictDoUpdate({
-          target: scfVersions.id,
-          set: {
-            version: v.version_label,
-            contentHash: v.source_hash,
-            updatedAt: new Date(),
-          },
-        });
+    // Helper for batch execution to avoid exceeding PostgreSQL parameter limits
+    const batchOperation = async <T>(
+      items: T[],
+      batchSize: number,
+      op: (batch: T[]) => Promise<void>,
+    ) => {
+      for (let i = 0; i < items.length; i += batchSize) {
+        const batch = items.slice(i, i + batchSize);
+        await op(batch);
+      }
+    };
+
+    // Bulk upsert versions
+    if (dataset.versions && dataset.versions.length > 0) {
+      await batchOperation(dataset.versions, 100, async (batch) => {
+        await db
+          .insert(scfVersions)
+          .values(
+            batch.map((v) => ({
+              id: v.id,
+              version: v.version_label,
+              sourceUri: v.source_url,
+              contentHash: v.source_hash,
+              publishedAt: v.release_date ? new Date(v.release_date) : null,
+            })),
+          )
+          .onConflictDoUpdate({
+            target: scfVersions.id,
+            set: {
+              version: sql`EXCLUDED.version`,
+              contentHash: sql`EXCLUDED.content_hash`,
+              updatedAt: new Date(),
+            },
+          });
+      });
     }
 
     // Bulk upsert domains
-    for (const d of dataset.domains) {
-      await db
-        .insert(scfDomains)
-        .values({
-          id: d.id,
-          scfVersionId: d.scf_version_id,
-          domainCode: d.domain_code,
-          name: d.domain_name,
-          description: d.description,
-          sortOrder: d.sort_order,
-          isSynthetic: d.is_synthetic,
-        })
-        .onConflictDoUpdate({
-          target: scfDomains.id,
-          set: {
-            name: d.domain_name,
-            description: d.description,
-            sortOrder: d.sort_order,
-            updatedAt: new Date(),
-          },
-        });
+    if (dataset.domains && dataset.domains.length > 0) {
+      await batchOperation(dataset.domains, 100, async (batch) => {
+        await db
+          .insert(scfDomains)
+          .values(
+            batch.map((d) => ({
+              id: d.id,
+              scfVersionId: d.scf_version_id,
+              domainCode: d.domain_code,
+              name: d.domain_name,
+              description: d.description ?? null,
+              sortOrder: d.sort_order,
+              isSynthetic: d.is_synthetic,
+            })),
+          )
+          .onConflictDoUpdate({
+            target: scfDomains.id,
+            set: {
+              name: sql`EXCLUDED.name`,
+              description: sql`EXCLUDED.description`,
+              sortOrder: sql`EXCLUDED.sort_order`,
+              updatedAt: new Date(),
+            },
+          });
+      });
     }
 
     // Bulk upsert controls
-    for (const c of dataset.controls) {
-      await db
-        .insert(scfControls)
-        .values({
-          id: c.id,
-          scfVersionId: c.scf_version_id,
-          scfDomainId: c.scf_domain_id,
-          controlCode: c.control_code,
-          title: c.control_title,
-          description: c.control_description,
-          controlQuestion: c.control_question,
-          controlIntent: c.control_intent,
-          implementationGuidance: c.implementation_guidance,
-          expectedEvidence: c.expected_evidence,
-          controlWeight: c.control_weight?.toString(),
-          maturityCriteriaRef: c.maturity_criteria_ref,
-          status: c.status,
-          isSynthetic: c.is_synthetic,
-        })
-        .onConflictDoUpdate({
-          target: scfControls.id,
-          set: {
-            title: c.control_title,
-            description: c.control_description,
-            controlQuestion: c.control_question,
-            controlIntent: c.control_intent,
-            implementationGuidance: c.implementation_guidance,
-            expectedEvidence: c.expected_evidence,
-            controlWeight: c.control_weight?.toString(),
-            maturityCriteriaRef: c.maturity_criteria_ref,
-            status: c.status,
-            updatedAt: new Date(),
-          },
-        });
+    if (dataset.controls && dataset.controls.length > 0) {
+      await batchOperation(dataset.controls, 250, async (batch) => {
+        await db
+          .insert(scfControls)
+          .values(
+            batch.map((c) => ({
+              id: c.id,
+              scfVersionId: c.scf_version_id,
+              scfDomainId: c.scf_domain_id,
+              controlCode: c.control_code,
+              title: c.control_title,
+              description: c.control_description ?? null,
+              controlQuestion: c.control_question ?? null,
+              controlIntent: c.control_intent ?? null,
+              implementationGuidance: c.implementation_guidance ?? null,
+              expectedEvidence: c.expected_evidence ?? null,
+              controlWeight: c.control_weight?.toString() ?? null,
+              maturityCriteriaRef: c.maturity_criteria_ref ?? null,
+              status: c.status,
+              isSynthetic: c.is_synthetic,
+            })),
+          )
+          .onConflictDoUpdate({
+            target: scfControls.id,
+            set: {
+              title: sql`EXCLUDED.title`,
+              description: sql`EXCLUDED.description`,
+              controlQuestion: sql`EXCLUDED.control_question`,
+              controlIntent: sql`EXCLUDED.control_intent`,
+              implementationGuidance: sql`EXCLUDED.implementation_guidance`,
+              expectedEvidence: sql`EXCLUDED.expected_evidence`,
+              controlWeight: sql`EXCLUDED.control_weight`,
+              maturityCriteriaRef: sql`EXCLUDED.maturity_criteria_ref`,
+              status: sql`EXCLUDED.status`,
+              updatedAt: new Date(),
+            },
+          });
+      });
     }
 
     // Bulk upsert frameworks
-    for (const f of dataset.frameworks) {
-      await db
-        .insert(scfFrameworks)
-        .values({
-          id: f.id,
-          scfVersionId: dataset.versions[0]?.id ?? "",
-          frameworkId: f.framework_code,
-          name: f.framework_name,
-          versionLabel: f.framework_version,
-          publisher: f.publisher,
-          jurisdiction: f.jurisdiction,
-          category: f.category,
-          sourceReference: f.source_reference,
-          status: f.status,
-          isSynthetic: f.is_synthetic,
-        })
-        .onConflictDoUpdate({
-          target: scfFrameworks.id,
-          set: {
-            name: f.framework_name,
-            versionLabel: f.framework_version,
-            publisher: f.publisher,
-            status: f.status,
-            updatedAt: new Date(),
-          },
-        });
+    if (dataset.frameworks && dataset.frameworks.length > 0) {
+      await batchOperation(dataset.frameworks, 100, async (batch) => {
+        await db
+          .insert(scfFrameworks)
+          .values(
+            batch.map((f) => ({
+              id: f.id,
+              scfVersionId: dataset.versions[0]?.id ?? "",
+              frameworkId: f.framework_code,
+              name: f.framework_name,
+              versionLabel: f.framework_version ?? null,
+              publisher: f.publisher ?? null,
+              jurisdiction: f.jurisdiction ?? null,
+              category: f.category ?? null,
+              sourceReference: f.source_reference ?? null,
+              status: f.status,
+              isSynthetic: f.is_synthetic,
+            })),
+          )
+          .onConflictDoUpdate({
+            target: scfFrameworks.id,
+            set: {
+              name: sql`EXCLUDED.name`,
+              versionLabel: sql`EXCLUDED.version_label`,
+              publisher: sql`EXCLUDED.publisher`,
+              status: sql`EXCLUDED.status`,
+              updatedAt: new Date(),
+            },
+          });
+      });
     }
 
     // Bulk upsert requirements
-    for (const r of dataset.requirements) {
-      await db
-        .insert(scfFrameworkRequirements)
-        .values({
-          id: r.id,
-          scfVersionId: dataset.versions[0]?.id ?? "",
-          scfFrameworkId: r.scf_framework_id,
-          requirementCode: r.requirement_code,
-          title: r.requirement_title,
-          description: r.requirement_text,
-          requirementText: r.requirement_text,
-          parentRequirementId: r.parent_requirement_id,
-          sortOrder: r.sort_order,
-          status: r.status,
-          isSynthetic: r.is_synthetic,
-        })
-        .onConflictDoUpdate({
-          target: scfFrameworkRequirements.id,
-          set: {
-            title: r.requirement_title,
-            description: r.requirement_text,
-            status: r.status,
-            updatedAt: new Date(),
-          },
-        });
+    if (dataset.requirements && dataset.requirements.length > 0) {
+      await batchOperation(dataset.requirements, 250, async (batch) => {
+        await db
+          .insert(scfFrameworkRequirements)
+          .values(
+            batch.map((r) => ({
+              id: r.id,
+              scfVersionId: dataset.versions[0]?.id ?? "",
+              scfFrameworkId: r.scf_framework_id,
+              requirementCode: r.requirement_code,
+              title: r.requirement_title,
+              description: r.requirement_text ?? null,
+              requirementText: r.requirement_text ?? null,
+              parentRequirementId: r.parent_requirement_id ?? null,
+              sortOrder: r.sort_order,
+              status: r.status,
+              isSynthetic: r.is_synthetic,
+            })),
+          )
+          .onConflictDoUpdate({
+            target: scfFrameworkRequirements.id,
+            set: {
+              title: sql`EXCLUDED.title`,
+              description: sql`EXCLUDED.description`,
+              status: sql`EXCLUDED.status`,
+              updatedAt: new Date(),
+            },
+          });
+      });
     }
 
     // Bulk upsert mappings
-    for (const m of dataset.mappings) {
-      await db
-        .insert(scfMappings)
-        .values({
-          id: m.id,
-          scfVersionId: m.scf_version_id,
-          scfFrameworkRequirementId: m.scf_framework_requirement_id,
-          scfControlId: m.scf_control_id,
-          relationshipType: m.relationship_type,
-          relationshipStrength: m.relationship_strength,
-          mappingRationale: m.mapping_rationale,
-          mappingSource: m.mapping_source as
-            | "official_scf"
-            | "derived"
-            | "consultative",
-          isOfficial: m.is_official,
-          status: m.status,
-          isSynthetic: m.is_synthetic,
-        })
-        .onConflictDoUpdate({
-          target: scfMappings.id,
-          set: {
-            relationshipType: m.relationship_type,
-            relationshipStrength: m.relationship_strength,
-            isOfficial: m.is_official,
-            status: m.status,
-            updatedAt: new Date(),
-          },
-        });
+    if (dataset.mappings && dataset.mappings.length > 0) {
+      await batchOperation(dataset.mappings, 250, async (batch) => {
+        await db
+          .insert(scfMappings)
+          .values(
+            batch.map((m) => ({
+              id: m.id,
+              scfVersionId: m.scf_version_id,
+              scfFrameworkRequirementId: m.scf_framework_requirement_id,
+              scfControlId: m.scf_control_id,
+              relationshipType: m.relationship_type,
+              relationshipStrength: m.relationship_strength ?? null,
+              mappingRationale: m.mapping_rationale ?? null,
+              mappingSource: m.mapping_source as
+                | "official_scf"
+                | "derived"
+                | "consultative",
+              isOfficial: m.is_official,
+              status: m.status,
+              isSynthetic: m.is_synthetic,
+            })),
+          )
+          .onConflictDoUpdate({
+            target: scfMappings.id,
+            set: {
+              relationshipType: sql`EXCLUDED.relationship_type`,
+              relationshipStrength: sql`EXCLUDED.relationship_strength`,
+              isOfficial: sql`EXCLUDED.is_official`,
+              status: sql`EXCLUDED.status`,
+              updatedAt: new Date(),
+            },
+          });
+      });
     }
 
     // Import runs
-    for (const ir of dataset.importRuns) {
-      await db
-        .insert(scfImportRuns)
-        .values({
-          id: ir.id,
-          scfVersionId: ir.scf_version_id,
-          sourceType: ir.source_type,
-          sourceFilename: ir.source_filename,
-          sourceHash: ir.source_hash,
-          status: ir.status,
-          startedAt: new Date(ir.started_at),
-          completedAt: ir.completed_at ? new Date(ir.completed_at) : null,
-          errorSummarySafe: ir.error_summary_safe,
-          importStatistics: ir.import_statistics as Record<string, unknown>,
-          traceId: ir.trace_id,
-        })
-        .onConflictDoUpdate({
-          target: scfImportRuns.id,
-          set: { status: ir.status, updatedAt: new Date() },
-        });
+    if (dataset.importRuns && dataset.importRuns.length > 0) {
+      await batchOperation(dataset.importRuns, 100, async (batch) => {
+        await db
+          .insert(scfImportRuns)
+          .values(
+            batch.map((ir) => ({
+              id: ir.id,
+              scfVersionId: ir.scf_version_id ?? null,
+              sourceType: ir.source_type,
+              sourceFilename: ir.source_filename ?? null,
+              sourceHash: ir.source_hash,
+              status: ir.status,
+              startedAt: new Date(ir.started_at),
+              completedAt: ir.completed_at ? new Date(ir.completed_at) : null,
+              errorSummarySafe: ir.error_summary_safe ?? null,
+              importStatistics: ir.import_statistics as Record<string, unknown>,
+              traceId: ir.trace_id,
+            })),
+          )
+          .onConflictDoUpdate({
+            target: scfImportRuns.id,
+            set: { status: sql`EXCLUDED.status`, updatedAt: new Date() },
+          });
+      });
     }
 
     // Bulk insert scf_assessment_objectives
