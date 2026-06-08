@@ -64,7 +64,7 @@ An in-memory fallback implementation for testing.
 ## 3. Security & Error Handling
 
 - **401 Unauthorized**: Missing or invalid Bearer token.
-- **400 Bad Request**: Missing `x-standard-organization-id` header (enforced by `tenantRequired: true`).
+- **400 Bad Request**: Missing `x-standard-tenant-id` header (enforced by `tenantRequired: true`).
 - **404 Not Found**: Control code does not exist in the requested version.
 
 ## 4. Testing Plan

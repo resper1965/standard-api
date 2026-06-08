@@ -36,7 +36,7 @@ Nunca versionar:
 
 Checklist:
 
-- toda rota de cliente recebe `x-standard-organization-id`;
+- toda rota de cliente recebe `x-standard-tenant-id`;
 - `organization_id` do body não diverge do organization context;
 - assessment carregado pertence ao organization;
 - storage keys preservam organization/organization/assessment;

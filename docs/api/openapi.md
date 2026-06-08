@@ -1064,7 +1064,7 @@ Regras:
 
 Headers de desenvolvimento/teste:
 
-- `x-standard-organization-id`: organization context para dados de cliente.
+- `x-standard-tenant-id`: organization context para dados de cliente.
 - `x-standard-actor-id`: actor context.
 - `Authorization: Bearer dev:<role>`: placeholder local para role específica.
 

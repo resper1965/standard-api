@@ -18,7 +18,7 @@ Os endpoints de lifecycle chamam `packages/assessment-engine` para validar e exe
 
 ## Multi-Tenancy
 
-Rotas protegidas exigem `organization_id` resolvido por placeholder via `x-standard-organization-id` ou path `:organizationId`. Quando os dois aparecem, a API rejeita divergência. `assessment_id` é sempre validado contra `organization_id` e `organization_id` nos mocks.
+Rotas protegidas exigem `organization_id` resolvido por placeholder via `x-standard-tenant-id` ou path `:organizationId`. Quando os dois aparecem, a API rejeita divergência. `assessment_id` é sempre validado contra `organization_id` e `organization_id` nos mocks.
 
 ## Approvals
 

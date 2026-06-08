@@ -319,7 +319,7 @@ Estes são conceitos e regras aplicados uniformemente em todo o monorepo para ga
 
 ### 8.1 Isolamento de Organizations (Multi-tenancy)
 O Standard é um sistema multi-organization por design. Para evitar o vazamento de dados (*cross-organization data leakage*):
-- **Camada Relacional**: Toda tabela transacional crítica (ex: `assessments`, `documents`, `audit_logs`) contém colunas `organization_id` e `organization_id` que apontam para UUIDs do GRC. Todas as queries de leitura/escrita filtram estritamente por estas colunas.
+- **Camada Relacional**: Toda tabela transacional crítica (ex: `assessments`, `documents`, `audit_logs`) contém a coluna `organization_id` que aponta para UUIDs do GRC. Todas as queries de leitura/escrita filtram estritamente por esta coluna. A antiga tabela `tenants` e todas as colunas `tenant_id` legadas foram completamente removidas do banco de dados relacional e do monorepo, alinhando a persistência física à tipagem TypeScript do ORM.
 - **Armazenamento de Arquivos (R2)**: As chaves de arquivos no bucket seguem o padrão `organizations/:organization_id/documents/:document_id/filename.ext`.
 - **Camada Vetorial (Vectorize)**: Os índices vetoriais utilizam namespaces dedicados (ou partições via metadados contendo o `organization_id`) para garantir isolamento durante a recuperação semântica do RAG.
 
@@ -382,6 +382,8 @@ Identificamos os riscos e trade-offs assumidos na arquitetura:
 - **Dependência do Ecossistema Cloudflare (Vendor Lock-in)**: O gateway utiliza bindings nativos (Queues, R2, Vectorize, Workflows). Embora o código javascript rode sobre o padrão WinterCG, migrar a infraestrutura para AWS ou GCP exigiria reescrever os adapters de persistência e orquestração.
 - **Cold Starts de Workers**: À medida que mais pacotes de domínio são incluídos no build do `api-gateway`, o tamanho do bundle compilado aumenta. Controlamos o tamanho do bundle desativando imports pesados e mantendo as dependências de roteamento leves (Hono).
 - **Scope Creep no Developer Console**: Como optamos por manter uma interface Web (`apps/web`) atuando como Painel do Desenvolvedor (gestão de API Keys e Organizations), existe a tentação e o risco de lógica de negócios GRC acabar vazando para o frontend. Exigirá disciplina arquitetural rigorosa para manter o frontend estritamente como um "console burro".
+- **Resolução de Dívidas de Ferramental (Husky/Pre-commit)**: A divergência de execução local do ESLint v10 durante os commits foi resolvida por meio da centralização do ESLint Flat Config no monorepo e da instalação de dependências compartilhadas no root.
+- **Resolução da Transição de Banco de Dados**: A transição para o isolamento puro de organizações (removendo a tabela tenants e o campo tenant_id) foi formalizada e concluída através da migração física 0032_drop_legacy_tenants, alinhando a base relacional com os tipos do ORM.
 
 ---
 
