@@ -322,6 +322,27 @@ const Tools = {
       required: ["assessment_id"],
     },
   },
+  optimize_compliance_path: {
+    name: "optimize_compliance_path",
+    description:
+      "Calculate the optimal sequential path of SCF controls to implement to achieve compliance with a set of target frameworks. Prioritizes overlap, weight, and low evidence effort.",
+    schema: {
+      type: "object",
+      properties: {
+        framework_ids: {
+          type: "array",
+          items: { type: "string" },
+          description:
+            "Target framework IDs or codes (e.g. ['iso27001', 'soc2'])",
+        },
+        scf_version_id: {
+          type: "string",
+          description: "SCF version UUID or code (default: latest)",
+        },
+      },
+      required: ["framework_ids"],
+    },
+  },
 
   // ── NEW: HITL + Jobs tools (closes #82) ────────────────────────────────
 
@@ -627,6 +648,24 @@ server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
         };
         const data = await fetchFromApi(
           `/api/v1/assessments/${assessment_id}/compliance-gate`,
+        );
+        return {
+          content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+        };
+      }
+
+      case "optimize_compliance_path": {
+        const { framework_ids, scf_version_id } = request.params.arguments as {
+          framework_ids: string[];
+          scf_version_id?: string;
+        };
+        const data = await fetchFromApi(
+          "/api/v1/optimizer/compliance-strategy",
+          "POST",
+          {
+            framework_ids,
+            scf_version_id,
+          },
         );
         return {
           content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
