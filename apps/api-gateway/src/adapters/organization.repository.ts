@@ -1,63 +1,83 @@
 import { eq } from "drizzle-orm";
 import { organizations } from "@standard/schemas";
-import type { OrganizationRecord, OrganizationRepositoryAdapter } from "../http";
+import type {
+  OrganizationRecord,
+  OrganizationRepositoryAdapter,
+} from "../http";
 import type { DbClient } from "./db";
 import { newId } from "../http";
 
-export const createOrganizationRepository = (): OrganizationRepositoryAdapter => {
-  const records = new Map<string, OrganizationRecord>();
+export const createOrganizationRepository =
+  (): OrganizationRepositoryAdapter => {
+    const records = new Map<string, OrganizationRecord>();
 
-  return {
-    async create(input) {
-      const record = { organization_id: newId(), status: "active" as const, billing_tier: "free", ...input };
-      records.set(record.organization_id, record);
-      return record;
-    },
-    async get(organizationId) {
-      return records.get(organizationId) ?? null;
-    },
-    async update(organizationId, patch) {
-      const existing = records.get(organizationId);
-      if (!existing) return null;
-      const updated = { ...existing, ...patch };
-      records.set(organizationId, updated);
-      return updated;
-    },
-    async listByTenant(organizationId) {
-      return [...records.values()];
-    },
-    withOrganization(organizationId) {
-      return {
-        create: async (input) => this.create(input),
-        get: async (orgId) => this.get(orgId),
-        list: async () => this.listByTenant(organizationId),
-        update: async (orgId, patch) => this.update(orgId, patch)
-      };
-    }
+    return {
+      async create(input) {
+        const record = {
+          organization_id: newId(),
+          status: "active" as const,
+          billing_tier: "free",
+          ...input,
+        };
+        records.set(record.organization_id, record);
+        return record;
+      },
+      async get(organizationId) {
+        return records.get(organizationId) ?? null;
+      },
+      async update(organizationId, patch) {
+        const existing = records.get(organizationId);
+        if (!existing) return null;
+        const updated = { ...existing, ...patch };
+        records.set(organizationId, updated);
+        return updated;
+      },
+      async delete(organizationId) {
+        return records.delete(organizationId);
+      },
+      async listByTenant(organizationId) {
+        return [...records.values()];
+      },
+      withOrganization(organizationId) {
+        return {
+          create: async (input) => this.create(input),
+          get: async (orgId) => this.get(orgId),
+          list: async () => this.listByTenant(organizationId),
+          update: async (orgId, patch) => this.update(orgId, patch),
+          delete: async (orgId) => this.delete(orgId),
+        };
+      },
+    };
   };
-};
 
-export const createDrizzleOrganizationRepository = (db: DbClient): OrganizationRepositoryAdapter => {
+export const createDrizzleOrganizationRepository = (
+  db: DbClient,
+): OrganizationRepositoryAdapter => {
   return {
     async create(input) {
-      const [inserted] = await db.insert(organizations).values({
-        id: newId(),
-        status: "active" as const,
-        name: input.name,
-        slug: input.slug,
-        billingTier: "free",
-        userId: "system", // Required by schema
-      }).returning();
+      const [inserted] = await db
+        .insert(organizations)
+        .values({
+          id: newId(),
+          status: "active" as const,
+          name: input.name,
+          slug: input.slug,
+          billingTier: "free",
+          userId: "system", // Required by schema
+        })
+        .returning();
       return {
         organization_id: inserted!.id,
         slug: inserted!.slug,
         name: inserted!.name,
         status: inserted!.status as "active" | "inactive",
-        billing_tier: inserted!.billingTier
+        billing_tier: inserted!.billingTier,
       };
     },
     async get(organizationId) {
-      const [found] = await db.select().from(organizations)
+      const [found] = await db
+        .select()
+        .from(organizations)
         .where(eq(organizations.id, organizationId))
         .limit(1);
       if (!found) return null;
@@ -67,27 +87,30 @@ export const createDrizzleOrganizationRepository = (db: DbClient): OrganizationR
         slug: found.slug,
         name: found.name,
         status: found.status as "active" | "inactive",
-        billing_tier: found.billingTier
+        billing_tier: found.billingTier,
       };
     },
     async listByTenant(organizationId) {
-      const results = await db.select().from(organizations)
+      const results = await db
+        .select()
+        .from(organizations)
         .where(eq(organizations.id, organizationId));
-      return results.map(found => ({
+      return results.map((found) => ({
         organization_id: found.id,
         slug: found.slug,
         name: found.name,
         status: found.status as "active" | "inactive",
-        billing_tier: found.billingTier
+        billing_tier: found.billingTier,
       }));
     },
     async update(organizationId, patch) {
-      const [updated] = await db.update(organizations)
+      const [updated] = await db
+        .update(organizations)
         .set({
           name: patch.name,
           slug: patch.slug,
           status: patch.status,
-          billingTier: patch.billing_tier
+          billingTier: patch.billing_tier,
         })
         .where(eq(organizations.id, organizationId))
         .returning();
@@ -99,8 +122,21 @@ export const createDrizzleOrganizationRepository = (db: DbClient): OrganizationR
         slug: updated.slug,
         name: updated.name,
         status: updated.status as "active" | "inactive",
-        billing_tier: updated.billingTier
+        billing_tier: updated.billingTier,
       };
+    },
+    async delete(organizationId) {
+      // Soft-delete: mark as inactive + set deletedAt timestamp
+      const result = await db
+        .update(organizations)
+        .set({
+          status: "inactive",
+
+          deletedAt: new Date() as any,
+        })
+        .where(eq(organizations.id, organizationId))
+        .returning({ id: organizations.id });
+      return result.length > 0;
     },
     withOrganization(organizationId) {
       return {
@@ -113,8 +149,12 @@ export const createDrizzleOrganizationRepository = (db: DbClient): OrganizationR
         update: async (orgId, patch) => {
           if (orgId !== organizationId) return null;
           return this.update(orgId, patch);
-        }
+        },
+        delete: async (orgId) => {
+          if (orgId !== organizationId) return false;
+          return this.delete(orgId);
+        },
       };
-    }
+    },
   };
 };

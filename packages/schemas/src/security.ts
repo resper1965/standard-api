@@ -1,8 +1,20 @@
 import { z } from "zod";
 import { TraceIdSchema, UuidSchema } from "./common";
 
-export const ActorTypeSchema = z.enum(["user", "service_account", "system", "agent_runtime", "workflow"]);
-export const AuthMethodSchema = z.enum(["jwt", "api_key", "cloudflare_access", "service_token", "mock_dev"]);
+export const ActorTypeSchema = z.enum([
+  "user",
+  "service_account",
+  "system",
+  "agent_runtime",
+  "workflow",
+]);
+export const AuthMethodSchema = z.enum([
+  "jwt",
+  "api_key",
+  "cloudflare_access",
+  "service_token",
+  "mock_dev",
+]);
 
 export const RoleSchema = z.enum([
   "platform_admin",
@@ -15,7 +27,7 @@ export const RoleSchema = z.enum([
   "auditor_readonly",
   "integration_service",
   "support_readonly",
-  "system"
+  "system",
 ]);
 
 export const PermissionSchema = z.enum([
@@ -24,6 +36,7 @@ export const PermissionSchema = z.enum([
   "organization:create",
   "organization:read",
   "organization:update",
+  "organization:delete",
   "membership:manage",
   "assessment:create",
   "assessment:read",
@@ -124,16 +137,23 @@ export const AuthContextSchema = z.object({
   api_key_id: z.string().min(1).optional(),
   issued_at: z.string(),
   expires_at: z.string().optional(),
-  trace_id: TraceIdSchema
+  trace_id: TraceIdSchema,
 });
 
 export const SecurityTenantContextSchema = z.object({
   organization_id: UuidSchema,
   assessment_id: UuidSchema.optional(),
   hostname: z.string().optional(),
-  source: z.enum(["jwt", "api_key", "hostname", "header", "route_param", "internal_worker"]),
+  source: z.enum([
+    "jwt",
+    "api_key",
+    "hostname",
+    "header",
+    "route_param",
+    "internal_worker",
+  ]),
   resolved_at: z.string(),
-  trace_id: TraceIdSchema
+  trace_id: TraceIdSchema,
 });
 
 export const AccessDeniedReasonSchema = z.enum([
@@ -144,7 +164,7 @@ export const AccessDeniedReasonSchema = z.enum([
   "organization_mismatch",
   "assessment_mismatch",
   "mock_auth_forbidden_in_production",
-  "policy_not_configured"
+  "policy_not_configured",
 ]);
 
 export const AccessDecisionSchema = z.object({
@@ -152,14 +172,14 @@ export const AccessDecisionSchema = z.object({
   reason: AccessDeniedReasonSchema.optional(),
   required_permissions: z.array(PermissionSchema).default([]),
   granted_permissions: z.array(PermissionSchema).default([]),
-  trace_id: TraceIdSchema
+  trace_id: TraceIdSchema,
 });
 
 export const PolicyInputSchema = z.object({
   auth: AuthContextSchema.optional(),
   tenant: SecurityTenantContextSchema.optional(),
   required_permissions: z.array(PermissionSchema).default([]),
-  trace_id: TraceIdSchema
+  trace_id: TraceIdSchema,
 });
 
 export const PolicyResultSchema = AccessDecisionSchema;
@@ -168,7 +188,7 @@ export const ApiKeyScopeSchema = z.object({
   api_key_id: z.string().min(1),
   organization_id: UuidSchema,
   organization_ids: z.array(UuidSchema).default([]),
-  permissions: z.array(PermissionSchema).default([])
+  permissions: z.array(PermissionSchema).default([]),
 });
 
 export const ServiceAccountSchema = z.object({
@@ -176,7 +196,7 @@ export const ServiceAccountSchema = z.object({
   organization_id: UuidSchema.optional(),
   roles: z.array(RoleSchema).default([]),
   permissions: z.array(PermissionSchema).default([]),
-  status: z.enum(["active", "disabled"]).default("active")
+  status: z.enum(["active", "disabled"]).default("active"),
 });
 
 export const SecurityEventSchema = z.object({
@@ -186,7 +206,7 @@ export const SecurityEventSchema = z.object({
   assessment_id: UuidSchema.optional(),
   trace_id: TraceIdSchema,
   timestamp: z.string(),
-  metadata: z.record(z.string(), z.unknown()).default({})
+  metadata: z.record(z.string(), z.unknown()).default({}),
 });
 
 export const FileSecurityPolicySchema = z.object({
@@ -195,7 +215,7 @@ export const FileSecurityPolicySchema = z.object({
   allowed_mime_types: z.array(z.string().min(1)),
   require_content_hash: z.boolean(),
   require_malware_scan: z.boolean(),
-  quarantine_on_rejection: z.boolean()
+  quarantine_on_rejection: z.boolean(),
 });
 
 export const FileValidationSecurityResultSchema = z.object({
@@ -204,17 +224,22 @@ export const FileValidationSecurityResultSchema = z.object({
   content_hash: z.string().optional(),
   rejection_reasons: z.array(z.string()).default([]),
   warnings: z.array(z.string()).default([]),
-  quarantine_required: z.boolean()
+  quarantine_required: z.boolean(),
 });
 
-export const PromptContentTrustLevelSchema = z.enum(["trusted_system", "trusted_tool", "untrusted_evidence", "untrusted_user"]);
+export const PromptContentTrustLevelSchema = z.enum([
+  "trusted_system",
+  "trusted_tool",
+  "untrusted_evidence",
+  "untrusted_user",
+]);
 
 export const ToolUsePolicySchema = z.object({
   agent_id: z.string().min(1),
   allowed_tools: z.array(z.string().min(1)),
   denied_tools: z.array(z.string().min(1)).default([]),
   external_calls_allowed: z.boolean().default(false),
-  approval_tools_allowed: z.boolean().default(false)
+  approval_tools_allowed: z.boolean().default(false),
 });
 
 export type ActorType = z.infer<typeof ActorTypeSchema>;
@@ -231,6 +256,10 @@ export type ApiKeyScope = z.infer<typeof ApiKeyScopeSchema>;
 export type ServiceAccount = z.infer<typeof ServiceAccountSchema>;
 export type SecurityEvent = z.infer<typeof SecurityEventSchema>;
 export type FileSecurityPolicy = z.infer<typeof FileSecurityPolicySchema>;
-export type FileValidationSecurityResult = z.infer<typeof FileValidationSecurityResultSchema>;
-export type PromptContentTrustLevel = z.infer<typeof PromptContentTrustLevelSchema>;
+export type FileValidationSecurityResult = z.infer<
+  typeof FileValidationSecurityResultSchema
+>;
+export type PromptContentTrustLevel = z.infer<
+  typeof PromptContentTrustLevelSchema
+>;
 export type ToolUsePolicy = z.infer<typeof ToolUsePolicySchema>;
