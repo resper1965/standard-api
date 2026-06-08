@@ -3,7 +3,10 @@ import { TenantResolver } from "@standard/security";
 import { ApiError } from "../errors/api-error";
 import type { RequestContext } from "../http";
 
-export const resolveOrganizationContext = async (context: RequestContext, protectedRoute: boolean): Promise<void> => {
+export const resolveOrganizationContext = async (
+  context: RequestContext,
+  protectedRoute: boolean,
+): Promise<void> => {
   const pathTenantId = context.params.organizationId;
   const headerTenantId =
     context.request.headers.get("x-standard-tenant-id") ??
@@ -12,9 +15,66 @@ export const resolveOrganizationContext = async (context: RequestContext, protec
 
   const isPlatformAdmin = context.session?.user?.platformAdmin === true;
 
-  // Isolation checks are moved to the bottom after resolving organizationId and organizationId.
+  // ── IDOR FIX (Issue #71) ─────────────────────────────────────────────
+  // Session organization ALWAYS takes precedence over untrusted headers.
+  // If the user has an active session, the header can ONLY be used to switch
+  // among their allowed organizations. An arbitrary header value from an
+  // attacker who is not a member of that org is rejected with 403.
+  //
+  // Priority order:
+  //   1. Session activeOrganizationId (trusted, set by auth middleware)
+  //   2. Header org (ONLY if validated against allowedOrganizations)
+  //   3. Path param org (for route-scoped endpoints)
+  //   4. context.organizationId (fallback from prior middleware)
 
-  const rawTenantId = headerTenantId ?? pathTenantId ?? context.organizationId;
+  let rawTenantId: string | undefined;
+
+  if (
+    context.session &&
+    context.actorId &&
+    !context.actorId.startsWith("m2m:")
+  ) {
+    // Interactive session: session org is the primary source of truth
+    const sessionOrgId = context.organizationId; // Already set by auth middleware
+
+    if (headerTenantId && headerTenantId !== sessionOrgId) {
+      // Header is requesting a DIFFERENT org than the session's active org.
+      // Only allow if the user is a member of that org (platform admins bypass).
+      if (!isPlatformAdmin) {
+        const allowedOrgs = context.session.session?.allowedOrganizations ?? [];
+        const isAllowed = allowedOrgs.some(
+          (org: { id?: string; organizationId?: string }) =>
+            org.id === headerTenantId || org.organizationId === headerTenantId,
+        );
+
+        if (!isAllowed) {
+          void new SecurityEventService(context.deps.observability).record({
+            organization_id: sessionOrgId,
+            event_type: "cross_tenant_access_blocked",
+            severity: "critical",
+            outcome: "blocked",
+            source: "api-gateway",
+            message_safe:
+              "Header x-standard-tenant-id references an organization the user is not a member of.",
+            trace_id: context.traceId,
+          });
+          throw new ApiError(
+            "FORBIDDEN",
+            "You are not a member of the requested organization.",
+            403,
+          );
+        }
+      }
+      // User IS a member — allow org switch via header
+      rawTenantId = headerTenantId;
+    } else {
+      // No header override or same org — use session org
+      rawTenantId = sessionOrgId ?? pathTenantId;
+    }
+  } else {
+    // M2M API key or unauthenticated: original behavior
+    rawTenantId = headerTenantId ?? pathTenantId ?? context.organizationId;
+  }
 
   if (protectedRoute && !rawTenantId) {
     // Only enforce tenant requirement when there IS an authenticated actor.
@@ -28,9 +88,13 @@ export const resolveOrganizationContext = async (context: RequestContext, protec
       outcome: "denied",
       source: "api-gateway",
       message_safe: "Tenant context is required.",
-      trace_id: context.traceId
+      trace_id: context.traceId,
     });
-    throw new ApiError("TENANT_CONTEXT_REQUIRED", "Tenant context is required.", 400);
+    throw new ApiError(
+      "TENANT_CONTEXT_REQUIRED",
+      "Tenant context is required.",
+      400,
+    );
   }
 
   // Resolve Standard Native Auth Org text ID to standard UUID if resolver is available
@@ -38,13 +102,17 @@ export const resolveOrganizationContext = async (context: RequestContext, protec
   let resolvedOrgId = context.params.organizationId;
   if (context.deps.resolveOrganizationContext && rawTenantId) {
     try {
-      const resolved = await context.deps.resolveOrganizationContext(rawTenantId);
+      const resolved =
+        await context.deps.resolveOrganizationContext(rawTenantId);
       if (resolved) {
         resolvedTenantId = resolved.organization_id;
         resolvedOrgId = resolved.organization_id;
       }
     } catch (e) {
-      console.error("[standard:tenant-middleware] Failed to resolve tenant context:", e);
+      console.error(
+        "[standard:tenant-middleware] Failed to resolve tenant context:",
+        e,
+      );
     }
   }
 
@@ -68,13 +136,15 @@ export const resolveOrganizationContext = async (context: RequestContext, protec
         organizationId: headerTenantId,
         expectedTenantId: pathTenantId,
         traceId: context.traceId,
-        ...(context.actorId ? { actorId: context.actorId } : {})
+        ...(context.actorId ? { actorId: context.actorId } : {}),
       });
     }
 
     // Also enqueue to SOC queue for durable persistence (belt-and-suspenders)
     if ((context.deps as any).SOC_TRIAGE_QUEUE) {
-      void (context.deps as any).SOC_TRIAGE_QUEUE.send(mismatchAlert).catch(() => {});
+      void (context.deps as any).SOC_TRIAGE_QUEUE.send(mismatchAlert).catch(
+        () => {},
+      );
     }
 
     // SecurityEventService fallback (always record locally)
@@ -85,7 +155,7 @@ export const resolveOrganizationContext = async (context: RequestContext, protec
       outcome: "blocked",
       source: "api-gateway",
       message_safe: "Tenant context mismatch — request blocked.",
-      trace_id: context.traceId
+      trace_id: context.traceId,
     });
 
     throw new ApiError("FORBIDDEN", "Tenant context mismatch.", 403);
@@ -101,7 +171,8 @@ export const resolveOrganizationContext = async (context: RequestContext, protec
     let resolvedPathTenantId = pathTenantId;
     if (context.deps.resolveOrganizationContext) {
       try {
-        const resolved = await context.deps.resolveOrganizationContext(pathTenantId);
+        const resolved =
+          await context.deps.resolveOrganizationContext(pathTenantId);
         if (resolved) {
           resolvedPathTenantId = resolved.organization_id;
         }
@@ -120,7 +191,8 @@ export const resolveOrganizationContext = async (context: RequestContext, protec
     let resolvedPathOrgId = pathOrgId;
     if (context.deps.resolveOrganizationContext) {
       try {
-        const resolved = await context.deps.resolveOrganizationContext(pathOrgId);
+        const resolved =
+          await context.deps.resolveOrganizationContext(pathOrgId);
         if (resolved) {
           resolvedPathOrgId = resolved.organization_id;
         }
@@ -133,14 +205,20 @@ export const resolveOrganizationContext = async (context: RequestContext, protec
     }
   }
 
-  context.securityTenant = new TenantResolver().resolve({
-    ...(headerTenantId ? { headerTenantId: resolvedTenantId } : {}),
-    ...(pathTenantId ? { pathTenantId: resolvedTenantId } : {}),
-    ...(context.actorId?.startsWith("m2m:") ? { apiKeyTenantId: resolvedTenantId } : { sessionTenantId: resolvedTenantId }),
-    ...(context.params.organizationId ? { organizationId: resolvedOrgId } : {}),
-    ...(context.params.assessmentId ? { assessmentId: context.params.assessmentId } : {}),
-    hostname: new URL(context.request.url).hostname,
-    traceId: context.traceId
-  }) ?? undefined;
+  context.securityTenant =
+    new TenantResolver().resolve({
+      ...(headerTenantId ? { headerTenantId: resolvedTenantId } : {}),
+      ...(pathTenantId ? { pathTenantId: resolvedTenantId } : {}),
+      ...(context.actorId?.startsWith("m2m:")
+        ? { apiKeyTenantId: resolvedTenantId }
+        : { sessionTenantId: resolvedTenantId }),
+      ...(context.params.organizationId
+        ? { organizationId: resolvedOrgId }
+        : {}),
+      ...(context.params.assessmentId
+        ? { assessmentId: context.params.assessmentId }
+        : {}),
+      hostname: new URL(context.request.url).hostname,
+      traceId: context.traceId,
+    }) ?? undefined;
 };
-

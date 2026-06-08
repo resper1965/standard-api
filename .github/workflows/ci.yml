@@ -97,19 +97,15 @@ jobs:
 
       - name: Security Tests
         run: pnpm test:security
-        continue-on-error: true
 
       - name: Regression Tests
         run: pnpm test:regression
-        continue-on-error: true
 
       - name: Agent Evaluations
         run: pnpm test:evaluations
-        continue-on-error: true
 
       - name: Synthetic E2E Tests
         run: pnpm test:synthetic-e2e
-        continue-on-error: true
 
   build:
     name: Build
