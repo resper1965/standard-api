@@ -5,7 +5,8 @@ import { expect, test } from "../test-kit";
 
 test("document upload contract returns document_id and scan_status", async () => {
   const client = createTestClient();
-  const { tenantId, organizationId, assessmentId } = await client.createAssessment();
+  const { tenantId, organizationId, assessmentId } =
+    await client.createAssessment();
 
   const result = await client.send(
     `/api/v1/assessments/${assessmentId}/documents`,
@@ -18,8 +19,8 @@ test("document upload contract returns document_id and scan_status", async () =>
     {
       "x-standard-tenant-id": tenantId,
       "x-standard-actor-id": ids.actorId,
-      authorization: "Bearer dev:admin",
-    }
+      authorization: "Bearer dev:organization_admin",
+    },
   );
   // Should return 200/201 with document_id, or 501 if upload route not wired
   if (result.response.status === 200 || result.response.status === 201) {
@@ -39,8 +40,8 @@ test("document list contract returns array with required fields", async () => {
     {
       "x-standard-tenant-id": tenantId,
       "x-standard-actor-id": ids.actorId,
-      authorization: "Bearer dev:admin",
-    }
+      authorization: "Bearer dev:organization_admin",
+    },
   );
   if (result.response.status === 200) {
     const docs = result.body.data ?? result.body.documents ?? result.body;
@@ -52,13 +53,19 @@ test("document list contract returns array with required fields", async () => {
 
 test("document endpoint requires authentication", async () => {
   const client = createTestClient();
-  const result = await client.send("/api/v1/assessments/fake-id/documents", "GET");
+  const result = await client.send(
+    "/api/v1/assessments/fake-id/documents",
+    "GET",
+  );
   expect(result.response.status).toBe(401);
 });
 
 test("document error response includes standard error contract", async () => {
   const client = createTestClient();
-  const result = await client.send("/api/v1/assessments/fake-id/documents", "GET");
+  const result = await client.send(
+    "/api/v1/assessments/fake-id/documents",
+    "GET",
+  );
   expect(result.body.error).toBeDefined();
   expect(result.body.error.code).toBeDefined();
   expect(result.body.error.trace_id).toBeDefined();

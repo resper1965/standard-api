@@ -11,7 +11,11 @@
  * - No `as any`, `as StandardUser`, or `as StandardSession` casts in this file.
  *   The single cast boundary is in resolveSessionFields() below.
  */
-import type { StandardAuth, StandardUser, StandardSession } from "@standard/auth";
+import type {
+  StandardAuth,
+  StandardUser,
+  StandardSession,
+} from "@standard/auth";
 import { StructuredLogger } from "@standard/observability";
 import { baSession } from "@standard/schemas";
 import { eq } from "drizzle-orm";
@@ -23,8 +27,11 @@ import type { DbClient } from "../adapters/db";
 const logger = new StructuredLogger();
 
 const isUuid = (val?: string): boolean =>
-  val ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val) : false;
-
+  val
+    ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        val,
+      )
+    : false;
 
 /**
  * Typed session field extraction.
@@ -33,7 +40,10 @@ const isUuid = (val?: string): boolean =>
  * plugin-injected fields (role, activeOrganizationId, platformAdmin) in the base TS type.
  * We perform a single cast here at the boundary — all callers receive typed objects.
  */
-function resolveSessionFields(rawSession: { user: unknown; session: unknown }): {
+function resolveSessionFields(rawSession: {
+  user: unknown;
+  session: unknown;
+}): {
   user: StandardUser;
   session: StandardSession;
 } {
@@ -53,7 +63,7 @@ function resolveSessionFields(rawSession: { user: unknown; session: unknown }): 
 export const resolveAuthContext = async (
   context: RequestContext,
   auth: StandardAuth,
-  requireAuth: boolean
+  requireAuth: boolean,
 ): Promise<void> => {
   try {
     const authHeader = context.request.headers.get("Authorization");
@@ -67,7 +77,9 @@ export const resolveAuthContext = async (
       const data = encoder.encode(token);
       const hashBuffer = await crypto.subtle.digest("SHA-256", data);
       const hashArray = Array.from(new Uint8Array(hashBuffer));
-      const keyHash = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+      const keyHash = hashArray
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
 
       const apiKeyRecord = await context.deps.apiKeys.verifyKey(keyHash);
       if (apiKeyRecord) {
@@ -83,15 +95,17 @@ export const resolveAuthContext = async (
         });
 
         // SOC 2 compliance: audit trail for every M2M key verification
-        context.deps.audit.record("api_key.verified", {
-          organization_id: apiKeyRecord.organizationId,
-          actor_id: `m2m:${apiKeyRecord.id}`,
-          key_id: apiKeyRecord.id,
-          scopes: apiKeyRecord.scopes,
-          route: new URL(context.request.url).pathname,
-          method: context.request.method,
-          trace_id: context.traceId,
-        }).catch(() => {}); // Fire-and-forget, don't block request
+        context.deps.audit
+          .record("api_key.verified", {
+            organization_id: apiKeyRecord.organizationId,
+            actor_id: `m2m:${apiKeyRecord.id}`,
+            key_id: apiKeyRecord.id,
+            scopes: apiKeyRecord.scopes,
+            route: new URL(context.request.url).pathname,
+            method: context.request.method,
+            trace_id: context.traceId,
+          })
+          .catch(() => {}); // Fire-and-forget, don't block request
 
         logger.log({
           level: "info",
@@ -101,7 +115,10 @@ export const resolveAuthContext = async (
           environment: "production",
           trace_id: context.traceId,
           organization_id: apiKeyRecord.organizationId,
-          metadata: { actor_id: `m2m:${apiKeyRecord.id}`, key_id: apiKeyRecord.id }
+          metadata: {
+            actor_id: `m2m:${apiKeyRecord.id}`,
+            key_id: apiKeyRecord.id,
+          },
         });
 
         return;
@@ -116,10 +133,16 @@ export const resolveAuthContext = async (
     if (rawSession?.user) {
       // Enforce revocation from Edge Cache
       if (context.env?.STANDARD_CACHE) {
-        const revocationReason = await context.env.STANDARD_CACHE.get(`revocations:user:${rawSession.user.id}`);
+        const revocationReason = await context.env.STANDARD_CACHE.get(
+          `revocations:user:${rawSession.user.id}`,
+        );
         if (revocationReason) {
           // Hard revocations: user banned/deleted — block with 401
-          const HARD_REVOCATIONS = ["user_banned", "user_deleted", "security_lockout"];
+          const HARD_REVOCATIONS = [
+            "user_banned",
+            "user_deleted",
+            "security_lockout",
+          ];
           if (HARD_REVOCATIONS.includes(revocationReason)) {
             logger.log({
               level: "warn",
@@ -128,8 +151,13 @@ export const resolveAuthContext = async (
               module: "auth",
               environment: "production",
               trace_id: context.traceId,
-              organization_id: isUuid(context.organizationId) ? context.organizationId : undefined,
-              metadata: { actor_id: rawSession.user.id, reason: revocationReason }
+              organization_id: isUuid(context.organizationId)
+                ? context.organizationId
+                : undefined,
+              metadata: {
+                actor_id: rawSession.user.id,
+                reason: revocationReason,
+              },
             });
             throw new ApiError("UNAUTHORIZED", "Token has been revoked.", 401);
           }
@@ -144,10 +172,15 @@ export const resolveAuthContext = async (
             module: "auth",
             environment: "production",
             trace_id: context.traceId,
-            metadata: { actor_id: rawSession.user.id, reason: revocationReason }
+            metadata: {
+              actor_id: rawSession.user.id,
+              reason: revocationReason,
+            },
           });
           // Fire-and-forget cleanup — don't block the request
-          context.env.STANDARD_CACHE.delete(`revocations:user:${rawSession.user.id}`).catch(() => {});
+          context.env.STANDARD_CACHE.delete(
+            `revocations:user:${rawSession.user.id}`,
+          ).catch(() => {});
         }
       }
 
@@ -158,7 +191,8 @@ export const resolveAuthContext = async (
       // New users are created with approved=false. Block access until a
       // platform admin approves the account. Platform admins themselves
       // are always allowed through.
-      const isPlatformAdminUser = user.platformAdmin === true || user.platform_admin === true;
+      const isPlatformAdminUser =
+        user.platformAdmin === true || user.platform_admin === true;
       if (user.approved === false && !isPlatformAdminUser) {
         logger.log({
           level: "warn",
@@ -172,7 +206,7 @@ export const resolveAuthContext = async (
         throw new ApiError(
           "ACCOUNT_PENDING_APPROVAL",
           "Your account is pending approval by a platform administrator.",
-          403
+          403,
         );
       }
 
@@ -186,7 +220,11 @@ export const resolveAuthContext = async (
       // reaches zero for 7 consecutive days, remove this block.
       if (context.deps.resolveUserContext) {
         try {
-          const resolvedUser = await context.deps.resolveUserContext(user.email, user.name);
+          const resolvedUser = await context.deps.resolveUserContext(
+            user.email,
+            user.name,
+            user.id,
+          );
           resolvedActorId = resolvedUser.id;
 
           // Track fallback usage — when this reaches zero, the fallback can be removed
@@ -197,12 +235,12 @@ export const resolveAuthContext = async (
             module: "auth",
             environment: "production",
             trace_id: context.traceId,
-            metadata: { 
+            metadata: {
               ba_user_id_hash: user.id.slice(0, 8),
               ba_user_id: user.id,
               resolved_domain_id: resolvedUser.id,
               deprecation: "remove_when_metric_reaches_zero_for_7_days",
-            }
+            },
           });
         } catch (err) {
           logger.log({
@@ -212,10 +250,10 @@ export const resolveAuthContext = async (
             module: "auth",
             environment: "production",
             trace_id: context.traceId,
-            metadata: { 
+            metadata: {
               error: err instanceof Error ? err.message : String(err),
-              ba_user_id: user.id 
-            }
+              ba_user_id: user.id,
+            },
           });
         }
       }
@@ -239,7 +277,7 @@ export const resolveAuthContext = async (
           activeOrganizationSlug: session.activeOrganizationSlug ?? null,
           activeOrganizationRole: session.activeOrganizationRole ?? null,
           allowedOrganizations: session.allowedOrganizations ?? [],
-        }
+        },
       };
 
       // ── Organization context resolution (Session-first, DB-fallback) ─────
@@ -248,7 +286,10 @@ export const resolveAuthContext = async (
       // Priority 2: For platform admins with no active org, auto-scope to bekaa.
       // Priority 3: Legacy fallback via resolveOrganizationContext (DB JOINs).
 
-      if (session.activeOrganizationId && isUuid(session.activeOrganizationId)) {
+      if (
+        session.activeOrganizationId &&
+        isUuid(session.activeOrganizationId)
+      ) {
         // ✅ Fast path: org context already in session (customSession plugin)
         context.organizationId = session.activeOrganizationId;
 
@@ -274,7 +315,8 @@ export const resolveAuthContext = async (
         // Platform admin resolution still needs a DB lookup by slug (one-time).
         if (context.deps.resolveOrganizationContext) {
           try {
-            const resolved = await context.deps.resolveOrganizationContext(platformOrgSlug);
+            const resolved =
+              await context.deps.resolveOrganizationContext(platformOrgSlug);
             if (resolved) {
               context.organizationId = resolved.organization_id;
             }
@@ -333,14 +375,16 @@ export const resolveAuthContext = async (
         module: "auth",
         environment: "production",
         trace_id: context.traceId,
-        organization_id: isUuid(context.organizationId) ? context.organizationId : undefined,
+        organization_id: isUuid(context.organizationId)
+          ? context.organizationId
+          : undefined,
         metadata: {
           actor_id: user.id,
           session_id: session.id,
           active_org_id: context.organizationId ?? null,
           role: user.role ?? "viewer",
           platform_admin: isPlatformAdminUser,
-        }
+        },
       });
     }
   } catch (err: any) {
@@ -353,30 +397,39 @@ export const resolveAuthContext = async (
       module: "auth",
       environment: "production",
       trace_id: context.traceId,
-      organization_id: isUuid(context.organizationId) ? context.organizationId : undefined,
-      metadata: { 
+      organization_id: isUuid(context.organizationId)
+        ? context.organizationId
+        : undefined,
+      metadata: {
         error: err instanceof Error ? err.message : String(err),
-        raw_tenant_id: context.organizationId
-      }
+        raw_tenant_id: context.organizationId,
+      },
     });
   }
 
   if (requireAuth && !context.actorId) {
-    const ip = context.request.headers.get("cf-connecting-ip") ?? context.request.headers.get("x-forwarded-for") ?? "unknown_ip";
+    const ip =
+      context.request.headers.get("cf-connecting-ip") ??
+      context.request.headers.get("x-forwarded-for") ??
+      "unknown_ip";
 
     if (context.deps.SOC_TRIAGE_QUEUE) {
       // Best-effort context for the Incident Triager
       const userAgent = context.request.headers.get("user-agent") ?? "unknown";
-      const authHeaderSize = context.request.headers.get("Authorization")?.length ?? 0;
+      const authHeaderSize =
+        context.request.headers.get("Authorization")?.length ?? 0;
 
       const sendOp = context.deps.SOC_TRIAGE_QUEUE.send({
         job_id: crypto.randomUUID(),
         organizationId: "system",
         traceId: context.traceId,
         systemModuleName: "API Gateway - Identity Service",
-        rawLogsExcerpt: `[Auth Rejection] Access denied to protected route.\nIP: ${ip}\nUser-Agent: ${userAgent}\nAuth Header Size: ${authHeaderSize} bytes\nAction: HTTP 401 Unauthorized triggered. Possible credential stuffing, expired session, or unauthenticated probing.`
-      }).catch(err => {
-        console.error("[standard:auth] Failed to queue SOC event. Attempting DLQ...", err);
+        rawLogsExcerpt: `[Auth Rejection] Access denied to protected route.\nIP: ${ip}\nUser-Agent: ${userAgent}\nAuth Header Size: ${authHeaderSize} bytes\nAction: HTTP 401 Unauthorized triggered. Possible credential stuffing, expired session, or unauthenticated probing.`,
+      }).catch((err) => {
+        console.error(
+          "[standard:auth] Failed to queue SOC event. Attempting DLQ...",
+          err,
+        );
       });
 
       if (context.execCtx?.waitUntil) {
@@ -387,7 +440,7 @@ export const resolveAuthContext = async (
     throw new ApiError(
       "UNAUTHORIZED",
       "Authentication is required for this operation.",
-      401
+      401,
     );
   }
 };

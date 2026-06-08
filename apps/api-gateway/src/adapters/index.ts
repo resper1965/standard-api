@@ -8,10 +8,18 @@
 import { createInMemoryAgentRuntimeDependencies } from "@standard/agent-runtime";
 import { createInMemoryKbDependencies } from "@standard/kb";
 import { createInMemoryGapAnalysisDependencies } from "@standard/gap-analysis";
-import { createInMemoryObservabilityDependencies, AlertService, SecurityEventService } from "@standard/observability";
+import {
+  createInMemoryObservabilityDependencies,
+  AlertService,
+  SecurityEventService,
+} from "@standard/observability";
 import { createInMemoryPoamDependencies } from "@standard/poam";
 import { createInMemoryReportingDependencies } from "@standard/reporting";
-import { createInMemoryScfCore, createScfCoreFromRepository, createDrizzleScfRepository } from "@standard/scf-core";
+import {
+  createInMemoryScfCore,
+  createScfCoreFromRepository,
+  createDrizzleScfRepository,
+} from "@standard/scf-core";
 import { createInMemorySoaDependencies } from "@standard/soa";
 import { createInMemoryPrivacyDependencies } from "@standard/privacy";
 import { createInMemoryWorkflowDependencies } from "@standard/workflows";
@@ -21,37 +29,70 @@ import type { Env } from "../index";
 import type { DbClient } from "./db";
 
 // Per-domain composition factories
-import { composeDrizzleDocumentIngestion, composeDrizzleKb } from "./compose-document-ingestion";
+import {
+  composeDrizzleDocumentIngestion,
+  composeDrizzleKb,
+} from "./compose-document-ingestion";
 import { composeDrizzleObservability } from "./compose-observability";
 import { composeDrizzleAgentRuntime } from "./compose-agent-runtime";
 
 // Repository adapters
 import { createDrizzleWorkflowDependencies } from "./workflow.repository";
 import { createDrizzlePrivacyRepositories } from "./privacy.repository";
-import { createAssessmentRepository, createDrizzleAssessmentRepository } from "./assessment.repository";
+import {
+  createAssessmentRepository,
+  createDrizzleAssessmentRepository,
+} from "./assessment.repository";
 import { createArtifactRepository } from "./artifact.repository";
 import { createDrizzleArtifactRepository } from "./artifact.drizzle.repository";
-import { createAuditRepository, createDrizzleAuditRepository } from "./audit.repository";
-import { createApprovalRepository, createDrizzleApprovalRepository } from "./approval.repository";
-import { createLifecycleEventRepository, createDrizzleLifecycleEventRepository } from "./lifecycle.repository";
-import { createOrganizationRepository, createDrizzleOrganizationRepository } from "./organization.repository";
-import { createTenantRepository, createDrizzleTenantRepository } from "./tenant.repository";
+import {
+  createAuditRepository,
+  createDrizzleAuditRepository,
+} from "./audit.repository";
+import {
+  createApprovalRepository,
+  createDrizzleApprovalRepository,
+} from "./approval.repository";
+import {
+  createLifecycleEventRepository,
+  createDrizzleLifecycleEventRepository,
+} from "./lifecycle.repository";
+import {
+  createOrganizationRepository,
+  createDrizzleOrganizationRepository,
+} from "./organization.repository";
+import {
+  createTenantRepository,
+  createDrizzleTenantRepository,
+} from "./tenant.repository";
 import { createDrizzleSoaRepositories } from "./soa.repository";
 import { createDrizzleGapAnalysisRepositories } from "./gap-analysis.repository";
 import { createDrizzlePoamRepositories } from "./poam.repository";
 import { createDrizzleReportRepositories } from "./reporting.repository";
-import { createMockApiKeysRepository, createDrizzleApiKeysRepository } from "./api-keys.repository";
-import { createInMemoryWebhookRepository, createDrizzleWebhookRepository } from "./webhook.repository";
-import { createDrizzleMembershipRepository, createMockMembershipRepository } from "./membership.repository";
-import { resolveOrganizationContext, provisionOrganizationContext } from "./tenant-mapping";
+import {
+  createMockApiKeysRepository,
+  createDrizzleApiKeysRepository,
+} from "./api-keys.repository";
+import {
+  createInMemoryWebhookRepository,
+  createDrizzleWebhookRepository,
+} from "./webhook.repository";
+import {
+  createDrizzleMembershipRepository,
+  createMockMembershipRepository,
+} from "./membership.repository";
+import {
+  resolveOrganizationContext,
+  provisionOrganizationContext,
+} from "./tenant-mapping";
 import { users } from "@standard/schemas";
 import { eq } from "drizzle-orm";
-
 
 /**
  * Type bridge: NeonHttpDatabase (edge) ↔ PostgresJsDatabase (packages).
  */
-const asDb = (db: DbClient) => db as unknown as Parameters<typeof createDrizzleScfRepository>[0];
+const asDb = (db: DbClient) =>
+  db as unknown as Parameters<typeof createDrizzleScfRepository>[0];
 
 // ─── In-Memory (mock) composition ──────────────────────────────
 export const createMockRepositories = (): AppDependencies => {
@@ -91,35 +132,44 @@ export const createMockRepositories = (): AppDependencies => {
           const record = await baseTenantDb.update(orgId, patch);
           if (record) orgMap.set(orgId, record);
           return record;
-        }
+        },
       };
-    }
+    },
   };
 
   const resolveOrganizationContext = async (baOrgId: string) => {
     let org = orgMap.get(baOrgId);
     if (!org) {
-      org = [...orgMap.values()].find((o: any) => o.organization_id === baOrgId);
+      org = [...orgMap.values()].find(
+        (o: any) => o.organization_id === baOrgId,
+      );
     }
     if (org) {
       return {
         organization_id: org.organization_id,
         ba_org_id: baOrgId,
-        org_name: org.name
+        org_name: org.name,
       };
     }
     // JIT provision mock tenant + organization
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(baOrgId);
+    const isUuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        baOrgId,
+      );
     const tenantPayload = isUuid
       ? { organization_id: baOrgId, name: `Tenant ${baOrgId}`, slug: baOrgId }
       : { name: `Tenant ${baOrgId}`, slug: baOrgId };
     const newTenant = await tenants.create(tenantPayload);
-    const newOrg = await orgsBase.create({ organization_id: newTenant.organization_id, name: `Org ${baOrgId}`, slug: baOrgId } as any);
+    const newOrg = await orgsBase.create({
+      organization_id: newTenant.organization_id,
+      name: `Org ${baOrgId}`,
+      slug: baOrgId,
+    } as any);
     orgMap.set(newOrg.organization_id, newOrg);
     return {
       organization_id: newOrg.organization_id,
       ba_org_id: baOrgId,
-      org_name: newOrg.name
+      org_name: newOrg.name,
     };
   };
 
@@ -139,22 +189,36 @@ export const createMockRepositories = (): AppDependencies => {
     soa,
     gapAnalysis,
     poam,
-    reporting: createInMemoryReportingDependencies({ soa, gapAnalysis, poam, scf }),
+    reporting: createInMemoryReportingDependencies({
+      soa,
+      gapAnalysis,
+      poam,
+      scf,
+    }),
     agentRuntime: createInMemoryAgentRuntimeDependencies(),
     workflows: createInMemoryWorkflowDependencies(),
     observability: createInMemoryObservabilityDependencies(),
-    alerts: new AlertService(new SecurityEventService(createInMemoryObservabilityDependencies())),
+    alerts: new AlertService(
+      new SecurityEventService(createInMemoryObservabilityDependencies()),
+    ),
     privacy: createInMemoryPrivacyDependencies(),
     webhooks: createInMemoryWebhookRepository(),
     resolveOrganizationContext,
     // In-memory path provisions on resolve; the same creating fn serves both roles.
     provisionOrganizationContext: resolveOrganizationContext,
-    resolveUserContext: async (email: string, displayName: string) => ({ id: crypto.randomUUID() })
+    resolveUserContext: async (
+      email: string,
+      displayName: string,
+      identityProviderSubject?: string,
+    ) => ({ id: crypto.randomUUID() }),
   };
 };
 
 // ─── Drizzle (production) composition ──────────────────────────
-export const createDrizzleRepositories = (db: DbClient, env?: Env): AppDependencies => {
+export const createDrizzleRepositories = (
+  db: DbClient,
+  env?: Env,
+): AppDependencies => {
   // Composed domain graphs (extracted to per-domain factories)
   const documentIngestion = composeDrizzleDocumentIngestion(db, env);
   const kb = composeDrizzleKb(db, documentIngestion, env);
@@ -172,7 +236,13 @@ export const createDrizzleRepositories = (db: DbClient, env?: Env): AppDependenc
   const poam = { repositories: poamRepositories, gapAnalysis, scf };
 
   const reportRepositories = createDrizzleReportRepositories(db);
-  const reporting = { repositories: reportRepositories, soa, gapAnalysis, poam, scf };
+  const reporting = {
+    repositories: reportRepositories,
+    soa,
+    gapAnalysis,
+    poam,
+    scf,
+  };
 
   return {
     _db: db,
@@ -198,16 +268,46 @@ export const createDrizzleRepositories = (db: DbClient, env?: Env): AppDependenc
     alerts,
     privacy: { repositories: createDrizzlePrivacyRepositories(db) },
     webhooks: createDrizzleWebhookRepository(db),
-    resolveOrganizationContext: (baOrgId: string) => resolveOrganizationContext(db, baOrgId),
-    provisionOrganizationContext: (baOrgId: string) => provisionOrganizationContext(db, baOrgId),
-    resolveUserContext: async (email: string, displayName: string) => {
-      const [existing] = await db.select().from(users).where(eq(users.email, email)).limit(1);
-      if (existing) return { id: existing.id };
+    resolveOrganizationContext: (baOrgId: string) =>
+      resolveOrganizationContext(db, baOrgId),
+    provisionOrganizationContext: (baOrgId: string) =>
+      provisionOrganizationContext(db, baOrgId),
+    resolveUserContext: async (
+      email: string,
+      displayName: string,
+      identityProviderSubject?: string,
+    ) => {
+      const [existing] = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, email))
+        .limit(1);
+      if (existing) {
+        if (
+          identityProviderSubject &&
+          existing.identityProviderSubject !== identityProviderSubject
+        ) {
+          await db
+            .update(users)
+            .set({
+              identityProviderSubject,
+              identityProvider: "better-auth",
+              updatedAt: new Date(),
+            })
+            .where(eq(users.id, existing.id));
+        }
+        return { id: existing.id };
+      }
 
-      const [inserted] = await db.insert(users).values({
-        email,
-        displayName,
-      }).returning();
+      const [inserted] = await db
+        .insert(users)
+        .values({
+          email,
+          displayName,
+          identityProvider: identityProviderSubject ? "better-auth" : null,
+          identityProviderSubject: identityProviderSubject || null,
+        })
+        .returning();
       return { id: inserted!.id };
     },
   };
