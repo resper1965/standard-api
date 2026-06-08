@@ -7,3 +7,4 @@ export * from "./schemas";
 export * from "./states";
 export * from "./transitions";
 export * from "./types";
+export * from "./compliance-optimizer";

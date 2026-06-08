@@ -15,12 +15,15 @@ export class StandardError extends Error {
   readonly details: unknown[];
   readonly traceId: string | undefined;
 
-  constructor(status: number, body: StandardErrorResponse) {
-    super(body.error.message);
+  constructor(status: number, body: any) {
+    const errorObj = body?.error || {};
+    const message =
+      errorObj.message || body?.detail || body?.message || "Unknown error";
+    super(message);
     this.name = "StandardError";
-    this.code = body.error.code;
+    this.code = errorObj.code || body?.code || "UNKNOWN";
     this.status = status;
-    this.details = body.error.details ?? [];
-    this.traceId = body.error.trace_id;
+    this.details = errorObj.details ?? [];
+    this.traceId = errorObj.trace_id || body?.trace_id;
   }
 }
