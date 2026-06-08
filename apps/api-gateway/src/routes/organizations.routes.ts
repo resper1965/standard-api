@@ -192,4 +192,186 @@ export const organizationsRoutes: RouteDefinition[] = [
       });
     },
   },
+
+  // ── PATCH /api/v1/organizations/:id ─────────────────────────────────────────
+  // Updates name and/or slug of an organization owned by the authenticated tenant.
+  {
+    method: "PATCH",
+    path: "/api/v1/organizations/:id",
+    protected: true,
+    permissions: ["organization:update"],
+    requireActor: true,
+    openapi: {
+      summary: "Update Organization",
+      description: "Updates the name and/or slug of an organization.",
+      request: {
+        params: z.object({ id: z.string().uuid() }),
+        body: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                name: z.string().min(1).max(100).optional(),
+                slug: z
+                  .string()
+                  .min(2)
+                  .max(50)
+                  .regex(/^[a-z0-9-]+$/)
+                  .optional(),
+              }),
+            },
+          },
+        },
+      },
+      responses: {
+        200: {
+          description: "Organization updated",
+          content: {
+            "application/json": {
+              schema: z.object({
+                organization_id: z.string(),
+                name: z.string(),
+                slug: z.string(),
+                status: z.string(),
+                trace_id: z.string(),
+              }),
+            },
+          },
+        },
+      },
+    },
+    handler: async ({
+      request,
+      deps,
+      params,
+      organizationId,
+      actorId,
+      traceId,
+    }) => {
+      const orgId = routeUuidParam(params, "id");
+      const resolvedTenantId = requireOrganizationId({ organizationId });
+
+      const body = await parseJson(
+        request,
+        z.object({
+          name: z.string().min(1).max(100).optional(),
+          slug: z
+            .string()
+            .min(2)
+            .max(50)
+            .regex(
+              /^[a-z0-9-]+$/,
+              "slug must be lowercase alphanumeric with hyphens",
+            )
+            .optional(),
+        }),
+      );
+
+      if (!body.name && !body.slug) {
+        throw new ApiError(
+          "VALIDATION_ERROR",
+          "At least one of name or slug must be provided.",
+          400,
+        );
+      }
+
+      const tenantDb = deps.organizations.withOrganization(resolvedTenantId);
+
+      // Verify the org exists and belongs to this tenant
+      const existing = await tenantDb.get(orgId);
+      if (!existing) {
+        throw new ApiError("NOT_FOUND", "Organization not found.", 404);
+      }
+
+      const updated = await tenantDb.update(orgId, {
+        ...(body.name ? { name: body.name } : {}),
+        ...(body.slug ? { slug: body.slug } : {}),
+      });
+
+      if (!updated) {
+        throw new ApiError("NOT_FOUND", "Organization not found.", 404);
+      }
+
+      await deps.audit.record("organization.updated", {
+        organization_id: orgId,
+        actor_id: actorId,
+        changes: { name: body.name, slug: body.slug },
+        trace_id: traceId,
+      });
+
+      return json({ ...updated, trace_id: traceId });
+    },
+  },
+
+  // ── DELETE /api/v1/organizations/:id ─────────────────────────────────────────
+  // Soft-deletes an organization: sets status=inactive and deletedAt.
+  // Hard delete is not supported — data retention and audit trail must be preserved.
+  {
+    method: "DELETE",
+    path: "/api/v1/organizations/:id",
+    protected: true,
+    permissions: ["organization:delete"],
+    requireActor: true,
+    openapi: {
+      summary: "Delete Organization",
+      description:
+        "Soft-deletes an organization by marking it inactive. Data is retained for audit purposes.",
+      request: {
+        params: z.object({ id: z.string().uuid() }),
+      },
+      responses: {
+        200: {
+          description: "Organization deleted",
+          content: {
+            "application/json": {
+              schema: z.object({
+                deleted: z.boolean(),
+                organization_id: z.string(),
+                trace_id: z.string(),
+              }),
+            },
+          },
+        },
+      },
+    },
+    handler: async ({ deps, params, organizationId, actorId, traceId }) => {
+      const orgId = routeUuidParam(params, "id");
+      const resolvedTenantId = requireOrganizationId({ organizationId });
+
+      const tenantDb = deps.organizations.withOrganization(resolvedTenantId);
+
+      // Verify the org exists and belongs to this tenant before deleting
+      const existing = await tenantDb.get(orgId);
+      if (!existing) {
+        throw new ApiError("NOT_FOUND", "Organization not found.", 404);
+      }
+
+      if (existing.status === "inactive") {
+        throw new ApiError(
+          "CONFLICT",
+          "Organization is already inactive.",
+          409,
+        );
+      }
+
+      const deleted = await tenantDb.delete(orgId);
+
+      if (!deleted) {
+        throw new ApiError(
+          "INTERNAL_ERROR",
+          "Failed to delete organization.",
+          500,
+        );
+      }
+
+      await deps.audit.record("organization.deleted", {
+        organization_id: orgId,
+        actor_id: actorId,
+        previous_name: existing.name,
+        previous_slug: existing.slug,
+        trace_id: traceId,
+      });
+
+      return json({ deleted: true, organization_id: orgId, trace_id: traceId });
+    },
+  },
 ];
