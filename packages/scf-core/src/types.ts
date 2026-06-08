@@ -47,6 +47,23 @@ export type ScfDataset = {
   mappings: ScfMapping[];
   strmRelationships: ScfStrmRelationship[];
   importRuns: ScfImportRun[];
+  assessmentObjectives?: ScfAssessmentObjective[];
+  evidenceRequests?: ScfEvidenceRequest[];
+  maturityCriteria?: ScfMaturityCriteria[];
+  risks?: ScfRisk[];
+  threats?: ScfThreat[];
+  riskControlMappings?: {
+    id: string;
+    scf_version_id: string;
+    scf_risk_id: string;
+    scf_control_id: string;
+  }[];
+  threatControlMappings?: {
+    id: string;
+    scf_version_id: string;
+    scf_threat_id: string;
+    scf_control_id: string;
+  }[];
 };
 
 export type ScfImportValidationResult = {
