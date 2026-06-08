@@ -123,7 +123,7 @@ id = "094323d4e27d4b92994c89d412d27f74"
 # Create: wrangler hyperdrive create standard-neon-staging --connection-string="<NEON_URL>"
 [[env.staging.hyperdrive]]
 binding = "HYPERDRIVE"
-id = "REPLACE_WITH_STAGING_HYPERDRIVE_ID"
+id = "69f8233cfd0f4614a9249e4a8867d148"
 
 [[env.staging.workflows]]
 binding = "ASSESSMENT_WORKFLOW"
@@ -199,7 +199,7 @@ id = "55f97abbf9794b0196bdf51e8c1dedec"
 # Create: wrangler hyperdrive create standard-neon-prod --connection-string="<NEON_URL>"
 [[env.production.hyperdrive]]
 binding = "HYPERDRIVE"
-id = "REPLACE_WITH_PRODUCTION_HYPERDRIVE_ID"
+id = "aa6fb63a67f24cbd82d28bf5a43f08e5"
 
 [[env.production.workflows]]
 binding = "ASSESSMENT_WORKFLOW"
