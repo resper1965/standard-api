@@ -172,6 +172,8 @@ export interface TenantScopedOrganizationRepository {
       Pick<OrganizationRecord, "name" | "slug" | "status" | "billing_tier">
     >,
   ): Promise<OrganizationRecord | null>;
+  /** Soft-delete — marks status=inactive and sets deletedAt */
+  delete(organizationId: string): Promise<boolean>;
 }
 
 export type OrganizationRepositoryAdapter = {
@@ -189,6 +191,8 @@ export type OrganizationRepositoryAdapter = {
       Pick<OrganizationRecord, "name" | "slug" | "status" | "billing_tier">
     >,
   ): Promise<OrganizationRecord | null>;
+  /** Soft-delete — marks status=inactive and sets deletedAt */
+  delete(organizationId: string): Promise<boolean>;
   /** Strict tenant-scoped data access pattern */
   withOrganization(organizationId: string): TenantScopedOrganizationRepository;
 };
