@@ -210,18 +210,51 @@ Auditar marketing vs realidade e corrigir/qualificar:
 
 ---
 
+# PARTE C — Developer Experience (consumidor: SDK / MCP / API)
+
+Avaliado no papel de quem vai **construir em cima**. A API tem amplitude (≈40 domínios, 16 resources no SDK, idempotência, paginação, webhooks assinados, `jobs`, `privacy/DSAR`) mas falta **profundidade de DX**: o SDK não carrega o peso, a ingestão empurra o trabalho sujo, e o consumidor voa cego em rate-limit/custo. O que torna "uma API que existe" em "uma API que eu adoto":
+
+## C1 (P1) — SDK não protege o consumidor (resiliência & segurança)
+`packages/sdk/src/` não tem **retry/backoff, verificador de webhook, auto-paginação nem `waitForCompletion`** (grep vazio). Hoje cada consumidor reimplementa o chato e o perigoso.
+- **`webhooks.constructEvent(payload, sig, secret)`** — verificação HMAC-SHA256 timing-safe pronta (server já assina em `services/webhook-dispatcher.ts`). Hoje é footgun de segurança terceirizado.
+- **Retry/backoff** em 429/5xx (respeitando `Retry-After` de C3).
+- **Auto-paginação** — async iterator sobre `PaginatedResponse{has_more}`.
+- **`jobs.waitForCompletion(jobId)`** — polling encapsulado (existe `jobs.routes.ts` + `poll_job_status`, mas nenhum açúcar no SDK).
+
+## C2 (P1) — Ingestão só de texto empurra o trabalho sujo
+`apps/api-gateway/src/openapi/docs/llms-constants.ts:103`: *"Clients MUST NOT upload raw binary streams, PDFs, or raw image screenshots."* Logo, o consumidor tem que fazer parsing de PDF/DOCX + OCR de screenshot **antes**. Para um produto cujo input é documento, é a maior cratera de DX.
+- Endpoint/worker de ingestão que aceite binário (PDF/DOCX/imagem) com extração + OCR server-side (já há `ingestion-worker`, R2, ClamAV no env), devolvendo texto normalizado para o pipeline. Senão, documentar explicitamente o pré-processamento exigido e oferecer um utilitário de extração.
+
+## C3 (P1) — Operabilidade cega (rate-limit / custo / sandbox)
+- **Headers de rate-limit:** emitir `Retry-After` + `X-RateLimit-Remaining/Limit/Reset` (hoje 429 sem nada — grep vazio). Pré-requisito do retry de C1.
+- **Usage/cost por key:** endpoint de consumo (tokens/custo/quota) — é API metered em gpt-4o; consumidor precisa enxergar gasto antes da fatura.
+- **Sandbox / test mode:** key de teste com resposta determinística (sem catálogo carregado, sem queimar LLM) para integração local.
+- **Política de versionamento/deprecation** documentada além de `/api/v1`.
+
+## C4 (P2) — MCP fino demais para a narrativa "agentic"
+4 tools (`get_scf_control`, `run_gap_analysis`, `dispatch_grc_council`, `poll_job_status`) vs ≈40 domínios. Um agente consumidor **não dirige o lifecycle** via MCP (criar assessment, subir evidência, aprovar gate). Expandir cobertura MCP para o ciclo completo (com guardrails dos gates humanos).
+
+## C5 (P2) — Kit de Human-in-the-Loop
+São 4 gates de aprovação. Existe `approvals.routes.ts`, mas falta o kit do consumidor: feed unificado "pendentes de aprovação", par webhook→approve com atribuição de ator, e açúcar no SDK para o loop. Hoje quem integra monta a UX de aprovação do zero.
+
+> **Proveniência da IA** (modelo/confiança/inferência-vs-evidência no output) e **contrato de erro** são DX mas já cobertos por A2/A4 (#72/#74) — referenciar, não duplicar.
+
+---
+
 # Sequenciamento & Esforço
 
 | Fase | Itens | Bloqueia | Esforço |
 |---|---|---|---|
 | **Sprint 1 (segurança)** | A1, A5, B2.3 (doc do header), B0 | tráfego multi-tenant | ~1 sem |
-| **Sprint 2 (confiabilidade)** | A2, A4, B3, B5 | confiar no output da API | ~1 sem |
-| **Sprint 3 (catálogo+IA prod)** | A3, B4, B1 | DR/reprodutibilidade | ~1–1.5 sem |
-| **Sprint 4 (polish)** | A6, B2 (restante), B1 (archive) | — | ~1 sem |
+| **Sprint 2 (confiabilidade + DX base)** | A2, A4, B3, B5, C3 | confiar no output e operar a API | ~1 sem |
+| **Sprint 3 (catálogo+IA prod + SDK)** | A3, B4, B1, C1 | DR/reprodutibilidade e adoção do SDK | ~1.5 sem |
+| **Sprint 4 (ingestão + polish)** | A6, A7, C2, B2 (restante), B1 (archive) | input real (binário) | ~1.5 sem |
+| **Sprint 5 (agentic + HITL)** | C4, C5 | automação completa via MCP | ~1 sem |
 
 ## Critérios de "pronto para vender a API"
-1. C1 fechado e testado, com teste bloqueante no CI.
+1. **A1** (IDOR) fechado e testado, com teste bloqueante no CI.
 2. IA falha alto em prod; output com proveniência.
 3. Catálogo versionado e reproduzível em banco limpo.
 4. Contrato de erro alinhado schema↔server.
-5. Docs de desenvolvedor completos, OpenAPI cobrindo 331 rotas, posicionamento "API/cérebro" consistente, zero links quebrados, zero claims falsos (gpt-4o/PDF/platform).
+5. Docs de desenvolvedor completos, OpenAPI cobrindo 331 rotas, posicionamento "API/cérebro" consistente, zero links quebrados, zero claims falsos.
+6. **DX mínima:** SDK com retry + verificação de webhook + auto-paginação + `waitForCompletion`; headers de rate-limit; usage/cost por key; sandbox/test mode.
