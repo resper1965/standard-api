@@ -1,7 +1,7 @@
 import { CreateAssessmentRequestSchema, UpdateAssessmentRequestSchema, type ComplianceGateResponse, type ComplianceGateStatus } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";
-import { json, newId, parseJson, routeParam, routeUuidParam } from "../http";
+import { json, newId, parseJson, routeParam, routeUuidParam , requireOrganizationId } from "../http";
 import { assessmentResponse, lifecycleEventResponse } from "../presenters";
 import { z } from "zod";
 
@@ -52,7 +52,7 @@ export const assessmentsRoutes: RouteDefinition[] = [
       const body = validatedBody as import("@standard/schemas").CreateAssessmentRequest;
 
       // Bridge Standard Native Auth text ID → Standard domain UUID context
-      const standardAuthOrgId = body.organization_id ?? organizationId!;
+      const standardAuthOrgId = body.organization_id ?? requireOrganizationId({ organizationId });
       if (!deps.resolveOrganizationContext) {
         throw new ApiError("INTERNAL_ERROR", "Tenant mapping not configured.", 500);
       }
@@ -87,7 +87,7 @@ export const assessmentsRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["assessment:read"],
     handler: async ({ deps, params, organizationId }) => {
-      const resolvedTenantId = organizationId!;
+      const resolvedTenantId = requireOrganizationId({ organizationId });
 
       const tenantDb = deps.assessments.withOrganization(resolvedTenantId);
       const assessment = await tenantDb.get(routeUuidParam(params, "assessmentId"));
@@ -107,7 +107,7 @@ export const assessmentsRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["assessment:read"],
     handler: async ({ deps, organizationId, traceId }) => {
-      const resolvedTenantId = organizationId!;
+      const resolvedTenantId = requireOrganizationId({ organizationId });
 
       const tenantDb = deps.assessments.withOrganization(resolvedTenantId);
       const assessments = await tenantDb.listAll();
@@ -128,7 +128,7 @@ export const assessmentsRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["assessment:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
-      const resolvedTenantId = organizationId!;
+      const resolvedTenantId = requireOrganizationId({ organizationId });
 
       const tenantDb = deps.assessments.withOrganization(resolvedTenantId);
       const assessments = await tenantDb.listByOrganization(routeUuidParam(params, "organizationId"));
@@ -152,7 +152,7 @@ export const assessmentsRoutes: RouteDefinition[] = [
     bodySchema: UpdateAssessmentRequestSchema,
     handler: async ({ validatedBody, deps, params, organizationId }) => {
       const body = validatedBody as import("@standard/schemas").UpdateAssessmentRequest;
-      const resolvedTenantId = organizationId!;
+      const resolvedTenantId = requireOrganizationId({ organizationId });
       const tenantDb = deps.assessments.withOrganization(resolvedTenantId);
       const assessment = await tenantDb.get(routeUuidParam(params, "assessmentId"));
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
@@ -174,7 +174,7 @@ export const assessmentsRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["assessment:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
-      const resolvedTenantId = organizationId!;
+      const resolvedTenantId = requireOrganizationId({ organizationId });
       const tenantDb = deps.assessments.withOrganization(resolvedTenantId);
       const assessment = await tenantDb.get(routeUuidParam(params, "assessmentId"));
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
@@ -193,7 +193,7 @@ export const assessmentsRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["assessment:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
-      const resolvedTenantId = organizationId!;
+      const resolvedTenantId = requireOrganizationId({ organizationId });
       const assessmentId = routeUuidParam(params, "assessmentId");
       const tenantDb = deps.assessments.withOrganization(resolvedTenantId);
       const assessment = await tenantDb.get(assessmentId);
@@ -214,7 +214,7 @@ export const assessmentsRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["assessment:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
-      const resolvedTenantId = organizationId!;
+      const resolvedTenantId = requireOrganizationId({ organizationId });
       const assessmentId = routeUuidParam(params, "assessmentId");
       const tenantDb = deps.assessments.withOrganization(resolvedTenantId);
       const assessment = await tenantDb.get(assessmentId);
@@ -305,7 +305,7 @@ export const assessmentsRoutes: RouteDefinition[] = [
     permissions: ["assessment:update"],
     bodySchema: AssessmentAutomationConfigSchema,
     handler: async ({ validatedBody, deps, params, organizationId, traceId }) => {
-      const resolvedTenantId = organizationId!;
+      const resolvedTenantId = requireOrganizationId({ organizationId });
 
       const assessmentId = routeUuidParam(params, "assessmentId");
       const assessment = await deps.assessments.withOrganization(resolvedTenantId).get(assessmentId);

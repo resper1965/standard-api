@@ -105,9 +105,9 @@ export const createDrizzleAssessmentRepository = (db: DbClient): AssessmentRepos
 
       return mapAssessmentRow(inserted!, input.documentCount);
     },
-    async get(assessmentId, _tenantId) {
+    async get(assessmentId, tenantId) {
       const [found] = await db.select().from(assessments)
-        .where(eq(assessments.id, assessmentId))
+        .where(and(eq(assessments.id, assessmentId), eq(assessments.organizationId, tenantId)))
         .limit(1);
 
       if (!found) return null;
@@ -120,8 +120,9 @@ export const createDrizzleAssessmentRepository = (db: DbClient): AssessmentRepos
 
       return results.map(found => mapAssessmentRow(found));
     },
-    async listAll(_tenantId) {
-      const results = await db.select().from(assessments);
+    async listAll(tenantId) {
+      const results = await db.select().from(assessments)
+        .where(eq(assessments.organizationId, tenantId));
 
       return results.map(found => mapAssessmentRow(found));
     },
@@ -134,7 +135,7 @@ export const createDrizzleAssessmentRepository = (db: DbClient): AssessmentRepos
           observationEndDate: record.observation_end_date ?? null,
           updatedAt: new Date()
         })
-        .where(eq(assessments.id, record.assessment_id));
+        .where(and(eq(assessments.id, record.assessment_id), eq(assessments.organizationId, record.organization_id)));
     },
     withOrganization(organizationId) {
       return {

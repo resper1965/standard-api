@@ -74,3 +74,48 @@ describe("M2mScopesArraySchema", () => {
     expect(() => M2mScopesArraySchema.parse(["assessment:read", "hacked:scope"])).toThrow();
   });
 });
+
+// ─── hasRequiredScopes logic tests ─────────────────────────────────
+
+import { hasRequiredScopes } from "../api-key-scopes";
+
+describe("hasRequiredScopes (M4 least privilege)", () => {
+  it("returns false for null keyScopes (fail-closed)", () => {
+    expect(hasRequiredScopes(null, ["scf:read"])).toBe(false);
+  });
+
+  it("returns false for undefined keyScopes (fail-closed)", () => {
+    expect(hasRequiredScopes(undefined, ["scf:read"])).toBe(false);
+  });
+
+  it("returns false for empty scopes (M4: zero permissions)", () => {
+    expect(hasRequiredScopes([], ["scf:read"])).toBe(false);
+  });
+
+  it("returns false for empty scopes even with no required scopes", () => {
+    // Empty scopes = zero permissions, but no required scopes = open route
+    // Edge: this returns false because empty check comes before required check
+    expect(hasRequiredScopes([], [])).toBe(false);
+  });
+
+  it("returns true when key has all required scopes", () => {
+    expect(hasRequiredScopes(["scf:read", "assessment:write"], ["scf:read", "assessment:write"])).toBe(true);
+  });
+
+  it("returns true when key has superset of required scopes", () => {
+    expect(hasRequiredScopes(["scf:read", "assessment:write", "kb:read"], ["scf:read"])).toBe(true);
+  });
+
+  it("returns false when key is missing ONE required scope (every, not some)", () => {
+    // This was the old bug: some() would return true because scf:read is present
+    expect(hasRequiredScopes(["scf:read"], ["scf:read", "assessment:write"])).toBe(false);
+  });
+
+  it("returns false when key has none of the required scopes", () => {
+    expect(hasRequiredScopes(["kb:read"], ["scf:read", "assessment:write"])).toBe(false);
+  });
+
+  it("returns true when no scopes are required (open route)", () => {
+    expect(hasRequiredScopes(["scf:read"], [])).toBe(true);
+  });
+});

@@ -1,21 +1,13 @@
 name = "standard-api-gateway"
-main = "src/index.ts"
+main = "../../apps/api-gateway/src/index.ts"
 compatibility_date = "2026-04-28"
-compatibility_flags = ["nodejs_compat"]
+compatibility_flags = [ "nodejs_compat" ]
 
 [vars]
 STANDARD_ENV = "development"
 LOG_LEVEL = "info"
 AI_GATEWAY_NAME = "standard-dev"
-AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/0a6c490dd5fe9051422c15c9e133138e/standard-dev/compat"
-# Better Auth — SECRET must be set via `wrangler secret put BETTER_AUTH_SECRET` for production
-# For local dev, this placeholder is overridden by .dev.vars
-BETTER_AUTH_URL = "https://standard-api.bekaa.eu"
-# Comma-separated allowed CORS origins — override via wrangler secret or env var
-ALLOWED_ORIGINS = "http://localhost:5173,http://localhost:3000"
-# Better Auth org slug for the platform-admin (Bekaa operator) org.
-# Platform admins without an active session org are auto-scoped to this org.
-PLATFORM_ADMIN_ORG_SLUG = "bekaa"
+AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/0a6c490dd5fe9051422c15c9e133138e/standard-dev"
 
 [[r2_buckets]]
 binding = "STANDARD_DOCUMENTS_BUCKET"
@@ -45,35 +37,22 @@ queue = "standard-report-export-dev"
 binding = "AGENT_RUN_QUEUE"
 queue = "standard-agent-run-dev"
 
-# ─── SOC Triage Queue (Background AI processing) ───────────
 [[queues.producers]]
-binding = "SOC_TRIAGE_QUEUE"
-queue = "standard-soc-triage-dev"
+binding = "USER_LIFECYCLE_QUEUE"
+queue = "standard-user-lifecycle-dev"
 
+[[kv_namespaces]]
+binding = "STANDARD_CONFIG_KV"
+id = "d780e8372a814b049d7283bfdd022d55"
 
-# ─── Email Service (send transactional emails) ─────────────────
-[[send_email]]
-name = "EMAIL"
-remote = true
-
-[ai]
-binding = "AI"
+[[kv_namespaces]]
+binding = "STANDARD_FEATURE_FLAGS_KV"
+id = "d57b7c1c18f744a8ab8b8fcafa84bc9d"
 
 [[kv_namespaces]]
 binding = "STANDARD_CACHE"
-id = "4e027e07e0e5440a8666c3f8ee419333"
-# preview_id is used by `wrangler dev` — isolated from production.
-# Namespace: standard-api-gateway-STANDARD_CACHE_preview
-preview_id = "d8a6d449689a47a5ae1ee5cec1f6ec8d"
+id = "d94323d4e27d4b92994c89d412d27f74"
 
-[[vectorize]]
-binding = "STANDARD_KB_INDEX"
-index_name = "standard-kb-dev"
-
-# ─── Cloudflare Workflows (durable assessment lifecycle orchestration) ─────
-# Prerequisite: deploy workers/workflows worker first:
-#   cd workers/workflows && wrangler deploy
-# These bindings connect the API gateway to the durable workflow engine.
 [[workflows]]
 binding = "ASSESSMENT_WORKFLOW"
 name = "standard-assessment-lifecycle-dev"
@@ -85,11 +64,86 @@ binding = "COUNCIL_WORKFLOW"
 name = "standard-council-orchestration-dev"
 class_name = "CouncilOrchestrationWorkflow"
 script_name = "standard-workflows"
-# ─── Production environment ────────────────────────────────────
+
+[env.staging]
+name = "standard-api-gateway-staging"
+
+[env.staging.vars]
+STANDARD_ENV = "staging"
+LOG_LEVEL = "info"
+AI_GATEWAY_NAME = "standard-staging"
+AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/0a6c490dd5fe9051422c15c9e133138e/standard-staging"
+BETTER_AUTH_URL = "https://standard-api.bekaa.eu/api/auth"
+
+[[env.staging.r2_buckets]]
+binding = "STANDARD_DOCUMENTS_BUCKET"
+bucket_name = "standard-documents-staging"
+
+[[env.staging.r2_buckets]]
+binding = "STANDARD_REPORTS_BUCKET"
+bucket_name = "standard-reports-staging"
+
+[[env.staging.r2_buckets]]
+binding = "STANDARD_EXPORTS_BUCKET"
+bucket_name = "standard-exports-staging"
+
+[[env.staging.queues.producers]]
+binding = "DOCUMENT_INGESTION_QUEUE"
+queue = "standard-document-ingestion-staging"
+
+[[env.staging.queues.producers]]
+binding = "KB_EMBEDDING_QUEUE"
+queue = "standard-kb-embedding-staging"
+
+[[env.staging.queues.producers]]
+binding = "REPORT_EXPORT_QUEUE"
+queue = "standard-report-export-staging"
+
+[[env.staging.queues.producers]]
+binding = "AGENT_RUN_QUEUE"
+queue = "standard-agent-run-staging"
+
+[[env.staging.queues.producers]]
+binding = "USER_LIFECYCLE_QUEUE"
+queue = "standard-user-lifecycle-staging"
+
+[[env.staging.kv_namespaces]]
+binding = "STANDARD_CONFIG_KV"
+id = "1780e8372a814b049d7283bfdd022d55"
+
+[[env.staging.kv_namespaces]]
+binding = "STANDARD_FEATURE_FLAGS_KV"
+id = "757b7c1c18f744a8ab8b8fcafa84bc9d"
+
+[[env.staging.kv_namespaces]]
+binding = "STANDARD_CACHE"
+id = "094323d4e27d4b92994c89d412d27f74"
+
+[[env.staging.workflows]]
+binding = "ASSESSMENT_WORKFLOW"
+name = "standard-assessment-lifecycle-staging"
+class_name = "AssessmentLifecycleWorkflow"
+script_name = "standard-workflows-staging"
+
+[[env.staging.workflows]]
+binding = "COUNCIL_WORKFLOW"
+name = "standard-council-orchestration-staging"
+class_name = "CouncilOrchestrationWorkflow"
+script_name = "standard-workflows-staging"
+
 [env.production]
-workers_dev = true
-vars = { STANDARD_ENV = "production", BETTER_AUTH_URL = "https://standard-api.bekaa.eu", LOG_LEVEL = "info", AI_GATEWAY_NAME = "standard-prod", AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/0a6c490dd5fe9051422c15c9e133138e/standard-prod/compat", ALLOWED_ORIGINS = "https://standard.bekaa.eu,https://standard-web.pages.dev,https://production.standard-web.pages.dev", PLATFORM_ADMIN_ORG_SLUG = "bekaa" }
-routes = [{ pattern = "standard-api.bekaa.eu", custom_domain = true }]
+name = "standard-api-gateway-production"
+routes = [
+  { pattern = "standard-api.bekaa.eu", custom_domain = true }
+]
+
+
+[env.production.vars]
+STANDARD_ENV = "production"
+LOG_LEVEL = "warn"
+AI_GATEWAY_NAME = "standard-prod"
+AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/0a6c490dd5fe9051422c15c9e133138e/standard-prod"
+BETTER_AUTH_URL = "https://standard-api.bekaa.eu/api/auth"
 
 [[env.production.r2_buckets]]
 binding = "STANDARD_DOCUMENTS_BUCKET"
@@ -120,34 +174,32 @@ binding = "AGENT_RUN_QUEUE"
 queue = "standard-agent-run-prod"
 
 [[env.production.queues.producers]]
-binding = "SOC_TRIAGE_QUEUE"
-queue = "standard-soc-triage-prod"
+binding = "USER_LIFECYCLE_QUEUE"
+queue = "standard-user-lifecycle-prod"
 
+[[env.production.kv_namespaces]]
+binding = "STANDARD_CONFIG_KV"
+id = "e7aba96b342b4060ab3869ca7789832d"
 
-[env.production.ai]
-binding = "AI"
+[[env.production.kv_namespaces]]
+binding = "STANDARD_FEATURE_FLAGS_KV"
+id = "23e073ec707d4803a8957e13a4046810"
 
 [[env.production.kv_namespaces]]
 binding = "STANDARD_CACHE"
 id = "55f97abbf9794b0196bdf51e8c1dedec"
 
-[[env.production.vectorize]]
-binding = "STANDARD_KB_INDEX"
-index_name = "standard-kb-prod"
-
-[[env.production.send_email]]
-name = "EMAIL"
-allowed_sender_addresses = ["noreply@bekaa.eu"]
-
-# ─── Production Workflows bindings ─────────────────────────────
 [[env.production.workflows]]
 binding = "ASSESSMENT_WORKFLOW"
-name = "standard-assessment-lifecycle-production"
+name = "standard-assessment-lifecycle-prod"
 class_name = "AssessmentLifecycleWorkflow"
-script_name = "standard-workflows"
+script_name = "standard-workflows-production"
 
 [[env.production.workflows]]
 binding = "COUNCIL_WORKFLOW"
 name = "standard-council-orchestration-production"
 class_name = "CouncilOrchestrationWorkflow"
-script_name = "standard-workflows"
+script_name = "standard-workflows-production"
+
+
+# Custom domain: standard-api.bekaa.eu is configured via routes in [env.production] above.

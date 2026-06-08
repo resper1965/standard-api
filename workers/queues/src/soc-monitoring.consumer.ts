@@ -21,6 +21,7 @@
 
 import { neon } from "@neondatabase/serverless";
 import type { Env } from "./index";
+import * as Sentry from "@sentry/cloudflare";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -49,6 +50,32 @@ export type TenantMismatchAlertMessage = {
 
 export type SocAlertMessage = DlqAlertMessage | TenantMismatchAlertMessage;
 
+// ── Redaction Utilities ──────────────────────────────────────────────────────
+
+const SENSITIVE_KEYS = new Set([
+  "token", "password", "secret", "key", "api_key", "authorization",
+  "email", "phone", "ssn", "credit_card", "access_token", "refresh_token",
+  "signing_secret", "client_secret"
+]);
+
+function redactSensitiveFields(obj: unknown): unknown {
+  if (typeof obj !== "object" || obj === null) return obj;
+  if (Array.isArray(obj)) return obj.map(redactSensitiveFields);
+  
+  const redacted: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
+    const isSensitive = [...SENSITIVE_KEYS].some(k => key.toLowerCase().includes(k));
+    if (isSensitive && typeof value === "string") {
+      redacted[key] = "[REDACTED]";
+    } else if (typeof value === "object" && value !== null) {
+      redacted[key] = redactSensitiveFields(value);
+    } else {
+      redacted[key] = value;
+    }
+  }
+  return redacted;
+}
+
 // ── DLQ Alert Handler ──────────────────────────────────────────────────────
 
 async function processDlqAlert(
@@ -56,6 +83,23 @@ async function processDlqAlert(
   env: Env
 ): Promise<void> {
   const timestamp = new Date().toISOString();
+  const redactedMessage = redactSensitiveFields(body.original_message);
+
+  // Send CRITICAL alert to Sentry
+  Sentry.captureException(new Error(`DLQ Alert: Exhausted retries on ${body.original_queue}`), {
+    level: "fatal",
+    tags: {
+      alert_type: "dlq",
+      organization_id: body.organization_id || "unknown",
+      queue: body.original_queue
+    },
+    extra: {
+      trace_id: body.trace_id,
+      failure_reason: body.failure_reason,
+      retry_count: body.retry_count,
+      original_message_preview: JSON.stringify(redactedMessage).slice(0, 500)
+    }
+  });
 
   // Structured log — picked up by Cloudflare Logpush / tail workers
   console.error(JSON.stringify({
@@ -69,7 +113,7 @@ async function processDlqAlert(
     agent_run_id: body.agent_run_id,
     trace_id: body.trace_id ?? crypto.randomUUID(),
     timestamp,
-    original_message_preview: JSON.stringify(body.original_message).slice(0, 500),
+    original_message_preview: JSON.stringify(redactedMessage).slice(0, 500),
     action: "DLQ message requires manual investigation",
   }));
 
@@ -175,6 +219,23 @@ async function processTenantMismatchAlert(
   env: Env
 ): Promise<void> {
   const timestamp = new Date().toISOString();
+
+  // Send CRITICAL alert to Sentry
+  Sentry.captureException(new Error(`Tenant Mismatch Alert: Actor ${body.actor_id} on ${body.request_path}`), {
+    level: "fatal",
+    tags: {
+      alert_type: "tenant_mismatch",
+      session_tenant_id: body.session_tenant_id,
+      payload_tenant_id: body.payload_tenant_id
+    },
+    extra: {
+      actor_id: body.actor_id,
+      request_path: body.request_path,
+      request_method: body.request_method,
+      trace_id: body.trace_id,
+      ip_country: body.ip_country
+    }
+  });
 
   // This is CRITICAL — any tenant mismatch must be investigated immediately
   console.error(JSON.stringify({

@@ -1,19 +1,40 @@
 import "./openapi/registry"; // Must be imported first to extend Zod
+import asyncHooks from "node:async_hooks";
+if (typeof globalThis !== "undefined") {
+  (globalThis as any).AsyncLocalStorage = asyncHooks.AsyncLocalStorage;
+}
 export type { Env } from "./types/env";
 import { ensureAppInitialized, handleAuthRoute } from "./index-helpers";
-import type { Env } from "./types/env";
+import type { Env as AppEnv } from "./types/env";
+import * as Sentry from "@sentry/cloudflare";
 
-export default {
-  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-    const app = ensureAppInitialized(env);
-    const url = new URL(request.url);
+export default Sentry.withSentry(
+  (env: AppEnv) => ({
+    dsn: (env as any).SENTRY_DSN || "https://b7d62614acaef427ce2de36228779c08@o4509995422515200.ingest.us.sentry.io/4511521270792192",
+    sendDefaultPii: true,
+  }),
+  {
+    async fetch(request: Request, env: AppEnv, ctx: ExecutionContext): Promise<Response> {
+      const app = ensureAppInitialized(env);
+      const url = new URL(request.url);
 
-    // ── Standard Native Auth route handler ────────────────────────────
-    // Delegate /api/auth/* requests directly to Standard Native Auth.
-    // This MUST happen before the standard API router runs.
-    const authResponse = await handleAuthRoute(request, url);
-    if (authResponse) return authResponse;
+      // Delegate /api/auth/* requests directly to Standard Native Auth.
+      try {
+        const authResponse = await handleAuthRoute(request, url, env);
+        if (authResponse) return authResponse;
+      } catch (err: any) {
+        console.error("[standard:auth] Route Error:", err);
+        return new Response(JSON.stringify({ 
+          error: "Auth 500", 
+          detail: err.message || err.toString(),
+          stack: err.stack
+        }), {
+          status: 500,
+          headers: { "Content-Type": "application/json" }
+        });
+      }
 
-    return app.fetch(request, ctx);
-  }
-};
+      return app.fetch(request, ctx);
+    }
+  } satisfies ExportedHandler<AppEnv>
+);

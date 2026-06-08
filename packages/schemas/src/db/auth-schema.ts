@@ -5,6 +5,10 @@
  * Generated based on Standard Native Auth v1.2+ with plugins: admin, organization, apiKey.
  * These tables are managed by Standard Native Auth at runtime.
  *
+ * NOTE: The `baApikey` table exported below is **deprecated and dead**.
+ * All M2M API key operations use the domain `api_keys` table in schema.ts.
+ * See ADR-008 for removal tracking.
+ *
  * Reference: https://standard-native-auth.com/docs/concepts/database
  */
 import {
@@ -51,6 +55,10 @@ export const baSession = pgTable("session", {
   ipAddress: text("ip_address"),
   userAgent: text("user_agent"),
   userId: text("user_id").notNull().references(() => baUser.id, { onDelete: "cascade" }),
+  // Organization context — tracks which org the user is currently operating in.
+  // Updated via POST /api/v1/users/me/organizations/:orgId/activate.
+  // Read by customSession plugin to enrich session with org context.
+  activeOrganizationId: text("active_organization_id"),
   // Admin plugin
   impersonatedBy: text("impersonated_by"),
 }, (table) => [
@@ -87,6 +95,15 @@ export const baVerification = pgTable("verification", {
 
 // ── API Key Plugin Tables ─────────────────────────────────────────────
 
+/**
+ * @deprecated DEAD TABLE — Better Auth API Key plugin table.
+ * Not used by Standard. All M2M API key operations use the domain
+ * `api_keys` table (schema.ts L221). This table exists because the BA
+ * drizzle adapter schema mapping includes it, but no route reads or writes to it.
+ *
+ * DO NOT USE. DO NOT BUILD FEATURES ON THIS TABLE.
+ * Track removal in ADR-008.
+ */
 export const baApikey = pgTable("apikey", {
   id: text("id").primaryKey(),
   name: text("name"),

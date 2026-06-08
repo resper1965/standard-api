@@ -1,7 +1,8 @@
 name = "standard-api-gateway"
 main = "../../apps/api-gateway/src/index.ts"
 compatibility_date = "2026-04-28"
-compatibility_flags = [ "nodejs_compat" ]
+compatibility_flags = [ "nodejs_compat", "nodejs_als" ]
+minify = false
 
 [vars]
 STANDARD_ENV = "development"
@@ -11,15 +12,15 @@ AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/0a6c490dd5fe9051422c
 
 [[r2_buckets]]
 binding = "STANDARD_DOCUMENTS_BUCKET"
-bucket_name = "standard-documents-staging"
+bucket_name = "standard-documents-dev"
 
 [[r2_buckets]]
 binding = "STANDARD_REPORTS_BUCKET"
-bucket_name = "standard-reports-staging"
+bucket_name = "standard-reports-dev"
 
 [[r2_buckets]]
 binding = "STANDARD_EXPORTS_BUCKET"
-bucket_name = "standard-exports-staging"
+bucket_name = "standard-exports-dev"
 
 [[queues.producers]]
 binding = "DOCUMENT_INGESTION_QUEUE"
@@ -37,17 +38,21 @@ queue = "standard-report-export-dev"
 binding = "AGENT_RUN_QUEUE"
 queue = "standard-agent-run-dev"
 
+[[queues.producers]]
+binding = "USER_LIFECYCLE_QUEUE"
+queue = "standard-user-lifecycle-dev"
+
 [[kv_namespaces]]
 binding = "STANDARD_CONFIG_KV"
-id = "1780e8372a814b049d7283bfdd022d55"
+id = "d780e8372a814b049d7283bfdd022d55"
 
 [[kv_namespaces]]
 binding = "STANDARD_FEATURE_FLAGS_KV"
-id = "757b7c1c18f744a8ab8b8fcafa84bc9d"
+id = "d57b7c1c18f744a8ab8b8fcafa84bc9d"
 
 [[kv_namespaces]]
 binding = "STANDARD_CACHE"
-id = "094323d4e27d4b92994c89d412d27f74"
+id = "d94323d4e27d4b92994c89d412d27f74"
 
 [[workflows]]
 binding = "ASSESSMENT_WORKFLOW"
@@ -69,7 +74,7 @@ STANDARD_ENV = "staging"
 LOG_LEVEL = "info"
 AI_GATEWAY_NAME = "standard-staging"
 AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/0a6c490dd5fe9051422c15c9e133138e/standard-staging"
-BETTER_AUTH_URL = "https://standard-api.bekaa.eu"
+BETTER_AUTH_URL = "https://standard-api.bekaa.eu/api/auth"
 
 [[env.staging.r2_buckets]]
 binding = "STANDARD_DOCUMENTS_BUCKET"
@@ -98,6 +103,10 @@ queue = "standard-report-export-staging"
 [[env.staging.queues.producers]]
 binding = "AGENT_RUN_QUEUE"
 queue = "standard-agent-run-staging"
+
+[[env.staging.queues.producers]]
+binding = "USER_LIFECYCLE_QUEUE"
+queue = "standard-user-lifecycle-staging"
 
 [[env.staging.kv_namespaces]]
 binding = "STANDARD_CONFIG_KV"
@@ -135,7 +144,7 @@ STANDARD_ENV = "production"
 LOG_LEVEL = "warn"
 AI_GATEWAY_NAME = "standard-prod"
 AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/0a6c490dd5fe9051422c15c9e133138e/standard-prod"
-BETTER_AUTH_URL = "https://standard-api.bekaa.eu"
+BETTER_AUTH_URL = "https://standard-api.bekaa.eu/api/auth"
 
 [[env.production.r2_buckets]]
 binding = "STANDARD_DOCUMENTS_BUCKET"
@@ -164,6 +173,10 @@ queue = "standard-report-export-prod"
 [[env.production.queues.producers]]
 binding = "AGENT_RUN_QUEUE"
 queue = "standard-agent-run-prod"
+
+[[env.production.queues.producers]]
+binding = "USER_LIFECYCLE_QUEUE"
+queue = "standard-user-lifecycle-prod"
 
 [[env.production.kv_namespaces]]
 binding = "STANDARD_CONFIG_KV"

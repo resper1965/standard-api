@@ -16,6 +16,7 @@ import { StructuredLogger } from "@standard/observability";
 import { baSession } from "@standard/schemas";
 import { eq } from "drizzle-orm";
 import { ApiError } from "../errors/api-error";
+import { isApiKeyToken, extractApiKeyToken } from "../utils/api-key-crypto";
 import type { RequestContext } from "../http";
 import type { DbClient } from "../adapters/db";
 
@@ -58,8 +59,8 @@ export const resolveAuthContext = async (
     const authHeader = context.request.headers.get("Authorization");
 
     // Machine-to-Machine API Key
-    if (authHeader && authHeader.startsWith("Bearer standard_live_")) {
-      const token = authHeader.replace("Bearer ", "");
+    if (authHeader && isApiKeyToken(authHeader)) {
+      const token = extractApiKeyToken(authHeader);
 
       // Hash the token using Web Crypto API
       const encoder = new TextEncoder();
@@ -72,7 +73,6 @@ export const resolveAuthContext = async (
       if (apiKeyRecord) {
         context.actorId = `m2m:${apiKeyRecord.id}`;
         context.organizationId = apiKeyRecord.organizationId;
-        context.organizationId = apiKeyRecord.organizationId; // organization_id === organization_id (ADR 0002 Phase 2/3)
 
         // Store scopes for downstream scope enforcement middleware
         context.m2mScopes = apiKeyRecord.scopes;
@@ -81,6 +81,17 @@ export const resolveAuthContext = async (
         context.deps.apiKeys.markUsed(apiKeyRecord.id).catch((e) => {
           console.error("Failed to mark API key used", e);
         });
+
+        // SOC 2 compliance: audit trail for every M2M key verification
+        context.deps.audit.record("api_key.verified", {
+          organization_id: apiKeyRecord.organizationId,
+          actor_id: `m2m:${apiKeyRecord.id}`,
+          key_id: apiKeyRecord.id,
+          scopes: apiKeyRecord.scopes,
+          route: new URL(context.request.url).pathname,
+          method: context.request.method,
+          trace_id: context.traceId,
+        }).catch(() => {}); // Fire-and-forget, don't block request
 
         logger.log({
           level: "info",
@@ -103,21 +114,40 @@ export const resolveAuthContext = async (
     });
 
     if (rawSession?.user) {
-      // Enforce JWT Blacklisting from Edge Cache (Revocation Check)
+      // Enforce revocation from Edge Cache
       if (context.env?.STANDARD_CACHE) {
-        const isRevoked = await context.env.STANDARD_CACHE.get(`revocations:user:${rawSession.user.id}`);
-        if (isRevoked) {
+        const revocationReason = await context.env.STANDARD_CACHE.get(`revocations:user:${rawSession.user.id}`);
+        if (revocationReason) {
+          // Hard revocations: user banned/deleted — block with 401
+          const HARD_REVOCATIONS = ["user_banned", "user_deleted", "security_lockout"];
+          if (HARD_REVOCATIONS.includes(revocationReason)) {
+            logger.log({
+              level: "warn",
+              message: "token_revoked_hard",
+              service: "api-gateway",
+              module: "auth",
+              environment: "production",
+              trace_id: context.traceId,
+              organization_id: isUuid(context.organizationId) ? context.organizationId : undefined,
+              metadata: { actor_id: rawSession.user.id, reason: revocationReason }
+            });
+            throw new ApiError("UNAUTHORIZED", "Token has been revoked.", 401);
+          }
+
+          // Soft revocations: org_switch, membership_change, org_deactivate
+          // Purpose: invalidate downstream caches. getSession() above already
+          // fetched fresh data from DB, so we just clear the key and proceed.
           logger.log({
-            level: "warn",
-            message: "token_revoked",
+            level: "info",
+            message: "token_revoked_soft_cleared",
             service: "api-gateway",
             module: "auth",
             environment: "production",
             trace_id: context.traceId,
-            organization_id: isUuid(context.organizationId) ? context.organizationId : undefined,
-            metadata: { actor_id: rawSession.user.id, raw_tenant_id: context.organizationId }
+            metadata: { actor_id: rawSession.user.id, reason: revocationReason }
           });
-          throw new ApiError("UNAUTHORIZED", "Token has been revoked.", 401);
+          // Fire-and-forget cleanup — don't block the request
+          context.env.STANDARD_CACHE.delete(`revocations:user:${rawSession.user.id}`).catch(() => {});
         }
       }
 
@@ -137,7 +167,7 @@ export const resolveAuthContext = async (
           module: "auth",
           environment: "production",
           trace_id: context.traceId,
-          metadata: { actor_id: user.id, email: user.email },
+          metadata: { actor_id: user.id },
         });
         throw new ApiError(
           "ACCOUNT_PENDING_APPROVAL",
@@ -147,10 +177,33 @@ export const resolveAuthContext = async (
       }
 
       let resolvedActorId = user.id;
+      // DEPRECATED FALLBACK: Synchronous domain user resolution.
+      // The primary provisioning path is now async via USER_LIFECYCLE_QUEUE.
+      // This fallback catches users created before the queue was deployed,
+      // and race conditions where the first request arrives before the
+      // consumer processes the signup event.
+      // REMOVAL CRITERIA: When the "user_context_fallback_used" metric
+      // reaches zero for 7 consecutive days, remove this block.
       if (context.deps.resolveUserContext) {
         try {
           const resolvedUser = await context.deps.resolveUserContext(user.email, user.name);
           resolvedActorId = resolvedUser.id;
+
+          // Track fallback usage — when this reaches zero, the fallback can be removed
+          logger.log({
+            level: "warn",
+            message: "user_context_fallback_used",
+            service: "api-gateway",
+            module: "auth",
+            environment: "production",
+            trace_id: context.traceId,
+            metadata: { 
+              ba_user_id_hash: user.id.slice(0, 8),
+              ba_user_id: user.id,
+              resolved_domain_id: resolvedUser.id,
+              deprecation: "remove_when_metric_reaches_zero_for_7_days",
+            }
+          });
         } catch (err) {
           logger.log({
             level: "error",
@@ -161,7 +214,7 @@ export const resolveAuthContext = async (
             trace_id: context.traceId,
             metadata: { 
               error: err instanceof Error ? err.message : String(err),
-              email: user.email 
+              ba_user_id: user.id 
             }
           });
         }
@@ -169,8 +222,9 @@ export const resolveAuthContext = async (
 
       context.actorId = resolvedActorId;
 
-      // Restore context.session so RBAC and Audit middlewares remain healthy.
-      // All fields are typed — no `as any` needed here.
+      // Restore context.session with customSession-enriched fields.
+      // The customSession plugin injects org context at login time,
+      // so we no longer need to query the DB for org resolution per-request.
       context.session = {
         user: {
           id: user.id,
@@ -181,18 +235,64 @@ export const resolveAuthContext = async (
         },
         session: {
           id: session.id,
+          activeOrganizationId: session.activeOrganizationId ?? null,
+          activeOrganizationSlug: session.activeOrganizationSlug ?? null,
+          activeOrganizationRole: session.activeOrganizationRole ?? null,
+          allowedOrganizations: session.allowedOrganizations ?? [],
         }
       };
 
-      // ── Organization context resolution ──────────────────────────────────
-      // Standard domain relies on a single organization per user in API-first mode.
-      let resolvedOrgId: string | undefined = user.id;
+      // ── Organization context resolution (Session-first, DB-fallback) ─────
+      // Priority 1: Use the activeOrganizationId from the enriched session
+      //             (injected by customSession plugin at login time — ZERO DB query).
+      // Priority 2: For platform admins with no active org, auto-scope to bekaa.
+      // Priority 3: Legacy fallback via resolveOrganizationContext (DB JOINs).
 
-      if (isPlatformAdminUser) {
+      if (session.activeOrganizationId && isUuid(session.activeOrganizationId)) {
+        // ✅ Fast path: org context already in session (customSession plugin)
+        context.organizationId = session.activeOrganizationId;
+
+        logger.log({
+          level: "info",
+          message: "org_resolved_from_session",
+          service: "api-gateway",
+          module: "auth",
+          environment: "production",
+          trace_id: context.traceId,
+          organization_id: session.activeOrganizationId,
+          metadata: {
+            actor_id: user.id,
+            org_slug: session.activeOrganizationSlug,
+            org_role: session.activeOrganizationRole,
+            source: "custom_session",
+          },
+        });
+      } else if (isPlatformAdminUser) {
         // Platform admin without an active org → auto-scope to the Bekaa operator org.
-        // The slug is driven by PLATFORM_ADMIN_ORG_SLUG env var (default: "bekaa").
         const platformOrgSlug = context.env?.PLATFORM_ADMIN_ORG_SLUG ?? "bekaa";
-        resolvedOrgId = platformOrgSlug; // use slug for domain resolution
+
+        // Platform admin resolution still needs a DB lookup by slug (one-time).
+        if (context.deps.resolveOrganizationContext) {
+          try {
+            const resolved = await context.deps.resolveOrganizationContext(platformOrgSlug);
+            if (resolved) {
+              context.organizationId = resolved.organization_id;
+            }
+          } catch (e) {
+            logger.log({
+              level: "error",
+              message: "platform_admin_org_resolution_failed",
+              service: "api-gateway",
+              module: "auth",
+              environment: "production",
+              trace_id: context.traceId,
+              metadata: {
+                error: e instanceof Error ? e.message : String(e),
+                platform_org_slug: platformOrgSlug,
+              },
+            });
+          }
+        }
 
         logger.log({
           level: "info",
@@ -203,47 +303,9 @@ export const resolveAuthContext = async (
           trace_id: context.traceId,
           metadata: {
             actor_id: user.id,
-            platform_org_slug: platformOrgSlug,
+            platform_org_slug: context.env?.PLATFORM_ADMIN_ORG_SLUG ?? "bekaa",
           },
         });
-      }
-
-      if (resolvedOrgId) {
-        context.organizationId = resolvedOrgId;
-
-        // Resolve Better-Auth string ID / slug to database UUIDs (read-only).
-        // If the org has not yet been provisioned in the domain tables, provision
-        // it now: the ID comes from the authenticated BA session (the user's
-        // active organization), so this is legitimate first-touch provisioning,
-        // not arbitrary "phantom" creation.
-        if (context.deps.resolveOrganizationContext) {
-          try {
-            let resolved = await context.deps.resolveOrganizationContext(resolvedOrgId);
-            if (!resolved && context.deps.provisionOrganizationContext) {
-              resolved = await context.deps.provisionOrganizationContext(resolvedOrgId);
-            }
-            if (resolved) {
-              context.organizationId = resolved.organization_id;
-            }
-          } catch (e) {
-            logger.log({
-              level: "error",
-              message: "auth_tenant_resolution_failed",
-              service: "api-gateway",
-              module: "auth",
-              environment: "production",
-              trace_id: context.traceId,
-              metadata: {
-                error: e instanceof Error ? e.message : String(e),
-                resolved_org_id: resolvedOrgId,
-              },
-            });
-            // CRITICAL: Clear tenant context to prevent raw BA org ID (nanoid)
-            // from being used downstream as a domain UUID. Handlers should
-            // treat this as "no org context" and re-resolve or reject.
-            context.organizationId = undefined;
-          }
-        }
       } else {
         // No active organization and not a platform admin.
         // We do NOT throw here — the 403 is deferred to the `requireAuth` check
@@ -275,15 +337,15 @@ export const resolveAuthContext = async (
         metadata: {
           actor_id: user.id,
           session_id: session.id,
-          active_org_id: resolvedOrgId ?? null,
+          active_org_id: context.organizationId ?? null,
           role: user.role ?? "viewer",
           platform_admin: isPlatformAdminUser,
         }
       });
     }
-  } catch (err) {
+  } catch (err: any) {
     // Session resolution failed — log structured event and treat as unauthenticated
-    if (err instanceof ApiError) throw err; // Re-throw intentional ApiErrors (revocation)
+    if (err && err.name === "ApiError") throw err; // Re-throw intentional ApiErrors (revocation)
     logger.log({
       level: "warn",
       message: "session_resolution_failed",

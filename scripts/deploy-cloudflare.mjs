@@ -14,7 +14,8 @@ const configs = [
   "infra/cloudflare/wrangler.queues-worker.toml",
   "infra/cloudflare/wrangler.ingestion-worker.toml",
   "infra/cloudflare/wrangler.kb-worker.toml",
-  "infra/cloudflare/wrangler.reporting-worker.toml"
+  "infra/cloudflare/wrangler.reporting-worker.toml",
+  "workers/smoke-tester/wrangler.toml"
 ];
 
 for (const config of configs) {

@@ -1,4 +1,5 @@
 import { createMockRepositories } from "./adapters";
+import { runWithTenantContext } from "@standard/security";
 import type { StandardAuth } from "@standard/auth";
 import type { Env } from "./index";
 import { ApiError } from "./errors/api-error";
@@ -13,6 +14,7 @@ import { assertApiKeyScopes } from "./middleware/scope.middleware";
 import { resolveOrganizationContext } from "./middleware/tenant.middleware";
 import { resolveTraceId } from "./middleware/trace.middleware";
 import { checkIdempotency, storeIdempotencyResult } from "./middleware/idempotency.middleware";
+import { verifyCsrf, generateCsrfToken, buildCsrfCookie } from "./middleware/csrf.middleware";
 import {
   resolveAllowedOrigins,
   buildCorsHeaders,
@@ -68,6 +70,7 @@ import { ropaRoutes } from "./routes/ropa.routes";
 import { tpraRoutes } from "./routes/tpra.routes";
 import { userOrgsRoutes } from "./routes/user-orgs.routes";
 import { adminUsersRoutes } from "./routes/admin-users.routes";
+import { adminOrgsRoutes } from "./routes/admin-orgs.routes";
 
 /**
  * Route path prefixes that are tenant-exempt by convention.
@@ -141,6 +144,7 @@ export const routes: RouteDefinition[] = [
   ...ropaRoutes,            // /api/v1/ropa/{data-subjects,data-categories,...}
   ...tpraRoutes,            // /api/v1/tpra/{questionnaires,tiers,score,...}
   ...adminUsersRoutes,      // /api/v1/admin/users — platform admin user management
+  ...adminOrgsRoutes,       // /api/v1/admin/organizations
 ];
 
 registerRoutesForOpenApi(routes);
@@ -239,6 +243,8 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
       assertApiKeyScopes(context, route.path, request.method,
         route.authRequired ?? (Boolean(route.protected) || Boolean(route.requireActor) || Boolean(route.permissions?.length)));
       await assertRateLimit(context, route.path, env?.STANDARD_CACHE);
+      // M3 fix: CSRF verification (after auth, before handler)
+      verifyCsrf(context);
       await recordAuditEvent(context, route.path);
 
       // ── Idempotency replay ────────────────────────────────────
@@ -249,12 +255,18 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
       if (idempotentReplay) return withSecurityHeaders(idempotentReplay);
 
       // ── Declarative body validation ───────────────────────────
-      // When route defines bodySchema, parse + validate before handler
+      // When route defines bodySchema, parse + validate before handler.
+      // H8 fix: mark body as consumed so parseJson won't try to read it again.
       if (route.bodySchema && ["POST", "PUT", "PATCH"].includes(request.method)) {
         context.validatedBody = await parseJson(request, route.bodySchema);
+        context._bodyConsumed = true;
       }
 
-      const response = await route.handler(context);
+      const response = await (context.organizationId ? runWithTenantContext(
+        { organizationId: context.organizationId, ...(context.actorId ? { actorId: context.actorId } : {}) },
+        () => route.handler(context)
+      ) : route.handler(context));
+      
       storeIdempotencyResult(request, response, context.organizationId, env?.STANDARD_CACHE);
       // Fire-and-forget observability — never blocks the response
       const obsPromise = recordRequestObservability(context, route.path, response, startedAt)

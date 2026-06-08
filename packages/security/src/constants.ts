@@ -18,11 +18,15 @@ export const ALL_PERMISSIONS = [
   "document:read",
   "document:delete",
   "document:reprocess",
+  "document:write",
   "kb:index",
   "kb:search",
+  "kb:read",
+  "kb:write",
   "scf:read",
   "scf:import",
   "scf:admin",
+  "scf:create",
   "scope:create",
   "scope:update",
   "scope:approve",
@@ -53,13 +57,35 @@ export const ALL_PERMISSIONS = [
   "report:approve",
   "report:read",
   "report:download",
+  "report:update",
   "agent:run",
   "agent:dry_run",
   "agent:read_runs",
+  "agent:read",
+  "agent:create",
   "agent:admin",
   "admin:read",
   "admin:write",
-  "audit:read"
+  "admin:create",
+  "admin:delete",
+  "admin:approve",
+  "audit:read",
+  "webhook:create",
+  "webhook:read",
+  "webhook:update",
+  "webhook:delete",
+  "artifact:create",
+  "artifact:read",
+  "artifact:update",
+  "artifact:approve",
+  "approval:create",
+  "approval:read",
+  "privacy:create",
+  "privacy:read",
+  "privacy:update",
+  "privacy:delete",
+  "intelligence:read",
+  "intelligence:create",
 ] as const satisfies readonly Permission[];
 
 export const DEFAULT_ROLE_PERMISSIONS: Record<Role, Permission[]> = {
@@ -178,6 +204,30 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   integration_service: ["assessment:read", "document:upload", "document:read", "kb:index", "kb:search", "report:read"],
   support_readonly: ["tenant:read", "organization:read", "assessment:read", "audit:read"],
   system: ["assessment:read", "assessment:update", "assessment:run_workflow", "kb:index", "agent:run", "agent:read_runs", "report:render"]
+};
+
+/**
+ * Maps Better Auth organization roles (from memberships table) to Standard GRC roles.
+ *
+ * Better Auth's organization plugin uses simple roles (owner, admin, member).
+ * Standard's GRC RBAC uses domain-specific roles (organization_admin, assessment_owner, etc.).
+ * This mapping bridges the two systems so session users get appropriate permissions.
+ *
+ * Future: Per-assessment role assignments will allow finer-grained roles
+ * (approver, reviewer, auditor_readonly) without changing this base mapping.
+ */
+export const ORG_ROLE_TO_GRC_ROLE: Record<string, Role> = {
+  owner: "organization_admin",
+  admin: "assessment_owner",
+  member: "assessor",
+};
+
+/**
+ * Resolves a Better Auth org role to a Standard GRC role.
+ * Returns null if the org role is unknown (defensive — should never happen).
+ */
+export const resolveGrcRoleFromOrgRole = (orgRole: string): Role | null => {
+  return ORG_ROLE_TO_GRC_ROLE[orgRole] ?? null;
 };
 
 export const DEFAULT_FILE_SECURITY_POLICY: FileSecurityPolicy = {

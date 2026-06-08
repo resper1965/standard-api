@@ -5,8 +5,8 @@
  * These routes are user-scoped: the authenticated user sees only their own
  * organizations.
  */
-import { eq, and } from "drizzle-orm";
-import { organizations, baSession } from "@standard/schemas";
+import { eq, and, or } from "drizzle-orm";
+import { organizations, baSession, memberships, users } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";
 import { json, routeUuidParam, parseJson } from "../http";
@@ -44,8 +44,9 @@ export const userOrgsRoutes: RouteDefinition[] = [
       const db = getDb(context.deps);
 
       // Direct SQL select to organizations to return the orgs that belong to the user
+      // either as owner OR as a member
       const rows = await db
-        .select({
+        .selectDistinct({
           id: organizations.id,
           name: organizations.name,
           slug: organizations.slug,
@@ -54,7 +55,14 @@ export const userOrgsRoutes: RouteDefinition[] = [
           createdAt: organizations.createdAt,
         })
         .from(organizations)
-        .where(eq(organizations.userId, userId));
+        .leftJoin(memberships, eq(organizations.id, memberships.organizationId))
+        .leftJoin(users, eq(users.id, memberships.userId))
+        .where(
+          or(
+            eq(organizations.userId, userId),
+            eq(users.identityProviderSubject, userId)
+          )
+        );
 
       return json(
         { data: rows, trace_id: context.traceId },
@@ -79,14 +87,19 @@ export const userOrgsRoutes: RouteDefinition[] = [
       const organizationId = routeUuidParam(context.params, "organizationId");
       const db = getDb(context.deps);
 
-      // Verify the user owns this organization
+      // Verify the user owns or is a member of this organization
       const [org] = await db
         .select({ id: organizations.id })
         .from(organizations)
+        .leftJoin(memberships, eq(organizations.id, memberships.organizationId))
+        .leftJoin(users, eq(users.id, memberships.userId))
         .where(
           and(
-            eq(organizations.userId, userId),
-            eq(organizations.id, organizationId)
+            eq(organizations.id, organizationId),
+            or(
+              eq(organizations.userId, userId),
+              eq(users.identityProviderSubject, userId)
+            )
           )
         )
         .limit(1);
@@ -99,13 +112,43 @@ export const userOrgsRoutes: RouteDefinition[] = [
         );
       }
 
-      // activeOrganizationId is deprecated in API-first approach
-      // session update is skipped.
+      // Update the ba_session to set activeOrganizationId.
+      // This persists the switch so the next getSession() + customSession
+      // plugin call returns the updated org context.
+      const sessionId = context.session?.session?.id;
+      if (sessionId) {
+        await db
+          .update(baSession)
+          .set({ activeOrganizationId: organizationId })
+          .where(eq(baSession.id, sessionId));
+
+        // H4 fix: Session rotation on privilege change.
+        // Org switch changes the user's role context (different org = different
+        // GRC role via ORG_ROLE_TO_GRC_ROLE mapping). Invalidate the old
+        // session and force re-authentication to prevent session fixation.
+        // 1. Delete old session from DB (forces 401 on next request with old token)
+        await db.delete(baSession).where(eq(baSession.id, sessionId));
+
+        // 2. Bust the customSession KV cache
+        if (context.env?.STANDARD_CACHE) {
+          await context.env.STANDARD_CACHE.delete(`session-ctx:${sessionId}`).catch(() => {});
+        }
+      }
+
+      // Soft revocation — clears downstream caches, does NOT cause 401
+      if (context.env?.STANDARD_CACHE) {
+        await context.env.STANDARD_CACHE.put(
+          `revocations:user:${userId}`,
+          "org_switch",
+          { expirationTtl: 10 }
+        ).catch(() => {});
+      }
 
       // Audit the activation
       await context.deps.audit.record("user_org.activated", {
         actor_id: userId,
         organization_id: organizationId,
+        session_rotated: true,
         trace_id: context.traceId,
       });
 
@@ -113,9 +156,11 @@ export const userOrgsRoutes: RouteDefinition[] = [
         {
           ok: true,
           active_organization_id: organizationId,
+          // H4: Signal to frontend that re-authentication is required
+          session_rotated: true,
           trace_id: context.traceId,
         },
-        { headers: { "x-trace-id": context.traceId } }
+        { status: 200, headers: { "x-trace-id": context.traceId } }
       );
     },
   },
@@ -136,14 +181,19 @@ export const userOrgsRoutes: RouteDefinition[] = [
       const organizationId = routeUuidParam(context.params, "organizationId");
       const db = getDb(context.deps);
 
-      // Verify the user owns this organization
+      // Verify the user owns or is a member of this organization
       const [org] = await db
         .select({ id: organizations.id })
         .from(organizations)
+        .leftJoin(memberships, eq(organizations.id, memberships.organizationId))
+        .leftJoin(users, eq(users.id, memberships.userId))
         .where(
           and(
-            eq(organizations.userId, userId),
-            eq(organizations.id, organizationId)
+            eq(organizations.id, organizationId),
+            or(
+              eq(organizations.userId, userId),
+              eq(users.identityProviderSubject, userId)
+            )
           )
         )
         .limit(1);
@@ -156,8 +206,28 @@ export const userOrgsRoutes: RouteDefinition[] = [
         );
       }
 
-      // activeOrganizationId is deprecated in API-first approach
-      // session update is skipped.
+      // Clear activeOrganizationId from the ba_session
+      const sessionId = context.session?.session?.id;
+      if (sessionId) {
+        await db
+          .update(baSession)
+          .set({ activeOrganizationId: null })
+          .where(eq(baSession.id, sessionId));
+
+        // Bust the customSession KV cache
+        if (context.env?.STANDARD_CACHE) {
+          await context.env.STANDARD_CACHE.delete(`session-ctx:${sessionId}`).catch(() => {});
+        }
+      }
+
+      // Soft revocation — clears downstream caches, does NOT cause 401
+      if (context.env?.STANDARD_CACHE) {
+        await context.env.STANDARD_CACHE.put(
+          `revocations:user:${userId}`,
+          "org_deactivate",
+          { expirationTtl: 10 }
+        ).catch(() => {});
+      }
 
       // Audit the deactivation
       await context.deps.audit.record("user_org.deactivated", {
@@ -190,9 +260,7 @@ export const userOrgsRoutes: RouteDefinition[] = [
         throw new ApiError("UNAUTHORIZED", "Session required.", 401);
       }
 
-      const isPlatformAdmin =
-        context.session?.user?.platformAdmin === true ||
-        (context.session?.user as any)?.platform_admin === true;
+      const isPlatformAdmin = context.session?.user?.platformAdmin === true;
 
       if (!isPlatformAdmin) {
         throw new ApiError(
@@ -222,6 +290,11 @@ export const userOrgsRoutes: RouteDefinition[] = [
         })
         .returning();
 
+      // C2 fix: guard INSERT result
+      if (!newOrg) {
+        throw new ApiError("CONFLICT", "Organization creation failed — possible duplicate slug.", 409);
+      }
+
       // Audit the creation
       await context.deps.audit.record("user_org.created", {
         actor_id: userId,
@@ -232,8 +305,8 @@ export const userOrgsRoutes: RouteDefinition[] = [
       return json(
         {
           organization_id: orgId,
-          name: newOrg!.name,
-          slug: newOrg!.slug,
+          name: newOrg.name,
+          slug: newOrg.slug,
           trace_id: context.traceId
         },
         { status: 201, headers: { "x-trace-id": context.traceId } }

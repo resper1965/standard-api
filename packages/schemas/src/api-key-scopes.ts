@@ -2,7 +2,8 @@
  * API Key Scopes — granular permission system for M2M API keys.
  *
  * Scopes follow `resource:action` format, matching internal permissions.
- * A key with no scopes acts as a wildcard (backward compatible).
+ * A key with no scopes has zero permissions (M4 least privilege).
+ * At least one scope must be explicitly granted.
  *
  * @module @standard/schemas/api-key-scopes
  */
@@ -166,7 +167,8 @@ export const ROUTE_SCOPE_MAP: Record<string, M2mScope[]> = {
 
 /**
  * Check if a set of key scopes satisfies the required scopes for a route.
- * Empty keyScopes = wildcard (all access) for backward compatibility.
+ * M4 fix: empty keyScopes = zero permissions (least privilege).
+ * ALL required scopes must be present (not just one).
  */
 export function hasRequiredScopes(
   keyScopes: M2mScope[] | undefined | null,
@@ -174,12 +176,12 @@ export function hasRequiredScopes(
 ): boolean {
   // Undefined/null = no key = fail-closed
   if (keyScopes == null) return false;
-  // Empty keyScopes = wildcard (full access)
-  if (keyScopes.length === 0) return true;
+  // M4 fix: empty scopes = zero permissions (least privilege)
+  if (keyScopes.length === 0) return false;
   // No required scopes = open route
   if (requiredScopes.length === 0) return true;
-  // At least one required scope must be present
-  return requiredScopes.some(scope => keyScopes.includes(scope));
+  // ALL required scopes must be present
+  return requiredScopes.every(scope => keyScopes.includes(scope));
 }
 
 /**

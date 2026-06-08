@@ -13,6 +13,10 @@ export type ApiKeyRecord = {
   lastUsedAt: Date | null;
   /** Null means active. Set to a timestamp when revoked (soft-delete). */
   revokedAt: Date | null;
+  /** Scheduled future revocation time (set during key rotation grace period). */
+  scheduledRevokeAt: Date | null;
+  /** If this key was rotated, points to the replacement key ID. */
+  rotatedToKeyId: string | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -39,6 +43,7 @@ export type ApiKeysRepositoryAdapter = {
   verifyKey(keyHash: string): Promise<ApiKeyRecord | null>;
   markUsed(id: string): Promise<void>;
   revokeKey(id: string, organizationId: string): Promise<boolean>;
+  scheduleRevocation(id: string, organizationId: string, revokeAt: Date, rotatedToKeyId: string): Promise<boolean>;
   listByOrganization(organizationId: string, activeOnly?: boolean): Promise<ApiKeyRecord[]>;
 };
 
@@ -114,6 +119,8 @@ export const createDrizzleApiKeysRepository = (db: DbClient): ApiKeysRepositoryA
       if (record.expiresAt && record.expiresAt < new Date()) return null;
       // Reject soft-deleted (revoked) keys
       if (record.revokedAt) return null;
+      // Reject keys past their scheduled revocation time (set by key rotation)
+      if (record.scheduledRevokeAt && record.scheduledRevokeAt < new Date()) return null;
       
       return { ...record, organizationId: record.organizationId };
     },
@@ -126,6 +133,14 @@ export const createDrizzleApiKeysRepository = (db: DbClient): ApiKeysRepositoryA
       const [updated] = await db
         .update(apiKeys)
         .set({ revokedAt: new Date() })
+        .where(and(eq(apiKeys.id, id), eq(apiKeys.organizationId, organizationId)))
+        .returning({ id: apiKeys.id });
+      return !!updated;
+    },
+    async scheduleRevocation(id, organizationId, revokeAt, rotatedToKeyId) {
+      const [updated] = await db
+        .update(apiKeys)
+        .set({ scheduledRevokeAt: revokeAt, rotatedToKeyId: rotatedToKeyId })
         .where(and(eq(apiKeys.id, id), eq(apiKeys.organizationId, organizationId)))
         .returning({ id: apiKeys.id });
       return !!updated;
@@ -152,6 +167,8 @@ export const createMockApiKeysRepository = (): ApiKeysRepositoryAdapter => {
         expiresAt: input.expiresAt ?? null,
         lastUsedAt: null,
         revokedAt: null,
+        scheduledRevokeAt: null,
+        rotatedToKeyId: null,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -176,6 +193,7 @@ export const createMockApiKeysRepository = (): ApiKeysRepositoryAdapter => {
       if (!record) return null;
       if (record.expiresAt && record.expiresAt < new Date()) return null;
       if (record.revokedAt) return null;
+      if (record.scheduledRevokeAt && record.scheduledRevokeAt < new Date()) return null;
       return record;
     },
     async markUsed(id) {
@@ -192,6 +210,15 @@ export const createMockApiKeysRepository = (): ApiKeysRepositoryAdapter => {
     async listByOrganization(organizationId, activeOnly = false) {
       const rows = Object.values(store).filter(k => k.organizationId === organizationId);
       return activeOnly ? rows.filter(k => !k.revokedAt) : rows;
+    },
+    async scheduleRevocation(id, orgId, revokeAt, rotatedToKeyId) {
+      const exist = store[id];
+      if (exist && exist.organizationId === orgId) {
+        exist.scheduledRevokeAt = revokeAt;
+        exist.rotatedToKeyId = rotatedToKeyId;
+        return true;
+      }
+      return false;
     }
   };
 };

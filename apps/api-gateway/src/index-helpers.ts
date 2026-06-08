@@ -13,17 +13,82 @@ import { createAuth, type StandardAuth } from "@standard/auth";
 import type { SendEmail } from "@standard/email";
 import type { AppDependencies } from "./http";
 import type { Env } from "./types/env";
+import { resolveAllowedOrigins } from "./app-helpers";
 
-// ── Allowed origins for Standard Native Auth CORS ────────────────
-const AUTH_ALLOWED_ORIGINS: string[] = [
-  "https://standard.bekaa.eu",
-  "https://standard-web.pages.dev",
-  "https://production.standard-web.pages.dev",
-  "https://standard-web-production.pages.dev",
-  "http://localhost:5173",
-  "http://localhost:5200",
-  "http://localhost:3000",
-];
+// Auth-route origins are now resolved via resolveAllowedOrigins(env)
+// from app-helpers.ts — single source of truth with the main CORS pipeline.
+// See H2-final fix.
+
+// ── Auth-specific rate limiting (runs BEFORE Better Auth handler) ──
+/**
+ * Why this is separate from `rate-limit.middleware.ts`:
+ *
+ * The `handleAuthRoute()` function delegates to Better Auth's handler
+ * BEFORE the standard middleware pipeline executes. This means any
+ * rate limits defined in `rate-limit.middleware.ts` for `/auth/*`
+ * routes are never reached. This in-memory limiter runs inline,
+ * AFTER the CORS preflight check but BEFORE `cachedAuth.handler()`.
+ */
+const AUTH_RATE_LIMITS: Record<string, { max: number; windowSeconds: number }> = {
+  '/api/auth/sign-in': { max: 10, windowSeconds: 60 },
+  '/api/auth/sign-up': { max: 5, windowSeconds: 60 },
+  '/api/auth/forgot-password': { max: 3, windowSeconds: 60 },
+  '/api/auth/reset-password': { max: 5, windowSeconds: 60 },
+};
+const AUTH_RATE_DEFAULT = { max: 30, windowSeconds: 60 };
+
+/** Module-level sliding-window state for auth rate limiting. */
+const authRateState = new Map<string, { count: number; resetAt: number }>();
+
+/**
+ * Checks the in-memory auth rate limiter and returns a 429 Response
+ * if the client has exceeded the limit, or `null` to proceed.
+ */
+function checkAuthRateLimit(request: Request, pathname: string): Response | null {
+  const ip =
+    request.headers.get('cf-connecting-ip') ||
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    'unknown';
+
+  // Match the most specific path first
+  const matchedPath = Object.keys(AUTH_RATE_LIMITS).find((p) =>
+    pathname.startsWith(p),
+  );
+  const { max, windowSeconds } = matchedPath
+    ? AUTH_RATE_LIMITS[matchedPath]!
+    : AUTH_RATE_DEFAULT;
+
+  const key = `${ip}:${matchedPath ?? '/api/auth/*'}`;
+  const now = Date.now();
+
+  // Simple GC: purge expired entries on each check
+  for (const [k, v] of authRateState) {
+    if (v.resetAt <= now) authRateState.delete(k);
+  }
+
+  const entry = authRateState.get(key);
+
+  if (!entry || entry.resetAt <= now) {
+    // New window
+    authRateState.set(key, { count: 1, resetAt: now + windowSeconds * 1000 });
+    return null;
+  }
+
+  entry.count += 1;
+
+  if (entry.count > max) {
+    return Response.json(
+      {
+        error: 'TOO_MANY_REQUESTS',
+        message: 'Rate limit exceeded. Try again later.',
+        retry_after_seconds: windowSeconds,
+      },
+      { status: 429 },
+    );
+  }
+
+  return null;
+}
 
 
 // ── Module-level cached singletons ──────────────────────────────
@@ -47,14 +112,26 @@ export function getCachedAuth(): StandardAuth | null {
  * invalidates all active sessions. Hard purge happens within 30 days
  * per data-retention-policy.md.
  */
+/** Expected shape of Better Auth's admin API (not yet exported by @standard/auth) */
+type BetterAuthAdminApi = {
+  api: {
+    banUser?: (opts: { body: { userId: string; banReason: string } }) => Promise<unknown>;
+  };
+};
+
 function createBanUser(): (userId: string, reason?: string) => Promise<void> {
   return async (userId: string, reason?: string) => {
     const auth = getCachedAuth();
     if (!auth) return;
 
+    const adminAuth = auth as unknown as BetterAuthAdminApi;
+    if (typeof adminAuth.api?.banUser !== 'function') {
+      console.warn('[standard:banUser] banUser API not available on this auth instance');
+      return;
+    }
+
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (auth as any).api.banUser({ // Standard Native Auth admin API type not yet exported
+      await adminAuth.api.banUser({
         body: {
           userId,
           banReason: reason ?? 'User-initiated account deletion (LGPD art. 18)',
@@ -83,6 +160,7 @@ function buildDrizzleDeps(env: Env): { deps: AppDependencies; auth: StandardAuth
     email: env.EMAIL ? (env.EMAIL as unknown as SendEmail) : undefined,
     AGENT_RUN_QUEUE: env.AGENT_RUN_QUEUE ?? undefined,
     SOC_TRIAGE_QUEUE: env.SOC_TRIAGE_QUEUE ?? undefined,
+    USER_LIFECYCLE_QUEUE: env.USER_LIFECYCLE_QUEUE ?? undefined,
     banUser: createBanUser(),
   };
 
@@ -91,7 +169,18 @@ function buildDrizzleDeps(env: Env): { deps: AppDependencies; auth: StandardAuth
     DATABASE_URL: env.DATABASE_URL!,
     BETTER_AUTH_SECRET: env.BETTER_AUTH_SECRET,
     ...(env.BETTER_AUTH_URL !== undefined ? { BETTER_AUTH_URL: env.BETTER_AUTH_URL } : {}),
+    ...(env.ALLOWED_ORIGINS !== undefined ? { ALLOWED_ORIGINS: env.ALLOWED_ORIGINS } : {}),
+    ...(env.STANDARD_ENV !== undefined ? { STANDARD_ENV: env.STANDARD_ENV } : {}),
     email: deps.email,
+    // KV cache for customSession enrichment (eliminates per-request DB queries)
+    sessionCache: env.STANDARD_CACHE,
+    // Event-driven lifecycle: send user events to the lifecycle queue
+    onUserCreated: env.USER_LIFECYCLE_QUEUE
+      ? (payload) => env.USER_LIFECYCLE_QUEUE!.send(payload)
+      : undefined,
+    onUserUpdated: env.USER_LIFECYCLE_QUEUE
+      ? (payload) => env.USER_LIFECYCLE_QUEUE!.send(payload)
+      : undefined,
   }, db);
 
   console.log('[standard:init] Standard Native Auth self-hosted initialized.');
@@ -146,8 +235,9 @@ export function ensureAppInitialized(env: Env): ReturnType<typeof createApp> {
 /**
  * Checks whether the given origin is allowed for the auth route CORS policy.
  */
-function isAuthOriginAllowed(origin: string): boolean {
-  if (AUTH_ALLOWED_ORIGINS.includes(origin)) return true;
+function isAuthOriginAllowed(origin: string, env?: Partial<Env>): boolean {
+  const allowed = resolveAllowedOrigins(env);
+  if (allowed.includes(origin)) return true;
   // Match hash-prefixed preview deploy aliases: <hash>.standard-web-production.pages.dev
   return origin.endsWith(".standard-web.pages.dev") || origin.endsWith(".standard-web-production.pages.dev");
 }
@@ -175,11 +265,12 @@ function buildAuthCorsHeaders(origin: string): Record<string, string> {
 export async function handleAuthRoute(
   request: Request,
   url: URL,
+  env?: Partial<Env>,
 ): Promise<Response | null> {
   if (!cachedAuth || !url.pathname.startsWith("/api/auth")) return null;
 
   const origin = request.headers.get("Origin") ?? "";
-  const isAllowed = isAuthOriginAllowed(origin);
+  const isAllowed = isAuthOriginAllowed(origin, env);
 
   // Handle CORS preflight — must respond BEFORE delegating to Standard Native Auth
   if (request.method === "OPTIONS") {
@@ -191,7 +282,78 @@ export async function handleAuthRoute(
     });
   }
 
-  const response = await cachedAuth.handler(request);
+  // ── In-memory auth rate limiter (runs before Better Auth handler) ──
+  const rateLimitResponse = checkAuthRateLimit(request, url.pathname);
+  if (rateLimitResponse) return rateLimitResponse;
+
+  const traceId = crypto.randomUUID().replace(/-/g, "").slice(0, 16);
+
+  const response = await (async () => {
+    try {
+      const res = await cachedAuth!.handler(request);
+      if (res.status === 500) {
+        // Log the error internally but do NOT expose detail to client (H5 fix)
+        const text = await res.clone().text();
+        console.error(`[standard:auth] handler 500 trace=${traceId}`, text);
+        return Response.json(
+          { error: "AUTH_INTERNAL_ERROR", detail: "Authentication service error.", trace_id: traceId },
+          { status: 500, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      return res;
+    } catch (err) {
+      console.error(
+        `[standard:auth] handler error trace=${traceId}`,
+        err instanceof Error ? `${err.name}: ${err.message}\n${err.stack}` : String(err),
+      );
+      return Response.json(
+        {
+          type: "https://api.standard-grc.com/errors/internal_error",
+          title: "Internal Server Error",
+          status: 500,
+          detail: "Authentication service error.",
+          instance: url.pathname,
+          trace_id: traceId,
+          errors: [],
+        },
+        { status: 500, headers: { "Content-Type": "application/problem+json" } },
+      );
+    }
+  })();
+
+  // ── Auth event audit logging (C10 fix — SOC 2 / ISO 27001 compliance) ──
+  // Fire-and-forget structured log for auth-relevant endpoints.
+  const AUTH_AUDIT_PATHS: Record<string, string> = {
+    "/api/auth/sign-in/email": "auth.sign_in",
+    "/api/auth/sign-up/email": "auth.sign_up",
+    "/api/auth/sign-out": "auth.sign_out",
+    "/api/auth/forgot-password": "auth.forgot_password",
+    "/api/auth/reset-password": "auth.reset_password",
+    "/api/auth/verify-email": "auth.verify_email",
+  };
+  const auditEvent = AUTH_AUDIT_PATHS[url.pathname];
+  if (auditEvent && request.method === "POST") {
+    const ip =
+      request.headers.get("cf-connecting-ip") ||
+      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      "unknown";
+    // Structured JSON log — no PII, only status + IP + trace
+    console.log(
+      JSON.stringify({
+        level: "info",
+        message: auditEvent,
+        service: "api-gateway",
+        module: "auth-audit",
+        trace_id: traceId,
+        metadata: {
+          status: response.status,
+          ip_hash: ip.slice(0, 8), // Partial IP for correlation without full PII
+          user_agent: request.headers.get("user-agent")?.slice(0, 80) || "unknown",
+          success: response.status >= 200 && response.status < 400,
+        },
+      }),
+    );
+  }
 
   // Inject CORS headers for the auth endpoints
   if (isAllowed) {
@@ -199,6 +361,23 @@ export async function handleAuthRoute(
     for (const [key, value] of Object.entries(corsHeaders)) {
       response.headers.set(key, value);
     }
+  }
+
+  // M3 fix: Set CSRF cookie on successful sign-in/sign-up responses.
+  // The Double-Submit Cookie Pattern requires the server to set a token
+  // that the frontend reads and sends back as X-CSRF-Token header.
+  const isAuthSuccess =
+    response.status >= 200 &&
+    response.status < 400 &&
+    (url.pathname === "/api/auth/sign-in/email" || url.pathname === "/api/auth/sign-up/email");
+  if (isAuthSuccess) {
+    // Generate a random CSRF token per auth session
+    const csrfToken = crypto.randomUUID().replace(/-/g, "");
+    // Set as non-httpOnly cookie so frontend JS can read it
+    response.headers.append(
+      "Set-Cookie",
+      `__csrf=${csrfToken}; Path=/; SameSite=Strict; Secure`,
+    );
   }
 
   return response;
