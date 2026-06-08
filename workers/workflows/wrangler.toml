@@ -3,24 +3,92 @@ main = "src/index.ts"
 compatibility_date = "2026-04-28"
 compatibility_flags = [ "nodejs_compat" ]
 
-
 [vars]
 STANDARD_ENV = "development"
 LOG_LEVEL = "info"
 
 [[workflows]]
 binding = "ASSESSMENT_WORKFLOW"
-name = "standard-assessment-lifecycle-production"
+name = "standard-assessment-lifecycle-dev"
 class_name = "AssessmentLifecycleWorkflow"
 
 [[workflows]]
 binding = "COUNCIL_WORKFLOW"
-name = "standard-council-orchestration-production"
+name = "standard-council-orchestration-dev"
 class_name = "CouncilOrchestrationWorkflow"
 
 [[kv_namespaces]]
 binding = "STANDARD_CACHE"
 id = "4e027e07e0e5440a8666c3f8ee419333"
 
+# R2 — large payload claim-check for council workflow (>=256KB evidence payloads)
+[[r2_buckets]]
+binding = "STANDARD_DOCUMENTS_BUCKET"
+bucket_name = "standard-documents-dev"
+
 # Database configured via secrets:
 # wrangler secret put DATABASE_URL --name standard-workflows
+
+# ── Staging ───────────────────────────────────────────────────────────────────
+[env.staging]
+name = "standard-workflows-staging"
+
+[env.staging.vars]
+STANDARD_ENV = "staging"
+LOG_LEVEL = "info"
+
+[[env.staging.workflows]]
+binding = "ASSESSMENT_WORKFLOW"
+name = "standard-assessment-lifecycle-staging"
+class_name = "AssessmentLifecycleWorkflow"
+
+[[env.staging.workflows]]
+binding = "COUNCIL_WORKFLOW"
+name = "standard-council-orchestration-staging"
+class_name = "CouncilOrchestrationWorkflow"
+
+[[env.staging.kv_namespaces]]
+binding = "STANDARD_CACHE"
+id = "4e027e07e0e5440a8666c3f8ee419333"
+
+[[env.staging.r2_buckets]]
+binding = "STANDARD_DOCUMENTS_BUCKET"
+bucket_name = "standard-documents-staging"
+
+# Hyperdrive — regional Neon connection pooler
+# Create: wrangler hyperdrive create standard-neon-staging --connection-string="<NEON_URL>"
+[[env.staging.hyperdrive]]
+binding = "HYPERDRIVE"
+id = "REPLACE_WITH_STAGING_HYPERDRIVE_ID"
+
+# ── Production ────────────────────────────────────────────────────────────────
+[env.production]
+name = "standard-workflows-production"
+
+[env.production.vars]
+STANDARD_ENV = "production"
+LOG_LEVEL = "warn"
+
+[[env.production.workflows]]
+binding = "ASSESSMENT_WORKFLOW"
+name = "standard-assessment-lifecycle-production"
+class_name = "AssessmentLifecycleWorkflow"
+
+[[env.production.workflows]]
+binding = "COUNCIL_WORKFLOW"
+name = "standard-council-orchestration-production"
+class_name = "CouncilOrchestrationWorkflow"
+
+[[env.production.kv_namespaces]]
+binding = "STANDARD_CACHE"
+id = "4e027e07e0e5440a8666c3f8ee419333"
+
+[[env.production.r2_buckets]]
+binding = "STANDARD_DOCUMENTS_BUCKET"
+bucket_name = "standard-documents-prod"
+
+# Hyperdrive — regional Neon connection pooler
+# Create: wrangler hyperdrive create standard-neon-prod --connection-string="<NEON_URL>"
+[[env.production.hyperdrive]]
+binding = "HYPERDRIVE"
+id = "REPLACE_WITH_PRODUCTION_HYPERDRIVE_ID"
