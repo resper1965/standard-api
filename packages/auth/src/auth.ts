@@ -16,7 +16,6 @@ import {
   baSession,
   baAccount,
   baVerification,
-  baApikey
 } from "@standard/schemas";
 import { sendStandardEmail, type SendEmail } from "@standard/email";
 import type { DrizzleClient } from "./types";
@@ -25,7 +24,11 @@ import type { DrizzleClient } from "./types";
  *  Compatible with Cloudflare KV, but doesn't import @cloudflare/workers-types. */
 interface SessionCacheStore {
   get(key: string, type: "json"): Promise<unknown>;
-  put(key: string, value: string, options?: { expirationTtl?: number }): Promise<void>;
+  put(
+    key: string,
+    value: string,
+    options?: { expirationTtl?: number },
+  ): Promise<void>;
   delete(key: string): Promise<void>;
 }
 
@@ -52,7 +55,7 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
   // HMAC-SHA256 needs ≥32 bytes of entropy. Reject weak secrets early.
   if (!env.BETTER_AUTH_SECRET || env.BETTER_AUTH_SECRET.length < 32) {
     throw new Error(
-      `[standard:auth] BETTER_AUTH_SECRET must be at least 32 characters. Got ${env.BETTER_AUTH_SECRET?.length ?? 0}.`
+      `[standard:auth] BETTER_AUTH_SECRET must be at least 32 characters. Got ${env.BETTER_AUTH_SECRET?.length ?? 0}.`,
     );
   }
 
@@ -60,18 +63,22 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
   // M2 fix: localhost only in non-production environments
   const isProduction = env.STANDARD_ENV === "production";
   const trustedOrigins = env.ALLOWED_ORIGINS
-    ? env.ALLOWED_ORIGINS.split(",").map((o) => o.trim()).filter(Boolean)
+    ? env.ALLOWED_ORIGINS.split(",")
+        .map((o) => o.trim())
+        .filter(Boolean)
     : [
         "https://standard.bekaa.eu",
         "https://standard-web.pages.dev",
         "https://production.standard-web.pages.dev",
         "https://standard-web-production.pages.dev",
         "https://*.standard-web-production.pages.dev",
-        ...(!isProduction ? [
-          "http://localhost:5173",
-          "http://localhost:5200",
-          "http://localhost:3000",
-        ] : []),
+        ...(!isProduction
+          ? [
+              "http://localhost:5173",
+              "http://localhost:5200",
+              "http://localhost:3000",
+            ]
+          : []),
       ];
 
   return betterAuth({
@@ -82,8 +89,7 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
         session: baSession,
         account: baAccount,
         verification: baVerification,
-        apikey: baApikey
-      }
+      },
     }),
     secret: env.BETTER_AUTH_SECRET,
     baseURL: env.BETTER_AUTH_URL,
@@ -106,22 +112,21 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
       password: {
         hash: async (password: string): Promise<string> => {
           // ── Password complexity validation ──────────────────────────
-          const COMMON_PASSWORDS = [
-            'password',
-            '123456789012',
-            'qwertyuiopas',
-          ];
+          const COMMON_PASSWORDS = ["password", "123456789012", "qwertyuiopas"];
           const errors: string[] = [];
-          if (!/[A-Z]/.test(password)) errors.push('at least one uppercase letter');
-          if (!/[a-z]/.test(password)) errors.push('at least one lowercase letter');
-          if (!/[0-9]/.test(password)) errors.push('at least one number');
-          if (!/[^A-Za-z0-9]/.test(password)) errors.push('at least one special character');
+          if (!/[A-Z]/.test(password))
+            errors.push("at least one uppercase letter");
+          if (!/[a-z]/.test(password))
+            errors.push("at least one lowercase letter");
+          if (!/[0-9]/.test(password)) errors.push("at least one number");
+          if (!/[^A-Za-z0-9]/.test(password))
+            errors.push("at least one special character");
           if (COMMON_PASSWORDS.includes(password.toLowerCase())) {
-            errors.push('password is too common');
+            errors.push("password is too common");
           }
           if (errors.length > 0) {
             throw new Error(
-              `Password does not meet complexity requirements: ${errors.join(', ')}.`,
+              `Password does not meet complexity requirements: ${errors.join(", ")}.`,
             );
           }
 
@@ -129,12 +134,27 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
           const { hashPassword } = await import("@better-auth/utils/password");
           return hashPassword(password);
         },
-        verify: async (data: { hash: string; password: string }): Promise<boolean> => {
-          const { verifyPassword } = await import("@better-auth/utils/password");
+        verify: async (data: {
+          hash: string;
+          password: string;
+        }): Promise<boolean> => {
+          const { verifyPassword } =
+            await import("@better-auth/utils/password");
           return verifyPassword(data.hash, data.password);
         },
       },
-      sendVerificationEmail: async ({ user, url, token }: { user: { email: string; name: string | null }; url: string; token: string }, request?: Request) => {
+      sendVerificationEmail: async (
+        {
+          user,
+          url,
+          token,
+        }: {
+          user: { email: string; name: string | null };
+          url: string;
+          token: string;
+        },
+        request?: Request,
+      ) => {
         const emailService = env.email;
         if (emailService) {
           try {
@@ -149,16 +169,32 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
               },
               {
                 domain: "bekaa.eu",
-              }
+              },
             );
           } catch (err) {
-            console.error("[standard:auth] Failed to send verification email:", err);
+            console.error(
+              "[standard:auth] Failed to send verification email:",
+              err,
+            );
           }
         } else {
-          console.log(`[standard:auth:dev] Email verification requested for ${user.email}. Link: ${url}`);
+          console.log(
+            `[standard:auth:dev] Email verification requested for ${user.email}. Link: ${url}`,
+          );
         }
       },
-      sendResetPassword: async ({ user, url, token }: { user: { email: string; name: string | null }; url: string; token: string }, request?: Request) => {
+      sendResetPassword: async (
+        {
+          user,
+          url,
+          token,
+        }: {
+          user: { email: string; name: string | null };
+          url: string;
+          token: string;
+        },
+        request?: Request,
+      ) => {
         const emailService = env.email;
         if (emailService) {
           try {
@@ -173,13 +209,18 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
               },
               {
                 domain: "bekaa.eu",
-              }
+              },
             );
           } catch (err) {
-            console.error("[standard:auth] Failed to send password reset email:", err);
+            console.error(
+              "[standard:auth] Failed to send password reset email:",
+              err,
+            );
           }
         } else {
-          console.log(`[standard:auth:dev] Password reset requested for ${user.email}. Link: ${url}`);
+          console.log(
+            `[standard:auth:dev] Password reset requested for ${user.email}. Link: ${url}`,
+          );
         }
       },
     },
@@ -236,8 +277,8 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
         domain: ".bekaa.eu",
       },
       defaultCookieAttributes: {
-        sameSite: "none",   // Required for cross-origin credentials
-        secure: true,       // Required when sameSite=none
+        sameSite: "none", // Required for cross-origin credentials
+        secure: true, // Required when sameSite=none
         httpOnly: true,
         path: "/",
       },
@@ -247,8 +288,8 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
       // ── M1: Session TTL — 4 hours (BA default is 7 days) ────────────
       // GRC platform handles sensitive compliance data; shorter sessions
       // reduce window of exposure for stolen cookies.
-      expiresIn: 4 * 60 * 60,       // 4h session lifetime (seconds)
-      updateAge: 30 * 60,            // Refresh session token every 30min of activity
+      expiresIn: 4 * 60 * 60, // 4h session lifetime (seconds)
+      updateAge: 30 * 60, // Refresh session token every 30min of activity
       cookieCache: {
         enabled: true,
         maxAge: 5 * 60,
@@ -281,7 +322,10 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
                   timestamp: new Date().toISOString(),
                 });
               } catch (err) {
-                console.error("[standard:auth] onUserCreated hook failed:", err);
+                console.error(
+                  "[standard:auth] onUserCreated hook failed:",
+                  err,
+                );
               }
             }
           },
@@ -298,7 +342,10 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
                   timestamp: new Date().toISOString(),
                 });
               } catch (err) {
-                console.error("[standard:auth] onUserUpdated hook failed:", err);
+                console.error(
+                  "[standard:auth] onUserUpdated hook failed:",
+                  err,
+                );
               }
             }
           },
@@ -334,7 +381,10 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
         // ── KV Cache: avoid 2x DB queries on every getSession() ────────
         if (kv && sessionId) {
           try {
-            const cached = await kv.get(`session-ctx:${sessionId}`, "json") as any;
+            const cached = (await kv.get(
+              `session-ctx:${sessionId}`,
+              "json",
+            )) as any;
             if (cached) {
               return {
                 user: {
@@ -364,7 +414,10 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
             })
             .from(memberships)
             .innerJoin(users, eq(users.id, memberships.userId))
-            .innerJoin(organizations, eq(organizations.id, memberships.organizationId))
+            .innerJoin(
+              organizations,
+              eq(organizations.id, memberships.organizationId),
+            )
             .where(eq(users.identityProviderSubject, user.id));
 
           // Also include orgs where user is direct owner
@@ -383,8 +436,17 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
             ...ownedOrgs.map((o: any) => ({ ...o, role: "owner" })),
           ];
           const uniqueOrgs = allOrgs.filter(
-            (o, i, a) => a.findIndex((x: any) => x.orgId === o.orgId) === i
+            (o, i, a) => a.findIndex((x: any) => x.orgId === o.orgId) === i,
           );
+
+          // Query domain user ID
+          const [domainUser] = await (db as any)
+            .select({ id: users.id })
+            .from(users)
+            .where(eq(users.identityProviderSubject, user.id))
+            .limit(1);
+
+          const domainUserId = domainUser?.id || null;
 
           // Determine active org
           const activeOrgId =
@@ -395,6 +457,7 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
 
           // Build the enrichment payload
           const sessionEnrichment = {
+            domainUserId,
             activeOrganizationId: activeOrgId,
             activeOrganizationSlug: activeOrg?.orgSlug ?? null,
             activeOrganizationRole: activeOrg?.role ?? null,
@@ -411,7 +474,7 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
             kv.put(
               `session-ctx:${sessionId}`,
               JSON.stringify(sessionEnrichment),
-              { expirationTtl: 60 }
+              { expirationTtl: 60 },
             ).catch(() => {}); // fire-and-forget
           }
 

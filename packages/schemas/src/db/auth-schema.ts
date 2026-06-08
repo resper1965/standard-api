@@ -46,43 +46,53 @@ export const baUser = pgTable("user", {
   metadata: text("metadata"), // Captured full raw JSON profiles
 });
 
-export const baSession = pgTable("session", {
-  id: text("id").primaryKey(),
-  expiresAt: timestamp("expires_at").notNull(),
-  token: text("token").notNull().unique(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-  ipAddress: text("ip_address"),
-  userAgent: text("user_agent"),
-  userId: text("user_id").notNull().references(() => baUser.id, { onDelete: "cascade" }),
-  // Organization context — tracks which org the user is currently operating in.
-  // Updated via POST /api/v1/users/me/organizations/:orgId/activate.
-  // Read by customSession plugin to enrich session with org context.
-  activeOrganizationId: text("active_organization_id"),
-  // Admin plugin
-  impersonatedBy: text("impersonated_by"),
-}, (table) => [
-  index("ba_session_user_idx").on(table.userId),
-  index("ba_session_token_idx").on(table.token),
-]);
+export const baSession = pgTable(
+  "session",
+  {
+    id: text("id").primaryKey(),
+    expiresAt: timestamp("expires_at").notNull(),
+    token: text("token").notNull().unique(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+    ipAddress: text("ip_address"),
+    userAgent: text("user_agent"),
+    userId: text("user_id")
+      .notNull()
+      .references(() => baUser.id, { onDelete: "cascade" }),
+    // Organization context — tracks which org the user is currently operating in.
+    // Updated via POST /api/v1/users/me/organizations/:orgId/activate.
+    // Read by customSession plugin to enrich session with org context.
+    activeOrganizationId: text("active_organization_id"),
+    // Admin plugin
+    impersonatedBy: text("impersonated_by"),
+  },
+  (table) => [
+    index("ba_session_user_idx").on(table.userId),
+    index("ba_session_token_idx").on(table.token),
+  ],
+);
 
-export const baAccount = pgTable("account", {
-  id: text("id").primaryKey(),
-  accountId: text("account_id").notNull(),
-  providerId: text("provider_id").notNull(),
-  userId: text("user_id").notNull().references(() => baUser.id, { onDelete: "cascade" }),
-  accessToken: text("access_token"),
-  refreshToken: text("refresh_token"),
-  idToken: text("id_token"),
-  accessTokenExpiresAt: timestamp("access_token_expires_at"),
-  refreshTokenExpiresAt: timestamp("refresh_token_expires_at"),
-  scope: text("scope"),
-  password: text("password"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-}, (table) => [
-  index("ba_account_user_idx").on(table.userId),
-]);
+export const baAccount = pgTable(
+  "account",
+  {
+    id: text("id").primaryKey(),
+    accountId: text("account_id").notNull(),
+    providerId: text("provider_id").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => baUser.id, { onDelete: "cascade" }),
+    accessToken: text("access_token"),
+    refreshToken: text("refresh_token"),
+    idToken: text("id_token"),
+    accessTokenExpiresAt: timestamp("access_token_expires_at"),
+    refreshTokenExpiresAt: timestamp("refresh_token_expires_at"),
+    scope: text("scope"),
+    password: text("password"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => [index("ba_account_user_idx").on(table.userId)],
+);
 
 export const baVerification = pgTable("verification", {
   id: text("id").primaryKey(),
@@ -92,41 +102,3 @@ export const baVerification = pgTable("verification", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
-
-// ── API Key Plugin Tables ─────────────────────────────────────────────
-
-/**
- * @deprecated DEAD TABLE — Better Auth API Key plugin table.
- * Not used by Standard. All M2M API key operations use the domain
- * `api_keys` table (schema.ts L221). This table exists because the BA
- * drizzle adapter schema mapping includes it, but no route reads or writes to it.
- *
- * DO NOT USE. DO NOT BUILD FEATURES ON THIS TABLE.
- * Track removal in ADR-008.
- */
-export const baApikey = pgTable("apikey", {
-  id: text("id").primaryKey(),
-  name: text("name"),
-  start: text("start"),
-  prefix: text("prefix"),
-  key: text("key").notNull(),
-  userId: text("user_id").notNull().references(() => baUser.id, { onDelete: "cascade" }),
-  refillInterval: integer("refill_interval"),
-  refillAmount: integer("refill_amount"),
-  lastRefillAt: timestamp("last_refill_at"),
-  enabled: boolean("enabled").default(true),
-  rateLimitEnabled: boolean("rate_limit_enabled").default(true),
-  rateLimitTimeWindow: integer("rate_limit_time_window"),
-  rateLimitMax: integer("rate_limit_max"),
-  requestCount: integer("request_count").default(0),
-  remaining: integer("remaining"),
-  lastRequest: timestamp("last_request"),
-  expiresAt: timestamp("expires_at"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-  permissions: text("permissions"),
-  metadata: text("metadata"),
-}, (table) => [
-  index("ba_apikey_user_idx").on(table.userId),
-]);
-

@@ -210,15 +210,11 @@ export const resolveAuthContext = async (
         );
       }
 
-      let resolvedActorId = user.id;
-      // DEPRECATED FALLBACK: Synchronous domain user resolution.
-      // The primary provisioning path is now async via USER_LIFECYCLE_QUEUE.
-      // This fallback catches users created before the queue was deployed,
-      // and race conditions where the first request arrives before the
-      // consumer processes the signup event.
-      // REMOVAL CRITERIA: When the "user_context_fallback_used" metric
-      // reaches zero for 7 consecutive days, remove this block.
-      if (context.deps.resolveUserContext) {
+      // Extract domain user UUID if present in the customSession (cached in KV).
+      // This bypasses the synchronous DB fallback query completely on the fast path.
+      let resolvedActorId = session.domainUserId || user.id;
+
+      if (!session.domainUserId && context.deps.resolveUserContext) {
         try {
           const resolvedUser = await context.deps.resolveUserContext(
             user.email,
@@ -273,6 +269,7 @@ export const resolveAuthContext = async (
         },
         session: {
           id: session.id,
+          domainUserId: session.domainUserId ?? null,
           activeOrganizationId: session.activeOrganizationId ?? null,
           activeOrganizationSlug: session.activeOrganizationSlug ?? null,
           activeOrganizationRole: session.activeOrganizationRole ?? null,
