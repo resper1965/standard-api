@@ -66,6 +66,8 @@ export interface StandardUser {
 export interface StandardSession {
   id: string;
   userId: string;
+  /** Resolved domain user UUID (injected by customSession plugin). */
+  domainUserId?: string | null;
   /** Set by customSession plugin — active org for this session. */
   activeOrganizationId?: string | null;
   /** Slug of the active organization (injected by customSession plugin). */

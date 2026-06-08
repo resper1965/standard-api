@@ -23,38 +23,57 @@ export interface UserLifecycleMessage {
   timestamp: string;
 }
 
+/** Mask email to prevent PII logging in console logs */
+function maskEmail(email: string): string {
+  const parts = email.split("@");
+  if (parts.length !== 2) return "invalid-email";
+  const local = parts[0]!;
+  const domain = parts[1]!;
+  if (local.length <= 2) {
+    const first = local[0] || "";
+    return `${first}***@${domain}`;
+  }
+  const first = local[0] || "";
+  const last = local[local.length - 1] || "";
+  return `${first}***${last}@${domain}`;
+}
+
 /** In-memory dedup cache for idempotency (survives within a single batch). */
 const processedKeys = new Set<string>();
 
 export async function processUserLifecycleMessage(
   body: UserLifecycleMessage,
-  env: { DATABASE_URL?: string }
+  env: { DATABASE_URL?: string },
 ): Promise<void> {
   const startTime = Date.now();
   const traceId = body.idempotency_key ?? body.timestamp ?? crypto.randomUUID();
 
   if (!env.DATABASE_URL) {
-    console.warn(JSON.stringify({
-      level: "warn",
-      message: "user_lifecycle_skipped",
-      service: "queue-worker",
-      module: "user-lifecycle",
-      trace_id: traceId,
-      metadata: { reason: "DATABASE_URL not set" },
-    }));
+    console.warn(
+      JSON.stringify({
+        level: "warn",
+        message: "user_lifecycle_skipped",
+        service: "queue-worker",
+        module: "user-lifecycle",
+        trace_id: traceId,
+        metadata: { reason: "DATABASE_URL not set" },
+      }),
+    );
     return;
   }
 
   // Idempotency check: skip if we've already processed this key in this batch
   if (body.idempotency_key && processedKeys.has(body.idempotency_key)) {
-    console.log(JSON.stringify({
-      level: "info",
-      message: "user_lifecycle_deduplicated",
-      service: "queue-worker",
-      module: "user-lifecycle",
-      trace_id: traceId,
-      metadata: { idempotency_key: body.idempotency_key, event: body.event },
-    }));
+    console.log(
+      JSON.stringify({
+        level: "info",
+        message: "user_lifecycle_deduplicated",
+        service: "queue-worker",
+        module: "user-lifecycle",
+        trace_id: traceId,
+        metadata: { idempotency_key: body.idempotency_key, event: body.event },
+      }),
+    );
     return;
   }
 
@@ -72,7 +91,10 @@ export async function processUserLifecycleMessage(
     if (event === "user.created") {
       // Upsert: create domain user if not exists
       const [existing] = await db
-        .select({ id: users.id, identityProviderSubject: users.identityProviderSubject })
+        .select({
+          id: users.id,
+          identityProviderSubject: users.identityProviderSubject,
+        })
         .from(users)
         .where(eq(users.email, email))
         .limit(1);
@@ -85,44 +107,54 @@ export async function processUserLifecycleMessage(
             .set({ identityProviderSubject: user.id })
             .where(eq(users.id, existing.id));
 
-          console.log(JSON.stringify({
-            level: "info",
-            message: "user_lifecycle_linked",
-            service: "queue-worker",
-            module: "user-lifecycle",
-            trace_id: traceId,
-            metadata: {
-              ba_user_id: user.id,
-              domain_user_id: existing.id,
-              email,
-              duration_ms: Date.now() - startTime,
-            },
-          }));
+          console.log(
+            JSON.stringify({
+              level: "info",
+              message: "user_lifecycle_linked",
+              service: "queue-worker",
+              module: "user-lifecycle",
+              trace_id: traceId,
+              metadata: {
+                ba_user_id: user.id,
+                domain_user_id: existing.id,
+                email: maskEmail(email),
+                duration_ms: Date.now() - startTime,
+              },
+            }),
+          );
           // Audit trail: structured log for observability pipeline capture
-          console.log(JSON.stringify({
-            level: "info",
-            message: "audit.system.user.linked",
-            service: "queue-worker",
-            module: "audit",
-            trace_id: traceId,
-            metadata: {
-              action: "domain_user_linked",
-              actor: "system:queue-worker",
-              ba_user_id: user.id,
-              domain_user_id: existing.id,
-              email,
-              source: "user_lifecycle_queue",
-            },
-          }));
+          console.log(
+            JSON.stringify({
+              level: "info",
+              message: "audit.system.user.linked",
+              service: "queue-worker",
+              module: "audit",
+              trace_id: traceId,
+              metadata: {
+                action: "domain_user_linked",
+                actor: "system:queue-worker",
+                ba_user_id: user.id,
+                domain_user_id: existing.id,
+                email: maskEmail(email),
+                source: "user_lifecycle_queue",
+              },
+            }),
+          );
         } else {
-          console.log(JSON.stringify({
-            level: "info",
-            message: "user_lifecycle_already_linked",
-            service: "queue-worker",
-            module: "user-lifecycle",
-            trace_id: traceId,
-            metadata: { ba_user_id: user.id, domain_user_id: existing.id, email },
-          }));
+          console.log(
+            JSON.stringify({
+              level: "info",
+              message: "user_lifecycle_already_linked",
+              service: "queue-worker",
+              module: "user-lifecycle",
+              trace_id: traceId,
+              metadata: {
+                ba_user_id: user.id,
+                domain_user_id: existing.id,
+                email: maskEmail(email),
+              },
+            }),
+          );
         }
       } else {
         const [inserted] = await db
@@ -135,35 +167,39 @@ export async function processUserLifecycleMessage(
           })
           .returning({ id: users.id });
 
-        console.log(JSON.stringify({
-          level: "info",
-          message: "user_lifecycle_provisioned",
-          service: "queue-worker",
-          module: "user-lifecycle",
-          trace_id: traceId,
-          metadata: {
-            ba_user_id: user.id,
-            domain_user_id: inserted?.id,
-            email,
-            duration_ms: Date.now() - startTime,
-          },
-        }));
+        console.log(
+          JSON.stringify({
+            level: "info",
+            message: "user_lifecycle_provisioned",
+            service: "queue-worker",
+            module: "user-lifecycle",
+            trace_id: traceId,
+            metadata: {
+              ba_user_id: user.id,
+              domain_user_id: inserted?.id,
+              email: maskEmail(email),
+              duration_ms: Date.now() - startTime,
+            },
+          }),
+        );
         // Audit trail
-        console.log(JSON.stringify({
-          level: "info",
-          message: "audit.system.user.provisioned",
-          service: "queue-worker",
-          module: "audit",
-          trace_id: traceId,
-          metadata: {
-            action: "domain_user_provisioned",
-            actor: "system:queue-worker",
-            ba_user_id: user.id,
-            domain_user_id: inserted?.id,
-            email,
-            source: "user_lifecycle_queue",
-          },
-        }));
+        console.log(
+          JSON.stringify({
+            level: "info",
+            message: "audit.system.user.provisioned",
+            service: "queue-worker",
+            module: "audit",
+            trace_id: traceId,
+            metadata: {
+              action: "domain_user_provisioned",
+              actor: "system:queue-worker",
+              ba_user_id: user.id,
+              domain_user_id: inserted?.id,
+              email: maskEmail(email),
+              source: "user_lifecycle_queue",
+            },
+          }),
+        );
       }
     } else if (event === "user.updated") {
       // Sync email and displayName
@@ -176,34 +212,38 @@ export async function processUserLifecycleMessage(
         })
         .where(eq(users.identityProviderSubject, user.id));
 
-      console.log(JSON.stringify({
-        level: "info",
-        message: "user_lifecycle_synced",
-        service: "queue-worker",
-        module: "user-lifecycle",
-        trace_id: traceId,
-        metadata: {
-          ba_user_id: user.id,
-          email,
-          event: "user.updated",
-          duration_ms: Date.now() - startTime,
-        },
-      }));
+      console.log(
+        JSON.stringify({
+          level: "info",
+          message: "user_lifecycle_synced",
+          service: "queue-worker",
+          module: "user-lifecycle",
+          trace_id: traceId,
+          metadata: {
+            ba_user_id: user.id,
+            email: maskEmail(email),
+            event: "user.updated",
+            duration_ms: Date.now() - startTime,
+          },
+        }),
+      );
       // Audit trail
-      console.log(JSON.stringify({
-        level: "info",
-        message: "audit.system.user.synced",
-        service: "queue-worker",
-        module: "audit",
-        trace_id: traceId,
-        metadata: {
-          action: "domain_user_synced",
-          actor: "system:queue-worker",
-          ba_user_id: user.id,
-          email,
-          source: "user_lifecycle_queue",
-        },
-      }));
+      console.log(
+        JSON.stringify({
+          level: "info",
+          message: "audit.system.user.synced",
+          service: "queue-worker",
+          module: "audit",
+          trace_id: traceId,
+          metadata: {
+            action: "domain_user_synced",
+            actor: "system:queue-worker",
+            ba_user_id: user.id,
+            email: maskEmail(email),
+            source: "user_lifecycle_queue",
+          },
+        }),
+      );
     }
 
     // Mark as processed for in-batch dedup
@@ -211,20 +251,22 @@ export async function processUserLifecycleMessage(
       processedKeys.add(body.idempotency_key);
     }
   } catch (err) {
-    console.error(JSON.stringify({
-      level: "error",
-      message: "user_lifecycle_failed",
-      service: "queue-worker",
-      module: "user-lifecycle",
-      trace_id: traceId,
-      metadata: {
-        ba_user_id: user.id,
-        email,
-        event,
-        error: err instanceof Error ? err.message : String(err),
-        duration_ms: Date.now() - startTime,
-      },
-    }));
+    console.error(
+      JSON.stringify({
+        level: "error",
+        message: "user_lifecycle_failed",
+        service: "queue-worker",
+        module: "user-lifecycle",
+        trace_id: traceId,
+        metadata: {
+          ba_user_id: user.id,
+          email: maskEmail(email),
+          event,
+          error: err instanceof Error ? err.message : String(err),
+          duration_ms: Date.now() - startTime,
+        },
+      }),
+    );
     // Re-throw to trigger queue retry
     throw err;
   }
