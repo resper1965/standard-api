@@ -197,8 +197,8 @@ export function ResetPasswordPage() {
     e.preventDefault()
     setError("")
 
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters.")
+    if (password.length < 12) {
+      setError("Password must be at least 12 characters.")
       return
     }
 
@@ -271,11 +271,11 @@ export function ResetPasswordPage() {
                   type={showPw ? "text" : "password"}
                   value={password}
                   onChange={setPassword}
-                  placeholder="••••••••"
+                  placeholder="Min. 12 characters"
                   icon={<IconLock />}
                   autoComplete="new-password"
                   required
-                  minLength={8}
+                  minLength={12}
                   suffix={
                     <button
                       type="button"
@@ -294,11 +294,11 @@ export function ResetPasswordPage() {
                   type={showPw ? "text" : "password"}
                   value={confirmPassword}
                   onChange={setConfirmPassword}
-                  placeholder="••••••••"
+                  placeholder="Min. 12 characters"
                   icon={<IconLock />}
                   autoComplete="new-password"
                   required
-                  minLength={8}
+                  minLength={12}
                 />
 
                 {error && (

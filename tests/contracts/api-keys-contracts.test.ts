@@ -15,9 +15,9 @@ import { expect, test } from "../test-kit";
 
 test("create API key returns a one-time raw key (201)", async () => {
   const client = createTestClient();
-  const { tenantId, organizationId } = await client.createTenantOrg();
+  const { organizationId } = await client.createTenantOrg();
 
-  const res = await client.createApiKey(tenantId, organizationId, {
+  const res = await client.createApiKey(organizationId, {
     name: "CI Test Key",
     scopes: ["assessment:read"],
   });
@@ -32,37 +32,43 @@ test("create API key returns a one-time raw key (201)", async () => {
 
 test("created key appears in the list (masked)", async () => {
   const client = createTestClient();
-  const { tenantId, organizationId } = await client.createTenantOrg();
+  const { organizationId } = await client.createTenantOrg();
 
-  const created = await client.createApiKey(tenantId, organizationId, {
+  const created = await client.createApiKey(organizationId, {
     name: "Listed Key",
     scopes: ["assessment:read"],
   });
   const keyId = created.body.data.id as string;
 
-  const list = await client.listApiKeys(tenantId, organizationId);
+  const list = await client.listApiKeys(organizationId);
   expect(list.response.status).toBe(200);
-  const found = (list.body.data as Array<{ id: string }>).some((k) => k.id === keyId);
+  const found = (list.body.data as Array<{ id: string }>).some(
+    (k) => k.id === keyId,
+  );
   expect(found).toBe(true);
 });
 
 test("revoke flips the key status to revoked", async () => {
   const client = createTestClient();
-  const { tenantId, organizationId } = await client.createTenantOrg();
+  const { organizationId } = await client.createTenantOrg();
 
-  const created = await client.createApiKey(tenantId, organizationId, {
+  const created = await client.createApiKey(organizationId, {
     name: "Revoke Me",
     scopes: ["assessment:read"],
   });
   const keyId = created.body.data.id as string;
 
-  const revoke = await client.revokeApiKey(tenantId, organizationId, keyId);
+  const revoke = await client.revokeApiKey(organizationId, keyId);
   expect(revoke.response.status).toBe(200);
 
-  const list = await client.listApiKeys(tenantId, organizationId);
-  const row = (list.body.data as Array<{ id: string; status?: string; revokedAt?: string | null }>).find(
-    (k) => k.id === keyId,
-  );
+  const list = await client.listApiKeys(organizationId);
+  const row = (
+    list.body.data as Array<{
+      id: string;
+      status?: string;
+      revokedAt?: string | null;
+    }>
+  ).find((k) => k.id === keyId);
   expect(row).toBeDefined();
   // Either an explicit status or a revokedAt timestamp marks it revoked.
   const isRevoked = row!.status === "revoked" || Boolean(row!.revokedAt);
@@ -74,21 +80,28 @@ test("[SECURITY] keys are isolated per tenant", async () => {
   const a = await client.createTenantOrg();
   const b = await client.createTenantOrg();
 
-  const created = await client.createApiKey(a.tenantId, a.organizationId, {
+  const created = await client.createApiKey(a.organizationId, {
     name: "Tenant A Key",
     scopes: ["assessment:read"],
   });
   expect(created.response.status).toBe(201);
 
   // Tenant B trying to list Tenant A's org keys must not see them.
-  const crossList = await client.listApiKeys(b.tenantId, a.organizationId);
+  const crossList = await client.send(
+    `/api/v1/organizations/${a.organizationId}/api-keys`,
+    "GET",
+    undefined,
+    client.authHeaders(b.organizationId),
+  );
   // Acceptable: 403 (forbidden) or 200 with no Tenant A keys leaked.
   if (crossList.response.status === 200) {
     const leaked = (crossList.body.data as Array<{ id: string }>).some(
       (k) => k.id === created.body.data.id,
     );
     if (leaked) {
-      throw new Error("CRITICAL: Tenant B listed Tenant A's API keys — cross-tenant leakage!");
+      throw new Error(
+        "CRITICAL: Tenant B listed Tenant A's API keys — cross-tenant leakage!",
+      );
     }
   } else {
     expect(crossList.response.status).toBe(403);
@@ -97,13 +110,16 @@ test("[SECURITY] keys are isolated per tenant", async () => {
 
 test("[RBAC] a read-only role cannot mint API keys", async () => {
   const client = createTestClient();
-  const { tenantId, organizationId } = await client.createTenantOrg();
+  const { organizationId } = await client.createTenantOrg();
 
   const res = await client.send(
     `/api/v1/organizations/${organizationId}/api-keys`,
     "POST",
     { name: "Should Fail", scopes: ["assessment:read"] },
-    { ...client.authHeaders(tenantId, "auditor_readonly") },
+    {
+      ...client.authHeaders(organizationId, "auditor_readonly"),
+      authorization: "Bearer dev:auditor_readonly",
+    },
   );
 
   expect(res.response.status).toBe(403);

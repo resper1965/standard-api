@@ -95,7 +95,7 @@ export function CreateUserDialog({ open, onOpenChange, onCreated }: CreateUserDi
           <div className="space-y-2">
             <Label htmlFor="create-password">Password</Label>
             <div className="relative">
-              <Input id="create-password" type={showPassword ? "text" : "password"} required minLength={8} value={createPassword} onChange={(e) => setCreatePassword(e.target.value)} placeholder="Min. 8 characters" className="pr-10" />
+              <Input id="create-password" type={showPassword ? "text" : "password"} required minLength={12} value={createPassword} onChange={(e) => setCreatePassword(e.target.value)} placeholder="Min. 12 characters" className="pr-10" />
               <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer" tabIndex={-1}>
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>

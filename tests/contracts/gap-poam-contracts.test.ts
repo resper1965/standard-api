@@ -5,27 +5,32 @@ import { expect, test } from "../test-kit";
 
 test("gap analysis endpoint requires assessment context", async () => {
   const client = createTestClient();
-  const { tenantId, assessmentId } = await client.createAssessment();
+  const { organizationId, assessmentId } = await client.createAssessment();
   const result = await client.send(
     `/api/v1/assessments/${assessmentId}/gap-analysis`,
     "GET",
     undefined,
     {
-      "x-standard-tenant-id": tenantId,
+      "x-standard-tenant-id": organizationId,
       "x-standard-actor-id": ids.actorId,
-      authorization: "Bearer dev:admin",
-    }
+      authorization: "Bearer dev:organization_admin",
+    },
   );
   // Should return 200 (possibly empty array), 500/501 if not yet wired
   const validStatuses = [200, 500, 501];
   if (!validStatuses.includes(result.response.status)) {
-    throw new Error(`Expected 200, 500 or 501 for gap analysis, got ${result.response.status}`);
+    throw new Error(
+      `Expected 200, 500 or 501 for gap analysis, got ${result.response.status}`,
+    );
   }
 });
 
 test("gap analysis requires authentication", async () => {
   const client = createTestClient();
-  const result = await client.send("/api/v1/assessments/fake-id/gap-analysis", "GET");
+  const result = await client.send(
+    "/api/v1/assessments/fake-id/gap-analysis",
+    "GET",
+  );
   expect(result.response.status).toBe(401);
 });
 
@@ -33,20 +38,22 @@ test("gap analysis requires authentication", async () => {
 
 test("POA&M endpoint requires assessment context", async () => {
   const client = createTestClient();
-  const { tenantId, assessmentId } = await client.createAssessment();
+  const { organizationId, assessmentId } = await client.createAssessment();
   const result = await client.send(
     `/api/v1/assessments/${assessmentId}/poam`,
     "GET",
     undefined,
     {
-      "x-standard-tenant-id": tenantId,
+      "x-standard-tenant-id": organizationId,
       "x-standard-actor-id": ids.actorId,
-      authorization: "Bearer dev:admin",
-    }
+      authorization: "Bearer dev:organization_admin",
+    },
   );
   const validStatuses = [200, 500, 501];
   if (!validStatuses.includes(result.response.status)) {
-    throw new Error(`Expected 200, 500 or 501 for POA&M, got ${result.response.status}`);
+    throw new Error(
+      `Expected 200, 500 or 501 for POA&M, got ${result.response.status}`,
+    );
   }
 });
 
@@ -69,6 +76,9 @@ test("POA&M error contract follows standard shape", async () => {
 
 test("reporting endpoint requires authentication and tenant", async () => {
   const client = createTestClient();
-  const result = await client.send("/api/v1/assessments/fake-id/reports", "GET");
+  const result = await client.send(
+    "/api/v1/assessments/fake-id/reports",
+    "GET",
+  );
   expect(result.response.status).toBe(401);
 });
