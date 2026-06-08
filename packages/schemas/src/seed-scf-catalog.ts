@@ -286,6 +286,109 @@ async function main() {
         const newControlId = controlOldToNew.get(m.scf_control_id);
         if (newControlId) m.scf_control_id = newControlId;
       }
+
+      // 5. Remap risk IDs to existing DB risk IDs
+      const existingRisks = await db
+        .select({
+          id: schema.scfRisks.id,
+          code: schema.scfRisks.riskCode,
+        })
+        .from(schema.scfRisks)
+        .where(eq(schema.scfRisks.scfVersionId, existingVersionId));
+
+      const riskCodeToExistingId = new Map(
+        existingRisks.map((r) => [r.code.toUpperCase(), r.id]),
+      );
+      const riskOldToNew = new Map<string, string>();
+
+      if (ds.risks) {
+        for (const r of ds.risks) {
+          r.scf_version_id = existingVersionId;
+          const existingId = riskCodeToExistingId.get(
+            r.risk_code.toUpperCase(),
+          );
+          if (existingId) {
+            riskOldToNew.set(r.id, existingId);
+            r.id = existingId;
+          }
+        }
+      }
+
+      // 6. Remap threat IDs to existing DB threat IDs
+      const existingThreats = await db
+        .select({
+          id: schema.scfThreats.id,
+          code: schema.scfThreats.threatCode,
+        })
+        .from(schema.scfThreats)
+        .where(eq(schema.scfThreats.scfVersionId, existingVersionId));
+
+      const threatCodeToExistingId = new Map(
+        existingThreats.map((t) => [t.code.toUpperCase(), t.id]),
+      );
+      const threatOldToNew = new Map<string, string>();
+
+      if (ds.threats) {
+        for (const t of ds.threats) {
+          t.scf_version_id = existingVersionId;
+          const existingId = threatCodeToExistingId.get(
+            t.threat_code.toUpperCase(),
+          );
+          if (existingId) {
+            threatOldToNew.set(t.id, existingId);
+            t.id = existingId;
+          }
+        }
+      }
+
+      // 7. Remap Assessment Objectives FKs
+      if (ds.assessmentObjectives) {
+        for (const ao of ds.assessmentObjectives) {
+          ao.scf_version_id = existingVersionId;
+          const newControlId = controlOldToNew.get(ao.scf_control_id);
+          if (newControlId) ao.scf_control_id = newControlId;
+        }
+      }
+
+      // 8. Remap Evidence Requests FKs
+      if (ds.evidenceRequests) {
+        for (const er of ds.evidenceRequests) {
+          er.scf_version_id = existingVersionId;
+          const newControlId = controlOldToNew.get(er.scf_control_id);
+          if (newControlId) er.scf_control_id = newControlId;
+        }
+      }
+
+      // 9. Remap Maturity Criteria FKs
+      if (ds.maturityCriteria) {
+        for (const mc of ds.maturityCriteria) {
+          mc.scf_version_id = existingVersionId;
+          const newControlId = controlOldToNew.get(mc.scf_control_id);
+          if (newControlId) mc.scf_control_id = newControlId;
+        }
+      }
+
+      // 10. Remap Risk Control Mappings FKs
+      if (ds.riskControlMappings) {
+        for (const rcm of ds.riskControlMappings) {
+          rcm.scf_version_id = existingVersionId;
+          const newControlId = controlOldToNew.get(rcm.scf_control_id);
+          if (newControlId) rcm.scf_control_id = newControlId;
+          const newRiskId = riskOldToNew.get(rcm.scf_risk_id);
+          if (newRiskId) rcm.scf_risk_id = newRiskId;
+        }
+      }
+
+      // 11. Remap Threat Control Mappings FKs
+      if (ds.threatControlMappings) {
+        for (const tcm of ds.threatControlMappings) {
+          tcm.scf_version_id = existingVersionId;
+          const newControlId = controlOldToNew.get(tcm.scf_control_id);
+          if (newControlId) tcm.scf_control_id = newControlId;
+          const newThreatId = threatOldToNew.get(tcm.scf_threat_id);
+          if (newThreatId) tcm.scf_threat_id = newThreatId;
+        }
+      }
     }
 
     console.log("     Starting upsert...");
