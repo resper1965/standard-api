@@ -7,7 +7,7 @@ test("SCF versions endpoint returns array", async () => {
   const client = createTestClient();
   const result = await client.send("/api/v1/scf/versions", "GET", undefined, {
     "x-standard-actor-id": ids.actorId,
-    authorization: "Bearer dev:admin",
+    authorization: "Bearer dev:platform_admin",
   });
   expect(result.response.status).toBe(200);
   const versions = result.body.data ?? result.body;
@@ -20,7 +20,7 @@ test("SCF controls endpoint returns controls with control_code pattern", async (
   const client = createTestClient();
   const result = await client.send("/api/v1/scf/controls", "GET", undefined, {
     "x-standard-actor-id": ids.actorId,
-    authorization: "Bearer dev:admin",
+    authorization: "Bearer dev:platform_admin",
   });
   if (result.response.status === 200) {
     const controls = result.body.data ?? result.body;
@@ -32,7 +32,9 @@ test("SCF controls endpoint returns controls with control_code pattern", async (
       // Control codes follow pattern: UPPERCASE-DIGITS (e.g., GOV-01, IAC-12)
       const pattern = /^[A-Z]{2,10}-\d+/;
       if (!pattern.test(first.control_code)) {
-        throw new Error(`Expected control_code to match pattern XX-NN, got: ${first.control_code}`);
+        throw new Error(
+          `Expected control_code to match pattern XX-NN, got: ${first.control_code}`,
+        );
       }
     }
   }
@@ -42,7 +44,7 @@ test("SCF domains endpoint returns domain list", async () => {
   const client = createTestClient();
   const result = await client.send("/api/v1/scf/domains", "GET", undefined, {
     "x-standard-actor-id": ids.actorId,
-    authorization: "Bearer dev:admin",
+    authorization: "Bearer dev:platform_admin",
   });
   if (result.response.status === 200) {
     const domains = result.body.data ?? result.body;
@@ -57,7 +59,7 @@ test("SCF endpoints are public (no tenant required)", async () => {
   // SCF routes should NOT require tenant context — they are catalog data
   const result = await client.send("/api/v1/scf/versions", "GET", undefined, {
     "x-standard-actor-id": ids.actorId,
-    authorization: "Bearer dev:admin",
+    authorization: "Bearer dev:platform_admin",
   });
   // Should not return 403 for missing tenant
   if (result.response.status === 403) {

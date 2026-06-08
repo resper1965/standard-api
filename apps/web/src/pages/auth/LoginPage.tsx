@@ -482,11 +482,11 @@ export function LoginPage() {
                 type={showPw ? "text" : "password"}
                 value={password}
                 onChange={setPassword}
-                placeholder="••••••••"
+                placeholder={isLogin ? "••••••••" : "Min. 12 characters"}
                 icon={<IconLock />}
                 autoComplete={isLogin ? "current-password" : "new-password"}
                 required
-                minLength={8}
+                minLength={isLogin ? undefined : 12}
                 suffix={
                   <button
                     type="button"

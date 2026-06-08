@@ -9,7 +9,7 @@ import type {
   AssessmentLifecycleEvent,
   AssessmentSnapshot,
   ApprovalEvent,
-  ApprovalGate
+  ApprovalGate,
 } from "@standard/assessment-engine";
 import type { DocumentIngestionServiceDependencies } from "@standard/document-ingestion";
 import type { GapAnalysisDependencies } from "@standard/gap-analysis";
@@ -17,7 +17,11 @@ import type { KbServiceDependencies } from "@standard/kb";
 import type { PoamDependencies } from "@standard/poam";
 import type { ReportingDependencies } from "@standard/reporting";
 import type { ScfCoreServices } from "@standard/scf-core";
-import type { AuthContext, Permission, SecurityTenantContext } from "@standard/security";
+import type {
+  AuthContext,
+  Permission,
+  SecurityTenantContext,
+} from "@standard/security";
 import type { SoaDependencies } from "@standard/soa";
 import type { PrivacyDependencies } from "@standard/privacy";
 import type { WorkflowDependencies } from "@standard/workflows";
@@ -64,7 +68,11 @@ export type ApprovalRecord = ApprovalEvent & {
 };
 
 export interface TenantScopedAssessmentRepository {
-  create(input: Omit<AssessmentRecord, "snapshot" | "organization_id"> & { documentCount: number }): Promise<AssessmentRecord>;
+  create(
+    input: Omit<AssessmentRecord, "snapshot" | "organization_id"> & {
+      documentCount: number;
+    },
+  ): Promise<AssessmentRecord>;
   get(assessmentId: string): Promise<AssessmentRecord | null>;
   listByOrganization(organizationId: string): Promise<AssessmentRecord[]>;
   listAll(): Promise<AssessmentRecord[]>;
@@ -72,8 +80,13 @@ export interface TenantScopedAssessmentRepository {
 }
 
 export type AssessmentRepositoryAdapter = {
-  create(input: Omit<AssessmentRecord, "snapshot"> & { documentCount: number }): Promise<AssessmentRecord>;
-  get(assessmentId: string, organizationId: string): Promise<AssessmentRecord | null>;
+  create(
+    input: Omit<AssessmentRecord, "snapshot"> & { documentCount: number },
+  ): Promise<AssessmentRecord>;
+  get(
+    assessmentId: string,
+    organizationId: string,
+  ): Promise<AssessmentRecord | null>;
   listByOrganization(organizationId: string): Promise<AssessmentRecord[]>;
   listAll(organizationId: string): Promise<AssessmentRecord[]>;
   save(record: AssessmentRecord): Promise<void>;
@@ -113,32 +126,69 @@ export type ApiKeyCreateInput = {
 export type ApiKeysRepositoryAdapter = {
   create(input: ApiKeyCreateInput): Promise<ApiKeyRecord>;
   getById(id: string, organizationId: string): Promise<ApiKeyRecord | null>;
-  update(id: string, organizationId: string, patch: { name?: string; expiresAt?: Date | null; scopes?: string[] }): Promise<ApiKeyRecord | null>;
+  update(
+    id: string,
+    organizationId: string,
+    patch: { name?: string; expiresAt?: Date | null; scopes?: string[] },
+  ): Promise<ApiKeyRecord | null>;
   verifyKey(keyHash: string): Promise<ApiKeyRecord | null>;
   markUsed(id: string): Promise<void>;
   revokeKey(id: string, organizationId: string): Promise<boolean>;
-  scheduleRevocation(id: string, organizationId: string, revokeAt: Date, rotatedToKeyId: string): Promise<boolean>;
-  listByOrganization(organizationId: string, activeOnly?: boolean): Promise<ApiKeyRecord[]>;
+  scheduleRevocation(
+    id: string,
+    organizationId: string,
+    revokeAt: Date,
+    rotatedToKeyId: string,
+  ): Promise<boolean>;
+  listByOrganization(
+    organizationId: string,
+    activeOnly?: boolean,
+  ): Promise<ApiKeyRecord[]>;
 };
 
 export type TenantRepositoryAdapter = {
-  create(input: Omit<TenantRecord, "organization_id" | "status">): Promise<TenantRecord>;
+  create(
+    input: Omit<TenantRecord, "organization_id" | "status">,
+  ): Promise<TenantRecord>;
   get(organizationId: string): Promise<TenantRecord | null>;
-  update(organizationId: string, patch: Partial<Pick<TenantRecord, "name" | "status">>): Promise<TenantRecord | null>;
+  update(
+    organizationId: string,
+    patch: Partial<Pick<TenantRecord, "name" | "status">>,
+  ): Promise<TenantRecord | null>;
 };
 
 export interface TenantScopedOrganizationRepository {
-  create(input: Omit<OrganizationRecord, "organization_id" | "status" | "organization_id" | "billing_tier">): Promise<OrganizationRecord>;
+  create(
+    input: Omit<
+      OrganizationRecord,
+      "organization_id" | "status" | "organization_id" | "billing_tier"
+    >,
+  ): Promise<OrganizationRecord>;
   get(organizationId: string): Promise<OrganizationRecord | null>;
   list(): Promise<OrganizationRecord[]>;
-  update(organizationId: string, patch: Partial<Pick<OrganizationRecord, "name" | "slug" | "status" | "billing_tier">>): Promise<OrganizationRecord | null>;
+  update(
+    organizationId: string,
+    patch: Partial<
+      Pick<OrganizationRecord, "name" | "slug" | "status" | "billing_tier">
+    >,
+  ): Promise<OrganizationRecord | null>;
 }
 
 export type OrganizationRepositoryAdapter = {
-  create(input: Omit<OrganizationRecord, "organization_id" | "status" | "billing_tier">): Promise<OrganizationRecord>;
+  create(
+    input: Omit<
+      OrganizationRecord,
+      "organization_id" | "status" | "billing_tier"
+    >,
+  ): Promise<OrganizationRecord>;
   get(organizationId: string): Promise<OrganizationRecord | null>;
   listByTenant(organizationId: string): Promise<OrganizationRecord[]>;
-  update(organizationId: string, patch: Partial<Pick<OrganizationRecord, "name" | "slug" | "status" | "billing_tier">>): Promise<OrganizationRecord | null>;
+  update(
+    organizationId: string,
+    patch: Partial<
+      Pick<OrganizationRecord, "name" | "slug" | "status" | "billing_tier">
+    >,
+  ): Promise<OrganizationRecord | null>;
   /** Strict tenant-scoped data access pattern */
   withOrganization(organizationId: string): TenantScopedOrganizationRepository;
 };
@@ -146,30 +196,49 @@ export type OrganizationRepositoryAdapter = {
 export interface TenantScopedApprovalRepository {
   create(input: ApprovalRecord): Promise<ApprovalRecord>;
   get(approvalId: string): Promise<ApprovalRecord | null>;
-  getForGate(approvalId: string, gate: ApprovalGate): Promise<ApprovalEvent | null>;
+  getForGate(
+    approvalId: string,
+    gate: ApprovalGate,
+  ): Promise<ApprovalEvent | null>;
   listByAssessment(assessmentId: string): Promise<ApprovalRecord[]>;
 }
 
 export type ApprovalRepositoryAdapter = {
   create(input: ApprovalRecord): Promise<ApprovalRecord>;
   get(approvalId: string): Promise<ApprovalRecord | null>;
-  getForGate(approvalId: string, gate: ApprovalGate): Promise<ApprovalEvent | null>;
-  listByAssessment(assessmentId: string, organizationId: string): Promise<ApprovalRecord[]>;
+  getForGate(
+    approvalId: string,
+    gate: ApprovalGate,
+  ): Promise<ApprovalEvent | null>;
+  listByAssessment(
+    assessmentId: string,
+    organizationId: string,
+  ): Promise<ApprovalRecord[]>;
   withOrganization(organizationId: string): TenantScopedApprovalRepository;
 };
 
 export interface TenantScopedArtifactRepository {
-  create(input: Omit<ArtifactVersion, "versionNumber" | "status">): Promise<ArtifactVersion>;
+  create(
+    input: Omit<ArtifactVersion, "versionNumber" | "status">,
+  ): Promise<ArtifactVersion>;
   get(versionId: string): Promise<ArtifactVersion | null>;
   save(version: ArtifactVersion): Promise<void>;
-  listByAssessment(assessmentId: string, artifactType: ArtifactType): Promise<ArtifactVersion[]>;
+  listByAssessment(
+    assessmentId: string,
+    artifactType: ArtifactType,
+  ): Promise<ArtifactVersion[]>;
 }
 
 export type ArtifactRepositoryAdapter = {
-  create(input: Omit<ArtifactVersion, "versionNumber" | "status">): Promise<ArtifactVersion>;
+  create(
+    input: Omit<ArtifactVersion, "versionNumber" | "status">,
+  ): Promise<ArtifactVersion>;
   get(versionId: string): Promise<ArtifactVersion | null>;
   save(version: ArtifactVersion): Promise<void>;
-  listByAssessment(assessmentId: string, artifactType: ArtifactType): Promise<ArtifactVersion[]>;
+  listByAssessment(
+    assessmentId: string,
+    artifactType: ArtifactType,
+  ): Promise<ArtifactVersion[]>;
   withOrganization(organizationId: string): TenantScopedArtifactRepository;
 };
 
@@ -180,8 +249,13 @@ export interface TenantScopedLifecycleEventRepository {
 
 export type LifecycleEventRepositoryAdapter = {
   record(event: AssessmentLifecycleEvent): Promise<void>;
-  listByAssessment(assessmentId: string, organizationId: string): Promise<AssessmentLifecycleEvent[]>;
-  withOrganization(organizationId: string): TenantScopedLifecycleEventRepository;
+  listByAssessment(
+    assessmentId: string,
+    organizationId: string,
+  ): Promise<AssessmentLifecycleEvent[]>;
+  withOrganization(
+    organizationId: string,
+  ): TenantScopedLifecycleEventRepository;
 };
 
 export type AuditRepositoryAdapter = {
@@ -223,11 +297,19 @@ export type AppDependencies = {
   /** Webhook endpoint management (optional — requires storage adapter) */
   webhooks?: WebhookRepositoryAdapter | undefined;
   /** READ-ONLY: resolves Standard Native Auth org ID → Standard domain UUIDs. Returns null if not provisioned. */
-  resolveOrganizationContext?: (standardAuthOrgId: string) => Promise<ResolvedTenantContext | null>;
+  resolveOrganizationContext?: (
+    standardAuthOrgId: string,
+  ) => Promise<ResolvedTenantContext | null>;
   /** Explicit provisioning: resolves and creates domain tenant/org if missing. Call only at deliberate provisioning points. */
-  provisionOrganizationContext?: (standardAuthOrgId: string) => Promise<ResolvedTenantContext>;
+  provisionOrganizationContext?: (
+    standardAuthOrgId: string,
+  ) => Promise<ResolvedTenantContext>;
   /** Resolves Standard Native Auth user email → Standard domain users UUID (JIT provisioning) */
-  resolveUserContext?: (email: string, displayName: string) => Promise<{ id: string }>;
+  resolveUserContext?: (
+    email: string,
+    displayName: string,
+    identityProviderSubject?: string,
+  ) => Promise<{ id: string }>;
   /** Bans/flags a user for deletion via Standard Native Auth admin API (optional — delegates to cachedAuth) */
   banUser?: (userId: string, reason?: string) => Promise<void>;
   /** Raw Drizzle DB client — internal escape hatch for admin routes that query auth tables directly.
@@ -288,10 +370,14 @@ export type RequestContext = {
    * Use `tenantScope.scopeWhere(table.organizationId)` for SELECTs.
    * Use `tenantScope.scopeInsert(values)` for INSERTs.
    * Undefined for unauthenticated/admin/cross-tenant routes. */
-  tenantScope?: import("./middleware/tenant-db.middleware").TenantScope | undefined;
+  tenantScope?:
+    | import("./middleware/tenant-db.middleware").TenantScope
+    | undefined;
 };
 
-export type RouteHandler = (context: RequestContext) => Promise<Response> | Response;
+export type RouteHandler = (
+  context: RequestContext,
+) => Promise<Response> | Response;
 
 export type RouteDefinition = {
   method: string;
@@ -315,13 +401,16 @@ export const json = (body: unknown, init: ResponseInit = {}): Response =>
     ...init,
     headers: {
       "content-type": "application/json; charset=utf-8",
-      ...init.headers
-    }
+      ...init.headers,
+    },
   });
 
 const MAX_JSON_BODY_BYTES = 1_048_576; // 1 MB
 
-export const parseJson = async <T extends z.ZodType>(request: Request, schema: T): Promise<z.infer<T>> => {
+export const parseJson = async <T extends z.ZodType>(
+  request: Request,
+  schema: T,
+): Promise<z.infer<T>> => {
   const contentLength = request.headers.get("content-length");
   if (contentLength && parseInt(contentLength, 10) > MAX_JSON_BODY_BYTES) {
     throw new ApiError("VALIDATION_ERROR", "Request body too large.", 413);
@@ -337,24 +426,45 @@ export const parseJson = async <T extends z.ZodType>(request: Request, schema: T
 
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
-    throw new ApiError("VALIDATION_ERROR", "Invalid request body.", 400, parsed.error.issues);
+    throw new ApiError(
+      "VALIDATION_ERROR",
+      "Invalid request body.",
+      400,
+      parsed.error.issues,
+    );
   }
 
   return parsed.data;
 };
 
-export const routeParam = (params: Record<string, string>, name: string): string => {
+export const routeParam = (
+  params: Record<string, string>,
+  name: string,
+): string => {
   const value = params[name];
-  if (!value) throw new ApiError("VALIDATION_ERROR", `Missing route parameter: ${name}.`, 400);
+  if (!value)
+    throw new ApiError(
+      "VALIDATION_ERROR",
+      `Missing route parameter: ${name}.`,
+      400,
+    );
   return value;
 };
 
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export const routeUuidParam = (params: Record<string, string>, name: string): string => {
+export const routeUuidParam = (
+  params: Record<string, string>,
+  name: string,
+): string => {
   const value = routeParam(params, name);
   if (!UUID_REGEX.test(value)) {
-    throw new ApiError("VALIDATION_ERROR", `Invalid UUID format for parameter: ${name}.`, 400);
+    throw new ApiError(
+      "VALIDATION_ERROR",
+      `Invalid UUID format for parameter: ${name}.`,
+      400,
+    );
   }
   return value;
 };
@@ -365,10 +475,15 @@ export const newId = (): string => crypto.randomUUID();
  * Safely extract organization_id from context — replaces `organizationId!`.
  * Throws ORGANIZATION_REQUIRED (403) if org context was not resolved. (A2 fix)
  */
-export const requireOrganizationId = (ctx: Pick<RequestContext, "organizationId">): string => {
+export const requireOrganizationId = (
+  ctx: Pick<RequestContext, "organizationId">,
+): string => {
   if (!ctx.organizationId) {
-    throw new ApiError("ORGANIZATION_REQUIRED", "Organization context is required for this operation.", 403);
+    throw new ApiError(
+      "ORGANIZATION_REQUIRED",
+      "Organization context is required for this operation.",
+      403,
+    );
   }
   return ctx.organizationId;
 };
-

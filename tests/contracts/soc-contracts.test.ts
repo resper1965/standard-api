@@ -5,16 +5,22 @@ import { expect, test } from "../test-kit";
 
 test("SOC triage with asyncCall returns 202 Accepted", async () => {
   const client = createTestClient();
-  const { tenantId } = await client.createTenantOrg();
-  const result = await client.send("/api/v1/soc/triage-incident", "POST", {
-    systemModuleName: "waf-edge-firewall",
-    rawLogsExcerpt: "2026-05-12T10:00:00Z BLOCK src=192.168.1.100 dst=10.0.0.1 rule=SQL_INJECTION",
-    asyncCall: true,
-  }, {
-    "x-standard-tenant-id": tenantId,
-    "x-standard-actor-id": ids.actorId,
-    authorization: "Bearer dev:admin",
-  });
+  const { organizationId } = await client.createTenantOrg();
+  const result = await client.send(
+    "/api/v1/soc/triage-incident",
+    "POST",
+    {
+      systemModuleName: "waf-edge-firewall",
+      rawLogsExcerpt:
+        "2026-05-12T10:00:00Z BLOCK src=192.168.1.100 dst=10.0.0.1 rule=SQL_INJECTION",
+      asyncCall: true,
+    },
+    {
+      "x-standard-tenant-id": organizationId,
+      "x-standard-actor-id": ids.actorId,
+      authorization: "Bearer dev:organization_admin",
+    },
+  );
   expect(result.response.status).toBe(202);
   expect(result.body.job_id).toBeDefined();
   expect(result.body.message).toBeDefined();
@@ -22,15 +28,20 @@ test("SOC triage with asyncCall returns 202 Accepted", async () => {
 
 test("SOC triage without asyncCall returns 200 with triage result", async () => {
   const client = createTestClient();
-  const { tenantId } = await client.createTenantOrg();
-  const result = await client.send("/api/v1/soc/triage-incident", "POST", {
-    systemModuleName: "endpoint-detection",
-    rawLogsExcerpt: "INFO healthcheck OK",
-  }, {
-    "x-standard-tenant-id": tenantId,
-    "x-standard-actor-id": ids.actorId,
-    authorization: "Bearer dev:admin",
-  });
+  const { organizationId } = await client.createTenantOrg();
+  const result = await client.send(
+    "/api/v1/soc/triage-incident",
+    "POST",
+    {
+      systemModuleName: "endpoint-detection",
+      rawLogsExcerpt: "INFO healthcheck OK",
+    },
+    {
+      "x-standard-tenant-id": organizationId,
+      "x-standard-actor-id": ids.actorId,
+      authorization: "Bearer dev:organization_admin",
+    },
+  );
   // Sync mode should return 200 (or 501 if LLM not configured, or 500 if provider throws)
   const validStatuses = [200, 500, 501];
   if (!validStatuses.includes(result.response.status)) {
