@@ -29,12 +29,13 @@ import { resolveAllowedOrigins } from "./app-helpers";
  * routes are never reached. This in-memory limiter runs inline,
  * AFTER the CORS preflight check but BEFORE `cachedAuth.handler()`.
  */
-const AUTH_RATE_LIMITS: Record<string, { max: number; windowSeconds: number }> = {
-  '/api/auth/sign-in': { max: 10, windowSeconds: 60 },
-  '/api/auth/sign-up': { max: 5, windowSeconds: 60 },
-  '/api/auth/forgot-password': { max: 3, windowSeconds: 60 },
-  '/api/auth/reset-password': { max: 5, windowSeconds: 60 },
-};
+const AUTH_RATE_LIMITS: Record<string, { max: number; windowSeconds: number }> =
+  {
+    "/api/auth/sign-in": { max: 10, windowSeconds: 60 },
+    "/api/auth/sign-up": { max: 5, windowSeconds: 60 },
+    "/api/auth/forgot-password": { max: 3, windowSeconds: 60 },
+    "/api/auth/reset-password": { max: 5, windowSeconds: 60 },
+  };
 const AUTH_RATE_DEFAULT = { max: 30, windowSeconds: 60 };
 
 /** Module-level sliding-window state for auth rate limiting. */
@@ -44,11 +45,14 @@ const authRateState = new Map<string, { count: number; resetAt: number }>();
  * Checks the in-memory auth rate limiter and returns a 429 Response
  * if the client has exceeded the limit, or `null` to proceed.
  */
-function checkAuthRateLimit(request: Request, pathname: string): Response | null {
+function checkAuthRateLimit(
+  request: Request,
+  pathname: string,
+): Response | null {
   const ip =
-    request.headers.get('cf-connecting-ip') ||
-    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-    'unknown';
+    request.headers.get("cf-connecting-ip") ||
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    "unknown";
 
   // Match the most specific path first
   const matchedPath = Object.keys(AUTH_RATE_LIMITS).find((p) =>
@@ -58,7 +62,7 @@ function checkAuthRateLimit(request: Request, pathname: string): Response | null
     ? AUTH_RATE_LIMITS[matchedPath]!
     : AUTH_RATE_DEFAULT;
 
-  const key = `${ip}:${matchedPath ?? '/api/auth/*'}`;
+  const key = `${ip}:${matchedPath ?? "/api/auth/*"}`;
   const now = Date.now();
 
   // Simple GC: purge expired entries on each check
@@ -79,8 +83,8 @@ function checkAuthRateLimit(request: Request, pathname: string): Response | null
   if (entry.count > max) {
     return Response.json(
       {
-        error: 'TOO_MANY_REQUESTS',
-        message: 'Rate limit exceeded. Try again later.',
+        error: "TOO_MANY_REQUESTS",
+        message: "Rate limit exceeded. Try again later.",
         retry_after_seconds: windowSeconds,
       },
       { status: 429 },
@@ -89,7 +93,6 @@ function checkAuthRateLimit(request: Request, pathname: string): Response | null
 
   return null;
 }
-
 
 // ── Module-level cached singletons ──────────────────────────────
 let cachedDeps: AppDependencies | undefined;
@@ -115,7 +118,9 @@ export function getCachedAuth(): StandardAuth | null {
 /** Expected shape of Better Auth's admin API (not yet exported by @standard/auth) */
 type BetterAuthAdminApi = {
   api: {
-    banUser?: (opts: { body: { userId: string; banReason: string } }) => Promise<unknown>;
+    banUser?: (opts: {
+      body: { userId: string; banReason: string };
+    }) => Promise<unknown>;
   };
 };
 
@@ -125,8 +130,10 @@ function createBanUser(): (userId: string, reason?: string) => Promise<void> {
     if (!auth) return;
 
     const adminAuth = auth as unknown as BetterAuthAdminApi;
-    if (typeof adminAuth.api?.banUser !== 'function') {
-      console.warn('[standard:banUser] banUser API not available on this auth instance');
+    if (typeof adminAuth.api?.banUser !== "function") {
+      console.warn(
+        "[standard:banUser] banUser API not available on this auth instance",
+      );
       return;
     }
 
@@ -134,11 +141,14 @@ function createBanUser(): (userId: string, reason?: string) => Promise<void> {
       await adminAuth.api.banUser({
         body: {
           userId,
-          banReason: reason ?? 'User-initiated account deletion (LGPD art. 18)',
+          banReason: reason ?? "User-initiated account deletion (LGPD art. 18)",
         },
       });
     } catch (err) {
-      console.warn('[standard:banUser] Standard Native Auth banUser failed:', err instanceof Error ? err.message : String(err));
+      console.warn(
+        "[standard:banUser] Standard Native Auth banUser failed:",
+        err instanceof Error ? err.message : String(err),
+      );
     }
   };
 }
@@ -147,8 +157,11 @@ function createBanUser(): (userId: string, reason?: string) => Promise<void> {
  * Builds `AppDependencies` backed by a real database.
  * Extracted to reduce nesting inside the initialization block.
  */
-function buildDrizzleDeps(env: Env): { deps: AppDependencies; auth: StandardAuth } {
-  const db = createDb(env.DATABASE_URL!);
+function buildDrizzleDeps(env: Env): {
+  deps: AppDependencies;
+  auth: StandardAuth;
+} {
+  const db = createDb(env.DATABASE_URL!, env.HYPERDRIVE);
 
   const deps: AppDependencies = {
     ...createDrizzleRepositories(db, env),
@@ -165,25 +178,34 @@ function buildDrizzleDeps(env: Env): { deps: AppDependencies; auth: StandardAuth
   };
 
   // Initialize Standard Native Auth — self-hosted, no JWKS dependency
-  const auth = createAuth({
-    DATABASE_URL: env.DATABASE_URL!,
-    BETTER_AUTH_SECRET: env.BETTER_AUTH_SECRET,
-    ...(env.BETTER_AUTH_URL !== undefined ? { BETTER_AUTH_URL: env.BETTER_AUTH_URL } : {}),
-    ...(env.ALLOWED_ORIGINS !== undefined ? { ALLOWED_ORIGINS: env.ALLOWED_ORIGINS } : {}),
-    ...(env.STANDARD_ENV !== undefined ? { STANDARD_ENV: env.STANDARD_ENV } : {}),
-    email: deps.email,
-    // KV cache for customSession enrichment (eliminates per-request DB queries)
-    sessionCache: env.STANDARD_CACHE,
-    // Event-driven lifecycle: send user events to the lifecycle queue
-    onUserCreated: env.USER_LIFECYCLE_QUEUE
-      ? (payload) => env.USER_LIFECYCLE_QUEUE!.send(payload)
-      : undefined,
-    onUserUpdated: env.USER_LIFECYCLE_QUEUE
-      ? (payload) => env.USER_LIFECYCLE_QUEUE!.send(payload)
-      : undefined,
-  }, db);
+  const auth = createAuth(
+    {
+      DATABASE_URL: env.DATABASE_URL!,
+      BETTER_AUTH_SECRET: env.BETTER_AUTH_SECRET,
+      ...(env.BETTER_AUTH_URL !== undefined
+        ? { BETTER_AUTH_URL: env.BETTER_AUTH_URL }
+        : {}),
+      ...(env.ALLOWED_ORIGINS !== undefined
+        ? { ALLOWED_ORIGINS: env.ALLOWED_ORIGINS }
+        : {}),
+      ...(env.STANDARD_ENV !== undefined
+        ? { STANDARD_ENV: env.STANDARD_ENV }
+        : {}),
+      email: deps.email,
+      // KV cache for customSession enrichment (eliminates per-request DB queries)
+      sessionCache: env.STANDARD_CACHE,
+      // Event-driven lifecycle: send user events to the lifecycle queue
+      onUserCreated: env.USER_LIFECYCLE_QUEUE
+        ? (payload) => env.USER_LIFECYCLE_QUEUE!.send(payload)
+        : undefined,
+      onUserUpdated: env.USER_LIFECYCLE_QUEUE
+        ? (payload) => env.USER_LIFECYCLE_QUEUE!.send(payload)
+        : undefined,
+    },
+    db,
+  );
 
-  console.log('[standard:init] Standard Native Auth self-hosted initialized.');
+  console.log("[standard:init] Standard Native Auth self-hosted initialized.");
   return { deps, auth };
 }
 
@@ -198,13 +220,15 @@ export function ensureAppInitialized(env: Env): ReturnType<typeof createApp> {
   if (cachedApp) return cachedApp;
 
   const hasDb = Boolean(env.DATABASE_URL);
-  console.log(`[standard:init] Starting API gateway. DATABASE_URL=${hasDb ? 'SET' : 'MISSING'}, ENV=${env.STANDARD_ENV}`);
+  console.log(
+    `[standard:init] Starting API gateway. DATABASE_URL=${hasDb ? "SET" : "MISSING"}, ENV=${env.STANDARD_ENV}`,
+  );
 
   // Refuse to start in mock mode in production — fail loudly, not silently
-  if (!hasDb && env.STANDARD_ENV === 'production') {
+  if (!hasDb && env.STANDARD_ENV === "production") {
     throw new Error(
-      '[standard:fatal] DATABASE_URL is required in production. ' +
-      'Configure it with: wrangler secret put DATABASE_URL --env production'
+      "[standard:fatal] DATABASE_URL is required in production. " +
+        "Configure it with: wrangler secret put DATABASE_URL --env production",
     );
   }
 
@@ -214,15 +238,21 @@ export function ensureAppInitialized(env: Env): ReturnType<typeof createApp> {
       cachedDeps = result.deps;
       cachedAuth = result.auth;
     } else {
-      console.warn('[standard:init] No DATABASE_URL — using MOCK repositories. SCF data will be synthetic.');
+      console.warn(
+        "[standard:init] No DATABASE_URL — using MOCK repositories. SCF data will be synthetic.",
+      );
       cachedDeps = createMockRepositories();
     }
     cachedApp = createApp(cachedDeps, env, cachedAuth ?? undefined);
-    console.log('[standard:init] App initialized successfully.');
+    console.log("[standard:init] App initialized successfully.");
   } catch (initErr) {
     const msg = initErr instanceof Error ? initErr.message : String(initErr);
-    const stack = initErr instanceof Error ? initErr.stack : '';
-    console.error('[standard:init] FATAL — app initialization failed:', msg, stack);
+    const stack = initErr instanceof Error ? initErr.stack : "";
+    console.error(
+      "[standard:init] FATAL — app initialization failed:",
+      msg,
+      stack,
+    );
     // Re-throw so Cloudflare logs it as a Worker exception
     throw initErr;
   }
@@ -239,7 +269,10 @@ function isAuthOriginAllowed(origin: string, env?: Partial<Env>): boolean {
   const allowed = resolveAllowedOrigins(env);
   if (allowed.includes(origin)) return true;
   // Match hash-prefixed preview deploy aliases: <hash>.standard-web-production.pages.dev
-  return origin.endsWith(".standard-web.pages.dev") || origin.endsWith(".standard-web-production.pages.dev");
+  return (
+    origin.endsWith(".standard-web.pages.dev") ||
+    origin.endsWith(".standard-web-production.pages.dev")
+  );
 }
 
 /**
@@ -296,7 +329,11 @@ export async function handleAuthRoute(
         const text = await res.clone().text();
         console.error(`[standard:auth] handler 500 trace=${traceId}`, text);
         return Response.json(
-          { error: "AUTH_INTERNAL_ERROR", detail: "Authentication service error.", trace_id: traceId },
+          {
+            error: "AUTH_INTERNAL_ERROR",
+            detail: "Authentication service error.",
+            trace_id: traceId,
+          },
           { status: 500, headers: { "Content-Type": "application/json" } },
         );
       }
@@ -304,7 +341,9 @@ export async function handleAuthRoute(
     } catch (err) {
       console.error(
         `[standard:auth] handler error trace=${traceId}`,
-        err instanceof Error ? `${err.name}: ${err.message}\n${err.stack}` : String(err),
+        err instanceof Error
+          ? `${err.name}: ${err.message}\n${err.stack}`
+          : String(err),
       );
       return Response.json(
         {
@@ -316,7 +355,10 @@ export async function handleAuthRoute(
           trace_id: traceId,
           errors: [],
         },
-        { status: 500, headers: { "Content-Type": "application/problem+json" } },
+        {
+          status: 500,
+          headers: { "Content-Type": "application/problem+json" },
+        },
       );
     }
   })();
@@ -348,7 +390,8 @@ export async function handleAuthRoute(
         metadata: {
           status: response.status,
           ip_hash: ip.slice(0, 8), // Partial IP for correlation without full PII
-          user_agent: request.headers.get("user-agent")?.slice(0, 80) || "unknown",
+          user_agent:
+            request.headers.get("user-agent")?.slice(0, 80) || "unknown",
           success: response.status >= 200 && response.status < 400,
         },
       }),
@@ -369,7 +412,8 @@ export async function handleAuthRoute(
   const isAuthSuccess =
     response.status >= 200 &&
     response.status < 400 &&
-    (url.pathname === "/api/auth/sign-in/email" || url.pathname === "/api/auth/sign-up/email");
+    (url.pathname === "/api/auth/sign-in/email" ||
+      url.pathname === "/api/auth/sign-up/email");
   if (isAuthSuccess) {
     // Generate a random CSRF token per auth session
     const csrfToken = crypto.randomUUID().replace(/-/g, "");

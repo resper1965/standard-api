@@ -7,6 +7,8 @@
  */
 export interface Env {
   DATABASE_URL?: string;
+  /** Cloudflare Hyperdrive — regional connection pooler for Neon (staging/prod only; absent in local dev). */
+  HYPERDRIVE?: { connectionString: string };
   BETTER_AUTH_SECRET: string;
   BETTER_AUTH_URL?: string;
   GOOGLE_CLIENT_ID?: string;

@@ -41,6 +41,12 @@ export const ScfImportStatisticsSchema = z.object({
   strm_relationships: z.number().int().nonnegative().default(0),
   warnings: z.number().int().nonnegative().default(0),
   synthetic_records: z.number().int().nonnegative().default(0),
+  // Extended meta-model entity counters (optional — only present when importer supports them)
+  assessment_objectives: z.number().int().nonnegative().optional(),
+  evidence_requests: z.number().int().nonnegative().optional(),
+  maturity_criteria: z.number().int().nonnegative().optional(),
+  risks: z.number().int().nonnegative().optional(),
+  threats: z.number().int().nonnegative().optional(),
 });
 
 export const ScfVersionSchema = z.object({
