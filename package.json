@@ -49,14 +49,17 @@
     "@cloudflare/workers-types": "^4.20260426.1",
     "@commitlint/cli": "^19.3.0",
     "@commitlint/config-conventional": "^19.2.2",
+    "@eslint/js": "^10.0.1",
     "@sentry/cli": "^3.5.0",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^25.7.0",
+    "eslint": "10.4.0",
     "husky": "^9.0.11",
     "js-yaml": "^4.2.0",
     "lint-staged": "^15.2.2",
     "tsx": "4.22.3",
     "typescript": "6.0.3",
+    "typescript-eslint": "^8.21.2",
     "wrangler": "^4.95.0"
   },
   "dependencies": {
