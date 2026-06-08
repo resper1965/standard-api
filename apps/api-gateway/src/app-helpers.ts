@@ -14,29 +14,41 @@ import { attachTenantDb } from "./middleware/tenant-db.middleware";
  * Validate and return a list of allowed CORS origins from env or defaults.
  */
 export const resolveAllowedOrigins = (env?: Partial<Env>): string[] => {
-  const isDevMode = env?.STANDARD_ENV === "development" || env?.STANDARD_ENV === "test";
+  const isDevMode =
+    env?.STANDARD_ENV === "development" || env?.STANDARD_ENV === "test";
   // ALLOWED_ORIGINS env var overrides hardcoded list (comma-separated)
-  const envOrigins = env?.ALLOWED_ORIGINS?.split(",").map((o: string) => o.trim()).filter(Boolean) ?? [];
+  const envOrigins =
+    env?.ALLOWED_ORIGINS?.split(",")
+      .map((o: string) => o.trim())
+      .filter(Boolean) ?? [];
   // Validate that no wildcard or malformed origins are in the list
   const validatedOrigins = envOrigins.filter((o: string) => {
     if (o === "*") {
-      console.warn("[SECURITY] ALLOWED_ORIGINS contains wildcard '*' — ignoring");
+      console.warn(
+        "[SECURITY] ALLOWED_ORIGINS contains wildcard '*' — ignoring",
+      );
       return false;
     }
     try {
       const url = new URL(o);
       return url.origin === o;
     } catch {
-      console.warn(`[SECURITY] ALLOWED_ORIGINS contains invalid origin: ${o} — ignoring`);
+      console.warn(
+        `[SECURITY] ALLOWED_ORIGINS contains invalid origin: ${o} — ignoring`,
+      );
       return false;
     }
   });
-  return validatedOrigins.length > 0 ? validatedOrigins : [
-    "https://standard.bekaa.eu",
-    "https://standard-web.pages.dev",
-    "https://standard-web-production.pages.dev",
-    ...(isDevMode ? ["http://localhost:5173", "http://localhost:3000"] : []),
-  ];
+  return validatedOrigins.length > 0
+    ? validatedOrigins
+    : [
+        "https://standard.bekaa.eu",
+        "https://standard-web.pages.dev",
+        "https://standard-web-production.pages.dev",
+        ...(isDevMode
+          ? ["http://localhost:5173", "http://localhost:3000"]
+          : []),
+      ];
 };
 
 /**
@@ -48,13 +60,18 @@ export const buildCorsHeaders = (
   allowedOrigins: string[],
 ): Record<string, string> => {
   const origin = request.headers.get("Origin") ?? "";
-  const isPagesDevAlias = origin.endsWith(".standard-web.pages.dev") || origin.endsWith(".standard-web-production.pages.dev");
-  const corsOrigin = allowedOrigins.includes(origin) || isPagesDevAlias ? origin : "";
+  const isPagesDevAlias =
+    origin.endsWith(".standard-web.pages.dev") ||
+    origin.endsWith(".standard-web-production.pages.dev");
+  const corsOrigin =
+    allowedOrigins.includes(origin) || isPagesDevAlias ? origin : "";
   return corsOrigin
     ? {
         "Access-Control-Allow-Origin": corsOrigin,
-        "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Trace-Id, X-Tenant-Id, x-standard-tenant-id",
+        "Access-Control-Allow-Methods":
+          "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers":
+          "Content-Type, Authorization, X-Trace-Id, X-Tenant-Id, x-standard-tenant-id",
         "Access-Control-Allow-Credentials": "true",
         "Access-Control-Max-Age": "86400",
       }
@@ -73,7 +90,8 @@ export const buildSecurityHeaders = (
   pathname: string,
 ): Record<string, string> => {
   // Relax CSP for docs/llms routes so Scalar UI, fonts, and scripts load correctly
-  const isDocsRoute = pathname.startsWith("/docs") || pathname.startsWith("/llms");
+  const isDocsRoute =
+    pathname.startsWith("/docs") || pathname.startsWith("/llms");
   const cspValue = isDocsRoute
     ? "default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src fonts.gstatic.com; img-src 'self' data:; connect-src 'self';"
     : "default-src 'none'; frame-ancestors 'none';";
@@ -87,7 +105,8 @@ export const buildSecurityHeaders = (
     "X-XSS-Protection": "0", // Deprecated; CSP is the modern replacement
     "Content-Security-Policy": cspValue,
     "Referrer-Policy": "strict-origin-when-cross-origin",
-    "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=()",
+    "Permissions-Policy":
+      "camera=(), microphone=(), geolocation=(), payment=()",
     "X-Download-Options": "noopen",
     "X-Permitted-Cross-Domain-Policies": "none",
     "Cross-Origin-Opener-Policy": "same-origin",
@@ -117,7 +136,10 @@ export const applySecurityHeaders = (
  * Determine whether auth is required for a given route definition.
  */
 export const isAuthRequired = (route: RouteDefinition): boolean =>
-  route.authRequired ?? (Boolean(route.protected) || Boolean(route.requireActor) || Boolean(route.permissions?.length));
+  route.authRequired ??
+  (Boolean(route.protected) ||
+    Boolean(route.requireActor) ||
+    Boolean(route.permissions?.length));
 
 /**
  * Build a minimal mock session so session.user.role RBAC checks work in dev/test.
@@ -134,13 +156,29 @@ const buildMockSession = (
   // We pass security-package roles through directly — they match
   // STANDARD_ROLE_PERMISSIONS keys in permissions.ts (GRC roles).
   // Only "system" maps to special handling (platform_admin flag).
-  const isPlatAdmin = (authRoles.includes("platform_admin" as any)
-    || authRoles.includes("system" as any)
-    || overrideRole === "platform_admin")
-    && overrideRole !== "owner"
-    && overrideRole !== "viewer"
-    && overrideRole !== "admin";
+  const isPlatAdmin =
+    (authRoles.includes("platform_admin" as any) ||
+      authRoles.includes("system" as any) ||
+      overrideRole === "platform_admin") &&
+    overrideRole !== "owner" &&
+    overrideRole !== "viewer" &&
+    overrideRole !== "admin";
   const mockRole = overrideRole ?? firstAuthRole ?? "admin";
+  const tenantId =
+    request.headers.get("x-standard-tenant-id") ??
+    request.headers.get("x-tenant-id") ??
+    undefined;
+  const allowedOrganizations = tenantId
+    ? [
+        {
+          id: tenantId,
+          name: "Mock Org",
+          slug: `org-${tenantId.slice(0, 6)}`,
+          role: mockRole,
+        },
+      ]
+    : [];
+
   return {
     user: {
       id: legacyActor,
@@ -149,7 +187,14 @@ const buildMockSession = (
       role: mockRole,
       platformAdmin: isPlatAdmin,
     },
-    session: { id: `mock-session-${legacyActor}` },
+    session: {
+      id: `mock-session-${legacyActor}`,
+      domainUserId: legacyActor,
+      activeOrganizationId: tenantId ?? null,
+      activeOrganizationSlug: tenantId ? `org-${tenantId.slice(0, 6)}` : null,
+      activeOrganizationRole: mockRole,
+      allowedOrganizations,
+    },
   };
 };
 
@@ -178,31 +223,54 @@ export const resolveAuth = async (
   // ── Legacy header fallback — requires ALLOW_MOCK_AUTH=true AND a non-production STANDARD_ENV. ──
   // Fail-closed: omitting ALLOW_MOCK_AUTH disables mock-auth even in dev.
   if (
-    (env?.STANDARD_ENV === "local" || env?.STANDARD_ENV === "development" || env?.STANDARD_ENV === "test") &&
+    (env?.STANDARD_ENV === "local" ||
+      env?.STANDARD_ENV === "development" ||
+      env?.STANDARD_ENV === "test") &&
     env?.ALLOW_MOCK_AUTH === "true"
   ) {
     const legacyActor = request.headers.get("x-standard-actor-id") ?? undefined;
+    const tenantId =
+      request.headers.get("x-standard-tenant-id") ??
+      request.headers.get("x-tenant-id") ??
+      undefined;
+    if (tenantId) {
+      context.organizationId = tenantId;
+    }
     if (legacyActor) {
       context.actorId = legacyActor;
       const mockAuth = new MockAuthProvider("development");
       const authCtx = await mockAuth.authenticate({
         actorId: legacyActor,
-        ...(context.organizationId ? { organizationId: context.organizationId } : {}),
+        ...(context.organizationId
+          ? { organizationId: context.organizationId }
+          : {}),
         authHeader: request.headers.get("authorization") ?? undefined,
         traceId: context.traceId,
       });
       if (authCtx) context.auth = authCtx;
       // Populate a minimal mock session so session.user.role RBAC checks work in dev/test.
-      context.session = buildMockSession(legacyActor, request, authCtx?.roles ?? []);
+      context.session = buildMockSession(
+        legacyActor,
+        request,
+        authCtx?.roles ?? [],
+      );
     }
     if (authRequired && !context.actorId) {
-      throw new ApiError("UNAUTHORIZED", "Authentication is required for this operation.", 401);
+      throw new ApiError(
+        "UNAUTHORIZED",
+        "Authentication is required for this operation.",
+        401,
+      );
     }
     return;
   }
 
   // ── Production without Standard Native Auth = always reject ──
   if (authRequired) {
-    throw new ApiError("UNAUTHORIZED", "Authentication provider is not configured.", 401);
+    throw new ApiError(
+      "UNAUTHORIZED",
+      "Authentication provider is not configured.",
+      401,
+    );
   }
 };

@@ -13,8 +13,15 @@ import { assertRbac } from "./middleware/rbac.middleware";
 import { assertApiKeyScopes } from "./middleware/scope.middleware";
 import { resolveOrganizationContext } from "./middleware/tenant.middleware";
 import { resolveTraceId } from "./middleware/trace.middleware";
-import { checkIdempotency, storeIdempotencyResult } from "./middleware/idempotency.middleware";
-import { verifyCsrf, generateCsrfToken, buildCsrfCookie } from "./middleware/csrf.middleware";
+import {
+  checkIdempotency,
+  storeIdempotencyResult,
+} from "./middleware/idempotency.middleware";
+import {
+  verifyCsrf,
+  generateCsrfToken,
+  buildCsrfCookie,
+} from "./middleware/csrf.middleware";
 import {
   resolveAllowedOrigins,
   buildCorsHeaders,
@@ -97,8 +104,8 @@ const defaultTenantRequired = (route: RouteDefinition): boolean =>
 
 export const routes: RouteDefinition[] = [
   ...openapiRoutes,
-  ...mcpRoutes,           // MCP server — /mcp
-  ...mcpDocsRoutes,       // MCP guide  — /docs/mcp
+  ...mcpRoutes, // MCP server — /mcp
+  ...mcpDocsRoutes, // MCP guide  — /docs/mcp
   ...jobsRoutes,
   ...healthRoutes,
   ...tenantsRoutes,
@@ -124,8 +131,8 @@ export const routes: RouteDefinition[] = [
   ...integrationRoutes,
   ...webhookRoutes,
   ...privacyRoutes,
-  ...dataSubjectRoutes,   // LGPD/GDPR data subject rights: /me/data-export, /me/account
-  ...userOrgsRoutes,       // User-scoped org listing & activation: /users/me/organizations
+  ...dataSubjectRoutes, // LGPD/GDPR data subject rights: /me/data-export, /me/account
+  ...userOrgsRoutes, // User-scoped org listing & activation: /users/me/organizations
   ...socRoutes,
   ...executiveRoutes,
   ...dashboardRoutes,
@@ -139,17 +146,20 @@ export const routes: RouteDefinition[] = [
   ...referenceDataRoutes,
   ...intelligenceRoutes,
   // ── Reference data routes (static, no DB) ──────────────────────
-  ...flowTemplateRoutes,    // /api/v1/flow-templates
-  ...governanceRefRoutes,   // /api/v1/governance/{maturity-levels,bg-check-types,...}
-  ...ropaRoutes,            // /api/v1/ropa/{data-subjects,data-categories,...}
-  ...tpraRoutes,            // /api/v1/tpra/{questionnaires,tiers,score,...}
-  ...adminUsersRoutes,      // /api/v1/admin/users — platform admin user management
-  ...adminOrgsRoutes,       // /api/v1/admin/organizations
+  ...flowTemplateRoutes, // /api/v1/flow-templates
+  ...governanceRefRoutes, // /api/v1/governance/{maturity-levels,bg-check-types,...}
+  ...ropaRoutes, // /api/v1/ropa/{data-subjects,data-categories,...}
+  ...tpraRoutes, // /api/v1/tpra/{questionnaires,tiers,score,...}
+  ...adminUsersRoutes, // /api/v1/admin/users — platform admin user management
+  ...adminOrgsRoutes, // /api/v1/admin/organizations
 ];
 
 registerRoutesForOpenApi(routes);
 
-const matchRoute = (routePath: string, actualPath: string): Record<string, string> | null => {
+const matchRoute = (
+  routePath: string,
+  actualPath: string,
+): Record<string, string> | null => {
   const routeParts = routePath.split("/").filter(Boolean);
   const actualParts = actualPath.split("/").filter(Boolean);
   if (routeParts.length !== actualParts.length) return null;
@@ -172,7 +182,9 @@ const matchRoute = (routePath: string, actualPath: string): Record<string, strin
  * Pre-built route index for O(1) bucket lookup instead of O(N) linear scan.
  * Keyed by "METHOD:/api/v1/SEGMENT" to reduce candidates per lookup.
  */
-const buildRouteIndex = (allRoutes: RouteDefinition[]): Map<string, RouteDefinition[]> => {
+const buildRouteIndex = (
+  allRoutes: RouteDefinition[],
+): Map<string, RouteDefinition[]> => {
   const index = new Map<string, RouteDefinition[]>();
   for (const route of allRoutes) {
     const segments = route.path.split("/").filter(Boolean);
@@ -187,19 +199,28 @@ const buildRouteIndex = (allRoutes: RouteDefinition[]): Map<string, RouteDefinit
 
 const routeIndex = buildRouteIndex(routes);
 
-const findRoute = (method: string, pathname: string): RouteDefinition | undefined => {
+const findRoute = (
+  method: string,
+  pathname: string,
+): RouteDefinition | undefined => {
   const segments = pathname.split("/").filter(Boolean);
   const prefix = `${method}:/${segments.slice(0, 3).join("/")}`;
   const candidates = routeIndex.get(prefix);
   if (candidates) {
-    const found = candidates.find(r => matchRoute(r.path, pathname));
+    const found = candidates.find((r) => matchRoute(r.path, pathname));
     if (found) return found;
   }
   // Fallback: scan shorter paths (health, root-level)
-  return routes.find(r => r.method === method && matchRoute(r.path, pathname));
+  return routes.find(
+    (r) => r.method === method && matchRoute(r.path, pathname),
+  );
 };
 
-export const createApp = (deps: AppDependencies = createMockRepositories(), env?: Partial<Env>, auth?: StandardAuth) => ({
+export const createApp = (
+  deps: AppDependencies = createMockRepositories(),
+  env?: Partial<Env>,
+  auth?: StandardAuth,
+) => ({
   async fetch(request: Request, execCtx?: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
     const traceId = resolveTraceId(request);
@@ -215,9 +236,15 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
 
     const securityHeaders = buildSecurityHeaders(corsHeaders, url.pathname);
 
+    let context: RequestContext | undefined;
     // Helper to attach headers to any response
-    const withSecurityHeaders = (res: Response): Response =>
-      applySecurityHeaders(res, securityHeaders);
+    const withSecurityHeaders = (res: Response): Response => {
+      const headers = { ...securityHeaders };
+      if (context?.rateLimitHeaders) {
+        Object.assign(headers, context.rateLimitHeaders);
+      }
+      return applySecurityHeaders(res, headers);
+    };
 
     try {
       const route = findRoute(request.method, url.pathname);
@@ -226,51 +253,96 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
       }
 
       const params = matchRoute(route.path, url.pathname)!;
-      const context: RequestContext = {
-        request, params, traceId, deps,
+      const ctx: RequestContext = {
+        request,
+        params,
+        traceId,
+        deps,
         ...(execCtx !== undefined ? { execCtx } : {}),
         ...(env !== undefined ? { env } : {}),
       };
+      context = ctx;
       const startedAt = Date.now();
 
       // ── Auth context resolution ──────────────────────────────
-      await resolveAuth(context, request, route, env, auth);
+      await resolveAuth(ctx, request, route, env, auth);
 
-      const tenantRequired = route.tenantRequired ?? defaultTenantRequired(route);
-      await resolveOrganizationContext(context, tenantRequired);
+      const tenantRequired =
+        route.tenantRequired ?? defaultTenantRequired(route);
+      await resolveOrganizationContext(ctx, tenantRequired);
 
-      await assertRbac(context, route.permissions);
-      assertApiKeyScopes(context, route.path, request.method,
-        route.authRequired ?? (Boolean(route.protected) || Boolean(route.requireActor) || Boolean(route.permissions?.length)));
-      await assertRateLimit(context, route.path, env?.STANDARD_CACHE);
+      await assertRbac(ctx, route.permissions);
+      assertApiKeyScopes(
+        ctx,
+        route.path,
+        request.method,
+        route.authRequired ??
+          (Boolean(route.protected) ||
+            Boolean(route.requireActor) ||
+            Boolean(route.permissions?.length)),
+      );
+      await assertRateLimit(ctx, route.path, env?.STANDARD_CACHE);
       // M3 fix: CSRF verification (after auth, before handler)
-      verifyCsrf(context);
-      await recordAuditEvent(context, route.path);
+      verifyCsrf(ctx);
+      await recordAuditEvent(ctx, route.path);
 
       // ── Idempotency replay ────────────────────────────────────
-      if (route.idempotencyRequired && !request.headers.get("Idempotency-Key")) {
-        throw new ApiError("VALIDATION_ERROR", "Idempotency-Key header is required for this operation.", 400);
+      if (
+        route.idempotencyRequired &&
+        !request.headers.get("Idempotency-Key")
+      ) {
+        throw new ApiError(
+          "VALIDATION_ERROR",
+          "Idempotency-Key header is required for this operation.",
+          400,
+        );
       }
-      const idempotentReplay = await checkIdempotency(request, context.organizationId, env?.STANDARD_CACHE);
+      const idempotentReplay = await checkIdempotency(
+        request,
+        ctx.organizationId,
+        env?.STANDARD_CACHE,
+      );
       if (idempotentReplay) return withSecurityHeaders(idempotentReplay);
 
       // ── Declarative body validation ───────────────────────────
       // When route defines bodySchema, parse + validate before handler.
       // H8 fix: mark body as consumed so parseJson won't try to read it again.
-      if (route.bodySchema && ["POST", "PUT", "PATCH"].includes(request.method)) {
-        context.validatedBody = await parseJson(request, route.bodySchema);
-        context._bodyConsumed = true;
+      if (
+        route.bodySchema &&
+        ["POST", "PUT", "PATCH"].includes(request.method)
+      ) {
+        ctx.validatedBody = await parseJson(request, route.bodySchema);
+        ctx._bodyConsumed = true;
       }
 
-      const response = await (context.organizationId ? runWithTenantContext(
-        { organizationId: context.organizationId, ...(context.actorId ? { actorId: context.actorId } : {}) },
-        () => route.handler(context)
-      ) : route.handler(context));
-      
-      storeIdempotencyResult(request, response, context.organizationId, env?.STANDARD_CACHE);
+      const response = await (ctx.organizationId
+        ? runWithTenantContext(
+            {
+              organizationId: ctx.organizationId,
+              ...(ctx.actorId ? { actorId: ctx.actorId } : {}),
+            },
+            () => route.handler(ctx),
+          )
+        : route.handler(ctx));
+
+      storeIdempotencyResult(
+        request,
+        response,
+        ctx.organizationId,
+        env?.STANDARD_CACHE,
+      );
       // Fire-and-forget observability — never blocks the response
-      const obsPromise = recordRequestObservability(context, route.path, response, startedAt)
-        .catch((obsErr) => console.error("[standard:observability] Failed to record metrics:", obsErr instanceof Error ? obsErr.message : obsErr));
+      const obsPromise = recordRequestObservability(
+        ctx,
+        route.path,
+        response,
+        startedAt,
+      ).catch((obsErr) =>
+        console.error(
+          "[standard:observability] Failed to record metrics:",
+          obsErr instanceof Error ? obsErr.message : obsErr,
+        ),
+      );
       if (execCtx) {
         execCtx.waitUntil(obsPromise);
       }
@@ -279,11 +351,14 @@ export const createApp = (deps: AppDependencies = createMockRepositories(), env?
       if (!(error instanceof ApiError)) {
         const msg = error instanceof Error ? error.message : String(error);
         const stack = error instanceof Error ? error.stack : undefined;
-        console.error(`[standard:api] Unhandled error on ${request.method} ${url.pathname}: ${msg}`, stack);
+        console.error(
+          `[standard:api] Unhandled error on ${request.method} ${url.pathname}: ${msg}`,
+          stack,
+        );
       }
       return withSecurityHeaders(errorResponse(error, traceId, url.pathname));
     }
-  }
+  },
 });
 
 const notImplemented = (traceId: string): Response =>
@@ -293,9 +368,8 @@ const notImplemented = (traceId: string): Response =>
         code: "NOT_IMPLEMENTED",
         message: "Endpoint reserved for future Standard API contract.",
         details: [],
-        trace_id: traceId
-      }
+        trace_id: traceId,
+      },
     },
-    { status: 501 }
+    { status: 501 },
   );
-

@@ -133,7 +133,7 @@ export interface ApprovalRequestEmailPayload extends StandardEmailBase {
   assessmentName: string;
   /** Organization name */
   organizationName: string;
-  /** URL to review the artifact */
+  /** Client-configured URL to review the artifact on the consumer's application (Standard remains headless and does not host review UIs) */
   reviewUrl: string;
   /** Who submitted it */
   submittedBy: string;
@@ -218,10 +218,9 @@ export class StandardEmailError extends Error {
     public readonly code: CloudflareEmailErrorCode | "UNKNOWN",
     message: string,
     public readonly type: StandardEmailType,
-    public readonly to: string
+    public readonly to: string,
   ) {
     super(message);
     this.name = "StandardEmailError";
   }
 }
-

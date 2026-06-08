@@ -50,6 +50,14 @@ export type LlmGenerateOutput = {
     completion_tokens: number;
     total_tokens: number;
   };
+  /** Model name actually used (e.g. "gpt-4o"). */
+  model?: string;
+  /** Provider identifier (e.g. "cloudflare-ai-gateway", "mock"). */
+  provider?: string;
+  /** Latency in milliseconds. */
+  latency_ms?: number;
+  /** Cache status from AI Gateway. */
+  cache_status?: "HIT" | "MISS" | "BYPASS" | "UNKNOWN";
 };
 
 export interface LlmProvider {

@@ -91,6 +91,15 @@ const METADATA_TAB_NAMES = [
   "copyright",
   "license",
   "legend",
+  // SCF 2026.1 specific non-control tabs
+  "scf domains",
+  "compensating controls",
+  "evidence request",
+  "assessment objectives",
+  "data privacy",
+  "threat catalog",
+  "risk catalog",
+  "lists",
 ];
 
 /** Column patterns that indicate a control BODY tab (title, description, domain) */
@@ -132,29 +141,39 @@ const headerMatchesExact = (header: string, indicator: string): boolean => {
  * Controls tab: must have BOTH a control identifier column AND a body column
  * (title, description, or domain). Crosswalk tabs only have SCF Control # + framework refs.
  */
-export const classifyTab = (sheetName: string, headers: string[]): TabClassification => {
+export const classifyTab = (
+  sheetName: string,
+  headers: string[],
+): TabClassification => {
   const nameLower = sheetName.toLowerCase().trim();
   const normalizedHeaders = headers.map(normalizeHeader);
 
   // Check if it's the authoritative sources tab (SCF 2026.1 structure)
-  if (nameLower === "authoritative sources" || normalizedHeaders.includes(normalizeHeader("Focal Document Identifier (FDI)"))) {
+  if (
+    nameLower === "authoritative sources" ||
+    normalizedHeaders.includes(
+      normalizeHeader("Focal Document Identifier (FDI)"),
+    )
+  ) {
     return { type: "authoritative_sources", sheetName };
   }
 
   // Check metadata tabs first
-  if (METADATA_TAB_NAMES.some((m) => nameLower === m || nameLower.startsWith(m))) {
+  if (
+    METADATA_TAB_NAMES.some((m) => nameLower === m || nameLower.startsWith(m))
+  ) {
     return { type: "metadata", sheetName };
   }
 
   // Check for a control identifier column (uses includes for flexibility)
   const hasControlIdColumn = CONTROLS_TAB_INDICATORS.some((indicator) =>
-    normalizedHeaders.some((h) => h === indicator || h.includes(indicator))
+    normalizedHeaders.some((h) => h === indicator || h.includes(indicator)),
   );
 
   // Check for a control body column — EXACT match only to prevent false positives
   // "scf_control_#" should NOT match "scf_control" body indicator
   const hasControlBodyColumn = CONTROLS_BODY_INDICATORS.some((indicator) =>
-    normalizedHeaders.some((h) => h === indicator)
+    normalizedHeaders.some((h) => h === indicator),
   );
 
   // A controls tab must have BOTH identifier AND body columns
@@ -163,7 +182,10 @@ export const classifyTab = (sheetName: string, headers: string[]): TabClassifica
   }
 
   // Check if this is the controls tab by sheet name (only if it also has control IDs)
-  if (hasControlIdColumn && CONTROLS_TAB_NAMES.some((n) => nameLower === n || nameLower.includes(n))) {
+  if (
+    hasControlIdColumn &&
+    CONTROLS_TAB_NAMES.some((n) => nameLower === n || nameLower.includes(n))
+  ) {
     return { type: "controls", sheetName };
   }
 
@@ -264,7 +286,11 @@ export const findControlDescription = (row: ParsedRow): string | null => {
   }
   // Fallback: search all keys for a key containing "description" that isn't a framework mapping
   for (const [key, value] of Object.entries(row)) {
-    if (key.includes("control_description") && value && value.trim().length > 20) {
+    if (
+      key.includes("control_description") &&
+      value &&
+      value.trim().length > 20
+    ) {
       return value.trim();
     }
   }
@@ -275,11 +301,7 @@ export const findControlDescription = (row: ParsedRow): string | null => {
  * Find the control question from a row.
  */
 export const findControlQuestion = (row: ParsedRow): string | null => {
-  const candidates = [
-    "scf_control_question",
-    "control_question",
-    "question",
-  ];
+  const candidates = ["scf_control_question", "control_question", "question"];
 
   for (const key of candidates) {
     if (row[key] && row[key].trim().length > 0) {
@@ -299,12 +321,7 @@ export const findControlQuestion = (row: ParsedRow): string | null => {
  * Find the SCF domain from a row (explicit column).
  */
 export const findDomainName = (row: ParsedRow): string | null => {
-  const candidates = [
-    "scf_domain",
-    "domain",
-    "domain_name",
-    "scf_domain_name",
-  ];
+  const candidates = ["scf_domain", "domain", "domain_name", "scf_domain_name"];
 
   for (const key of candidates) {
     if (row[key] && row[key].trim().length > 0) {
@@ -318,7 +335,13 @@ export const findDomainName = (row: ParsedRow): string | null => {
  * Find control weight from a row.
  */
 export const findControlWeight = (row: ParsedRow): number | undefined => {
-  const candidates = ["scf_control_weighting", "control_weight", "weight", "scf_weighting", "relative_control_weighting"];
+  const candidates = [
+    "scf_control_weighting",
+    "control_weight",
+    "weight",
+    "scf_weighting",
+    "relative_control_weighting",
+  ];
   for (const key of candidates) {
     if (row[key]) {
       const parsed = Number.parseFloat(row[key]);
@@ -344,14 +367,14 @@ export const findControlWeight = (row: ParsedRow): number | undefined => {
  */
 const findCrosswalkReferenceColumn = (
   headers: string[],
-  _sheetName: string
+  _sheetName: string,
 ): string | null => {
   const normalizedHeaders = headers.map(normalizeHeader);
 
   // Look for columns that are NOT the SCF control identifier
   const scfColumns = new Set(CONTROLS_TAB_INDICATORS);
   const nonScfColumns = normalizedHeaders.filter(
-    (h) => !scfColumns.has(h) && h.length > 0
+    (h) => !scfColumns.has(h) && h.length > 0,
   );
 
   // The first non-SCF column with data is typically the reference column
