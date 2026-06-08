@@ -45,6 +45,13 @@ max_batch_timeout = 30
 max_retries = 3
 dead_letter_queue = "standard-dead-letter-dev"
 
+[[queues.consumers]]
+queue = "standard-user-lifecycle-dev"
+max_batch_size = 10
+max_batch_timeout = 5
+max_retries = 3
+dead_letter_queue = "standard-dead-letter-dev"
+
 # Dead Letter Queue consumer — receives messages that exhausted all retries.
 [[queues.consumers]]
 queue = "standard-dead-letter-dev"
@@ -100,6 +107,13 @@ max_batch_size = 5
 max_batch_timeout = 30
 max_retries = 3
 dead_letter_queue = "standard-soc-triage-dlq-staging"
+
+[[env.staging.queues.consumers]]
+queue = "standard-user-lifecycle-staging"
+max_batch_size = 10
+max_batch_timeout = 5
+max_retries = 3
+dead_letter_queue = "standard-dead-letter-staging"
 
 [[env.staging.queues.consumers]]
 queue = "standard-kb-embedding-staging"
@@ -181,6 +195,13 @@ max_batch_size = 5
 max_batch_timeout = 30
 max_retries = 3
 dead_letter_queue = "standard-soc-triage-dlq-prod"
+
+[[env.production.queues.consumers]]
+queue = "standard-user-lifecycle-prod"
+max_batch_size = 10
+max_batch_timeout = 5
+max_retries = 3
+dead_letter_queue = "standard-dead-letter-prod"
 
 # Dead Letter Queue consumers
 [[env.production.queues.consumers]]

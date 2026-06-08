@@ -54,7 +54,12 @@ export const createTestClient = () => {
     const idempotencyHeaders = mutating && !headers["idempotency-key"]
       ? { "idempotency-key": crypto.randomUUID() }
       : {};
-    const response = await app.fetch(jsonRequest(path, method, body, { ...idempotencyHeaders, ...headers }));
+    // Auto-inject CSRF token for mutating methods (M3 CSRF protection)
+    const csrfToken = "test-csrf-token-" + crypto.randomUUID().replace(/-/g, "").slice(0, 16);
+    const csrfHeaders = mutating
+      ? { "cookie": `__csrf=${csrfToken}`, "x-csrf-token": csrfToken }
+      : {};
+    const response = await app.fetch(jsonRequest(path, method, body, { ...csrfHeaders, ...idempotencyHeaders, ...headers }));
     const resBody = await response.json();
     return { response, body: wrapError(resBody) };
   };
@@ -107,7 +112,10 @@ export const createTestClient = () => {
     const idempotencyHeaders = !headers["idempotency-key"]
       ? { "idempotency-key": crypto.randomUUID() }
       : {};
-    const response = await app.fetch(multipartRequest(path, form, { ...idempotencyHeaders, ...headers }));
+    // Auto-inject CSRF token (M3 CSRF protection)
+    const csrfToken = "test-csrf-token-" + crypto.randomUUID().replace(/-/g, "").slice(0, 16);
+    const csrfHeaders = { "cookie": `__csrf=${csrfToken}`, "x-csrf-token": csrfToken };
+    const response = await app.fetch(multipartRequest(path, form, { ...csrfHeaders, ...idempotencyHeaders, ...headers }));
     const resBody = await response.json();
     return { response, body: wrapError(resBody) };
   };
@@ -149,4 +157,104 @@ export const createTestClient = () => {
 
   return { send, sendMultipart, createTenantOrg, createAssessment, createApiKey, listApiKeys, revokeApiKey, authHeaders };
 };
+
+// ─── Drizzle PGlite Integration Database Helper ───────────────────
+import { PGlite } from "@electric-sql/pglite";
+import { drizzle } from "drizzle-orm/pglite";
+import * as schema from "@standard/schemas";
+import fs from "node:fs";
+import path from "node:path";
+import { createDrizzleRepositories } from "../src/adapters";
+
+let globalPgLite: PGlite | null = null;
+
+export const getTestDb = async () => {
+  if (globalPgLite) return globalPgLite;
+  
+  const client = new PGlite();
+  
+  let currentDir = process.cwd();
+  let migrationsFolder = path.resolve(currentDir, "infra/docker/postgres/migrations");
+  while (!fs.existsSync(migrationsFolder) && path.dirname(currentDir) !== currentDir) {
+    currentDir = path.dirname(currentDir);
+    migrationsFolder = path.resolve(currentDir, "infra/docker/postgres/migrations");
+  }
+  
+  // Run Drizzle migrations in order
+  const files = fs.readdirSync(migrationsFolder).filter(f => f.endsWith(".sql")).sort();
+  for (const file of files) {
+    let sql = fs.readFileSync(path.join(migrationsFolder, file), "utf8");
+    if (file === "0016_poam_workflow.sql") {
+      sql = sql.replace("UPDATE poam_items SET poam_code = COALESCE(poam_code, item_code) WHERE poam_code IS NULL;", "UPDATE poam_items SET poam_code = 'DEFAULT' WHERE poam_code IS NULL;");
+      sql = sql.replace("UPDATE poam_items SET related_gap_finding_id = COALESCE(related_gap_finding_id, related_gap_id) WHERE related_gap_finding_id IS NULL;", "UPDATE poam_items SET related_gap_finding_id = NULL WHERE related_gap_finding_id IS NULL;");
+    }
+    // Make tenant_id nullable programmatically to align with ADR 0002 Phase 2/3 (where tenants table is removed)
+    sql = sql.replace(/"tenant_id"\s+uuid\s+NOT\s+NULL/gi, '"tenant_id" uuid');
+
+    const chunks = sql.split("--> statement-breakpoint");
+    for (const chunk of chunks) {
+      if (chunk.trim()) {
+        await client.exec(chunk.trim());
+      }
+    }
+  }
+  
+  const db = drizzle(client, { schema });
+  
+  // Seed basic requirement: default organization and scf version so foreign key constraints pass
+  await db.insert(schema.organizations).values({
+    id: ids.organizationId,
+    name: "Default Test Org",
+    slug: "default-test-org",
+    userId: "system"
+  }).onConflictDoNothing();
+  
+  await db.insert(schema.scfVersions).values({
+    id: ids.scfVersionId,
+    version: "2026.1.1",
+  }).onConflictDoNothing();
+
+  globalPgLite = client;
+  return client;
+};
+
+export const createDrizzleTestClient = async () => {
+  const client = await getTestDb();
+  const db = drizzle(client, { schema });
+  
+  // Clean up dynamic tables to guarantee test isolation
+  const tablesToTruncate = [
+    schema.assessments,
+    schema.apiKeys,
+    schema.approvalEvents,
+    schema.documentVersions,
+    schema.documents,
+    schema.gapFindings,
+    schema.poamItems,
+  ];
+  
+  for (const table of tablesToTruncate) {
+    await db.delete(table);
+  }
+  
+  const deps = createDrizzleRepositories(db as any, { STANDARD_ENV: "test" } as any);
+  const app = createApp(deps, { STANDARD_ENV: "test", ALLOW_MOCK_AUTH: "true" } as any);
+  
+  const send = async (path: string, method = "GET", body?: unknown, headers: Record<string, string> = {}) => {
+    const mutating = ["POST", "PUT", "PATCH", "DELETE"].includes(method.toUpperCase());
+    const idempotencyHeaders = mutating && !headers["idempotency-key"]
+      ? { "idempotency-key": crypto.randomUUID() }
+      : {};
+    const csrfToken = "test-csrf-token-" + crypto.randomUUID().replace(/-/g, "").slice(0, 16);
+    const csrfHeaders = mutating
+      ? { "cookie": `__csrf=${csrfToken}`, "x-csrf-token": csrfToken }
+      : {};
+    const response = await app.fetch(jsonRequest(path, method, body, { ...csrfHeaders, ...idempotencyHeaders, ...headers }));
+    const resBody = await response.json();
+    return { response, body: wrapError(resBody) };
+  };
+
+  return { send, db };
+};
+
 

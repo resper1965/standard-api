@@ -25,7 +25,7 @@ import {
 import { ApiError } from "../errors/api-error";
 import type { ApiErrorCode } from "../errors/error-codes";
 import type { RouteDefinition } from "../http";
-import { json, parseJson, routeParam, routeUuidParam } from "../http";
+import { json, parseJson, routeParam, routeUuidParam , requireOrganizationId } from "../http";
 
 const toApiError = (error: unknown): never => {
   if (error instanceof PrivacyError) {
@@ -40,7 +40,7 @@ const toApiError = (error: unknown): never => {
 };
 
 const privacyContext = (ctx: any) => ({
-  organizationId: ctx.organizationId!,
+  organizationId: requireOrganizationId(ctx),
   actorId: ctx.actorId,
   traceId: ctx.traceId,
 });
@@ -80,7 +80,7 @@ export const privacyRoutes: RouteDefinition[] = [
         limit: url.searchParams.has("limit") ? Math.min(Number(url.searchParams.get("limit")), 100) : undefined,
         offset: url.searchParams.has("offset") ? Number(url.searchParams.get("offset")) : undefined,
       };
-      const results = await svc.listActivities(ctx.organizationId!, filters);
+      const results = await svc.listActivities(requireOrganizationId(ctx), filters);
       return json({ data: results, trace_id: ctx.traceId });
     },
   },
@@ -92,7 +92,7 @@ export const privacyRoutes: RouteDefinition[] = [
     tenantRequired: true,
     handler: async (ctx) => {
       const svc = new PrivacyCrudService(ctx.deps.privacy);
-      const activity = await svc.getActivity(routeUuidParam(ctx.params, "id"), ctx.organizationId!);
+      const activity = await svc.getActivity(routeUuidParam(ctx.params, "id"), requireOrganizationId(ctx));
       if (!activity) throw new ApiError("NOT_FOUND", "Processing activity not found.", 404);
       return json({ data: activity, trace_id: ctx.traceId });
     },
@@ -158,7 +158,7 @@ export const privacyRoutes: RouteDefinition[] = [
     handler: async (ctx) => {
       try {
         const svc = new PrivacyCompletenessService(ctx.deps.privacy);
-        const result = await svc.analyze(routeUuidParam(ctx.params, "id"), ctx.organizationId!);
+        const result = await svc.analyze(routeUuidParam(ctx.params, "id"), requireOrganizationId(ctx));
         return json({ data: result, trace_id: ctx.traceId });
       } catch (e) { return toApiError(e); }
     },
@@ -191,7 +191,7 @@ export const privacyRoutes: RouteDefinition[] = [
     tenantRequired: true,
     handler: async (ctx) => {
       const svc = new PrivacyCrudService(ctx.deps.privacy);
-      const result = await svc.listDataSubjects(routeUuidParam(ctx.params, "id"), ctx.organizationId!);
+      const result = await svc.listDataSubjects(routeUuidParam(ctx.params, "id"), requireOrganizationId(ctx));
       return json({ data: result, trace_id: ctx.traceId });
     },
   },
@@ -203,7 +203,7 @@ export const privacyRoutes: RouteDefinition[] = [
     tenantRequired: true,
     handler: async (ctx) => {
       const svc = new PrivacyCrudService(ctx.deps.privacy);
-      await svc.removeDataSubject(routeUuidParam(ctx.params, "subjectId"), ctx.organizationId!);
+      await svc.removeDataSubject(routeUuidParam(ctx.params, "subjectId"), requireOrganizationId(ctx));
       await ctx.deps.audit.record("privacy.data_subject.removed", { subject_id: routeUuidParam(ctx.params, "subjectId"), organization_id: ctx.organizationId, trace_id: ctx.traceId });
       return json({ data: { deleted: true }, trace_id: ctx.traceId });
     },
@@ -236,7 +236,7 @@ export const privacyRoutes: RouteDefinition[] = [
     tenantRequired: true,
     handler: async (ctx) => {
       const svc = new PrivacyCrudService(ctx.deps.privacy);
-      const result = await svc.listDataCategories(routeUuidParam(ctx.params, "id"), ctx.organizationId!);
+      const result = await svc.listDataCategories(routeUuidParam(ctx.params, "id"), requireOrganizationId(ctx));
       return json({ data: result, trace_id: ctx.traceId });
     },
   },
@@ -248,7 +248,7 @@ export const privacyRoutes: RouteDefinition[] = [
     tenantRequired: true,
     handler: async (ctx) => {
       const svc = new PrivacyCrudService(ctx.deps.privacy);
-      await svc.removeDataCategory(routeUuidParam(ctx.params, "categoryId"), ctx.organizationId!);
+      await svc.removeDataCategory(routeUuidParam(ctx.params, "categoryId"), requireOrganizationId(ctx));
       await ctx.deps.audit.record("privacy.data_category.removed", { category_id: routeUuidParam(ctx.params, "categoryId"), organization_id: ctx.organizationId, trace_id: ctx.traceId });
       return json({ data: { deleted: true }, trace_id: ctx.traceId });
     },
@@ -281,7 +281,7 @@ export const privacyRoutes: RouteDefinition[] = [
     tenantRequired: true,
     handler: async (ctx) => {
       const svc = new PrivacyCrudService(ctx.deps.privacy);
-      const result = await svc.listThirdParties(routeUuidParam(ctx.params, "id"), ctx.organizationId!);
+      const result = await svc.listThirdParties(routeUuidParam(ctx.params, "id"), requireOrganizationId(ctx));
       return json({ data: result, trace_id: ctx.traceId });
     },
   },
@@ -293,7 +293,7 @@ export const privacyRoutes: RouteDefinition[] = [
     tenantRequired: true,
     handler: async (ctx) => {
       const svc = new PrivacyCrudService(ctx.deps.privacy);
-      await svc.removeThirdParty(routeUuidParam(ctx.params, "partyId"), ctx.organizationId!);
+      await svc.removeThirdParty(routeUuidParam(ctx.params, "partyId"), requireOrganizationId(ctx));
       await ctx.deps.audit.record("privacy.third_party.removed", { party_id: routeUuidParam(ctx.params, "partyId"), organization_id: ctx.organizationId, trace_id: ctx.traceId });
       return json({ data: { deleted: true }, trace_id: ctx.traceId });
     },
@@ -325,7 +325,7 @@ export const privacyRoutes: RouteDefinition[] = [
     tenantRequired: true,
     handler: async (ctx) => {
       const svc = new PrivacyScreeningService(ctx.deps.privacy);
-      const result = await svc.listScreenings(routeUuidParam(ctx.params, "id"), ctx.organizationId!);
+      const result = await svc.listScreenings(routeUuidParam(ctx.params, "id"), requireOrganizationId(ctx));
       return json({ data: result, trace_id: ctx.traceId });
     },
   },
@@ -357,7 +357,7 @@ export const privacyRoutes: RouteDefinition[] = [
     tenantRequired: true,
     handler: async (ctx) => {
       const svc = new PrivacyCrudService(ctx.deps.privacy);
-      const result = await svc.listFieldReviews(routeUuidParam(ctx.params, "id"), ctx.organizationId!);
+      const result = await svc.listFieldReviews(routeUuidParam(ctx.params, "id"), requireOrganizationId(ctx));
       return json({ data: result, trace_id: ctx.traceId });
     },
   },
@@ -425,7 +425,7 @@ export const privacyRoutes: RouteDefinition[] = [
         const usecase = new RopaAnalyzerUseCase(llmProvider);
         const result = await usecase.analyze({
           naturalLanguageDescription: body.text,
-          organizationId: ctx.organizationId!
+          organizationId: requireOrganizationId(ctx)
         });
         
         await ctx.deps.audit.record("privacy.ropa.analyzed", { organization_id: ctx.organizationId, trace_id: ctx.traceId });
@@ -475,7 +475,7 @@ export const privacyRoutes: RouteDefinition[] = [
         const result = await usecase.assess({
           ropaContext: body.ropaContext,
           projectDescription: body.projectDescription,
-          organizationId: ctx.organizationId!
+          organizationId: requireOrganizationId(ctx)
         });
         
         await ctx.deps.audit.record("privacy.dpia.assessed", { organization_id: ctx.organizationId, trace_id: ctx.traceId, draft: result.is_draft });
@@ -526,7 +526,7 @@ export const privacyRoutes: RouteDefinition[] = [
             const result = await usecase.scan({
               vendorName: item.payload.vendorName,
               contractExcerpt: item.payload.contractExcerpt,
-              organizationId: ctx.organizationId!
+              organizationId: requireOrganizationId(ctx)
             });
             await ctx.deps.audit.record("privacy.vendor_contract.batch.item_evaluated", { 
               job_id: jobId, 
@@ -595,7 +595,7 @@ export const privacyRoutes: RouteDefinition[] = [
         const result = await usecase.scan({
           vendorName: body.vendorName,
           contractExcerpt: body.contractExcerpt,
-          organizationId: ctx.organizationId!
+          organizationId: requireOrganizationId(ctx)
         });
         
         await ctx.deps.audit.record("vendor.contract.scanned", { organization_id: ctx.organizationId, trace_id: ctx.traceId, vendor: body.vendorName, complete_dpa: result.is_dpa_compliant });
@@ -646,7 +646,7 @@ export const privacyRoutes: RouteDefinition[] = [
         const url = new URL(ctx.request.url);
         const format = url.searchParams.get("format") === "markdown" ? "markdown" as const : "json" as const;
         const svc = new PrivacyReportService(ctx.deps.privacy);
-        const result = await svc.generateReport(routeUuidParam(ctx.params, "id"), ctx.organizationId!, format);
+        const result = await svc.generateReport(routeUuidParam(ctx.params, "id"), requireOrganizationId(ctx), format);
         await ctx.deps.audit.record("privacy.report.generated", { activity_id: routeUuidParam(ctx.params, "id"), format, report_id: result.report_id, organization_id: ctx.organizationId, trace_id: ctx.traceId });
         return json({ data: result, trace_id: ctx.traceId });
       } catch (e) { return toApiError(e); }

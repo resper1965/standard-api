@@ -298,9 +298,9 @@ ALTER TABLE "gap_findings" ALTER COLUMN "scf_control_id" DROP NOT NULL;--> state
 ALTER TABLE "gap_findings" ALTER COLUMN "soa_item_id" SET NOT NULL;--> statement-breakpoint
 ALTER TABLE "poam_items" ALTER COLUMN "scf_control_id" DROP NOT NULL;--> statement-breakpoint
 ALTER TABLE "poam_items" ALTER COLUMN "framework_requirement_id" DROP NOT NULL;--> statement-breakpoint
-ALTER TABLE "poam_items" ALTER COLUMN "expected_evidence" SET DATA TYPE jsonb;--> statement-breakpoint
+ALTER TABLE "poam_items" ALTER COLUMN "expected_evidence" SET DATA TYPE jsonb USING expected_evidence::jsonb;--> statement-breakpoint
 ALTER TABLE "poam_items" ALTER COLUMN "expected_evidence" SET DEFAULT '[]'::jsonb;--> statement-breakpoint
-ALTER TABLE "poam_items" ALTER COLUMN "acceptance_criteria" SET DATA TYPE jsonb;--> statement-breakpoint
+ALTER TABLE "poam_items" ALTER COLUMN "acceptance_criteria" SET DATA TYPE jsonb USING acceptance_criteria::jsonb;--> statement-breakpoint
 ALTER TABLE "poam_items" ALTER COLUMN "acceptance_criteria" SET DEFAULT '[]'::jsonb;--> statement-breakpoint
 ALTER TABLE "report_versions" ALTER COLUMN "report_type" SET DATA TYPE "public"."report_type" USING "report_type"::"public"."report_type";--> statement-breakpoint
 ALTER TABLE "scf_frameworks" ALTER COLUMN "version_label" DROP NOT NULL;--> statement-breakpoint

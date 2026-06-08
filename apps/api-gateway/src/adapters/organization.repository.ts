@@ -71,7 +71,8 @@ export const createDrizzleOrganizationRepository = (db: DbClient): OrganizationR
       };
     },
     async listByTenant(organizationId) {
-      const results = await db.select().from(organizations);
+      const results = await db.select().from(organizations)
+        .where(eq(organizations.id, organizationId));
       return results.map(found => ({
         organization_id: found.id,
         slug: found.slug,
@@ -104,9 +105,15 @@ export const createDrizzleOrganizationRepository = (db: DbClient): OrganizationR
     withOrganization(organizationId) {
       return {
         create: async (input) => this.create(input),
-        get: async (orgId) => this.get(orgId),
+        get: async (orgId) => {
+          if (orgId !== organizationId) return null;
+          return this.get(orgId);
+        },
         list: async () => this.listByTenant(organizationId),
-        update: async (orgId, patch) => this.update(orgId, patch)
+        update: async (orgId, patch) => {
+          if (orgId !== organizationId) return null;
+          return this.update(orgId, patch);
+        }
       };
     }
   };

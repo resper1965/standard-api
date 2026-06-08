@@ -73,13 +73,9 @@ export const assertRbac = async (context: RequestContext, requiredPermissions: P
 
   // Step 2: Check that the actor's permissions include ALL required permissions.
   // M2M scopes are checked first (API keys); then auth.permissions (session-based roles).
+  // M4 fix: empty scopes = no permissions (least privilege).
+  // If an API key has no scopes, it should be rejected, not granted full access.
   if (allowed && requiredPermissions.length > 0) {
-    // M2M wildcard key bypass: empty scopes array = full access (all permissions granted).
-    // This is by design: scope.middleware.ts already validates scoped keys; RBAC respects the convention.
-    if (context.m2mScopes && context.m2mScopes.length === 0) {
-      return; // Wildcard M2M key — bypass all permission checks
-    }
-
     const actorPermissions: string[] = [];
 
     // M2M API key scopes (highest priority — explicit scope grants)
@@ -92,13 +88,28 @@ export const assertRbac = async (context: RequestContext, requiredPermissions: P
       actorPermissions.push(...context.auth.permissions);
     }
 
-    // Session-based role resolution: if we have a session but no auth.permissions,
-    // resolve permissions from the role via DEFAULT_ROLE_PERMISSIONS lookup.
-    // This covers Standard Native Auth sessions where permissions come from the user's role.
-    if (context.session?.user?.role && actorPermissions.length === 0) {
-      const { DEFAULT_ROLE_PERMISSIONS } = await import("@standard/security");
-      const rolePerms = DEFAULT_ROLE_PERMISSIONS[context.session.user.role as keyof typeof DEFAULT_ROLE_PERMISSIONS];
-      if (rolePerms) actorPermissions.push(...rolePerms);
+    // Session-based role resolution: resolve GRC permissions from the user's role.
+    // Priority 1: session.user.role (populated by Better Auth admin plugin, if installed).
+    // Priority 2: session.activeOrganizationRole (populated by customSession plugin — this is
+    //   the org membership role, e.g. "owner"/"admin"/"member"). Mapped to GRC role via
+    //   resolveGrcRoleFromOrgRole() which bridges Better Auth org roles → Standard GRC roles.
+    if (actorPermissions.length === 0 && context.session) {
+      const { DEFAULT_ROLE_PERMISSIONS, resolveGrcRoleFromOrgRole } = await import("@standard/security");
+
+      // Priority 1: explicit user.role (future-proof — not currently populated)
+      let resolvedGrcRole = context.session.user?.role as keyof typeof DEFAULT_ROLE_PERMISSIONS | undefined;
+
+      // Priority 2: org role from session enrichment → GRC role mapping
+      if (!resolvedGrcRole && context.session.session?.activeOrganizationRole) {
+        resolvedGrcRole = resolveGrcRoleFromOrgRole(
+          context.session.session.activeOrganizationRole
+        ) as keyof typeof DEFAULT_ROLE_PERMISSIONS | undefined ?? undefined;
+      }
+
+      if (resolvedGrcRole) {
+        const rolePerms = DEFAULT_ROLE_PERMISSIONS[resolvedGrcRole];
+        if (rolePerms) actorPermissions.push(...rolePerms);
+      }
     }
 
     const missingPermissions = requiredPermissions.filter(

@@ -48,11 +48,23 @@ export type MembershipRepositoryAdapter = {
   countActiveOrgsByUser(userId: string): Promise<number>;
 };
 
+/**
+ * Safely extract rows from Drizzle result regardless of driver shape.
+ * neon-http returns { rows: [...] }, drizzle-node returns [...] directly. (C1 fix)
+ */
+function extractRows(result: unknown): Record<string, unknown>[] {
+  if (Array.isArray(result)) return result;
+  if (result && typeof result === 'object' && 'rows' in result && Array.isArray((result as any).rows)) {
+    return (result as any).rows;
+  }
+  return [];
+}
+
 export function createDrizzleMembershipRepository(db: DbClient): MembershipRepositoryAdapter {
   return {
     async create(input): Promise<MembershipRecord> {
-      const rows = await db.execute(
-        sql`INSERT INTO memberships (id, organization_id, organization_id, user_id, email, display_name, role, status, invited_at, accepted_at, created_at, updated_at)
+      const result = await db.execute(
+        sql`INSERT INTO memberships (id, organization_id, user_id, email, display_name, role, status, invited_at, accepted_at, created_at, updated_at)
             VALUES (
               ${input.membership_id}::uuid,
               ${input.organization_id}::uuid,
@@ -66,32 +78,30 @@ export function createDrizzleMembershipRepository(db: DbClient): MembershipRepos
               NOW(),
               NOW()
             )
-            RETURNING id AS membership_id, organization_id, organization_id, user_id, email, display_name, role, status,
+            RETURNING id AS membership_id, organization_id, user_id, email, display_name, role, status,
                       invited_at, accepted_at, created_at, updated_at`
       );
-      const row = (rows as any)[0] ?? (rows as any).rows?.[0];
+      const row = extractRows(result)[0];
       if (!row) throw new ApiError("INTERNAL_ERROR", "Failed to create membership.", 500);
       return mapRow(row);
     },
 
     async listByOrganization(organizationId): Promise<MembershipRecord[]> {
-      const rows = await db.execute(
-        sql`SELECT id AS membership_id, organization_id, organization_id, user_id, email, display_name, role, status,
+      const result = await db.execute(
+        sql`SELECT id AS membership_id, organization_id, user_id, email, display_name, role, status,
                    invited_at, accepted_at, created_at, updated_at
             FROM memberships
             WHERE organization_id = ${organizationId}::uuid
-              AND organization_id = ${organizationId}::uuid
               AND deleted_at IS NULL
               AND status != 'removed'
             ORDER BY created_at DESC`
       );
-      const list = (rows as any).rows ?? rows as any;
-      return Array.isArray(list) ? list.map(mapRow) : [];
+      return extractRows(result).map(mapRow);
     },
 
     async getById(membershipId, organizationId): Promise<MembershipRecord | null> {
-      const rows = await db.execute(
-        sql`SELECT id AS membership_id, organization_id, organization_id, user_id, email, display_name, role, status,
+      const result = await db.execute(
+        sql`SELECT id AS membership_id, organization_id, user_id, email, display_name, role, status,
                    invited_at, accepted_at, created_at, updated_at
             FROM memberships
             WHERE id = ${membershipId}::uuid
@@ -99,28 +109,26 @@ export function createDrizzleMembershipRepository(db: DbClient): MembershipRepos
               AND deleted_at IS NULL
             LIMIT 1`
       );
-      const list = (rows as any).rows ?? rows as any;
-      const row = Array.isArray(list) ? list[0] : null;
+      const row = extractRows(result)[0];
       return row ? mapRow(row) : null;
     },
 
     async updateRole(membershipId, organizationId, role): Promise<MembershipRecord | null> {
-      const rows = await db.execute(
+      const result = await db.execute(
         sql`UPDATE memberships
             SET role = ${role}, updated_at = NOW()
             WHERE id = ${membershipId}::uuid
               AND organization_id = ${organizationId}::uuid
               AND deleted_at IS NULL
-            RETURNING id AS membership_id, organization_id, organization_id, user_id, email, display_name, role, status,
+            RETURNING id AS membership_id, organization_id, user_id, email, display_name, role, status,
                       invited_at, accepted_at, created_at, updated_at`
       );
-      const list = (rows as any).rows ?? rows as any;
-      const row = Array.isArray(list) ? list[0] : null;
+      const row = extractRows(result)[0];
       return row ? mapRow(row) : null;
     },
 
     async remove(membershipId, organizationId): Promise<boolean> {
-      const rows = await db.execute(
+      const result = await db.execute(
         sql`UPDATE memberships
             SET status = 'removed', updated_at = NOW()
             WHERE id = ${membershipId}::uuid
@@ -128,22 +136,20 @@ export function createDrizzleMembershipRepository(db: DbClient): MembershipRepos
               AND deleted_at IS NULL
             RETURNING id`
       );
-      const list = (rows as any).rows ?? rows as any;
-      return Array.isArray(list) && list.length > 0;
+      return extractRows(result).length > 0;
     },
 
     async countActiveOrgsByUser(userId): Promise<number> {
       // Count active, non-removed memberships for the user across all orgs.
       // Excludes 'removed' status entries.
-      const rows = await db.execute(
+      const result = await db.execute(
         sql`SELECT COUNT(*)::int AS count
             FROM memberships
             WHERE user_id = ${userId}::uuid
               AND status != 'removed'
               AND deleted_at IS NULL`
       );
-      const list = (rows as any).rows ?? rows as any;
-      const first = Array.isArray(list) ? list[0] : null;
+      const first = extractRows(result)[0];
       return Number(first?.count ?? 0);
     },
   };
@@ -188,7 +194,7 @@ export function createMockMembershipRepository(): MembershipRepositoryAdapter {
     },
     async listByOrganization(organizationId) {
       return [...store.values()].filter(
-        m => m.organization_id === organizationId && m.organization_id === organizationId && m.status !== 'removed'
+        m => m.organization_id === organizationId && m.status !== 'removed'
       );
     },
     async getById(id, organizationId) {

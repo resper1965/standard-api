@@ -11,7 +11,7 @@
  *   4. Derive gap/compliance per requirement WITHOUT reassessing
  */
 import type { RouteDefinition } from "../http";
-import { json, routeParam, routeUuidParam } from "../http";
+import { json, routeParam, routeUuidParam , requireOrganizationId } from "../http";
 import { ApiError } from "../errors/api-error";
 
 // Projection status derived from control implementation status
@@ -70,7 +70,7 @@ export const projectionRoutes: RouteDefinition[] = [
       const frameworkId = routeUuidParam(params, "frameworkId");
 
       // 1. Validate assessment exists
-      const assessment = await deps.assessments.withOrganization(organizationId!).get(assessmentId);
+      const assessment = await deps.assessments.withOrganization(requireOrganizationId({ organizationId })).get(assessmentId);
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
 
       const scfVersionId = assessment.scf_version_id;

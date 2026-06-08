@@ -1,7 +1,7 @@
 import { CreateApprovalRequestSchema } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";
-import { json, newId, parseJson, routeParam, routeUuidParam } from "../http";
+import { json, newId, parseJson, routeParam, routeUuidParam , requireOrganizationId } from "../http";
 import { approvalResponse } from "../presenters";
 
 export const approvalsRoutes: RouteDefinition[] = [
@@ -44,18 +44,18 @@ export const approvalsRoutes: RouteDefinition[] = [
         throw new ApiError("FORBIDDEN", "Approval requires explicit approve permission for this gate.", 403, [{ required_permission: requiredPermission, your_role: sessionRole }]);
       }
 
-      const tenantAssessmentsDb = deps.assessments.withOrganization(organizationId!);
+      const tenantAssessmentsDb = deps.assessments.withOrganization(requireOrganizationId({ organizationId }));
       const assessment = await tenantAssessmentsDb.get(assessmentId);
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
       if (body.target_type === "artifact_version") {
-        const tenantArtifactsDb = deps.artifacts.withOrganization(organizationId!);
+        const tenantArtifactsDb = deps.artifacts.withOrganization(requireOrganizationId({ organizationId }));
         const artifact = await tenantArtifactsDb.get(body.target_id);
         if (!artifact || artifact.assessmentId !== assessmentId) {
           throw new ApiError("NOT_FOUND", "Approval target not found.", 404);
         }
       }
 
-      const tenantApprovalsDb = deps.approvals.withOrganization(organizationId!);
+      const tenantApprovalsDb = deps.approvals.withOrganization(requireOrganizationId({ organizationId }));
       const approval = await tenantApprovalsDb.create({
         id: newId(),
         organizationId: assessment.organization_id,
@@ -79,7 +79,7 @@ export const approvalsRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["approval:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
-      const tenantApprovalsDb = deps.approvals.withOrganization(organizationId!);
+      const tenantApprovalsDb = deps.approvals.withOrganization(requireOrganizationId({ organizationId }));
       const approvals = await tenantApprovalsDb.listByAssessment(routeUuidParam(params, "assessmentId"));
       return json({ data: approvals.map(approvalResponse), trace_id: traceId });
     }
@@ -90,7 +90,7 @@ export const approvalsRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["approval:read"],
     handler: async ({ deps, params, organizationId }) => {
-      const tenantApprovalsDb = deps.approvals.withOrganization(organizationId!);
+      const tenantApprovalsDb = deps.approvals.withOrganization(requireOrganizationId({ organizationId }));
       const approval = await tenantApprovalsDb.get(routeUuidParam(params, "approvalId"));
       if (!approval) throw new ApiError("NOT_FOUND", "Approval not found.", 404);
       return json(approvalResponse(approval));

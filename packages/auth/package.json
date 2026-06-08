@@ -15,6 +15,7 @@
   "dependencies": {
     "better-auth": "1.6.11",
     "@neondatabase/serverless": "^0.9.3",
+    "drizzle-orm": "^0.45.2",
     "@standard/schemas": "workspace:*",
     "@standard/email": "workspace:*"
   },

@@ -12,8 +12,8 @@
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^8.5.0",
-    "zod": "^4.3.6",
     "@neondatabase/serverless": "^0.9.3",
+    "@sentry/cloudflare": "^10.56.0",
     "@standard/agent-runtime": "workspace:*",
     "@standard/assessment-engine": "workspace:*",
     "@standard/auth": "workspace:*",
@@ -32,10 +32,12 @@
     "@standard/soa": "workspace:*",
     "@standard/workflows": "workspace:*",
     "better-auth": "1.6.11",
-    "drizzle-orm": "^0.45.2"
+    "drizzle-orm": "^0.45.2",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260426.1",
+    "@electric-sql/pglite": "0.5.1",
     "tsx": "latest",
     "typescript": "^6.0.3",
     "wrangler": "^3.114.17"

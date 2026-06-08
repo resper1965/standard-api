@@ -40,24 +40,33 @@ const createM2mContext = (m2mScopes: string[]): RequestContext => ({
 
 // ─── Wildcard M2M Key (scopes: []) ────────────────────────────────
 
-test("RBAC: M2M wildcard key (scopes: []) bypasses all permission checks", async () => {
+test("RBAC: M2M key with empty scopes (M4 fix) denies permission — least privilege", async () => {
   const context = createM2mContext([]);
-  // This was the exact scenario that caused the production 500:
-  // scf:read required, but m2mScopes was empty → denied → ZodError in logging
-  await assertRbac(context, ["scf:read"]);
-  // If we get here without throwing, the fix works
+  // M4 fix: empty scopes = ZERO permissions = 403 (least privilege, not wildcard)
+  try {
+    await assertRbac(context, ["scf:read"]);
+    throw new Error("Should have thrown ApiError — empty scopes = no permissions");
+  } catch (error: any) {
+    expect(error.status).toBe(403);
+    expect(error.code).toBe("FORBIDDEN");
+  }
 });
 
-test("RBAC: M2M wildcard key passes with multiple required permissions", async () => {
+test("RBAC: M2M key with empty scopes denies multiple required permissions", async () => {
   const context = createM2mContext([]);
-  await assertRbac(context, ["scf:read", "scf:write", "assessment:read"]);
-  // Wildcard key should pass regardless of how many permissions are required
+  // M4 fix: empty scopes = no permissions, fails for any required permission
+  try {
+    await assertRbac(context, ["scf:read", "scf:write", "assessment:read"]);
+    throw new Error("Should have thrown ApiError");
+  } catch (error: any) {
+    expect(error.status).toBe(403);
+  }
 });
 
-test("RBAC: M2M wildcard key passes with no required permissions", async () => {
+test("RBAC: M2M key with empty scopes passes when no permissions required", async () => {
   const context = createM2mContext([]);
   await assertRbac(context, []);
-  // Edge case: no permissions required + wildcard key = always pass
+  // Edge case: no permissions required + empty scopes = pass
 });
 
 // ─── Scoped M2M Key ──────────────────────────────────────────────
@@ -178,3 +187,11 @@ test("Integration: GET /scf/frameworks/invalid-non-uuid returns 400 not 500", as
   // RFC 7807 Problem Details format
   expect(body.status).toBe(400);
 });
+
+test("Drizzle: PGlite real database client integration test", async () => {
+  const { createDrizzleTestClient } = await import("./helpers");
+  const client = await createDrizzleTestClient();
+  const response = await client.send("/health", "GET");
+  expect(response.response.status).toBe(200);
+});
+

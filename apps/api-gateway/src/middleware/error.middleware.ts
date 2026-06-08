@@ -1,5 +1,6 @@
 import { AssessmentEngineError } from "@standard/assessment-engine";
 import { sanitizeErrorDetails } from "@standard/security";
+import { ZodError } from "zod";
 import { ApiError } from "../errors/api-error";
 import { json } from "../http";
 
@@ -43,6 +44,22 @@ export const errorResponse = (error: unknown, traceId: string, instance: string 
         errors: sanitizeErrorDetails([error.details])
       },
       { status, headers: { "Content-Type": "application/problem+json" } }
+    );
+  }
+
+  // ── Zod validation errors → 400 (A1 fix) ─────────────────────────
+  if (error instanceof ZodError) {
+    return json(
+      {
+        type: "https://api.standard-grc.com/errors/validation_error",
+        title: "Validation Error",
+        status: 400,
+        detail: "Request validation failed.",
+        instance,
+        trace_id: traceId,
+        errors: error.issues.map(i => ({ path: i.path.join("."), message: i.message }))
+      },
+      { status: 400, headers: { "Content-Type": "application/problem+json" } }
     );
   }
 

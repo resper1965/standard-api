@@ -69,3 +69,13 @@ infra/docker/postgres/seeds/0010_scf_official_frameworks_seed.sql
 
 .worktrees/
 worktrees/
+
+# Security: contains hardcoded credentials
+test-auth.ts
+
+# Sentry & local scratch
+sentry_*.json
+scratch/
+workers/smoke-tester/
+tests/unit/
+

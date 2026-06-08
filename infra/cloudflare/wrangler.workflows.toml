@@ -21,7 +21,7 @@ class_name = "CouncilOrchestrationWorkflow"
 
 [[kv_namespaces]]
 binding = "STANDARD_CACHE"
-id = "094323d4e27d4b92994c89d412d27f74"
+id = "d94323d4e27d4b92994c89d412d27f74"
 
 [env.staging]
 name = "standard-workflows-staging"

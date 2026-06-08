@@ -49,16 +49,18 @@
     "@cloudflare/workers-types": "^4.20260426.1",
     "@commitlint/cli": "^19.3.0",
     "@commitlint/config-conventional": "^19.2.2",
-    "wrangler": "^4.95.0",
+    "@sentry/cli": "^3.5.0",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^25.7.0",
     "husky": "^9.0.11",
     "js-yaml": "^4.2.0",
     "lint-staged": "^15.2.2",
     "tsx": "4.22.3",
-    "typescript": "6.0.3"
+    "typescript": "6.0.3",
+    "wrangler": "^4.95.0"
   },
   "dependencies": {
+    "better-auth": "1.5.0",
     "dotenv": "^17.4.2"
   },
   "pnpm": {
@@ -66,7 +68,8 @@
       "better-auth": "1.6.11",
       "@better-auth/api-key": "1.6.11",
       "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.2/xlsx-0.20.2.tgz",
-      "undici": ">=6.24.0"
+      "undici": ">=6.24.0",
+      "@electric-sql/pglite": "0.5.1"
     }
   }
 }

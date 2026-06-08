@@ -1,5 +1,5 @@
 import type { RouteDefinition } from "../http";
-import { json } from "../http";
+import { json , requireOrganizationId } from "../http";
 import { IntelligenceService } from "../services/intelligence.service";
 import { ApiError } from "../errors/api-error";
 import { z } from "zod";
@@ -20,7 +20,7 @@ export const jobsRoutes: RouteDefinition[] = [
       const intelligenceService = new IntelligenceService(ctx.deps);
       
       try {
-        const run = await intelligenceService.getJobStatus(jobId, ctx.organizationId!);
+        const run = await intelligenceService.getJobStatus(jobId, requireOrganizationId(ctx));
         
         if (!run) {
            throw new ApiError("NOT_FOUND", "Job not found", 404);

@@ -8,7 +8,7 @@ import type { AssessmentSummary, OrganizationDashboard, AuditLogTenantQuery } fr
 import { AuditLogTenantQuerySchema } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";
-import { json, routeParam, routeUuidParam } from "../http";
+import { json, routeParam, routeUuidParam , requireOrganizationId } from "../http";
 
 const parseQuery = (request: Request, schema: { safeParse: (v: unknown) => { success: boolean; data?: unknown; error?: unknown } }) => {
   const raw = Object.fromEntries(new URL(request.url).searchParams.entries());
@@ -26,26 +26,26 @@ export const dashboardRoutes: RouteDefinition[] = [
     permissions: ["assessment:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
       const assessmentId = routeUuidParam(params, "assessmentId");
-      const assessment = await deps.assessments.withOrganization(organizationId!).get(assessmentId);
+      const assessment = await deps.assessments.withOrganization(requireOrganizationId({ organizationId })).get(assessmentId);
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
 
       // SoA items → total & implemented controls
-      const soaVersions = await deps.soa.repositories.versions.listByAssessment(assessmentId, organizationId!);
+      const soaVersions = await deps.soa.repositories.versions.listByAssessment(assessmentId, requireOrganizationId({ organizationId }));
       const latestSoa = soaVersions.at(-1);
       let totalControls = 0;
       let implementedControls = 0;
       if (latestSoa) {
-        const items = await deps.soa.repositories.items.listByVersion(latestSoa.soa_version_id, organizationId!);
+        const items = await deps.soa.repositories.items.listByVersion(latestSoa.soa_version_id, requireOrganizationId({ organizationId }));
         totalControls = items.length;
         implementedControls = items.filter((i) => i.implementation_status === "implemented").length;
       }
 
       // Gap findings
-      const gapVersions = await deps.gapAnalysis.repositories.gapVersions.listByAssessment(assessmentId, organizationId!);
+      const gapVersions = await deps.gapAnalysis.repositories.gapVersions.listByAssessment(assessmentId, requireOrganizationId({ organizationId }));
       const latestGap = gapVersions.at(-1);
       let totalFindings = 0, critical = 0, high = 0, medium = 0, low = 0;
       if (latestGap) {
-        const findings = await deps.gapAnalysis.repositories.gapFindings.listByVersion(latestGap.gap_analysis_version_id, organizationId!);
+        const findings = await deps.gapAnalysis.repositories.gapFindings.listByVersion(latestGap.gap_analysis_version_id, requireOrganizationId({ organizationId }));
         totalFindings = findings.length;
         for (const f of findings) {
           if (f.severity === "critical") critical++;
@@ -56,11 +56,11 @@ export const dashboardRoutes: RouteDefinition[] = [
       }
 
       // POA&M open items
-      const poamVersions = await deps.poam.repositories.versions.listByAssessment(assessmentId, organizationId!);
+      const poamVersions = await deps.poam.repositories.versions.listByAssessment(assessmentId, requireOrganizationId({ organizationId }));
       const latestPoam = poamVersions.at(-1);
       let openPoamItems = 0;
       if (latestPoam) {
-        const items = await deps.poam.repositories.items.listByVersion(latestPoam.poam_version_id, organizationId!);
+        const items = await deps.poam.repositories.items.listByVersion(latestPoam.poam_version_id, requireOrganizationId({ organizationId }));
         openPoamItems = items.filter((p) => p.status === "draft" || p.status === "in_progress" || p.status === "approved").length;
       }
 
@@ -113,10 +113,10 @@ export const dashboardRoutes: RouteDefinition[] = [
         byState[state] = (byState[state] ?? 0) + 1;
 
         // Quick SoA compliance calc
-        const soaVersions = await deps.soa.repositories.versions.listByAssessment(a.assessment_id, organizationId!);
+        const soaVersions = await deps.soa.repositories.versions.listByAssessment(a.assessment_id, requireOrganizationId({ organizationId }));
         const latestSoa = soaVersions.at(-1);
         if (latestSoa) {
-          const items = await deps.soa.repositories.items.listByVersion(latestSoa.soa_version_id, organizationId!);
+          const items = await deps.soa.repositories.items.listByVersion(latestSoa.soa_version_id, requireOrganizationId({ organizationId }));
           if (items.length > 0) {
             const implemented = items.filter((i) => i.implementation_status === "implemented").length;
             complianceSum += (implemented / items.length) * 100;
@@ -125,18 +125,18 @@ export const dashboardRoutes: RouteDefinition[] = [
         }
 
         // POA&M count
-        const poamVersions = await deps.poam.repositories.versions.listByAssessment(a.assessment_id, organizationId!);
+        const poamVersions = await deps.poam.repositories.versions.listByAssessment(a.assessment_id, requireOrganizationId({ organizationId }));
         const latestPoam = poamVersions.at(-1);
         if (latestPoam) {
-          const pItems = await deps.poam.repositories.items.listByVersion(latestPoam.poam_version_id, organizationId!);
+          const pItems = await deps.poam.repositories.items.listByVersion(latestPoam.poam_version_id, requireOrganizationId({ organizationId }));
           totalOpenPoams += pItems.filter((p) => p.status === "draft" || p.status === "in_progress" || p.status === "approved").length;
         }
 
         // Gap findings
-        const gapVersions = await deps.gapAnalysis.repositories.gapVersions.listByAssessment(a.assessment_id, organizationId!);
+        const gapVersions = await deps.gapAnalysis.repositories.gapVersions.listByAssessment(a.assessment_id, requireOrganizationId({ organizationId }));
         const latestGap = gapVersions.at(-1);
         if (latestGap) {
-          const findings = await deps.gapAnalysis.repositories.gapFindings.listByVersion(latestGap.gap_analysis_version_id, organizationId!);
+          const findings = await deps.gapAnalysis.repositories.gapFindings.listByVersion(latestGap.gap_analysis_version_id, requireOrganizationId({ organizationId }));
           for (const f of findings) {
             if (f.severity === "critical") totalCritical++;
             else if (f.severity === "high") totalHigh++;

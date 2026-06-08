@@ -91,6 +91,8 @@ export type ApiKeyRecord = {
   expiresAt: Date | null;
   lastUsedAt: Date | null;
   revokedAt: Date | null;
+  scheduledRevokeAt: Date | null;
+  rotatedToKeyId: string | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -115,6 +117,7 @@ export type ApiKeysRepositoryAdapter = {
   verifyKey(keyHash: string): Promise<ApiKeyRecord | null>;
   markUsed(id: string): Promise<void>;
   revokeKey(id: string, organizationId: string): Promise<boolean>;
+  scheduleRevocation(id: string, organizationId: string, revokeAt: Date, rotatedToKeyId: string): Promise<boolean>;
   listByOrganization(organizationId: string, activeOnly?: boolean): Promise<ApiKeyRecord[]>;
 };
 
@@ -215,6 +218,8 @@ export type AppDependencies = {
   COUNCIL_WORKFLOW?: Workflow | undefined;
   /** Cloudflare Queue for SOC incident triage background processing (optional) */
   SOC_TRIAGE_QUEUE?: Queue | undefined;
+  /** Cloudflare Queue for user lifecycle events (signup, update) */
+  USER_LIFECYCLE_QUEUE?: Queue | undefined;
   /** Webhook endpoint management (optional — requires storage adapter) */
   webhooks?: WebhookRepositoryAdapter | undefined;
   /** READ-ONLY: resolves Standard Native Auth org ID → Standard domain UUIDs. Returns null if not provisioned. */
@@ -256,6 +261,14 @@ export type RequestContext = {
     session: {
       id: string;
       activeOrganizationId?: string | null | undefined;
+      activeOrganizationSlug?: string | null | undefined;
+      activeOrganizationRole?: string | null | undefined;
+      allowedOrganizations?: Array<{
+        id: string;
+        name: string;
+        slug: string;
+        role: string;
+      }>;
       [key: string]: unknown;
     };
   } | null;
@@ -264,10 +277,18 @@ export type RequestContext = {
   validatedBody?: unknown;
   /** Cloudflare native execution context for background tasks */
   execCtx?: ExecutionContext;
+  /** H8: Flag indicating body has already been parsed by declarative bodySchema validation */
+  _bodyConsumed?: boolean;
   /** Cloudflare Worker Environment variables and bindings.
    * Typed as Partial<Env> because the app is initialised with a partial env
    * in dev/test mode (see createApp signature in app.ts). */
   env?: Partial<Env>;
+  /** Application-level tenant scoping for database queries.
+   * Populated by tenant-db middleware after auth resolves organizationId.
+   * Use `tenantScope.scopeWhere(table.organizationId)` for SELECTs.
+   * Use `tenantScope.scopeInsert(values)` for INSERTs.
+   * Undefined for unauthenticated/admin/cross-tenant routes. */
+  tenantScope?: import("./middleware/tenant-db.middleware").TenantScope | undefined;
 };
 
 export type RouteHandler = (context: RequestContext) => Promise<Response> | Response;
@@ -339,4 +360,15 @@ export const routeUuidParam = (params: Record<string, string>, name: string): st
 };
 
 export const newId = (): string => crypto.randomUUID();
+
+/**
+ * Safely extract organization_id from context — replaces `organizationId!`.
+ * Throws ORGANIZATION_REQUIRED (403) if org context was not resolved. (A2 fix)
+ */
+export const requireOrganizationId = (ctx: Pick<RequestContext, "organizationId">): string => {
+  if (!ctx.organizationId) {
+    throw new ApiError("ORGANIZATION_REQUIRED", "Organization context is required for this operation.", 403);
+  }
+  return ctx.organizationId;
+};
 

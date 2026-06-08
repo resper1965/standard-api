@@ -53,34 +53,57 @@ const createDrizzleKbEmbeddingJobRepository = (db: DbClient): KbEmbeddingJobRepo
       errorCode: job.error_code,
       errorMessageSafe: job.error_message_safe,
       updatedAt: new Date(),
-    }).where(eq(kbEmbeddingJobs.id, job.job_id));
+    }).where(
+      and(
+        eq(kbEmbeddingJobs.id, job.job_id),
+        eq(kbEmbeddingJobs.organizationId, job.organization_id)
+      )
+    );
   },
 
   async getJob(jobId: string, organizationId: string) {
     const [row] = await db.select().from(kbEmbeddingJobs)
-      .where(eq(kbEmbeddingJobs.id, jobId))
+      .where(
+        and(
+          eq(kbEmbeddingJobs.id, jobId),
+          eq(kbEmbeddingJobs.organizationId, organizationId)
+        )
+      )
       .limit(1);
     return row ? mapEmbeddingJobRow(row) : null;
   },
 
   async listJobsByAssessment(assessmentId: string, organizationId: string) {
     const rows = await db.select().from(kbEmbeddingJobs)
-      .where(eq(kbEmbeddingJobs.assessmentId, assessmentId));
+      .where(
+        and(
+          eq(kbEmbeddingJobs.assessmentId, assessmentId),
+          eq(kbEmbeddingJobs.organizationId, organizationId)
+        )
+      );
     return rows.map(mapEmbeddingJobRow);
   },
 
   async listJobsByDocument(documentId: string, organizationId: string) {
     const rows = await db.select().from(kbEmbeddingJobs)
-      .where(eq(kbEmbeddingJobs.documentId, documentId));
+      .where(
+        and(
+          eq(kbEmbeddingJobs.documentId, documentId),
+          eq(kbEmbeddingJobs.organizationId, organizationId)
+        )
+      );
     return rows.map(mapEmbeddingJobRow);
   },
 
   async findQueuedJobForChunk(chunkId: string, organizationId: string) {
     const [row] = await db.select().from(kbEmbeddingJobs)
-      .where(and(
-        eq(kbEmbeddingJobs.chunkId, chunkId),
-        inArray(kbEmbeddingJobs.status, ["queued", "running", "retrying"])
-      ))
+      .where(
+        and(
+          eq(kbEmbeddingJobs.chunkId, chunkId),
+          eq(kbEmbeddingJobs.organizationId, organizationId),
+          inArray(kbEmbeddingJobs.status, ["queued", "running", "retrying"])
+        )
+      )
       .limit(1);
     return row ? mapEmbeddingJobRow(row) : null;
   },
@@ -143,32 +166,57 @@ const createDrizzleKbVectorReferenceRepository = (db: DbClient): KbVectorReferen
         document_id: ref.document_id,
       },
       updatedAt: new Date(),
-    }).where(eq(vectorReferences.id, ref.vector_reference_id));
+    }).where(
+      and(
+        eq(vectorReferences.id, ref.vector_reference_id),
+        eq(vectorReferences.organizationId, ref.organization_id)
+      )
+    );
   },
 
   async get(referenceId: string, organizationId: string) {
     const [row] = await db.select().from(vectorReferences)
-      .where(eq(vectorReferences.id, referenceId))
+      .where(
+        and(
+          eq(vectorReferences.id, referenceId),
+          eq(vectorReferences.organizationId, organizationId)
+        )
+      )
       .limit(1);
     return row ? mapVectorRefRow(row) : null;
   },
 
   async findByChunk(chunkId: string, organizationId: string) {
     const [row] = await db.select().from(vectorReferences)
-      .where(eq(vectorReferences.kbEntryId, chunkId))
+      .where(
+        and(
+          eq(vectorReferences.kbEntryId, chunkId),
+          eq(vectorReferences.organizationId, organizationId)
+        )
+      )
       .limit(1);
     return row ? mapVectorRefRow(row) : null;
   },
 
   async listByAssessment(assessmentId: string, organizationId: string) {
     const rows = await db.select().from(vectorReferences)
-      .where(eq(vectorReferences.assessmentId, assessmentId));
+      .where(
+        and(
+          eq(vectorReferences.assessmentId, assessmentId),
+          eq(vectorReferences.organizationId, organizationId)
+        )
+      );
     return rows.map(mapVectorRefRow);
   },
 
   async listByDocument(documentId: string, organizationId: string) {
     const rows = await db.select().from(vectorReferences)
-      .where(eq(vectorReferences.assessmentId, documentId));
+      .where(
+        and(
+          eq(vectorReferences.assessmentId, documentId),
+          eq(vectorReferences.organizationId, organizationId)
+        )
+      );
     return rows.map(mapVectorRefRow);
   },
 });

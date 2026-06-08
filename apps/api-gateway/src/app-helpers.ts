@@ -4,6 +4,7 @@ import type { Env } from "./index";
 import { ApiError } from "./errors/api-error";
 import type { RequestContext, RouteDefinition } from "./http";
 import { resolveAuthContext } from "./middleware/auth.middleware";
+import { attachTenantDb } from "./middleware/tenant-db.middleware";
 
 // ─────────────────────────────────────────────────────────────────────
 // CORS helpers
@@ -169,6 +170,8 @@ export const resolveAuth = async (
   // ── Standard Native Auth ──────────────────────────────────
   if (auth) {
     await resolveAuthContext(context, auth, authRequired);
+    // Attach RLS-scoped DB access after org context is resolved
+    attachTenantDb(context);
     return;
   }
 

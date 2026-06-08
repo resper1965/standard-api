@@ -20,8 +20,24 @@ export const healthRoutes: RouteDefinition[] = [
   {
     method: "GET",
     path: "/api/v1/health",
+    // M10 fix: public liveness probe returns ONLY status for load balancers.
+    // Operational metrics moved to /api/v1/health/metrics (protected).
+    handler: async ({ traceId }) => {
+      return json({
+        ok: true,
+        service: "standard-api-standard",
+        trace_id: traceId,
+        timestamp: new Date().toISOString(),
+      });
+    }
+  },
+  {
+    method: "GET",
+    path: "/api/v1/health/metrics",
+    protected: true,
+    requireActor: true,
+    permissions: ["admin:read"],
     handler: async ({ traceId, deps }) => {
-      // Basic health
       const health: Record<string, unknown> = {
         ok: true,
         service: "standard-api-standard",
@@ -30,8 +46,6 @@ export const healthRoutes: RouteDefinition[] = [
       };
 
       // Operational metrics: best-effort with 250ms timeout.
-      // If metrics DB query is slow, health returns without operational data.
-      // Prevents metrics aggregation from blocking health checks (Neon P95 can be ~600ms).
       try {
         if (deps.observability?.metrics) {
           const METRICS_TIMEOUT_MS = 250;
@@ -72,7 +86,6 @@ export const healthRoutes: RouteDefinition[] = [
           health["operational"] = result ?? { status: "timeout" };
         }
       } catch {
-        // Observability unavailable — basic health is still valid
         health["operational"] = { status: "unavailable" };
       }
 
@@ -103,7 +116,7 @@ export const healthRoutes: RouteDefinition[] = [
       return json(
         {
           status: isHealthy ? "ok" : "degraded",
-          auth: "standard-native-auth@1.6.11",
+          auth: "standard-native-auth",
           db: dbStatus,
           latency_ms: latencyMs,
           trace_id: traceId,
@@ -115,9 +128,13 @@ export const healthRoutes: RouteDefinition[] = [
   {
     method: "GET",
     path: "/api/v1/auth/debug",
+    protected: true,
+    requireActor: true,
+    permissions: ["admin:read"],
     handler: async (context) => {
-      if (context.env?.STANDARD_ENV === "production") {
-        throw new ApiError("FORBIDDEN", "Auth debug endpoint is disabled in production.", 403);
+      const env = context.env?.STANDARD_ENV;
+      if (env !== "development" && env !== "staging") {
+        throw new ApiError("FORBIDDEN", "Auth debug endpoint is only available in development and staging.", 403);
       }
       return json({
         session: context.session ?? null,

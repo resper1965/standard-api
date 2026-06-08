@@ -2,10 +2,10 @@
  * @module scope.middleware
  * @description Enforces M2M API key scopes on protected routes.
  *
- * Only active for M2M requests (actorId === "m2m-agent").
+ * Only active for M2M requests (actorId starts with "m2m:").
  * Interactive sessions bypass scope checks (they use RBAC instead).
  *
- * Keys with no scopes (empty array) have wildcard access for backward compatibility.
+ * M4 fix: Keys with no scopes (empty array) have ZERO permissions (least privilege).
  */
 import { hasRequiredScopes, getRequiredScopesForRoute, type M2mScope } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
@@ -23,8 +23,15 @@ export const assertApiKeyScopes = (
   // Only enforce for M2M agents (actorId begins with m2m:)
   if (!context.actorId?.startsWith("m2m:")) return;
 
-  // Wildcard keys (empty scopes array) bypass all scope checks
-  if (Array.isArray(context.m2mScopes) && context.m2mScopes.length === 0) return;
+  // M4 fix alignment: empty scopes = zero permissions = deny
+  // This aligns with rbac.middleware.ts which already rejects empty scopes.
+  if (Array.isArray(context.m2mScopes) && context.m2mScopes.length === 0) {
+    throw new ApiError(
+      "INSUFFICIENT_SCOPE",
+      "This API key has no scopes configured. Assign at least one scope to enable access.",
+      403
+    );
+  }
 
   const requiredScopes = getRequiredScopesForRoute(method, routePath);
 
