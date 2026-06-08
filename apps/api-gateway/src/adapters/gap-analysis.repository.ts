@@ -33,22 +33,34 @@ const createDrizzleEvidenceFindingRepository = (
       await db
         .insert(evidenceFindings)
         .values({
-          id: sql<string>`${finding.evidence_finding_id}::uuid`,
-          organizationId: finding.organization_id,
-          assessmentId: finding.assessment_id,
-          soaVersionId: finding.soa_version_id,
-          soaItemId: finding.soa_item_id,
-          frameworkId: finding.framework_id ?? "",
-          frameworkRequirementId: finding.framework_requirement_id ?? "",
-          scfVersionId: finding.scf_version_id,
-          scfControlId: finding.scf_control_id,
-          evidenceStrength: finding.evidence_strength,
-          evidenceStatus: finding.evidence_status,
-          evidenceSummary: finding.evidence_summary,
-          evidenceLimitations: finding.evidence_limitations,
+          id: String(finding.evidence_finding_id) as any,
+          organizationId: String(finding.organization_id),
+          assessmentId: String(finding.assessment_id),
+          soaVersionId: String(finding.soa_version_id),
+          soaItemId: String(finding.soa_item_id),
+          frameworkId:
+            finding.framework_id != null ? String(finding.framework_id) : "",
+          frameworkRequirementId:
+            finding.framework_requirement_id != null
+              ? String(finding.framework_requirement_id)
+              : "",
+          scfVersionId: String(finding.scf_version_id),
+          scfControlId:
+            finding.scf_control_id != null
+              ? String(finding.scf_control_id)
+              : null,
+
+          evidenceStrength: String(finding.evidence_strength) as any,
+
+          evidenceStatus: String(finding.evidence_status) as any,
+          evidenceSummary: String(finding.evidence_summary),
+          evidenceLimitations: [],
           confidenceScore: String(finding.confidence_score),
-          generatedByAgentRunId: finding.generated_by_agent_run_id,
-          traceId: finding.trace_id,
+          generatedByAgentRunId:
+            finding.generated_by_agent_run_id != null
+              ? String(finding.generated_by_agent_run_id)
+              : null,
+          traceId: String(finding.trace_id),
         })
         .onConflictDoNothing();
     },
@@ -56,14 +68,15 @@ const createDrizzleEvidenceFindingRepository = (
       await db
         .update(evidenceFindings)
         .set({
-          evidenceStrength: finding.evidence_strength,
-          evidenceStatus: finding.evidence_status,
-          evidenceSummary: finding.evidence_summary,
-          evidenceLimitations: finding.evidence_limitations,
+          evidenceStrength: String(finding.evidence_strength) as any,
+
+          evidenceStatus: String(finding.evidence_status) as any,
+          evidenceSummary: String(finding.evidence_summary),
+          evidenceLimitations: [],
           confidenceScore: String(finding.confidence_score),
           updatedAt: new Date(),
         })
-        .where(eq(evidenceFindings.id, finding.evidence_finding_id));
+        .where(eq(evidenceFindings.id, String(finding.evidence_finding_id)));
     },
     async get(evidenceFindingId: string, _organizationId: string) {
       const [row] = await db
@@ -114,20 +127,32 @@ const createDrizzleEvidenceSourceRepository = (
         .insert(evidenceSources)
         .values(
           sources.map((s) => ({
-            id: sql<string>`${s.evidence_source_id}::uuid`,
-            organizationId: s.organization_id,
-            assessmentId: s.assessment_id,
-            evidenceFindingId: s.evidence_finding_id,
-            documentId: s.document_id,
-            chunkId: s.chunk_id,
-            vectorReferenceId: s.vector_reference_id,
-            sourceType: s.source_type,
-            sourceTitle: s.source_title,
-            sourceLocation: s.source_location,
-            snippet: s.snippet,
+            id: String(s.evidence_source_id) as any,
+            organizationId: String(s.organization_id),
+            assessmentId: String(s.assessment_id),
+            evidenceFindingId: String(s.evidence_finding_id),
+            documentId: String(s.document_id),
+            chunkId: String(s.chunk_id),
+            vectorReferenceId:
+              s.vector_reference_id != null
+                ? String(s.vector_reference_id)
+                : null,
+            sourceType: String(s.source_type) as
+              | "document_chunk"
+              | "kb_entry"
+              | "vector_result"
+              | "manual",
+            sourceTitle: s.source_title != null ? String(s.source_title) : null,
+            sourceLocation:
+              s.source_location != null ? String(s.source_location) : null,
+            snippet: String(s.snippet),
             retrievalScore: String(s.retrieval_score),
-            retrievalMethod: s.retrieval_method,
-            candidateEvidence: s.candidate_evidence,
+            retrievalMethod: String(s.retrieval_method) as
+              | "semantic"
+              | "keyword"
+              | "hybrid"
+              | "manual",
+            candidateEvidence: Boolean(s.candidate_evidence),
           })),
         )
         .onConflictDoNothing();
@@ -158,18 +183,27 @@ const createDrizzleGapAnalysisVersionRepository = (
       await db
         .insert(gapAnalysisVersions)
         .values({
-          id: sql<string>`${version.gap_analysis_version_id}::uuid`,
-          organizationId: version.organization_id,
-          assessmentId: version.assessment_id,
-          versionNumber: version.version_number,
-          status: version.status,
-          sourceSoaVersionId: version.source_soa_version_id,
-          frameworkId: version.framework_id,
-          scfVersionId: version.scf_version_id,
-          generatedByAgentRunId: version.generated_by_agent_run_id,
-          createdBy: version.created_by,
-          traceId: version.trace_id,
-          metadata: version.metadata ?? {},
+          id: String(version.gap_analysis_version_id) as any,
+          organizationId: String(version.organization_id),
+          assessmentId: String(version.assessment_id),
+          versionNumber: Number(version.version_number),
+          status: String(version.status) as
+            | "draft"
+            | "under_review"
+            | "approved"
+            | "superseded"
+            | "archived",
+          sourceSoaVersionId: String(version.source_soa_version_id),
+          frameworkId: String(version.framework_id),
+          scfVersionId: String(version.scf_version_id),
+          generatedByAgentRunId:
+            version.generated_by_agent_run_id != null
+              ? String(version.generated_by_agent_run_id)
+              : null,
+          createdBy:
+            version.created_by != null ? String(version.created_by) : null,
+          traceId: String(version.trace_id),
+          metadata: (version.metadata ?? {}) as Record<string, unknown>,
         })
         .onConflictDoNothing();
     },
@@ -177,20 +211,34 @@ const createDrizzleGapAnalysisVersionRepository = (
       await db
         .update(gapAnalysisVersions)
         .set({
-          status: version.status,
+          status: String(version.status) as
+            | "draft"
+            | "under_review"
+            | "approved"
+            | "superseded"
+            | "archived",
           submittedForReviewAt: version.submitted_for_review_at
             ? new Date(version.submitted_for_review_at)
             : undefined,
-          approvedBy: version.approved_by,
+          approvedBy:
+            version.approved_by != null ? String(version.approved_by) : null,
           approvedAt: version.approved_at
             ? new Date(version.approved_at)
             : undefined,
-          approvalEventId: version.approval_event_id,
-          supersededBy: version.superseded_by,
-          metadata: version.metadata ?? {},
+          approvalEventId:
+            version.approval_event_id != null
+              ? String(version.approval_event_id)
+              : null,
+          supersededBy:
+            version.superseded_by != null
+              ? String(version.superseded_by)
+              : null,
+          metadata: (version.metadata ?? {}) as Record<string, unknown>,
           updatedAt: new Date(),
         })
-        .where(eq(gapAnalysisVersions.id, version.gap_analysis_version_id));
+        .where(
+          eq(gapAnalysisVersions.id, String(version.gap_analysis_version_id)),
+        );
     },
     async get(gapAnalysisVersionId: string, _organizationId: string) {
       const [row] = await db
@@ -231,29 +279,43 @@ const createDrizzleGapFindingRepository = (
         .insert(gapFindings)
         .values(
           findings.map((f) => ({
-            id: sql<string>`${f.gap_finding_id}::uuid`,
-            organizationId: f.organization_id,
-            assessmentId: f.assessment_id,
-            gapAnalysisVersionId: f.gap_analysis_version_id,
-            soaVersionId: f.soa_version_id,
-            soaItemId: f.soa_item_id,
-            frameworkId: f.framework_id,
-            frameworkRequirementId: f.framework_requirement_id,
-            scfVersionId: f.scf_version_id,
-            scfControlId: f.scf_control_id,
-            evidenceFindingId: f.evidence_finding_id,
-            gapCode: f.gap_code,
-            assessmentStatus: f.assessment_status,
-            gapType: f.gap_type,
-            severity: f.severity,
-            impact: f.impact,
-            likelihood: f.likelihood,
-            gapSummary: f.gap_summary,
-            gapRationale: f.gap_rationale,
-            recommendationSummary: f.recommendation_summary,
-            responsibilityType: f.responsibility_type,
+            id: String(f.gap_finding_id) as any,
+            organizationId: String(f.organization_id),
+            assessmentId: String(f.assessment_id),
+            gapAnalysisVersionId: String(f.gap_analysis_version_id),
+            soaVersionId: String(f.soa_version_id),
+            soaItemId: String(f.soa_item_id),
+            frameworkId: String(f.framework_id),
+            frameworkRequirementId: String(f.framework_requirement_id),
+            scfVersionId: String(f.scf_version_id),
+            scfControlId:
+              f.scf_control_id != null ? String(f.scf_control_id) : null,
+            evidenceFindingId:
+              f.evidence_finding_id != null
+                ? String(f.evidence_finding_id)
+                : null,
+            gapCode: String(f.gap_code),
+
+            assessmentStatus: String(f.assessment_status) as any,
+
+            gapType: String(f.gap_type) as any,
+
+            severity: String(f.severity) as any,
+            impact: f.impact != null ? String(f.impact) : null,
+            likelihood: f.likelihood != null ? String(f.likelihood) : null,
+            gapSummary: String(f.gap_summary),
+            gapRationale:
+              f.gap_rationale != null ? String(f.gap_rationale) : null,
+            recommendationSummary:
+              f.recommendation_summary != null
+                ? String(f.recommendation_summary)
+                : null,
+
+            responsibilityType: (f.responsibility_type != null
+              ? String(f.responsibility_type)
+              : "internal") as any,
             confidenceScore: String(f.confidence_score),
-            requiresUserValidation: f.requires_user_validation,
+            requiresUserValidation: Boolean(f.requires_user_validation),
           })),
         )
         .onConflictDoNothing();
@@ -262,20 +324,32 @@ const createDrizzleGapFindingRepository = (
       await db
         .update(gapFindings)
         .set({
-          assessmentStatus: finding.assessment_status,
-          gapType: finding.gap_type,
-          severity: finding.severity,
-          impact: finding.impact,
-          likelihood: finding.likelihood,
-          gapSummary: finding.gap_summary,
-          gapRationale: finding.gap_rationale,
-          recommendationSummary: finding.recommendation_summary,
-          responsibilityType: finding.responsibility_type,
+          assessmentStatus: String(finding.assessment_status) as any,
+
+          gapType: String(finding.gap_type) as any,
+
+          severity: String(finding.severity) as any,
+          impact: finding.impact != null ? String(finding.impact) : null,
+          likelihood:
+            finding.likelihood != null ? String(finding.likelihood) : null,
+          gapSummary: String(finding.gap_summary),
+          gapRationale:
+            finding.gap_rationale != null
+              ? String(finding.gap_rationale)
+              : null,
+          recommendationSummary:
+            finding.recommendation_summary != null
+              ? String(finding.recommendation_summary)
+              : null,
+
+          responsibilityType: (finding.responsibility_type != null
+            ? String(finding.responsibility_type)
+            : "internal") as any,
           confidenceScore: String(finding.confidence_score),
-          requiresUserValidation: finding.requires_user_validation,
+          requiresUserValidation: Boolean(finding.requires_user_validation),
           updatedAt: new Date(),
         })
-        .where(eq(gapFindings.id, finding.gap_finding_id));
+        .where(eq(gapFindings.id, String(finding.gap_finding_id)));
     },
     async get(gapFindingId: string, _organizationId: string) {
       const [row] = await db
