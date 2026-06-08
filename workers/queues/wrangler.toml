@@ -3,13 +3,11 @@ main = "src/index.ts"
 compatibility_date = "2026-04-28"
 compatibility_flags = [ "nodejs_compat" ]
 
-
 [vars]
 STANDARD_ENV = "development"
 LOG_LEVEL = "info"
 AI_GATEWAY_NAME = "standard-dev"
 AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/0a6c490dd5fe9051422c15c9e133138e/standard-dev/compat"
-
 
 [[queues.consumers]]
 queue = "standard-kb-embedding-dev"
@@ -46,8 +44,14 @@ max_batch_timeout = 30
 max_retries = 3
 dead_letter_queue = "standard-dead-letter-dev"
 
+[[queues.consumers]]
+queue = "standard-user-lifecycle-dev"
+max_batch_size = 10
+max_batch_timeout = 5
+max_retries = 3
+dead_letter_queue = "standard-dead-letter-dev"
+
 # Dead Letter Queue consumer — receives messages that exhausted all retries.
-# The SOC monitoring consumer processes these as dlq_passthrough alerts.
 [[queues.consumers]]
 queue = "standard-dead-letter-dev"
 max_batch_size = 20
@@ -77,7 +81,95 @@ binding = "AI"
 crons = ["0 2 * * SUN"]
 
 
-# ─── Production environment ────────────────────────────────────
+# ── Staging ───────────────────────────────────────────────────────────────────
+[env.staging]
+name = "standard-queues-staging"
+
+[env.staging.triggers]
+crons = ["0 2 * * SUN"]
+
+[env.staging.vars]
+STANDARD_ENV = "staging"
+LOG_LEVEL = "info"
+AI_GATEWAY_NAME = "standard-staging"
+AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/0a6c490dd5fe9051422c15c9e133138e/standard-staging/compat"
+
+[[env.staging.queues.consumers]]
+queue = "standard-kb-embedding-staging"
+max_batch_size = 10
+max_batch_timeout = 30
+max_retries = 3
+dead_letter_queue = "standard-dead-letter-staging"
+
+[[env.staging.queues.consumers]]
+queue = "standard-report-export-staging"
+max_batch_size = 5
+max_batch_timeout = 30
+max_retries = 3
+dead_letter_queue = "standard-dead-letter-staging"
+
+[[env.staging.queues.consumers]]
+queue = "standard-agent-run-staging"
+max_batch_size = 5
+max_batch_timeout = 60
+max_retries = 5
+dead_letter_queue = "standard-dead-letter-staging"
+
+[[env.staging.queues.consumers]]
+queue = "standard-document-ingestion-staging"
+max_batch_size = 10
+max_batch_timeout = 30
+max_retries = 3
+dead_letter_queue = "standard-dead-letter-staging"
+
+[[env.staging.queues.consumers]]
+queue = "standard-soc-triage-staging"
+max_batch_size = 5
+max_batch_timeout = 30
+max_retries = 3
+dead_letter_queue = "standard-soc-triage-dlq-staging"
+
+[[env.staging.queues.consumers]]
+queue = "standard-user-lifecycle-staging"
+max_batch_size = 10
+max_batch_timeout = 5
+max_retries = 3
+dead_letter_queue = "standard-dead-letter-staging"
+
+# Dead Letter Queue consumers
+[[env.staging.queues.consumers]]
+queue = "standard-dead-letter-staging"
+max_batch_size = 20
+max_batch_timeout = 60
+max_retries = 1
+
+[[env.staging.queues.consumers]]
+queue = "standard-soc-triage-dlq-staging"
+max_batch_size = 10
+max_batch_timeout = 60
+max_retries = 1
+
+[[env.staging.r2_buckets]]
+binding = "STANDARD_DOCUMENTS_BUCKET"
+bucket_name = "standard-documents-staging"
+
+[[env.staging.r2_buckets]]
+binding = "STANDARD_REPORTS_BUCKET"
+bucket_name = "standard-reports-staging"
+
+[[env.staging.r2_buckets]]
+binding = "STANDARD_EXPORTS_BUCKET"
+bucket_name = "standard-exports-staging"
+
+[[env.staging.vectorize]]
+binding = "STANDARD_KB_INDEX"
+index_name = "standard-kb-staging"
+
+[env.staging.ai]
+binding = "AI"
+
+
+# ── Production ────────────────────────────────────────────────────────────────
 [env.production]
 name = "standard-queues-production"
 
@@ -86,20 +178,12 @@ crons = ["0 2 * * SUN"]
 
 [env.production.vars]
 STANDARD_ENV = "production"
-LOG_LEVEL = "info"
+LOG_LEVEL = "warn"
 AI_GATEWAY_NAME = "standard-prod"
 AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/0a6c490dd5fe9051422c15c9e133138e/standard-prod/compat"
 
-
 [[env.production.queues.consumers]]
 queue = "standard-kb-embedding-prod"
-max_batch_size = 10
-max_batch_timeout = 30
-max_retries = 3
-dead_letter_queue = "standard-dead-letter-prod"
-
-[[env.production.queues.consumers]]
-queue = "standard-document-ingestion-prod"
 max_batch_size = 10
 max_batch_timeout = 30
 max_retries = 3
@@ -120,11 +204,25 @@ max_retries = 5
 dead_letter_queue = "standard-dead-letter-prod"
 
 [[env.production.queues.consumers]]
+queue = "standard-document-ingestion-prod"
+max_batch_size = 10
+max_batch_timeout = 30
+max_retries = 3
+dead_letter_queue = "standard-dead-letter-prod"
+
+[[env.production.queues.consumers]]
 queue = "standard-soc-triage-prod"
 max_batch_size = 5
 max_batch_timeout = 30
 max_retries = 3
 dead_letter_queue = "standard-soc-triage-dlq-prod"
+
+[[env.production.queues.consumers]]
+queue = "standard-user-lifecycle-prod"
+max_batch_size = 10
+max_batch_timeout = 5
+max_retries = 3
+dead_letter_queue = "standard-dead-letter-prod"
 
 # Dead Letter Queue consumers — SOC monitoring processes all DLQ messages.
 [[env.production.queues.consumers]]
