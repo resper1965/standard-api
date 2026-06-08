@@ -30,12 +30,12 @@ All protected endpoints require a valid session. Authentication is handled via *
 | Browser Session | Cookie | `standard-native-auth.session_token=<token>` |
 | API Key (M2M) | `Authorization` | `Bearer standard_live_<key>` |
 
-### Organization Context
+### Tenancy Context
 
-Most endpoints require a organization/organization context, sent via header:
+Most endpoints require a organization/tenant context, sent via header:
 
 ```
-x-standard-organization-id: <organization_id>
+x-standard-tenant-id: <organization_id>
 ```
 
 This is automatically set from the active organization in the user's session.
@@ -450,7 +450,7 @@ Allowed origins:
 - `https://standard-web.pages.dev`
 - `http://localhost:5173`
 
-Allowed headers: `Content-Type`, `Authorization`, `X-Trace-Id`, `X-Organization-Id`, `x-standard-organization-id`
+Allowed headers: `Content-Type`, `Authorization`, `X-Trace-Id`, `X-Tenant-Id`, `x-standard-tenant-id`
 
 ---
 
@@ -461,13 +461,13 @@ Allowed headers: `Content-Type`, `Authorization`, `X-Trace-Id`, `X-Organization-
 
 # 2. List SCF frameworks
 curl -H "Authorization: Bearer standard_live_YOUR_KEY" \
-     -H "x-standard-organization-id: YOUR_ORG_ID" \
+     -H "x-standard-tenant-id: YOUR_ORG_ID" \
      https://standard-api.bekaa.eu/api/v1/scf/frameworks
 
 # 3. Create an assessment
 curl -X POST \
      -H "Authorization: Bearer standard_live_YOUR_KEY" \
-     -H "x-standard-organization-id: YOUR_ORG_ID" \
+     -H "x-standard-tenant-id: YOUR_ORG_ID" \
      -H "Content-Type: application/json" \
      -d '{"name": "ISO 27001 Assessment", "scf_version_id": "..."}' \
      https://standard-api.bekaa.eu/api/v1/assessments
@@ -475,7 +475,7 @@ curl -X POST \
 # 4. Upload a document
 curl -X POST \
      -H "Authorization: Bearer standard_live_YOUR_KEY" \
-     -H "x-standard-organization-id: YOUR_ORG_ID" \
+     -H "x-standard-tenant-id: YOUR_ORG_ID" \
      -F "file=@policy.pdf" \
      https://standard-api.bekaa.eu/api/v1/assessments/ASSESSMENT_ID/documents
 ```

@@ -5,7 +5,7 @@ This file provides the single source of truth for the architecture and technical
 
 ### 1. Tenancy Model
 - **Concept:** A arquitetura é Multi-Organization. O Platform Admin é quem faz a criação da organização e cede acesso ao administrador daquela organização. Só o administrador acessa a aplicação para criar suas chaves.
-- **Rule:** The concept of `tenant` or `tenant_id` **DOES NOT EXIST** in this application anymore. Multi-tenancy is exclusively handled via `organization_id` (or `organizationId`). All endpoints, middlewares, databases, and artifacts are strictly isolated by `organizationId`. 
+- **Rule:** The concept of `tenant` or `tenant_id` **DOES NOT EXIST** in this application anymore. Multi-tenancy is exclusively handled via `organization_id` (or `organizationId`). All endpoints, middlewares, databases, and artifacts are strictly isolated by `organizationId`. The legacy `tenant_id` columns and `tenants` table have been completely dropped from the physical PostgreSQL schemas via migration `0032_drop_legacy_tenants.sql`, removing all legacy constraints and references.
 
 ### 2. Authentication Model
 - **Provider:** Standard Native Auth v1.6.11.
@@ -27,7 +27,7 @@ This file provides the single source of truth for the architecture and technical
 ### 5. Backend Architecture (Post-Refactoring)
 - **API Gateway (`apps/api-gateway`):**
   - `app.ts` delegates CORS configuration, security headers, and auth resolution to `app-helpers.ts`. Do NOT inline these concerns back into `app.ts`.
-  - `index.ts` delegates bindings resolution, dependency injection bootstrapping, and auth route handling to `index-helpers.ts`. Do NOT inline these concerns back into `index.ts`.
+  - `index.ts` delegates bindings resolution, dependency injection bootstrapping, and auth route handling to `index-helpers.ts`. Do NOT inline these concerns back into `index-helpers.ts`.
 - **Agent Runtime (`packages/agent-runtime`):**
   - `council.ts` uses a **dispatch map pattern** (`AgentDispatchMap`) to route agent names to handler functions. Do NOT replace this with `if/else` or `switch` chains.
 - **SCF Core (`packages/scf-core`):**
@@ -40,5 +40,10 @@ This file provides the single source of truth for the architecture and technical
 - **POA&M service:** Uses declarative validation rule arrays for item and milestone validation. Do NOT replace with imperative validation logic.
 - **Rule:** When extending validation, add entries to the rule arrays instead of adding new `if` blocks.
 
+### 7. Developer Experience & Linter
+- **Linter:** ESLint v10 is configured via Flat Config format at the root level (`eslint.config.js`). It is executed centrally and covers all packages (except the frontend `apps/web` which has its own React-specific config). 
+- **Rule:** Ensure all new code complies with root rules. If Husky pre-commit hooks fail, debug using `npx eslint <path>`.
+
 If you are modifying code, ensure you use `organizationId` instead of `tenantId`. If you encounter any remnant of `tenantId` in the codebase, you should immediately refactor it to `organizationId`.
+
 

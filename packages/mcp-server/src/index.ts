@@ -7,21 +7,33 @@ import {
   McpError,
 } from "@modelcontextprotocol/sdk/types.js";
 import { program } from "commander";
-import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
 
 program
   .name("standard-mcp")
   .description("MCP server for Standard GRC Platform Intelligence")
-  .option("-u, --url <url>", "Standard API base URL", process.env.STANDARD_API_URL || "http://127.0.0.1:8787")
-  .option("-t, --token <token>", "Standard API Bearer token", process.env.STANDARD_API_KEY)
-  .option("--organization-id <organizationId>", "Standard organization/org UUID (x-standard-organization-id)", process.env.STANDARD_ORGANIZATION_ID)
+  .option(
+    "-u, --url <url>",
+    "Standard API base URL",
+    process.env.STANDARD_API_URL || "http://127.0.0.1:8787",
+  )
+  .option(
+    "-t, --token <token>",
+    "Standard API Bearer token",
+    process.env.STANDARD_API_KEY,
+  )
+  .option(
+    "--organization-id <organizationId>",
+    "Standard organization/org UUID (x-standard-tenant-id)",
+    process.env.STANDARD_ORGANIZATION_ID,
+  )
   .parse(process.argv);
 
 const options = program.opts();
 
 if (!options.token) {
-  console.error("Error: Standard API token is required. Pass --token or set STANDARD_API_KEY environment variable.");
+  console.error(
+    "Error: Standard API token is required. Pass --token or set STANDARD_API_KEY environment variable.",
+  );
   process.exit(1);
 }
 
@@ -29,12 +41,16 @@ const API_URL = options.url.replace(/\/$/, "");
 const API_TOKEN = options.token as string;
 const ORGANIZATION_ID = (options.organizationId as string | undefined) ?? "";
 
-async function fetchFromApi(path: string, method: string = "GET", body?: unknown) {
+async function fetchFromApi(
+  path: string,
+  method: string = "GET",
+  body?: unknown,
+) {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    "Authorization": `Bearer ${API_TOKEN}`,
+    Authorization: `Bearer ${API_TOKEN}`,
   };
-  if (ORGANIZATION_ID) headers["x-standard-organization-id"] = ORGANIZATION_ID;
+  if (ORGANIZATION_ID) headers["x-standard-tenant-id"] = ORGANIZATION_ID;
 
   const response = await fetch(`${API_URL}${path}`, {
     method,
@@ -46,15 +62,16 @@ async function fetchFromApi(path: string, method: string = "GET", body?: unknown
     let errorText = await response.text();
     try {
       const json = JSON.parse(errorText) as Record<string, unknown>;
-      errorText = (typeof json.error === "string" ? json.error : null)
-        ?? (typeof json.message === "string" ? json.message : null)
-        ?? errorText;
+      errorText =
+        (typeof json.error === "string" ? json.error : null) ??
+        (typeof json.message === "string" ? json.message : null) ??
+        errorText;
     } catch {
       // Keep raw text
     }
     throw new McpError(
       ErrorCode.InternalError,
-      `Standard API Error (${response.status}): ${errorText}`
+      `Standard API Error (${response.status}): ${errorText}`,
     );
   }
 
@@ -70,76 +87,99 @@ const server = new Server(
     capabilities: {
       tools: {},
     },
-  }
+  },
 );
 
 // Define tool schemas
 const Tools = {
   get_scf_control: {
     name: "get_scf_control",
-    description: "Retrieve regulatory details for an SCF control (e.g. AC-01) from the Standard GRC catalog.",
+    description:
+      "Retrieve regulatory details for an SCF control (e.g. AC-01) from the Standard GRC catalog.",
     schema: {
       type: "object",
       properties: {
-        id: { type: "string", description: "The SCF control ID to fetch (e.g., 'AC-01')" }
+        id: {
+          type: "string",
+          description: "The SCF control ID to fetch (e.g., 'AC-01')",
+        },
       },
       required: ["id"],
-    }
+    },
   },
   run_gap_analysis: {
     name: "run_gap_analysis",
-    description: "Calculate missing controls and generate a readiness report against a specific framework mask.",
+    description:
+      "Calculate missing controls and generate a readiness report against a specific framework mask.",
     schema: {
       type: "object",
       properties: {
-        framework_mask: { type: "string", description: "The framework mask to analyze against (e.g., 'iso27001')" },
-        scf_controls_implemented: { 
-          type: "array", 
-          items: { type: "string" }, 
-          description: "List of SCF control IDs already implemented by the organization"
-        }
+        framework_mask: {
+          type: "string",
+          description:
+            "The framework mask to analyze against (e.g., 'iso27001')",
+        },
+        scf_controls_implemented: {
+          type: "array",
+          items: { type: "string" },
+          description:
+            "List of SCF control IDs already implemented by the organization",
+        },
       },
       required: ["framework_mask", "scf_controls_implemented"],
-    }
+    },
   },
   dispatch_grc_council: {
     name: "dispatch_grc_council",
-    description: "Asynchronously dispatch the multi-agent GRC council to process specialized security context, returning a job_id for polling.",
+    description:
+      "Asynchronously dispatch the multi-agent GRC council to process specialized security context, returning a job_id for polling.",
     schema: {
       type: "object",
       properties: {
-        assessment_id: { type: "string", description: "The UUID of the assessment" },
-        target_framework_id: { type: "string", description: "The UUID of the target framework" },
-        input: { 
-          type: "object", 
-          description: "Key-value input map containing the context (e.g. { \"context\": \"incident details\" })",
-          additionalProperties: true
+        assessment_id: {
+          type: "string",
+          description: "The UUID of the assessment",
+        },
+        target_framework_id: {
+          type: "string",
+          description: "The UUID of the target framework",
+        },
+        input: {
+          type: "object",
+          description:
+            'Key-value input map containing the context (e.g. { "context": "incident details" })',
+          additionalProperties: true,
         },
         agents: {
           type: "array",
           items: { type: "string" },
-          description: "List of specialized agents to invoke (e.g., 'incident_triager', 'poam_architect', 'evidence_evaluator', 'board_translator')"
-        }
+          description:
+            "List of specialized agents to invoke (e.g., 'incident_triager', 'poam_architect', 'evidence_evaluator', 'board_translator')",
+        },
       },
       required: ["assessment_id", "target_framework_id", "agents", "input"],
-    }
+    },
   },
   poll_job_status: {
     name: "poll_job_status",
-    description: "Retrieve the current status and output of an asynchronous GRC job (e.g. from the council).",
+    description:
+      "Retrieve the current status and output of an asynchronous GRC job (e.g. from the council).",
     schema: {
       type: "object",
       properties: {
-        job_id: { type: "string", description: "The job ID returned from dispatch_grc_council" }
+        job_id: {
+          type: "string",
+          description: "The job ID returned from dispatch_grc_council",
+        },
       },
       required: ["job_id"],
-    }
-  }
+    },
+  },
 };
 
 server.setRequestHandler(ListToolsRequestSchema, async () => {
   return {
-    tools: Object.values(Tools).map(t => ({
+    tools: Object.values(Tools).map((t) => ({
       name: t.name,
       description: t.description,
       inputSchema: t.schema as any,
@@ -164,37 +204,49 @@ server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
       }
 
       case "run_gap_analysis": {
-        const { framework_mask, scf_controls_implemented } = request.params.arguments as {
+        const { framework_mask, scf_controls_implemented } = request.params
+          .arguments as {
           framework_mask: string;
           scf_controls_implemented: string[];
         };
-        const data = await fetchFromApi("/api/v1/intelligence/gap-analysis", "POST", {
-          framework_mask,
-          scf_controls_implemented,
-        });
+        const data = await fetchFromApi(
+          "/api/v1/intelligence/gap-analysis",
+          "POST",
+          {
+            framework_mask,
+            scf_controls_implemented,
+          },
+        );
         return {
           content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
         };
       }
 
       case "dispatch_grc_council": {
-        const { assessment_id, target_framework_id, agents, input } = request.params.arguments as {
+        const { assessment_id, target_framework_id, agents, input } = request
+          .params.arguments as {
           assessment_id: string;
           target_framework_id: string;
           agents: string[];
           input: Record<string, unknown>;
         };
-        const data = await fetchFromApi("/api/v1/intelligence/council", "POST", {
-          assessment_id,
-          target_framework_id,
-          agents,
-          input,
-        }) as Record<string, unknown>;
+        const data = (await fetchFromApi(
+          "/api/v1/intelligence/council",
+          "POST",
+          {
+            assessment_id,
+            target_framework_id,
+            agents,
+            input,
+          },
+        )) as Record<string, unknown>;
         return {
-          content: [{
-            type: "text",
-            text: `Council dispatched. Job ID: ${data.job_id}\nUse 'poll_job_status' to check the output.`,
-          }],
+          content: [
+            {
+              type: "text",
+              text: `Council dispatched. Job ID: ${data.job_id}\nUse 'poll_job_status' to check the output.`,
+            },
+          ],
         };
       }
 
@@ -209,7 +261,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
       default:
         throw new McpError(
           ErrorCode.MethodNotFound,
-          `Unknown tool: ${request.params.name}`
+          `Unknown tool: ${request.params.name}`,
         );
     }
   } catch (error: any) {

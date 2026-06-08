@@ -52,7 +52,7 @@ Não atualizar para mascarar regressão.
 ## Investigar Falha de Organization Isolation
 
 1. Identifique organization do request, body e recurso.
-2. Verifique `x-standard-organization-id`.
+2. Verifique `x-standard-tenant-id`.
 3. Verifique filtros de repository/service.
 4. Procure security events `organization_context_mismatch` ou `cross_tenant_access_blocked`.
 5. Adicione teste negativo antes de corrigir.

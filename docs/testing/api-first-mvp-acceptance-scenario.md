@@ -43,8 +43,7 @@ Headers mínimos recomendados:
 
 ```text
 Authorization: Bearer synthetic-token
-x-standard-organization-id: tenant_synth_a
-x-standard-organization-id: org_synth_healthtech
+x-standard-tenant-id: org_synth_healthtech
 x-standard-actor-id: assessor_user
 x-standard-trace-id: trace_acceptance_001
 content-type: application/json
@@ -504,7 +503,7 @@ Durante o fluxo validar:
 
 ### Acessar Assessment de Outro Organization
 
-- Request com `x-standard-organization-id: tenant_synth_b`.
+- Request com `x-standard-tenant-id: tenant_synth_b`.
 - Endpoint: `GET /api/v1/assessments/asm_synth_001`.
 - Esperado: `403` ou `404` seguro.
 - Validar security event `cross_tenant_access_blocked` ou equivalente.
@@ -542,7 +541,7 @@ Durante o fluxo validar:
 
 ### Executar sem `organization_id`
 
-- Remover `x-standard-organization-id` e organization do payload.
+- Remover `x-standard-tenant-id` e organization do payload.
 - Esperado: `400` ou `401/403` seguro.
 - Validar erro com `trace_id`.
 
@@ -687,7 +686,7 @@ Exemplo base com `curl`:
 
 ```bash
 export API_BASE="http://localhost:8787"
-export TENANT_ID="tenant_synth_a"
+export ORGANIZATION_ID="tenant_synth_a"
 export ORG_ID="org_synth_healthtech"
 export TRACE_ID="trace_acceptance_001"
 export ASSESSOR="assessor_user"
@@ -699,8 +698,7 @@ Criar assessment:
 ```bash
 curl -X POST "$API_BASE/api/v1/assessments" \
   -H "content-type: application/json" \
-  -H "x-standard-organization-id: $TENANT_ID" \
-  -H "x-standard-organization-id: $ORG_ID" \
+  -H "x-standard-tenant-id: $ORGANIZATION_ID" \
   -H "x-standard-actor-id: $ASSESSOR" \
   -H "x-standard-trace-id: $TRACE_ID" \
   -d '{
@@ -716,8 +714,7 @@ Iniciar workflow:
 ```bash
 curl -X POST "$API_BASE/api/v1/assessments/asm_synth_001/workflows/lifecycle/start" \
   -H "content-type: application/json" \
-  -H "x-standard-organization-id: $TENANT_ID" \
-  -H "x-standard-organization-id: $ORG_ID" \
+  -H "x-standard-tenant-id: $ORGANIZATION_ID" \
   -H "x-standard-actor-id: $ASSESSOR" \
   -H "x-standard-trace-id: $TRACE_ID" \
   -d '{ "idempotency_key": "workflow-start-asm-synth-001" }'
@@ -728,8 +725,7 @@ Enviar signal de framework:
 ```bash
 curl -X POST "$API_BASE/api/v1/workflows/workflow_synth_001/signals" \
   -H "content-type: application/json" \
-  -H "x-standard-organization-id: $TENANT_ID" \
-  -H "x-standard-organization-id: $ORG_ID" \
+  -H "x-standard-tenant-id: $ORGANIZATION_ID" \
   -H "x-standard-actor-id: $ASSESSOR" \
   -H "x-standard-trace-id: $TRACE_ID" \
   -d '{

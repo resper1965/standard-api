@@ -35,7 +35,7 @@ No MVP, integramos o provedor definitivo usando o **Standard Native Auth Plugin*
 
 `TenantResolver` resolve o organization por:
 
-- header interno `x-standard-organization-id`;
+- header interno `x-standard-tenant-id`;
 - route param `organizationId`;
 - placeholders futuros para JWT, API key e hostname.
 
