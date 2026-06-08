@@ -4,7 +4,7 @@
  * Implements: DocumentRecordRepository, DocumentJobRepository, DocumentChunkRepository,
  * VectorReferenceRepository, AuditSink.
  */
-import { eq, and } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import {
   documents,
   documentChunks,
@@ -16,7 +16,7 @@ import {
 import type {
   DocumentResponse,
   DocumentJobResponse,
-  VectorReferenceResponse
+  VectorReferenceResponse,
 } from "@standard/schemas";
 import type {
   DocumentRecordRepository,
@@ -25,65 +25,93 @@ import type {
   VectorReferenceRepository,
   AuditSink,
   DocumentChunk,
-  IngestionRepositories
+  IngestionRepositories,
 } from "@standard/document-ingestion";
 import type { DbClient } from "./db";
 
 // ---------- Documents ----------
 
-const createDrizzleDocumentRepository = (db: DbClient): DocumentRecordRepository => {
+const createDrizzleDocumentRepository = (
+  db: DbClient,
+): DocumentRecordRepository => {
   const repo = {
     async saveDocument(doc: DocumentResponse) {
-      await db.insert(documents).values({
-        id: doc.document_id,
-        organizationId: doc.organization_id,
-        assessmentId: doc.assessment_id,
-        originalFilename: doc.original_filename,
-        storageProvider: doc.storage_provider as "r2" | "external" | "r2_compatible_mock",
-        storageKey: doc.storage_key,
-        contentHash: doc.content_hash,
-        mimeType: doc.mime_type,
-        fileSize: doc.file_size,
-        uploadedBy: doc.uploaded_by,
-        classification: doc.classification as "public" | "internal" | "confidential" | "restricted",
-        documentType: doc.document_type as "policy" | "procedure" | "standard" | "evidence" | "soa" | "report" | "other",
-        language: doc.language,
-        versionLabel: doc.version_label,
-        effectiveDate: doc.effective_date,
-      }).onConflictDoNothing();
+      await db
+        .insert(documents)
+        .values({
+          id: sql<string>`${doc.document_id}::uuid`,
+          organizationId: doc.organization_id,
+          assessmentId: doc.assessment_id,
+          originalFilename: doc.original_filename,
+          storageProvider: doc.storage_provider as
+            | "r2"
+            | "external"
+            | "r2_compatible_mock",
+          storageKey: doc.storage_key,
+          contentHash: doc.content_hash,
+          mimeType: doc.mime_type,
+          fileSize: doc.file_size,
+          uploadedBy: doc.uploaded_by,
+          classification: doc.classification as
+            | "public"
+            | "internal"
+            | "confidential"
+            | "restricted",
+          documentType: doc.document_type as
+            | "policy"
+            | "procedure"
+            | "standard"
+            | "evidence"
+            | "soa"
+            | "report"
+            | "other",
+          language: doc.language,
+          versionLabel: doc.version_label,
+          effectiveDate: doc.effective_date,
+        })
+        .onConflictDoNothing();
     },
 
     async getDocument(documentId: string, organizationId: string) {
-      const [row] = await db.select().from(documents)
+      const [row] = await db
+        .select()
+        .from(documents)
         .where(eq(documents.id, documentId))
         .limit(1);
       return row ? mapDocumentRow(row) : null;
     },
 
     async listDocuments(assessmentId: string, organizationId: string) {
-      const rows = await db.select().from(documents)
+      const rows = await db
+        .select()
+        .from(documents)
         .where(eq(documents.assessmentId, assessmentId));
       return rows.map(mapDocumentRow);
     },
 
     async updateDocument(doc: DocumentResponse) {
-      await db.update(documents).set({
-        originalFilename: doc.original_filename,
-        contentHash: doc.content_hash,
-        mimeType: doc.mime_type,
-        fileSize: doc.file_size,
-        updatedAt: new Date(),
-      }).where(eq(documents.id, doc.document_id));
+      await db
+        .update(documents)
+        .set({
+          originalFilename: doc.original_filename,
+          contentHash: doc.content_hash,
+          mimeType: doc.mime_type,
+          fileSize: doc.file_size,
+          updatedAt: new Date(),
+        })
+        .where(eq(documents.id, doc.document_id));
     },
 
     withOrganization(organizationId: string) {
       return {
         saveDocument: (doc: DocumentResponse) => repo.saveDocument(doc),
-        getDocument: (documentId: string) => repo.getDocument(documentId, organizationId),
-        listDocuments: (assessmentId: string) => repo.listDocuments(assessmentId, organizationId),
+        getDocument: (documentId: string) =>
+          repo.getDocument(documentId, organizationId),
+        listDocuments: (assessmentId: string) =>
+          repo.listDocuments(assessmentId, organizationId),
         updateDocument: (doc: DocumentResponse) => repo.updateDocument(doc),
       };
-    }
+    },
   };
   return repo;
 };
@@ -94,7 +122,9 @@ const mapDocumentRow = (row: DocumentRow): DocumentResponse => ({
   organization_id: row.organizationId,
   assessment_id: row.assessmentId ?? "",
   original_filename: row.originalFilename,
-  normalized_filename: row.originalFilename.toLowerCase().replace(/[^a-z0-9._-]/g, "_"),
+  normalized_filename: row.originalFilename
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]/g, "_"),
   storage_provider: row.storageProvider,
   storage_bucket: "STANDARD_DOCUMENTS_BUCKET",
   storage_key: row.storageKey,
@@ -117,66 +147,98 @@ const mapDocumentRow = (row: DocumentRow): DocumentResponse => ({
 
 // ---------- Extraction Jobs ----------
 
-const createDrizzleDocumentJobRepository = (db: DbClient): DocumentJobRepository => {
+const createDrizzleDocumentJobRepository = (
+  db: DbClient,
+): DocumentJobRepository => {
   const repo = {
     async saveJob(job: DocumentJobResponse) {
-      await db.insert(documentExtractionJobs).values({
-        id: job.job_id,
-        organizationId: job.organization_id,
-        assessmentId: job.assessment_id,
-        documentId: job.document_id,
-        status: job.status === "running" ? "processing" :
-                job.status === "succeeded" ? "completed" :
-                job.status as "queued" | "processing" | "completed" | "failed" | "cancelled",
-        errorCode: job.error_code,
-        errorMessage: job.error_message_safe,
-        startedAt: job.started_at ? new Date(job.started_at) : null,
-        completedAt: job.completed_at ? new Date(job.completed_at) : null,
-        traceId: job.trace_id,
-      }).onConflictDoNothing();
+      await db
+        .insert(documentExtractionJobs)
+        .values({
+          id: sql<string>`${job.job_id}::uuid`,
+          organizationId: job.organization_id,
+          assessmentId: job.assessment_id,
+          documentId: job.document_id,
+          status:
+            job.status === "running"
+              ? "processing"
+              : job.status === "succeeded"
+                ? "completed"
+                : (job.status as
+                    | "queued"
+                    | "processing"
+                    | "completed"
+                    | "failed"
+                    | "cancelled"),
+          errorCode: job.error_code,
+          errorMessage: job.error_message_safe,
+          startedAt: job.started_at ? new Date(job.started_at) : null,
+          completedAt: job.completed_at ? new Date(job.completed_at) : null,
+          traceId: job.trace_id,
+        })
+        .onConflictDoNothing();
     },
 
     async getJob(jobId: string, organizationId: string) {
-      const [row] = await db.select().from(documentExtractionJobs)
+      const [row] = await db
+        .select()
+        .from(documentExtractionJobs)
         .where(eq(documentExtractionJobs.id, jobId))
         .limit(1);
       return row ? mapJobRow(row) : null;
     },
 
     async listJobsByDocument(documentId: string, organizationId: string) {
-      const rows = await db.select().from(documentExtractionJobs)
+      const rows = await db
+        .select()
+        .from(documentExtractionJobs)
         .where(eq(documentExtractionJobs.documentId, documentId));
       return rows.map(mapJobRow);
     },
 
     async listJobsByAssessment(assessmentId: string, organizationId: string) {
-      const rows = await db.select().from(documentExtractionJobs)
+      const rows = await db
+        .select()
+        .from(documentExtractionJobs)
         .where(eq(documentExtractionJobs.assessmentId, assessmentId));
       return rows.map(mapJobRow);
     },
 
     async updateJob(job: DocumentJobResponse) {
-      await db.update(documentExtractionJobs).set({
-        status: job.status === "running" ? "processing" :
-                job.status === "succeeded" ? "completed" :
-                job.status as "queued" | "processing" | "completed" | "failed" | "cancelled",
-        errorCode: job.error_code,
-        errorMessage: job.error_message_safe,
-        startedAt: job.started_at ? new Date(job.started_at) : null,
-        completedAt: job.completed_at ? new Date(job.completed_at) : null,
-        updatedAt: new Date(),
-      }).where(eq(documentExtractionJobs.id, job.job_id));
+      await db
+        .update(documentExtractionJobs)
+        .set({
+          status:
+            job.status === "running"
+              ? "processing"
+              : job.status === "succeeded"
+                ? "completed"
+                : (job.status as
+                    | "queued"
+                    | "processing"
+                    | "completed"
+                    | "failed"
+                    | "cancelled"),
+          errorCode: job.error_code,
+          errorMessage: job.error_message_safe,
+          startedAt: job.started_at ? new Date(job.started_at) : null,
+          completedAt: job.completed_at ? new Date(job.completed_at) : null,
+          updatedAt: new Date(),
+        })
+        .where(eq(documentExtractionJobs.id, job.job_id));
     },
 
     withOrganization(organizationId: string) {
       return {
         saveJob: (job: DocumentJobResponse) => repo.saveJob(job),
         getJob: (jobId: string) => repo.getJob(jobId, organizationId),
-        listJobsByDocument: (documentId: string) => repo.listJobsByDocument(documentId, organizationId),
-        listJobsByAssessment: (assessmentId: string) => repo.listJobsByAssessment(assessmentId, organizationId),
+        listJobsByDocument: (documentId: string) =>
+          repo.listJobsByDocument(documentId, organizationId),
+        listJobsByAssessment: (assessmentId: string) =>
+          repo.listJobsByAssessment(assessmentId, organizationId),
         updateJob: (job: DocumentJobResponse) => repo.updateJob(job),
       };
-    }
+    },
   };
   return repo;
 };
@@ -188,9 +250,17 @@ const mapJobRow = (row: JobRow): DocumentJobResponse => ({
   assessment_id: row.assessmentId ?? "",
   document_id: row.documentId,
   job_type: "extract_and_chunk",
-  status: row.status === "processing" ? "running" :
-          row.status === "completed" ? "succeeded" :
-          row.status as "queued" | "running" | "succeeded" | "failed" | "cancelled",
+  status:
+    row.status === "processing"
+      ? "running"
+      : row.status === "completed"
+        ? "succeeded"
+        : (row.status as
+            | "queued"
+            | "running"
+            | "succeeded"
+            | "failed"
+            | "cancelled"),
   attempt_count: 0,
   error_code: row.errorCode ?? undefined,
   error_message_safe: row.errorMessage ?? undefined,
@@ -203,28 +273,40 @@ const mapJobRow = (row: JobRow): DocumentJobResponse => ({
 
 // ---------- Document Chunks ----------
 
-const createDrizzleDocumentChunkRepository = (db: DbClient): DocumentChunkRepository => {
+const createDrizzleDocumentChunkRepository = (
+  db: DbClient,
+): DocumentChunkRepository => {
   const repo = {
     async saveChunks(chunks: DocumentChunk[]) {
       if (chunks.length === 0) return;
-      await db.insert(documentChunks).values(
-        chunks.map((chunk) => ({
-          id: chunk.chunk_id,
-          organizationId: chunk.organization_id,
-          assessmentId: chunk.assessment_id,
-          documentId: chunk.document_id,
-          documentVersionId: chunk.document_version_id,
-          chunkIndex: chunk.chunk_index,
-          textHash: chunk.text_hash,
-          pageNumber: chunk.page_number,
-          approximateTokenCount: chunk.token_count_estimate,
-          locationMetadata: chunk.location_metadata,
-        }))
-      ).onConflictDoNothing();
+      await db
+        .insert(documentChunks)
+        .values(
+          chunks.map((chunk) => ({
+            id: sql<string>`${chunk.chunk_id}::uuid`,
+            organizationId: chunk.organization_id,
+            assessmentId: chunk.assessment_id,
+            documentId: chunk.document_id,
+            documentVersionId: chunk.document_version_id,
+            chunkIndex: chunk.chunk_index,
+            textHash: chunk.text_hash,
+            pageNumber: chunk.page_number,
+            approximateTokenCount: chunk.token_count_estimate,
+            locationMetadata: chunk.location_metadata,
+          })),
+        )
+        .onConflictDoNothing();
     },
 
-    async listChunks(documentId: string, organizationId: string, limit: number, cursor?: string) {
-      const rows = await db.select().from(documentChunks)
+    async listChunks(
+      documentId: string,
+      organizationId: string,
+      limit: number,
+      cursor?: string,
+    ) {
+      const rows = await db
+        .select()
+        .from(documentChunks)
         .where(eq(documentChunks.documentId, documentId))
         .limit(limit);
       return rows.map(mapChunkRow);
@@ -233,9 +315,10 @@ const createDrizzleDocumentChunkRepository = (db: DbClient): DocumentChunkReposi
     withOrganization(organizationId: string) {
       return {
         saveChunks: (chunks: DocumentChunk[]) => repo.saveChunks(chunks),
-        listChunks: (documentId: string, limit: number, cursor?: string) => repo.listChunks(documentId, organizationId, limit, cursor),
+        listChunks: (documentId: string, limit: number, cursor?: string) =>
+          repo.listChunks(documentId, organizationId, limit, cursor),
       };
-    }
+    },
   };
   return repo;
 };
@@ -246,7 +329,9 @@ const mapChunkRow = (row: ChunkRow): DocumentChunk => ({
   organization_id: row.organizationId,
   assessment_id: row.assessmentId ?? "",
   document_id: row.documentId,
-  ...(row.documentVersionId ? { document_version_id: row.documentVersionId } : {}),
+  ...(row.documentVersionId
+    ? { document_version_id: row.documentVersionId }
+    : {}),
   chunk_index: row.chunkIndex,
   chunk_text: "", // DB does not store raw text (stored in R2 / reconstructed from index)
   text_hash: row.textHash,
@@ -258,20 +343,25 @@ const mapChunkRow = (row: ChunkRow): DocumentChunk => ({
 
 // ---------- Vector References ----------
 
-const createDrizzleIngestionVectorRefRepository = (db: DbClient): VectorReferenceRepository => ({
+const createDrizzleIngestionVectorRefRepository = (
+  db: DbClient,
+): VectorReferenceRepository => ({
   async saveVectorReferences(refs: VectorReferenceResponse[]) {
     if (refs.length === 0) return;
-    await db.insert(vectorReferences).values(
-      refs.map((ref) => ({
-        id: ref.vector_reference_id,
-        organizationId: ref.organization_id,
-        assessmentId: ref.assessment_id,
-        kbEntryId: ref.chunk_id, // Maps chunk → kbEntry relationship
-        vectorProvider: ref.vector_provider,
-        vectorIndexName: ref.vector_index_name,
-        vectorId: ref.vector_id ?? `pending_${ref.chunk_id}`,
-      }))
-    ).onConflictDoNothing();
+    await db
+      .insert(vectorReferences)
+      .values(
+        refs.map((ref) => ({
+          id: sql<string>`${ref.vector_reference_id}::uuid`,
+          organizationId: ref.organization_id,
+          assessmentId: ref.assessment_id,
+          kbEntryId: ref.chunk_id, // Maps chunk → kbEntry relationship
+          vectorProvider: ref.vector_provider,
+          vectorIndexName: ref.vector_index_name,
+          vectorId: ref.vector_id ?? `pending_${ref.chunk_id}`,
+        })),
+      )
+      .onConflictDoNothing();
   },
 });
 
@@ -279,14 +369,26 @@ const createDrizzleIngestionVectorRefRepository = (db: DbClient): VectorReferenc
 
 const createDrizzleIngestionAuditSink = (db: DbClient): AuditSink => {
   const isUuid = (val: string): boolean => {
-    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      val,
+    );
   };
 
   return {
     async record(event: string, metadata: Record<string, unknown>) {
-      const organizationId = typeof metadata.organization_id === "string" && isUuid(metadata.organization_id) ? metadata.organization_id : null;
-      const actorId = typeof metadata.actor_id === "string" && isUuid(metadata.actor_id) ? metadata.actor_id : null;
-      const resourceId = typeof metadata.document_id === "string" && isUuid(metadata.document_id) ? metadata.document_id : null;
+      const organizationId =
+        typeof metadata.organization_id === "string" &&
+        isUuid(metadata.organization_id)
+          ? metadata.organization_id
+          : null;
+      const actorId =
+        typeof metadata.actor_id === "string" && isUuid(metadata.actor_id)
+          ? metadata.actor_id
+          : null;
+      const resourceId =
+        typeof metadata.document_id === "string" && isUuid(metadata.document_id)
+          ? metadata.document_id
+          : null;
 
       // Sanitize metadata: only copy allowlisted keys, then delete columns
       const safeMeta: Record<string, unknown> = {};
@@ -315,11 +417,12 @@ const createDrizzleIngestionAuditSink = (db: DbClient): AuditSink => {
 
 // ---------- Factory ----------
 
-export const createDrizzleIngestionRepositories = (db: DbClient): IngestionRepositories => ({
+export const createDrizzleIngestionRepositories = (
+  db: DbClient,
+): IngestionRepositories => ({
   documents: createDrizzleDocumentRepository(db),
   jobs: createDrizzleDocumentJobRepository(db),
   chunks: createDrizzleDocumentChunkRepository(db),
   vectorReferences: createDrizzleIngestionVectorRefRepository(db),
   audit: createDrizzleIngestionAuditSink(db),
 });
-
