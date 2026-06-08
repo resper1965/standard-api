@@ -19,6 +19,7 @@ Este arquivo é o índice central de decisões arquiteturais e operacionais rele
 - `docs/decisions/0009-superpowers-sdlc.md`: Superpowers SDLC como processo de desenvolvimento.
 - `docs/decisions/adr-0010-discard-architecture-refactoring-branch.md`: Descarte da branch feature/architecture-refactoring.
 - `docs/decisions/adr-refactoring-sprint-2026-06-05.md`: Sprint de refatoração — declarative patterns, helper extraction, component decomposition.
+- `docs/decisions/0011-hitl-fully-headless.md`: Human-in-the-Loop (gates de aprovação) é 100% no app do cliente; Standard permanece headless (sem página hospedada/widget/console).
 
 ## Como Registrar Nova Decisão
 

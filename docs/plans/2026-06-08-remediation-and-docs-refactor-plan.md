@@ -234,8 +234,13 @@ Avaliado no papel de quem vai **construir em cima**. A API tem amplitude (≈40 
 ## C4 (P2) — MCP fino demais para a narrativa "agentic"
 4 tools (`get_scf_control`, `run_gap_analysis`, `dispatch_grc_council`, `poll_job_status`) vs ≈40 domínios. Um agente consumidor **não dirige o lifecycle** via MCP (criar assessment, subir evidência, aprovar gate). Expandir cobertura MCP para o ciclo completo (com guardrails dos gates humanos).
 
-## C5 (P2) — Kit de Human-in-the-Loop
-São 4 gates de aprovação. Existe `approvals.routes.ts`, mas falta o kit do consumidor: feed unificado "pendentes de aprovação", par webhook→approve com atribuição de ator, e açúcar no SDK para o loop. Hoje quem integra monta a UX de aprovação do zero.
+## C5 (P2) — Kit de Human-in-the-Loop (headless — ADR 0011)
+**Decisão (ADR `0011-hitl-fully-headless.md`):** o HITL é 100% no app do cliente; o Standard permanece headless — sem página hospedada, widget ou tela no console. Entregar só o **kit**:
+- Feed unificado "pendentes de aprovação" (cross-assessment, filtrável por gate).
+- Par **webhook→approve/reject** com atribuição de ator (existe `approvals.routes.ts` com `requireActor` + RBAC).
+- Açúcar no SDK para o loop.
+- **Corrigir a suposição meio-construída do `reviewUrl`:** o botão "Review & Approve" do e-mail (`packages/email/src/templates.ts:196`) aponta para uma página que ninguém entrega. Documentar e tipar `reviewUrl` como **valor configurado pelo consumidor** (URL da tela de revisão do próprio app), não um endpoint do Standard.
+- Guia de desenvolvedor "Gates de aprovação / integração HITL" (parte do épico de docs, #78/B2).
 
 > **Proveniência da IA** (modelo/confiança/inferência-vs-evidência no output) e **contrato de erro** são DX mas já cobertos por A2/A4 (#72/#74) — referenciar, não duplicar.
 
