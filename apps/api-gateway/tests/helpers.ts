@@ -188,9 +188,6 @@ export const getTestDb = async () => {
       sql = sql.replace("UPDATE poam_items SET poam_code = COALESCE(poam_code, item_code) WHERE poam_code IS NULL;", "UPDATE poam_items SET poam_code = 'DEFAULT' WHERE poam_code IS NULL;");
       sql = sql.replace("UPDATE poam_items SET related_gap_finding_id = COALESCE(related_gap_finding_id, related_gap_id) WHERE related_gap_finding_id IS NULL;", "UPDATE poam_items SET related_gap_finding_id = NULL WHERE related_gap_finding_id IS NULL;");
     }
-    // Make tenant_id nullable programmatically to align with ADR 0002 Phase 2/3 (where tenants table is removed)
-    sql = sql.replace(/"tenant_id"\s+uuid\s+NOT\s+NULL/gi, '"tenant_id" uuid');
-
     const chunks = sql.split("--> statement-breakpoint");
     for (const chunk of chunks) {
       if (chunk.trim()) {
