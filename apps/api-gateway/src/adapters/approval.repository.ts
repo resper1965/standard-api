@@ -68,7 +68,7 @@ export const createApprovalRepository = (): ApprovalRepositoryAdapter => {
     },
     withOrganization(organizationId: string) {
       return {
-        create: async (input) => this.create(input),
+        create: async (input) => this.create({ ...input, organizationId }),
         get: async (approvalId) => {
           const approval = await this.get(approvalId);
           return approval && approval.organizationId === organizationId ? approval : null;
@@ -129,16 +129,20 @@ export const createDrizzleApprovalRepository = (db: DbClient): ApprovalRepositor
         .where(
           and(
             eq(approvalEvents.assessmentId, assessmentId),
-            )
+            eq(approvalEvents.organizationId, organizationId)
+          )
         );
       return results.map(mapRowToRecord);
     },
     withOrganization(organizationId: string) {
       return {
-        create: async (input) => this.create(input),
+        create: async (input) => this.create({ ...input, organizationId }),
         get: async (approvalId) => {
           const [found] = await db.select().from(approvalEvents)
-            .where(eq(approvalEvents.id, approvalId))
+            .where(and(
+              eq(approvalEvents.id, approvalId),
+              eq(approvalEvents.organizationId, organizationId)
+            ))
             .limit(1);
           return found ? mapRowToRecord(found) : null;
         },
@@ -149,7 +153,8 @@ export const createDrizzleApprovalRepository = (db: DbClient): ApprovalRepositor
                 eq(approvalEvents.id, approvalId),
                 eq(approvalEvents.gate, gate as ApprovalRow["gate"]),
                 eq(approvalEvents.decision, "approved" as ApprovalRow["decision"]),
-                )
+                eq(approvalEvents.organizationId, organizationId)
+              )
             )
             .limit(1);
           return found ? mapRowToEvent(found) : null;

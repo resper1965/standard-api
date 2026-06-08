@@ -73,6 +73,9 @@ export const ApiErrorCodeSchema = z.enum([
   "ORGANIZATION_REQUIRED",
   /** User account exists but has not been approved by a platform admin yet. */
   "ACCOUNT_PENDING_APPROVAL",
+  // Document security
+  /** Uploaded file failed malware scan — rejected by the security pipeline. */
+  "MALWARE_DETECTED",
 ]);
 
 export const ApiErrorSchema = z.object({

@@ -9,10 +9,11 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^0.9.3",
+    "@sentry/cloudflare": "^10.56.0",
+    "@standard/document-ingestion": "workspace:*",
     "@standard/kb": "workspace:*",
     "@standard/schemas": "workspace:*",
-    "@standard/document-ingestion": "workspace:*",
-    "@neondatabase/serverless": "^0.9.3",
     "drizzle-orm": "^0.45.2"
   },
   "devDependencies": {
@@ -21,4 +22,3 @@
     "wrangler": "latest"
   }
 }
-

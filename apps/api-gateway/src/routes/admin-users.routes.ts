@@ -13,11 +13,12 @@
  */
 import { z } from "zod";
 import { eq, ilike, or, sql, desc, and } from "drizzle-orm";
-import { baUser, baSession, baAccount, organizations } from "@standard/schemas";
+import { baUser, baSession, baAccount, organizations, memberships, users } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition, RequestContext } from "../http";
 import { json, parseJson, routeParam, routeUuidParam } from "../http";
 import { requirePlatformAdmin } from "../middleware/rbac.middleware";
+import { sanitizeLikeInput } from "@standard/security";
 import type { DbClient } from "../adapters/db";
 import { resolveOrganizationContext } from "../adapters/tenant-mapping";
 
@@ -104,8 +105,8 @@ export const adminUsersRoutes: RouteDefinition[] = [
 
       const conditions = query.search
         ? or(
-            ilike(baUser.name, `%${query.search}%`),
-            ilike(baUser.email, `%${query.search}%`),
+            ilike(baUser.name, `%${sanitizeLikeInput(query.search)}%`),
+            ilike(baUser.email, `%${sanitizeLikeInput(query.search)}%`),
           )
         : undefined;
 
@@ -133,6 +134,78 @@ export const adminUsersRoutes: RouteDefinition[] = [
     },
   },
 
+  // ── POST /api/v1/admin/users ──────────────────────────────────────────
+  {
+    method: "POST",
+    path: "/api/v1/admin/users",
+    protected: true,
+    permissions: ["admin:write"],
+    requireActor: true,
+    tenantRequired: false,
+    handler: async (context) => {
+      await requirePlatformAdmin(context);
+
+      const CreateUserBodySchema = z.object({
+        name: z.string().min(1),
+        email: z.string().email(),
+        password: z.string().min(8),
+        role: z.string().default("user"),
+      });
+
+      const body = await parseJson(context.request, CreateUserBodySchema);
+
+      // We dynamically import getCachedAuth here to avoid circular dependency loops if any,
+      // or we can rely on standard baUser inserts. However, password hashing requires auth.
+      const { getCachedAuth } = await import("../index-helpers");
+      const auth = getCachedAuth();
+
+      if (!auth) {
+        throw new ApiError("INTERNAL_ERROR", "Auth instance not available", 500);
+      }
+
+      try {
+        const res = await auth.api.signUpEmail({
+          body: {
+            name: body.name,
+            email: body.email,
+            password: body.password,
+            metadata: "",
+            jobTitle: "",
+            phone: "",
+          }
+        });
+
+        const db = getDb(context);
+        
+        // Auto-approve users created by platform admin and apply role
+        const patch: Record<string, unknown> = {
+          approved: true,
+          updatedAt: new Date(),
+        };
+        if (body.role === "admin") {
+          patch.platformAdmin = true;
+        }
+
+        const [updated] = await db.update(baUser)
+          .set(patch)
+          .where(eq(baUser.email, body.email))
+          .returning(userColumns);
+
+        await context.deps.audit.record("admin.user.created", {
+          actor_id: context.actorId,
+          target_email: body.email,
+          role: body.role,
+          trace_id: context.traceId,
+        });
+
+        return json({ data: updated || res.user, trace_id: context.traceId }, { status: 201 });
+      } catch (err: any) {
+        throw new ApiError("VALIDATION_ERROR", err.message || "Failed to create user", 400);
+      }
+    },
+  },
+
+
   // ── PATCH /api/v1/admin/users/:userId ─────────────────────────────────
   {
     method: "PATCH",
@@ -145,7 +218,7 @@ export const adminUsersRoutes: RouteDefinition[] = [
       await requirePlatformAdmin(context);
 
       const db = getDb(context);
-      const userId = routeUuidParam(context.params, "userId");
+      const userId = routeParam(context.params, "userId");
       const body = await parseJson(context.request, UpdateUserBodySchema);
 
       // Verify user exists
@@ -192,7 +265,7 @@ export const adminUsersRoutes: RouteDefinition[] = [
       await requirePlatformAdmin(context);
 
       const db = getDb(context);
-      const userId = routeUuidParam(context.params, "userId");
+      const userId = routeParam(context.params, "userId");
       const body = await parseJson(context.request, BanUserBodySchema);
 
       // Verify user exists
@@ -225,18 +298,37 @@ export const adminUsersRoutes: RouteDefinition[] = [
         .where(eq(baUser.id, userId))
         .returning(userColumns);
 
-      // Invalidate all active sessions for the banned user
-      await db
-        .delete(baSession)
-        .where(eq(baSession.userId, userId));
+      // Invalidate all active sessions for the banned user.
+      // Non-critical: user is already banned, sessions will be rejected on
+      // next auth check even if this cleanup fails.
+      let sessionCleanupError: string | undefined;
+      try {
+        await db
+          .delete(baSession)
+          .where(eq(baSession.userId, userId));
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error(`[admin:ban] Failed to delete sessions for user ${userId}:`, msg);
+        sessionCleanupError = msg;
+      }
 
       await context.deps.audit.record("admin.user.banned", {
         actor_id: context.actorId,
         target_user_id: userId,
         reason: body.reason ?? "no reason provided",
         ban_expires: body.banExpires?.toISOString() ?? "permanent",
+        session_cleanup_error: sessionCleanupError,
         trace_id: context.traceId,
       });
+
+      // Edge cache revocation — forces immediate rejection at the middleware
+      if (context.env?.STANDARD_CACHE) {
+        await context.env.STANDARD_CACHE.put(
+          `revocations:user:${userId}`,
+          "user_banned",
+          { expirationTtl: 86400 } // 24h
+        ).catch(() => {});
+      }
 
       return json({ data: updated, trace_id: context.traceId });
     },
@@ -254,7 +346,7 @@ export const adminUsersRoutes: RouteDefinition[] = [
       await requirePlatformAdmin(context);
 
       const db = getDb(context);
-      const userId = routeUuidParam(context.params, "userId");
+      const userId = routeParam(context.params, "userId");
 
       // Verify user exists
       const [existing] = await db
@@ -299,12 +391,12 @@ export const adminUsersRoutes: RouteDefinition[] = [
       await requirePlatformAdmin(context);
 
       const db = getDb(context);
-      const userId = routeUuidParam(context.params, "userId");
+      const userId = routeParam(context.params, "userId");
       const body = await parseJson(context.request, ApproveUserBodySchema);
 
       // Verify user exists and is not already approved
       const [existing] = await db
-        .select({ id: baUser.id, approved: baUser.approved })
+        .select({ id: baUser.id, approved: baUser.approved, email: baUser.email, name: baUser.name })
         .from(baUser)
         .where(eq(baUser.id, userId))
         .limit(1);
@@ -332,19 +424,44 @@ export const adminUsersRoutes: RouteDefinition[] = [
         .where(eq(baUser.id, userId))
         .returning(userColumns);
 
-      // 2. Assign user to the organization (since they can only have one, update organizations table)
-      // Note: organizations has a userId column. 
-      await db
-        .update(organizations)
-        .set({ userId: userId })
-        .where(eq(organizations.id, body.organization_id));
+      // 2. Upsert into domain users
+      let domainUserId: string;
+      const [existingDomainUser] = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(eq(users.email, existing.email))
+        .limit(1);
 
-      // 3. JIT resolve tenant context for the org (idempotent)
-      try {
-        await resolveOrganizationContext(db, body.organization_id);
-      } catch (err) {
-        // Non-fatal — tenant may already exist
-        console.warn("[admin:approve] resolveOrganizationContext warning:", err);
+      if (existingDomainUser) {
+        domainUserId = existingDomainUser.id;
+        await db.update(users).set({ identityProviderSubject: userId }).where(eq(users.id, domainUserId));
+      } else {
+        const [newDomainUser] = await db.insert(users).values({
+          email: existing.email,
+          displayName: existing.name || "User",
+          identityProvider: "standard-native-auth",
+          identityProviderSubject: userId,
+        }).returning({ id: users.id });
+        domainUserId = newDomainUser!.id;
+      }
+
+      // 3. Upsert into memberships
+      const [existingMembership] = await db
+        .select({ id: memberships.id })
+        .from(memberships)
+        .where(and(eq(memberships.organizationId, body.organization_id), eq(memberships.userId, domainUserId)))
+        .limit(1);
+
+      if (!existingMembership) {
+        await db.insert(memberships).values({
+          organizationId: body.organization_id,
+          userId: domainUserId,
+          email: existing.email,
+          displayName: existing.name,
+          role: body.role ?? "member",
+          status: "active",
+          acceptedAt: new Date()
+        });
       }
 
       await context.deps.audit.record("admin.user.approved", {
@@ -354,6 +471,24 @@ export const adminUsersRoutes: RouteDefinition[] = [
         assigned_role: body.role ?? "member",
         trace_id: context.traceId,
       });
+
+      // Invalidate all sessions so the user re-authenticates with fresh
+      // customSession data (new membership + org context).
+      try {
+        await db.delete(baSession).where(eq(baSession.userId, userId));
+      } catch (err) {
+        console.error(`[admin:approve] Session invalidation failed for ${userId}:`, err instanceof Error ? err.message : String(err));
+      }
+      // Edge cache soft revocation — clears downstream caches on next request.
+      // The session DELETE above already forces re-authentication.
+      // "membership_change" is a soft revocation (not 401) — see auth.middleware.ts.
+      if (context.env?.STANDARD_CACHE) {
+        await context.env.STANDARD_CACHE.put(
+          `revocations:user:${userId}`,
+          "membership_change",
+          { expirationTtl: 10 } // 10s — just enough to bust cached session data
+        ).catch(() => {});
+      }
 
       return json({ data: updated, trace_id: context.traceId });
     },
@@ -371,7 +506,7 @@ export const adminUsersRoutes: RouteDefinition[] = [
       await requirePlatformAdmin(context);
 
       const db = getDb(context);
-      const userId = routeUuidParam(context.params, "userId");
+      const userId = routeParam(context.params, "userId");
 
       const [existing] = await db
         .select({ id: baUser.id, email: baUser.email, approved: baUser.approved, platformAdmin: baUser.platformAdmin })
@@ -385,15 +520,35 @@ export const adminUsersRoutes: RouteDefinition[] = [
         throw new ApiError("FORBIDDEN", "Cannot reject a platform admin.", 403);
       }
 
-      // Cascade delete the rejected user and all their data
-      await db.delete(baAccount).where(eq(baAccount.userId, userId));
-      await db.delete(baSession).where(eq(baSession.userId, userId));
+      // Cascade delete the rejected user and all their data.
+      // Non-critical cleanup (accounts, sessions) failures are logged but
+      // do not block the primary user deletion.
+      const cascadeErrors: string[] = [];
+
+      try {
+        await db.delete(baAccount).where(eq(baAccount.userId, userId));
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error(`[admin:reject] Failed to delete accounts for user ${userId}:`, msg);
+        cascadeErrors.push(`accounts: ${msg}`);
+      }
+
+      try {
+        await db.delete(baSession).where(eq(baSession.userId, userId));
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error(`[admin:reject] Failed to delete sessions for user ${userId}:`, msg);
+        cascadeErrors.push(`sessions: ${msg}`);
+      }
+
+      // Primary operation — this MUST succeed.
       await db.delete(baUser).where(eq(baUser.id, userId));
 
       await context.deps.audit.record("admin.user.rejected", {
         actor_id: context.actorId,
         target_user_id: userId,
         target_email: existing.email,
+        cascade_errors: cascadeErrors.length > 0 ? cascadeErrors : undefined,
         trace_id: context.traceId,
       });
 
@@ -440,7 +595,7 @@ export const adminUsersRoutes: RouteDefinition[] = [
       await requirePlatformAdmin(context);
 
       const db = getDb(context);
-      const userId = routeUuidParam(context.params, "userId");
+      const userId = routeParam(context.params, "userId");
 
       // Verify user exists
       const [existing] = await db
@@ -470,16 +625,36 @@ export const adminUsersRoutes: RouteDefinition[] = [
         );
       }
 
-      // Cascade delete: accounts → sessions → user
-      // baSession and baAccount have ON DELETE CASCADE, but be explicit for auditability.
-      await db.delete(baAccount).where(eq(baAccount.userId, userId));
-      await db.delete(baSession).where(eq(baSession.userId, userId));
+      // Cascade delete: accounts → sessions → user.
+      // baSession and baAccount have ON DELETE CASCADE, but be explicit for
+      // auditability. Non-critical cleanup failures are logged but do not
+      // block the primary user deletion.
+      const cascadeErrors: string[] = [];
+
+      try {
+        await db.delete(baAccount).where(eq(baAccount.userId, userId));
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error(`[admin:delete] Failed to delete accounts for user ${userId}:`, msg);
+        cascadeErrors.push(`accounts: ${msg}`);
+      }
+
+      try {
+        await db.delete(baSession).where(eq(baSession.userId, userId));
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error(`[admin:delete] Failed to delete sessions for user ${userId}:`, msg);
+        cascadeErrors.push(`sessions: ${msg}`);
+      }
+
+      // Primary operation — this MUST succeed.
       await db.delete(baUser).where(eq(baUser.id, userId));
 
       await context.deps.audit.record("admin.user.deleted", {
         actor_id: context.actorId,
         target_user_id: userId,
         target_email: existing.email,
+        cascade_errors: cascadeErrors.length > 0 ? cascadeErrors : undefined,
         trace_id: context.traceId,
       });
 

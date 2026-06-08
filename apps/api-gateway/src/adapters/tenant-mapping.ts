@@ -14,7 +14,7 @@
  * mask resolution bugs by inventing "phantom" tenants.
  */
 import { eq, or } from "drizzle-orm";
-import { organizations } from "@standard/schemas";
+import { organizations, memberships, users } from "@standard/schemas";
 import type { DbClient } from "./db";
 
 export interface ResolvedTenantContext {
@@ -53,7 +53,11 @@ export async function resolveOrganizationContext(
 
   // Non-UUID: could be a baUser.id or a slug.
   const [existingOrg] = await db
-    .select()
+    .select({
+      id: organizations.id,
+      slug: organizations.slug,
+      name: organizations.name,
+    })
     .from(organizations)
     .where(or(
       eq(organizations.userId, identifier),
@@ -66,6 +70,27 @@ export async function resolveOrganizationContext(
       organization_id: existingOrg.id,
       ba_org_id: existingOrg.slug,
       org_name: existingOrg.name,
+    };
+  }
+
+  // Check if identifier is a baUser.id that belongs to an org via memberships
+  const [memberOrg] = await db
+    .select({
+      id: organizations.id,
+      slug: organizations.slug,
+      name: organizations.name,
+    })
+    .from(organizations)
+    .innerJoin(memberships, eq(memberships.organizationId, organizations.id))
+    .innerJoin(users, eq(users.id, memberships.userId))
+    .where(eq(users.identityProviderSubject, identifier))
+    .limit(1);
+
+  if (memberOrg) {
+    return {
+      organization_id: memberOrg.id,
+      ba_org_id: memberOrg.slug,
+      org_name: memberOrg.name,
     };
   }
 
@@ -100,13 +125,18 @@ export async function provisionOrganizationContext(
     })
     .returning();
 
+  // C3 fix: guard INSERT result — Drizzle may return empty on constraint violations
+  if (!newOrg) {
+    throw new Error(`[standard:tenant-mapping] Failed to provision organization for identifier=${identifier} — possible duplicate slug or DB constraint violation.`);
+  }
+
   console.log(
-    `[standard:tenant-mapping] provisioned org=${newOrg!.id} for identifier=${identifier}`
+    `[standard:tenant-mapping] provisioned org=${newOrg.id} for identifier=${identifier}`
   );
 
   return {
-    organization_id: newOrg!.id,
-    ba_org_id: newOrg!.slug,
+    organization_id: newOrg.id,
+    ba_org_id: newOrg.slug,
     org_name: name,
   };
 }

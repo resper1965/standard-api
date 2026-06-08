@@ -82,21 +82,26 @@ export const dataSubjectRoutes: RouteDefinition[] = [
         ],
       };
 
-      // Memberships: which organizations this user belongs to.
-      // Full membership data is available via the tenant admin endpoint.
-      // For user-facing export, we note the user's active org from the session.
-      // Fetch real memberships from DB
+      // Memberships: fetch all organizations the user belongs to
       try {
-        const activeOrgId = (context.session as any)?.session?.activeOrganizationId;
-        if (activeOrgId && context.organizationId) {
-          const realMemberships = await context.deps.members.listByOrganization(activeOrgId);
-          exportData.memberships = realMemberships.map(m => ({
-            membership_id: m.membership_id,
-            organization_id: m.organization_id,
-            role: m.role,
-            status: m.status,
-            invited_at: m.invited_at,
-            accepted_at: m.accepted_at,
+        if (context.deps._db) {
+          const { organizations } = await import("@standard/schemas");
+          const { eq } = await import("drizzle-orm");
+          const db = context.deps._db as import("../adapters/db").DbClient;
+          const userOrgs = await db
+            .select({
+              id: organizations.id,
+              name: organizations.name,
+              slug: organizations.slug,
+              status: organizations.status,
+            })
+            .from(organizations)
+            .where(eq(organizations.userId, userId));
+          exportData.memberships = userOrgs.map(org => ({
+            organization_id: org.id,
+            organization_name: org.name,
+            organization_slug: org.slug,
+            status: org.status,
           }));
         }
       } catch {

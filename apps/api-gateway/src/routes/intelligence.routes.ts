@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { RouteDefinition } from "../http";
-import { json, parseJson } from "../http";
+import { json, parseJson , requireOrganizationId } from "../http";
 import { ApiError } from "../errors/api-error";
 import { flattenI18n } from "../utils/i18n";
 import { RISK_TAXONOMY } from "./risk.routes";
@@ -424,7 +424,7 @@ export const intelligenceRoutes: RouteDefinition[] = [
                   id: job.run_id,
                   params: {
                       runId: job.run_id,
-                      organizationId: organizationId!,
+                      organizationId: requireOrganizationId({ organizationId }),
                       agents: body.agents,
                       inputData: body.input
                   }
@@ -432,7 +432,7 @@ export const intelligenceRoutes: RouteDefinition[] = [
           } else if (deps.AGENT_RUN_QUEUE) {
               await deps.AGENT_RUN_QUEUE.send({
                   agent_run_id: job.run_id,
-                  organization_id: organizationId!,
+                  organization_id: requireOrganizationId({ organizationId }),
                   assessment_id: body.assessment_id
               });
           }

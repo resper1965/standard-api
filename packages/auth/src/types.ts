@@ -20,8 +20,7 @@ import type { NeonHttpDatabase } from "drizzle-orm/neon-http";
  * Drizzle client type — supports both Neon serverless and postgres.js drivers.
  * Standard Native Auth's drizzle adapter accepts any drizzle instance.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type DrizzleClient = PostgresJsDatabase<any> | NeonHttpDatabase<any> | Record<string, unknown>;
+export type DrizzleClient = PostgresJsDatabase<any> | NeonHttpDatabase<any>;
 
 /**
  * Standard Native Auth user type extended with plugin-injected fields.
@@ -67,8 +66,19 @@ export interface StandardUser {
 export interface StandardSession {
   id: string;
   userId: string;
-  /** Set by Standard Native Auth `organization` plugin when user switches active org. */
-  activeOrganizationId?: string;
+  /** Set by customSession plugin — active org for this session. */
+  activeOrganizationId?: string | null;
+  /** Slug of the active organization (injected by customSession plugin). */
+  activeOrganizationSlug?: string | null;
+  /** User's role in the active organization (injected by customSession plugin). */
+  activeOrganizationRole?: string | null;
+  /** All organizations the user belongs to (injected by customSession plugin). */
+  allowedOrganizations?: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    role: string;
+  }>;
   expiresAt?: Date;
   createdAt?: Date;
   updatedAt?: Date;

@@ -23,7 +23,11 @@ const ROUTE_LIMITS: Record<string, RateLimitConfig> = {
   "/render": { maxRequests: 20, windowSeconds: 60 },
   "/admin/": { maxRequests: 15, windowSeconds: 60 },
   "/intelligence/council": { maxRequests: 5, windowSeconds: 60 },
-  "/intelligence/": { maxRequests: 20, windowSeconds: 60 }
+  "/intelligence/": { maxRequests: 20, windowSeconds: 60 },
+  // Auth endpoints — prevent mass signups flooding USER_LIFECYCLE_QUEUE
+  "/auth/sign-up": { maxRequests: 10, windowSeconds: 60 },
+  "/auth/sign-in": { maxRequests: 20, windowSeconds: 60 },
+  "/auth/forgot-password": { maxRequests: 5, windowSeconds: 60 },
 };
 
 const DEFAULT_LIMIT: RateLimitConfig = { maxRequests: 120, windowSeconds: 60 };
@@ -69,6 +73,9 @@ const counters = new Map<string, { count: number; windowStart: number }>();
 /** Sync KV every N in-memory increments (batch-based, not time-based). */
 const SYNC_BATCH_SIZE = 10;
 
+/** Hard cap on in-memory counter entries to prevent unbounded growth. */
+const MAX_COUNTERS = 10_000;
+
 const getOrCreateCounter = (key: string, windowSeconds: number): { count: number; windowStart: number } => {
   const now = Date.now();
   const existing = counters.get(key);
@@ -79,6 +86,36 @@ const getOrCreateCounter = (key: string, windowSeconds: number): { count: number
   const fresh = { count: 0, windowStart: now };
   counters.set(key, fresh);
   return fresh;
+};
+
+/**
+ * Prunes expired entries from the in-memory counters map and enforces
+ * the MAX_COUNTERS cap by evicting the oldest entries when exceeded.
+ * Uses a default 60s window for expiry since the actual per-route config
+ * isn't available here — safe because it only affects cleanup, not limiting.
+ */
+const pruneExpiredCounters = (): void => {
+  const now = Date.now();
+  const defaultWindowMs = 60 * 1000;
+
+  // Pass 1: remove expired entries
+  for (const [key, entry] of counters) {
+    if (now - entry.windowStart >= defaultWindowMs) {
+      counters.delete(key);
+    }
+  }
+
+  // Pass 2: if still over cap, evict oldest entries
+  if (counters.size > MAX_COUNTERS) {
+    const sorted = [...counters.entries()].sort(
+      (a, b) => a[1].windowStart - b[1].windowStart
+    );
+    const excess = sorted.length - MAX_COUNTERS;
+    for (let i = 0; i < excess; i++) {
+      const entry = sorted[i];
+      if (entry) counters.delete(entry[0]);
+    }
+  }
 };
 
 export const assertRateLimit = async (
@@ -97,10 +134,16 @@ export const assertRateLimit = async (
   const key = buildKey(context.organizationId, context.actorId, ip, route, config.windowSeconds);
   const counter = getOrCreateCounter(key, config.windowSeconds);
 
+  // Periodic pruning — only when map is getting large, to avoid overhead
+  if (counters.size > MAX_COUNTERS / 2) {
+    pruneExpiredCounters();
+  }
+
   // Check limit in-memory (0ms, no I/O)
   if (counter.count >= config.maxRequests) {
     
-    await context.deps.audit.record("security_rate_limit_exceeded", {
+    // H5 fix: audit is fire-and-forget — DB failure must not block the 429 response
+    context.deps.audit.record("security_rate_limit_exceeded", {
       route,
       organization_id: context.organizationId,
       actor_id: context.actorId,
@@ -109,7 +152,7 @@ export const assertRateLimit = async (
       max_requests: config.maxRequests,
       window_seconds: config.windowSeconds,
       ip_address: ip
-    });
+    }).catch((e: unknown) => console.error("[rate-limit] audit record failed:", e instanceof Error ? e.message : e));
 
     if (context.deps.SOC_TRIAGE_QUEUE) {
       const sendOp = context.deps.SOC_TRIAGE_QUEUE.send({

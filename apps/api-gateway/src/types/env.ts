@@ -26,6 +26,7 @@ export interface Env {
   REPORT_EXPORT_QUEUE: Queue;
   AGENT_RUN_QUEUE: Queue;
   SOC_TRIAGE_QUEUE?: Queue;
+  USER_LIFECYCLE_QUEUE?: Queue;
   EMAIL: Fetcher;
   STANDARD_CACHE?: KVNamespace;
   STANDARD_CONFIG_KV?: KVNamespace;

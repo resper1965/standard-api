@@ -64,7 +64,11 @@ export const createDrizzleWebhookRepository = (db: DbClient): WebhookRepositoryA
 
   async getEndpoint(id, organization_id) {
     const [row] = await db.select().from(webhookEndpoints)
-      .where(eq(webhookEndpoints.id, id));
+      .where(and(
+        eq(webhookEndpoints.id, id),
+        eq(webhookEndpoints.organizationId, organization_id)
+      ))
+      .limit(1);
     return row ? toEndpointRecord(row) : null;
   },
 
@@ -83,14 +87,20 @@ export const createDrizzleWebhookRepository = (db: DbClient): WebhookRepositoryA
 
     const [row] = await db.update(webhookEndpoints)
       .set(updates)
-      .where(eq(webhookEndpoints.id, id))
+      .where(and(
+        eq(webhookEndpoints.id, id),
+        eq(webhookEndpoints.organizationId, organization_id)
+      ))
       .returning();
     return row ? toEndpointRecord(row) : null;
   },
 
   async deleteEndpoint(id, organization_id) {
     const [deleted] = await db.delete(webhookEndpoints)
-      .where(eq(webhookEndpoints.id, id))
+      .where(and(
+        eq(webhookEndpoints.id, id),
+        eq(webhookEndpoints.organizationId, organization_id)
+      ))
       .returning({ id: webhookEndpoints.id });
     return !!deleted;
   },
@@ -134,7 +144,10 @@ export const createDrizzleWebhookRepository = (db: DbClient): WebhookRepositoryA
   async rotateSecret(id, organization_id, newSecretHash, newSecretMasked) {
     const [row] = await db.update(webhookEndpoints)
       .set({ signingSecretHash: newSecretHash, signingSecretMasked: newSecretMasked, updatedAt: new Date() })
-      .where(eq(webhookEndpoints.id, id))
+      .where(and(
+        eq(webhookEndpoints.id, id),
+        eq(webhookEndpoints.organizationId, organization_id)
+      ))
       .returning();
     return row ? toEndpointRecord(row) : null;
   },

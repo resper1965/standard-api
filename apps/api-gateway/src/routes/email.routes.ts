@@ -106,8 +106,9 @@ export const emailRoutes: RouteDefinition[] = [
   {
     method: "POST",
     path: "/api/v1/email/test",
-    authRequired: true,
+    protected: true,
     requireActor: true,
+    permissions: ["admin:write"],
     handler: async (ctx) => {
       const body = await parseJson(ctx.request, testEmailSchema);
       const { to, type } = body;

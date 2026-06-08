@@ -3,14 +3,15 @@ import { extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
 extendZodWithOpenApi(z);
 import { M2mScopesArraySchema } from "@standard/schemas";
 import type { RouteDefinition, RequestContext } from "../http";
-import { json } from "../http";
+import { json , requireOrganizationId } from "../http";
 import { ApiError } from "../errors/api-error";
+import { generateApiKey } from "../utils/api-key-crypto";
 
 const createApiKeyInput = z.object({
   name: z.string().min(1).max(100),
   expiresAt: z.string().datetime().optional(),
-  /** M2M scopes — when omitted or empty, defaults to all scopes (full access) */
-  scopes: M2mScopesArraySchema.optional(),
+  /** M2M scopes — required, at least one. Least privilege: no key without explicit scopes. */
+  scopes: M2mScopesArraySchema,
 });
 
 const updateApiKeyInput = z.object({
@@ -118,7 +119,7 @@ export const apiKeysRoutes: RouteDefinition[] = [
     handler: async (context) => {
       const { organizationId } = context.params;
       const activeOnly = new URL(context.request.url).searchParams.get("active") === "true";
-      const tenantCtx = await resolveOrgCtx(context, organizationId!);
+      const tenantCtx = await resolveOrgCtx(context, requireOrganizationId(context));
       const keys = await context.deps.apiKeys.listByOrganization(tenantCtx.organization_id, activeOnly);
       const now = new Date();
 
@@ -184,19 +185,9 @@ export const apiKeysRoutes: RouteDefinition[] = [
     handler: async (context) => {
       const { organizationId } = context.params;
       const input = context.validatedBody as z.infer<typeof createApiKeyInput>;
-      const tenantCtx = await resolveOrgCtx(context, organizationId!);
+      const tenantCtx = await resolveOrgCtx(context, requireOrganizationId(context));
 
-      // Generate token: standard_live_<64-char hex>
-      const rawSecret = crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "");
-      const fullToken = `standard_live_${rawSecret}`;
-      const maskedKey = `standard_live_...${fullToken.slice(-4)}`;
-
-      // SHA-256 hash for secure storage
-      const encoder = new TextEncoder();
-      const hashBuffer = await crypto.subtle.digest("SHA-256", encoder.encode(fullToken));
-      const keyHash = Array.from(new Uint8Array(hashBuffer))
-        .map(b => b.toString(16).padStart(2, "0"))
-        .join("");
+      const { fullToken, keyHash, maskedKey } = await generateApiKey();
 
       const record = await context.deps.apiKeys.create({
         organizationId: tenantCtx.organization_id,
@@ -204,7 +195,7 @@ export const apiKeysRoutes: RouteDefinition[] = [
         keyHash,
         maskedKey,
         expiresAt: input.expiresAt ? new Date(input.expiresAt) : undefined,
-        ...(input.scopes ? { scopes: input.scopes } : {}),
+        scopes: input.scopes,
       });
 
       await context.deps.audit.record("api_key.created", {
@@ -240,7 +231,7 @@ export const apiKeysRoutes: RouteDefinition[] = [
     permissions: ["organization:read"],
     handler: async (context) => {
       const { organizationId, keyId } = context.params;
-      const tenantCtx = await resolveOrgCtx(context, organizationId!);
+      const tenantCtx = await resolveOrgCtx(context, requireOrganizationId(context));
 
       const key = await context.deps.apiKeys.getById(keyId!, tenantCtx.organization_id);
       if (!key) throw new ApiError("NOT_FOUND", "API key not found.", 404);
@@ -290,7 +281,7 @@ export const apiKeysRoutes: RouteDefinition[] = [
     handler: async (context) => {
       const { organizationId, keyId } = context.params;
       const input = context.validatedBody as z.infer<typeof updateApiKeyInput>;
-      const tenantCtx = await resolveOrgCtx(context, organizationId!);
+      const tenantCtx = await resolveOrgCtx(context, requireOrganizationId(context));
 
       const existing = await context.deps.apiKeys.getById(keyId!, tenantCtx.organization_id);
       if (!existing) throw new ApiError("NOT_FOUND", "API key not found.", 404);
@@ -340,7 +331,7 @@ export const apiKeysRoutes: RouteDefinition[] = [
     permissions: ["organization:update"],
     handler: async (context) => {
       const { organizationId, keyId } = context.params;
-      const tenantCtx = await resolveOrgCtx(context, organizationId!);
+      const tenantCtx = await resolveOrgCtx(context, requireOrganizationId(context));
 
       const revoked = await context.deps.apiKeys.revokeKey(keyId!, tenantCtx.organization_id);
       if (!revoked) throw new ApiError("NOT_FOUND", "API key not found.", 404);
@@ -356,6 +347,138 @@ export const apiKeysRoutes: RouteDefinition[] = [
     }
   },
 
+  // ── POST /organizations/:orgId/api-keys/:keyId/rotate ─────────────────
+  {
+    method: "POST",
+    path: "/api/v1/organizations/:organizationId/api-keys/:keyId/rotate",
+    protected: true,
+    requireActor: true,
+    permissions: ["organization:update"],
+    bodySchema: z.object({
+      gracePeriodHours: z.number().int().min(0).max(168).default(24),
+    }),
+    openapi: {
+      summary: "Rotate API Key",
+      description: "Creates a new replacement key and schedules revocation of the old key after an optional grace period.",
+      request: {
+        params: z.object({ organizationId: z.string(), keyId: z.string() }),
+        body: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                gracePeriodHours: z.number().int().min(0).max(168).default(24),
+              }),
+            },
+          },
+        },
+      },
+      responses: {
+        201: {
+          description: "Key rotated successfully",
+          content: {
+            "application/json": {
+              schema: z.object({
+                data: z.object({
+                  new_key: z.object({
+                    id: z.string(),
+                    name: z.string(),
+                    key: z.string().openapi({ description: "Raw key — shown only once" }),
+                    maskedKey: z.string(),
+                    scopes: z.array(z.string()),
+                  }),
+                  old_key: z.object({
+                    id: z.string(),
+                    status: z.string(),
+                    revokes_at: z.string().nullable(),
+                  }),
+                }),
+                trace_id: z.string(),
+              }),
+            },
+          },
+        },
+      },
+    },
+    handler: async (context) => {
+      const { organizationId, keyId } = context.params;
+      const input = context.validatedBody as { gracePeriodHours: number };
+      const tenantCtx = await resolveOrgCtx(context, requireOrganizationId(context));
+
+      // Block M2M self-management (same guard as create)
+      if (context.actorId?.startsWith("m2m:")) {
+        throw new ApiError("FORBIDDEN", "M2M agents cannot manage API keys.", 403);
+      }
+
+      // 1. Get existing key
+      const existing = await context.deps.apiKeys.getById(keyId!, tenantCtx.organization_id);
+      if (!existing) throw new ApiError("NOT_FOUND", "API key not found.", 404);
+      if (existing.revokedAt) throw new ApiError("CONFLICT", "Cannot rotate a revoked key.", 409);
+
+      // 2. Generate new key
+      const { fullToken, keyHash, maskedKey } = await generateApiKey();
+
+      // 3. Create new key inheriting properties from old key
+      const newRecord = await context.deps.apiKeys.create({
+        organizationId: tenantCtx.organization_id,
+        name: `${existing.name} (rotated)`,
+        keyHash,
+        maskedKey,
+        scopes: existing.scopes,
+        expiresAt: existing.expiresAt ?? undefined,
+      });
+
+      // 4. Handle old key: immediate revocation or scheduled grace period
+      let oldKeyStatus: string;
+      let revokesAt: string | null;
+
+      if (input.gracePeriodHours === 0) {
+        // Immediate revocation
+        await context.deps.apiKeys.revokeKey(keyId!, tenantCtx.organization_id);
+        oldKeyStatus = "revoked";
+        revokesAt = new Date().toISOString();
+      } else {
+        // Schedule revocation after grace period
+        const revokeAt = new Date(Date.now() + input.gracePeriodHours * 60 * 60 * 1000);
+        await context.deps.apiKeys.scheduleRevocation(
+          keyId!,
+          tenantCtx.organization_id,
+          revokeAt,
+          newRecord.id,
+        );
+        oldKeyStatus = "pending_revocation";
+        revokesAt = revokeAt.toISOString();
+      }
+
+      // 5. Audit log
+      await context.deps.audit.record("api_key.rotated", {
+        organization_id: tenantCtx.organization_id,
+        actor_id: context.actorId,
+        old_key_id: keyId,
+        new_key_id: newRecord.id,
+        grace_period_hours: input.gracePeriodHours,
+        trace_id: context.traceId,
+      });
+
+      return json({
+        data: {
+          new_key: {
+            id: newRecord.id,
+            name: newRecord.name,
+            key: fullToken,
+            maskedKey: newRecord.maskedKey,
+            scopes: newRecord.scopes,
+          },
+          old_key: {
+            id: keyId,
+            status: oldKeyStatus,
+            revokes_at: revokesAt,
+          },
+        },
+        trace_id: context.traceId,
+      }, { status: 201 });
+    }
+  },
+
   // ── GET /organizations/:orgId/api-keys/:keyId/usage ──────────────────
   {
     method: "GET",
@@ -365,7 +488,7 @@ export const apiKeysRoutes: RouteDefinition[] = [
     permissions: ["organization:read"],
     handler: async (context) => {
       const { organizationId, keyId } = context.params;
-      const tenantCtx = await resolveOrgCtx(context, organizationId!);
+      const tenantCtx = await resolveOrgCtx(context, requireOrganizationId(context));
 
       const key = await context.deps.apiKeys.getById(keyId!, tenantCtx.organization_id);
       if (!key) throw new ApiError("NOT_FOUND", "API key not found.", 404);

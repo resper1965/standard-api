@@ -1,7 +1,7 @@
 import { AuditLogQuerySchema, MetricsQuerySchema, SecurityEventQuerySchema, UsageQuerySchema } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";
-import { json, routeParam, routeUuidParam } from "../http";
+import { json, routeParam, routeUuidParam , requireOrganizationId } from "../http";
 
 const parseQuery = <T extends { safeParse: (value: unknown) => { success: boolean; data?: unknown; error?: unknown } }>(
   request: Request,
@@ -21,7 +21,7 @@ export const observabilityRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["audit:read"],
     handler: async ({ request, deps, params, organizationId, traceId }) => {
-      const assessment = await deps.assessments.withOrganization(organizationId!).get(routeUuidParam(params, "assessmentId"));
+      const assessment = await deps.assessments.withOrganization(requireOrganizationId({ organizationId })).get(routeUuidParam(params, "assessmentId"));
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
       const query = parseQuery(request, AuditLogQuerySchema);
       const data = await deps.observability.auditEvents.list({
@@ -71,7 +71,7 @@ export const observabilityRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["assessment:read"],
     handler: async ({ request, deps, params, organizationId, traceId }) => {
-      const assessment = await deps.assessments.withOrganization(organizationId!).get(routeUuidParam(params, "assessmentId"));
+      const assessment = await deps.assessments.withOrganization(requireOrganizationId({ organizationId })).get(routeUuidParam(params, "assessmentId"));
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
       const query = parseQuery(request, MetricsQuerySchema);
       const data = await deps.observability.metrics.list({
@@ -102,7 +102,7 @@ export const observabilityRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["assessment:read"],
     handler: async ({ request, deps, params, organizationId, traceId }) => {
-      const assessment = await deps.assessments.withOrganization(organizationId!).get(routeUuidParam(params, "assessmentId"));
+      const assessment = await deps.assessments.withOrganization(requireOrganizationId({ organizationId })).get(routeUuidParam(params, "assessmentId"));
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
       const query = parseQuery(request, UsageQuerySchema);
       const usage = await deps.observability.usage.list({ organization_id: organizationId, assessment_id: assessment.assessment_id, limit: query.limit });

@@ -2,7 +2,7 @@ import { BoardTranslatorUseCase } from "@standard/agent-runtime";
 import { z } from "zod";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";
-import { json, parseJson } from "../http";
+import { json, parseJson , requireOrganizationId } from "../http";
 
 export const executiveRoutes: RouteDefinition[] = [
   // ═══════════════════════════════════════════════════════════════════
@@ -31,7 +31,7 @@ export const executiveRoutes: RouteDefinition[] = [
           technicalRiskDescription: body.technicalRiskDescription,
           riskCategory: body.riskCategory,
           ...(body.businessContext ? { businessContext: body.businessContext } : {}),
-          organizationId: ctx.organizationId!
+          organizationId: requireOrganizationId(ctx)
         });
         
         await ctx.deps.audit.record("executive.risk.translated", { 

@@ -173,7 +173,7 @@ export const organizations = pgTable("organizations", {
   ...timestamps()
 }, (table) => [
   uniqueIndex("organizations_slug_uidx").on(table.slug),
-  uniqueIndex("organizations_user_uidx").on(table.userId)
+  index("organizations_user_idx").on(table.userId)
 ]);
 
 export const users = pgTable("users", {
@@ -224,12 +224,16 @@ export const apiKeys = pgTable("api_keys", {
   name: text("name").notNull(),
   keyHash: text("key_hash").notNull(),
   maskedKey: text("masked_key").notNull(),
-  /** M2M permission scopes — empty array means wildcard access (backward compatible) */
+  /** M2M permission scopes — at least one scope required (M4 least privilege). */
   scopes: jsonb("scopes").$type<string[]>().default([]).notNull(),
   expiresAt: timestamp("expires_at", { withTimezone: true }),
   lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
   /** Soft-delete: set when key is revoked. Null means active. */
   revokedAt: timestamp("revoked_at", { withTimezone: true }),
+  /** Scheduled revocation time — set by key rotation. Null = no pending revocation. */
+  scheduledRevokeAt: timestamp("scheduled_revoke_at", { withTimezone: true }),
+  /** ID of the key that replaced this one (rotation chain traceability). */
+  rotatedToKeyId: uuid("rotated_to_key_id"),
   ...timestamps()
 }, (table) => [
   index("api_keys_org_idx").on(table.organizationId),

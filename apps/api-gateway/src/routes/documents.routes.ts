@@ -2,7 +2,7 @@ import { DocumentIngestionService, maxUploadSizeBytes, processDocumentIngestionJ
 import { ReprocessDocumentRequestSchema } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";
-import { json, newId, parseJson, routeParam, routeUuidParam } from "../http";
+import { json, newId, parseJson, routeParam, routeUuidParam , requireOrganizationId } from "../http";
 import { scanForMalware } from "../utils/malware-scanner";
 
 const mapUploadError = (error: unknown): ApiError => {
@@ -68,7 +68,7 @@ export const documentsRoutes: RouteDefinition[] = [
     permissions: ["document:upload"],
     handler: async ({ request, deps, params, organizationId, actorId, traceId, env }) => {
       const assessmentId = routeUuidParam(params, "assessmentId");
-      const tenantAssessmentsDb = deps.assessments.withOrganization(organizationId!);
+      const tenantAssessmentsDb = deps.assessments.withOrganization(requireOrganizationId({ organizationId }));
       const assessment = await tenantAssessmentsDb.get(assessmentId);
       if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
 
@@ -114,7 +114,7 @@ export const documentsRoutes: RouteDefinition[] = [
           }
         });
 
-        const tenantJobsDb = deps.documentIngestion.repositories.jobs.withOrganization(organizationId!);
+        const tenantJobsDb = deps.documentIngestion.repositories.jobs.withOrganization(requireOrganizationId({ organizationId }));
         const job = await tenantJobsDb.getJob(result.message.job_id);
         return json({ document: result.document, job, trace_id: traceId }, { status: 202 });
       } catch (error) {
@@ -128,7 +128,7 @@ export const documentsRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["document:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
-      const tenantDocDb = deps.documentIngestion.repositories.documents.withOrganization(organizationId!);
+      const tenantDocDb = deps.documentIngestion.repositories.documents.withOrganization(requireOrganizationId({ organizationId }));
       const documents = await tenantDocDb.listDocuments(routeUuidParam(params, "assessmentId"));
       return json({ data: documents, trace_id: traceId });
     }
@@ -139,7 +139,7 @@ export const documentsRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["document:read"],
     handler: async ({ deps, params, organizationId }) => {
-      const tenantDocDb = deps.documentIngestion.repositories.documents.withOrganization(organizationId!);
+      const tenantDocDb = deps.documentIngestion.repositories.documents.withOrganization(requireOrganizationId({ organizationId }));
       const document = await tenantDocDb.getDocument(routeUuidParam(params, "documentId"));
       if (!document) throw new ApiError("NOT_FOUND", "Document not found.", 404);
       return json(document);
@@ -154,7 +154,7 @@ export const documentsRoutes: RouteDefinition[] = [
       const url = new URL(request.url);
       const limit = Math.min(Number.parseInt(url.searchParams.get("limit") ?? "25", 10), 100);
       const cursor = url.searchParams.get("cursor") ?? undefined;
-      const tenantChunksDb = deps.documentIngestion.repositories.chunks.withOrganization(organizationId!);
+      const tenantChunksDb = deps.documentIngestion.repositories.chunks.withOrganization(requireOrganizationId({ organizationId }));
       const chunks = await tenantChunksDb.listChunks(routeUuidParam(params, "documentId"), limit, cursor);
       return json({ data: chunks, trace_id: traceId });
     }
@@ -165,7 +165,7 @@ export const documentsRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["document:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
-      const tenantJobDb = deps.documentIngestion.repositories.jobs.withOrganization(organizationId!);
+      const tenantJobDb = deps.documentIngestion.repositories.jobs.withOrganization(requireOrganizationId({ organizationId }));
       const jobs = await tenantJobDb.listJobsByDocument(routeUuidParam(params, "documentId"));
       return json({ data: jobs, trace_id: traceId });
     }
@@ -179,8 +179,8 @@ export const documentsRoutes: RouteDefinition[] = [
     permissions: ["document:reprocess"],
     handler: async ({ request, deps, params, organizationId, actorId, traceId }) => {
       await parseJson(request, ReprocessDocumentRequestSchema);
-      const tenantDocDb = deps.documentIngestion.repositories.documents.withOrganization(organizationId!);
-      const tenantJobDb = deps.documentIngestion.repositories.jobs.withOrganization(organizationId!);
+      const tenantDocDb = deps.documentIngestion.repositories.documents.withOrganization(requireOrganizationId({ organizationId }));
+      const tenantJobDb = deps.documentIngestion.repositories.jobs.withOrganization(requireOrganizationId({ organizationId }));
       
       const document = await tenantDocDb.getDocument(routeUuidParam(params, "documentId"));
       if (!document) throw new ApiError("NOT_FOUND", "Document not found.", 404);
@@ -219,7 +219,7 @@ export const documentsRoutes: RouteDefinition[] = [
     requireActor: true,
     permissions: ["document:delete"],
     handler: async ({ deps, params, organizationId, traceId }) => {
-      const tenantDocDb = deps.documentIngestion.repositories.documents.withOrganization(organizationId!);
+      const tenantDocDb = deps.documentIngestion.repositories.documents.withOrganization(requireOrganizationId({ organizationId }));
       const document = await tenantDocDb.getDocument(routeUuidParam(params, "documentId"));
       if (!document) throw new ApiError("NOT_FOUND", "Document not found.", 404);
       const archived = { ...document, status: "archived" as const, trace_id: traceId };
@@ -233,7 +233,7 @@ export const documentsRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["document:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
-      const tenantJobsDb = deps.documentIngestion.repositories.jobs.withOrganization(organizationId!);
+      const tenantJobsDb = deps.documentIngestion.repositories.jobs.withOrganization(requireOrganizationId({ organizationId }));
       const jobs = await tenantJobsDb.listJobsByAssessment(routeUuidParam(params, "assessmentId"));
       return json({ data: jobs, trace_id: traceId });
     }
@@ -244,7 +244,7 @@ export const documentsRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["document:read"],
     handler: async ({ deps, params, organizationId }) => {
-      const tenantJobsDb = deps.documentIngestion.repositories.jobs.withOrganization(organizationId!);
+      const tenantJobsDb = deps.documentIngestion.repositories.jobs.withOrganization(requireOrganizationId({ organizationId }));
       const job = await tenantJobsDb.getJob(routeUuidParam(params, "jobId"));
       if (!job) throw new ApiError("NOT_FOUND", "Ingestion job not found.", 404);
       return json(job);
@@ -258,7 +258,7 @@ export const documentsRoutes: RouteDefinition[] = [
     requireActor: true,
     permissions: ["document:write"],
     handler: async ({ deps, params, organizationId, traceId }) => {
-      const tenantDocDb = deps.documentIngestion.repositories.documents.withOrganization(organizationId!);
+      const tenantDocDb = deps.documentIngestion.repositories.documents.withOrganization(requireOrganizationId({ organizationId }));
       const document = await tenantDocDb.getDocument(routeUuidParam(params, "documentId"));
       if (!document) throw new ApiError("NOT_FOUND", "Document not found.", 404);
       const updated = { ...document, status: "queued_for_embedding" as const, trace_id: traceId };
@@ -274,8 +274,8 @@ export const documentsRoutes: RouteDefinition[] = [
     requireActor: true,
     permissions: ["document:write"],
     handler: async ({ deps, params, organizationId, traceId }) => {
-      const tenantJobsDb = deps.documentIngestion.repositories.jobs.withOrganization(organizationId!);
-      const tenantDocDb = deps.documentIngestion.repositories.documents.withOrganization(organizationId!);
+      const tenantJobsDb = deps.documentIngestion.repositories.jobs.withOrganization(requireOrganizationId({ organizationId }));
+      const tenantDocDb = deps.documentIngestion.repositories.documents.withOrganization(requireOrganizationId({ organizationId }));
       
       const job = await tenantJobsDb.getJob(routeUuidParam(params, "jobId"));
       if (!job) throw new ApiError("NOT_FOUND", "Ingestion job not found.", 404);

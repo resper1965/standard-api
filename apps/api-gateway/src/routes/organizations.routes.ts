@@ -2,7 +2,7 @@ import { z } from "zod";
 import { CreateOrganizationRequestSchema } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";
-import { json, parseJson, routeParam, routeUuidParam } from "../http";
+import { json, parseJson, routeParam, routeUuidParam , requireOrganizationId } from "../http";
 
 export const organizationsRoutes: RouteDefinition[] = [
   {
@@ -24,7 +24,7 @@ export const organizationsRoutes: RouteDefinition[] = [
     handler: async ({ request, deps, organizationId, traceId }) => {
       const body = await parseJson(request, CreateOrganizationRequestSchema);
       
-      const tenantDb = deps.organizations.withOrganization(organizationId!);
+      const tenantDb = deps.organizations.withOrganization(requireOrganizationId({ organizationId }));
       const organization = await tenantDb.create({
         slug: body.slug,
         name: body.name
@@ -39,7 +39,7 @@ export const organizationsRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["organization:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
-      const tenantDb = deps.organizations.withOrganization(organizationId!);
+      const tenantDb = deps.organizations.withOrganization(requireOrganizationId({ organizationId }));
       const organization = await tenantDb.get(routeUuidParam(params, "organizationId"));
       if (!organization) throw new ApiError("NOT_FOUND", "Organization not found.", 404);
       return json({ ...organization, trace_id: traceId });
@@ -61,7 +61,7 @@ export const organizationsRoutes: RouteDefinition[] = [
       }
     },
     handler: async ({ deps, organizationId, traceId }) => {
-      const tenantDb = deps.organizations.withOrganization(organizationId!);
+      const tenantDb = deps.organizations.withOrganization(requireOrganizationId({ organizationId }));
       const organizations = await tenantDb.list();
       return json({ data: organizations, trace_id: traceId });
     }

@@ -13,6 +13,7 @@
  */
 
 const IDEMPOTENCY_TTL_SECONDS = 86_400; // 24 h
+const MAX_IDEMPOTENCY_BODY_BYTES = 512 * 1024; // 512 KB
 
 type CachedResponse = {
   status: number;
@@ -75,13 +76,17 @@ export const storeIdempotencyResult = (
   const kvKey = buildKvKey(organizationId, key);
   const contentType = response.headers.get("Content-Type") ?? "application/json";
 
+  const contentLength = Number(response.headers.get('Content-Length') ?? '0');
+  if (contentLength > MAX_IDEMPOTENCY_BODY_BYTES) return; // Too large to cache
+
   response
     .clone()
     .text()
-    .then((body) =>
-      kv.put(kvKey, JSON.stringify({ status: response.status, body, contentType } satisfies CachedResponse), {
+    .then((body) => {
+      if (body.length > MAX_IDEMPOTENCY_BODY_BYTES) return; // Safety net
+      return kv.put(kvKey, JSON.stringify({ status: response.status, body, contentType } satisfies CachedResponse), {
         expirationTtl: IDEMPOTENCY_TTL_SECONDS,
-      })
-    )
+      });
+    })
     .catch(() => {});
 };

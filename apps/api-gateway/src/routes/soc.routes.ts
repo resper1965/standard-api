@@ -2,7 +2,7 @@ import { IncidentTriagerUseCase } from "@standard/agent-runtime";
 import { z } from "zod";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";
-import { json, parseJson } from "../http";
+import { json, parseJson , requireOrganizationId } from "../http";
 
 export const socRoutes: RouteDefinition[] = [
   // ── GET /api/v1/soc/status ────────────────────────────────────────────
@@ -85,7 +85,7 @@ export const socRoutes: RouteDefinition[] = [
           if (ctx.deps.SOC_TRIAGE_QUEUE) {
             await ctx.deps.SOC_TRIAGE_QUEUE.send({
               job_id,
-              organizationId: ctx.organizationId!,
+              organizationId: requireOrganizationId(ctx),
               traceId: ctx.traceId,
               systemModuleName: body.systemModuleName,
               rawLogsExcerpt: body.rawLogsExcerpt,
@@ -105,7 +105,7 @@ export const socRoutes: RouteDefinition[] = [
         const result = await usecase.triage({
           systemModuleName: body.systemModuleName,
           rawLogsExcerpt: body.rawLogsExcerpt,
-          organizationId: ctx.organizationId!
+          organizationId: requireOrganizationId(ctx)
         });
         
         await ctx.deps.audit.record("soc.incident.triaged", { 

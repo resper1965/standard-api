@@ -18,7 +18,7 @@ import { z } from "zod";
 import { ApiError } from "../errors/api-error";
 import type { ApiErrorCode } from "../errors/error-codes";
 import type { AppDependencies, AssessmentRecord, RouteDefinition } from "../http";
-import { json, parseJson, routeParam, routeUuidParam } from "../http";
+import { json, parseJson, routeParam, routeUuidParam , requireOrganizationId } from "../http";
 import { parsePagination, applyPagination } from "../utils/pagination";
 
 /** Schema for POST /api/v1/gap/evaluate-evidence */
@@ -96,7 +96,7 @@ export const gapAnalysisRoutes: RouteDefinition[] = [
     permissions: ["gap:create"],
     bodySchema: RunEvidenceAnalysisRequestSchema,
     handler: async ({ validatedBody, deps, params, organizationId, actorId, traceId }) => {
-      const assessment = await requireAssessment(deps, routeUuidParam(params, "assessmentId"), organizationId!);
+      const assessment = await requireAssessment(deps, routeUuidParam(params, "assessmentId"), requireOrganizationId({ organizationId }));
       const body = validatedBody as { soa_version_id: string };
       try {
         const result = await new EvidenceAnalysisService(deps.gapAnalysis).runEvidenceAnalysis(assessment.assessment_id, body.soa_version_id, contextFor(assessment, traceId, actorId!));
@@ -113,7 +113,7 @@ export const gapAnalysisRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["gap:read"],
     handler: async ({ request, deps, params, organizationId, traceId }) => {
-      const assessment = await requireAssessment(deps, routeUuidParam(params, "assessmentId"), organizationId!);
+      const assessment = await requireAssessment(deps, routeUuidParam(params, "assessmentId"), requireOrganizationId({ organizationId }));
       const page = parsePagination(request);
       const data = await new EvidenceAnalysisService(deps.gapAnalysis).listEvidenceFindings(assessment.assessment_id, {}, contextFor(assessment, traceId));
       const result = applyPagination(data, page, "evidence_finding_id");
@@ -126,7 +126,7 @@ export const gapAnalysisRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["gap:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
-      const tenantEvDb = deps.gapAnalysis.repositories.evidenceFindings.withOrganization(organizationId!);
+      const tenantEvDb = deps.gapAnalysis.repositories.evidenceFindings.withOrganization(requireOrganizationId({ organizationId }));
       const finding = await tenantEvDb.get(routeUuidParam(params, "evidenceFindingId"));
       if (!finding) throw new ApiError("NOT_FOUND", "Evidence finding not found.", 404);
       return json({ ...finding, trace_id: traceId });
@@ -140,10 +140,10 @@ export const gapAnalysisRoutes: RouteDefinition[] = [
     permissions: ["gap:update"],
     handler: async ({ request, deps, params, organizationId, actorId, traceId }) => {
       await parseJson(request, RefreshEvidenceFindingRequestSchema);
-      const tenantEvDb = deps.gapAnalysis.repositories.evidenceFindings.withOrganization(organizationId!);
+      const tenantEvDb = deps.gapAnalysis.repositories.evidenceFindings.withOrganization(requireOrganizationId({ organizationId }));
       const existing = await tenantEvDb.get(routeUuidParam(params, "evidenceFindingId"));
       if (!existing) throw new ApiError("NOT_FOUND", "Evidence finding not found.", 404);
-      const assessment = await requireAssessment(deps, existing.assessment_id, organizationId!);
+      const assessment = await requireAssessment(deps, existing.assessment_id, requireOrganizationId({ organizationId }));
       try {
         return json(await new EvidenceAnalysisService(deps.gapAnalysis).refreshEvidenceFinding(existing.evidence_finding_id, contextFor(assessment, traceId, actorId!)));
       } catch (error) {
@@ -157,7 +157,7 @@ export const gapAnalysisRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["gap:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
-      const tenantSourcesDb = deps.gapAnalysis.repositories.evidenceSources.withOrganization(organizationId!);
+      const tenantSourcesDb = deps.gapAnalysis.repositories.evidenceSources.withOrganization(requireOrganizationId({ organizationId }));
       const data = await tenantSourcesDb.listByFinding(routeUuidParam(params, "evidenceFindingId"));
       return json({ data, trace_id: traceId });
     }
@@ -169,7 +169,7 @@ export const gapAnalysisRoutes: RouteDefinition[] = [
     requireActor: true,
     permissions: ["gap:create"],
     handler: async ({ request, deps, params, organizationId, actorId, traceId }) => {
-      const assessment = await requireAssessment(deps, routeUuidParam(params, "assessmentId"), organizationId!);
+      const assessment = await requireAssessment(deps, routeUuidParam(params, "assessmentId"), requireOrganizationId({ organizationId }));
       const body = await parseJson(request, CreateGapAnalysisDraftRequestSchema);
       try {
         const draft = await new GapDraftService(deps.gapAnalysis).createGapAnalysisDraft(assessment.assessment_id, body.soa_version_id, contextFor(assessment, traceId, actorId!));
@@ -186,8 +186,8 @@ export const gapAnalysisRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["gap:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
-      const assessment = await requireAssessment(deps, routeUuidParam(params, "assessmentId"), organizationId!);
-      const tenantGapVersionDb = deps.gapAnalysis.repositories.gapVersions.withOrganization(organizationId!);
+      const assessment = await requireAssessment(deps, routeUuidParam(params, "assessmentId"), requireOrganizationId({ organizationId }));
+      const tenantGapVersionDb = deps.gapAnalysis.repositories.gapVersions.withOrganization(requireOrganizationId({ organizationId }));
       const data = await tenantGapVersionDb.listByAssessment(assessment.assessment_id);
       return json({ data, trace_id: traceId });
     }
@@ -198,7 +198,7 @@ export const gapAnalysisRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["gap:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
-      const tenantGapVersionDb = deps.gapAnalysis.repositories.gapVersions.withOrganization(organizationId!);
+      const tenantGapVersionDb = deps.gapAnalysis.repositories.gapVersions.withOrganization(requireOrganizationId({ organizationId }));
       const version = await tenantGapVersionDb.get(routeUuidParam(params, "gapAnalysisVersionId"));
       if (!version) throw new ApiError("NOT_FOUND", "Gap Analysis version not found.", 404);
       return json({ ...version, trace_id: traceId });
@@ -210,10 +210,10 @@ export const gapAnalysisRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["gap:read"],
     handler: async ({ request, deps, params, organizationId, traceId }) => {
-      const tenantGapVersionDb = deps.gapAnalysis.repositories.gapVersions.withOrganization(organizationId!);
+      const tenantGapVersionDb = deps.gapAnalysis.repositories.gapVersions.withOrganization(requireOrganizationId({ organizationId }));
       const version = await tenantGapVersionDb.get(routeUuidParam(params, "gapAnalysisVersionId"));
       if (!version) throw new ApiError("NOT_FOUND", "Gap Analysis version not found.", 404);
-      const assessment = await requireAssessment(deps, version.assessment_id, organizationId!);
+      const assessment = await requireAssessment(deps, version.assessment_id, requireOrganizationId({ organizationId }));
       const page = parsePagination(request);
       const data = await new GapDraftService(deps.gapAnalysis).listGapFindings(version.gap_analysis_version_id, {}, contextFor(assessment, traceId));
       const result = applyPagination(data, page, "gap_finding_id");
@@ -226,7 +226,7 @@ export const gapAnalysisRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["gap:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
-      const tenantGapFindingDb = deps.gapAnalysis.repositories.gapFindings.withOrganization(organizationId!);
+      const tenantGapFindingDb = deps.gapAnalysis.repositories.gapFindings.withOrganization(requireOrganizationId({ organizationId }));
       const finding = await tenantGapFindingDb.get(routeUuidParam(params, "gapFindingId"));
       if (!finding) throw new ApiError("NOT_FOUND", "Gap finding not found.", 404);
       return json({ ...finding, trace_id: traceId });
@@ -239,8 +239,8 @@ export const gapAnalysisRoutes: RouteDefinition[] = [
     requireActor: true,
     permissions: ["gap:update"],
     handler: async ({ request, deps, params, organizationId, actorId, traceId }) => {
-      const tenantGapFindingDb = deps.gapAnalysis.repositories.gapFindings.withOrganization(organizationId!);
-      const tenantGapVersionDb = deps.gapAnalysis.repositories.gapVersions.withOrganization(organizationId!);
+      const tenantGapFindingDb = deps.gapAnalysis.repositories.gapFindings.withOrganization(requireOrganizationId({ organizationId }));
+      const tenantGapVersionDb = deps.gapAnalysis.repositories.gapVersions.withOrganization(requireOrganizationId({ organizationId }));
       
       const finding = await tenantGapFindingDb.get(routeUuidParam(params, "gapFindingId"));
       if (!finding) throw new ApiError("NOT_FOUND", "Gap finding not found.", 404);
@@ -249,7 +249,7 @@ export const gapAnalysisRoutes: RouteDefinition[] = [
       if (parentVersion && parentVersion.status === "approved") {
         throw new ApiError("CONFLICT", "Cannot modify findings in an approved Gap Analysis version. Create a new draft instead.", 409);
       }
-      const assessment = await requireAssessment(deps, finding.assessment_id, organizationId!);
+      const assessment = await requireAssessment(deps, finding.assessment_id, requireOrganizationId({ organizationId }));
       const body = await parseJson(request, UpdateGapFindingRequestSchema);
       try {
         return json(await new GapReviewService(deps.gapAnalysis).updateGapFinding(finding.gap_finding_id, body, contextFor(assessment, traceId, actorId!)));
@@ -264,10 +264,10 @@ export const gapAnalysisRoutes: RouteDefinition[] = [
     protected: true,
     permissions: ["gap:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
-      const tenantGapVersionDb = deps.gapAnalysis.repositories.gapVersions.withOrganization(organizationId!);
+      const tenantGapVersionDb = deps.gapAnalysis.repositories.gapVersions.withOrganization(requireOrganizationId({ organizationId }));
       const version = await tenantGapVersionDb.get(routeUuidParam(params, "gapAnalysisVersionId"));
       if (!version) throw new ApiError("NOT_FOUND", "Gap Analysis version not found.", 404);
-      const assessment = await requireAssessment(deps, version.assessment_id, organizationId!);
+      const assessment = await requireAssessment(deps, version.assessment_id, requireOrganizationId({ organizationId }));
       return json(await new GapValidationService(deps.gapAnalysis).validateGapAnalysisForReview(version.gap_analysis_version_id, contextFor(assessment, traceId)));
     }
   },
@@ -278,10 +278,10 @@ export const gapAnalysisRoutes: RouteDefinition[] = [
     requireActor: true,
     permissions: ["gap:update"],
     handler: async ({ request, deps, params, organizationId, actorId, traceId }) => {
-      const tenantGapVersionDb = deps.gapAnalysis.repositories.gapVersions.withOrganization(organizationId!);
+      const tenantGapVersionDb = deps.gapAnalysis.repositories.gapVersions.withOrganization(requireOrganizationId({ organizationId }));
       const version = await tenantGapVersionDb.get(routeUuidParam(params, "gapAnalysisVersionId"));
       if (!version) throw new ApiError("NOT_FOUND", "Gap Analysis version not found.", 404);
-      const assessment = await requireAssessment(deps, version.assessment_id, organizationId!);
+      const assessment = await requireAssessment(deps, version.assessment_id, requireOrganizationId({ organizationId }));
       const body = await parseJson(request, SubmitGapAnalysisReviewRequestSchema);
       try {
         const submitted = await new GapReviewService(deps.gapAnalysis).submitGapAnalysisForReview(version.gap_analysis_version_id, contextFor(assessment, traceId, actorId!), body.exception_rationale);
@@ -299,13 +299,13 @@ export const gapAnalysisRoutes: RouteDefinition[] = [
     requireActor: true,
     permissions: ["gap:approve"],
     handler: async ({ request, deps, params, organizationId, actorId, traceId }) => {
-      const tenantGapVersionDb = deps.gapAnalysis.repositories.gapVersions.withOrganization(organizationId!);
+      const tenantGapVersionDb = deps.gapAnalysis.repositories.gapVersions.withOrganization(requireOrganizationId({ organizationId }));
       const version = await tenantGapVersionDb.get(routeUuidParam(params, "gapAnalysisVersionId"));
       if (!version) throw new ApiError("NOT_FOUND", "Gap Analysis version not found.", 404);
-      const assessment = await requireAssessment(deps, version.assessment_id, organizationId!);
+      const assessment = await requireAssessment(deps, version.assessment_id, requireOrganizationId({ organizationId }));
       const body = await parseJson(request, ApproveGapAnalysisRequestSchema);
       try {
-        const approvalEvent = await deps.approvals.withOrganization(organizationId!).getForGate(body.approval_event_id, "gap_analysis");
+        const approvalEvent = await deps.approvals.withOrganization(requireOrganizationId({ organizationId })).getForGate(body.approval_event_id, "gap_analysis");
         if (!approvalEvent || approvalEvent.approvedBy !== actorId) throw new ApiError("APPROVAL_REQUIRED", "Valid human Gap Analysis approval_event is required.", 409);
         const approved = await new GapApprovalService(deps.gapAnalysis).approveGapAnalysis(version.gap_analysis_version_id, body, contextFor(assessment, traceId, actorId!));
         await applyTransitionIfAllowed(deps, assessment, "gap_analysis_approved", traceId, actorId!, approvalEvent);
@@ -322,10 +322,10 @@ export const gapAnalysisRoutes: RouteDefinition[] = [
     requireActor: true,
     permissions: ["gap:create"],
     handler: async ({ deps, params, organizationId, actorId, traceId }) => {
-      const tenantGapVersionDb = deps.gapAnalysis.repositories.gapVersions.withOrganization(organizationId!);
+      const tenantGapVersionDb = deps.gapAnalysis.repositories.gapVersions.withOrganization(requireOrganizationId({ organizationId }));
       const version = await tenantGapVersionDb.get(routeUuidParam(params, "gapAnalysisVersionId"));
       if (!version) throw new ApiError("NOT_FOUND", "Gap Analysis version not found.", 404);
-      const assessment = await requireAssessment(deps, version.assessment_id, organizationId!);
+      const assessment = await requireAssessment(deps, version.assessment_id, requireOrganizationId({ organizationId }));
       try {
         return json(await new GapDraftService(deps.gapAnalysis).regenerateGapAnalysisDraft(version.gap_analysis_version_id, {}, contextFor(assessment, traceId, actorId!)), { status: 201 });
       } catch (error) {
@@ -340,10 +340,10 @@ export const gapAnalysisRoutes: RouteDefinition[] = [
     requireActor: true,
     permissions: ["gap:update"],
     handler: async ({ request, deps, params, organizationId, actorId, traceId }) => {
-      const tenantGapVersionDb = deps.gapAnalysis.repositories.gapVersions.withOrganization(organizationId!);
+      const tenantGapVersionDb = deps.gapAnalysis.repositories.gapVersions.withOrganization(requireOrganizationId({ organizationId }));
       const version = await tenantGapVersionDb.get(routeUuidParam(params, "gapAnalysisVersionId"));
       if (!version) throw new ApiError("NOT_FOUND", "Gap Analysis version not found.", 404);
-      const assessment = await requireAssessment(deps, version.assessment_id, organizationId!);
+      const assessment = await requireAssessment(deps, version.assessment_id, requireOrganizationId({ organizationId }));
       const body = await parseJson(request, UpdateGapFindingRequestSchema);
       try {
         const data = await new GapReviewService(deps.gapAnalysis).bulkUpdateGapFindings(version.gap_analysis_version_id, body, contextFor(assessment, traceId, actorId!));
@@ -372,7 +372,7 @@ export const gapAnalysisRoutes: RouteDefinition[] = [
         const result = await usecase.evaluate({
           controlRequirement: body.controlRequirement,
           evidenceDescription: body.evidenceDescription,
-          organizationId: ctx.organizationId!
+          organizationId: requireOrganizationId(ctx)
         });
         
         await ctx.deps.audit.record("gap.evidence.evaluated", { organization_id: ctx.organizationId, trace_id: ctx.traceId, compliant: result.is_compliant });
@@ -409,7 +409,7 @@ export const gapAnalysisRoutes: RouteDefinition[] = [
             const result = await usecase.evaluate({
               controlRequirement: item.payload.controlRequirement,
               evidenceDescription: item.payload.evidenceDescription,
-              organizationId: ctx.organizationId!
+              organizationId: requireOrganizationId(ctx)
             });
             await ctx.deps.audit.record("gap.evidence.batch.item_evaluated", { 
               job_id: jobId, 
@@ -455,7 +455,7 @@ export const gapAnalysisRoutes: RouteDefinition[] = [
         const result = await usecase.architect({
           evidenceContext: body.evidenceContext as import("@standard/agent-runtime").EvidenceEvaluationOutput,
           systemArchitectureDescription: body.systemArchitectureDescription,
-          organizationId: ctx.organizationId!
+          organizationId: requireOrganizationId(ctx)
         });
         
         await ctx.deps.audit.record("poam.architectured", { organization_id: ctx.organizationId, trace_id: ctx.traceId, priority: result.priority_level });

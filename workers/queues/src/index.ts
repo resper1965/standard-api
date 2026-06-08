@@ -8,6 +8,7 @@ import { processKbEmbeddingQueueMessage } from "./kb-embedding.consumer";
 import { processAgentRunQueueMessage } from "./agent-run.consumer";
 import { processDataRetentionPurge, type RetentionPurgeMessage } from "./data-retention.consumer";
 import { processSocAlert, processDlqQueueMessage, type SocAlertMessage } from "./soc-monitoring.consumer";
+import { processUserLifecycleMessage, type UserLifecycleMessage } from "./user-lifecycle.consumer";
 
 export interface Env {
   STANDARD_DOCUMENTS_BUCKET: R2Bucket;
@@ -20,6 +21,7 @@ export interface Env {
   OPENAI_API_KEY?: string;
   AI_GATEWAY_BASE_URL?: string;
   AI_GATEWAY_TOKEN?: string;
+  SENTRY_DSN?: string;
 }
 
 type QueueMessageBody = {
@@ -27,7 +29,14 @@ type QueueMessageBody = {
   [key: string]: unknown;
 };
 
-export default {
+import * as Sentry from "@sentry/cloudflare";
+
+export default Sentry.withSentry(
+  (env: Env) => ({
+    dsn: env.SENTRY_DSN || "https://REDACTED_SENTRY_DSN",
+    sendDefaultPii: true,
+  }),
+  {
   async queue(batch: MessageBatch<unknown>, env: Env): Promise<void> {
     for (const message of batch.messages) {
       try {
@@ -74,6 +83,10 @@ export default {
             await processSocAlert(body as unknown as SocAlertMessage, env);
             break;
 
+          case "user_lifecycle":
+            await processUserLifecycleMessage(body as unknown as UserLifecycleMessage, env);
+            break;
+
           case "dlq_passthrough":
             // Catch-all for messages arriving from dead letter queues without
             // a structured queue_type. Wraps them into a DLQ alert automatically.
@@ -96,7 +109,7 @@ export default {
     return Response.json({
       service: "standard-queues",
       version: "1.0.0",
-      queues: ["standard-kb-embedding", "standard-report-export", "standard-agent-run", "standard-soc-triage"],
+      queues: ["standard-kb-embedding", "standard-report-export", "standard-agent-run", "standard-soc-triage", "standard-user-lifecycle"],
       status: "operational"
     });
   },
@@ -108,8 +121,8 @@ export default {
    * To run a dry-run manually via Cloudflare Dashboard:
    *   Workers > standard-queues > Triggers > Crons > Run
    */
-  async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
-    console.log(`[queues] Scheduled cron fired: ${event.cron} at ${new Date(event.scheduledTime).toISOString()}`);
+  async scheduled(controller: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
+    console.log(`[queues] Scheduled cron fired: ${controller.cron} at ${new Date(controller.scheduledTime).toISOString()}`);
 
     ctx.waitUntil(
       processDataRetentionPurge(
@@ -127,7 +140,7 @@ export default {
       })
     );
   }
-};
+} satisfies ExportedHandler<Env>);
 
 /**
  * Infers queue type from queue name or message shape when `queue_type` is absent.
@@ -138,6 +151,7 @@ function detectQueueType(queueName: string, body: QueueMessageBody): string {
   if (queueName.includes("document-ingestion") || body?.job_type === "document_ingestion") return "document_ingestion";
   if (queueName.includes("agent-run") || body?.job_type === "agent_run") return "agent_run";
   if (queueName.includes("soc-triage") || body?.job_type === "soc_triage") return "soc_triage";
+  if (queueName.includes("user-lifecycle") || body?.job_type === "user_lifecycle") return "user_lifecycle";
   // DLQ queues: any message landing here has exhausted all retries → SOC alert
   if (queueName.includes("dead-letter") || queueName.includes("dlq")) return "dlq_passthrough";
   return "unknown";
