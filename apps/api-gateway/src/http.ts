@@ -342,6 +342,7 @@ export type RequestContext = {
     };
     session: {
       id: string;
+      domainUserId?: string | null | undefined;
       activeOrganizationId?: string | null | undefined;
       activeOrganizationSlug?: string | null | undefined;
       activeOrganizationRole?: string | null | undefined;
