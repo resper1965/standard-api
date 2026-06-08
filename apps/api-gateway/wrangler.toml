@@ -119,6 +119,12 @@ id = "757b7c1c18f744a8ab8b8fcafa84bc9d"
 binding = "STANDARD_CACHE"
 id = "094323d4e27d4b92994c89d412d27f74"
 
+# Hyperdrive — regional Neon connection pooler
+# Create: wrangler hyperdrive create standard-neon-staging --connection-string="<NEON_URL>"
+[[env.staging.hyperdrive]]
+binding = "HYPERDRIVE"
+id = "REPLACE_WITH_STAGING_HYPERDRIVE_ID"
+
 [[env.staging.workflows]]
 binding = "ASSESSMENT_WORKFLOW"
 name = "standard-assessment-lifecycle-staging"
@@ -188,6 +194,12 @@ id = "23e073ec707d4803a8957e13a4046810"
 [[env.production.kv_namespaces]]
 binding = "STANDARD_CACHE"
 id = "55f97abbf9794b0196bdf51e8c1dedec"
+
+# Hyperdrive — regional Neon connection pooler
+# Create: wrangler hyperdrive create standard-neon-prod --connection-string="<NEON_URL>"
+[[env.production.hyperdrive]]
+binding = "HYPERDRIVE"
+id = "REPLACE_WITH_PRODUCTION_HYPERDRIVE_ID"
 
 [[env.production.workflows]]
 binding = "ASSESSMENT_WORKFLOW"

@@ -174,6 +174,11 @@ async function main() {
     console.log(`     Mappings:     ${ds.mappings.length}`);
     console.log(`     STRM Rels:    ${ds.strmRelationships.length}`);
     console.log(`     Import Runs:  ${ds.importRuns.length}`);
+    console.log(`     AOs:          ${ds.assessmentObjectives?.length ?? 0}`);
+    console.log(`     Evidence Reqs:${ds.evidenceRequests?.length ?? 0}`);
+    console.log(`     Maturity:     ${ds.maturityCriteria?.length ?? 0}`);
+    console.log(`     Risks:        ${ds.risks?.length ?? 0}`);
+    console.log(`     Threats:      ${ds.threats?.length ?? 0}`);
 
     if (parsed.warnings.length > 0) {
       const shown = parsed.warnings.slice(0, 10);
@@ -318,6 +323,11 @@ async function main() {
     console.log(`  Frameworks:   ${ds.frameworks.length}`);
     console.log(`  Requirements: ${ds.requirements.length}`);
     console.log(`  Mappings:     ${ds.mappings.length}`);
+    console.log(`  AOs:          ${ds.assessmentObjectives?.length ?? 0}`);
+    console.log(`  Evidence Reqs:${ds.evidenceRequests?.length ?? 0}`);
+    console.log(`  Maturity:     ${ds.maturityCriteria?.length ?? 0}`);
+    console.log(`  Risks:        ${ds.risks?.length ?? 0}`);
+    console.log(`  Threats:      ${ds.threats?.length ?? 0}`);
     console.log();
   } finally {
     await client.end();
