@@ -19,7 +19,7 @@ A régua aqui é a de **uma API**, não a de um SaaS de GRC: isolamento multi-te
 | Catálogo SCF | **Existe no Neon**: 1468 controles, 33 domínios, 231 frameworks (4 import runs xlsx `succeeded`). Versão rotulada `SYNTH-SCF-1`. **Não versionado no repo** — seed do repo é sintético. |
 | Rotas | **331 reais** (não 86), registradas em `app.ts`. OpenAPI gerado por código (`src/openapi/generator.ts`). |
 | Persistência | Drizzle + Neon, 33 migrations. Multi-tenant via `withOrganization()`. |
-| LLM | Cloudflare Workers AI / **Llama 3.3 70B** (CLAUDE.md diz gpt-4o — divergente). Fallback **mock silencioso** (`"{}"`) se env faltar. `total_tokens` hardcoded 0. |
+| LLM | Caminho ativo: **Cloudflare AI Gateway → OpenAI `gpt-4o`** (`ai-gateway.adapter.ts:35`), com cache/retry/observability e custo por tenant. CLAUDE.md (`gpt-4o`) **está correto**. Workers AI/Llama 3.3 é provider secundário não-default. Único gap: fallback **mock** (`"{}"`) só com `console.warn` se env faltar (há teste `llm-provider-validation.test.ts`). |
 | Segurança | **C1 CRÍTICO: IDOR cross-tenant** via header `x-standard-tenant-id`. Maioria do audit anterior já corrigida. |
 | CI | Testes de segurança/regressão/e2e com `continue-on-error: true` (não bloqueiam). |
 | Docs | ~190 arquivos .md fragmentados. `docs/api/openapi.json` defasado (9 endpoints). `CONTEXT.md` com links `file:///c:/Users/...` quebrados. |
@@ -48,20 +48,21 @@ Ordem por risco. P0 bloqueia qualquer tráfego multi-tenant de produção.
 
 **Esforço.** 1–2 dias (fix focado, não reescrita).
 
-## A2 (P0) — LLM: falhar alto + alinhar modelo + proveniência
+## A2 (P0) — LLM: falhar alto em prod + proveniência
 
-**Problema.** `compose-agent-runtime.ts:23-28` cai em mock (`repositories.ts:42-51` devolve `"{}"`) com só um `console.warn` se `AI_GATEWAY_BASE_URL`/`OPENAI_API_KEY` faltam → prod gera IA vazia silenciosamente. Modelo real diverge da doc. `total_tokens: 0`.
+**Contexto correto.** O caminho ativo é **AI Gateway → OpenAI `gpt-4o`** (`apps/api-gateway/src/adapters/ai-gateway.adapter.ts`), com cache nativo, retry exponencial e observabilidade/custo por tenant (`cf-aig-*`). Isso é um **ponto forte** — documentar, não mexer. O modelo na doc (`gpt-4o`) está certo. O provider Workers AI/Llama 3.3 (`packages/agent-runtime/src/providers/workers-ai.provider.ts`) é secundário/não-default; `total_tokens: 0` é desse provider não-usado.
+
+**Problema remanescente.** `apps/api-gateway/src/adapters/compose-agent-runtime.ts:16-26` cai em **mock LLM** (devolve `"{}"`) com só `console.warn` se `AI_GATEWAY_BASE_URL`/`OPENAI_API_KEY` faltam → prod mal-configurado gera IA vazia silenciosamente. Já existe `apps/api-gateway/tests/llm-provider-validation.test.ts` cobrindo o cenário.
 
 **Mudança.**
-1. Em produção (`STANDARD_ENV=production`), **lançar erro no boot** se provider de IA não configurado (espelhar o guard de DB em `index-helpers.ts:204`). Mock só permitido fora de prod, e explícito.
-2. Expor **proveniência no output**: `model`, `provider`, `confidence_score`, `is_inference` vs `evidence_backed`, e telemetria de tokens real (não 0).
-3. Decidir e **documentar o modelo real** (Llama 3.3 70B hoje). Se gpt-4o for o alvo, wirar via AI Gateway e atualizar doc; senão, remover gpt-4o da doc.
+1. Em produção (`STANDARD_ENV=production`), **lançar erro no boot** se o provider AI Gateway não estiver configurado (espelhar o guard de DB em `index-helpers.ts:204`). Mock permitido só fora de prod, e explícito. Tornar o teste existente bloqueante.
+2. Expor **proveniência no output** dos endpoints de IA: `model` (gpt-4o), `provider` (ai-gateway), `confidence_score`, distinção `is_inference` vs `evidence_backed`, e uso de tokens real do AI Gateway.
 
-**Arquivos.** `packages/agent-runtime/src/compose-agent-runtime.ts`, `repositories.ts`, `providers/workers-ai.provider.ts`, schemas de output em `packages/schemas`.
+**Arquivos.** `apps/api-gateway/src/adapters/compose-agent-runtime.ts`, `apps/api-gateway/src/workers/queue-consumer.ts:236`, `apps/api-gateway/src/index-helpers.ts`, schemas de output em `packages/schemas`.
 
-**Aceite.** Boot de prod sem IA configurada **falha** com erro claro. Output de gap/SoA inclui bloco de proveniência. Token usage reportado.
+**Aceite.** Boot de prod sem AI Gateway **falha** com erro claro (teste bloqueante). Output de gap/SoA inclui bloco de proveniência com modelo/provider/uso real.
 
-**Esforço.** 2–3 dias.
+**Esforço.** 1–2 dias.
 
 ## A3 (P1) — Catálogo SCF: versionar e tornar reprodutível
 
@@ -168,7 +169,7 @@ Estrutura mínima em `docs/developers/` (e refletida no site Astro), cada uma co
 ## B4 (P1) — CONTEXT / AGENTS / CLAUDE: alinhar e desquebrar
 
 - `CONTEXT.md`: trocar links `file:///c:/Users/resper/...` (quebrados, máquina-específicos) por **paths relativos do repo**; remover linguagem "platform"; refletir estado real (catálogo no Neon, não versionado → item de risco).
-- `CLAUDE.md`: gpt-4o → modelo real; "platform" → "API"; alinhar contagem de endpoints (86→331 ou "ver OpenAPI").
+- `CLAUDE.md`: manter `gpt-4o` (correto); **adicionar** que roda via Cloudflare AI Gateway (cache/retry/observability/custo por tenant); "platform" → "API"; alinhar contagem de endpoints (86→331 ou "ver OpenAPI").
 - `AGENTS.md`: revisar a lista dos "7 agentes" vs as 9 IDs reais em `schemas/agent-runtime.ts`.
 - `ROADMAP.md` / `CHANGELOG.md`: refletir prioridades deste plano.
 
@@ -176,8 +177,8 @@ Estrutura mínima em `docs/developers/` (e refletida no site Astro), cada uma co
 
 Auditar marketing vs realidade e corrigir/qualificar:
 - "audit-ready PDF reports" → hoje HTML/MD/JSON; PDF requer Puppeteer do consumidor; DOCX é stub. Reescrever.
-- "gpt-4o" → modelo real.
 - "platform" → "API".
+- IA: documentar o stack real como diferencial — **AI Gateway → gpt-4o** com cache/retry/observability/custo por tenant (não é um claim a remover, é um a destacar).
 - Números 1468/231 — manter (são reais no Neon), mas linkar à **versão do catálogo** e ao job de integridade (A3).
 
 ---
