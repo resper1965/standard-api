@@ -1,6 +1,6 @@
 name: ✨ Feature Request
 description: Suggest a new feature for the Standard API
-labels: ["enhancement"]
+labels: ["enhancement", "triage"]
 body:
   - type: markdown
     attributes:
