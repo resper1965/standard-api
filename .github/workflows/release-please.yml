@@ -30,11 +30,11 @@ jobs:
         if: ${{ steps.release.outputs.release_created }}
         uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 22
 
       - name: Install pnpm
         if: ${{ steps.release.outputs.release_created }}
-        run: npm install -g pnpm@9.0.0
+        run: npm install -g pnpm@9.15.9
 
       - name: Generate SBOM
         if: ${{ steps.release.outputs.release_created }}
