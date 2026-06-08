@@ -1,7 +1,9 @@
 import type {
+  ScfAssessmentObjective,
   ScfControl,
   ScfControlSearchQuery,
   ScfDomain,
+  ScfEvidenceRequest,
   ScfFramework,
   ScfFrameworkRequirement,
   ScfImportRun,
@@ -9,14 +11,19 @@ import type {
   ScfImportStatistics,
   ScfImportResult,
   ScfMapping,
+  ScfMaturityCriteria,
+  ScfRisk,
   ScfStrmRelationship,
-  ScfVersion
+  ScfThreat,
+  ScfVersion,
 } from "@standard/schemas";
 
 export type {
+  ScfAssessmentObjective,
   ScfControl,
   ScfControlSearchQuery,
   ScfDomain,
+  ScfEvidenceRequest,
   ScfFramework,
   ScfFrameworkRequirement,
   ScfImportRun,
@@ -24,8 +31,11 @@ export type {
   ScfImportStatistics,
   ScfImportResult,
   ScfMapping,
+  ScfMaturityCriteria,
+  ScfRisk,
   ScfStrmRelationship,
-  ScfVersion
+  ScfThreat,
+  ScfVersion,
 };
 
 export type ScfDataset = {
@@ -49,4 +59,3 @@ export type ScfImportParsedDataset = {
   dataset: ScfDataset;
   warnings: string[];
 };
-

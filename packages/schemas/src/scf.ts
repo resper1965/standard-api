@@ -1,10 +1,35 @@
 import { z } from "zod";
 import { UuidSchema } from "./common";
 
-export const ScfImportStatusSchema = z.enum(["pending", "running", "succeeded", "failed", "partial", "rolled_back"]);
-export const ScfRecordStatusSchema = z.enum(["active", "deprecated", "draft", "archived"]);
-export const ScfSourceTypeSchema = z.enum(["xlsx", "csv", "oscal_json", "synthetic_fixture"]);
-export const ScfRelationshipTypeSchema = z.enum(["equal", "subset", "superset", "intersecting", "related", "no_relationship", "source_defined"]);
+export const ScfImportStatusSchema = z.enum([
+  "pending",
+  "running",
+  "succeeded",
+  "failed",
+  "partial",
+  "rolled_back",
+]);
+export const ScfRecordStatusSchema = z.enum([
+  "active",
+  "deprecated",
+  "draft",
+  "archived",
+]);
+export const ScfSourceTypeSchema = z.enum([
+  "xlsx",
+  "csv",
+  "oscal_json",
+  "synthetic_fixture",
+]);
+export const ScfRelationshipTypeSchema = z.enum([
+  "equal",
+  "subset",
+  "superset",
+  "intersecting",
+  "related",
+  "no_relationship",
+  "source_defined",
+]);
 
 export const ScfImportStatisticsSchema = z.object({
   versions: z.number().int().nonnegative().default(0),
@@ -15,7 +40,7 @@ export const ScfImportStatisticsSchema = z.object({
   mappings: z.number().int().nonnegative().default(0),
   strm_relationships: z.number().int().nonnegative().default(0),
   warnings: z.number().int().nonnegative().default(0),
-  synthetic_records: z.number().int().nonnegative().default(0)
+  synthetic_records: z.number().int().nonnegative().default(0),
 });
 
 export const ScfVersionSchema = z.object({
@@ -29,7 +54,7 @@ export const ScfVersionSchema = z.object({
   imported_at: z.string().optional(),
   imported_by: z.string().optional(),
   notes: z.string().optional(),
-  is_synthetic: z.boolean().default(false)
+  is_synthetic: z.boolean().default(false),
 });
 
 export const ScfVersionResponseSchema = z.object({
@@ -40,7 +65,7 @@ export const ScfVersionResponseSchema = z.object({
   import_status: ScfImportStatusSchema,
   imported_at: z.string().optional(),
   is_synthetic: z.boolean(),
-  trace_id: z.string().optional()
+  trace_id: z.string().optional(),
 });
 
 export const ScfDomainSchema = z.object({
@@ -51,11 +76,11 @@ export const ScfDomainSchema = z.object({
   domain_name: z.string().min(1),
   description: z.string().optional(),
   sort_order: z.number().int().default(0),
-  is_synthetic: z.boolean().default(false)
+  is_synthetic: z.boolean().default(false),
 });
 
 export const ScfDomainResponseSchema = ScfDomainSchema.extend({
-  trace_id: z.string().optional()
+  trace_id: z.string().optional(),
 });
 
 export const ScfFrameworkSchema = z.object({
@@ -69,7 +94,7 @@ export const ScfFrameworkSchema = z.object({
   category: z.string().optional(),
   source_reference: z.string().optional(),
   status: ScfRecordStatusSchema,
-  is_synthetic: z.boolean().default(false)
+  is_synthetic: z.boolean().default(false),
 });
 
 export const ScfFrameworkResponseSchema = z.object({
@@ -82,7 +107,7 @@ export const ScfFrameworkResponseSchema = z.object({
   category: z.string().optional(),
   status: ScfRecordStatusSchema,
   is_synthetic: z.boolean(),
-  trace_id: z.string().optional()
+  trace_id: z.string().optional(),
 });
 
 export const ScfStructuredControlSchema = z.object({
@@ -100,7 +125,7 @@ export const ScfStructuredControlSchema = z.object({
   control_weight: z.number().optional(),
   maturity_criteria_ref: z.string().optional(),
   status: ScfRecordStatusSchema,
-  is_synthetic: z.boolean().default(false)
+  is_synthetic: z.boolean().default(false),
 });
 
 export const ScfControlResponseSchema = z.object({
@@ -112,7 +137,7 @@ export const ScfControlResponseSchema = z.object({
   control_description: z.string().optional(),
   status: ScfRecordStatusSchema,
   is_synthetic: z.boolean(),
-  trace_id: z.string().optional()
+  trace_id: z.string().optional(),
 });
 
 export const ScfFrameworkRequirementSchema = z.object({
@@ -125,7 +150,7 @@ export const ScfFrameworkRequirementSchema = z.object({
   parent_requirement_id: UuidSchema.optional(),
   sort_order: z.number().int().default(0),
   status: ScfRecordStatusSchema,
-  is_synthetic: z.boolean().default(false)
+  is_synthetic: z.boolean().default(false),
 });
 
 export const ScfRequirementResponseSchema = z.object({
@@ -136,7 +161,7 @@ export const ScfRequirementResponseSchema = z.object({
   requirement_text: z.string().optional(),
   status: ScfRecordStatusSchema,
   is_synthetic: z.boolean(),
-  trace_id: z.string().optional()
+  trace_id: z.string().optional(),
 });
 
 export const ScfStructuredMappingSchema = z.object({
@@ -152,7 +177,7 @@ export const ScfStructuredMappingSchema = z.object({
   mapping_source: z.string().min(1),
   is_official: z.boolean(),
   status: ScfRecordStatusSchema,
-  is_synthetic: z.boolean().default(false)
+  is_synthetic: z.boolean().default(false),
 });
 
 export const ScfMappingResponseSchema = ScfStructuredMappingSchema.extend({
@@ -160,7 +185,7 @@ export const ScfMappingResponseSchema = ScfStructuredMappingSchema.extend({
   requirement_code: z.string().optional(),
   framework_code: z.string().optional(),
   framework_name: z.string().optional(),
-  trace_id: z.string().optional()
+  trace_id: z.string().optional(),
 });
 
 export const ScfStrmRelationshipSchema = z.object({
@@ -170,7 +195,7 @@ export const ScfStrmRelationshipSchema = z.object({
   label: z.string(),
   description: z.string().optional(),
   directionality: z.string().optional(),
-  default_strength_range: z.string().optional()
+  default_strength_range: z.string().optional(),
 });
 
 export const ScfImportRunSchema = z.object({
@@ -184,7 +209,7 @@ export const ScfImportRunSchema = z.object({
   completed_at: z.string().optional(),
   error_summary_safe: z.string().optional(),
   import_statistics: ScfImportStatisticsSchema,
-  trace_id: z.string()
+  trace_id: z.string(),
 });
 
 export const ScfImportSourceSchema = z.object({
@@ -193,12 +218,12 @@ export const ScfImportSourceSchema = z.object({
   source_url: z.string().url().optional(),
   source_hash: z.string().optional(),
   version_label: z.string().min(1).optional(),
-  content: z.string().min(1)
+  content: z.string().min(1),
 });
 
 export const ScfImportResultSchema = z.object({
   import_run: ScfImportRunSchema,
-  warnings: z.array(z.string()).default([])
+  warnings: z.array(z.string()).default([]),
 });
 
 export const ScfControlSearchQuerySchema = z.object({
@@ -208,14 +233,14 @@ export const ScfControlSearchQuerySchema = z.object({
   q: z.string().optional(),
   tags: z.array(z.string()).optional(),
   limit: z.number().int().optional(),
-  offset: z.number().int().optional()
+  offset: z.number().int().optional(),
 });
 
 export const ScfMappingQuerySchema = z.object({
   scf_version_id: UuidSchema,
   framework_id: UuidSchema.optional(),
   requirement_id: UuidSchema.optional(),
-  control_id: UuidSchema.optional()
+  control_id: UuidSchema.optional(),
 });
 
 export const ScfFrameworkCoverageResponseSchema = z.object({
@@ -226,14 +251,16 @@ export const ScfFrameworkCoverageResponseSchema = z.object({
   control_count: z.number().int().nonnegative(),
   official_mapping_count: z.number().int().nonnegative(),
   is_synthetic: z.boolean(),
-  trace_id: z.string().optional()
+  trace_id: z.string().optional(),
 });
 
 export type ScfVersion = z.infer<typeof ScfVersionSchema>;
 export type ScfDomain = z.infer<typeof ScfDomainSchema>;
 export type ScfControl = z.infer<typeof ScfStructuredControlSchema>;
 export type ScfFramework = z.infer<typeof ScfFrameworkSchema>;
-export type ScfFrameworkRequirement = z.infer<typeof ScfFrameworkRequirementSchema>;
+export type ScfFrameworkRequirement = z.infer<
+  typeof ScfFrameworkRequirementSchema
+>;
 export type ScfMapping = z.infer<typeof ScfStructuredMappingSchema>;
 export type ScfStrmRelationship = z.infer<typeof ScfStrmRelationshipSchema>;
 export type ScfImportRun = z.infer<typeof ScfImportRunSchema>;
@@ -242,10 +269,67 @@ export type ScfImportResult = z.infer<typeof ScfImportResultSchema>;
 export type ScfImportStatistics = z.infer<typeof ScfImportStatisticsSchema>;
 export type ScfControlSearchQuery = z.infer<typeof ScfControlSearchQuerySchema>;
 export type ScfMappingQuery = z.infer<typeof ScfMappingQuerySchema>;
-export type ScfFrameworkCoverageResponse = z.infer<typeof ScfFrameworkCoverageResponseSchema>;
+export type ScfFrameworkCoverageResponse = z.infer<
+  typeof ScfFrameworkCoverageResponseSchema
+>;
 export type ScfVersionResponse = z.infer<typeof ScfVersionResponseSchema>;
 export type ScfDomainResponse = z.infer<typeof ScfDomainResponseSchema>;
 export type ScfFrameworkResponse = z.infer<typeof ScfFrameworkResponseSchema>;
 export type ScfControlResponse = z.infer<typeof ScfControlResponseSchema>;
-export type ScfRequirementResponse = z.infer<typeof ScfRequirementResponseSchema>;
+export type ScfRequirementResponse = z.infer<
+  typeof ScfRequirementResponseSchema
+>;
 export type ScfMappingResponse = z.infer<typeof ScfMappingResponseSchema>;
+
+// ──── New SCF Meta-Model Entity Types ────
+
+export const ScfAssessmentObjectiveSchema = z.object({
+  id: UuidSchema,
+  scf_version_id: UuidSchema,
+  scf_control_id: UuidSchema,
+  objective_code: z.string().min(1),
+  text: z.string().min(1),
+});
+
+export const ScfEvidenceRequestSchema = z.object({
+  id: UuidSchema,
+  scf_version_id: UuidSchema,
+  scf_control_id: UuidSchema,
+  request_item: z.string().min(1),
+  evidence_type: z.string().optional(),
+});
+
+export const ScfMaturityCriteriaSchema = z.object({
+  id: UuidSchema,
+  scf_version_id: UuidSchema,
+  scf_control_id: UuidSchema,
+  level: z.number().int().min(1).max(5),
+  criteria_text: z.string().min(1),
+  remediation_guidance: z.string().optional(),
+});
+
+export const ScfRiskSchema = z.object({
+  id: UuidSchema,
+  scf_version_id: UuidSchema,
+  risk_code: z.string().min(1),
+  title: z.string().min(1),
+  description: z.string().optional(),
+  category: z.string().optional(),
+});
+
+export const ScfThreatSchema = z.object({
+  id: UuidSchema,
+  scf_version_id: UuidSchema,
+  threat_code: z.string().min(1),
+  title: z.string().min(1),
+  description: z.string().optional(),
+  category: z.string().optional(),
+});
+
+export type ScfAssessmentObjective = z.infer<
+  typeof ScfAssessmentObjectiveSchema
+>;
+export type ScfEvidenceRequest = z.infer<typeof ScfEvidenceRequestSchema>;
+export type ScfMaturityCriteria = z.infer<typeof ScfMaturityCriteriaSchema>;
+export type ScfRisk = z.infer<typeof ScfRiskSchema>;
+export type ScfThreat = z.infer<typeof ScfThreatSchema>;
