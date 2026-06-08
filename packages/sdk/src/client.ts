@@ -5,12 +5,17 @@
  * Works in Node.js 18+, Deno, Bun, Cloudflare Workers, and browsers.
  */
 import { StandardError, type StandardErrorResponse } from "./errors.js";
+import { constructEvent, type WebhookEvent } from "./crypto.js";
 import type {
   RequestOptions,
   PaginatedResponse,
+  RetryConfig,
   StandardResponse,
   ListQuery,
 } from "./types.js";
+
+export type { WebhookEvent } from "./crypto.js";
+export type { RetryConfig } from "./types.js";
 import type {
   Assessment,
   Document,
@@ -56,7 +61,7 @@ import type {
 } from "./models.js";
 
 export type StandardClientConfig = {
-  /** API key (starts with "standard_live_") */
+  /** API key (starts with "standard_live_" or "standard_test_" for sandbox) */
   apiKey: string;
   /** Organization UUID */
   organizationId: string;
@@ -66,14 +71,42 @@ export type StandardClientConfig = {
   timeout?: number;
   /** Custom fetch implementation */
   fetch?: typeof globalThis.fetch;
+  /**
+   * Automatic retry configuration for 429 and 5xx errors.
+   * Set `maxAttempts: 1` to disable retry entirely.
+   */
+  retry?: Partial<RetryConfig>;
 };
+
+const DEFAULT_RETRY: RetryConfig = {
+  maxAttempts: 3,
+  initialDelayMs: 500,
+  maxDelayMs: 32_000,
+  retryableStatuses: [429, 500, 502, 503, 504],
+};
+
+/** Sleep for `ms` milliseconds, cancellable via signal */
+const sleep = (ms: number, signal?: AbortSignal): Promise<void> =>
+  new Promise((resolve, reject) => {
+    const tid = setTimeout(resolve, ms);
+    signal?.addEventListener("abort", () => {
+      clearTimeout(tid);
+      reject(new DOMException("Aborted", "AbortError"));
+    });
+  });
+
+/** Generate a v4-style UUID using Web Crypto */
+const newUuid = (): string => crypto.randomUUID();
 
 const DEFAULT_BASE_URL = "https://standard-api.bekaa.eu";
 const DEFAULT_TIMEOUT = 30_000;
 
 export class StandardClient {
-  private readonly config: Required<Omit<StandardClientConfig, "fetch">> & {
+  private readonly config: Required<
+    Omit<StandardClientConfig, "fetch" | "retry">
+  > & {
     fetch: typeof globalThis.fetch;
+    retry: RetryConfig;
   };
 
   // ── Resource Namespaces ─────────────────────────────────
@@ -92,6 +125,12 @@ export class StandardClient {
   readonly agents: AgentsResource;
   readonly webhooks: WebhooksResource;
   readonly organizations: OrganizationsResource;
+  readonly jobs: JobsResource;
+
+  /** True when the client is using a test/sandbox API key (prefix: standard_test_) */
+  get isSandbox(): boolean {
+    return this.config.apiKey.startsWith("standard_test_");
+  }
 
   constructor(config: StandardClientConfig) {
     this.config = {
@@ -100,6 +139,7 @@ export class StandardClient {
       baseUrl: (config.baseUrl ?? DEFAULT_BASE_URL).replace(/\/+$/, ""),
       timeout: config.timeout ?? DEFAULT_TIMEOUT,
       fetch: config.fetch ?? globalThis.fetch.bind(globalThis),
+      retry: { ...DEFAULT_RETRY, ...config.retry },
     };
 
     // Initialize resource namespaces
@@ -118,9 +158,11 @@ export class StandardClient {
     this.agents = new AgentsResource(this);
     this.webhooks = new WebhooksResource(this);
     this.organizations = new OrganizationsResource(this);
+    this.jobs = new JobsResource(this);
   }
 
   // ── Internal HTTP Methods ──────────────────────────────
+
   /** @internal */
   async _request<T>(
     method: string,
@@ -128,63 +170,115 @@ export class StandardClient {
     body?: unknown,
     opts?: RequestOptions,
   ): Promise<T> {
-    const url = `${this.config.baseUrl}/api/v1${path}`;
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), this.config.timeout);
-
-    const headers: Record<string, string> = {
-      Authorization: `Bearer ${this.config.apiKey}`,
-      "x-standard-tenant-id": this.config.organizationId,
-      ...(body && !(body instanceof FormData)
-        ? { "Content-Type": "application/json" }
-        : {}),
-      ...(opts?.idempotencyKey
-        ? { "Idempotency-Key": opts.idempotencyKey }
-        : {}),
-      ...opts?.headers,
+    const retryConfig: RetryConfig = {
+      ...this.config.retry,
+      ...opts?.retry,
     };
 
-    try {
-      const requestBody: BodyInit | null =
-        body instanceof FormData ? body : body ? JSON.stringify(body) : null;
+    // Auto-generate an idempotency key for write operations so retries are safe.
+    // Use caller-provided key if supplied; generate one for POST/PATCH/PUT/DELETE.
+    const isWrite = ["POST", "PATCH", "PUT", "DELETE"].includes(
+      method.toUpperCase(),
+    );
+    const idempotencyKey =
+      opts?.idempotencyKey ?? (isWrite ? newUuid() : undefined);
 
-      const init: RequestInit = {
-        method,
-        headers,
-        body: requestBody,
-        signal: opts?.signal ?? controller.signal,
+    let attempt = 0;
+    let lastError: unknown;
+
+    while (attempt < retryConfig.maxAttempts) {
+      attempt++;
+      const url = `${this.config.baseUrl}/api/v1${path}`;
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), this.config.timeout);
+
+      const headers: Record<string, string> = {
+        Authorization: `Bearer ${this.config.apiKey}`,
+        "x-standard-tenant-id": this.config.organizationId,
+        ...(body && !(body instanceof FormData)
+          ? { "Content-Type": "application/json" }
+          : {}),
+        ...(idempotencyKey ? { "Idempotency-Key": idempotencyKey } : {}),
+        ...(this.isSandbox ? { "x-standard-sandbox": "1" } : {}),
+        ...opts?.headers,
       };
 
-      const response = await this.config.fetch(url, init);
+      try {
+        const requestBody: BodyInit | null =
+          body instanceof FormData ? body : body ? JSON.stringify(body) : null;
 
-      clearTimeout(timeout);
+        const init: RequestInit = {
+          method,
+          headers,
+          body: requestBody,
+          signal: opts?.signal ?? controller.signal,
+        };
 
-      if (!response.ok) {
-        let errorBody: StandardErrorResponse;
-        try {
-          errorBody = (await response.json()) as StandardErrorResponse;
-        } catch {
-          errorBody = {
-            error: { code: "UNKNOWN", message: response.statusText },
-          };
+        const response = await this.config.fetch(url, init);
+        clearTimeout(timeout);
+
+        if (!response.ok) {
+          const statusCode = response.status;
+          const shouldRetry =
+            attempt < retryConfig.maxAttempts &&
+            retryConfig.retryableStatuses.includes(statusCode);
+
+          let errorBody: StandardErrorResponse;
+          try {
+            errorBody = (await response.json()) as StandardErrorResponse;
+          } catch {
+            errorBody = {
+              error: { code: "UNKNOWN", message: response.statusText },
+            };
+          }
+
+          const err = new StandardError(statusCode, errorBody);
+
+          if (!shouldRetry) throw err;
+
+          // Respect Retry-After header (in seconds or HTTP date)
+          let delayMs: number;
+          const retryAfter = response.headers.get("Retry-After");
+          if (retryAfter) {
+            const parsed = parseInt(retryAfter, 10);
+            delayMs = isNaN(parsed)
+              ? new Date(retryAfter).getTime() - Date.now()
+              : parsed * 1000;
+            delayMs = Math.max(0, Math.min(delayMs, retryConfig.maxDelayMs));
+          } else {
+            // Exponential backoff with jitter (+/-20%)
+            const base = Math.min(
+              retryConfig.initialDelayMs * 2 ** (attempt - 1),
+              retryConfig.maxDelayMs,
+            );
+            delayMs = base * (0.8 + Math.random() * 0.4);
+          }
+
+          lastError = err;
+          await sleep(delayMs, opts?.signal);
+          continue;
         }
-        throw new StandardError(response.status, errorBody);
-      }
 
-      return (await response.json()) as T;
-    } catch (error) {
-      clearTimeout(timeout);
-      if (error instanceof StandardError) throw error;
-      if (error instanceof DOMException && error.name === "AbortError") {
-        throw new StandardError(408, {
-          error: {
-            code: "TIMEOUT",
-            message: `Request timed out after ${this.config.timeout}ms`,
-          },
-        });
+        return (await response.json()) as T;
+      } catch (error) {
+        clearTimeout(timeout);
+
+        // Never retry abort/timeout — propagate immediately
+        if (error instanceof DOMException && error.name === "AbortError") {
+          throw new StandardError(408, {
+            error: {
+              code: "TIMEOUT",
+              message: `Request timed out after ${this.config.timeout}ms`,
+            },
+          });
+        }
+        if (error instanceof StandardError) throw error;
+        throw error;
       }
-      throw error;
     }
+
+    // All attempts exhausted
+    throw lastError;
   }
 
   /** @internal */
@@ -202,6 +296,35 @@ export class StandardClient {
   /** @internal */
   _delete<T>(path: string, opts?: RequestOptions) {
     return this._request<T>("DELETE", path, undefined, opts);
+  }
+
+  /**
+   * Async generator that auto-paginates a list endpoint.
+   * Yields individual items, fetching next pages automatically.
+   *
+   * @example
+   * ```typescript
+   * for await (const finding of client._paginate<GapFinding>("/assessments/123/gap-findings")) {
+   *   console.log(finding.control_code);
+   * }
+   * ```
+   */
+  async *_paginate<T>(path: string, opts?: RequestOptions): AsyncGenerator<T> {
+    let cursor: string | undefined;
+    do {
+      const url = cursor
+        ? `${path}${path.includes("?") ? "&" : "?"}cursor=${encodeURIComponent(cursor)}`
+        : path;
+      const page = await this._get<PaginatedResponse<T>>(url, opts);
+      for (const item of page.data) {
+        yield item;
+      }
+      // Support both top-level and nested pagination shapes
+      const hasMore = page.has_more ?? page.pagination?.has_more ?? false;
+      cursor = hasMore
+        ? (page.next_cursor ?? page.pagination?.next_cursor)
+        : undefined;
+    } while (cursor);
   }
 }
 
@@ -467,6 +590,79 @@ class ApprovalsResource {
       opts,
     );
   }
+
+  /**
+   * List pending approvals across all assessments for an organization.
+   * Use this to build HITL dashboards and notification feeds.
+   *
+   * @param orgId  - Organization UUID
+   * @param gate   - Optional filter: "soa"|"gap_analysis"|"maturity"|"poam"
+   */
+  listPending(
+    orgId: string,
+    gate?: "soa" | "gap_analysis" | "maturity" | "poam",
+    opts?: RequestOptions,
+  ) {
+    const q = gate ? `?gate=${gate}` : "";
+    return this.client._get<PaginatedResponse<ApprovalRecord>>(
+      `/organizations/${orgId}/approvals/pending${q}`,
+      opts,
+    );
+  }
+
+  /**
+   * Approve a pending approval gate.
+   *
+   * @param approvalId - UUID of the approval record
+   * @param actor      - Human-readable identifier of the approver (email, user ID, etc.)
+   *                     REQUIRED — approval must be traceable to a human actor.
+   * @param reason     - Optional justification text
+   */
+  approve(
+    approvalId: string,
+    actor: string,
+    reason?: string,
+    opts?: RequestOptions,
+  ) {
+    if (!actor) {
+      throw new Error(
+        "approvals.approve() requires an explicit actor. " +
+          "Approval gates must be traceable to a human — do not automate without identifying who approved.",
+      );
+    }
+    return this.client._post<StandardResponse<ApprovalRecord>>(
+      `/approvals/${approvalId}/approve`,
+      { actor, reason },
+      opts,
+    );
+  }
+
+  /**
+   * Reject a pending approval gate.
+   *
+   * @param approvalId - UUID of the approval record
+   * @param actor      - Human-readable identifier of the reviewer (REQUIRED)
+   * @param reason     - Rejection justification (REQUIRED)
+   */
+  reject(
+    approvalId: string,
+    actor: string,
+    reason: string,
+    opts?: RequestOptions,
+  ) {
+    if (!actor) {
+      throw new Error("approvals.reject() requires an explicit actor.");
+    }
+    if (!reason) {
+      throw new Error("approvals.reject() requires a reason for rejection.");
+    }
+    return this.client._post<StandardResponse<ApprovalRecord>>(
+      `/approvals/${approvalId}/reject`,
+      { actor, reason },
+      opts,
+    );
+  }
+
   list(assessmentId: string, opts?: RequestOptions) {
     return this.client._get<PaginatedResponse<ApprovalRecord>>(
       `/assessments/${assessmentId}/approvals`,
@@ -941,6 +1137,41 @@ class WebhooksResource {
       opts,
     );
   }
+
+  /**
+   * Verify and parse a Standard webhook event.
+   *
+   * IMPORTANT: Pass the **raw** request body string (not parsed JSON).
+   * Parsing the body before verification will break the HMAC check.
+   *
+   * @param rawBody   - The raw request body (string)
+   * @param signature - Value of the `X-Standard-Signature` header
+   * @param secret    - Your webhook signing secret (from `webhooks.create()`)
+   * @returns Parsed WebhookEvent if the signature is valid
+   * @throws Error with code `WEBHOOK_SIGNATURE_INVALID` if invalid
+   *
+   * @example
+   * ```typescript
+   * app.post("/webhook", express.raw({ type: "*\/*" }), async (req, res) => {
+   *   const event = await client.webhooks.constructEvent(
+   *     req.body.toString(),
+   *     req.headers["x-standard-signature"] as string,
+   *     process.env.WEBHOOK_SECRET!,
+   *   );
+   *   if (event.event_type === "assessment.gap_analysis.approved") {
+   *     // handle approved gap analysis
+   *   }
+   *   res.sendStatus(200);
+   * });
+   * ```
+   */
+  constructEvent(
+    rawBody: string,
+    signature: string,
+    secret: string,
+  ): Promise<WebhookEvent> {
+    return constructEvent(rawBody, signature, secret);
+  }
 }
 
 class OrganizationsResource {
@@ -1050,6 +1281,123 @@ class OrganizationsResource {
   }
 }
 
+// ── Jobs Resource ────────────────────────────────────────────
+
+export type JobStatus =
+  | "pending"
+  | "processing"
+  | "completed"
+  | "failed"
+  | "cancelled";
+
+export type JobRecord = {
+  id: string;
+  type: string;
+  status: JobStatus;
+  assessment_id?: string;
+  organization_id?: string;
+  progress?: number;
+  error?: string;
+  created_at: string;
+  updated_at: string;
+  completed_at?: string;
+};
+
+export type UsagePeriod = "day" | "week" | "month";
+
+export type UsageRecord = {
+  period: UsagePeriod;
+  tokens_used: number;
+  estimated_cost_usd: number;
+  requests_count: number;
+  quota_limit: number | null;
+  quota_remaining: number | null;
+  since: string;
+  until: string;
+};
+
+class JobsResource {
+  constructor(private client: StandardClient) {}
+
+  /** Get the current status of a job */
+  get(jobId: string, opts?: RequestOptions) {
+    return this.client._get<StandardResponse<JobRecord>>(
+      `/jobs/${jobId}`,
+      opts,
+    );
+  }
+
+  /** List recent jobs for an assessment */
+  list(assessmentId: string, opts?: RequestOptions) {
+    return this.client._get<PaginatedResponse<JobRecord>>(
+      `/assessments/${assessmentId}/jobs`,
+      opts,
+    );
+  }
+
+  /**
+   * Poll a job until it reaches a terminal state (completed | failed | cancelled).
+   *
+   * @param jobId          - Job UUID to poll
+   * @param opts.pollIntervalMs - How often to poll in ms (default: 3000)
+   * @param opts.timeoutMs     - Max wait time in ms (default: 300_000 = 5 min)
+   * @returns The completed JobRecord
+   * @throws StandardError if the job fails or timeout is exceeded
+   *
+   * @example
+   * ```typescript
+   * const doc = await client.documents.upload(assessmentId, file);
+   * const job = await client.jobs.waitForCompletion(doc.data.ingestion_job_id);
+   * console.log("Ingestion complete:", job.status);
+   * ```
+   */
+  async waitForCompletion(
+    jobId: string,
+    opts?: {
+      pollIntervalMs?: number;
+      timeoutMs?: number;
+      signal?: AbortSignal;
+    },
+  ): Promise<JobRecord> {
+    const pollInterval = opts?.pollIntervalMs ?? 3_000;
+    const timeout = opts?.timeoutMs ?? 300_000;
+    const deadline = Date.now() + timeout;
+    const TERMINAL: JobStatus[] = ["completed", "failed", "cancelled"];
+
+    while (Date.now() < deadline) {
+      const res = await this.get(
+        jobId,
+        opts?.signal ? { signal: opts.signal } : undefined,
+      );
+      if (TERMINAL.includes(res.data.status)) {
+        if (res.data.status === "failed") {
+          throw new StandardError(500, {
+            error: {
+              code: "JOB_FAILED",
+              message: res.data.error ?? `Job ${jobId} failed`,
+            },
+          });
+        }
+        return res.data;
+      }
+      await new Promise<void>((resolve, reject) => {
+        const tid = setTimeout(resolve, pollInterval);
+        opts?.signal?.addEventListener("abort", () => {
+          clearTimeout(tid);
+          reject(new DOMException("Aborted", "AbortError"));
+        });
+      });
+    }
+
+    throw new StandardError(408, {
+      error: {
+        code: "JOB_TIMEOUT",
+        message: `Job ${jobId} did not complete within ${timeout}ms`,
+      },
+    });
+  }
+}
+
 // ── Helper ──────────────────────────────────────────────────
 function qs(query?: ListQuery): string {
   if (!query) return "";
@@ -1057,6 +1405,7 @@ function qs(query?: ListQuery): string {
   if (query.limit) params.set("limit", String(query.limit));
   if (query.offset) params.set("offset", String(query.offset));
   if (query.page) params.set("page", String(query.page));
+  if (query.cursor) params.set("cursor", query.cursor);
   const str = params.toString();
   return str ? `?${str}` : "";
 }
