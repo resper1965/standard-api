@@ -175,6 +175,257 @@ const Tools = {
       required: ["job_id"],
     },
   },
+  create_assessment: {
+    name: "create_assessment",
+    description: "Create a new GRC compliance assessment.",
+    schema: {
+      type: "object",
+      properties: {
+        name: {
+          type: "string",
+          description: "The name of the assessment",
+        },
+        scf_version_id: {
+          type: "string",
+          description: "The UUID of the SCF version to use",
+        },
+        organization_id: {
+          type: "string",
+          description:
+            "The UUID of the organization (optional, defaults to default configured organization)",
+        },
+      },
+      required: ["name", "scf_version_id"],
+    },
+  },
+  list_assessments: {
+    name: "list_assessments",
+    description: "List all GRC compliance assessments.",
+    schema: {
+      type: "object",
+      properties: {},
+    },
+  },
+  define_scope: {
+    name: "define_scope",
+    description:
+      "Define the scope (framework, departments, locations) for a compliance assessment.",
+    schema: {
+      type: "object",
+      properties: {
+        assessment_id: {
+          type: "string",
+          description: "The UUID of the assessment",
+        },
+        framework_id: {
+          type: "string",
+          description: "The ID of the target framework (e.g., 'iso27001')",
+        },
+        departments: {
+          type: "array",
+          items: { type: "string" },
+          description: "List of department names in scope",
+        },
+        locations: {
+          type: "array",
+          items: { type: "string" },
+          description: "List of location names in scope",
+        },
+      },
+      required: ["assessment_id", "framework_id"],
+    },
+  },
+  generate_soa_draft: {
+    name: "generate_soa_draft",
+    description:
+      "Generate the Statement of Applicability (SoA) draft for an assessment.",
+    schema: {
+      type: "object",
+      properties: {
+        assessment_id: {
+          type: "string",
+          description: "The UUID of the assessment",
+        },
+      },
+      required: ["assessment_id"],
+    },
+  },
+  run_evidence_analysis: {
+    name: "run_evidence_analysis",
+    description:
+      "Run AI analysis of the uploaded evidence documents for an assessment.",
+    schema: {
+      type: "object",
+      properties: {
+        assessment_id: {
+          type: "string",
+          description: "The UUID of the assessment",
+        },
+      },
+      required: ["assessment_id"],
+    },
+  },
+  generate_gap_analysis: {
+    name: "generate_gap_analysis",
+    description: "Generate a Gap Analysis draft for an assessment.",
+    schema: {
+      type: "object",
+      properties: {
+        assessment_id: {
+          type: "string",
+          description: "The UUID of the assessment",
+        },
+      },
+      required: ["assessment_id"],
+    },
+  },
+  generate_poam_draft: {
+    name: "generate_poam_draft",
+    description:
+      "Generate a Plan of Action & Milestones (POA&M) draft for an assessment.",
+    schema: {
+      type: "object",
+      properties: {
+        assessment_id: {
+          type: "string",
+          description: "The UUID of the assessment",
+        },
+      },
+      required: ["assessment_id"],
+    },
+  },
+  generate_report_draft: {
+    name: "generate_report_draft",
+    description: "Generate a draft compliance report for an assessment.",
+    schema: {
+      type: "object",
+      properties: {
+        assessment_id: {
+          type: "string",
+          description: "The UUID of the assessment",
+        },
+      },
+      required: ["assessment_id"],
+    },
+  },
+  get_compliance_gate: {
+    name: "get_compliance_gate",
+    description: "Retrieve Go/No-Go compliance gate status for an assessment.",
+    schema: {
+      type: "object",
+      properties: {
+        assessment_id: {
+          type: "string",
+          description: "The UUID of the assessment",
+        },
+      },
+      required: ["assessment_id"],
+    },
+  },
+
+  // ── NEW: HITL + Jobs tools (closes #82) ────────────────────────────────
+
+  list_pending_approvals: {
+    name: "list_pending_approvals",
+    description:
+      "List pending human approval gates across all assessments for the organization. " +
+      "Use this to surface items that require human review before the lifecycle can continue.",
+    schema: {
+      type: "object",
+      properties: {
+        organization_id: {
+          type: "string",
+          description:
+            "Organization UUID (defaults to configured organization)",
+        },
+        gate: {
+          type: "string",
+          enum: [
+            "soa",
+            "gap_analysis",
+            "maturity_assessment",
+            "poam",
+            "report",
+          ],
+          description: "Filter by specific gate type (optional)",
+        },
+      },
+      required: [],
+    },
+  },
+
+  submit_approval: {
+    name: "submit_approval",
+    description:
+      "Submit a human approval or rejection for a specific approval gate. " +
+      "IMPORTANT: This action requires an explicit human actor_id. " +
+      "AI agents MUST NOT call this autonomously — always confirm with the human user before approving. " +
+      "The actor_id must identify the human who reviewed and approved.",
+    schema: {
+      type: "object",
+      properties: {
+        approval_id: {
+          type: "string",
+          description: "UUID of the approval record to approve or reject",
+        },
+        decision: {
+          type: "string",
+          enum: ["approved", "rejected"],
+          description: "The human decision: approved or rejected",
+        },
+        actor_id: {
+          type: "string",
+          description:
+            "REQUIRED: Identifier of the human who is approving (email, user ID, name). " +
+            "Cannot be an agent identifier. This value is recorded in the immutable audit trail.",
+        },
+        reason: {
+          type: "string",
+          description:
+            "Justification for the decision (required for rejection)",
+        },
+      },
+      required: ["approval_id", "decision", "actor_id"],
+    },
+  },
+
+  list_jobs: {
+    name: "list_jobs",
+    description:
+      "List recent async jobs for an assessment (ingestion, analysis, etc.).",
+    schema: {
+      type: "object",
+      properties: {
+        assessment_id: {
+          type: "string",
+          description: "UUID of the assessment",
+        },
+      },
+      required: ["assessment_id"],
+    },
+  },
+
+  wait_for_job: {
+    name: "wait_for_job",
+    description:
+      "Poll a job until it completes or fails. Returns final job status. " +
+      "Use after triggering async operations like document ingestion.",
+    schema: {
+      type: "object",
+      properties: {
+        job_id: {
+          type: "string",
+          description: "Job UUID to poll",
+        },
+        max_polls: {
+          type: "number",
+          description:
+            "Maximum polling attempts (default: 20, ~60s at 3s interval)",
+        },
+      },
+      required: ["job_id"],
+    },
+  },
 };
 
 server.setRequestHandler(ListToolsRequestSchema, async () => {
@@ -255,6 +506,229 @@ server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
         const data = await fetchFromApi(`/api/v1/jobs/${job_id}`);
         return {
           content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+        };
+      }
+
+      case "create_assessment": {
+        const { name, scf_version_id, organization_id } = request.params
+          .arguments as {
+          name: string;
+          scf_version_id: string;
+          organization_id?: string;
+        };
+        const orgId = organization_id || ORGANIZATION_ID;
+        const data = await fetchFromApi("/api/v1/assessments", "POST", {
+          name,
+          scf_version_id,
+          organization_id: orgId,
+        });
+        return {
+          content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+        };
+      }
+
+      case "list_assessments": {
+        const data = await fetchFromApi("/api/v1/assessments");
+        return {
+          content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+        };
+      }
+
+      case "define_scope": {
+        const { assessment_id, framework_id, departments, locations } = request
+          .params.arguments as {
+          assessment_id: string;
+          framework_id: string;
+          departments?: string[];
+          locations?: string[];
+        };
+        const data = await fetchFromApi(
+          `/api/v1/assessments/${assessment_id}/scope`,
+          "POST",
+          {
+            framework_id,
+            departments,
+            locations,
+          },
+        );
+        return {
+          content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+        };
+      }
+
+      case "generate_soa_draft": {
+        const { assessment_id } = request.params.arguments as {
+          assessment_id: string;
+        };
+        const data = await fetchFromApi(
+          `/api/v1/assessments/${assessment_id}/soa/draft`,
+          "POST",
+        );
+        return {
+          content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+        };
+      }
+
+      case "run_evidence_analysis": {
+        const { assessment_id } = request.params.arguments as {
+          assessment_id: string;
+        };
+        const data = await fetchFromApi(
+          `/api/v1/assessments/${assessment_id}/evidence-analysis/run`,
+          "POST",
+        );
+        return {
+          content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+        };
+      }
+
+      case "generate_gap_analysis": {
+        const { assessment_id } = request.params.arguments as {
+          assessment_id: string;
+        };
+        const data = await fetchFromApi(
+          `/api/v1/assessments/${assessment_id}/gap-analysis/draft`,
+          "POST",
+        );
+        return {
+          content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+        };
+      }
+
+      case "generate_poam_draft": {
+        const { assessment_id } = request.params.arguments as {
+          assessment_id: string;
+        };
+        const data = await fetchFromApi(
+          `/api/v1/assessments/${assessment_id}/poam/draft`,
+          "POST",
+        );
+        return {
+          content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+        };
+      }
+
+      case "generate_report_draft": {
+        const { assessment_id } = request.params.arguments as {
+          assessment_id: string;
+        };
+        const data = await fetchFromApi(
+          `/api/v1/assessments/${assessment_id}/reports/draft`,
+          "POST",
+        );
+        return {
+          content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+        };
+      }
+
+      case "get_compliance_gate": {
+        const { assessment_id } = request.params.arguments as {
+          assessment_id: string;
+        };
+        const data = await fetchFromApi(
+          `/api/v1/assessments/${assessment_id}/compliance-gate`,
+        );
+        return {
+          content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+        };
+      }
+
+      // ── NEW: HITL + Jobs cases (closes #82) ────────────────────────────────
+
+      case "list_pending_approvals": {
+        const { organization_id, gate } = request.params.arguments as {
+          organization_id?: string;
+          gate?: string;
+        };
+        const orgId = organization_id || ORGANIZATION_ID;
+        const q = gate ? `?gate=${gate}` : "";
+        const data = await fetchFromApi(
+          `/api/v1/organizations/${orgId}/approvals/pending${q}`,
+        );
+        return {
+          content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+        };
+      }
+
+      case "submit_approval": {
+        const { approval_id, decision, actor_id, reason } = request.params
+          .arguments as {
+          approval_id: string;
+          decision: "approved" | "rejected";
+          actor_id: string;
+          reason?: string;
+        };
+
+        // GUARDRAIL: Reject if actor_id looks like an agent/bot identifier
+        if (!actor_id || actor_id.trim().length === 0) {
+          throw new McpError(
+            ErrorCode.InvalidParams,
+            "submit_approval requires a non-empty actor_id identifying the human approver. " +
+              "AI agents must not approve gates autonomously — confirm with the human user first.",
+          );
+        }
+        const BOT_PATTERNS = [
+          /^agent/i,
+          /^bot/i,
+          /^llm/i,
+          /^ai/i,
+          /^gpt/i,
+          /^claude/i,
+          /^gemini/i,
+        ];
+        if (BOT_PATTERNS.some((p) => p.test(actor_id.trim()))) {
+          throw new McpError(
+            ErrorCode.InvalidParams,
+            `actor_id '${actor_id}' appears to be an AI agent identifier. ` +
+              "Approval gates require a human actor. Pass the human's email or user ID.",
+          );
+        }
+
+        const endpoint =
+          decision === "approved"
+            ? `/api/v1/approvals/${approval_id}/approve`
+            : `/api/v1/approvals/${approval_id}/reject`;
+        const data = await fetchFromApi(endpoint, "POST", {
+          actor: actor_id,
+          reason,
+        });
+        return {
+          content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+        };
+      }
+
+      case "list_jobs": {
+        const { assessment_id } = request.params.arguments as {
+          assessment_id: string;
+        };
+        const data = await fetchFromApi(
+          `/api/v1/assessments/${assessment_id}/jobs`,
+        );
+        return {
+          content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+        };
+      }
+
+      case "wait_for_job": {
+        const { job_id, max_polls = 20 } = request.params.arguments as {
+          job_id: string;
+          max_polls?: number;
+        };
+        const TERMINAL = ["completed", "failed", "cancelled"];
+        let lastData: Record<string, unknown> = {};
+        for (let i = 0; i < max_polls; i++) {
+          lastData = (await fetchFromApi(`/api/v1/jobs/${job_id}`)) as Record<
+            string,
+            unknown
+          >;
+          const status =
+            (lastData as any)?.data?.status ?? (lastData as any)?.status;
+          if (TERMINAL.includes(status)) break;
+          // MCP servers run synchronously in stdio mode — approximate poll with delay
+          await new Promise((r) => setTimeout(r, 3_000));
+        }
+        return {
+          content: [{ type: "text", text: JSON.stringify(lastData, null, 2) }],
         };
       }
 

@@ -201,6 +201,8 @@ export interface TenantScopedApprovalRepository {
     gate: ApprovalGate,
   ): Promise<ApprovalEvent | null>;
   listByAssessment(assessmentId: string): Promise<ApprovalRecord[]>;
+  /** List approvals with no decision yet (pending HITL gates) across all assessments */
+  listPending(gate?: ApprovalGate): Promise<ApprovalRecord[]>;
 }
 
 export type ApprovalRepositoryAdapter = {
@@ -213,6 +215,11 @@ export type ApprovalRepositoryAdapter = {
   listByAssessment(
     assessmentId: string,
     organizationId: string,
+  ): Promise<ApprovalRecord[]>;
+  /** List pending approvals across all assessments for an organization */
+  listPending(
+    organizationId: string,
+    gate?: ApprovalGate,
   ): Promise<ApprovalRecord[]>;
   withOrganization(organizationId: string): TenantScopedApprovalRepository;
 };
@@ -366,6 +373,7 @@ export type RequestContext = {
    * Typed as Partial<Env> because the app is initialised with a partial env
    * in dev/test mode (see createApp signature in app.ts). */
   env?: Partial<Env>;
+  rateLimitHeaders?: Record<string, string>;
   /** Application-level tenant scoping for database queries.
    * Populated by tenant-db middleware after auth resolves organizationId.
    * Use `tenantScope.scopeWhere(table.organizationId)` for SELECTs.

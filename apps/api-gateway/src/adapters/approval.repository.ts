@@ -47,9 +47,16 @@ export const createApprovalRepository = (): ApprovalRepositoryAdapter => {
     async get(approvalId) {
       return records.get(approvalId) ?? null;
     },
-    async getForGate(approvalId: string, gate: ApprovalGate): Promise<ApprovalEvent | null> {
+    async getForGate(
+      approvalId: string,
+      gate: ApprovalGate,
+    ): Promise<ApprovalEvent | null> {
       const approval = records.get(approvalId);
-      if (!approval || approval.gate !== gate || approval.decision !== "approved") {
+      if (
+        !approval ||
+        approval.gate !== gate ||
+        approval.decision !== "approved"
+      ) {
         return null;
       }
       return {
@@ -63,7 +70,17 @@ export const createApprovalRepository = (): ApprovalRepositoryAdapter => {
     },
     async listByAssessment(assessmentId, organizationId) {
       return [...records.values()].filter(
-        (record) => record.assessmentId === assessmentId && record.organizationId === organizationId
+        (record) =>
+          record.assessmentId === assessmentId &&
+          record.organizationId === organizationId,
+      );
+    },
+    async listPending(organizationId, gate?) {
+      return [...records.values()].filter(
+        (record) =>
+          record.organizationId === organizationId &&
+          (record.decision === null || record.decision === undefined) &&
+          (gate === undefined || record.gate === gate),
       );
     },
     withOrganization(organizationId: string) {
@@ -71,23 +88,31 @@ export const createApprovalRepository = (): ApprovalRepositoryAdapter => {
         create: async (input) => this.create({ ...input, organizationId }),
         get: async (approvalId) => {
           const approval = await this.get(approvalId);
-          return approval && approval.organizationId === organizationId ? approval : null;
+          return approval && approval.organizationId === organizationId
+            ? approval
+            : null;
         },
         getForGate: async (approvalId, gate) => {
           const approval = await this.getForGate(approvalId, gate);
           if (!approval) return null;
           const fullRecord = records.get(approvalId);
-          return fullRecord && fullRecord.organizationId === organizationId ? approval : null;
+          return fullRecord && fullRecord.organizationId === organizationId
+            ? approval
+            : null;
         },
-        listByAssessment: async (assessmentId) => this.listByAssessment(assessmentId, organizationId),
+        listByAssessment: async (assessmentId) =>
+          this.listByAssessment(assessmentId, organizationId),
+        listPending: async (gate?) => this.listPending(organizationId, gate),
       };
-    }
+    },
   };
 };
 
 // ─── Drizzle (production) ──────────────────────────────────────────
 
-export const createDrizzleApprovalRepository = (db: DbClient): ApprovalRepositoryAdapter => {
+export const createDrizzleApprovalRepository = (
+  db: DbClient,
+): ApprovalRepositoryAdapter => {
   return {
     async create(input) {
       await db.insert(approvalEvents).values({
@@ -106,18 +131,27 @@ export const createDrizzleApprovalRepository = (db: DbClient): ApprovalRepositor
       return input;
     },
     async get(approvalId) {
-      const [found] = await db.select().from(approvalEvents).where(eq(approvalEvents.id, approvalId)).limit(1);
+      const [found] = await db
+        .select()
+        .from(approvalEvents)
+        .where(eq(approvalEvents.id, approvalId))
+        .limit(1);
       if (!found) return null;
       return mapRowToRecord(found);
     },
-    async getForGate(approvalId: string, gate: ApprovalGate): Promise<ApprovalEvent | null> {
-      const [found] = await db.select().from(approvalEvents)
+    async getForGate(
+      approvalId: string,
+      gate: ApprovalGate,
+    ): Promise<ApprovalEvent | null> {
+      const [found] = await db
+        .select()
+        .from(approvalEvents)
         .where(
           and(
             eq(approvalEvents.id, approvalId),
             eq(approvalEvents.gate, gate as ApprovalRow["gate"]),
-            eq(approvalEvents.decision, "approved" as ApprovalRow["decision"])
-          )
+            eq(approvalEvents.decision, "approved" as ApprovalRow["decision"]),
+          ),
         )
         .limit(1);
 
@@ -125,42 +159,69 @@ export const createDrizzleApprovalRepository = (db: DbClient): ApprovalRepositor
       return mapRowToEvent(found);
     },
     async listByAssessment(assessmentId, organizationId) {
-      const results = await db.select().from(approvalEvents)
+      const results = await db
+        .select()
+        .from(approvalEvents)
         .where(
           and(
             eq(approvalEvents.assessmentId, assessmentId),
-            eq(approvalEvents.organizationId, organizationId)
-          )
+            eq(approvalEvents.organizationId, organizationId),
+          ),
         );
       return results.map(mapRowToRecord);
+    },
+    async listPending(organizationId, gate?) {
+      // Select approvals where decision IS NULL (pending) for this organization
+      const conditions = gate
+        ? and(
+            eq(approvalEvents.organizationId, organizationId),
+            eq(approvalEvents.gate, gate as ApprovalRow["gate"]),
+          )
+        : eq(approvalEvents.organizationId, organizationId);
+
+      const results = await db.select().from(approvalEvents).where(conditions);
+
+      // Filter server-side for null decision (pending) — avoids isNull import complexity
+      return results.filter((r) => r.decision === null).map(mapRowToRecord);
     },
     withOrganization(organizationId: string) {
       return {
         create: async (input) => this.create({ ...input, organizationId }),
         get: async (approvalId) => {
-          const [found] = await db.select().from(approvalEvents)
-            .where(and(
-              eq(approvalEvents.id, approvalId),
-              eq(approvalEvents.organizationId, organizationId)
-            ))
+          const [found] = await db
+            .select()
+            .from(approvalEvents)
+            .where(
+              and(
+                eq(approvalEvents.id, approvalId),
+                eq(approvalEvents.organizationId, organizationId),
+              ),
+            )
             .limit(1);
           return found ? mapRowToRecord(found) : null;
         },
         getForGate: async (approvalId, gate) => {
-          const [found] = await db.select().from(approvalEvents)
+          const [found] = await db
+            .select()
+            .from(approvalEvents)
             .where(
               and(
                 eq(approvalEvents.id, approvalId),
                 eq(approvalEvents.gate, gate as ApprovalRow["gate"]),
-                eq(approvalEvents.decision, "approved" as ApprovalRow["decision"]),
-                eq(approvalEvents.organizationId, organizationId)
-              )
+                eq(
+                  approvalEvents.decision,
+                  "approved" as ApprovalRow["decision"],
+                ),
+                eq(approvalEvents.organizationId, organizationId),
+              ),
             )
             .limit(1);
           return found ? mapRowToEvent(found) : null;
         },
-        listByAssessment: async (assessmentId: string) => this.listByAssessment(assessmentId, organizationId)
+        listByAssessment: async (assessmentId: string) =>
+          this.listByAssessment(assessmentId, organizationId),
+        listPending: async (gate?) => this.listPending(organizationId, gate),
       };
-    }
+    },
   };
 };
