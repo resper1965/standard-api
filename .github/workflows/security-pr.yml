@@ -5,12 +5,16 @@ on:
     types: [opened, synchronize, reopened]
     branches: [main]
 
+concurrency:
+  group: security-pr-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
 env:
   NODE_VERSION: '22'
-  PNPM_VERSION: '9.0.0'
+  PNPM_VERSION: '9.15.9'
 
 jobs:
   security-pr:
