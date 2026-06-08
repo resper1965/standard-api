@@ -100,6 +100,30 @@ const requirementResponse = (requirement: ScfFrameworkRequirement) => ({
   is_synthetic: requirement.is_synthetic,
 });
 
+const resolveFrameworkId = async (
+  deps: AppDependencies,
+  idOrCode: string,
+): Promise<string> => {
+  const isUuid =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      idOrCode,
+    );
+  if (isUuid) return idOrCode;
+
+  const frameworks = await deps.scf.frameworks.listFrameworks();
+  const found = frameworks.find(
+    (f) => f.framework_code.toLowerCase() === idOrCode.toLowerCase(),
+  );
+  if (!found) {
+    throw new ApiError(
+      "NOT_FOUND",
+      `Framework not found for code: ${idOrCode}`,
+      404,
+    );
+  }
+  return found.id;
+};
+
 export const scfRoutes: RouteDefinition[] = [
   {
     method: "GET",
@@ -982,6 +1006,41 @@ export const scfRoutes: RouteDefinition[] = [
         data,
         control_id: controlIdParam,
         count: data.length,
+        trace_id: traceId,
+      });
+    },
+  },
+  {
+    method: "GET",
+    path: "/api/v1/scf/strm/compare",
+    protected: true,
+    permissions: ["scf:read"],
+    handler: async ({ deps, request, traceId }) => {
+      const url = new URL(request.url);
+      const source = url.searchParams.get("source");
+      const target = url.searchParams.get("target");
+      const version = url.searchParams.get("version") ?? "latest";
+
+      if (!source || !target) {
+        throw new ApiError(
+          "VALIDATION_ERROR",
+          "Both 'source' and 'target' query parameters are required.",
+          400,
+        );
+      }
+
+      const versionId = await resolveVersionId(deps, version);
+      const sourceId = await resolveFrameworkId(deps, source);
+      const targetId = await resolveFrameworkId(deps, target);
+
+      const comparison = await deps.scf.mappings.compareFrameworks(
+        sourceId,
+        targetId,
+        versionId,
+      );
+
+      return json({
+        ...comparison,
         trace_id: traceId,
       });
     },
