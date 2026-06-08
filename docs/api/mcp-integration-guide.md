@@ -2,7 +2,7 @@
 
 > Connect AI assistants to your GRC assessments, SCF controls, intelligence engine and compliance findings through the Model Context Protocol.
 
-The Standard GRC Platform exposes a **Model Context Protocol (MCP)** endpoint with **33 tools** across 7 categories that let any compatible AI assistant — Claude, Cursor, Windsurf, VS Code Copilot, and others — interact directly with your assessments, SCF control catalog, SoA lifecycle, intelligence engine, gap analysis findings, and evidence knowledge base.
+The Standard GRC Platform exposes a **Model Context Protocol (MCP)** endpoint with **32 tools** across 7 categories that let any compatible AI assistant — Claude, Cursor, Windsurf, VS Code Copilot, and others — interact directly with your assessments, SCF control catalog, SoA lifecycle, intelligence engine, gap analysis findings, and evidence knowledge base.
 
 ---
 
@@ -43,7 +43,8 @@ Add the following block to your MCP client configuration file (e.g. `claude_desk
 
 Replace `standard_live_YOUR_RAW_KEY` with the key you generated in Step 1.
 
-> **Note:** The MCP endpoint connects directly using your API Key. Authentication is strictly User=Tenant, and keys are bound to that scope.
+> **Note:** The MCP endpoint connects directly using your API Key. Authentication is strictly organization-scoped (which acts as the single tenant boundary), and keys are bound to that scope.
+
 
 ---
 
@@ -321,4 +322,4 @@ The tool name in the request does not match any registered tool.
 
 ---
 
-*Standard GRC Platform · MCP endpoint: `POST /mcp` · SSE streaming: `GET /mcp` · 27 tools · API version: v1*
+*Standard GRC Platform · MCP endpoint: `POST /mcp` · SSE streaming: `GET /mcp` · 32 tools · API version: v1*

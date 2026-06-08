@@ -12,7 +12,7 @@ POST /api/v1/assessments/{assessmentId}/workflows/lifecycle/start
 
 Headers mínimos:
 
-- `x-standard-organization-id`
+- `x-standard-tenant-id`
 - `x-standard-actor-id`
 - `x-trace-id`
 
@@ -139,7 +139,7 @@ No MVP, reprocessamento granular ainda é operacional/manual:
 
 - `CONFLICT`: já existe workflow ativo para o assessment.
 - `APPROVAL_EVENT_REQUIRED`: o signal de aprovação não tem `approval_event_id` válido para o gate.
-- `TENANT_CONTEXT_REQUIRED`: faltou `x-standard-organization-id`.
+- `TENANT_CONTEXT_REQUIRED`: faltou `x-standard-tenant-id`.
 - `INVALID_STATE_TRANSITION`: o Assessment Engine bloqueou a transição.
 - `VALIDATION_ERROR`: body, params ou contexto inválidos.
 

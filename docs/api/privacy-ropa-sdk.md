@@ -2,7 +2,7 @@
 
 > **Version**: v1 | **Base URL**: `https://api.standard.dev/api/v1`
 > **Auth**: Bearer token (header `Authorization: Bearer <token>`)
-> **Organization**: Required (header `x-organization-id: <uuid>`)
+> **Organization**: Required (header `x-standard-tenant-id: <uuid>`)
 
 ---
 
@@ -24,7 +24,7 @@ The fastest way to create a ROPA entry is to send natural language text:
 ```bash
 curl -X POST https://api.standard.dev/api/v1/privacy/processing-activities/from-text \
   -H "Authorization: Bearer $TOKEN" \
-  -H "x-organization-id: $TENANT_ID" \
+  -H "x-standard-tenant-id: $ORGANIZATION_ID" \
   -H "Content-Type: application/json" \
   -d '{
     "text": "Nós coletamos emails, nomes e CPFs dos nossos clientes para enviar campanhas de marketing. Compartilhamos os dados com a Mailchimp para disparo de emails. Guardamos por 2 anos. Temos consentimento via formulário web."
@@ -280,7 +280,7 @@ class StandardPrivacyClient {
       method,
       headers: {
         "Authorization": `Bearer ${this.token}`,
-        "x-organization-id": this.organizationId,
+        "x-standard-tenant-id": this.organizationId,
         "Content-Type": "application/json",
       },
       body: body ? JSON.stringify(body) : undefined,

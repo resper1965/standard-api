@@ -34,7 +34,7 @@
 ## Investigar Cross-Organization Access
 
 1. Procure security events `organization_context_mismatch` ou `cross_tenant_access_blocked`.
-2. Compare `x-standard-organization-id`, route params e organization do recurso.
+2. Compare `x-standard-tenant-id`, route params e organization do recurso.
 3. Audite actor, role, auth method e trace.
 4. Se envolver API key, verificar escopo da key.
 

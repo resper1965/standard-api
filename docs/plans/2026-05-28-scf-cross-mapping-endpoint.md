@@ -249,7 +249,7 @@ test("SCF cross-mappings endpoint - Success: returns mappings for existing contr
     undefined,
     {
       "x-standard-actor-id": ids.actorId,
-      "x-standard-organization-id": ids.organizationId
+      "x-standard-tenant-id": ids.organizationId
     }
   );
 
@@ -270,7 +270,7 @@ test("SCF cross-mappings endpoint - Success: filters by framework query paramete
     undefined,
     {
       "x-standard-actor-id": ids.actorId,
-      "x-standard-organization-id": ids.organizationId
+      "x-standard-tenant-id": ids.organizationId
     }
   );
 
@@ -286,7 +286,7 @@ test("SCF cross-mappings endpoint - Error: returns 404 for non-existent control 
     undefined,
     {
       "x-standard-actor-id": ids.actorId,
-      "x-standard-organization-id": ids.organizationId
+      "x-standard-tenant-id": ids.organizationId
     }
   );
 
@@ -301,7 +301,7 @@ test("SCF cross-mappings endpoint - Error: returns 401 for unauthenticated reque
     "GET",
     undefined,
     {
-      "x-standard-organization-id": ids.organizationId
+      "x-standard-tenant-id": ids.organizationId
     }
   );
 

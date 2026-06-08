@@ -11,9 +11,9 @@
 ```bash
 # Set these once
 export API_KEY="standard_live_..."
-export TENANT_ID="your-organization-uuid"
+export ORGANIZATION_ID="your-organization-uuid"
 export BASE="https://standard-api.bekaa.eu/api/v1"
-export AUTH="-H 'Authorization: Bearer $API_KEY' -H 'x-standard-organization-id: $TENANT_ID'"
+export AUTH="-H 'Authorization: Bearer $API_KEY' -H 'x-standard-tenant-id: $ORGANIZATION_ID'"
 ```
 
 ---
@@ -23,7 +23,7 @@ export AUTH="-H 'Authorization: Bearer $API_KEY' -H 'x-standard-organization-id:
 ```bash
 curl -s -X POST "$BASE/organizations" \
   -H "Authorization: Bearer $API_KEY" \
-  -H "x-standard-organization-id: $TENANT_ID" \
+  -H "x-standard-tenant-id: $ORGANIZATION_ID" \
   -H "Content-Type: application/json" \
   -d '{"name": "Acme Corp", "slug": "acme-corp"}' | jq .
 ```
@@ -32,7 +32,6 @@ curl -s -X POST "$BASE/organizations" \
 ```json
 {
   "data": {
-    "organization_id": "uuid",
     "organization_id": "uuid",
     "name": "Acme Corp",
     "slug": "acme-corp",
@@ -52,7 +51,7 @@ export ORG_ID="<organization_id from response>"
 ```bash
 curl -s -X POST "$BASE/organizations/$ORG_ID/api-keys" \
   -H "Authorization: Bearer $API_KEY" \
-  -H "x-standard-organization-id: $TENANT_ID" \
+  -H "x-standard-tenant-id: $ORGANIZATION_ID" \
   -H "Content-Type: application/json" \
   -d '{"name": "CI/CD Key", "scopes": ["assessments:read", "assessments:write", "scf:read"]}' | jq .
 ```
@@ -66,7 +65,7 @@ curl -s -X POST "$BASE/organizations/$ORG_ID/api-keys" \
 ```bash
 curl -s "$BASE/scf/versions/latest" \
   -H "Authorization: Bearer $API_KEY" \
-  -H "x-standard-organization-id: $TENANT_ID" | jq .
+  -H "x-standard-tenant-id: $ORGANIZATION_ID" | jq .
 ```
 
 ```bash
@@ -82,7 +81,7 @@ export SCF_VERSION_ID="<id from response>"
 ```bash
 curl -s -X POST "$BASE/assessments" \
   -H "Authorization: Bearer $API_KEY" \
-  -H "x-standard-organization-id: $TENANT_ID" \
+  -H "x-standard-tenant-id: $ORGANIZATION_ID" \
   -H "Content-Type: application/json" \
   -d "{\"organization_id\": \"$ORG_ID\", \"name\": \"Q2 2026 SOC2 Assessment\", \"scf_version_id\": \"$SCF_VERSION_ID\"}" | jq .
 ```
@@ -102,7 +101,7 @@ export ASSESSMENT_ID="<id from response>"
 ```bash
 curl -s -X POST "$BASE/assessments/$ASSESSMENT_ID/documents" \
   -H "Authorization: Bearer $API_KEY" \
-  -H "x-standard-organization-id: $TENANT_ID" \
+  -H "x-standard-tenant-id: $ORGANIZATION_ID" \
   -F "file=@./evidence/security-policy.pdf" \
   -F "description=Information Security Policy v3.1" | jq .
 ```
@@ -116,7 +115,7 @@ curl -s -X POST "$BASE/assessments/$ASSESSMENT_ID/documents" \
 ```bash
 curl -s -X POST "$BASE/assessments/$ASSESSMENT_ID/transitions" \
   -H "Authorization: Bearer $API_KEY" \
-  -H "x-standard-organization-id: $TENANT_ID" \
+  -H "x-standard-tenant-id: $ORGANIZATION_ID" \
   -H "Content-Type: application/json" \
   -d '{"next_state": "documents_uploaded", "reason": "Evidence uploaded"}' | jq .
 ```
@@ -132,7 +131,7 @@ curl -s -X POST "$BASE/assessments/$ASSESSMENT_ID/transitions" \
 # Each requires its own prerequisites to be met
 curl -s -X POST "$BASE/assessments/$ASSESSMENT_ID/transitions" \
   -H "Authorization: Bearer $API_KEY" \
-  -H "x-standard-organization-id: $TENANT_ID" \
+  -H "x-standard-tenant-id: $ORGANIZATION_ID" \
   -H "Content-Type: application/json" \
   -d '{"next_state": "framework_selected", "reason": "SOC2 framework selected"}' | jq .
 ```
@@ -146,7 +145,7 @@ curl -s -X POST "$BASE/assessments/$ASSESSMENT_ID/transitions" \
 ```bash
 curl -s -X POST "$BASE/assessments/$ASSESSMENT_ID/soa/draft" \
   -H "Authorization: Bearer $API_KEY" \
-  -H "x-standard-organization-id: $TENANT_ID" \
+  -H "x-standard-tenant-id: $ORGANIZATION_ID" \
   -H "Content-Type: application/json" \
   -d '{}' | jq .
 ```
@@ -163,12 +162,12 @@ export SOA_VERSION_ID="<id from response>"
 # Submit for review
 curl -s -X POST "$BASE/soa/$SOA_VERSION_ID/submit-review" \
   -H "Authorization: Bearer $API_KEY" \
-  -H "x-standard-organization-id: $TENANT_ID" | jq .
+  -H "x-standard-tenant-id: $ORGANIZATION_ID" | jq .
 
 # Approve (requires human approval gate)
 curl -s -X POST "$BASE/soa/$SOA_VERSION_ID/approve" \
   -H "Authorization: Bearer $API_KEY" \
-  -H "x-standard-organization-id: $TENANT_ID" \
+  -H "x-standard-tenant-id: $ORGANIZATION_ID" \
   -H "Content-Type: application/json" \
   -d '{"gate": "soa"}' | jq .
 ```
@@ -182,7 +181,7 @@ curl -s -X POST "$BASE/soa/$SOA_VERSION_ID/approve" \
 ```bash
 curl -s -X POST "$BASE/assessments/$ASSESSMENT_ID/gap-analysis/draft" \
   -H "Authorization: Bearer $API_KEY" \
-  -H "x-standard-organization-id: $TENANT_ID" \
+  -H "x-standard-tenant-id: $ORGANIZATION_ID" \
   -H "Content-Type: application/json" \
   -d '{}' | jq .
 ```
@@ -196,7 +195,7 @@ export GAP_VERSION_ID="<id from response>"
 ```bash
 curl -s -X POST "$BASE/gap-analysis/$GAP_VERSION_ID/findings" \
   -H "Authorization: Bearer $API_KEY" \
-  -H "x-standard-organization-id: $TENANT_ID" \
+  -H "x-standard-tenant-id: $ORGANIZATION_ID" \
   -H "Content-Type: application/json" \
   -d '{
     "scf_control_id": "<control-uuid>",
@@ -215,7 +214,7 @@ curl -s -X POST "$BASE/gap-analysis/$GAP_VERSION_ID/findings" \
 ```bash
 curl -s -X POST "$BASE/assessments/$ASSESSMENT_ID/poam/draft" \
   -H "Authorization: Bearer $API_KEY" \
-  -H "x-standard-organization-id: $TENANT_ID" \
+  -H "x-standard-tenant-id: $ORGANIZATION_ID" \
   -H "Content-Type: application/json" \
   -d '{}' | jq .
 ```
@@ -229,7 +228,7 @@ curl -s -X POST "$BASE/assessments/$ASSESSMENT_ID/poam/draft" \
 ```bash
 curl -s -X POST "$BASE/assessments/$ASSESSMENT_ID/reports/draft" \
   -H "Authorization: Bearer $API_KEY" \
-  -H "x-standard-organization-id: $TENANT_ID" \
+  -H "x-standard-tenant-id: $ORGANIZATION_ID" \
   -H "Content-Type: application/json" \
   -d '{}' | jq .
 ```

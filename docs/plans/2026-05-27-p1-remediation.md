@@ -70,7 +70,7 @@ describe("IDOR: Assessment organization ownership", () => {
       headers: {
         "x-standard-actor-id": SYNTH.userId,
         "x-standard-mock-role": "org_admin",
-        "x-standard-organization-id": SYNTH.organizationId,
+        "x-standard-tenant-id": SYNTH.organizationId,
       },
     });
 
@@ -104,7 +104,7 @@ describe("IDOR: Assessment organization ownership", () => {
       headers: {
         "x-standard-actor-id": SYNTH.userId,
         "x-standard-mock-role": "org_admin",
-        "x-standard-organization-id": SYNTH.organizationId,
+        "x-standard-tenant-id": SYNTH.organizationId,
       },
     });
 
