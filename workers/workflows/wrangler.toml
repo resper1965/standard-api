@@ -59,7 +59,7 @@ bucket_name = "standard-documents-staging"
 # Create: wrangler hyperdrive create standard-neon-staging --connection-string="<NEON_URL>"
 [[env.staging.hyperdrive]]
 binding = "HYPERDRIVE"
-id = "REPLACE_WITH_STAGING_HYPERDRIVE_ID"
+id = "69f8233cfd0f4614a9249e4a8867d148"
 
 # ── Production ────────────────────────────────────────────────────────────────
 [env.production]
@@ -91,4 +91,4 @@ bucket_name = "standard-documents-prod"
 # Create: wrangler hyperdrive create standard-neon-prod --connection-string="<NEON_URL>"
 [[env.production.hyperdrive]]
 binding = "HYPERDRIVE"
-id = "REPLACE_WITH_PRODUCTION_HYPERDRIVE_ID"
+id = "aa6fb63a67f24cbd82d28bf5a43f08e5"
