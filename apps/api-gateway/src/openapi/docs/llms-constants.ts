@@ -41,7 +41,10 @@ Tenant: \`x-standard-tenant-id\` header (required)
 - [Privacy SDK Guide](https://standard-api.bekaa.eu/docs/api/privacy-ropa-sdk.md): RoPA, DPIA, vendor scanning
 `;
 
-export const LLMS_FULL_HEADER = (spec: any, baseUrl: string) => `# Standard GRC Platform — Complete API Reference
+export const LLMS_FULL_HEADER = (
+  spec: any,
+  baseUrl: string,
+) => `# Standard GRC Platform — Complete API Reference
 
 > Agentic GRC intelligence engine. Send text, get structured compliance analysis.
 > 1,468 controls · 231 frameworks · 33 domains · 10 AI-powered endpoints
@@ -99,9 +102,10 @@ Rate limits: 100 req/10s (general) · 5/min (sign-in) · 3/min (sign-up)
 export const getLlmsFullCookbook = (baseUrl: string) => `
 ## Cookbook — Recipes
 
-> [!CAUTION] **MANDATORY DATA FORMATTING RULE**
-> The Standard API acts purely as a deterministic GRC intelligence engine. **Clients MUST NOT upload raw binary streams, PDFs, or raw image screenshots.**
-> It is the sole responsibility of the consuming client application to perform OCR (Optical Character Recognition), PDF parsing, or audio transcription. All contextual evidence must be structured and normalized into Markdown or flat Strings prior to ingestion through the \\\`evidenceDescription\\\` payload. Sending unparsed binary formats will result in rejection.
+> [!NOTE] **SUPPORTED EVIDENCE FORMATS**
+> The Standard API supports direct ingestion and automatic parsing of documents and images.
+> Supported formats: **PDF, DOCX, PNG, JPG, JPEG, WEBP, TXT, MD, CSV, JSON**.
+> Binary documents and images are automatically processed using integrated OCR/Document Intelligence services prior to semantic indexing.
 
 > Each recipe is self-contained. Copy the curl command, replace the auth headers, and execute.
 

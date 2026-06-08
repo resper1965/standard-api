@@ -14,7 +14,7 @@ import type {
 
 export type AiGatewayConfig = {
   baseUrl: string; // e.g. https://gateway.ai.cloudflare.com/v1/{account_id}/{gateway}/openai
-  apiKey: string;  // e.g. OpenAI API Key
+  apiKey: string; // e.g. OpenAI API Key
   gatewayToken?: string; // Cloudflare API token for Authenticated Gateway
   /** Cache TTL in seconds. Default: 3600 (1 hour). Set to 0 to disable. */
   cacheTtlSeconds?: number;
@@ -46,7 +46,7 @@ export class CloudflareAiGatewayAdapter implements LlmProvider {
 
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${this.config.apiKey}`,
+      Authorization: `Bearer ${this.config.apiKey}`,
     };
 
     if (this.config.gatewayToken) {
@@ -63,15 +63,19 @@ export class CloudflareAiGatewayAdapter implements LlmProvider {
     headers["cf-aig-max-attempts"] = "3";
     headers["cf-aig-retry-delay"] = "1000";
     headers["cf-aig-backoff"] = "exponential";
-    headers["cf-aig-request-timeout"] = String(CloudflareAiGatewayAdapter.TIMEOUT_MS);
+    headers["cf-aig-request-timeout"] = String(
+      CloudflareAiGatewayAdapter.TIMEOUT_MS,
+    );
 
     // AI Gateway metadata for observability (per-tenant cost tracking in dashboard)
     if (this.config.metadata && Object.keys(this.config.metadata).length > 0) {
       headers["cf-aig-metadata"] = JSON.stringify(this.config.metadata);
     }
 
-    const baseUrlCleaned = this.config.baseUrl.replace(/\/+$/, '');
-    const finalBaseUrl = baseUrlCleaned.endsWith('/openai') ? baseUrlCleaned : `${baseUrlCleaned}/openai`;
+    const baseUrlCleaned = this.config.baseUrl.replace(/\/+$/, "");
+    const finalBaseUrl = baseUrlCleaned.endsWith("/openai")
+      ? baseUrlCleaned
+      : `${baseUrlCleaned}/openai`;
     const url = `${finalBaseUrl}/chat/completions`;
 
     // Attempt with timeout + single retry for transient errors
@@ -79,7 +83,10 @@ export class CloudflareAiGatewayAdapter implements LlmProvider {
     let lastError: Error | null = null;
     for (let attempt = 0; attempt < 2; attempt++) {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), CloudflareAiGatewayAdapter.TIMEOUT_MS);
+      const timeout = setTimeout(
+        () => controller.abort(),
+        CloudflareAiGatewayAdapter.TIMEOUT_MS,
+      );
 
       try {
         const response = await fetch(url, {
@@ -95,22 +102,30 @@ export class CloudflareAiGatewayAdapter implements LlmProvider {
           // Auth errors are non-retryable and indicate a config problem
           if (response.status === 401 || response.status === 403) {
             throw new Error(
-              `AI Gateway auth failed (${response.status}). Check AI_GATEWAY_TOKEN and OPENAI_API_KEY. Detail: ${errText.substring(0, 300)}`
+              `AI Gateway auth failed (${response.status}). Check AI_GATEWAY_TOKEN and OPENAI_API_KEY. Detail: ${errText.substring(0, 300)}`,
             );
           }
 
-          if (attempt === 0 && CloudflareAiGatewayAdapter.RETRYABLE_STATUSES.includes(response.status)) {
-            lastError = new Error(`AI Gateway error (${response.status}): ${errText}`);
+          if (
+            attempt === 0 &&
+            CloudflareAiGatewayAdapter.RETRYABLE_STATUSES.includes(
+              response.status,
+            )
+          ) {
+            lastError = new Error(
+              `AI Gateway error (${response.status}): ${errText}`,
+            );
             continue; // Retry once
           }
           throw new Error(`AI Gateway error (${response.status}): ${errText}`);
         }
 
         // Log cache status from AI Gateway response
-        const cacheStatus = response.headers.get("cf-aig-cache-status") ?? "UNKNOWN";
+        const cacheStatus =
+          response.headers.get("cf-aig-cache-status") ?? "UNKNOWN";
         const latencyMs = Date.now() - callStartedAt;
 
-        const data = await response.json() as OpenAICompletionResponse;
+        const data = (await response.json()) as OpenAICompletionResponse;
         const choice = data.choices[0];
         if (!choice) {
           throw new Error("No choices returned from LLM provider");
@@ -123,23 +138,39 @@ export class CloudflareAiGatewayAdapter implements LlmProvider {
         };
 
         // Structured observability log for LLM calls
-        console.log(JSON.stringify({
-          metric: "llm.call",
-          model: modelName,
-          cache_status: cacheStatus,
-          latency_ms: latencyMs,
-          prompt_tokens: usage.prompt_tokens,
-          completion_tokens: usage.completion_tokens,
-          total_tokens: usage.total_tokens,
-          attempt,
-          ...(this.config.metadata ?? {}),
-          timestamp: new Date().toISOString(),
-        }));
+        console.log(
+          JSON.stringify({
+            metric: "llm.call",
+            model: modelName,
+            cache_status: cacheStatus,
+            latency_ms: latencyMs,
+            prompt_tokens: usage.prompt_tokens,
+            completion_tokens: usage.completion_tokens,
+            total_tokens: usage.total_tokens,
+            attempt,
+            ...(this.config.metadata ?? {}),
+            timestamp: new Date().toISOString(),
+          }),
+        );
 
-        return { message: choice.message, usage };
+        return {
+          message: choice.message,
+          usage,
+          model: modelName,
+          provider: "cloudflare-ai-gateway",
+          latency_ms: latencyMs,
+          cache_status:
+            cacheStatus === "HIT" ||
+            cacheStatus === "MISS" ||
+            cacheStatus === "BYPASS"
+              ? cacheStatus
+              : "UNKNOWN",
+        };
       } catch (error) {
         if (error instanceof DOMException && error.name === "AbortError") {
-          lastError = new Error(`AI Gateway timeout after ${CloudflareAiGatewayAdapter.TIMEOUT_MS}ms`);
+          lastError = new Error(
+            `AI Gateway timeout after ${CloudflareAiGatewayAdapter.TIMEOUT_MS}ms`,
+          );
           if (attempt === 0) continue; // Retry once on timeout
         }
         throw error;
@@ -166,5 +197,3 @@ type OpenAICompletionResponse = {
     total_tokens: number;
   };
 };
-
-
