@@ -126,6 +126,7 @@ export class StandardClient {
   readonly webhooks: WebhooksResource;
   readonly organizations: OrganizationsResource;
   readonly jobs: JobsResource;
+  readonly compliance: ComplianceResource;
 
   /** True when the client is using a test/sandbox API key (prefix: standard_test_) */
   get isSandbox(): boolean {
@@ -159,6 +160,7 @@ export class StandardClient {
     this.webhooks = new WebhooksResource(this);
     this.organizations = new OrganizationsResource(this);
     this.jobs = new JobsResource(this);
+    this.compliance = new ComplianceResource(this);
   }
 
   // ── Internal HTTP Methods ──────────────────────────────
@@ -509,6 +511,71 @@ class ScfResource {
         `/scf/controls/${controlId}/mappings`,
         opts,
       ),
+    assessmentObjectives: (
+      controlId: string,
+      query?: { version?: string },
+      opts?: RequestOptions,
+    ) => {
+      const q = query?.version
+        ? `?scf_version=${encodeURIComponent(query.version)}`
+        : "";
+      return this.client._get<any>(
+        `/scf/controls/${controlId}/assessment-objectives${q}`,
+        opts,
+      );
+    },
+    evidenceRequests: (
+      controlId: string,
+      query?: { version?: string },
+      opts?: RequestOptions,
+    ) => {
+      const q = query?.version
+        ? `?scf_version=${encodeURIComponent(query.version)}`
+        : "";
+      return this.client._get<any>(
+        `/scf/controls/${controlId}/evidence-requests${q}`,
+        opts,
+      );
+    },
+    maturityCriteria: (
+      controlId: string,
+      query?: { version?: string },
+      opts?: RequestOptions,
+    ) => {
+      const q = query?.version
+        ? `?scf_version=${encodeURIComponent(query.version)}`
+        : "";
+      return this.client._get<any>(
+        `/scf/controls/${controlId}/maturity-criteria${q}`,
+        opts,
+      );
+    },
+    risks: (
+      controlId: string,
+      query?: { version?: string },
+      opts?: RequestOptions,
+    ) => {
+      const q = query?.version
+        ? `?scf_version=${encodeURIComponent(query.version)}`
+        : "";
+      return this.client._get<any>(
+        `/scf/controls/${controlId}/risks${q}`,
+        opts,
+      );
+    },
+    threats: (
+      controlId: string,
+      query?: { version?: string },
+      opts?: RequestOptions,
+    ) => {
+      const q = query?.version
+        ? `?scf_version=${encodeURIComponent(query.version)}`
+        : "";
+      return this.client._get<any>(
+        `/scf/controls/${controlId}/threats${q}`,
+        opts,
+      );
+    },
   };
 
   readonly frameworks = {
@@ -538,6 +605,32 @@ class ScfResource {
     mappings: (reqId: string, opts?: RequestOptions) =>
       this.client._get<PaginatedResponse<ScfMapping>>(
         `/scf/requirements/${reqId}/mappings`,
+        opts,
+      ),
+  };
+
+  readonly strm = {
+    compare: (
+      source: string,
+      target: string,
+      version = "latest",
+      opts?: RequestOptions,
+    ) =>
+      this.client._get<any>(
+        `/scf/strm/compare?source=${encodeURIComponent(source)}&target=${encodeURIComponent(target)}&version=${encodeURIComponent(version)}`,
+        opts,
+      ),
+  };
+
+  readonly optimizer = {
+    complianceStrategy: (
+      frameworkIds: string[],
+      scfVersionId?: string,
+      opts?: RequestOptions,
+    ) =>
+      this.client._post<any>(
+        "/optimizer/compliance-strategy",
+        { framework_ids: frameworkIds, scf_version_id: scfVersionId },
         opts,
       ),
   };
@@ -1395,6 +1488,92 @@ class JobsResource {
         message: `Job ${jobId} did not complete within ${timeout}ms`,
       },
     });
+  }
+}
+
+class ComplianceResource {
+  constructor(private client: StandardClient) {}
+
+  /**
+   * Verifies the compliance status of an assessment for CI/CD pipelines.
+   * Fetches the assessment's compliance gate status and gap findings,
+   * then verifies if any controls under critical control families are in a non-compliant state.
+   * Throws an error (fails the build) if any critical control is not met.
+   */
+  async verifyPipelineStatus(
+    opts: {
+      assessmentId: string;
+      criticalFamilies?: string[];
+    },
+    requestOpts?: RequestOptions,
+  ): Promise<{
+    status: "pass";
+    checked_at: string;
+    total_findings: number;
+    non_compliant_criticals: string[];
+  }> {
+    const assessmentId = opts.assessmentId;
+    const criticalFamilies = opts.criticalFamilies ?? ["SDP", "SDLC"];
+
+    // 1. Fetch compliance gate
+    const gate = await this.client.assessments.complianceGate(
+      assessmentId,
+      requestOpts,
+    );
+
+    if (gate.status === "no_data") {
+      throw new Error(
+        `Compliance verification failed: No approved gap analysis found for assessment ${assessmentId}`,
+      );
+    }
+
+    if (!gate.gap_analysis_version_id) {
+      throw new Error(
+        `Compliance verification failed: Missing gap analysis version in compliance gate for assessment ${assessmentId}`,
+      );
+    }
+
+    // 2. Fetch gap findings
+    const findingsResponse = await this.client.gapAnalysis.findings(
+      gate.gap_analysis_version_id,
+      requestOpts,
+    );
+    const findings = findingsResponse.data || [];
+
+    // 3. Check for non-compliant controls under critical families
+    const nonCompliantCriticals: string[] = [];
+    const upperCriticalFamilies = criticalFamilies.map((f) => f.toUpperCase());
+
+    for (const finding of findings) {
+      const gapCode =
+        (finding as any).gap_code || (finding as any).control_code || "";
+      const status = (finding as any).assessment_status || finding.status || "";
+
+      // Determine the control family/domain from the gap code (e.g. SDP-01 -> SDP)
+      const family = gapCode.split("-")[0]?.toUpperCase() || "";
+
+      if (upperCriticalFamilies.includes(family)) {
+        // A control in a critical family is non-compliant if it's not "met" and not "not_applicable_justified"
+        if (status !== "met" && status !== "not_applicable_justified") {
+          nonCompliantCriticals.push(`${gapCode} (Status: ${status})`);
+        }
+      }
+    }
+
+    if (nonCompliantCriticals.length > 0) {
+      throw new Error(
+        `Compliance gate failed: Non-compliant controls found in critical families [${criticalFamilies.join(
+          ", ",
+        )}]:\n` + nonCompliantCriticals.map((c) => `  - ${c}`).join("\n"),
+      );
+    }
+
+    return {
+      status: "pass",
+      checked_at: new Date().toISOString(),
+      total_findings: gate.total_findings,
+      non_compliant_criticals: [],
+    };
   }
 }
 

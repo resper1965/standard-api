@@ -1,14 +1,40 @@
-import type { GapFindingResponse, GapAnalysisVersionResponse } from "@standard/schemas";
+import type {
+  GapFindingResponse,
+  GapAnalysisVersionResponse,
+} from "@standard/schemas";
 
 // ── Maturity Levels (CMMI-inspired 0-5 scale) ──────────────────────────────
 
 export const MATURITY_LEVELS = {
-  0: { name: "Incomplete", description: "Control is not implemented or fails to achieve its purpose." },
-  1: { name: "Initial", description: "Control is performed ad-hoc. Success depends on individual effort." },
-  2: { name: "Managed", description: "Control is planned, performed, and tracked. Basic processes are established." },
-  3: { name: "Defined", description: "Control follows a standardized, documented process across the organization." },
-  4: { name: "Quantitatively Managed", description: "Control performance is measured with quantitative objectives." },
-  5: { name: "Optimizing", description: "Control is continuously improved based on quantitative feedback." }
+  0: {
+    name: "Incomplete",
+    description: "Control is not implemented or fails to achieve its purpose.",
+  },
+  1: {
+    name: "Initial",
+    description:
+      "Control is performed ad-hoc. Success depends on individual effort.",
+  },
+  2: {
+    name: "Managed",
+    description:
+      "Control is planned, performed, and tracked. Basic processes are established.",
+  },
+  3: {
+    name: "Defined",
+    description:
+      "Control follows a standardized, documented process across the organization.",
+  },
+  4: {
+    name: "Quantitatively Managed",
+    description:
+      "Control performance is measured with quantitative objectives.",
+  },
+  5: {
+    name: "Optimizing",
+    description:
+      "Control is continuously improved based on quantitative feedback.",
+  },
 } as const;
 
 export type MaturityLevel = 0 | 1 | 2 | 3 | 4 | 5;
@@ -41,7 +67,13 @@ export type MaturityAssessmentVersion = {
   organizationId: string;
   assessmentId: string;
   versionNumber: number;
-  status: "draft" | "under_review" | "approved" | "rejected" | "superseded" | "archived";
+  status:
+    | "draft"
+    | "under_review"
+    | "approved"
+    | "rejected"
+    | "superseded"
+    | "archived";
   approvalEventId?: string | undefined;
   createdByAgentRunId?: string | undefined;
   createdAt?: string | undefined;
@@ -66,12 +98,23 @@ export type MaturityClassificationInput = {
   controlTitle: string;
   gapStatus: GapFindingResponse["assessment_status"];
   gapType?: GapFindingResponse["gap_type"];
-  evidenceStrength?: "strong" | "partial" | "weak" | "absent" | "conflicting" | "not_checked";
+  evidenceStrength?:
+    | "strong"
+    | "partial"
+    | "weak"
+    | "absent"
+    | "conflicting"
+    | "not_checked";
   evidenceCoverage: number;
   hasDocumentation: boolean;
   hasProcess: boolean;
   hasMeasurement: boolean;
   hasContinuousImprovement: boolean;
+  rubrics?: {
+    level: number;
+    criteriaText: string;
+    remediationGuidance?: string | null;
+  }[];
 };
 
 // ── Repository Interfaces ───────────────────────────────────────────────────
@@ -79,15 +122,24 @@ export type MaturityClassificationInput = {
 export type MaturityVersionRepository = {
   save(version: MaturityAssessmentVersion): Promise<void>;
   update(version: MaturityAssessmentVersion): Promise<void>;
-  get(versionId: string, organizationId: string): Promise<MaturityAssessmentVersion | null>;
-  listByAssessment(assessmentId: string, organizationId: string): Promise<MaturityAssessmentVersion[]>;
+  get(
+    versionId: string,
+    organizationId: string,
+  ): Promise<MaturityAssessmentVersion | null>;
+  listByAssessment(
+    assessmentId: string,
+    organizationId: string,
+  ): Promise<MaturityAssessmentVersion[]>;
 };
 
 export type MaturityScoreRepository = {
   saveMany(scores: MaturityScore[]): Promise<void>;
   update(score: MaturityScore): Promise<void>;
   get(scoreId: string, organizationId: string): Promise<MaturityScore | null>;
-  listByVersion(maturityAssessmentVersionId: string, organizationId: string): Promise<MaturityScore[]>;
+  listByVersion(
+    maturityAssessmentVersionId: string,
+    organizationId: string,
+  ): Promise<MaturityScore[]>;
 };
 
 export type MaturityRepositories = {
@@ -99,8 +151,20 @@ export type MaturityRepositories = {
 
 export type MaturityDependencies = {
   repositories: MaturityRepositories;
-  getApprovedGapAnalysis: (assessmentId: string, organizationId: string) => Promise<{
+  getApprovedGapAnalysis: (
+    assessmentId: string,
+    organizationId: string,
+  ) => Promise<{
     version: GapAnalysisVersionResponse;
     findings: GapFindingResponse[];
   } | null>;
+  getMaturityCriteriaForControl?: (
+    controlId: string,
+  ) => Promise<
+    {
+      level: number;
+      criteriaText: string;
+      remediationGuidance?: string | null;
+    }[]
+  >;
 };

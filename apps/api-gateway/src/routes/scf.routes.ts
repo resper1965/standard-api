@@ -11,6 +11,7 @@ import { json, parseJson, routeParam, routeUuidParam } from "../http";
 import { REGULATIONS } from "./regulations.routes";
 import { RISK_TAXONOMY } from "./risk.routes";
 import { DATA_CATEGORIES, RETENTION_RULES } from "./reference-data.routes";
+import { ComplianceOptimizerService } from "@standard/assessment-engine";
 
 const resolveVersionId = async (
   deps: AppDependencies,
@@ -1041,6 +1042,61 @@ export const scfRoutes: RouteDefinition[] = [
 
       return json({
         ...comparison,
+        trace_id: traceId,
+      });
+    },
+  },
+  {
+    method: "POST",
+    path: "/api/v1/optimizer/compliance-strategy",
+    authRequired: true,
+    tenantRequired: false,
+    handler: async ({ request, deps, traceId }) => {
+      let body: any;
+      try {
+        body = await request.json();
+      } catch {
+        throw new ApiError("VALIDATION_ERROR", "Invalid JSON body.", 400);
+      }
+
+      const frameworkIds = body?.framework_ids;
+      let scfVersionId = body?.scf_version_id;
+
+      if (
+        !frameworkIds ||
+        !Array.isArray(frameworkIds) ||
+        frameworkIds.length === 0
+      ) {
+        throw new ApiError(
+          "VALIDATION_ERROR",
+          "Property 'framework_ids' is required and must be a non-empty array.",
+          400,
+        );
+      }
+
+      if (!scfVersionId) {
+        scfVersionId = await resolveVersionId(deps, "latest");
+      } else {
+        scfVersionId = await resolveVersionId(deps, scfVersionId);
+      }
+
+      const db = deps._db;
+      if (!db) {
+        throw new ApiError("INTERNAL_ERROR", "DB client not available.", 500);
+      }
+
+      const resolvedFrameworkIds = await Promise.all(
+        frameworkIds.map((fId) => resolveFrameworkId(deps, fId)),
+      );
+
+      const optimizer = new ComplianceOptimizerService(db);
+      const result = await optimizer.optimizePath({
+        frameworkIds: resolvedFrameworkIds,
+        scfVersionId,
+      });
+
+      return json({
+        ...result,
         trace_id: traceId,
       });
     },
