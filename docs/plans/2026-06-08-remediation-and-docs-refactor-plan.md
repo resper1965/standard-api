@@ -26,6 +26,17 @@ A régua aqui é a de **uma API**, não a de um SaaS de GRC: isolamento multi-te
 
 ---
 
+## Pontos fortes (preservar, não mexer)
+
+A base é competente — o plano endurece arestas, não reescreve. Manter e **documentar como diferencial**:
+- **AI Gateway → gpt-4o** com cache nativo, retry exponencial, observabilidade e custo por tenant (`ai-gateway.adapter.ts`).
+- **331 rotas reais**, OpenAPI gerado por código, Zod em todo input, RFC 7807, SDK zero-dep.
+- **SoA draft determinístico** (projeção, não LLM) — reprodutível, ideal para API.
+- **Multi-tenant via Drizzle/Neon**, 33 migrations, audit trail completo.
+- Higiene: maioria do audit anterior corrigida (KV dev/prod separados, `as any` removido, secret validado, CORS via env, CSRF, security headers, SQL parametrizado).
+
+---
+
 # PARTE A — Correções de Código / Produto
 
 Ordem por risco. P0 bloqueia qualquer tráfego multi-tenant de produção.
@@ -110,6 +121,22 @@ Ordem por risco. P0 bloqueia qualquer tráfego multi-tenant de produção.
 - Reports binários (DOCX `docx-renderer.placeholder.ts`, PDF=HTML) — rebaixados: opcionais para uma API; entregar via worker+R2 só se houver demanda. Não bloqueiam.
 
 **Esforço.** 2–4 dias distribuídos.
+
+## A7 (P1) — Triagem de dependências (Dependabot)
+
+**Problema.** O push reportou **37 vulnerabilidades** na branch default (4 críticas, 6 altas, 23 moderadas, 4 baixas) via Dependabot. Para um produto de compliance, dívida de vuln de dependência é incoerente com a proposta.
+
+**Mudança.** Triar as 4 críticas + 6 altas primeiro: atualizar/substituir, ou registrar exceção justificada. Avaliar o caso `xlsx` (vem de `cdn.sheetjs.com`, fora do npm — quebra install reprodutível, ver nota de perf). `deploy-production.yml` já roda `audit --audit-level=high` bloqueante — alinhar o threshold com a triagem.
+
+**Arquivos.** `package.json` dos pacotes afetados, `pnpm-lock.yaml`, `.github/dependabot.yml` (criar se ausente).
+
+**Aceite.** Zero críticas/altas abertas ou todas com exceção documentada; install reprodutível sem CDN externo.
+
+**Esforço.** 1–2 dias.
+
+## Nota de performance (issues existentes)
+
+Perf não foi medida sob carga; dois riscos de escala **já rastreados** e válidos: **#61** (limites de conexão Neon na borda → Hyperdrive/pooler) e **#62** (payload de contexto dos Cloudflare Workflows → trafegar referências, não documentos). Ambos são pré-requisito de tráfego M2M agressivo e devem entrar no Sprint 4. Paginação presente em só ~14/46 arquivos de rota — auditar antes de expor listas grandes.
 
 ---
 
