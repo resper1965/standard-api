@@ -45,11 +45,19 @@ const resolveLimit = (route: string): RateLimitConfig => {
 /**
  * Builds a unique rate-limit key: tenant:actor:route-category:window
  */
-const buildKey = (organizationId: string | undefined, actorId: string | undefined, ip: string, route: string, windowSeconds: number): string => {
+const buildKey = (
+  organizationId: string | undefined,
+  actorId: string | undefined,
+  ip: string,
+  route: string,
+  windowSeconds: number,
+): string => {
   const t = organizationId ?? "anonymous";
   const a = actorId ?? ip; // Fallback to IP if anonymous
   const window = Math.floor(Date.now() / (windowSeconds * 1000));
-  const routeCategory = Object.keys(ROUTE_LIMITS).find((pattern) => route.includes(pattern)) ?? "default";
+  const routeCategory =
+    Object.keys(ROUTE_LIMITS).find((pattern) => route.includes(pattern)) ??
+    "default";
   return `rl:${t}:${a}:${routeCategory}:${window}`;
 };
 
@@ -76,10 +84,13 @@ const SYNC_BATCH_SIZE = 10;
 /** Hard cap on in-memory counter entries to prevent unbounded growth. */
 const MAX_COUNTERS = 10_000;
 
-const getOrCreateCounter = (key: string, windowSeconds: number): { count: number; windowStart: number } => {
+const getOrCreateCounter = (
+  key: string,
+  windowSeconds: number,
+): { count: number; windowStart: number } => {
   const now = Date.now();
   const existing = counters.get(key);
-  if (existing && (now - existing.windowStart) < windowSeconds * 1000) {
+  if (existing && now - existing.windowStart < windowSeconds * 1000) {
     return existing;
   }
   // Window expired or new key — reset
@@ -108,7 +119,7 @@ const pruneExpiredCounters = (): void => {
   // Pass 2: if still over cap, evict oldest entries
   if (counters.size > MAX_COUNTERS) {
     const sorted = [...counters.entries()].sort(
-      (a, b) => a[1].windowStart - b[1].windowStart
+      (a, b) => a[1].windowStart - b[1].windowStart,
     );
     const excess = sorted.length - MAX_COUNTERS;
     for (let i = 0; i < excess; i++) {
@@ -121,17 +132,31 @@ const pruneExpiredCounters = (): void => {
 export const assertRateLimit = async (
   context: RequestContext,
   route: string,
-  kvNamespace?: KVNamespace
+  kvNamespace?: KVNamespace,
 ): Promise<void> => {
-  // Graceful degradation: if KV is not bound, skip silently
+  const ip =
+    context.request.headers.get("cf-connecting-ip") ??
+    context.request.headers.get("x-forwarded-for") ??
+    "unknown_ip";
+  const config = resolveLimit(route);
+
+  // Graceful degradation: if KV is not bound, set mock headers and skip silently
   if (!kvNamespace) {
-    // Fix: no DB write for missing KV — just a debug log
+    context.rateLimitHeaders = {
+      "X-RateLimit-Limit": String(config.maxRequests),
+      "X-RateLimit-Remaining": String(config.maxRequests),
+      "X-RateLimit-Reset": "0",
+    };
     return;
   }
 
-  const ip = context.request.headers.get("cf-connecting-ip") ?? context.request.headers.get("x-forwarded-for") ?? "unknown_ip";
-  const config = resolveLimit(route);
-  const key = buildKey(context.organizationId, context.actorId, ip, route, config.windowSeconds);
+  const key = buildKey(
+    context.organizationId,
+    context.actorId,
+    ip,
+    route,
+    config.windowSeconds,
+  );
   const counter = getOrCreateCounter(key, config.windowSeconds);
 
   // Periodic pruning — only when map is getting large, to avoid overhead
@@ -139,20 +164,43 @@ export const assertRateLimit = async (
     pruneExpiredCounters();
   }
 
+  const limit = config.maxRequests;
+  const remaining = Math.max(0, limit - (counter.count + 1));
+  const reset = Math.max(
+    0,
+    Math.ceil(
+      (counter.windowStart + config.windowSeconds * 1000 - Date.now()) / 1000,
+    ),
+  );
+
+  context.rateLimitHeaders = {
+    "X-RateLimit-Limit": String(limit),
+    "X-RateLimit-Remaining": String(remaining),
+    "X-RateLimit-Reset": String(reset),
+  };
+
   // Check limit in-memory (0ms, no I/O)
   if (counter.count >= config.maxRequests) {
-    
+    context.rateLimitHeaders["Retry-After"] = String(reset);
+
     // H5 fix: audit is fire-and-forget — DB failure must not block the 429 response
-    context.deps.audit.record("security_rate_limit_exceeded", {
-      route,
-      organization_id: context.organizationId,
-      actor_id: context.actorId,
-      trace_id: context.traceId,
-      current_count: counter.count,
-      max_requests: config.maxRequests,
-      window_seconds: config.windowSeconds,
-      ip_address: ip
-    }).catch((e: unknown) => console.error("[rate-limit] audit record failed:", e instanceof Error ? e.message : e));
+    context.deps.audit
+      .record("security_rate_limit_exceeded", {
+        route,
+        organization_id: context.organizationId,
+        actor_id: context.actorId,
+        trace_id: context.traceId,
+        current_count: counter.count,
+        max_requests: config.maxRequests,
+        window_seconds: config.windowSeconds,
+        ip_address: ip,
+      })
+      .catch((e: unknown) =>
+        console.error(
+          "[rate-limit] audit record failed:",
+          e instanceof Error ? e.message : e,
+        ),
+      );
 
     if (context.deps.SOC_TRIAGE_QUEUE) {
       const sendOp = context.deps.SOC_TRIAGE_QUEUE.send({
@@ -160,24 +208,31 @@ export const assertRateLimit = async (
         organizationId: context.organizationId ?? "system",
         traceId: context.traceId,
         systemModuleName: "API Gateway - WAF/Rate Limiter",
-        rawLogsExcerpt: `[Rate Limiting Block] Endpoint: ${route} breached quota. \nActor: ${context.actorId ?? 'anon'}\nIP: ${ip}\nCount: ${counter.count}/${config.maxRequests} per ${config.windowSeconds}s.\nAction: HTTP 429 triggered. Possible Unrestricted Resource Consumption attack.`
+        rawLogsExcerpt: `[Rate Limiting Block] Endpoint: ${route} breached quota. \nActor: ${context.actorId ?? "anon"}\nIP: ${ip}\nCount: ${counter.count}/${config.maxRequests} per ${config.windowSeconds}s.\nAction: HTTP 429 triggered. Possible Unrestricted Resource Consumption attack.`,
       }).catch(async (err) => {
         // Dead-Letter Queue (DLQ) Fallback
-        console.error("[standard:rate-limit] SOC Queue down. Saving to DLQ KV:", err);
+        console.error(
+          "[standard:rate-limit] SOC Queue down. Saving to DLQ KV:",
+          err,
+        );
         if (kvNamespace) {
-           await kvNamespace.put(`dlq:soc:rate-limit:${context.traceId}`, JSON.stringify({ ip, route, count: counter.count }), { expirationTtl: 86400 });
+          await kvNamespace.put(
+            `dlq:soc:rate-limit:${context.traceId}`,
+            JSON.stringify({ ip, route, count: counter.count }),
+            { expirationTtl: 86400 },
+          );
         }
       });
       // Fire and guarantee execution via Cloudflare Edge WaitUntil
       if (context.execCtx?.waitUntil) {
-         context.execCtx.waitUntil(sendOp);
+        context.execCtx.waitUntil(sendOp);
       }
     }
 
     throw new ApiError(
       "RATE_LIMIT_EXCEEDED",
       `Rate limit exceeded. Maximum ${config.maxRequests} requests per ${config.windowSeconds}s for this endpoint.`,
-      429
+      429,
     );
   }
 
@@ -188,15 +243,18 @@ export const assertRateLimit = async (
   if (counter.count % SYNC_BATCH_SIZE === 0) {
     try {
       // Fire-and-forget KV write — doesn't block response
-      kvNamespace.put(key, String(counter.count), {
-        expirationTtl: config.windowSeconds
-      }).catch((err: unknown) => {
-        console.error("[rate-limit] KV sync failed:", err instanceof Error ? err.message : err);
-      });
+      kvNamespace
+        .put(key, String(counter.count), {
+          expirationTtl: config.windowSeconds,
+        })
+        .catch((err: unknown) => {
+          console.error(
+            "[rate-limit] KV sync failed:",
+            err instanceof Error ? err.message : err,
+          );
+        });
     } catch {
       // Swallow — KV sync is best-effort
     }
   }
 };
-
-

@@ -4,7 +4,7 @@ import { ZodError } from "zod";
 import { ApiError } from "../errors/api-error";
 import { json } from "../http";
 
-const engineCodeMap = {
+export const engineCodeMap = {
   APPROVAL_REQUIRED: ["APPROVAL_REQUIRED", 409],
   ARTIFACT_VERSION_IMMUTABLE: ["ARTIFACT_IMMUTABLE", 409],
   TRANSITION_NOT_ALLOWED: ["INVALID_STATE_TRANSITION", 409],
@@ -12,10 +12,14 @@ const engineCodeMap = {
   TENANT_CONTEXT_MISMATCH: ["FORBIDDEN", 403],
   APPROVAL_GATE_MISMATCH: ["CONFLICT", 409],
   ARTIFACT_VERSION_NOT_REVIEWABLE: ["CONFLICT", 409],
-  ARTIFACT_VERSION_NOT_REJECTED: ["CONFLICT", 409]
+  ARTIFACT_VERSION_NOT_REJECTED: ["CONFLICT", 409],
 } as const;
 
-export const errorResponse = (error: unknown, traceId: string, instance: string = "/"): Response => {
+export const errorResponse = (
+  error: unknown,
+  traceId: string,
+  instance: string = "/",
+): Response => {
   if (error instanceof ApiError) {
     return json(
       {
@@ -25,9 +29,12 @@ export const errorResponse = (error: unknown, traceId: string, instance: string 
         detail: error.message,
         instance,
         trace_id: traceId,
-        errors: sanitizeErrorDetails(error.details)
+        errors: sanitizeErrorDetails(error.details),
       },
-      { status: error.status, headers: { "Content-Type": "application/problem+json" } }
+      {
+        status: error.status,
+        headers: { "Content-Type": "application/problem+json" },
+      },
     );
   }
 
@@ -41,9 +48,9 @@ export const errorResponse = (error: unknown, traceId: string, instance: string 
         detail: error.message,
         instance,
         trace_id: traceId,
-        errors: sanitizeErrorDetails([error.details])
+        errors: sanitizeErrorDetails([error.details]),
       },
-      { status, headers: { "Content-Type": "application/problem+json" } }
+      { status, headers: { "Content-Type": "application/problem+json" } },
     );
   }
 
@@ -57,14 +64,22 @@ export const errorResponse = (error: unknown, traceId: string, instance: string 
         detail: "Request validation failed.",
         instance,
         trace_id: traceId,
-        errors: error.issues.map(i => ({ path: i.path.join("."), message: i.message }))
+        errors: error.issues.map((i) => ({
+          path: i.path.join("."),
+          message: i.message,
+        })),
       },
-      { status: 400, headers: { "Content-Type": "application/problem+json" } }
+      { status: 400, headers: { "Content-Type": "application/problem+json" } },
     );
   }
 
   // Log the real error for debugging
-  console.error(`[UNHANDLED_ERROR] trace=${traceId}`, error instanceof Error ? `${error.name}: ${error.message}\n${error.stack}` : String(error));
+  console.error(
+    `[UNHANDLED_ERROR] trace=${traceId}`,
+    error instanceof Error
+      ? `${error.name}: ${error.message}\n${error.stack}`
+      : String(error),
+  );
 
   return json(
     {
@@ -74,9 +89,8 @@ export const errorResponse = (error: unknown, traceId: string, instance: string 
       detail: "Unexpected API error.",
       instance,
       trace_id: traceId,
-      errors: []
+      errors: [],
     },
-    { status: 500, headers: { "Content-Type": "application/problem+json" } }
+    { status: 500, headers: { "Content-Type": "application/problem+json" } },
   );
 };
-

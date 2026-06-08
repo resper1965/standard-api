@@ -13,6 +13,8 @@
     "db:migrate": "tsx --env-file=../../.env migrate.ts",
     "db:migrate:kit": "drizzle-kit migrate --config drizzle.config.ts",
     "db:seed": "tsx --env-file=../../.env src/seed.ts",
+    "db:seed:scf": "tsx --env-file=../../.env src/seed-scf-catalog.ts",
+    "db:seed:scf:dry-run": "tsx --env-file=../../.env src/seed-scf-catalog.ts --dry-run",
     "db:lifecycle-proof": "tsx --env-file=../../.env src/lifecycle-proof.ts"
   },
   "dependencies": {

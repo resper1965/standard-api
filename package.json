@@ -37,6 +37,7 @@
     "cf:deploy:staging": "node scripts/deploy-cloudflare.mjs staging",
     "cf:deploy:production": "node scripts/deploy-cloudflare.mjs production",
     "db:seed": "pnpm --filter @standard/schemas db:seed",
+    "db:seed:scf": "pnpm --filter @standard/schemas db:seed:scf",
     "db:studio": "echo \"db:studio ainda não configurado\""
   },
   "lint-staged": {
@@ -71,7 +72,8 @@
       "better-auth": "1.6.11",
       "@better-auth/api-key": "1.6.11",
       "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.2/xlsx-0.20.2.tgz",
-      "undici": ">=6.24.0",
+      "undici": ">=7.0.0",
+      "ws": ">=8.17.1",
       "@electric-sql/pglite": "0.5.1"
     }
   }
