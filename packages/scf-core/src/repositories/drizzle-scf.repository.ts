@@ -749,6 +749,196 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
           set: { status: ir.status, updatedAt: new Date() },
         });
     }
+
+    // Bulk insert scf_assessment_objectives
+    if (
+      dataset.assessmentObjectives &&
+      dataset.assessmentObjectives.length > 0
+    ) {
+      const BATCH_SIZE = 500;
+      for (
+        let i = 0;
+        i < dataset.assessmentObjectives.length;
+        i += BATCH_SIZE
+      ) {
+        const batch = dataset.assessmentObjectives.slice(i, i + BATCH_SIZE);
+        await db
+          .insert(scfAssessmentObjectives)
+          .values(
+            batch.map((ao) => ({
+              id: ao.id,
+              scfVersionId: ao.scf_version_id,
+              scfControlId: ao.scf_control_id,
+              objectiveCode: ao.objective_code,
+              text: ao.text,
+            })),
+          )
+          .onConflictDoUpdate({
+            target: [
+              scfAssessmentObjectives.scfVersionId,
+              scfAssessmentObjectives.objectiveCode,
+            ],
+            set: {
+              text: sql`EXCLUDED.text`,
+              updatedAt: new Date(),
+            },
+          });
+      }
+    }
+
+    // Bulk insert scf_evidence_requests
+    if (dataset.evidenceRequests && dataset.evidenceRequests.length > 0) {
+      const BATCH_SIZE = 500;
+      for (let i = 0; i < dataset.evidenceRequests.length; i += BATCH_SIZE) {
+        const batch = dataset.evidenceRequests.slice(i, i + BATCH_SIZE);
+        await db
+          .insert(scfEvidenceRequests)
+          .values(
+            batch.map((er) => ({
+              id: er.id,
+              scfVersionId: er.scf_version_id,
+              scfControlId: er.scf_control_id,
+              requestItem: er.request_item,
+              evidenceType: er.evidence_type ?? null,
+            })),
+          )
+          .onConflictDoNothing();
+      }
+    }
+
+    // Bulk insert scf_maturity_criteria
+    if (dataset.maturityCriteria && dataset.maturityCriteria.length > 0) {
+      const BATCH_SIZE = 500;
+      for (let i = 0; i < dataset.maturityCriteria.length; i += BATCH_SIZE) {
+        const batch = dataset.maturityCriteria.slice(i, i + BATCH_SIZE);
+        await db
+          .insert(scfMaturityCriteria)
+          .values(
+            batch.map((mc) => ({
+              id: mc.id,
+              scfVersionId: mc.scf_version_id,
+              scfControlId: mc.scf_control_id,
+              level: mc.level,
+              criteriaText: mc.criteria_text,
+              remediationGuidance: mc.remediation_guidance ?? null,
+            })),
+          )
+          .onConflictDoUpdate({
+            target: [
+              scfMaturityCriteria.scfControlId,
+              scfMaturityCriteria.level,
+            ],
+            set: {
+              criteriaText: sql`EXCLUDED.criteria_text`,
+              remediationGuidance: sql`EXCLUDED.remediation_guidance`,
+              updatedAt: new Date(),
+            },
+          });
+      }
+    }
+
+    // Bulk insert scf_risks
+    if (dataset.risks && dataset.risks.length > 0) {
+      const BATCH_SIZE = 500;
+      for (let i = 0; i < dataset.risks.length; i += BATCH_SIZE) {
+        const batch = dataset.risks.slice(i, i + BATCH_SIZE);
+        await db
+          .insert(scfRisks)
+          .values(
+            batch.map((r) => ({
+              id: r.id,
+              scfVersionId: r.scf_version_id,
+              riskCode: r.risk_code,
+              title: r.title,
+              description: r.description ?? null,
+              category: r.category ?? null,
+            })),
+          )
+          .onConflictDoUpdate({
+            target: [scfRisks.scfVersionId, scfRisks.riskCode],
+            set: {
+              title: sql`EXCLUDED.title`,
+              description: sql`EXCLUDED.description`,
+              category: sql`EXCLUDED.category`,
+              updatedAt: new Date(),
+            },
+          });
+      }
+    }
+
+    // Bulk insert scf_risk_control_mappings
+    if (dataset.riskControlMappings && dataset.riskControlMappings.length > 0) {
+      const BATCH_SIZE = 500;
+      for (let i = 0; i < dataset.riskControlMappings.length; i += BATCH_SIZE) {
+        const batch = dataset.riskControlMappings.slice(i, i + BATCH_SIZE);
+        await db
+          .insert(scfRiskControlMappings)
+          .values(
+            batch.map((m) => ({
+              id: m.id,
+              scfVersionId: m.scf_version_id,
+              scfRiskId: m.scf_risk_id,
+              scfControlId: m.scf_control_id,
+            })),
+          )
+          .onConflictDoNothing();
+      }
+    }
+
+    // Bulk insert scf_threats
+    if (dataset.threats && dataset.threats.length > 0) {
+      const BATCH_SIZE = 500;
+      for (let i = 0; i < dataset.threats.length; i += BATCH_SIZE) {
+        const batch = dataset.threats.slice(i, i + BATCH_SIZE);
+        await db
+          .insert(scfThreats)
+          .values(
+            batch.map((t) => ({
+              id: t.id,
+              scfVersionId: t.scf_version_id,
+              threatCode: t.threat_code,
+              title: t.title,
+              description: t.description ?? null,
+              category: t.category ?? null,
+            })),
+          )
+          .onConflictDoUpdate({
+            target: [scfThreats.scfVersionId, scfThreats.threatCode],
+            set: {
+              title: sql`EXCLUDED.title`,
+              description: sql`EXCLUDED.description`,
+              category: sql`EXCLUDED.category`,
+              updatedAt: new Date(),
+            },
+          });
+      }
+    }
+
+    // Bulk insert scf_threat_control_mappings
+    if (
+      dataset.threatControlMappings &&
+      dataset.threatControlMappings.length > 0
+    ) {
+      const BATCH_SIZE = 500;
+      for (
+        let i = 0;
+        i < dataset.threatControlMappings.length;
+        i += BATCH_SIZE
+      ) {
+        const batch = dataset.threatControlMappings.slice(i, i + BATCH_SIZE);
+        await db
+          .insert(scfThreatControlMappings)
+          .values(
+            batch.map((m) => ({
+              id: m.id,
+              scfVersionId: m.scf_version_id,
+              scfThreatId: m.scf_threat_id,
+              scfControlId: m.scf_control_id,
+            })),
+          )
+          .onConflictDoNothing();
+      }
+    }
   },
 
   // ── New SCF Meta-Model Entity Methods ────────────────────────────────
