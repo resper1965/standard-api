@@ -10,6 +10,7 @@ import { useDocumentTitle } from "@/hooks/useDocumentTitle"
 import { useActiveOrg } from "@/hooks/useActiveOrg"
 import { useQuery } from "@tanstack/react-query"
 import { qk, useHealthStatus } from "@/lib/queries"
+import { PageHeader } from "@/components/ui/PageHeader"
 
 function getGreeting(): string {
   const h = new Date().getHours()
@@ -114,6 +115,10 @@ export function OverviewPage() {
 
   return (
     <div className="space-y-8 animate-slide-up">
+      <PageHeader
+        title="Overview"
+        description="Platform status and activity summary"
+      />
       {/* Greeting */}
       <div>
         <p className="text-sm text-muted-foreground">
@@ -130,41 +135,49 @@ export function OverviewPage() {
 
       {/* ── Platform Stat Cards ────────────────────────── */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 animate-stagger">
-        <StatCard
-          label="Organizations"
-          value={orgs.length}
-          sub="Managed tenants"
-          icon={<Building2 className="h-4 w-4" />}
-          accent="primary"
-        />
-        <StatCard
-          label="API Keys"
-          value={keyCount}
-          sub="Active in current org"
-          icon={<Key className="h-4 w-4" />}
-          accent="primary"
-        />
-        <StatCard
-          label="Users"
-          value={userCount || "—"}
-          sub="Platform accounts"
-          icon={<Users className="h-4 w-4" />}
-          accent="primary"
-        />
-        <StatCard
-          label="API Status"
-          value={healthLabel[apiHealth]}
-          sub="standard-api.bekaa.eu"
-          icon={<HeartPulse className="h-4 w-4" />}
-          accent={
-            apiHealth === "operational"
-              ? "primary"
-              : apiHealth === "down"
-              ? "destructive"
-              : "muted"
-          }
-          showPulse={apiHealth === "operational"}
-        />
+        <div className="ds-fade-up ds-fade-up--1">
+          <StatCard
+            label="Organizations"
+            value={orgs.length}
+            sub="Managed tenants"
+            icon={<Building2 className="h-4 w-4" />}
+            accent="primary"
+          />
+        </div>
+        <div className="ds-fade-up ds-fade-up--2">
+          <StatCard
+            label="API Keys"
+            value={keyCount}
+            sub="Active in current org"
+            icon={<Key className="h-4 w-4" />}
+            accent="primary"
+          />
+        </div>
+        <div className="ds-fade-up ds-fade-up--3">
+          <StatCard
+            label="Users"
+            value={userCount || "—"}
+            sub="Platform accounts"
+            icon={<Users className="h-4 w-4" />}
+            accent="primary"
+          />
+        </div>
+        <div className="ds-fade-up ds-fade-up--4">
+          <StatCard
+            label="API Status"
+            value={healthLabel[apiHealth]}
+            sub="standard-api.bekaa.eu"
+            icon={<HeartPulse className="h-4 w-4" />}
+            accent={
+              apiHealth === "operational"
+                ? "primary"
+                : apiHealth === "down"
+                ? "destructive"
+                : "muted"
+            }
+            showPulse={apiHealth === "operational"}
+          />
+        </div>
       </div>
 
       {/* ── Content Grid ───────────────────────────────── */}
@@ -282,7 +295,10 @@ export function OverviewPage() {
               </div>
               <div>
                 <p className="text-sm font-medium text-foreground">Manage API Keys</p>
-                <p className="text-xs text-muted-foreground">Generate and revoke keys</p>
+                <div className="flex items-center gap-1 mt-0.5">
+                  <p className="text-xs text-muted-foreground">Generate and revoke keys</p>
+                  <ArrowUpRight className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -295,7 +311,10 @@ export function OverviewPage() {
               </div>
               <div>
                 <p className="text-sm font-medium text-foreground">SDK & Documentation</p>
-                <p className="text-xs text-muted-foreground">Integration guides and API reference</p>
+                <div className="flex items-center gap-1 mt-0.5">
+                  <p className="text-xs text-muted-foreground">Integration guides and API reference</p>
+                  <ArrowUpRight className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -308,7 +327,10 @@ export function OverviewPage() {
               </div>
               <div>
                 <p className="text-sm font-medium text-foreground">System Health</p>
-                <p className="text-xs text-muted-foreground">API status and diagnostics</p>
+                <div className="flex items-center gap-1 mt-0.5">
+                  <p className="text-xs text-muted-foreground">API status and diagnostics</p>
+                  <ArrowUpRight className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -349,7 +371,7 @@ function StatCard({
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">{label}</CardTitle>
         <div
-          className={`h-8 w-8 rounded-full ${bgMap[accent]} flex items-center justify-center ${colorMap[accent]} opacity-70 group-hover:opacity-100 transition-opacity`}
+          className={`h-9 w-9 rounded-lg ${bgMap[accent]} flex items-center justify-center ${colorMap[accent]} opacity-70 group-hover:opacity-100 transition-opacity`}
         >
           {icon}
         </div>
@@ -361,7 +383,7 @@ function StatCard({
           }`}
         >
           {showPulse && (
-            <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 mr-2 animate-pulse align-middle" />
+            <span className="inline-block h-2 w-2 rounded-full mr-2 animate-pulse align-middle" style={{ background: 'var(--ds-success)' }} />
           )}
           {value}
         </div>

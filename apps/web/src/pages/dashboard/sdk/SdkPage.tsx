@@ -1,4 +1,4 @@
-﻿import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useState } from "react";
 import { useSession } from "../../../lib/auth-client";
 import { Link } from "react-router-dom";
@@ -6,23 +6,14 @@ import {
   ExternalLink, Terminal, Code2, Bot, Key, Copy, Check,
   Globe, Cpu, Zap, ChevronRight, Package, BookOpen,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { API_URL } from "@/lib/config";
 import "./SdkPage.css";
 
 // ─── Code block with per-snippet copy ──────────────────────────
-function CodeBlock({
-  code,
-  language = "typescript",
-  label,
-}: {
-  code: string;
-  language?: string;
-  label?: string;
-}) {
+function CodeBlock({ code, language = "typescript", label }: { code: string; language?: string; label?: string }) {
   const [copied, setCopied] = useState(false);
   const copy = () => {
     navigator.clipboard.writeText(code);
@@ -30,21 +21,30 @@ function CodeBlock({
     setTimeout(() => setCopied(false), 2000);
   };
   return (
-    <div className="sdk-code-block">
-      <div className="sdk-code-header">
+    <div className="ds-code-block">
+      <div className="ds-code-header">
         <div className="flex items-center gap-2">
-          {label && <span className="sdk-code-label">{label}</span>}
-          <span className="sdk-code-lang">{language}</span>
+          <div className="ds-code-dots" aria-hidden="true">
+            <span className="ds-code-dot" />
+            <span className="ds-code-dot" />
+            <span className="ds-code-dot" />
+          </div>
+          {label && <span className="ds-code-label">{label}</span>}
+          <span className="ds-code-lang">{language}</span>
         </div>
-        <button className="sdk-code-copy" onClick={copy} aria-label="Copy code">
+        <button
+          className={`ds-code-copy${copied ? " ds-code-copy-check" : ""}`}
+          onClick={copy}
+          aria-label="Copy code"
+        >
           {copied ? (
-            <><Check className="w-3 h-3 mr-1 inline text-emerald-400" />Copied</>
+            <><Check className="w-3 h-3 mr-1 inline" />Copied</>
           ) : (
             <><Copy className="w-3 h-3 mr-1 inline" />Copy</>
           )}
         </button>
       </div>
-      <pre className="sdk-code-pre"><code>{code}</code></pre>
+      <pre className="ds-code-pre"><code>{code}</code></pre>
     </div>
   );
 }
@@ -62,7 +62,7 @@ function InfoCard({
   action: React.ReactNode;
 }) {
   return (
-    <Card className="border-border/60 bg-card/60 shadow-none flex flex-col">
+    <Card className="border-border/60 bg-card/60 shadow-none flex flex-col border-l-2 border-l-transparent hover:border-l-[var(--ds-accent)] transition-all duration-200">
       <CardContent className="p-5 flex flex-col gap-4 flex-1">
         <div className="p-2.5 bg-primary/10 rounded-lg text-primary w-fit">{icon}</div>
         <div className="flex-1">
@@ -248,6 +248,10 @@ Return findings in this format per control:
 
   return (
     <div className="space-y-6 pb-10">
+      <PageHeader
+        title="SDK & Integration"
+        description="REST API, TypeScript SDK, MCP Server and AI-native prompts."
+      />
       {/* Header row */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <p className="text-sm text-muted-foreground max-w-xl">
@@ -255,10 +259,10 @@ Return findings in this format per control:
           Model Context Protocol (MCP), or AI-native prompts.
         </p>
         <div className="flex items-center gap-2 shrink-0">
-          <Badge variant="outline" className="text-xs gap-1.5">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 inline-block" />
+          <span className="ds-badge ds-badge--success" style={{ gap: '6px' }}>
+            <span className="ds-status-dot ds-status-dot--operational" />
             API Online
-          </Badge>
+          </span>
           <a
             href={`${API_URL}/`}
             target="_blank"
@@ -273,49 +277,55 @@ Return findings in this format per control:
 
       {/* Quick actions */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <InfoCard
-          icon={<Globe className="w-4 h-4" />}
-          title="Interactive API Explorer"
-          description="Explore the OpenAPI 3.1 spec, test endpoints live and view request/response schemas via Scalar UI."
-          action={
-            <a
-              href={`${API_URL}/`}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
-            >
-              Open Scalar UI <ChevronRight className="h-3 w-3" />
-            </a>
-          }
-        />
-        <InfoCard
-          icon={<Key className="w-4 h-4" />}
-          title="API Keys (M2M)"
-          description="All requests require a Bearer token. Generate machine-to-machine keys with granular scopes."
-          action={
-            <Link
-              to="/dashboard/api-keys"
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
-            >
-              Manage Keys <ChevronRight className="h-3 w-3" />
-            </Link>
-          }
-        />
-        <InfoCard
-          icon={<BookOpen className="w-4 h-4" />}
-          title="llms.txt (AI Context)"
-          description="Machine-readable context map with all endpoints, lifecycle states, and usage examples for AI agents."
-          action={
-            <a
-              href={`${API_URL}/llms.txt`}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
-            >
-              View llms.txt <ChevronRight className="h-3 w-3" />
-            </a>
-          }
-        />
+        <div className="ds-fade-up ds-fade-up--1">
+          <InfoCard
+            icon={<Globe className="w-4 h-4" />}
+            title="Interactive API Explorer"
+            description="Explore the OpenAPI 3.1 spec, test endpoints live and view request/response schemas via Scalar UI."
+            action={
+              <a
+                href={`${API_URL}/`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+              >
+                Open Scalar UI <ChevronRight className="h-3 w-3" />
+              </a>
+            }
+          />
+        </div>
+        <div className="ds-fade-up ds-fade-up--2">
+          <InfoCard
+            icon={<Key className="w-4 h-4" />}
+            title="API Keys (M2M)"
+            description="All requests require a Bearer token. Generate machine-to-machine keys with granular scopes."
+            action={
+              <Link
+                to="/dashboard/api-keys"
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+              >
+                Manage Keys <ChevronRight className="h-3 w-3" />
+              </Link>
+            }
+          />
+        </div>
+        <div className="ds-fade-up ds-fade-up--3">
+          <InfoCard
+            icon={<BookOpen className="w-4 h-4" />}
+            title="llms.txt (AI Context)"
+            description="Machine-readable context map with all endpoints, lifecycle states, and usage examples for AI agents."
+            action={
+              <a
+                href={`${API_URL}/llms.txt`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+              >
+                View llms.txt <ChevronRight className="h-3 w-3" />
+              </a>
+            }
+          />
+        </div>
       </div>
 
       {/* Tabs */}

@@ -245,24 +245,33 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
          * - Never settable via public API (input: false).
          * - Only set via SQL migration/seed by operators.
          * - Checked by requirePlatformAdmin() in rbac.middleware.ts.
+         *
+         * F7 fix: fieldName must match the actual DB column name (snake_case).
+         * Without fieldName, Better Auth looks for a column named "platformAdmin"
+         * which does not exist — the real column is "platform_admin".
+         * This caused isPlatformAdmin() to always return false.
          */
         platformAdmin: {
           type: "boolean",
           defaultValue: false,
           returned: true,
           input: false,
+          fieldName: "platform_admin",
         },
         /**
          * Account approval gate.
          * New users default to false; platform admin must approve before access.
          * - Never settable via public signup (input: false).
          * - Managed via /api/v1/admin/users/:id/approve endpoint.
+         *
+         * F7 fix: fieldName maps to the actual DB column "approved".
          */
         approved: {
           type: "boolean",
           defaultValue: false,
           returned: true,
           input: false,
+          fieldName: "approved",
         },
       },
     },
@@ -354,6 +363,56 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
       // M9 fix: Purge KV session cache on sign-out so the session is
       // immediately invalidated instead of waiting for 60s TTL expiry.
       session: {
+        create: {
+          // F6 fix: Auto-set activeOrganizationId for platform admins on session creation.
+          // Platform admins (bekaa operators) never go through the /activate flow —
+          // they need activeOrganizationId from the first request so customSession
+          // can enrich the session with org context and isPlatformAdmin can return true.
+          after: async (session) => {
+            if (!db) return;
+            try {
+              const [user] = await db
+                .select({
+                  platformAdmin:
+                    (baUser as any).platform_admin ??
+                    (baUser as any).platformAdmin,
+                })
+                .from(baUser)
+                .where(eq((baUser as any).id, session.userId))
+                .limit(1);
+
+              if (!user?.platformAdmin) return;
+
+              // Find the platform admin's primary org in the Standard domain
+              const [org] = await db
+                .select({ id: organizations.id })
+                .from(organizations)
+                .innerJoin(
+                  users,
+                  eq(users.identityProviderSubject, session.userId),
+                )
+                .limit(1);
+
+              if (!org) return;
+
+              // Set activeOrganizationId directly on the session row
+              await db
+                .update(baSession)
+                .set({ activeOrganizationId: org.id })
+                .where(eq(baSession.id, session.id));
+
+              console.log(
+                `[standard:auth] F6: auto-set activeOrganizationId=${org.id} for platform admin session=${session.id}`,
+              );
+            } catch (err) {
+              // Non-blocking — session is still valid, admin can activate manually
+              console.error(
+                "[standard:auth] F6: session.create hook failed:",
+                err,
+              );
+            }
+          },
+        },
         delete: {
           after: async (session) => {
             if (env.sessionCache && session?.id) {

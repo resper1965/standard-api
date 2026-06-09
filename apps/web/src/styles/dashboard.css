@@ -1,0 +1,584 @@
+/* ═══════════════════════════════════════════════════════════════════
+   b.standard — Dashboard Shared Styles
+   Design System: Nordic Tech · Internal Pages Layer
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Surface tokens ─────────────────────────────────────────────── */
+:root {
+  --ds-surface-0:     #1a1d20;
+  --ds-surface-1:     #1e2124;
+  --ds-surface-2:     #222629;
+  --ds-surface-3:     #252a2e;
+
+  --ds-accent:        #8fa89b;
+  --ds-accent-hover:  #7d9689;
+  --ds-accent-light:  rgba(143, 168, 155, 0.08);
+  --ds-accent-muted:  rgba(143, 168, 155, 0.18);
+  --ds-accent-glow:   rgba(143, 168, 155, 0.14);
+
+  --ds-border:        rgba(255, 255, 255, 0.07);
+  --ds-border-med:    rgba(255, 255, 255, 0.11);
+
+  --ds-text:          #e9ecef;
+  --ds-text-sub:      #adb5bd;
+  --ds-text-muted:    #6c757d;
+  --ds-text-micro:    #495057;
+
+  /* Status — usar APENAS para indicadores de estado real */
+  --ds-success:       #4ade80;
+  --ds-success-light: rgba(74, 222, 128, 0.08);
+  --ds-warning:       #fbbf24;
+  --ds-warning-light: rgba(251, 191, 36, 0.08);
+  --ds-error:         #f87171;
+  --ds-error-light:   rgba(248, 113, 113, 0.08);
+
+  /* Code block */
+  --ds-code-bg:       #13171a;
+  --ds-code-text:     #e9ecef;
+  --ds-code-muted:    #6c757d;
+  --ds-code-sage:     #8fa89b;
+
+  /* Radius */
+  --ds-r-sm: 6px;
+  --ds-r-md: 10px;
+  --ds-r-lg: 14px;
+  --ds-r-xl: 18px;
+
+  /* Easing */
+  --ds-ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
+  --ds-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ── Page wrapper ───────────────────────────────────────────────── */
+.ds-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding-bottom: 3rem;
+}
+
+/* ── Page header ────────────────────────────────────────────────── */
+.ds-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--ds-border);
+  margin-bottom: 0.25rem;
+}
+
+.ds-page-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.ds-page-title {
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-size: 1.1875rem;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  color: var(--ds-text);
+  line-height: 1.2;
+  margin: 0;
+}
+
+.ds-page-desc {
+  font-size: 0.8125rem;
+  color: var(--ds-text-muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.ds-page-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ds-accent);
+  background: var(--ds-accent-light);
+  border: 1px solid rgba(143, 168, 155, 0.18);
+  border-radius: 999px;
+  padding: 2px 8px;
+  margin-left: 0.5rem;
+  vertical-align: middle;
+}
+
+.ds-page-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+/* ── Section separator ──────────────────────────────────────────── */
+.ds-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.ds-section-title {
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ds-text-sub);
+  margin: 0;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--ds-border);
+}
+
+/* ── Code block — Terminal aesthetic ───────────────────────────── */
+.ds-code-block {
+  border-radius: var(--ds-r-md);
+  border: 1px solid var(--ds-border);
+  overflow: hidden;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'SF Mono', 'Consolas', monospace;
+}
+
+.ds-code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.625rem 1rem;
+  background: rgba(255, 255, 255, 0.025);
+  border-bottom: 1px solid var(--ds-border);
+}
+
+.ds-code-dots {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.ds-code-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.ds-code-label {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--ds-text-muted);
+  letter-spacing: 0.02em;
+}
+
+.ds-code-lang {
+  font-size: 0.6875rem;
+  color: var(--ds-accent);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.ds-code-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--ds-text-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--ds-r-sm);
+  padding: 3px 8px;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+  font-family: inherit;
+}
+
+.ds-code-copy:hover {
+  color: var(--ds-accent);
+  background: var(--ds-accent-light);
+  border-color: rgba(143, 168, 155, 0.2);
+}
+
+.ds-code-copy-check {
+  color: var(--ds-success) !important;
+  animation: ds-check-pop 0.3s var(--ds-ease-spring) both;
+}
+
+@keyframes ds-check-pop {
+  0%   { transform: scale(0); opacity: 0; }
+  60%  { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.ds-code-pre {
+  margin: 0;
+  padding: 1.125rem 1rem;
+  background: var(--ds-code-bg);
+  overflow-x: auto;
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  color: var(--ds-code-text);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.1) transparent;
+}
+
+.ds-code-pre::-webkit-scrollbar {
+  height: 4px;
+}
+.ds-code-pre::-webkit-scrollbar-track {
+  background: transparent;
+}
+.ds-code-pre::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.1);
+  border-radius: 2px;
+}
+
+/* ── Status dot ─────────────────────────────────────────────────── */
+.ds-status-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.ds-status-dot--operational { background: var(--ds-success); animation: ds-breathe 3s ease-in-out infinite; }
+.ds-status-dot--degraded    { background: var(--ds-warning); }
+.ds-status-dot--down        { background: var(--ds-error); }
+.ds-status-dot--unknown     { background: var(--ds-text-muted); }
+
+@keyframes ds-breathe {
+  0%, 100% { opacity: 0.6; }
+  50%       { opacity: 1; box-shadow: 0 0 6px var(--ds-success); }
+}
+
+/* ── Badge variants ─────────────────────────────────────────────── */
+.ds-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  border-radius: 999px;
+  padding: 2px 8px;
+  border: 1px solid transparent;
+}
+
+.ds-badge--active   { background: var(--ds-accent-light); color: var(--ds-accent); border-color: rgba(143,168,155,0.2); }
+.ds-badge--success  { background: rgba(74,222,128,0.07); color: #4ade80; border-color: rgba(74,222,128,0.18); }
+.ds-badge--warning  { background: rgba(251,191,36,0.07); color: #fbbf24; border-color: rgba(251,191,36,0.18); }
+.ds-badge--error    { background: rgba(248,113,113,0.07); color: #f87171; border-color: rgba(248,113,113,0.18); }
+.ds-badge--muted    { background: rgba(255,255,255,0.04); color: var(--ds-text-muted); border-color: var(--ds-border); }
+.ds-badge--method-get    { background: rgba(74,222,128,0.07);  color: #4ade80; border-color: rgba(74,222,128,0.18); }
+.ds-badge--method-post   { background: var(--ds-accent-light); color: var(--ds-accent); border-color: rgba(143,168,155,0.2); }
+.ds-badge--method-patch  { background: rgba(251,191,36,0.07);  color: #fbbf24; border-color: rgba(251,191,36,0.18); }
+.ds-badge--method-delete { background: rgba(248,113,113,0.07); color: #f87171; border-color: rgba(248,113,113,0.18); }
+
+/* ── Table ──────────────────────────────────────────────────────── */
+.ds-table-wrapper {
+  border-radius: var(--ds-r-lg);
+  border: 1px solid var(--ds-border);
+  overflow: hidden;
+}
+
+.ds-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+.ds-table th {
+  text-align: left;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ds-text-muted);
+  padding: 0.625rem 1rem;
+  background: rgba(255,255,255,0.02);
+  border-bottom: 1px solid var(--ds-border);
+}
+
+.ds-table td {
+  padding: 0.75rem 1rem;
+  color: var(--ds-text);
+  border-bottom: 1px solid var(--ds-border);
+  vertical-align: middle;
+}
+
+.ds-table tr:last-child td {
+  border-bottom: none;
+}
+
+.ds-table tr:hover td {
+  background: rgba(255,255,255,0.018);
+}
+
+.ds-table .ds-mono {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.75rem;
+  color: var(--ds-text-sub);
+}
+
+/* ── Empty state ────────────────────────────────────────────────── */
+.ds-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 3rem 1.5rem;
+  text-align: center;
+}
+
+.ds-empty-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--ds-r-md);
+  background: var(--ds-accent-light);
+  border: 1px solid rgba(143,168,155,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ds-accent);
+}
+
+.ds-empty-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ds-text);
+  margin: 0;
+}
+
+.ds-empty-desc {
+  font-size: 0.8125rem;
+  color: var(--ds-text-muted);
+  margin: 0;
+  max-width: 320px;
+  line-height: 1.5;
+}
+
+/* ── Animations ─────────────────────────────────────────────────── */
+@keyframes ds-fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.ds-fade-up { animation: ds-fade-up 0.4s var(--ds-ease-out) both; }
+.ds-fade-up--1 { animation-delay: 0.05s; }
+.ds-fade-up--2 { animation-delay: 0.10s; }
+.ds-fade-up--3 { animation-delay: 0.15s; }
+.ds-fade-up--4 { animation-delay: 0.20s; }
+
+/* ── Skeleton ───────────────────────────────────────────────────── */
+.ds-skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255,255,255,0.04) 0%,
+    rgba(255,255,255,0.08) 50%,
+    rgba(255,255,255,0.04) 100%
+  );
+  background-size: 200% 100%;
+  animation: ds-shimmer 1.4s ease-in-out infinite;
+  border-radius: var(--ds-r-sm);
+}
+
+@keyframes ds-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── Accordion (SCF Explorer) ───────────────────────────────────── */
+.ds-accordion {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ds-accordion-item {
+  border: 1px solid var(--ds-border);
+  border-radius: var(--ds-r-md);
+  overflow: hidden;
+  transition: border-color 0.2s ease;
+}
+
+.ds-accordion-item:hover {
+  border-color: var(--ds-border-med);
+}
+
+.ds-accordion-item.is-open {
+  border-color: rgba(143,168,155,0.2);
+}
+
+.ds-accordion-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.875rem 1rem;
+  background: rgba(255,255,255,0.018);
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ds-text);
+  transition: background 0.15s ease;
+  gap: 1rem;
+}
+
+.ds-accordion-trigger:hover {
+  background: rgba(255,255,255,0.03);
+}
+
+.ds-accordion-trigger-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.ds-accordion-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--ds-r-sm);
+  background: var(--ds-accent-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ds-accent);
+  flex-shrink: 0;
+}
+
+.ds-accordion-chevron {
+  color: var(--ds-text-muted);
+  transition: transform 0.25s var(--ds-ease-out);
+  flex-shrink: 0;
+}
+
+.ds-accordion-item.is-open .ds-accordion-chevron {
+  transform: rotate(180deg);
+}
+
+.ds-accordion-content {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.28s var(--ds-ease-out);
+}
+
+.ds-accordion-item.is-open .ds-accordion-content {
+  grid-template-rows: 1fr;
+}
+
+.ds-accordion-inner {
+  overflow: hidden;
+}
+
+.ds-accordion-body {
+  border-top: 1px solid var(--ds-border);
+  padding: 0.5rem 0;
+}
+
+/* ── Control row (SCF controls in accordion) ──────────────────── */
+.ds-control-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+  padding: 0.625rem 1rem;
+  transition: background 0.15s ease;
+  cursor: default;
+}
+
+.ds-control-row:hover {
+  background: rgba(255,255,255,0.018);
+}
+
+.ds-control-code {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ds-accent);
+  background: var(--ds-accent-light);
+  border: 1px solid rgba(143,168,155,0.15);
+  border-radius: var(--ds-r-sm);
+  padding: 2px 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.ds-control-name {
+  font-size: 0.8125rem;
+  color: var(--ds-text-sub);
+  line-height: 1.45;
+  min-width: 0;
+}
+
+/* ── Danger zone ────────────────────────────────────────────────── */
+.ds-danger-zone {
+  border: 1px solid rgba(248,113,113,0.2);
+  border-radius: var(--ds-r-lg);
+  background: rgba(248,113,113,0.03);
+  padding: 1.25rem 1.5rem;
+}
+
+.ds-danger-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #f87171;
+  margin: 0 0 0.25rem;
+}
+
+.ds-danger-desc {
+  font-size: 0.8125rem;
+  color: var(--ds-text-muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ── Reveal blur spell ──────────────────────────────────────────── */
+.ds-secret {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.8125rem;
+  letter-spacing: 0.05em;
+  transition: filter 0.3s ease;
+  user-select: none;
+}
+
+.ds-secret--hidden {
+  filter: blur(4px);
+  user-select: none;
+  pointer-events: none;
+}
+
+.ds-secret--visible {
+  filter: blur(0);
+  user-select: text;
+}
+
+/* ── Responsive ─────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .ds-page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .ds-page-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+/* ── Reduced motion ─────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .ds-fade-up,
+  .ds-skeleton,
+  .ds-status-dot--operational,
+  .ds-accordion-content,
+  .ds-accordion-chevron {
+    animation: none !important;
+    transition: none !important;
+  }
+}

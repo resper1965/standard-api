@@ -1,4 +1,5 @@
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { useState, useMemo } from "react";
 import { useAdminUsers, useAdminOrgs, usePendingUserCount, qk } from "../../lib/queries";
 import { useQueryClient } from "@tanstack/react-query";
@@ -77,8 +78,8 @@ export function AdminUsers() {
       <div className="flex items-center justify-center min-h-[400px]">
         <Card className="border-border/60 shadow-none max-w-md w-full">
           <CardContent className="pt-8 pb-8 flex flex-col items-center text-center space-y-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10">
-              <ShieldOff className="h-6 w-6 text-amber-500" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-full" style={{ background: 'var(--ds-warning-light)' }}>
+              <ShieldOff className="h-6 w-6" style={{ color: 'var(--ds-warning)' }} />
             </div>
             <div className="space-y-1.5">
               <h3 className="text-lg font-semibold">Insufficient Permissions</h3>
@@ -98,6 +99,7 @@ export function AdminUsers() {
 
   return (
     <div className="space-y-6">
+      <PageHeader title="User Management" description="Manage platform accounts, roles and access" />
       {/* Header bar */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative w-full sm:max-w-xs">
