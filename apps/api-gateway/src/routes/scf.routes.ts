@@ -4,6 +4,10 @@ import {
   type ScfFramework,
   type ScfFrameworkRequirement,
   type ScfVersion,
+  scfRisks,
+  scfThreats,
+  scfRiskControlMappings,
+  scfThreatControlMappings,
 } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition, AppDependencies } from "../http";
@@ -12,6 +16,7 @@ import { REGULATIONS } from "./regulations.routes";
 import { RISK_TAXONOMY } from "./risk.routes";
 import { DATA_CATEGORIES, RETENTION_RULES } from "./reference-data.routes";
 import { ComplianceOptimizerService } from "@standard/assessment-engine";
+import { eq, and } from "drizzle-orm";
 
 const resolveVersionId = async (
   deps: AppDependencies,
@@ -1360,6 +1365,126 @@ export const scfRoutes: RouteDefinition[] = [
 
       return json({
         ...result,
+        trace_id: traceId,
+      });
+    },
+  },
+
+  // ── GET /scf/risks ──────────────────────────────────────────────────────
+  // SCR-RMM: Global SCF Risk Catalog. Used to map assessment risks to SCF control risks.
+  // Optional filter: ?category=<string>
+  {
+    method: "GET",
+    path: "/api/v1/scf/risks",
+    authRequired: true,
+    tenantRequired: false,
+    handler: async ({ deps, request, traceId }) => {
+      if (!deps._db)
+        throw new ApiError("INTERNAL_ERROR", "DB client not available.", 500);
+
+      const url = new URL(request.url);
+      const category = url.searchParams.get("category");
+
+      const rows = await deps._db
+        .select()
+        .from(scfRisks)
+        .where(category ? eq(scfRisks.category, category) : undefined);
+
+      return json({ data: rows, total: rows.length, trace_id: traceId });
+    },
+  },
+
+  // ── GET /scf/risks/:riskId ───────────────────────────────────────────────
+  {
+    method: "GET",
+    path: "/api/v1/scf/risks/:riskId",
+    authRequired: true,
+    tenantRequired: false,
+    handler: async ({ deps, params, traceId }) => {
+      if (!deps._db)
+        throw new ApiError("INTERNAL_ERROR", "DB client not available.", 500);
+
+      const riskId = routeUuidParam(params, "riskId");
+
+      const [risk] = await deps._db
+        .select()
+        .from(scfRisks)
+        .where(eq(scfRisks.id, riskId))
+        .limit(1);
+
+      if (!risk) throw new ApiError("NOT_FOUND", "SCF Risk not found.", 404);
+
+      // Include mapped controls
+      const mappings = await deps._db
+        .select({ scfControlId: scfRiskControlMappings.scfControlId })
+        .from(scfRiskControlMappings)
+        .where(eq(scfRiskControlMappings.scfRiskId, riskId));
+
+      return json({
+        data: {
+          ...risk,
+          mapped_control_ids: mappings.map((m) => m.scfControlId),
+        },
+        trace_id: traceId,
+      });
+    },
+  },
+
+  // ── GET /scf/threats ──────────────────────────────────────────────────
+  // SCR-RMM: Global SCF Threat Catalog. Optional filter: ?category=<string>
+  {
+    method: "GET",
+    path: "/api/v1/scf/threats",
+    authRequired: true,
+    tenantRequired: false,
+    handler: async ({ deps, request, traceId }) => {
+      if (!deps._db)
+        throw new ApiError("INTERNAL_ERROR", "DB client not available.", 500);
+
+      const url = new URL(request.url);
+      const category = url.searchParams.get("category");
+
+      const rows = await deps._db
+        .select()
+        .from(scfThreats)
+        .where(category ? eq(scfThreats.category, category) : undefined);
+
+      return json({ data: rows, total: rows.length, trace_id: traceId });
+    },
+  },
+
+  // ── GET /scf/threats/:threatId ────────────────────────────────────────────
+  {
+    method: "GET",
+    path: "/api/v1/scf/threats/:threatId",
+    authRequired: true,
+    tenantRequired: false,
+    handler: async ({ deps, params, traceId }) => {
+      if (!deps._db)
+        throw new ApiError("INTERNAL_ERROR", "DB client not available.", 500);
+
+      const threatId = routeUuidParam(params, "threatId");
+
+      const [threat] = await deps._db
+        .select()
+        .from(scfThreats)
+        .where(eq(scfThreats.id, threatId))
+        .limit(1);
+
+      if (!threat)
+        throw new ApiError("NOT_FOUND", "SCF Threat not found.", 404);
+
+      // Include mapped controls
+      const mappings = await deps._db
+        .select({ scfControlId: scfThreatControlMappings.scfControlId })
+        .from(scfThreatControlMappings)
+        .where(eq(scfThreatControlMappings.scfThreatId, threatId));
+
+      return json({
+        data: {
+          ...threat,
+          mapped_control_ids: mappings.map((m) => m.scfControlId),
+        },
         trace_id: traceId,
       });
     },
