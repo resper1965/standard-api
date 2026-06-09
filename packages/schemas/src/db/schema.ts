@@ -837,6 +837,91 @@ export const scfThreatControlMappings = pgTable(
 );
 
 /**
+ * SCR-RMM Step 13: Risk Treatment options.
+ * Q-C decision (2026-06-09): `accept` does NOT require a mandatory approval event —
+ * the register entry itself is the audit record. Extreme/severe risk acceptance is
+ * flagged in the ROC report but not hard-gated.
+ */
+export const riskTreatmentEnum = pgEnum("risk_treatment", [
+  "mitigate", // Implement or improve controls to reduce residual risk
+  "accept", // Formally accept residual risk (audit-logged; no approval gate)
+  "transfer", // Transfer risk via insurance, contract, or third party
+  "avoid", // Discontinue the activity that generates the risk
+  "monitor", // Accept current level but increase monitoring frequency
+]);
+
+/**
+ * SCR-RMM Steps 13-15: Assessment Risk Register.
+ *
+ * Operational risk register scoped to an assessment. Each entry captures:
+ *   - Source gap finding that identified the risk
+ *   - Risk rating (inherent/residual, category)
+ *   - Treatment decision and owner
+ *   - Review cadence and ROC linkage
+ *
+ * Q-D decision (2026-06-09): scf_version_id REQUIRED for AGENTS.md §8 traceability.
+ */
+export const assessmentRiskRegister = pgTable(
+  "assessment_risk_register",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id),
+    assessmentId: uuid("assessment_id")
+      .notNull()
+      .references(() => assessments.id),
+    /** AGENTS.md §8: records the SCF version under which risk was scored and treated. */
+    scfVersionId: uuid("scf_version_id")
+      .notNull()
+      .references(() => scfVersions.id),
+    /** Source gap finding that generated this risk register entry. */
+    gapFindingId: uuid("gap_finding_id")
+      .notNull()
+      .references(() => gapFindings.id),
+    /** Optional link to SCF Risk Catalog for normative risk traceability. */
+    scfRiskId: uuid("scf_risk_id").references(() => scfRisks.id),
+    riskTitle: text("risk_title").notNull(),
+    riskDescription: text("risk_description"),
+    /** SCR-RMM Step 12: Inherent risk score (IE × OL). */
+    inherentRiskScore: numeric("inherent_risk_score", {
+      precision: 6,
+      scale: 2,
+    }),
+    /** SCR-RMM Step 12: Residual risk score (post-control mitigation). */
+    residualRiskScore: numeric("residual_risk_score", {
+      precision: 6,
+      scale: 2,
+    }),
+    /** 5-category risk rating: low|moderate|high|severe|extreme */
+    riskCategory: text("risk_category"),
+    /** SCR-RMM Step 13: Treatment decision. */
+    treatment: riskTreatmentEnum("treatment").notNull(),
+    /** Rationale for treatment decision. Required for `accept` at extreme/severe (advisory). */
+    treatmentRationale: text("treatment_rationale"),
+    /** Owner responsible for executing or monitoring the treatment. */
+    ownerId: uuid("owner_id").references(() => users.id),
+    /** Target date for treatment completion or next periodic review. */
+    reviewDate: date("review_date"),
+    /** ROC determination inherited from source gap finding (denormalized for reporting). */
+    rocDetermination: rocDeterminationEnum("roc_determination"),
+    traceId: text("trace_id").notNull(),
+    ...timestamps(),
+  },
+  (table) => [
+    index("arr_org_assessment_idx").on(
+      table.organizationId,
+      table.assessmentId,
+    ),
+    index("arr_gap_finding_idx").on(table.gapFindingId),
+    uniqueIndex("arr_assessment_finding_uidx").on(
+      table.assessmentId,
+      table.gapFindingId,
+    ),
+  ],
+);
+
+/**
  * Single Source of Truth for control implementation status.
  * The assessment is ALWAYS against SCF controls. Frameworks are projections (masks).
  *
