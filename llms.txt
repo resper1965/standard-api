@@ -1,49 +1,168 @@
 # Standard GRC API - AI Context
 
 ## Current Reality
-This file provides the single source of truth for the architecture and technical stack to prevent hallucinations or references to legacy code.
+
+This file provides the single source of truth for architecture and technical stack. It prevents hallucinations and references to legacy code.
+
+**Production URL:** `https://standard-api.bekaa.eu`
+**Platform version:** 2026.1 (SCF 2026.1, SCR-CMM 2026.1)
+**SDK:** `@standard/sdk` v1.0.0 — npm public, zero-dep, TypeScript-first
+
+---
 
 ### 1. Tenancy Model
-- **Concept:** A arquitetura é Multi-Organization. O Platform Admin é quem faz a criação da organização e cede acesso ao administrador daquela organização. Só o administrador acessa a aplicação para criar suas chaves.
-- **Rule:** The concept of `tenant` or `tenant_id` **DOES NOT EXIST** in this application anymore. Multi-tenancy is exclusively handled via `organization_id` (or `organizationId`). All endpoints, middlewares, databases, and artifacts are strictly isolated by `organizationId`. The legacy `tenant_id` columns and `tenants` table have been completely dropped from the physical PostgreSQL schemas via migration `0032_drop_legacy_tenants.sql`, removing all legacy constraints and references.
+
+- **Concept:** Multi-Organization. Platform Admin creates the organization and grants access to that organization's administrator. Only the administrator accesses the application to create their API keys.
+- **Rule:** The concept of `tenant` or `tenant_id` **DOES NOT EXIST** in this application. Multi-tenancy is exclusively handled via `organization_id` (or `organizationId`). All endpoints, middlewares, databases, and artifacts are strictly isolated by `organizationId`. Legacy `tenant_id` columns and `tenants` table were dropped via migration `0032_drop_legacy_tenants.sql`.
+
+---
 
 ### 2. Authentication Model
+
 - **Provider:** Standard Native Auth v1.6.11.
 - **Rule:** Do NOT use or reference Clerk, Supabase, Auth0, or any other external provider.
-- **Storage:** Sessions and Users are managed via Standard Native Auth backed by Neon PostgreSQL (`sessions`, `users` tables). As funcionalidades atribuídas ao 'member' foram eliminadas, somos API only. O administrador da organização é a única pessoa com direito de acesso à mesma.
-- **API Keys:** Handled via `@standard-native-auth/api-key` plugin.
+- **API Keys:** Format `standard_live_...` — handled via `@standard-native-auth/api-key` plugin.
+- **Auth flow:** Bearer token (API key) OR session cookie. Organization context automatically resolved — no custom headers required.
 
-### 3. Frontend Architecture
-- **Application (`apps/web`):** This is a **Platform Console** for managing Orgs, Users, API keys, and System Health. 
-- **Rule:** It is **NOT** a GRC Dashboard for end-users. The assessment features are primarily consumed via our API (`apps/api-gateway`).
-- **Users Page:** `apps/web/src/pages/admin/Users.tsx` is composed of 5 sub-components in `apps/web/src/pages/admin/components/` (e.g., `UserTable`, `UserForm`, `UserFilters`, `UserActions`, `UserDetails`). Do NOT inline large blocks back into `Users.tsx`.
+---
+
+### 3. Frontend Architecture (`apps/web`)
+
+- **Application:** **Platform Console** for managing Orgs, Users, API keys, and System Health.
+- **Rule:** It is **NOT** a GRC Dashboard for end-users. Assessment features are consumed via the API.
+- **Stack:** React 18 + Vite 5 + React Router + TanStack Query v5 + better-auth v1.6.11
+- **API client:** `src/lib/api.ts` — typed fetch wrapper, injects `x-standard-tenant-id`, handles 401→/login, 15s timeout
+- **Production URL:** resolved from `VITE_API_URL=https://standard-api.bekaa.eu`
+
+---
 
 ### 4. Core Stack
-- **Edge:** Cloudflare Workers, Workflows, Queues.
-- **Database:** Neon Serverless PostgreSQL with Drizzle ORM.
-- **AI/Vector:** Cloudflare Vectorize + R2 for documents.
-- **Package Manager:** pnpm workspaces.
 
-### 5. Backend Architecture (Post-Refactoring)
+- **Edge:** Cloudflare Workers, Workflows, Queues, KV, R2, Vectorize, AI Gateway
+- **Database:** Neon Serverless PostgreSQL + Drizzle ORM (migrations `0001`→`0045`)
+- **AI/Vector:** Cloudflare Vectorize + R2 for documents
+- **Package Manager:** pnpm workspaces
+
+---
+
+### 5. Backend Architecture
+
 - **API Gateway (`apps/api-gateway`):**
-  - `app.ts` delegates CORS configuration, security headers, and auth resolution to `app-helpers.ts`. Do NOT inline these concerns back into `app.ts`.
-  - `index.ts` delegates bindings resolution, dependency injection bootstrapping, and auth route handling to `index-helpers.ts`. Do NOT inline these concerns back into `index-helpers.ts`.
+  - `app.ts` delegates CORS/security headers/auth resolution to `app-helpers.ts`. Do NOT inline these back.
+  - `index.ts` delegates bindings/DI bootstrapping to `index-helpers.ts`. Do NOT inline these back.
+  - DB access pattern: `deps._db` (Drizzle client) for direct SQL; `deps.<module>.repositories` for domain repositories.
+  - 50 route files, ~400 endpoints at `/api/v1/...`, auth required on all except `/health` and `/api/v1/scf/*`.
+
 - **Agent Runtime (`packages/agent-runtime`):**
-  - `council.ts` uses a **dispatch map pattern** (`AgentDispatchMap`) to route agent names to handler functions. Do NOT replace this with `if/else` or `switch` chains.
+  - `council.ts` uses a **dispatch map pattern** (`AgentDispatchMap`). Do NOT replace with if/else chains.
+
 - **SCF Core (`packages/scf-core`):**
-  - `importers/csv-importer.ts` uses an `ImportContext` object + row-handler functions for CSV ingestion. Do NOT replace this with monolithic parsing loops.
+  - Normative source of truth — SCF 2026.1, 1,468 controls, 231 frameworks, 33 domains.
+  - `importers/xlsx-importer.ts` handles XLSX ingestion. Do NOT create alternate importers.
+
 - **Assessment Engine (`packages/assessment-engine`):**
-  - `prerequisites.ts` uses a **declarative lookup table** for prerequisite resolution. Do NOT replace this with `switch` statements.
+  - `prerequisites.ts` uses a **declarative lookup table**. Do NOT replace with switch statements.
 
-### 6. Assessment Engine & Services (Declarative Patterns)
-- **Gap Analysis service:** Uses declarative validation rule arrays for finding validation. Do NOT replace with imperative validation logic.
-- **POA&M service:** Uses declarative validation rule arrays for item and milestone validation. Do NOT replace with imperative validation logic.
-- **Rule:** When extending validation, add entries to the rule arrays instead of adding new `if` blocks.
+---
 
-### 7. Developer Experience & Linter
-- **Linter:** ESLint v10 is configured via Flat Config format at the root level (`eslint.config.js`). It is executed centrally and covers all packages (except the frontend `apps/web` which has its own React-specific config). 
-- **Rule:** Ensure all new code complies with root rules. If Husky pre-commit hooks fail, debug using `npx eslint <path>`.
+### 6. Assessment Lifecycle — States & Approval Gates
 
-If you are modifying code, ensure you use `organizationId` instead of `tenantId`. If you encounter any remnant of `tenantId` in the codebase, you should immediately refactor it to `organizationId`.
+**States (30):** draft → documents_uploaded → documents_ingested → scf_pre_analysis_ready → framework_selected → scope_drafted → soa_drafted → soa_under_review → **soa_approved** → soa_ingested → evidence_analysis_ready → gap_analysis_drafted → gap_analysis_under_review → **gap_analysis_approved** → maturity_assessed → maturity_under_review → **maturity_approved** → poam_drafted → poam_under_review → **poam_approved** → report_generated → closed → archived → cancelled → failed → blocked
 
+**Mandatory approval gates:** SoA, Gap Analysis, Maturity Assessment, POA&M.
 
+**Rule:** Approved artifacts are **immutable** — corrections create a new version.
+
+---
+
+### 7. SCR-RMM Risk Management (2026-06-09)
+
+**Risk Register API:** `POST/GET/PATCH/DELETE /api/v1/assessments/:id/risk-register`
+- Inherits `inherent_risk_score` and `residual_risk_score` from `gap_findings`
+- Derives `risk_category`: low(<0.2) / moderate(<0.4) / high(<0.6) / severe(<0.8) / extreme(≥0.8)
+- Derives `roc_determination`: strictly_conforms / conforms / significant_deficiency / material_weakness
+
+**Risk Appetite Architecture (ADR-014):**
+- `risk_appetite`, `risk_tolerance`, `risk_threshold` are **inputs FROM the consuming application** (GRC/frontend)
+- Standard does **NOT** manage risk appetite — receives, stores, and uses per-request
+- `within_tolerance = residual_risk_score <= risk_tolerance_input` (calculated by Standard)
+- `within_tolerance = null` when `risk_tolerance_input` is not provided
+
+**ROC Determination auto-calc:**
+- critical/high severity + not_met → `material_weakness`
+- medium severity + not_met → `significant_deficiency`
+- any severity + partially_met → `significant_deficiency`
+- low + met/fully_met → `conforms`
+- low + met + maturity≥4 → `strictly_conforms`
+
+---
+
+### 8. SCR-CMM Maturity (2026-06-09)
+
+**Assessment Method:** `assessment_method` column on `maturity_scores`
+- Values: `examine` (artifact review), `interview` (discussions), `test` (technical exercise)
+
+**Maturity Domain Targets:** `maturity_domain_targets` JSONB on `assessments`
+- Format: `{ "ACM": 3, "CPL": 2, "GOV": 3 }` (domain_code → L0–L5 integer)
+- Enables spider chart: current maturity (computed) vs target (set by CISO)
+- API: `PUT/GET /api/v1/assessments/:id/maturity-targets`
+
+**Scoring:** L0 (Not Performed) → L5 (Continuously Improving), 0–5 integer
+
+---
+
+### 9. SCF Catalog APIs (2026-06-09)
+
+```
+GET /api/v1/scf/risks           # Global risk catalog (optional ?category=)
+GET /api/v1/scf/risks/:riskId   # Risk detail + mapped control IDs
+GET /api/v1/scf/threats         # Global threat catalog (optional ?category=)
+GET /api/v1/scf/threats/:id     # Threat detail + mapped control IDs
+```
+
+**Rule:** SCF risks and threats are normative data — they are READ-ONLY catalog entries. Never allow user mutation.
+
+---
+
+### 10. Assessment Engine & Services (Declarative Patterns)
+
+- **Gap Analysis service:** Declarative validation rule arrays. Do NOT replace with imperative logic.
+- **POA&M service:** Declarative validation rule arrays. Do NOT replace with imperative logic.
+- **Rule:** When extending validation, add entries to rule arrays — never add new `if` blocks.
+
+---
+
+### 11. Developer Experience & Linter
+
+- **Linter:** ESLint v10 Flat Config at root (`eslint.config.js`). Covers all packages.
+- `apps/web` has its own React-specific config.
+- Pre-commit hooks via Husky. Debug with `npx eslint <path>`.
+- Commit format: conventional commits, max 100 chars header.
+- AI commits MUST include `Co-Authored-By:` attribution.
+
+---
+
+### 12. Database Access Pattern
+
+```typescript
+// Direct Drizzle (for tables without domain repositories)
+const db = deps._db;
+if (!db) throw new ApiError("INTERNAL_ERROR", "DB client not available.", 500);
+const rows = await db.select().from(table).where(eq(table.orgId, orgId));
+
+// Domain repositories (preferred when available)
+const entry = await deps.gapAnalysis.repositories.gapFindings
+  .withOrganization(orgId)
+  .get(findingId);
+```
+
+**Rule:** Always scope queries with `organization_id`. Never query without tenant scope.
+
+---
+
+**If you are modifying code:**
+- Use `organizationId` — NEVER `tenantId`
+- Scope every DB query with `organization_id`
+- Validate every agent output with Zod schema before persistence
+- Respect approval gates — never bypass
+- Record `trace_id`, `agent_run_id`, `scf_version_id` on all critical outputs

@@ -51,20 +51,7 @@ const IconAlert = () => (
   </svg>
 )
 
-const IconShieldFill = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-    <path
-      d="M12 2L4 6v6c0 5.25 3.5 10.15 8 11.5C17.5 22.15 21 17.25 21 12V6L12 2z"
-      fill="url(#shield-gradient)"
-    />
-    <defs>
-      <linearGradient id="shield-gradient" x1="4" y1="2" x2="21" y2="23.5" gradientUnits="userSpaceOnUse">
-        <stop offset="0%" stopColor="#60a5fa" />
-        <stop offset="100%" stopColor="#a78bfa" />
-      </linearGradient>
-    </defs>
-  </svg>
-)
+/* Typographic logo — no SVG needed */
 
 const IconCheck = () => (
   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -320,26 +307,27 @@ export function LoginPage() {
             ═══════════════════════════════════════════ */}
         <aside className="lp-left" aria-label="Standard Platform overview">
 
-          {/* Logo mark */}
+          {/* Typographic logo */}
           <div className="lp-logo">
-            <div className="lp-logo-icon" aria-hidden="true">
-              <IconShieldFill />
-            </div>
-            <span className="lp-logo-name">Standard</span>
-            <span className="lp-logo-tag">Be Secure · Bekaa</span>
+            <span className="lp-logo-mark">
+              b<span className="lp-logo-dot">.</span>standard
+            </span>
           </div>
 
           {/* Hero copy */}
           <div className="lp-hero">
+            <p className="lp-hero-eyebrow">
+              be secure<span className="lp-dot">.</span>
+            </p>
             <h1 className="lp-hero-title">
-              The Enterprise{" "}
-              <span className="lp-hero-accent">Assessment</span>{" "}
-              <span className="lp-hero-accent lp-hero-accent--delay">Engine.</span>
+              Compliance without{" "}
+              <span className="lp-hero-accent">the chaos</span>{" "}
+              <span className="lp-hero-accent lp-hero-accent--delay">or the spreadsheets.</span>
             </h1>
             <p className="lp-hero-desc">
-              Part of <strong style={{ color: "#60a5fa", fontWeight: 600 }}>Be Secure</strong> by Bekaa.
-              Run security, compliance, and maturity assessments
-              at scale — API-first, multi-tenant, enterprise-grade.
+              b.standard turns your security assessment lifecycle into a
+              structured, traceable workflow. Every control mapped.
+              Every gap scored. Every finding audit&#8209;ready — at API speed.
             </p>
           </div>
 
@@ -362,7 +350,7 @@ export function LoginPage() {
           {/* Bottom tagline */}
           <div className="lp-left-footer">
             <span className="lp-footer-dot" aria-hidden="true" />
-            <span>Be Secure by Bekaa — Powered by Cloudflare</span>
+            <span>bekaa — powered by cloudflare edge</span>
           </div>
         </aside>
 
@@ -375,10 +363,9 @@ export function LoginPage() {
         >
           {/* Mobile-only logo */}
           <div className="lp-mobile-logo" aria-hidden="true">
-            <div className="lp-logo-icon lp-logo-icon--sm">
-              <IconShieldFill />
-            </div>
-            <span className="lp-logo-name">Standard</span>
+            <span className="lp-logo-mark lp-logo-mark--sm">
+              b<span className="lp-logo-dot">.</span>standard
+            </span>
           </div>
 
           {/* Mode switcher */}
@@ -583,7 +570,7 @@ export function LoginPage() {
           {/* Bottom brand */}
           <div className="lp-bottom-brand" aria-hidden="true">
             <span className="lp-bottom-dot" />
-            Standard API Platform — Be Secure · Bekaa {new Date().getFullYear()}
+            b.standard — be secure. — bekaa {new Date().getFullYear()}
           </div>
         </section>
       </div>
