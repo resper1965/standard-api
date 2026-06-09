@@ -26,6 +26,7 @@ export type TabClassification =
   | { type: "threat_catalog"; sheetName: string }
   | { type: "dpmp"; sheetName: string }
   | { type: "cdpas"; sheetName: string }
+  | { type: "mad"; sheetName: string }
   | { type: "unknown"; sheetName: string };
 
 // ──── Header Normalization ────
@@ -233,6 +234,14 @@ export const classifyTab = (
   // Check for DPMP (Data Privacy Management Principles) tab
   if (nameLower === "dpmp" || nameLower.startsWith("data privacy management")) {
     return { type: "dpmp" as const, sheetName };
+  }
+
+  // MA&D / MADSS tab detection (before generic crosswalk fallback)
+  if (
+    nameLower === "ma&d" || nameLower === "mad" || nameLower === "madss" ||
+    nameLower.startsWith("mergers") || nameLower.startsWith("m&a")
+  ) {
+    return { type: "mad" as const, sheetName };
   }
 
   // Everything else is treated as a crosswalk tab

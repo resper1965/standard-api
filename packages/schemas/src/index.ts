@@ -30,3 +30,4 @@ export * from "./privacy";
 export * from "./db/auth-schema";
 export * from "./dpmp";
 export * from "./cdpas";
+export * from "./mad";

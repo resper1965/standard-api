@@ -79,6 +79,7 @@ import { tpraRoutes } from "./routes/tpra.routes";
 import { userOrgsRoutes } from "./routes/user-orgs.routes";
 import { adminUsersRoutes } from "./routes/admin-users.routes";
 import { adminOrgsRoutes } from "./routes/admin-orgs.routes";
+import { madRoutes } from "./routes/mad.routes";
 
 /**
  * Route path prefixes that are tenant-exempt by convention.
@@ -155,6 +156,7 @@ export const routes: RouteDefinition[] = [
   ...tpraRoutes, // /api/v1/tpra/{questionnaires,tiers,score,...}
   ...adminUsersRoutes, // /api/v1/admin/users — platform admin user management
   ...adminOrgsRoutes, // /api/v1/admin/organizations
+  ...madRoutes, // /api/v1/mad — MA&D MADSS transaction assessments
 ];
 
 registerRoutesForOpenApi(routes);

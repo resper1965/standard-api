@@ -51,6 +51,8 @@ export const ScfImportStatisticsSchema = z.object({
   dpmp_framework_mappings: z.number().int().nonnegative().optional(),
   cdpas_standards: z.number().int().nonnegative().optional(),
   cdpas_sub_requirements: z.number().int().nonnegative().optional(),
+  mad_standards: z.number().int().nonnegative().optional(),
+  mad_sub_requirements: z.number().int().nonnegative().optional(),
 });
 
 export const ScfVersionSchema = z.object({

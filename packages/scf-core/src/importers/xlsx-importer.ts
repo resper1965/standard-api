@@ -28,7 +28,16 @@ import type {
   ScfRisk,
   ScfThreat,
 } from "../types";
-import type { DpmpPrinciple, DpmpFrameworkMapping, CdpasStandard, CdpasSubRequirement, CdpasControlMapping } from "@standard/schemas";
+import type { DpmpPrinciple, DpmpFrameworkMapping, CdpasStandard, CdpasSubRequirement, CdpasControlMapping, MadStandard, MadSubRequirement, MadMaturityCriteria } from "@standard/schemas";
+
+type MadControlMappingRecord = {
+  id: string;
+  scf_version_id: string;
+  mad_sub_requirement_id: string;
+  scf_control_id: string;
+  relationship_note: null;
+  is_synthetic: false;
+};
 import type { ScfImporter } from "./scf-importer";
 import { sha256Hex, validateBaseImportSource } from "./scf-importer";
 import {
@@ -708,14 +717,13 @@ const parseCdpasTab = (
   const standards: CdpasStandard[] = [];
   const subRequirements: CdpasSubRequirement[] = [];
   const controlMappings: CdpasControlMapping[] = [];
-  const standardByNumber = new Map<number, string>(); // number → id
+  const standardByNumber = new Map<number, string>();
 
   for (const row of rows) {
     const standardNumRaw =
       row["standard_#"] || row["standard_number"] || row["cdpas_standard"];
     const requirementCode =
       row["sub_requirement_#"] || row["requirement_code"] || row["sub_requirement_code"];
-
     if (!requirementCode) continue;
 
     const standardNum = standardNumRaw ? parseInt(standardNumRaw.toString(), 10) : 0;
@@ -723,7 +731,6 @@ const parseCdpasTab = (
     const reqTitle = row["sub_requirement"] || row["requirement_title"] || row["title"] || requirementCode;
     const description = row["description"] || row["requirement_description"] || undefined;
 
-    // Auto-create standard if not seen
     if (standardNum > 0 && !standardByNumber.has(standardNum)) {
       const sId = crypto.randomUUID();
       standardByNumber.set(standardNum, sId);
@@ -741,7 +748,6 @@ const parseCdpasTab = (
 
     const standardId = standardByNumber.get(standardNum) ?? standards[0]?.id ?? crypto.randomUUID();
 
-    // Parse assessment methods from boolean columns
     const methods: Array<"examine" | "interview" | "test"> = [];
     if (row["examine"] && ["x", "yes", "true", "1"].includes(row["examine"].toLowerCase())) methods.push("examine");
     if (row["interview"] && ["x", "yes", "true", "1"].includes(row["interview"].toLowerCase())) methods.push("interview");
@@ -760,7 +766,6 @@ const parseCdpasTab = (
       is_synthetic: false,
     });
 
-    // Parse SCF control mappings
     const controlsRaw =
       row["scf_control_#"] || row["scf_control_mappings"] || row["scf_controls"] || "";
     if (controlsRaw) {
@@ -781,6 +786,110 @@ const parseCdpasTab = (
   }
 
   return { standards, subRequirements, controlMappings };
+};
+
+// ──── MA&D Tab Parser ────
+
+const parseMadTab = (
+  rows: ParsedRow[],
+  versionId: string,
+  controlByCode: Map<string, string>,
+): {
+  standards: MadStandard[];
+  subRequirements: MadSubRequirement[];
+  maturityCriteria: MadMaturityCriteria[];
+  controlMappings: MadControlMappingRecord[];
+} => {
+  const standards: MadStandard[] = [];
+  const subRequirements: MadSubRequirement[] = [];
+  const maturityCriteria: MadMaturityCriteria[] = [];
+  const controlMappings: MadControlMappingRecord[] = [];
+  const standardByNumber = new Map<number, string>();
+
+  for (const row of rows) {
+    const standardNumRaw =
+      row["standard_#"] || row["standard_number"] || row["madss_standard_number"];
+    const requirementCode =
+      row["sub_requirement_#"] || row["requirement_code"] || row["sub_requirement_code"];
+    if (!requirementCode) continue;
+
+    const standardNum = standardNumRaw ? parseInt(standardNumRaw.toString(), 10) : 0;
+    const standardTitle = row["standard_title"] || row["standard"] || `Standard ${standardNum}`;
+    const phaseRaw = (row["phase"] || row["mad_phase"] || "pre_transaction")
+      .toLowerCase().replace(/[ \-]/g, "_") as MadStandard["phase"];
+
+    if (standardNum > 0 && !standardByNumber.has(standardNum)) {
+      const sId = crypto.randomUUID();
+      standardByNumber.set(standardNum, sId);
+      standards.push({
+        id: sId,
+        scf_version_id: versionId,
+        standard_number: standardNum,
+        code: `MADSS-${standardNum}`,
+        title: standardTitle.trim(),
+        description: null,
+        phase: phaseRaw,
+        sort_order: standardNum,
+        is_synthetic: false,
+      });
+    }
+
+    const standardId = standardByNumber.get(standardNum) ?? standards[0]?.id ?? crypto.randomUUID();
+    const subReqTitle = row["sub_requirement"] || row["requirement_title"] || row["title"] || requirementCode;
+    const description = row["description"] || row["requirement_description"] || undefined;
+
+    const subReqId = crypto.randomUUID();
+    subRequirements.push({
+      id: subReqId,
+      scf_version_id: versionId,
+      mad_standard_id: standardId,
+      requirement_code: requirementCode.trim(),
+      title: subReqTitle.trim(),
+      description: description?.trim() || null,
+      sort_order: subRequirements.length + 1,
+      is_synthetic: false,
+    });
+
+    for (let level = 0; level <= 5; level++) {
+      const criteriaText =
+        row[`l${level}`] ||
+        row[`level_${level}`] ||
+        row[`level_${level}_criteria`] ||
+        row[`l${level}_criteria`] ||
+        row[`maturity_level_${level}`];
+      if (criteriaText && criteriaText.trim()) {
+        maturityCriteria.push({
+          id: crypto.randomUUID(),
+          scf_version_id: versionId,
+          mad_sub_requirement_id: subReqId,
+          level,
+          criteria_text: criteriaText.trim(),
+          remediation_guidance: null,
+          is_synthetic: false,
+        });
+      }
+    }
+
+    const controlsRaw =
+      row["scf_control_#"] || row["scf_control_mappings"] || row["scf_controls"] || "";
+    if (controlsRaw) {
+      for (const code of controlsRaw.split(/[,;]/).map((s: string) => s.trim()).filter(Boolean)) {
+        const controlId = controlByCode.get(code);
+        if (controlId) {
+          controlMappings.push({
+            id: crypto.randomUUID(),
+            scf_version_id: versionId,
+            mad_sub_requirement_id: subReqId,
+            scf_control_id: controlId,
+            relationship_note: null,
+            is_synthetic: false,
+          });
+        }
+      }
+    }
+  }
+
+  return { standards, subRequirements, maturityCriteria, controlMappings };
 };
 
 // ──── Main XLSX Importer ────
@@ -973,7 +1082,7 @@ export const createXlsxScfImporter = (): ScfImporter => ({
       }
     }
 
-    // Phase 1.5: Parse extended meta-model tabs (AOs, ERL, Risks, Threats, Maturity, DPMP)
+    // Phase 1.5: Parse extended meta-model tabs (AOs, ERL, Risks, Threats, Maturity, DPMP, MA&D)
     const allAssessmentObjectives: ScfAssessmentObjective[] = [];
     const allEvidenceRequests: ScfEvidenceRequest[] = [];
     const allMaturityCriteria: ScfMaturityCriteria[] = [];
@@ -986,6 +1095,10 @@ export const createXlsxScfImporter = (): ScfImporter => ({
     const allCdpasStandards: CdpasStandard[] = [];
     const allCdpasSubRequirements: CdpasSubRequirement[] = [];
     const allCdpasControlMappings: CdpasControlMapping[] = [];
+    const allMadStandards: MadStandard[] = [];
+    const allMadSubRequirements: MadSubRequirement[] = [];
+    const allMadMaturityCriteria: MadMaturityCriteria[] = [];
+    const allMadControlMappings: MadControlMappingRecord[] = [];
 
     const riskByCode = new Map<string, string>();
     const threatByCode = new Map<string, string>();
@@ -1066,6 +1179,14 @@ export const createXlsxScfImporter = (): ScfImporter => ({
         const { principles, frameworkMappings } = parseDpmpTab(rows, versionId);
         allDpmpPrinciples.push(...principles);
         allDpmpFrameworkMappings.push(...frameworkMappings);
+      } else if (classification.type === "mad") {
+        const rows = parseSheetToRows(sheet);
+        const { standards, subRequirements, maturityCriteria, controlMappings } =
+          parseMadTab(rows, versionId, controlByCode);
+        allMadStandards.push(...standards);
+        allMadSubRequirements.push(...subRequirements);
+        allMadMaturityCriteria.push(...maturityCriteria);
+        allMadControlMappings.push(...controlMappings);
       }
     }
 
@@ -1128,6 +1249,8 @@ export const createXlsxScfImporter = (): ScfImporter => ({
         dpmp_framework_mappings: allDpmpFrameworkMappings.length,
         cdpas_standards: allCdpasStandards.length,
         cdpas_sub_requirements: allCdpasSubRequirements.length,
+        mad_standards: allMadStandards.length,
+        mad_sub_requirements: allMadSubRequirements.length,
       },
       trace_id: `xlsx-importer-${Date.now()}`,
     };
@@ -1156,6 +1279,10 @@ export const createXlsxScfImporter = (): ScfImporter => ({
         cdpasStandards: allCdpasStandards,
         cdpasSubRequirements: allCdpasSubRequirements,
         cdpasControlMappings: allCdpasControlMappings,
+        madStandards: allMadStandards,
+        madSubRequirements: allMadSubRequirements,
+        madMaturityCriteria: allMadMaturityCriteria,
+        madControlMappings: allMadControlMappings,
       },
       warnings: allWarnings,
     };
