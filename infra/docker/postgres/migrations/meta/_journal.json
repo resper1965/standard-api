@@ -239,6 +239,13 @@
       "when": 1780937868341,
       "tag": "0033_shocking_manta",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1781008816916,
+      "tag": "0034_fixed_hellfire_club",
+      "breakpoints": true
     }
   ]
 }
