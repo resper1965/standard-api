@@ -13,7 +13,7 @@ import {
   SYNTHETIC_REQ_1_2_ID,
   SYNTHETIC_SCF_VERSION_ID,
   SYNTHETIC_SCF_VERSION_LABEL,
-  SYNTHETIC_SOURCE_HASH
+  SYNTHETIC_SOURCE_HASH,
 } from "../constants";
 import type { ScfDataset } from "../types";
 
@@ -28,8 +28,8 @@ export const createSyntheticScfFixture = (): ScfDataset => ({
       imported_at: "2026-01-01T00:00:00.000Z",
       imported_by: "synthetic-seed",
       notes: "Synthetic/test SCF fixture. Not an official SCF dataset.",
-      is_synthetic: true
-    }
+      is_synthetic: true,
+    },
   ],
   domains: [
     {
@@ -39,7 +39,7 @@ export const createSyntheticScfFixture = (): ScfDataset => ({
       domain_name: "Governance",
       description: "Synthetic governance domain for tests.",
       sort_order: 1,
-      is_synthetic: true
+      is_synthetic: true,
     },
     {
       id: SYNTHETIC_IAC_DOMAIN_ID,
@@ -48,8 +48,8 @@ export const createSyntheticScfFixture = (): ScfDataset => ({
       domain_name: "Identity and Access Control",
       description: "Synthetic identity and access domain for tests.",
       sort_order: 2,
-      is_synthetic: true
-    }
+      is_synthetic: true,
+    },
   ],
   controls: [
     {
@@ -60,7 +60,7 @@ export const createSyntheticScfFixture = (): ScfDataset => ({
       control_title: "Synthetic governance policy",
       control_description: "Synthetic/test control. Not official SCF content.",
       status: "active",
-      is_synthetic: true
+      is_synthetic: true,
     },
     {
       id: SYNTHETIC_GOV_002_CONTROL_ID,
@@ -70,7 +70,7 @@ export const createSyntheticScfFixture = (): ScfDataset => ({
       control_title: "Synthetic governance review",
       control_description: "Synthetic/test control. Not official SCF content.",
       status: "active",
-      is_synthetic: true
+      is_synthetic: true,
     },
     {
       id: SYNTHETIC_IAC_001_CONTROL_ID,
@@ -80,7 +80,7 @@ export const createSyntheticScfFixture = (): ScfDataset => ({
       control_title: "Synthetic access authorization",
       control_description: "Synthetic/test control. Not official SCF content.",
       status: "active",
-      is_synthetic: true
+      is_synthetic: true,
     },
     {
       id: SYNTHETIC_IAC_002_CONTROL_ID,
@@ -90,8 +90,8 @@ export const createSyntheticScfFixture = (): ScfDataset => ({
       control_title: "Synthetic access review",
       control_description: "Synthetic/test control. Not official SCF content.",
       status: "active",
-      is_synthetic: true
-    }
+      is_synthetic: true,
+    },
   ],
   frameworks: [
     {
@@ -103,8 +103,8 @@ export const createSyntheticScfFixture = (): ScfDataset => ({
       category: "test",
       source_reference: "synthetic/test fixture",
       status: "active",
-      is_synthetic: true
-    }
+      is_synthetic: true,
+    },
   ],
   requirements: [
     {
@@ -115,7 +115,7 @@ export const createSyntheticScfFixture = (): ScfDataset => ({
       requirement_text: "Synthetic/test requirement mapped to GOV-001.",
       sort_order: 1,
       status: "active",
-      is_synthetic: true
+      is_synthetic: true,
     },
     {
       id: SYNTHETIC_REQ_1_2_ID,
@@ -125,8 +125,8 @@ export const createSyntheticScfFixture = (): ScfDataset => ({
       requirement_text: "Synthetic/test requirement mapped to IAC-001.",
       sort_order: 2,
       status: "active",
-      is_synthetic: true
-    }
+      is_synthetic: true,
+    },
   ],
   mappings: [
     {
@@ -140,7 +140,7 @@ export const createSyntheticScfFixture = (): ScfDataset => ({
       mapping_source: "synthetic/test fixture",
       is_official: true,
       status: "active",
-      is_synthetic: true
+      is_synthetic: true,
     },
     {
       id: SYNTHETIC_MAPPING_2_ID,
@@ -153,26 +153,26 @@ export const createSyntheticScfFixture = (): ScfDataset => ({
       mapping_source: "synthetic/test fixture",
       is_official: true,
       status: "active",
-      is_synthetic: true
-    }
+      is_synthetic: true,
+    },
   ],
   strmRelationships: [
     {
       id: "20000000-0000-4000-8000-000000000701",
-      relationship_type: "equal",
-      label: "Equal",
-      description: "Synthetic STRM reference row.",
-      directionality: "bidirectional",
-      default_strength_range: "exact"
+      scf_mapping_id: SYNTHETIC_MAPPING_1_ID,
+      relationship_type: "equal" as const,
+      relationship_strength: "strong" as const,
+      rationale: "Synthetic STRM reference row — equal.",
+      source: "synthetic_fixture",
     },
     {
       id: "20000000-0000-4000-8000-000000000702",
-      relationship_type: "related",
-      label: "Related",
-      description: "Synthetic STRM reference row.",
-      directionality: "bidirectional",
-      default_strength_range: "source-defined"
-    }
+      scf_mapping_id: SYNTHETIC_MAPPING_2_ID,
+      relationship_type: "intersecting" as const,
+      relationship_strength: "moderate" as const,
+      rationale: "Synthetic STRM reference row — intersecting.",
+      source: "synthetic_fixture",
+    },
   ],
   importRuns: [
     {
@@ -193,10 +193,9 @@ export const createSyntheticScfFixture = (): ScfDataset => ({
         mappings: 2,
         strm_relationships: 2,
         warnings: 0,
-        synthetic_records: 14
+        synthetic_records: 14,
       },
-      trace_id: "synthetic-trace"
-    }
-  ]
+      trace_id: "synthetic-trace",
+    },
+  ],
 });
-

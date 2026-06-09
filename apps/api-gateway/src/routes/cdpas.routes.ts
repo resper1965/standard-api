@@ -13,7 +13,11 @@ export const cdpasRoutes: RouteDefinition[] = [
       const url = new URL(request.url);
       const scfVersionId = url.searchParams.get("scf_version") ?? undefined;
       const standards = await (deps as any).cdpas.listStandards(scfVersionId);
-      return json({ data: standards, total: standards.length, trace_id: traceId });
+      return json({
+        data: standards,
+        total: standards.length,
+        trace_id: traceId,
+      });
     },
   },
   {
@@ -35,7 +39,12 @@ export const cdpasRoutes: RouteDefinition[] = [
     handler: async ({ deps, params, traceId }) => {
       const subReqId = routeParam(params, "subReqId");
       const subReq = await (deps as any).cdpas.getSubRequirement(subReqId);
-      if (!subReq) throw new ApiError("NOT_FOUND", "CDPAS sub-requirement not found.", 404);
+      if (!subReq)
+        throw new ApiError(
+          "NOT_FOUND",
+          "CDPAS sub-requirement not found.",
+          404,
+        );
       return json({ ...subReq, trace_id: traceId });
     },
   },
@@ -47,8 +56,15 @@ export const cdpasRoutes: RouteDefinition[] = [
     permissions: ["assessment:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
       const assessmentId = routeParam(params, "assessmentId");
-      const findings = await (deps as any).cdpas.listFindings(organizationId, assessmentId);
-      return json({ data: findings, total: findings.length, trace_id: traceId });
+      const findings = await (deps as any).cdpas.listFindings(
+        organizationId,
+        assessmentId,
+      );
+      return json({
+        data: findings,
+        total: findings.length,
+        trace_id: traceId,
+      });
     },
   },
   {
@@ -56,12 +72,25 @@ export const cdpasRoutes: RouteDefinition[] = [
     path: "/api/v1/assessments/:assessmentId/cdpas/findings/:subReqId",
     protected: true,
     requireActor: true,
-    permissions: ["assessment:write"],
-    handler: async ({ deps, params, request, organizationId, actorId, traceId }) => {
+    permissions: ["assessment:update"],
+    handler: async ({
+      deps,
+      params,
+      request,
+      organizationId,
+      actorId,
+      traceId,
+    }) => {
       const assessmentId = routeParam(params, "assessmentId");
       const subReqId = routeParam(params, "subReqId");
       const body = await parseJson(request, UpsertCdpasAssessmentFindingSchema);
-      const finding = await (deps as any).cdpas.upsertFinding(organizationId, assessmentId, subReqId, actorId, body);
+      const finding = await (deps as any).cdpas.upsertFinding(
+        organizationId,
+        assessmentId,
+        subReqId,
+        actorId,
+        body,
+      );
       return json({ ...finding, trace_id: traceId });
     },
   },
@@ -73,7 +102,10 @@ export const cdpasRoutes: RouteDefinition[] = [
     permissions: ["assessment:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
       const assessmentId = routeParam(params, "assessmentId");
-      const summary = await (deps as any).cdpas.getSummary(organizationId, assessmentId);
+      const summary = await (deps as any).cdpas.getSummary(
+        organizationId,
+        assessmentId,
+      );
       return json({ ...summary, trace_id: traceId });
     },
   },
