@@ -34,21 +34,6 @@ const IconAlert = () => (
   </svg>
 )
 
-const IconShieldFill = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-    <path
-      d="M12 2L4 6v6c0 5.25 3.5 10.15 8 11.5C17.5 22.15 21 17.25 21 12V6L12 2z"
-      fill="url(#shield-gradient-reset)"
-    />
-    <defs>
-      <linearGradient id="shield-gradient-reset" x1="4" y1="2" x2="21" y2="23.5" gradientUnits="userSpaceOnUse">
-        <stop offset="0%" stopColor="#60a5fa" />
-        <stop offset="100%" stopColor="#a78bfa" />
-      </linearGradient>
-    </defs>
-  </svg>
-)
-
 const IconArrow = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="M5 12h14M12 5l7 7-7 7" />
@@ -62,7 +47,6 @@ function ParticleCanvas() {
     if (!canvas) return
     const ctx = canvas.getContext("2d")
     if (!ctx) return
-
     let animId: number
     const resize = () => {
       canvas.width = window.innerWidth
@@ -70,84 +54,53 @@ function ParticleCanvas() {
     }
     resize()
     window.addEventListener("resize", resize)
-
-    const particles = Array.from({ length: 28 }, () => ({
+    const particles = Array.from({ length: 24 }, () => ({
       x: Math.random() * window.innerWidth,
       y: Math.random() * window.innerHeight,
-      r: Math.random() * 1.5 + 0.3,
-      vx: (Math.random() - 0.5) * 0.15,
-      vy: (Math.random() - 0.5) * 0.15,
-      alpha: Math.random() * 0.25 + 0.05,
+      r: Math.random() * 1.2 + 0.2,
+      vx: (Math.random() - 0.5) * 0.12,
+      vy: (Math.random() - 0.5) * 0.12,
+      alpha: Math.random() * 0.18 + 0.04,
     }))
-
     const render = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
       particles.forEach((p) => {
-        p.x += p.vx
-        p.y += p.vy
+        p.x += p.vx; p.y += p.vy
         if (p.x < 0) p.x = canvas.width
         if (p.x > canvas.width) p.x = 0
         if (p.y < 0) p.y = canvas.height
         if (p.y > canvas.height) p.y = 0
-
         ctx.beginPath()
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(148, 163, 184, ${p.alpha})`
+        ctx.fillStyle = `rgba(143, 168, 155, ${p.alpha})`
         ctx.fill()
       })
       animId = requestAnimationFrame(render)
     }
     render()
-
-    return () => {
-      cancelAnimationFrame(animId)
-      window.removeEventListener("resize", resize)
-    }
+    return () => { cancelAnimationFrame(animId); window.removeEventListener("resize", resize) }
   }, [])
-
   return <canvas ref={canvasRef} className="lp-canvas" aria-hidden="true" />
 }
 
 interface InputFieldProps {
-  id: string
-  label: string
-  type: string
-  value: string
-  onChange: (v: string) => void
-  placeholder: string
-  icon: React.ReactNode
-  autoComplete?: string
-  required?: boolean
-  minLength?: number
-  suffix?: React.ReactNode
+  id: string; label: string; type: string; value: string
+  onChange: (v: string) => void; placeholder: string; icon: React.ReactNode
+  autoComplete?: string; required?: boolean; minLength?: number; suffix?: React.ReactNode
 }
 
-function InputField({
-  id, label, type, value, onChange, placeholder, icon,
-  autoComplete, required, minLength, suffix
-}: InputFieldProps) {
+function InputField({ id, label, type, value, onChange, placeholder, icon, autoComplete, required, minLength, suffix }: InputFieldProps) {
   const [focused, setFocused] = useState(false)
   const filled = value.length > 0
-
   return (
     <div className={`lp-field${focused ? " is-focused" : ""}${filled ? " is-filled" : ""}`}>
       <label className="lp-label" htmlFor={id}>{label}</label>
       <div className="lp-input-shell">
         <span className="lp-input-prefix">{icon}</span>
-        <input
-          id={id}
-          className="lp-input"
-          type={type}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
-          autoComplete={autoComplete}
-          required={required}
-          minLength={minLength}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-          aria-required={required}
-        />
+        <input id={id} className="lp-input" type={type} value={value}
+          onChange={(e) => onChange(e.target.value)} placeholder={placeholder}
+          autoComplete={autoComplete} required={required} minLength={minLength}
+          onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} aria-required={required} />
         {suffix && <span className="lp-input-suffix">{suffix}</span>}
         <span className="lp-input-border" aria-hidden="true" />
       </div>
@@ -176,10 +129,10 @@ export function ResetPasswordPage() {
   if (!token) {
     return (
       <div className="lp-root" role="main">
-        <div className="lp-orb lp-orb--blue" aria-hidden="true" />
-        <div className="lp-orb lp-orb--violet" aria-hidden="true" />
+        <div className="lp-orb lp-orb--a" aria-hidden="true" />
+        <div className="lp-orb lp-orb--b" aria-hidden="true" />
         <div className="lp-loader-wrap" aria-label="Error">
-          <div className="lp-card" style={{ maxWidth: "420px", textAlign: "center", padding: "2rem" }}>
+          <div className="lp-card" style={{ maxWidth: "400px", textAlign: "center", padding: "2rem" }}>
             <h2 className="lp-card-title" style={{ color: "#ef4444" }}>Invalid Reset Link</h2>
             <p className="lp-card-sub" style={{ marginTop: "1rem" }}>
               The password reset token is missing or invalid. Please request a new password reset link.
@@ -196,31 +149,16 @@ export function ResetPasswordPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
-
-    if (password.length < 12) {
-      setError("Password must be at least 12 characters.")
-      return
-    }
-
-    if (password !== confirmPassword) {
-      setError("Passwords do not match.")
-      return
-    }
-
+    if (password.length < 12) { setError("Password must be at least 12 characters."); return }
+    if (password !== confirmPassword) { setError("Passwords do not match."); return }
     setLoading(true)
     try {
-      const result = await authClient.resetPassword({
-        newPassword: password,
-        token,
-      })
-
+      const result = await authClient.resetPassword({ newPassword: password, token })
       if (result.error) {
         setError(result.error.message || "Failed to reset password. The link may have expired.")
       } else {
         setSuccess(true)
-        setTimeout(() => {
-          navigate("/login")
-        }, 3000)
+        setTimeout(() => navigate("/login"), 3000)
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "An unexpected error occurred.")
@@ -231,21 +169,26 @@ export function ResetPasswordPage() {
 
   return (
     <div className="lp-root" role="main">
-      <div className="lp-orb lp-orb--blue" aria-hidden="true" />
-      <div className="lp-orb lp-orb--violet" aria-hidden="true" />
-      <div className="lp-orb lp-orb--cyan" aria-hidden="true" />
+      <div className="lp-orb lp-orb--a" aria-hidden="true" />
+      <div className="lp-orb lp-orb--b" aria-hidden="true" />
+      <div className="lp-orb lp-orb--c" aria-hidden="true" />
       <div className="lp-grid" aria-hidden="true" />
       <ParticleCanvas />
       <div className="lp-vignette" aria-hidden="true" />
 
       <div className="lp-layout" style={{ justifyContent: "center" }}>
-        <section className={`lp-right${formMounted ? " lp-right--in" : ""}`} style={{ maxWidth: "460px", width: "100%", padding: "2rem" }}>
-          
-          <div className="lp-mobile-logo" aria-hidden="true" style={{ marginBottom: "2rem" }}>
-            <div className="lp-logo-icon lp-logo-icon--sm">
-              <IconShieldFill />
+        <section className={`lp-right${formMounted ? " lp-right--in" : ""}`} style={{ maxWidth: "440px", width: "100%" }}>
+
+          {/* Logo */}
+          <div className="lp-mobile-logo" aria-hidden="true">
+            <div className="lp-mobile-logo-stack">
+              <span className="lp-logo-mark lp-logo-mark--sm">
+                b<span className="lp-logo-dot">.</span>standard
+              </span>
+              <span className="lp-logo-slogan lp-logo-slogan--sm">
+                be secure<span className="lp-logo-dot">.</span>
+              </span>
             </div>
-            <span className="lp-logo-name">Standard</span>
           </div>
 
           <div className="lp-card">
@@ -255,66 +198,42 @@ export function ResetPasswordPage() {
             </div>
 
             {success ? (
-              <div style={{ textAlign: "center", padding: "1.5rem" }}>
-                <p className="lp-forgot-sent" style={{ color: "#22c55e", fontSize: "1rem", fontWeight: 600 }} role="status">
+              <div style={{ textAlign: "center", padding: "1.5rem 0 0.5rem" }}>
+                <p className="lp-forgot-sent" style={{ fontSize: "0.9375rem" }} role="status">
                   ✓ Password reset successfully!
                 </p>
                 <p className="lp-card-sub" style={{ marginTop: "0.5rem" }}>
-                  Redirecting you to the Sign In page...
+                  Redirecting you to the Sign In page…
                 </p>
               </div>
             ) : (
               <form className="lp-form" onSubmit={handleSubmit} noValidate>
                 <InputField
-                  id="lp-password"
-                  label="New Password"
-                  type={showPw ? "text" : "password"}
-                  value={password}
-                  onChange={setPassword}
-                  placeholder="Min. 12 characters"
-                  icon={<IconLock />}
-                  autoComplete="new-password"
-                  required
-                  minLength={12}
+                  id="lp-password" label="New Password"
+                  type={showPw ? "text" : "password"} value={password}
+                  onChange={setPassword} placeholder="Min. 12 characters"
+                  icon={<IconLock />} autoComplete="new-password" required minLength={12}
                   suffix={
-                    <button
-                      type="button"
-                      className="lp-pw-toggle"
+                    <button type="button" className="lp-pw-toggle"
                       onClick={() => setShowPw((v) => !v)}
-                      aria-label={showPw ? "Hide password" : "Show password"}
-                    >
+                      aria-label={showPw ? "Hide password" : "Show password"}>
                       {showPw ? <IconEyeOff /> : <IconEye />}
                     </button>
                   }
                 />
-
                 <InputField
-                  id="lp-confirm-password"
-                  label="Confirm Password"
-                  type={showPw ? "text" : "password"}
-                  value={confirmPassword}
-                  onChange={setConfirmPassword}
-                  placeholder="Min. 12 characters"
-                  icon={<IconLock />}
-                  autoComplete="new-password"
-                  required
-                  minLength={12}
+                  id="lp-confirm-password" label="Confirm Password"
+                  type={showPw ? "text" : "password"} value={confirmPassword}
+                  onChange={setConfirmPassword} placeholder="Repeat your password"
+                  icon={<IconLock />} autoComplete="new-password" required minLength={12}
                 />
-
                 {error && (
                   <div className="lp-error" role="alert" aria-live="assertive">
                     <span className="lp-error-icon"><IconAlert /></span>
                     <span>{error}</span>
                   </div>
                 )}
-
-                <button
-                  id="lp-submit"
-                  className="lp-submit"
-                  type="submit"
-                  disabled={loading}
-                  aria-busy={loading}
-                >
+                <button id="lp-submit" className="lp-submit" type="submit" disabled={loading} aria-busy={loading}>
                   <span className={`lp-submit-content${loading ? " lp-submit-content--hidden" : ""}`}>
                     Reset Password
                     <span className="lp-submit-arrow"><IconArrow /></span>
@@ -327,9 +246,7 @@ export function ResetPasswordPage() {
           </div>
 
           <p className="lp-form-footer">
-            <Link to="/login" className="lp-link">
-              Back to Sign In
-            </Link>
+            <Link to="/login" className="lp-link">Back to Sign In</Link>
           </p>
         </section>
       </div>

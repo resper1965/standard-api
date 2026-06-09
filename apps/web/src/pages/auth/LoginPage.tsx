@@ -393,17 +393,6 @@ export function LoginPage() {
             />
           </div>
 
-          {/* Divider */}
-          <div className="lp-divider" aria-hidden="true" />
-
-          {/* Trust badges */}
-          <div className="lp-badges" role="list" aria-label="Platform certifications">
-            <TrustBadge>Multi-Tenant Isolation</TrustBadge>
-            <TrustBadge>Approval Gate Workflow</TrustBadge>
-            <TrustBadge>Immutable Audit Trail</TrustBadge>
-            <TrustBadge>Schema-Validated Outputs</TrustBadge>
-          </div>
-
           {/* Footer */}
           <div className="lp-left-footer">
             <span className="lp-footer-dot" aria-hidden="true" />
