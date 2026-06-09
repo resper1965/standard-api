@@ -905,6 +905,35 @@ export const assessmentRiskRegister = pgTable(
     reviewDate: date("review_date"),
     /** ROC determination inherited from source gap finding (denormalized for reporting). */
     rocDetermination: rocDeterminationEnum("roc_determination"),
+    /**
+     * Input da aplicação consumidora (GRC / frontend): corporate risk appetite (0.0–1.0).
+     * O Standard NÃO gerencia risk appetite — apenas recebe e armazena o valor usado no assessment.
+     */
+    riskAppetiteInput: numeric("risk_appetite_input", {
+      precision: 4,
+      scale: 2,
+    }),
+    /**
+     * Input da aplicação consumidora: LOB/unit risk tolerance (0.0–1.0).
+     * Usado para calcular within_tolerance: residual_risk_score <= risk_tolerance_input.
+     */
+    riskToleranceInput: numeric("risk_tolerance_input", {
+      precision: 4,
+      scale: 2,
+    }),
+    /**
+     * Input da aplicação consumidora: departmental risk threshold (0.0–1.0).
+     * Armazenado como contexto de rastreabilidade — não usado no cálculo de within_tolerance.
+     */
+    riskThresholdInput: numeric("risk_threshold_input", {
+      precision: 4,
+      scale: 2,
+    }),
+    /**
+     * Calculado pelo Standard: residual_risk_score <= risk_tolerance_input.
+     * null quando risk_tolerance_input não foi fornecido pela aplicação.
+     */
+    withinTolerance: boolean("within_tolerance"),
     traceId: text("trace_id").notNull(),
     ...timestamps(),
   },
