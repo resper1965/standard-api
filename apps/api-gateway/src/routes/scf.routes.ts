@@ -96,12 +96,17 @@ const requirementResponse = (requirement: ScfFrameworkRequirement) => ({
   requirement_id: requirement.id,
   framework_id: requirement.scf_framework_id,
   requirement_code: requirement.requirement_code,
+  ...(requirement.fde_code ? { fde_code: requirement.fde_code } : {}),
   requirement_title: requirement.requirement_title,
   ...(requirement.requirement_text
     ? { requirement_text: requirement.requirement_text }
     : {}),
   status: requirement.status,
   is_synthetic: requirement.is_synthetic,
+  is_mcr: requirement.is_mcr,
+  ...(requirement.mcr_rationale
+    ? { mcr_rationale: requirement.mcr_rationale }
+    : {}),
 });
 
 const resolveFrameworkId = async (
@@ -431,17 +436,25 @@ export const scfRoutes: RouteDefinition[] = [
     path: "/api/v1/scf/frameworks/:frameworkId/requirements",
     protected: true,
     permissions: ["scf:read"],
-    handler: async ({ deps, params, traceId }) => {
+    handler: async ({ deps, params, request, traceId }) => {
       const frameworkId = routeUuidParam(params, "frameworkId");
-      const requirements =
-        await deps.scf.frameworks.listRequirements(frameworkId);
+      const mcrOnly =
+        new URL(request.url).searchParams.get("mcr_only") === "true";
+
+      const requirements = mcrOnly
+        ? await deps.scf.frameworks.listMcrRequirements(frameworkId)
+        : await deps.scf.frameworks.listRequirements(frameworkId);
+
       return json({
         data: requirements.map(requirementResponse),
         framework_id: frameworkId,
+        mcr_only: mcrOnly,
+        total: requirements.length,
         trace_id: traceId,
       });
     },
   },
+
   {
     method: "GET",
     path: "/api/v1/scf/requirements/:requirementId/mappings",

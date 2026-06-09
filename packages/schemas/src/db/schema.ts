@@ -529,6 +529,14 @@ export const scfFrameworkRequirements = pgTable(
     sortOrder: integer("sort_order").default(0).notNull(),
     status: text("status").default("active").notNull(),
     isSynthetic: boolean("is_synthetic").default(false).notNull(),
+    /** Whether this requirement represents a Minimum Compliance Requirement (MCR) —
+     *  a legally mandated control obligation rather than a best-practice recommendation.
+     *  MCR gaps are treated as compliance blockers, not risk-based decisions.
+     *  Source: SCF XLSX crosswalk column "Mandatory" or manual admin classification. */
+    isMcr: boolean("is_mcr").default(false).notNull(),
+    /** Human-readable rationale for why this requirement is classified as MCR.
+     *  E.g. "Mandated by GDPR Art. 32 — technical measures for data security." */
+    mcrRationale: text("mcr_rationale"),
     ...timestamps(),
   },
   (table) => [
@@ -538,6 +546,7 @@ export const scfFrameworkRequirements = pgTable(
       table.requirementCode,
     ),
     index("scf_requirements_fde_code_idx").on(table.fdeCode),
+    index("scf_requirements_mcr_idx").on(table.isMcr),
   ],
 );
 

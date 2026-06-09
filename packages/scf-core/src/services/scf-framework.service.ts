@@ -16,7 +16,15 @@ export class ScfFrameworkService {
     return this.repository.listRequirements(frameworkId);
   }
 
-  getRequirement(requirementId: string): Promise<ScfFrameworkRequirement | null> {
+  /** Returns only requirements classified as MCR (Minimum Compliance Requirements).
+   *  MCR gaps are compliance blockers, not risk-based decisions. */
+  listMcrRequirements(frameworkId: string): Promise<ScfFrameworkRequirement[]> {
+    return this.repository.listMcrRequirements(frameworkId);
+  }
+
+  getRequirement(
+    requirementId: string,
+  ): Promise<ScfFrameworkRequirement | null> {
     return this.repository.getRequirement(requirementId);
   }
 }

@@ -3,7 +3,8 @@
  * @description Drizzle PostgreSQL repositories for Gap Analysis.
  * Uses $inferSelect types for row mappers so column names match exactly.
  */
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
+
 import {
   evidenceFindings,
   evidenceSources,
@@ -475,6 +476,8 @@ const mapGapFindingRow = (row: GapFindingRow): GapFindingResponse => ({
   assessment_status: row.assessmentStatus,
   gap_type: row.gapType,
   severity: row.severity,
+  // isMcrGap column is added via future migration; defaults to false for existing rows
+  is_mcr_gap: (row as any).isMcrGap ?? false,
   impact: row.impact ?? undefined,
   likelihood: row.likelihood ?? undefined,
   gap_summary: row.gapSummary,

@@ -116,12 +116,15 @@ const mapRequirement = (
   id: row.id,
   scf_framework_id: row.scfFrameworkId,
   requirement_code: row.requirementCode,
+  fde_code: row.fdeCode ?? undefined,
   requirement_title: row.title,
   requirement_text: row.description ?? row.requirementText ?? undefined,
   parent_requirement_id: row.parentRequirementId ?? undefined,
   sort_order: row.sortOrder,
   status: (row.status ?? "active") as ScfFrameworkRequirement["status"],
   is_synthetic: row.isSynthetic,
+  is_mcr: row.isMcr,
+  mcr_rationale: row.mcrRationale ?? undefined,
 });
 
 const mapMapping = (row: typeof scfMappings.$inferSelect): ScfMapping => ({
@@ -355,6 +358,20 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
       .select()
       .from(scfFrameworkRequirements)
       .where(eq(scfFrameworkRequirements.scfFrameworkId, frameworkId))
+      .orderBy(asc(scfFrameworkRequirements.sortOrder));
+    return rows.map(mapRequirement);
+  },
+
+  listMcrRequirements: async (frameworkId) => {
+    const rows = await db
+      .select()
+      .from(scfFrameworkRequirements)
+      .where(
+        and(
+          eq(scfFrameworkRequirements.scfFrameworkId, frameworkId),
+          eq(scfFrameworkRequirements.isMcr, true),
+        ),
+      )
       .orderBy(asc(scfFrameworkRequirements.sortOrder));
     return rows.map(mapRequirement);
   },
