@@ -907,12 +907,89 @@ export const scfRoutes: RouteDefinition[] = [
           );
         controlId = control.id;
       }
-      const data =
+
+      const allData =
         await deps.scf.repository.listAssessmentObjectivesForControl(controlId);
+
+      // ?pptdf=people,process,technology,data,facility — filter by active dimensions
+      const url = new URL(request.url);
+      const rawPptdf = url.searchParams.get("pptdf");
+      const pptdfFilter = rawPptdf
+        ? rawPptdf
+            .split(",")
+            .map((s) => s.trim().toLowerCase())
+            .filter(Boolean)
+        : [];
+
+      const data =
+        pptdfFilter.length > 0
+          ? allData.filter((obj) =>
+              pptdfFilter.some((dim) =>
+                (obj.pptdf_dimensions ?? []).includes(dim as never),
+              ),
+            )
+          : allData;
+
       return json({
         data,
         control_id: controlIdParam,
         count: data.length,
+        pptdf_filter: pptdfFilter.length > 0 ? pptdfFilter : null,
+        trace_id: traceId,
+      });
+    },
+  },
+  {
+    method: "GET",
+    path: "/api/v1/scf/controls/:controlId/pptdf-profile",
+    protected: true,
+    permissions: ["scf:read"],
+    handler: async ({ deps, params, request, traceId }) => {
+      const controlIdParam = routeParam(params, "controlId");
+      const isUuid =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+          controlIdParam,
+        );
+      let controlId: string;
+      if (isUuid) {
+        controlId = controlIdParam;
+      } else {
+        const versionId = await requireVersionQuery(request, deps);
+        const control = await deps.scf.controls.getControlByCode(
+          versionId,
+          controlIdParam,
+        );
+        if (!control)
+          throw new ApiError(
+            "NOT_FOUND",
+            `SCF control '${controlIdParam}' not found.`,
+            404,
+          );
+        controlId = control.id;
+      }
+
+      const objectives =
+        await deps.scf.repository.listAssessmentObjectivesForControl(controlId);
+
+      // Compute union of active PPTDF dimensions across all objectives
+      const active = new Set<string>();
+      for (const obj of objectives) {
+        for (const dim of obj.pptdf_dimensions ?? []) {
+          active.add(dim);
+        }
+      }
+
+      return json({
+        control_id: controlIdParam,
+        active_dimensions: [...active].sort(),
+        pptdf_profile: {
+          people: active.has("people"),
+          process: active.has("process"),
+          technology: active.has("technology"),
+          data: active.has("data"),
+          facility: active.has("facility"),
+        },
+        objectives_analyzed: objectives.length,
         trace_id: traceId,
       });
     },

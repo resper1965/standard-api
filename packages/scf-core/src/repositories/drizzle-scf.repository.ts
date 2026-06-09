@@ -1123,6 +1123,19 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
       scf_control_id: r.scfControlId,
       objective_code: r.objectiveCode,
       text: r.text,
+      pptdf_people: r.pptdfPeople ?? undefined,
+      pptdf_process: r.pptdfProcess ?? undefined,
+      pptdf_technology: r.pptdfTechnology ?? undefined,
+      pptdf_data: r.pptdfData ?? undefined,
+      pptdf_facility: r.pptdfFacility ?? undefined,
+      // Computed: collapsed array of active dimensions (no DB column)
+      pptdf_dimensions: [
+        ...(r.pptdfPeople ? (["people"] as const) : []),
+        ...(r.pptdfProcess ? (["process"] as const) : []),
+        ...(r.pptdfTechnology ? (["technology"] as const) : []),
+        ...(r.pptdfData ? (["data"] as const) : []),
+        ...(r.pptdfFacility ? (["facility"] as const) : []),
+      ],
     }));
   },
 
