@@ -326,7 +326,7 @@ export function LoginPage() {
               <IconShieldFill />
             </div>
             <span className="lp-logo-name">Standard</span>
-            <span className="lp-logo-tag">Platform</span>
+            <span className="lp-logo-tag">Be Secure · Bekaa</span>
           </div>
 
           {/* Hero copy */}
@@ -337,8 +337,9 @@ export function LoginPage() {
               <span className="lp-hero-accent lp-hero-accent--delay">Engine.</span>
             </h1>
             <p className="lp-hero-desc">
-              Run security, compliance, and maturity assessments at scale.
-              API-first, multi-tenant, enterprise-grade.
+              Part of <strong style={{ color: "#60a5fa", fontWeight: 600 }}>Be Secure</strong> by Bekaa.
+              Run security, compliance, and maturity assessments
+              at scale — API-first, multi-tenant, enterprise-grade.
             </p>
           </div>
 
@@ -361,7 +362,7 @@ export function LoginPage() {
           {/* Bottom tagline */}
           <div className="lp-left-footer">
             <span className="lp-footer-dot" aria-hidden="true" />
-            <span>Powered by Cloudflare Workers & D1</span>
+            <span>Be Secure by Bekaa — Powered by Cloudflare</span>
           </div>
         </aside>
 
@@ -582,7 +583,7 @@ export function LoginPage() {
           {/* Bottom brand */}
           <div className="lp-bottom-brand" aria-hidden="true">
             <span className="lp-bottom-dot" />
-            Standard API Platform — {new Date().getFullYear()}
+            Standard API Platform — Be Secure · Bekaa {new Date().getFullYear()}
           </div>
         </section>
       </div>
