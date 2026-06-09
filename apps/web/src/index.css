@@ -1,120 +1,63 @@
+/* ══════════════════════════════════════════════════════════════
+   b.standard — Design System
+   Nordic Tech: grafite antracite + verde sálvia digital
+   Be Secure · bekaa
+   ══════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ─────────────────────────────────────────────────────────────
-   Standard Design System — Enterprise Grade
-   Unified token layer: light + dark, accessible contrast ratios
-   ───────────────────────────────────────────────────────────── */
-
 @layer base {
   :root {
-    /* ── Light Mode ──────────────────────────────────────────── */
+    /* ── Nordic Tech — dark only, always ─────────────────── */
 
-    /* Surfaces */
-    --background:           220 20% 97%;      /* #F4F6F9  — cool neutral background */
-    --foreground:           222 47% 11%;      /* #0F172A  — near-black for readability */
+    /* Backgrounds */
+    --background:           213 9% 11%;      /* #1a1d20 — grafite antracite */
+    --foreground:           210 17% 95%;     /* #e9ecef — off-white gelo */
 
-    --card:                 0 0% 100%;        /* #FFFFFF  — pure white cards */
-    --card-foreground:      222 47% 11%;      /* #0F172A */
+    --card:                 213 9% 14%;      /* #212529 — grafite médio */
+    --card-foreground:      210 17% 95%;
 
-    --popover:              220 20% 97%;
-    --popover-foreground:   222 47% 11%;
+    --popover:              213 8% 16%;      /* #2b3035 */
+    --popover-foreground:   210 17% 95%;
 
-    /* Brand System */
-    --primary:              200 98% 39%;      /* #017AAD  — deeper teal, WCAG AA on white */
-    --primary-foreground:   0 0% 100%;
+    /* Sage Green — accent primário */
+    --primary:              152 10% 61%;     /* #8fa89b — verde sálvia */
+    --primary-foreground:   213 9% 11%;      /* texto escuro sobre sage */
 
-    --secondary:            220 14% 96%;      /* #F1F3F5  — subtle gray surface */
-    --secondary-foreground: 222 47% 11%;
+    --secondary:            213 8% 20%;      /* #2b3035 */
+    --secondary-foreground: 210 17% 95%;
 
-    /* Muted & Accent */
-    --muted:                220 14% 96%;
-    --muted-foreground:     215 16% 47%;      /* #64748B  — readable gray text */
+    --muted:                213 8% 20%;
+    --muted-foreground:     210 7% 70%;      /* #adb5bd */
 
-    --accent:               200 98% 39%;      /* same as primary for consistency */
-    --accent-foreground:    0 0% 100%;
+    --accent:               152 10% 61%;     /* sage green */
+    --accent-foreground:    213 9% 11%;
 
     /* Semantic */
-    --success:              160 84% 29%;      /* #0B8457 */
-    --success-foreground:   0 0% 100%;
-
-    --warning:              38 92% 50%;       /* #F59E0B */
-    --warning-foreground:   0 0% 100%;
-
-    --destructive:          0 72% 51%;        /* #DC2626 */
+    --success:              152 10% 61%;     /* sage */
+    --success-foreground:   213 9% 11%;
+    --warning:              38 100% 53%;     /* #ff9f0a */
+    --warning-foreground:   213 9% 11%;
+    --destructive:          3 100% 59%;      /* #ff3b30 */
     --destructive-foreground: 0 0% 100%;
 
-    --info:                 200 98% 39%;
-    --info-foreground:      0 0% 100%;
-
     /* Chrome */
-    --border:               220 13% 91%;      /* #E2E5EA  — soft border */
-    --input:                220 13% 91%;
-    --ring:                 200 98% 39%;
+    --border:               213 9% 22%;      /* rgba(255,255,255,0.08) equivalent */
+    --input:                213 9% 22%;
+    --ring:                 152 10% 61%;     /* sage focus ring */
 
-    /* Radii */
-    --radius:               0.5rem;
+    --radius: 0.5rem;
 
     /* Sidebar */
-    --sidebar-bg:           222 47% 11%;      /* dark sidebar in light mode */
-    --sidebar-fg:           220 14% 96%;
-    --sidebar-muted:        215 16% 47%;
-    --sidebar-border:       220 13% 18%;
-    --sidebar-accent:       200 98% 39%;
-  }
-
-  .dark {
-    /* ── Dark Mode ───────────────────────────────────────────── */
-
-    /* Surfaces */
-    --background:           224 32% 8%;       /* #0C111D  — deep navy-black */
-    --foreground:           210 40% 98%;      /* #F8FAFC */
-
-    --card:                 225 25% 12%;      /* #161B26  — elevated surface */
-    --card-foreground:      210 40% 98%;
-
-    --popover:              225 25% 14%;
-    --popover-foreground:   210 40% 98%;
-
-    /* Brand System */
-    --primary:              199 89% 48%;      /* #0EA5E9  — bright sky-blue */
-    --primary-foreground:   222 47% 11%;
-
-    --secondary:            225 20% 16%;      /* #1E2433  — subtle dark surface */
-    --secondary-foreground: 210 40% 98%;
-
-    /* Muted & Accent */
-    --muted:                225 20% 16%;
-    --muted-foreground:     218 11% 60%;      /* #8B95A5  — readable muted text */
-
-    --accent:               199 89% 48%;
-    --accent-foreground:    222 47% 11%;
-
-    /* Semantic — slightly brighter for dark backgrounds */
-    --success:              160 72% 46%;      /* #22C55E */
-    --success-foreground:   0 0% 100%;
-
-    --warning:              38 92% 50%;       /* #F59E0B */
-    --warning-foreground:   0 0% 100%;
-
-    --destructive:          0 84% 60%;        /* #EF4444 */
-    --destructive-foreground: 0 0% 100%;
-
-    --info:                 199 89% 48%;
-    --info-foreground:      0 0% 100%;
-
-    /* Chrome */
-    --border:               225 15% 18%;      /* #262D3A  — subtle dark border */
-    --input:                225 15% 18%;
-    --ring:                 199 89% 48%;
-
-    /* Sidebar — same tone as card in dark */
-    --sidebar-bg:           225 30% 10%;
-    --sidebar-fg:           210 40% 98%;
-    --sidebar-muted:        218 11% 60%;
-    --sidebar-border:       225 15% 18%;
-    --sidebar-accent:       199 89% 48%;
+    --sidebar-bg:           213 10% 12%;     /* #1e2124 */
+    --sidebar-fg:           210 17% 95%;
+    --sidebar-muted:        210 7% 70%;
+    --sidebar-border:       213 9% 18%;
+    --sidebar-accent:       152 10% 61%;
   }
 }
 
@@ -125,47 +68,48 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+    font-feature-settings: 'rlig' 1, 'calt' 1;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    letter-spacing: -0.01em;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: "Outfit", "Inter", sans-serif;
+    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
     letter-spacing: -0.03em;
   }
 
-  
+  /* b.standard brand logo — tipográfico */
   .brand-logo {
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 500;
-    color: #ffffff;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 300;
+    color: #e9ecef;
     text-transform: lowercase;
+    letter-spacing: -0.04em;
   }
   .brand-logo-dot {
-    color: #00ade8;
+    color: #8fa89b;
   }
 
   .font-brand {
-    font-family: "Outfit", sans-serif;
-    font-weight: 700;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 300;
     letter-spacing: -0.04em;
   }
 
-  /* Smooth transitions when switching themes */
+  /* Smooth transitions */
   *, *::before, *::after {
     transition-property: background-color, border-color;
     transition-duration: 150ms;
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   }
-
-  /* Opt-out for explicit transitions (animations, transforms) */
   [class*="animate-"],
   [class*="transition-"] {
     transition-property: all;
   }
 }
+
 
 @layer utilities {
   .hover-lift {
@@ -312,7 +256,7 @@
 
 }
 
-/* ── Legacy variables (Login.css compat) ───────────────────── */
+/* ── Legacy variables (Login.css — style.css compat) ───────────── */
 :root {
   --space-1: 0.25rem;
   --space-2: 0.5rem;
@@ -321,28 +265,34 @@
   --space-6: 1.5rem;
   --space-8: 2rem;
   --space-10: 2.5rem;
-  --text-xs: 0.75rem;
-  --text-sm: 0.875rem;
-  --text-base: 1rem;
-  --text-lg: 1.125rem;
+  --text-xs: 0.6875rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.9375rem;
+  --text-lg: 1.0625rem;
   --text-xl: 1.25rem;
   --text-2xl: 1.5rem;
-  --text-3xl: 1.875rem;
+  --text-3xl: 2.125rem;
   --weight-medium: 500;
   --weight-semibold: 600;
   --weight-bold: 700;
-  --radius: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
-  --accent: hsl(199 89% 48%);
-  --accent-hover: hsl(199 89% 42%);
-  --admin: hsl(265 80% 55%);
-  --text-secondary: hsl(218 11% 60%);
-  --text-muted: hsl(218 11% 50%);
-  --danger: hsl(0 84% 60%);
-  --danger-subtle: hsl(0 84% 60% / 0.1);
+  --radius: 10px;
+  --radius-sm: 6px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  /* Sage green — Nordic Tech accent */
+  --sage:        #8fa89b;
+  --sage-hover:  #7d9689;
+  --accent:      #8fa89b;
+  --accent-hover:#7d9689;
+  /* sem --admin violeta, sem --info azul */
+  --admin:       #8fa89b;
+  --text-secondary: #adb5bd;
+  --text-muted:  #6c757d;
+  --danger:      #ff3b30;
+  --danger-subtle: rgba(255, 59, 48, 0.10);
+  --warning:     #ff9f0a;
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* ── Custom scrollbar ──────────────────────────────────────── */
@@ -406,13 +356,13 @@
   100% { transform: rotate(0deg); }
 }
 
-/* Spell 3: Avatar — dim border glow on hover, no spinning ring */
+/* Spell 3: Avatar — sage green glow on hover */
 .avatar-glow {
   position: relative;
   transition: box-shadow 300ms ease;
 }
 .avatar-glow:hover {
-  box-shadow: 0 0 0 2px hsl(var(--primary) / 0.25);
+  box-shadow: 0 0 0 2px rgba(143, 168, 155, 0.25);
 }
 
 /* Spell 4: Nav — tighter icon shift, no bounce */
@@ -423,7 +373,7 @@
   transform: translateX(1px);
 }
 
-/* Spell 5: Active nav indicator — clean vertical bar */
+/* Spell 5: Active nav indicator — clean vertical bar, sage green */
 .nav-active-pill {
   position: relative;
 }
@@ -435,7 +385,7 @@
   width: 2px;
   height: 50%;
   border-radius: 0 2px 2px 0;
-  background: hsl(var(--primary));
+  background: #8fa89b;
   opacity: 0.8;
 }
 
@@ -460,7 +410,7 @@
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: hsl(var(--background));
+  background: #1a1d20;
   position: relative;
   overflow: hidden;
 }
@@ -469,8 +419,8 @@
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 60% 50% at 20% 30%, hsl(199 89% 48% / 0.06) 0%, transparent 70%),
-    radial-gradient(ellipse 50% 40% at 80% 70%, hsl(265 80% 55% / 0.04) 0%, transparent 70%);
+    radial-gradient(ellipse 60% 50% at 20% 30%, rgba(143, 168, 155, 0.06) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 40% at 80% 70%, rgba(143, 168, 155, 0.04) 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -515,8 +465,8 @@
 }
 .form-input:focus {
   outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px hsl(199 89% 48% / 0.15);
+  border-color: rgba(143, 168, 155, 0.45);
+  box-shadow: 0 0 0 3px rgba(143, 168, 155, 0.10);
 }
 .form-input::placeholder {
   color: var(--text-muted);
@@ -538,13 +488,13 @@
   border: none;
 }
 .btn-primary {
-  background: var(--accent);
-  color: white;
+  background: #8fa89b;
+  color: #1a1d20;
 }
 .btn-primary:hover {
-  background: var(--accent-hover);
+  background: #7d9689;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px hsl(199 89% 48% / 0.25);
+  box-shadow: 0 4px 12px rgba(143, 168, 155, 0.25);
 }
 .btn-primary:disabled {
   opacity: 0.6;

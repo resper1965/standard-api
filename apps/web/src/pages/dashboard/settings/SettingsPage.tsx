@@ -2,6 +2,7 @@ import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useState, useEffect } from "react"
 import { useSession } from "@/lib/auth-client"
 import { useOrgDetail, useOrgApiKeys, qk } from "@/lib/queries"
+import { useActiveOrg } from "@/hooks/useActiveOrg"
 import { useQueryClient } from "@tanstack/react-query"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
@@ -474,15 +475,14 @@ interface ApiKeySummary {
 // --- Component ---
 export function SettingsPage() {
   useDocumentTitle("Settings");
-  const { data: session } = useSession()
+  const { orgId } = useActiveOrg()
   const { toast } = useToast()
-  const hasActiveOrg = !!session?.session?.activeOrganizationId
-
-  const orgId = (session?.session as Record<string, unknown>)?.activeOrganizationId as string | undefined
+  // hasActiveOrg uses the resolved Standard UUID (not BA nanoid) from useActiveOrg
+  const hasActiveOrg = !!orgId
 
   const qc = useQueryClient()
-  const { data: orgDetail } = useOrgDetail(orgId)
-  const { data: apiKeysData } = useOrgApiKeys(orgId)
+  const { data: orgDetail } = useOrgDetail(orgId ?? undefined)
+  const { data: apiKeysData } = useOrgApiKeys(orgId ?? undefined)
 
   const activeOrg = orgDetail as OrgSummary | null | undefined
   const apiKeys = (apiKeysData?.data ?? []) as ApiKeySummary[]
