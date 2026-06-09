@@ -476,8 +476,7 @@ const mapGapFindingRow = (row: GapFindingRow): GapFindingResponse => ({
   assessment_status: row.assessmentStatus,
   gap_type: row.gapType,
   severity: row.severity,
-  // isMcrGap column is added via future migration; defaults to false for existing rows
-  is_mcr_gap: (row as any).isMcrGap ?? false,
+  is_mcr_gap: row.isMcrGap ?? false,
   impact: row.impact ?? undefined,
   likelihood: row.likelihood ?? undefined,
   gap_summary: row.gapSummary,

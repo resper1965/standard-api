@@ -1,0 +1,1 @@
+ALTER TABLE "gap_findings" ADD COLUMN "is_mcr_gap" boolean DEFAULT false NOT NULL;

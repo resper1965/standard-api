@@ -274,6 +274,27 @@
       "when": 1781024946839,
       "tag": "0038_minor_texas_twister",
       "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1781026770825,
+      "tag": "0039_jittery_vengeance",
+      "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1781027169689,
+      "tag": "0040_sturdy_moira_mactaggert",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1781027382054,
+      "tag": "0041_late_sway",
+      "breakpoints": true
     }
   ]
 }

@@ -87,6 +87,28 @@ export class GapDraftService {
   ): Promise<GapFindingResponse> {
     const now = new Date().toISOString();
     const assessment = this.assess(soaItem, evidenceFinding);
+
+    // MCR enrichment: check if this gap is tied to a Minimum Compliance Requirement (SCRMS-PIG Step 1c)
+    // Non-blocking: if SCF service unavailable or framework_id missing, defaults to false (conservative)
+    let is_mcr_gap = false;
+    if (
+      this.deps.scf &&
+      soaItem.framework_id &&
+      soaItem.framework_requirement_id
+    ) {
+      try {
+        const mcrReqs = await this.deps.scf.frameworks.listMcrRequirements(
+          soaItem.framework_id,
+        );
+        is_mcr_gap = mcrReqs.some(
+          (r) => r.id === soaItem.framework_requirement_id,
+        );
+      } catch {
+        // Non-blocking: default to false if SCF unavailable
+        is_mcr_gap = false;
+      }
+    }
+
     return {
       gap_finding_id: crypto.randomUUID(),
       organization_id: context.organizationId,
@@ -108,9 +130,7 @@ export class GapDraftService {
       assessment_status: assessment.status,
       gap_type: assessment.gapType,
       severity: assessment.severity,
-      // MCR enrichment is deferred to Gap×STRM linkage (Iniciativa 4).
-      // When the SoA item's requirement has is_mcr=true, this will be set to true.
-      is_mcr_gap: false,
+      is_mcr_gap,
       gap_summary: assessment.summary,
       ...(assessment.rationale ? { gap_rationale: assessment.rationale } : {}),
       recommendation_summary: assessment.recommendation,
