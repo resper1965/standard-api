@@ -253,6 +253,20 @@
       "when": 1781010392230,
       "tag": "0035_pale_human_cannonball",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1781018522956,
+      "tag": "0036_even_felicia_hardy",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1781018860649,
+      "tag": "0037_flashy_jack_flag",
+      "breakpoints": true
     }
   ]
 }
