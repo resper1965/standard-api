@@ -145,6 +145,16 @@ export const gapTypeEnum = pgEnum("gap_type", [
  * Strictly Conforms → material strength. Material Weakness → crosses risk threshold.
  * Per SCR-RMM, the worst finding in an assessment determines the overall ROC level.
  */
+/**
+ * SCR-CMM §Assessment Methods: the method used to assess a control.
+ * examine = review artifacts/docs; interview = discussions; test = exercise/validate.
+ */
+export const assessmentMethodEnum = pgEnum("assessment_method", [
+  "examine",
+  "interview",
+  "test",
+]);
+
 export const rocDeterminationEnum = pgEnum("roc_determination", [
   "strictly_conforms", // Controls exceed requirements — positive assurance
   "conforms", // Controls meet requirements — baseline assurance
@@ -1035,6 +1045,15 @@ export const assessments = pgTable(
      */
     assuranceLevel:
       assuranceLevelEnum("assurance_level").default("l1_standard"),
+    /**
+     * SCR-CMM §Use Case 1: Target maturity level per SCF domain, set by CISO/assessor.
+     * Format: { "ACM": 3, "CPL": 2, "GOV": 3, ... } (domain_code → target L0–L5).
+     * Enables spider chart visualization of current vs target maturity by domain.
+     * Managed via PUT /api/v1/assessments/:id/maturity-targets.
+     */
+    maturityDomainTargets: jsonb("maturity_domain_targets").$type<
+      Record<string, number>
+    >(),
     ...timestamps(),
   },
   (table) => [
@@ -1966,6 +1985,12 @@ export const maturityScores = pgTable(
       precision: 5,
       scale: 4,
     }).notNull(),
+    /**
+     * SCR-CMM §Assessment Methods: how this control was assessed.
+     * examine = artifact review, interview = discussions, test = technical exercise.
+     * Optional — defaults to examine if not specified.
+     */
+    assessmentMethod: assessmentMethodEnum("assessment_method"),
     ...timestamps(),
   },
   (table) => [
