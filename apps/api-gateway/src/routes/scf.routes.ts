@@ -288,8 +288,12 @@ export const scfRoutes: RouteDefinition[] = [
 
       const domainCode =
         url.searchParams.get("domain_code") || url.searchParams.get("domain");
-      const weightMin = url.searchParams.get("weight_min") ? parseFloat(url.searchParams.get("weight_min")!) : undefined;
-      const weightMax = url.searchParams.get("weight_max") ? parseFloat(url.searchParams.get("weight_max")!) : undefined;
+      const weightMin = url.searchParams.get("weight_min")
+        ? parseFloat(url.searchParams.get("weight_min")!)
+        : undefined;
+      const weightMax = url.searchParams.get("weight_max")
+        ? parseFloat(url.searchParams.get("weight_max")!)
+        : undefined;
 
       try {
         const controls = await deps.scf.controls.searchControls({
@@ -341,7 +345,10 @@ export const scfRoutes: RouteDefinition[] = [
     handler: async ({ deps, params, request, traceId }) => {
       const domainCode = routeParam(params, "domainCode").toUpperCase();
       const url = new URL(request.url);
-      const scfVersionId = await resolveVersionId(deps, url.searchParams.get("scf_version") || "latest");
+      const scfVersionId = await resolveVersionId(
+        deps,
+        url.searchParams.get("scf_version") || "latest",
+      );
 
       const limitStr = url.searchParams.get("limit");
       const limit = limitStr ? Math.min(parseInt(limitStr, 10), 200) : 100;
@@ -1048,8 +1055,138 @@ export const scfRoutes: RouteDefinition[] = [
     },
   },
   {
+    /**
+     * GET /api/v1/scf/strm/lookup?fde_code=AC-1
+     *
+     * Lookup all SCF controls mapped to a specific Focal Document Element (FDE) code.
+     * Returns the STRM relationship type and strength for each mapping.
+     *
+     * Query params:
+     *   - fde_code        (required) — FDE identifier, e.g. "AC-1", "A.5.1", "7.1.2"
+     *   - relationship_type (optional) — filter: equal|subset|superset|intersecting
+     *   - limit           (optional, default 100, max 500)
+     */
+    method: "GET",
+    path: "/api/v1/scf/strm/lookup",
+    protected: true,
+    permissions: ["scf:read"],
+    handler: async ({ deps, request, traceId }) => {
+      const url = new URL(request.url);
+      const fdeCode = url.searchParams.get("fde_code");
+      const relationshipType =
+        url.searchParams.get("relationship_type") ?? undefined;
+      const limitRaw = url.searchParams.get("limit");
+      const limit = limitRaw
+        ? Math.min(parseInt(limitRaw, 10) || 100, 500)
+        : 100;
+
+      if (!fdeCode) {
+        throw new ApiError(
+          "VALIDATION_ERROR",
+          "Missing required query parameter: fde_code.",
+          400,
+        );
+      }
+
+      const rows = await deps.scf.repository.lookupStrmByFdeCode(fdeCode, {
+        limit,
+        ...(relationshipType ? { relationshipType } : {}),
+      });
+
+      const data = rows.map((r: any) => ({
+        strm_id: r.id,
+        fde_code: r.fde_code,
+        fde_name: r.fde_name,
+        scf_control_id: r.scf_control_id,
+        control_code: r._control_code,
+        control_title: r._control_title,
+        relationship_type: r.relationship_type,
+        relationship_strength: r.relationship_strength,
+        rationale: r.rationale,
+        source: r.source,
+      }));
+
+      return json({
+        fde_code: fdeCode,
+        count: data.length,
+        data,
+        trace_id: traceId,
+      });
+    },
+  },
+  {
+    /**
+     * GET /api/v1/scf/strm/control/:control_code
+     *
+     * Lookup all FDE (framework requirements) mapped to a specific SCF control code
+     * with their STRM relationship type.
+     *
+     * Path params:
+     *   - control_code — SCF control code, e.g. "GOV-001", "IAC-15"
+     *
+     * Query params:
+     *   - relationship_type (optional) — filter: equal|subset|superset|intersecting
+     *   - limit           (optional, default 100, max 500)
+     */
+    method: "GET",
+    path: "/api/v1/scf/strm/control/:control_code",
+    protected: true,
+    permissions: ["scf:read"],
+    handler: async ({ deps, request, traceId, params }) => {
+      const controlCode = routeParam(params, "control_code");
+      const url = new URL(request.url);
+      const relationshipType =
+        url.searchParams.get("relationship_type") ?? undefined;
+      const limitRaw = url.searchParams.get("limit");
+      const limit = limitRaw
+        ? Math.min(parseInt(limitRaw, 10) || 100, 500)
+        : 100;
+
+      const rows = await deps.scf.repository.lookupStrmByControlCode(
+        controlCode,
+        {
+          limit,
+          ...(relationshipType ? { relationshipType } : {}),
+        },
+      );
+
+      if (!rows.length) {
+        const version = await deps.scf.versions.getLatestVersion();
+        const versionId = version?.id ?? "";
+        const control = versionId
+          ? await deps.scf.controls.getControlByCode(versionId, controlCode)
+          : null;
+        if (!control) {
+          throw new ApiError(
+            "NOT_FOUND",
+            `SCF control not found: ${controlCode}`,
+            404,
+          );
+        }
+      }
+
+      const data = rows.map((r) => ({
+        strm_id: r.id,
+        fde_code: r.fde_code,
+        fde_name: r.fde_name,
+        relationship_type: r.relationship_type,
+        relationship_strength: r.relationship_strength,
+        rationale: r.rationale,
+        source: r.source,
+      }));
+
+      return json({
+        control_code: controlCode,
+        count: data.length,
+        data,
+        trace_id: traceId,
+      });
+    },
+  },
+  {
     method: "GET",
     path: "/api/v1/scf/strm/compare",
+
     protected: true,
     permissions: ["scf:read"],
     handler: async ({ deps, request, traceId }) => {

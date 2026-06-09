@@ -68,6 +68,16 @@ export type ScfRepository = {
     versionId: string,
   ): Promise<ScfMapping[]>;
   listStrmRelationships(): Promise<ScfStrmRelationship[]>;
+  /** Lookup STRM relationships by FDE code (e.g. "AC-1", "A.5.1"). */
+  lookupStrmByFdeCode(
+    fdeCode: string,
+    opts?: { relationshipType?: string; limit?: number },
+  ): Promise<ScfStrmRelationship[]>;
+  /** Lookup STRM relationships by SCF control code (e.g. "GOV-001"). */
+  lookupStrmByControlCode(
+    controlCode: string,
+    opts?: { relationshipType?: string; limit?: number },
+  ): Promise<ScfStrmRelationship[]>;
   createImportRun(run: ScfImportRun): Promise<ScfImportRun>;
   saveImportRun(run: ScfImportRun): Promise<void>;
   listImportRuns(): Promise<ScfImportRun[]>;
@@ -278,6 +288,28 @@ export const createInMemoryScfRepository = (
       };
     },
     listStrmRelationships: async () => [...strmRelationships.values()],
+    lookupStrmByFdeCode: async (fdeCode, opts) => {
+      const code = fdeCode.trim().toLowerCase();
+      let results = [...strmRelationships.values()].filter(
+        (r) => (r.fde_code ?? "").toLowerCase() === code,
+      );
+      if (opts?.relationshipType)
+        results = results.filter(
+          (r) => r.relationship_type === opts.relationshipType,
+        );
+      return results.slice(0, opts?.limit ?? 100);
+    },
+    lookupStrmByControlCode: async (controlCode, opts) => {
+      const code = controlCode.trim().toLowerCase();
+      let results = [...strmRelationships.values()].filter(
+        (r) => (r.scf_control_id ?? "").toLowerCase() === code,
+      );
+      if (opts?.relationshipType)
+        results = results.filter(
+          (r) => r.relationship_type === opts.relationshipType,
+        );
+      return results.slice(0, opts?.limit ?? 100);
+    },
     createImportRun: async (run) => {
       importRuns.set(run.id, run);
       return run;
