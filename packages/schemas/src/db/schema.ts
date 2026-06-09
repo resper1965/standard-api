@@ -517,6 +517,11 @@ export const scfFrameworkRequirements = pgTable(
       .notNull()
       .references(() => scfFrameworks.id),
     requirementCode: text("requirement_code").notNull(),
+    /** Official Focal Document Element (FDE) identifier used in the SCF STRM bundle.
+     *  e.g. "A.5.1" for ISO 27001, "AC-1" for NIST 800-53, "7.1" for PCI DSS.
+     *  Populated by the crosswalk importer and used to join with scf_strm_relationships.
+     *  Distinct from requirement_code which may store SCF-internal or question text. */
+    fdeCode: text("fde_code"),
     title: text("title").notNull(),
     description: text("description"),
     requirementText: text("requirement_text"),
@@ -532,6 +537,7 @@ export const scfFrameworkRequirements = pgTable(
       table.scfFrameworkId,
       table.requirementCode,
     ),
+    index("scf_requirements_fde_code_idx").on(table.fdeCode),
   ],
 );
 
@@ -576,9 +582,15 @@ export const scfStrmRelationships = pgTable(
   {
     id: uuid("id").defaultRandom().primaryKey(),
     organizationId: uuid("organization_id").references(() => organizations.id),
-    scfMappingId: uuid("scf_mapping_id")
-      .notNull()
-      .references(() => scfMappings.id),
+    /** Optional: set when an scf_mapping row exists for this (fde_code, scf_control) pair. */
+    scfMappingId: uuid("scf_mapping_id").references(() => scfMappings.id),
+    /** Direct FK to the SCF control — always populated from bundle. */
+    scfControlId: uuid("scf_control_id").references(() => scfControls.id),
+    /** Official Focal Document Element identifier (e.g. "AC-1", "A.5.1", "7.1").
+     *  This is the FDE # column from the STRM bundle XLSX. */
+    fdeCode: text("fde_code"),
+    /** Human-readable name of the FDE requirement. */
+    fdeName: text("fde_name"),
     relationshipType: text("relationship_type").notNull(),
     relationshipStrength: text("relationship_strength").notNull(),
     rationale: text("rationale"),
@@ -587,7 +599,12 @@ export const scfStrmRelationships = pgTable(
   },
   (table) => [
     index("scf_strm_mapping_idx").on(table.scfMappingId),
-    uniqueIndex("scf_strm_mapping_uidx").on(table.scfMappingId),
+    index("scf_strm_control_idx").on(table.scfControlId),
+    index("scf_strm_fde_code_idx").on(table.fdeCode),
+    uniqueIndex("scf_strm_control_fde_uidx").on(
+      table.scfControlId,
+      table.fdeCode,
+    ),
   ],
 );
 

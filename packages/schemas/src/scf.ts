@@ -203,16 +203,24 @@ export const ScfMappingResponseSchema = ScfStructuredMappingSchema.extend({
 
 /**
  * ScfStrmRelationshipSchema — reflects the `scf_strm_relationships` Drizzle table.
- * Each record qualifies one `scf_mappings` row with a formal STRM type (NIST IR 8477).
+ * Each record links an FDE (Focal Document Element) to an SCF control with a formal
+ * STRM type (NIST IR 8477).
  *
  * source values:
+ *   - "scf_official_strm_bundle_2026.1" — from official SCF STRM bundle XLSXs
  *   - "inferred_structural_analysis_v1" — derived from cardinality analysis
- *   - URL string                        — from official SCF STRM PDF crosswalk
  */
 export const ScfStrmRelationshipSchema = z.object({
   id: UuidSchema,
   organization_id: UuidSchema.optional(),
-  scf_mapping_id: UuidSchema,
+  /** Optional: set when a matching scf_mappings row exists for this (fde_code, scf_control) pair. */
+  scf_mapping_id: UuidSchema.nullable().optional(),
+  /** Direct FK to the SCF control — always populated from bundle. */
+  scf_control_id: UuidSchema.nullable().optional(),
+  /** Official Focal Document Element identifier (e.g. "AC-1", "A.5.1", "7.1"). */
+  fde_code: z.string().optional(),
+  /** Human-readable name of the FDE requirement. */
+  fde_name: z.string().optional(),
   relationship_type: ScfRelationshipTypeSchema,
   relationship_strength: z.enum(["strong", "moderate", "weak"]),
   rationale: z.string().optional(),

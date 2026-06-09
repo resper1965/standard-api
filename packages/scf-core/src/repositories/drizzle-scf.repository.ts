@@ -431,7 +431,10 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
     const rows = await db.select().from(scfStrmRelationships);
     return rows.map((row) => ({
       id: row.id,
-      scf_mapping_id: row.scfMappingId,
+      scf_mapping_id: row.scfMappingId ?? undefined,
+      scf_control_id: row.scfControlId ?? undefined,
+      fde_code: row.fdeCode ?? undefined,
+      fde_name: row.fdeName ?? undefined,
       relationship_type:
         row.relationshipType as ScfStrmRelationship["relationship_type"],
       relationship_strength:
