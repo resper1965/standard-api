@@ -156,8 +156,18 @@ export function DashboardLayout() {
         const res = await api<{ data: Org[] }>("/api/v1/users/me/organizations")
         const list = Array.isArray(res?.data) ? res.data : []
         if (list.length > 0) {
-          await api(`/api/v1/users/me/organizations/${list[0].id}/activate`, { method: "POST" })
-          window.location.reload()
+          const activateRes = await api<{ session_rotated?: boolean }>(
+            `/api/v1/users/me/organizations/${list[0].id}/activate`,
+            { method: "POST" }
+          )
+          // H4 fix: server rotates session on org switch (deletes old session).
+          // Must sign out to clear the stale cookie, then redirect to login.
+          if (activateRes?.session_rotated) {
+            await signOut()
+            window.location.href = "/login"
+          } else {
+            window.location.reload()
+          }
         } else if (location.pathname !== "/onboarding") {
           navigate("/onboarding")
         }
@@ -204,8 +214,17 @@ export function DashboardLayout() {
 
   const handleOrgChange = async (orgId: string) => {
     try {
-      await api(`/api/v1/users/me/organizations/${orgId}/activate`, { method: "POST" })
-      window.location.reload()
+      const res = await api<{ session_rotated?: boolean }>(
+        `/api/v1/users/me/organizations/${orgId}/activate`,
+        { method: "POST" }
+      )
+      // H4 fix: session was rotated — must sign out and re-login to get new cookie
+      if (res?.session_rotated) {
+        await signOut()
+        window.location.href = "/login"
+      } else {
+        window.location.reload()
+      }
     } catch {
       // Failed silently — reload would still be safe but skip to avoid confusion
     }
