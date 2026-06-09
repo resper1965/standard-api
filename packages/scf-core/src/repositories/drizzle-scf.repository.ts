@@ -445,7 +445,111 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
     }));
   },
 
-  // ─── Import Runs ─────────────────────────────────────────
+  lookupStrmByFdeCode: async (fdeCode, opts) => {
+    const rows = await db
+      .select({
+        id: scfStrmRelationships.id,
+        scfMappingId: scfStrmRelationships.scfMappingId,
+        scfControlId: scfStrmRelationships.scfControlId,
+        fdeCode: scfStrmRelationships.fdeCode,
+        fdeName: scfStrmRelationships.fdeName,
+        relationshipType: scfStrmRelationships.relationshipType,
+        relationshipStrength: scfStrmRelationships.relationshipStrength,
+        rationale: scfStrmRelationships.rationale,
+        source: scfStrmRelationships.source,
+        organizationId: scfStrmRelationships.organizationId,
+        // denorm
+        controlCode: scfControls.controlCode,
+        controlTitle: scfControls.title,
+      })
+      .from(scfStrmRelationships)
+      .leftJoin(
+        scfControls,
+        eq(scfControls.id, scfStrmRelationships.scfControlId),
+      )
+      .where(
+        and(
+          ilike(scfStrmRelationships.fdeCode, fdeCode.trim()),
+          ...(opts?.relationshipType
+            ? [eq(scfStrmRelationships.relationshipType, opts.relationshipType)]
+            : []),
+        ),
+      )
+      .limit(opts?.limit ?? 100);
+
+    return rows.map((row) => ({
+      id: row.id,
+      scf_mapping_id: row.scfMappingId ?? undefined,
+      scf_control_id: row.scfControlId ?? undefined,
+      fde_code: row.fdeCode ?? undefined,
+      fde_name: row.fdeName ?? undefined,
+      relationship_type:
+        row.relationshipType as ScfStrmRelationship["relationship_type"],
+      relationship_strength:
+        row.relationshipStrength as ScfStrmRelationship["relationship_strength"],
+      rationale: row.rationale ?? undefined,
+      source: row.source,
+      organization_id: row.organizationId ?? undefined,
+      // extras — will be picked up by the response shape
+      _control_code: row.controlCode ?? undefined,
+      _control_title: row.controlTitle ?? undefined,
+    })) as ScfStrmRelationship[];
+  },
+
+  lookupStrmByControlCode: async (controlCode, opts) => {
+    // First resolve control id from code
+    const control = await db
+      .select({
+        id: scfControls.id,
+        code: scfControls.controlCode,
+        title: scfControls.title,
+      })
+      .from(scfControls)
+      .where(ilike(scfControls.controlCode, controlCode.trim()))
+      .limit(1);
+
+    if (!control.length) return [];
+
+    const rows = await db
+      .select({
+        id: scfStrmRelationships.id,
+        scfMappingId: scfStrmRelationships.scfMappingId,
+        scfControlId: scfStrmRelationships.scfControlId,
+        fdeCode: scfStrmRelationships.fdeCode,
+        fdeName: scfStrmRelationships.fdeName,
+        relationshipType: scfStrmRelationships.relationshipType,
+        relationshipStrength: scfStrmRelationships.relationshipStrength,
+        rationale: scfStrmRelationships.rationale,
+        source: scfStrmRelationships.source,
+        organizationId: scfStrmRelationships.organizationId,
+      })
+      .from(scfStrmRelationships)
+      .where(
+        and(
+          eq(scfStrmRelationships.scfControlId, control[0]!.id),
+          ...(opts?.relationshipType
+            ? [eq(scfStrmRelationships.relationshipType, opts.relationshipType)]
+            : []),
+        ),
+      )
+      .limit(opts?.limit ?? 100);
+
+    return rows.map((row) => ({
+      id: row.id,
+      scf_mapping_id: row.scfMappingId ?? undefined,
+      scf_control_id: row.scfControlId ?? undefined,
+      fde_code: row.fdeCode ?? undefined,
+      fde_name: row.fdeName ?? undefined,
+      relationship_type:
+        row.relationshipType as ScfStrmRelationship["relationship_type"],
+      relationship_strength:
+        row.relationshipStrength as ScfStrmRelationship["relationship_strength"],
+      rationale: row.rationale ?? undefined,
+      source: row.source,
+      organization_id: row.organizationId ?? undefined,
+    }));
+  },
+
   createImportRun: async (run) => {
     await db.insert(scfImportRuns).values({
       id: run.id,
