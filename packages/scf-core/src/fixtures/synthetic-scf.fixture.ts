@@ -114,8 +114,9 @@ export const createSyntheticScfFixture = (): ScfDataset => ({
       requirement_title: "Synthetic governance requirement",
       requirement_text: "Synthetic/test requirement mapped to GOV-001.",
       sort_order: 1,
-      status: "active",
+      status: "active" as const,
       is_synthetic: true,
+      is_mcr: false,
     },
     {
       id: SYNTHETIC_REQ_1_2_ID,
@@ -124,8 +125,9 @@ export const createSyntheticScfFixture = (): ScfDataset => ({
       requirement_title: "Synthetic access requirement",
       requirement_text: "Synthetic/test requirement mapped to IAC-001.",
       sort_order: 2,
-      status: "active",
+      status: "active" as const,
       is_synthetic: true,
+      is_mcr: false,
     },
   ],
   mappings: [

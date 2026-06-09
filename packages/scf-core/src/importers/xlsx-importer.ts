@@ -335,6 +335,9 @@ const parseCrosswalkTab = (
           sort_order: reqSortOrder,
           status: "active",
           is_synthetic: false,
+          // MCR status defaults to false for crosswalk-imported requirements.
+          // Can be updated via admin API or future XLSX column mapping.
+          is_mcr: false,
         });
       }
 
