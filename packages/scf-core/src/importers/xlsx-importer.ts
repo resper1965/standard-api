@@ -28,7 +28,7 @@ import type {
   ScfRisk,
   ScfThreat,
 } from "../types";
-import type { DpmpPrinciple, DpmpFrameworkMapping } from "@standard/schemas";
+import type { DpmpPrinciple, DpmpFrameworkMapping, CdpasStandard, CdpasSubRequirement, CdpasControlMapping } from "@standard/schemas";
 import type { ScfImporter } from "./scf-importer";
 import { sha256Hex, validateBaseImportSource } from "./scf-importer";
 import {
@@ -694,6 +694,95 @@ const parseThreatsTab = (rows: ParsedRow[], versionId: string): ScfThreat[] => {
   return threats;
 };
 
+// ──── CDPAS Tab Parser ────
+
+const parseCdpasTab = (
+  rows: ParsedRow[],
+  versionId: string,
+  controlByCode: Map<string, string>,
+): {
+  standards: CdpasStandard[];
+  subRequirements: CdpasSubRequirement[];
+  controlMappings: CdpasControlMapping[];
+} => {
+  const standards: CdpasStandard[] = [];
+  const subRequirements: CdpasSubRequirement[] = [];
+  const controlMappings: CdpasControlMapping[] = [];
+  const standardByNumber = new Map<number, string>(); // number → id
+
+  for (const row of rows) {
+    const standardNumRaw =
+      row["standard_#"] || row["standard_number"] || row["cdpas_standard"];
+    const requirementCode =
+      row["sub_requirement_#"] || row["requirement_code"] || row["sub_requirement_code"];
+
+    if (!requirementCode) continue;
+
+    const standardNum = standardNumRaw ? parseInt(standardNumRaw.toString(), 10) : 0;
+    const standardTitle = row["standard_title"] || row["standard"] || `Standard ${standardNum}`;
+    const reqTitle = row["sub_requirement"] || row["requirement_title"] || row["title"] || requirementCode;
+    const description = row["description"] || row["requirement_description"] || undefined;
+
+    // Auto-create standard if not seen
+    if (standardNum > 0 && !standardByNumber.has(standardNum)) {
+      const sId = crypto.randomUUID();
+      standardByNumber.set(standardNum, sId);
+      standards.push({
+        id: sId,
+        scf_version_id: versionId,
+        standard_number: standardNum,
+        code: `CDPAS-${standardNum}`,
+        title: standardTitle.trim(),
+        description: null,
+        sort_order: standardNum,
+        is_synthetic: false,
+      });
+    }
+
+    const standardId = standardByNumber.get(standardNum) ?? standards[0]?.id ?? crypto.randomUUID();
+
+    // Parse assessment methods from boolean columns
+    const methods: Array<"examine" | "interview" | "test"> = [];
+    if (row["examine"] && ["x", "yes", "true", "1"].includes(row["examine"].toLowerCase())) methods.push("examine");
+    if (row["interview"] && ["x", "yes", "true", "1"].includes(row["interview"].toLowerCase())) methods.push("interview");
+    if (row["test"] && ["x", "yes", "true", "1"].includes(row["test"].toLowerCase())) methods.push("test");
+
+    const subReqId = crypto.randomUUID();
+    subRequirements.push({
+      id: subReqId,
+      scf_version_id: versionId,
+      cdpas_standard_id: standardId,
+      requirement_code: requirementCode.trim(),
+      title: reqTitle.trim(),
+      description: description?.trim() || null,
+      assessment_methods: methods,
+      sort_order: subRequirements.length + 1,
+      is_synthetic: false,
+    });
+
+    // Parse SCF control mappings
+    const controlsRaw =
+      row["scf_control_#"] || row["scf_control_mappings"] || row["scf_controls"] || "";
+    if (controlsRaw) {
+      for (const code of controlsRaw.split(/[,;]/).map((s: string) => s.trim()).filter(Boolean)) {
+        const controlId = controlByCode.get(code);
+        if (controlId) {
+          controlMappings.push({
+            id: crypto.randomUUID(),
+            scf_version_id: versionId,
+            cdpas_sub_requirement_id: subReqId,
+            scf_control_id: controlId,
+            relationship_note: null,
+            is_synthetic: false,
+          });
+        }
+      }
+    }
+  }
+
+  return { standards, subRequirements, controlMappings };
+};
+
 // ──── Main XLSX Importer ────
 
 export const createXlsxScfImporter = (): ScfImporter => ({
@@ -894,6 +983,9 @@ export const createXlsxScfImporter = (): ScfImporter => ({
     const allThreatControlMappings: any[] = [];
     const allDpmpPrinciples: DpmpPrinciple[] = [];
     const allDpmpFrameworkMappings: DpmpFrameworkMapping[] = [];
+    const allCdpasStandards: CdpasStandard[] = [];
+    const allCdpasSubRequirements: CdpasSubRequirement[] = [];
+    const allCdpasControlMappings: CdpasControlMapping[] = [];
 
     const riskByCode = new Map<string, string>();
     const threatByCode = new Map<string, string>();
@@ -931,6 +1023,12 @@ export const createXlsxScfImporter = (): ScfImporter => ({
           controlByCode,
         );
         allAssessmentObjectives.push(...objectives);
+      } else if (classification.type === "cdpas") {
+        const rows = parseSheetToRows(sheet);
+        const { standards, subRequirements, controlMappings } = parseCdpasTab(rows, versionId, controlByCode);
+        allCdpasStandards.push(...standards);
+        allCdpasSubRequirements.push(...subRequirements);
+        allCdpasControlMappings.push(...controlMappings);
       } else if (classification.type === "evidence_requests") {
         const rows = parseSheetToRows(sheet);
         const requests = parseEvidenceRequestsTab(
@@ -1028,6 +1126,8 @@ export const createXlsxScfImporter = (): ScfImporter => ({
         threats: allThreats.length,
         dpmp_principles: allDpmpPrinciples.length,
         dpmp_framework_mappings: allDpmpFrameworkMappings.length,
+        cdpas_standards: allCdpasStandards.length,
+        cdpas_sub_requirements: allCdpasSubRequirements.length,
       },
       trace_id: `xlsx-importer-${Date.now()}`,
     };
@@ -1053,6 +1153,9 @@ export const createXlsxScfImporter = (): ScfImporter => ({
         threatControlMappings: allThreatControlMappings,
         dpmpPrinciples: allDpmpPrinciples,
         dpmpFrameworkMappings: allDpmpFrameworkMappings,
+        cdpasStandards: allCdpasStandards,
+        cdpasSubRequirements: allCdpasSubRequirements,
+        cdpasControlMappings: allCdpasControlMappings,
       },
       warnings: allWarnings,
     };

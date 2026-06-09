@@ -48,6 +48,7 @@ import { observabilityRoutes } from "./routes/observability.routes";
 import { poamRoutes } from "./routes/poam.routes";
 import { reportingRoutes } from "./routes/reporting.routes";
 import { scfRoutes } from "./routes/scf.routes";
+import { cdpasRoutes } from "./routes/cdpas.routes";
 import { soaRoutes } from "./routes/soa.routes";
 import { emailRoutes } from "./routes/email.routes";
 import { tenantsRoutes } from "./routes/tenants.routes";
@@ -90,6 +91,7 @@ import { adminOrgsRoutes } from "./routes/admin-orgs.routes";
  */
 const TENANT_EXEMPT_PREFIXES = [
   "/api/v1/scf",
+  "/api/v1/cdpas",
   "/api/v1/admin/scf",
   "/api/v1/admin/users",
   "/api/v1/admin/security",
@@ -125,6 +127,7 @@ export const routes: RouteDefinition[] = [
   ...approvalsRoutes,
   ...artifactsRoutes,
   ...scfRoutes,
+  ...cdpasRoutes,
   ...soaRoutes,
   ...emailRoutes,
   ...agentToolsRoutes,

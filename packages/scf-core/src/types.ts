@@ -18,6 +18,9 @@ import type {
   ScfVersion,
   DpmpPrinciple,
   DpmpFrameworkMapping,
+  CdpasStandard,
+  CdpasSubRequirement,
+  CdpasControlMapping,
 } from "@standard/schemas";
 
 export type {
@@ -40,6 +43,9 @@ export type {
   ScfVersion,
   DpmpPrinciple,
   DpmpFrameworkMapping,
+  CdpasStandard,
+  CdpasSubRequirement,
+  CdpasControlMapping,
 };
 
 export type ScfDataset = {
@@ -70,6 +76,9 @@ export type ScfDataset = {
   }[];
   dpmpPrinciples?: DpmpPrinciple[];
   dpmpFrameworkMappings?: DpmpFrameworkMapping[];
+  cdpasStandards?: CdpasStandard[];
+  cdpasSubRequirements?: CdpasSubRequirement[];
+  cdpasControlMappings?: CdpasControlMapping[];
 };
 
 export type ScfImportValidationResult = {

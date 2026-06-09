@@ -25,6 +25,7 @@ export type TabClassification =
   | { type: "risk_catalog"; sheetName: string }
   | { type: "threat_catalog"; sheetName: string }
   | { type: "dpmp"; sheetName: string }
+  | { type: "cdpas"; sheetName: string }
   | { type: "unknown"; sheetName: string };
 
 // ──── Header Normalization ────
@@ -214,6 +215,14 @@ export const classifyTab = (
     CONTROLS_TAB_NAMES.some((n) => nameLower === n || nameLower.includes(n))
   ) {
     return { type: "controls", sheetName };
+  }
+
+  // Detect CDPAS tab before generic crosswalk fallback
+  if (
+    nameLower === "cdpas" ||
+    (nameLower.startsWith("cybersecurity") && nameLower.includes("assessment"))
+  ) {
+    return { type: "cdpas" as const, sheetName };
   }
 
   // If it has control IDs but no body columns → it's a crosswalk
