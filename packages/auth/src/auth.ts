@@ -491,7 +491,16 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
           };
         } catch (err) {
           console.error("[standard:auth] customSession query failed:", err);
-          return { user, session };
+          // F1 fix: preserve platformAdmin and approved from base BA user even on DB failure.
+          // Without this, isPlatformAdmin() returns false and all admin routes throw 403.
+          return {
+            user: {
+              ...user,
+              platformAdmin: (user as any).platformAdmin ?? false,
+              approved: (user as any).approved ?? false,
+            },
+            session,
+          };
         }
       }),
     ],

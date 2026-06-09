@@ -3,7 +3,7 @@ import { extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
 extendZodWithOpenApi(z);
 import { M2mScopesArraySchema } from "@standard/schemas";
 import type { RouteDefinition, RequestContext } from "../http";
-import { json , requireOrganizationId } from "../http";
+import { json, requireOrganizationId } from "../http";
 import { ApiError } from "../errors/api-error";
 import { generateApiKey } from "../utils/api-key-crypto";
 
@@ -20,7 +20,8 @@ const updateApiKeyInput = z.object({
   scopes: M2mScopesArraySchema.optional(),
 });
 
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Shared helper: resolve Standard Native Auth orgId → Standard UUIDs and block M2M self-management */
 async function resolveOrgCtx(context: RequestContext, organizationId: string) {
@@ -34,7 +35,7 @@ async function resolveOrgCtx(context: RequestContext, organizationId: string) {
     if (!UUID_RE.test(context.organizationId)) {
       console.error(
         `[standard:api-keys] resolveOrgCtx: context.organizationId is not a valid UUID: "${context.organizationId}". ` +
-        `Tenant resolution likely failed silently. ba_org_id=${organizationId}, trace=${context.traceId}`
+          `Tenant resolution likely failed silently. ba_org_id=${organizationId}, trace=${context.traceId}`,
       );
       // Fall through to explicit resolution below instead of passing a nanoid to the DB
     } else {
@@ -53,28 +54,56 @@ async function resolveOrgCtx(context: RequestContext, organizationId: string) {
   // yet (e.g. org seeded only in the Better Auth tables).
   if (!tenantCtx && context.deps.provisionOrganizationContext) {
     console.log(
-      `[standard:api-keys] resolveOrgCtx: provisioning org for orgRef="${orgRef}", ba_org_id="${organizationId}", trace=${context.traceId}`
+      `[standard:api-keys] resolveOrgCtx: provisioning org for orgRef="${orgRef}", ba_org_id="${organizationId}", trace=${context.traceId}`,
     );
     tenantCtx = await context.deps.provisionOrganizationContext(orgRef);
   }
   if (!tenantCtx) {
     console.error(
       `[standard:api-keys] resolveOrgCtx: could not resolve or provision org. orgRef="${orgRef}", organizationId="${organizationId}", ` +
-      `organizationId=${context.organizationId}, trace=${context.traceId}`
+        `organizationId=${context.organizationId}, trace=${context.traceId}`,
     );
-    throw new ApiError("NOT_FOUND", "Organization not found or not provisioned.", 404);
+    throw new ApiError(
+      "NOT_FOUND",
+      "Organization not found or not provisioned.",
+      404,
+    );
   }
 
   // Final UUID guard after resolution
   if (!UUID_RE.test(tenantCtx.organization_id)) {
     console.error(
       `[standard:api-keys] resolveOrgCtx: resolved organization_id is not a valid UUID: "${tenantCtx.organization_id}". ` +
-      `orgRef="${orgRef}", trace=${context.traceId}`
+        `orgRef="${orgRef}", trace=${context.traceId}`,
     );
-    throw new ApiError("INTERNAL_ERROR", "Organization ID resolution produced an invalid identifier.", 500);
+    throw new ApiError(
+      "INTERNAL_ERROR",
+      "Organization ID resolution produced an invalid identifier.",
+      500,
+    );
   }
 
   return tenantCtx;
+}
+
+/**
+ * Returns the organization ID to use for org resolution.
+ * Platform admins may have no org in session context (if the Bekaa org is not
+ * provisioned in the Standard domain tables). In that case, fall back to the
+ * URL path organizationId — the route param is already validated by route match
+ * and will be UUID-checked inside resolveOrgCtx.
+ *
+ * Non-platform-admins MUST have session org context (tenant isolation).
+ */
+function orgIdForContext(context: RequestContext, pathOrgId?: string): string {
+  if (context.organizationId) return context.organizationId;
+  const isPlatformAdmin = context.session?.user?.platformAdmin === true;
+  if (isPlatformAdmin && pathOrgId) return pathOrgId;
+  throw new ApiError(
+    "ORGANIZATION_REQUIRED",
+    "Organization context is required for this operation.",
+    403,
+  );
 }
 
 export const apiKeysRoutes: RouteDefinition[] = [
@@ -87,7 +116,8 @@ export const apiKeysRoutes: RouteDefinition[] = [
     permissions: ["organization:read"],
     openapi: {
       summary: "List API Keys",
-      description: "Returns all API keys for the authenticated organization (masked). Use ?active=true to exclude revoked keys.",
+      description:
+        "Returns all API keys for the authenticated organization (masked). Use ?active=true to exclude revoked keys.",
       request: {
         params: z.object({ organizationId: z.string() }),
         query: z.object({ active: z.enum(["true", "false"]).optional() }),
@@ -98,36 +128,50 @@ export const apiKeysRoutes: RouteDefinition[] = [
           content: {
             "application/json": {
               schema: z.object({
-                data: z.array(z.object({
-                  id: z.string(),
-                  name: z.string(),
-                  maskedKey: z.string(),
-                  scopes: z.array(z.string()),
-                  lastUsedAt: z.string().nullable(),
-                  expiresAt: z.string().nullable(),
-                  revokedAt: z.string().nullable(),
-                  isRevoked: z.boolean(),
-                  status: z.enum(["active", "expired", "revoked"]),
-                  createdAt: z.string(),
-                }))
-              })
-            }
-          }
-        }
-      }
+                data: z.array(
+                  z.object({
+                    id: z.string(),
+                    name: z.string(),
+                    maskedKey: z.string(),
+                    scopes: z.array(z.string()),
+                    lastUsedAt: z.string().nullable(),
+                    expiresAt: z.string().nullable(),
+                    revokedAt: z.string().nullable(),
+                    isRevoked: z.boolean(),
+                    status: z.enum(["active", "expired", "revoked"]),
+                    createdAt: z.string(),
+                  }),
+                ),
+              }),
+            },
+          },
+        },
+      },
     },
     handler: async (context) => {
       const { organizationId } = context.params;
-      const activeOnly = new URL(context.request.url).searchParams.get("active") === "true";
-      const tenantCtx = await resolveOrgCtx(context, requireOrganizationId(context));
-      const keys = await context.deps.apiKeys.listByOrganization(tenantCtx.organization_id, activeOnly);
+      const activeOnly =
+        new URL(context.request.url).searchParams.get("active") === "true";
+      const tenantCtx = await resolveOrgCtx(
+        context,
+        orgIdForContext(context, organizationId),
+      );
+      const keys = await context.deps.apiKeys.listByOrganization(
+        tenantCtx.organization_id,
+        activeOnly,
+      );
       const now = new Date();
 
       return json({
         data: keys.map((k: any) => {
           const isRevoked = !!k.revokedAt;
-          const isExpired = !isRevoked && k.expiresAt && new Date(k.expiresAt) < now;
-          const status = isRevoked ? "revoked" : isExpired ? "expired" : "active";
+          const isExpired =
+            !isRevoked && k.expiresAt && new Date(k.expiresAt) < now;
+          const status = isRevoked
+            ? "revoked"
+            : isExpired
+              ? "expired"
+              : "active";
           return {
             id: k.id,
             name: k.name,
@@ -143,7 +187,7 @@ export const apiKeysRoutes: RouteDefinition[] = [
         }),
         trace_id: context.traceId,
       });
-    }
+    },
   },
 
   // ── POST /organizations/:orgId/api-keys ───────────────────────────────
@@ -156,10 +200,13 @@ export const apiKeysRoutes: RouteDefinition[] = [
     bodySchema: createApiKeyInput,
     openapi: {
       summary: "Create API Key",
-      description: "Creates a new M2M API key. The raw key is returned only once — store it securely.",
+      description:
+        "Creates a new M2M API key. The raw key is returned only once — store it securely.",
       request: {
         params: z.object({ organizationId: z.string() }),
-        body: { content: { "application/json": { schema: createApiKeyInput } } }
+        body: {
+          content: { "application/json": { schema: createApiKeyInput } },
+        },
       },
       responses: {
         201: {
@@ -170,22 +217,28 @@ export const apiKeysRoutes: RouteDefinition[] = [
                 data: z.object({
                   id: z.string(),
                   name: z.string(),
-                  key: z.string().openapi({ description: "Raw key — shown only once" }),
+                  key: z
+                    .string()
+                    .openapi({ description: "Raw key — shown only once" }),
                   maskedKey: z.string(),
                   scopes: z.array(z.string()),
                   expiresAt: z.string().nullable(),
                   createdAt: z.string(),
-                })
-              })
-            }
-          }
-        }
-      }
+                }),
+              }),
+            },
+          },
+        },
+      },
     },
     handler: async (context) => {
-      const { organizationId } = context.params;
+      const { organizationId: pathOrgId } = context.params;
       const input = context.validatedBody as z.infer<typeof createApiKeyInput>;
-      const tenantCtx = await resolveOrgCtx(context, requireOrganizationId(context));
+      // orgIdForContext: for platform admins without session org, falls back to URL path param
+      const tenantCtx = await resolveOrgCtx(
+        context,
+        orgIdForContext(context, pathOrgId),
+      );
 
       const { fullToken, keyHash, maskedKey } = await generateApiKey();
 
@@ -207,19 +260,22 @@ export const apiKeysRoutes: RouteDefinition[] = [
         trace_id: context.traceId,
       });
 
-      return json({
-        data: {
-          id: record.id,
-          name: record.name,
-          key: fullToken,   // ⚠️ Only returned ONCE — store securely
-          maskedKey: record.maskedKey,
-          scopes: record.scopes,
-          expiresAt: record.expiresAt ?? null,
-          createdAt: record.createdAt,
+      return json(
+        {
+          data: {
+            id: record.id,
+            name: record.name,
+            key: fullToken, // ⚠️ Only returned ONCE — store securely
+            maskedKey: record.maskedKey,
+            scopes: record.scopes,
+            expiresAt: record.expiresAt ?? null,
+            createdAt: record.createdAt,
+          },
+          trace_id: context.traceId,
         },
-        trace_id: context.traceId,
-      }, { status: 201 });
-    }
+        { status: 201 },
+      );
+    },
   },
 
   // ── GET /organizations/:orgId/api-keys/:keyId ─────────────────────────
@@ -231,14 +287,21 @@ export const apiKeysRoutes: RouteDefinition[] = [
     permissions: ["organization:read"],
     handler: async (context) => {
       const { organizationId, keyId } = context.params;
-      const tenantCtx = await resolveOrgCtx(context, requireOrganizationId(context));
+      const tenantCtx = await resolveOrgCtx(
+        context,
+        orgIdForContext(context, organizationId),
+      );
 
-      const key = await context.deps.apiKeys.getById(keyId!, tenantCtx.organization_id);
+      const key = await context.deps.apiKeys.getById(
+        keyId!,
+        tenantCtx.organization_id,
+      );
       if (!key) throw new ApiError("NOT_FOUND", "API key not found.", 404);
 
       const now = new Date();
       const isRevoked = !!key.revokedAt;
-      const isExpired = !isRevoked && key.expiresAt && new Date(key.expiresAt) < now;
+      const isExpired =
+        !isRevoked && key.expiresAt && new Date(key.expiresAt) < now;
       const status = isRevoked ? "revoked" : isExpired ? "expired" : "active";
 
       return json({
@@ -256,7 +319,7 @@ export const apiKeysRoutes: RouteDefinition[] = [
         },
         trace_id: context.traceId,
       });
-    }
+    },
   },
 
   // ── PATCH /organizations/:orgId/api-keys/:keyId ───────────────────────
@@ -269,35 +332,57 @@ export const apiKeysRoutes: RouteDefinition[] = [
     bodySchema: updateApiKeyInput,
     openapi: {
       summary: "Update API Key",
-      description: "Update name, expiration date, and/or scopes of an existing API key.",
+      description:
+        "Update name, expiration date, and/or scopes of an existing API key.",
       request: {
         params: z.object({ organizationId: z.string(), keyId: z.string() }),
-        body: { content: { "application/json": { schema: updateApiKeyInput } } }
+        body: {
+          content: { "application/json": { schema: updateApiKeyInput } },
+        },
       },
       responses: {
-        200: { description: "API key updated" }
-      }
+        200: { description: "API key updated" },
+      },
     },
     handler: async (context) => {
       const { organizationId, keyId } = context.params;
       const input = context.validatedBody as z.infer<typeof updateApiKeyInput>;
-      const tenantCtx = await resolveOrgCtx(context, requireOrganizationId(context));
+      const tenantCtx = await resolveOrgCtx(
+        context,
+        orgIdForContext(context, organizationId),
+      );
 
-      const existing = await context.deps.apiKeys.getById(keyId!, tenantCtx.organization_id);
+      const existing = await context.deps.apiKeys.getById(
+        keyId!,
+        tenantCtx.organization_id,
+      );
       if (!existing) throw new ApiError("NOT_FOUND", "API key not found.", 404);
-      if (existing.revokedAt) throw new ApiError("CONFLICT", "Cannot update a revoked key.", 409);
+      if (existing.revokedAt)
+        throw new ApiError("CONFLICT", "Cannot update a revoked key.", 409);
 
       // Build patch — only include fields that were explicitly provided
-      const patch: { name?: string; expiresAt?: Date | null; scopes?: string[] } = {};
+      const patch: {
+        name?: string;
+        expiresAt?: Date | null;
+        scopes?: string[];
+      } = {};
       if (input.name !== undefined) patch.name = input.name;
-      if (input.expiresAt !== undefined) patch.expiresAt = input.expiresAt ? new Date(input.expiresAt) : null;
+      if (input.expiresAt !== undefined)
+        patch.expiresAt = input.expiresAt ? new Date(input.expiresAt) : null;
       if (input.scopes !== undefined) patch.scopes = input.scopes;
 
       if (Object.keys(patch).length === 0) {
-        return json({ message: "No fields to update.", trace_id: context.traceId });
+        return json({
+          message: "No fields to update.",
+          trace_id: context.traceId,
+        });
       }
 
-      const updated = await context.deps.apiKeys.update(keyId!, tenantCtx.organization_id, patch);
+      const updated = await context.deps.apiKeys.update(
+        keyId!,
+        tenantCtx.organization_id,
+        patch,
+      );
       if (!updated) throw new ApiError("INTERNAL_ERROR", "Update failed.", 500);
 
       await context.deps.audit.record("api_key.updated", {
@@ -319,7 +404,7 @@ export const apiKeysRoutes: RouteDefinition[] = [
         },
         trace_id: context.traceId,
       });
-    }
+    },
   },
 
   // ── DELETE /organizations/:orgId/api-keys/:keyId ──────────────────────
@@ -331,9 +416,15 @@ export const apiKeysRoutes: RouteDefinition[] = [
     permissions: ["organization:update"],
     handler: async (context) => {
       const { organizationId, keyId } = context.params;
-      const tenantCtx = await resolveOrgCtx(context, requireOrganizationId(context));
+      const tenantCtx = await resolveOrgCtx(
+        context,
+        orgIdForContext(context, organizationId),
+      );
 
-      const revoked = await context.deps.apiKeys.revokeKey(keyId!, tenantCtx.organization_id);
+      const revoked = await context.deps.apiKeys.revokeKey(
+        keyId!,
+        tenantCtx.organization_id,
+      );
       if (!revoked) throw new ApiError("NOT_FOUND", "API key not found.", 404);
 
       await context.deps.audit.record("api_key.revoked", {
@@ -343,8 +434,12 @@ export const apiKeysRoutes: RouteDefinition[] = [
         trace_id: context.traceId,
       });
 
-      return json({ ok: true, revoked_at: new Date().toISOString(), trace_id: context.traceId });
-    }
+      return json({
+        ok: true,
+        revoked_at: new Date().toISOString(),
+        trace_id: context.traceId,
+      });
+    },
   },
 
   // ── POST /organizations/:orgId/api-keys/:keyId/rotate ─────────────────
@@ -359,7 +454,8 @@ export const apiKeysRoutes: RouteDefinition[] = [
     }),
     openapi: {
       summary: "Rotate API Key",
-      description: "Creates a new replacement key and schedules revocation of the old key after an optional grace period.",
+      description:
+        "Creates a new replacement key and schedules revocation of the old key after an optional grace period.",
       request: {
         params: z.object({ organizationId: z.string(), keyId: z.string() }),
         body: {
@@ -382,7 +478,9 @@ export const apiKeysRoutes: RouteDefinition[] = [
                   new_key: z.object({
                     id: z.string(),
                     name: z.string(),
-                    key: z.string().openapi({ description: "Raw key — shown only once" }),
+                    key: z
+                      .string()
+                      .openapi({ description: "Raw key — shown only once" }),
                     maskedKey: z.string(),
                     scopes: z.array(z.string()),
                   }),
@@ -402,17 +500,28 @@ export const apiKeysRoutes: RouteDefinition[] = [
     handler: async (context) => {
       const { organizationId, keyId } = context.params;
       const input = context.validatedBody as { gracePeriodHours: number };
-      const tenantCtx = await resolveOrgCtx(context, requireOrganizationId(context));
+      const tenantCtx = await resolveOrgCtx(
+        context,
+        orgIdForContext(context, organizationId),
+      );
 
       // Block M2M self-management (same guard as create)
       if (context.actorId?.startsWith("m2m:")) {
-        throw new ApiError("FORBIDDEN", "M2M agents cannot manage API keys.", 403);
+        throw new ApiError(
+          "FORBIDDEN",
+          "M2M agents cannot manage API keys.",
+          403,
+        );
       }
 
       // 1. Get existing key
-      const existing = await context.deps.apiKeys.getById(keyId!, tenantCtx.organization_id);
+      const existing = await context.deps.apiKeys.getById(
+        keyId!,
+        tenantCtx.organization_id,
+      );
       if (!existing) throw new ApiError("NOT_FOUND", "API key not found.", 404);
-      if (existing.revokedAt) throw new ApiError("CONFLICT", "Cannot rotate a revoked key.", 409);
+      if (existing.revokedAt)
+        throw new ApiError("CONFLICT", "Cannot rotate a revoked key.", 409);
 
       // 2. Generate new key
       const { fullToken, keyHash, maskedKey } = await generateApiKey();
@@ -438,7 +547,9 @@ export const apiKeysRoutes: RouteDefinition[] = [
         revokesAt = new Date().toISOString();
       } else {
         // Schedule revocation after grace period
-        const revokeAt = new Date(Date.now() + input.gracePeriodHours * 60 * 60 * 1000);
+        const revokeAt = new Date(
+          Date.now() + input.gracePeriodHours * 60 * 60 * 1000,
+        );
         await context.deps.apiKeys.scheduleRevocation(
           keyId!,
           tenantCtx.organization_id,
@@ -459,24 +570,27 @@ export const apiKeysRoutes: RouteDefinition[] = [
         trace_id: context.traceId,
       });
 
-      return json({
-        data: {
-          new_key: {
-            id: newRecord.id,
-            name: newRecord.name,
-            key: fullToken,
-            maskedKey: newRecord.maskedKey,
-            scopes: newRecord.scopes,
+      return json(
+        {
+          data: {
+            new_key: {
+              id: newRecord.id,
+              name: newRecord.name,
+              key: fullToken,
+              maskedKey: newRecord.maskedKey,
+              scopes: newRecord.scopes,
+            },
+            old_key: {
+              id: keyId,
+              status: oldKeyStatus,
+              revokes_at: revokesAt,
+            },
           },
-          old_key: {
-            id: keyId,
-            status: oldKeyStatus,
-            revokes_at: revokesAt,
-          },
+          trace_id: context.traceId,
         },
-        trace_id: context.traceId,
-      }, { status: 201 });
-    }
+        { status: 201 },
+      );
+    },
   },
 
   // ── GET /organizations/:orgId/api-keys/:keyId/usage ──────────────────
@@ -488,9 +602,15 @@ export const apiKeysRoutes: RouteDefinition[] = [
     permissions: ["organization:read"],
     handler: async (context) => {
       const { organizationId, keyId } = context.params;
-      const tenantCtx = await resolveOrgCtx(context, requireOrganizationId(context));
+      const tenantCtx = await resolveOrgCtx(
+        context,
+        orgIdForContext(context, organizationId),
+      );
 
-      const key = await context.deps.apiKeys.getById(keyId!, tenantCtx.organization_id);
+      const key = await context.deps.apiKeys.getById(
+        keyId!,
+        tenantCtx.organization_id,
+      );
       if (!key) throw new ApiError("NOT_FOUND", "API key not found.", 404);
 
       const now = new Date();
@@ -506,6 +626,6 @@ export const apiKeysRoutes: RouteDefinition[] = [
         },
         trace_id: context.traceId,
       });
-    }
+    },
   },
 ];
