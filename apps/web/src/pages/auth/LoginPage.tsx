@@ -332,13 +332,13 @@ export function LoginPage() {
           {/* Hero copy */}
           <div className="lp-hero">
             <h1 className="lp-hero-title">
-              The SCF-Native{" "}
+              The Enterprise{" "}
               <span className="lp-hero-accent">Assessment</span>{" "}
               <span className="lp-hero-accent lp-hero-accent--delay">Engine.</span>
             </h1>
             <p className="lp-hero-desc">
-              Conduct security, compliance, and maturity assessments driven by
-              the Secure Controls Framework. API-first, multi-tenant, enterprise-grade.
+              Run security, compliance, and maturity assessments at scale.
+              API-first, multi-tenant, enterprise-grade.
             </p>
           </div>
 
@@ -347,7 +347,7 @@ export function LoginPage() {
             <StatCard value="REST" label="API" />
             <StatCard value="SDK" label="TypeScript" />
             <StatCard value="MCP" label="AI Agents" />
-            <StatCard value="SCF" label="Framework" />
+            <StatCard value="231+" label="Frameworks" />
           </div>
 
           {/* Trust badges */}
