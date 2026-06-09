@@ -289,6 +289,26 @@ export class GapAnalysisExecutionService {
     const gap = gapResult.data;
 
     // Step 5: Build gap finding
+    // MCR enrichment: check if this gap is tied to an MCR (SCRMS-PIG Step 1c)
+    let isMcrGap = false;
+    if (
+      this.deps.scf &&
+      soaItem.framework_id &&
+      soaItem.framework_requirement_id
+    ) {
+      try {
+        const mcrReqs = await this.deps.scf.frameworks.listMcrRequirements(
+          soaItem.framework_id,
+        );
+        isMcrGap = mcrReqs.some(
+          (r) => r.id === soaItem.framework_requirement_id,
+        );
+      } catch {
+        // Non-blocking: default to false if SCF unavailable
+        isMcrGap = false;
+      }
+    }
+
     const gapFinding: GapFindingResponse = {
       gap_finding_id: crypto.randomUUID(),
       organization_id: context.organizationId,
@@ -307,8 +327,7 @@ export class GapAnalysisExecutionService {
       assessment_status: gap.assessment_status,
       gap_type: gap.gap_type,
       severity: gap.severity,
-      // MCR enrichment deferred to Iniciativa 4 (Gap×STRM linkage).
-      is_mcr_gap: false,
+      is_mcr_gap: isMcrGap,
       gap_summary: gap.gap_summary,
       gap_rationale: gap.gap_rationale,
       recommendation_summary: gap.recommendation_summary,
