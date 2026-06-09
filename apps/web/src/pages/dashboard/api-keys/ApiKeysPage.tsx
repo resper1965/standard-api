@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
   Key, Plus, Trash2, Loader2, Copy, Check, Pencil,
-  ShieldCheck, ShieldOff, Clock
+  ShieldCheck, ShieldOff, Clock, AlertCircle
 } from "lucide-react"
 import { useOrgApiKeys, useCreateApiKey, useDeleteApiKey, useUpdateApiKey } from "@/lib/queries"
 
@@ -57,8 +57,8 @@ function formatRelative(dateStr: string | null): string {
 
 /** A key is considered active if it was used within the last 30 days. */
 function isRecentlyActive(last_used_at: string | null): boolean {
-  if (!lastUsedAt) return false
-  const diff = Date.now() - new Date(lastUsedAt).getTime()
+  if (!last_used_at) return false
+  const diff = Date.now() - new Date(last_used_at).getTime()
   return diff < 30 * 86400000
 }
 
@@ -265,7 +265,7 @@ export function ApiKeysPage() {
     if (!newName.trim() || !orgId) return
     const expiresAt = getExpiryDate(expiryOption, customDate)
     createMutation.mutate(
-      { name: newName, ...(expiresAt ? { expiresAt } : {}), scopes: [] },
+      { name: newName, ...(expiresAt ? { expiresAt } : {}), scopes: ["assessment:read", "assessment:write", "documents:read", "documents:write", "scf:read"] },
       {
         onSuccess: (res) => {
           const rawKey = (res as any)?.data?.key ?? null
