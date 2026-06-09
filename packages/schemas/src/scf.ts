@@ -375,6 +375,15 @@ export type ScfMappingResponse = z.infer<typeof ScfMappingResponseSchema>;
 
 // ──── New SCF Meta-Model Entity Types ────
 
+export const PptdfDimensionSchema = z.enum([
+  "people",
+  "process",
+  "technology",
+  "data",
+  "facility",
+]);
+export type PptdfDimension = z.infer<typeof PptdfDimensionSchema>;
+
 export const ScfAssessmentObjectiveSchema = z.object({
   id: UuidSchema,
   scf_version_id: UuidSchema,
@@ -386,6 +395,8 @@ export const ScfAssessmentObjectiveSchema = z.object({
   pptdf_technology: z.boolean().optional(),
   pptdf_data: z.boolean().optional(),
   pptdf_facility: z.boolean().optional(),
+  /** Computed: collapsed array of active PPTDF dimensions (no DB column needed) */
+  pptdf_dimensions: z.array(PptdfDimensionSchema).default([]),
 });
 
 export const ScfEvidenceRequestSchema = z.object({
