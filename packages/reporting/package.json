@@ -15,7 +15,8 @@
     "@standard/poam": "workspace:*",
     "@standard/scf-core": "workspace:*",
     "@standard/schemas": "workspace:*",
-    "@standard/soa": "workspace:*"
+    "@standard/soa": "workspace:*",
+    "fflate": "^0.8.2"
   },
   "devDependencies": {
     "tsx": "^4.21.0",

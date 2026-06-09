@@ -28,6 +28,16 @@ import type {
   ScfRisk,
   ScfThreat,
 } from "../types";
+import type { DpmpPrinciple, DpmpFrameworkMapping, CdpasStandard, CdpasSubRequirement, CdpasControlMapping, MadStandard, MadSubRequirement, MadMaturityCriteria } from "@standard/schemas";
+
+type MadControlMappingRecord = {
+  id: string;
+  scf_version_id: string;
+  mad_sub_requirement_id: string;
+  scf_control_id: string;
+  relationship_note: null;
+  is_synthetic: false;
+};
 import type { ScfImporter } from "./scf-importer";
 import { sha256Hex, validateBaseImportSource } from "./scf-importer";
 import {
@@ -179,6 +189,11 @@ const parseControlsTab = (
     const controlDescription = findControlDescription(row);
     const controlQuestion = findControlQuestion(row);
     const controlWeight = findControlWeight(row);
+    const compensatingGuidance = row["compensating_control_guidance"] ||
+      row["compensating_controls"] ||
+      row["proposed_compensating_controls"] ||
+      row["compensating_control"] ||
+      undefined;
 
     controls.push({
       id: newId(),
@@ -191,6 +206,7 @@ const parseControlsTab = (
         : {}),
       ...(controlQuestion ? { control_question: controlQuestion } : {}),
       ...(controlWeight !== undefined ? { control_weight: controlWeight } : {}),
+      ...(compensatingGuidance ? { compensating_control_guidance: compensatingGuidance } : {}),
       status: "active",
       is_synthetic: false,
     });
@@ -332,6 +348,12 @@ const parseCrosswalkTab = (
 
 // ──── Extended Catalog Parsers ────
 
+const parsePptdfBool = (value: string | undefined): boolean | undefined => {
+  if (value === undefined || value === null || value === "") return undefined;
+  const v = value.toString().toLowerCase().trim();
+  return v === "x" || v === "yes" || v === "true" || v === "1" ? true : false;
+};
+
 const parseAssessmentObjectivesTab = (
   rows: ParsedRow[],
   versionId: string,
@@ -385,10 +407,91 @@ const parseAssessmentObjectivesTab = (
         scf_control_id: controlId,
         objective_code: objectiveCode.trim(),
         text: text.trim(),
+        pptdf_people: parsePptdfBool(row["people"] || row["pptdf_people"] || row["pptdf - people"]),
+        pptdf_process: parsePptdfBool(row["process"] || row["pptdf_process"] || row["pptdf - process"]),
+        pptdf_technology: parsePptdfBool(row["technology"] || row["pptdf_technology"] || row["pptdf - technology"]),
+        pptdf_data: parsePptdfBool(row["data"] || row["pptdf_data"] || row["pptdf - data"]),
+        pptdf_facility: parsePptdfBool(row["facility"] || row["pptdf_facility"] || row["pptdf - facility"]),
       });
     }
   }
   return result;
+};
+
+const parseDpmpTab = (
+  rows: ParsedRow[],
+  versionId: string,
+): { principles: DpmpPrinciple[]; frameworkMappings: DpmpFrameworkMapping[] } => {
+  const principles: DpmpPrinciple[] = [];
+  const frameworkMappings: DpmpFrameworkMapping[] = [];
+
+  // Identify non-data columns (structural columns to skip for framework detection)
+  const STRUCTURAL_COLS = new Set([
+    "principle_code", "dpmp_#", "principle_#", "code", "#",
+    "domain", "dpmp_domain",
+    "title", "principle", "dpmp_principle", "principle_title",
+    "description", "principle_description",
+    "scf_control", "scf_controls", "scf_control_mappings", "scf_control_codes",
+    "sort_order", "order",
+  ]);
+
+  for (const row of rows) {
+    const principleCode =
+      row["principle_code"] || row["dpmp_#"] || row["principle_#"] || row["code"] || row["#"];
+    if (!principleCode) continue;
+
+    const domain = (
+      row["domain"] || row["dpmp_domain"] || "privacy_governance"
+    ).toLowerCase().replace(/ /g, "_") as DpmpPrinciple["domain"];
+
+    const title =
+      row["title"] || row["principle"] || row["dpmp_principle"] || row["principle_title"] || "";
+    if (!title.trim()) continue;
+
+    const description =
+      row["description"] || row["principle_description"] || undefined;
+
+    const scfControlsRaw =
+      row["scf_control"] || row["scf_controls"] || row["scf_control_mappings"] || row["scf_control_codes"] || "";
+    const scfControlCodes = scfControlsRaw
+      ? scfControlsRaw.split(/[,;]/).map((s: string) => s.trim()).filter(Boolean)
+      : [];
+
+    const sortOrder = principles.length + 1;
+
+    const principle: DpmpPrinciple = {
+      id: crypto.randomUUID(),
+      scf_version_id: versionId,
+      principle_code: principleCode.trim(),
+      domain,
+      title: title.trim(),
+      description: description?.trim() || null,
+      scf_control_codes: scfControlCodes,
+      sort_order: sortOrder,
+      is_synthetic: false,
+    };
+
+    principles.push(principle);
+
+    // All remaining columns with values are framework mappings
+    for (const [colKey, cellValue] of Object.entries(row)) {
+      const normalizedCol = colKey.toLowerCase().trim();
+      if (STRUCTURAL_COLS.has(normalizedCol)) continue;
+      if (!cellValue || !cellValue.toString().trim()) continue;
+
+      frameworkMappings.push({
+        id: crypto.randomUUID(),
+        scf_version_id: versionId,
+        dpmp_principle_id: principle.id,
+        framework_id: colKey.trim().toUpperCase(),
+        requirement_reference: cellValue.toString().trim(),
+        mapping_note: null,
+        is_synthetic: false,
+      });
+    }
+  }
+
+  return { principles, frameworkMappings };
 };
 
 const parseEvidenceRequestsTab = (
@@ -600,6 +703,195 @@ const parseThreatsTab = (rows: ParsedRow[], versionId: string): ScfThreat[] => {
   return threats;
 };
 
+// ──── CDPAS Tab Parser ────
+
+const parseCdpasTab = (
+  rows: ParsedRow[],
+  versionId: string,
+  controlByCode: Map<string, string>,
+): {
+  standards: CdpasStandard[];
+  subRequirements: CdpasSubRequirement[];
+  controlMappings: CdpasControlMapping[];
+} => {
+  const standards: CdpasStandard[] = [];
+  const subRequirements: CdpasSubRequirement[] = [];
+  const controlMappings: CdpasControlMapping[] = [];
+  const standardByNumber = new Map<number, string>();
+
+  for (const row of rows) {
+    const standardNumRaw =
+      row["standard_#"] || row["standard_number"] || row["cdpas_standard"];
+    const requirementCode =
+      row["sub_requirement_#"] || row["requirement_code"] || row["sub_requirement_code"];
+    if (!requirementCode) continue;
+
+    const standardNum = standardNumRaw ? parseInt(standardNumRaw.toString(), 10) : 0;
+    const standardTitle = row["standard_title"] || row["standard"] || `Standard ${standardNum}`;
+    const reqTitle = row["sub_requirement"] || row["requirement_title"] || row["title"] || requirementCode;
+    const description = row["description"] || row["requirement_description"] || undefined;
+
+    if (standardNum > 0 && !standardByNumber.has(standardNum)) {
+      const sId = crypto.randomUUID();
+      standardByNumber.set(standardNum, sId);
+      standards.push({
+        id: sId,
+        scf_version_id: versionId,
+        standard_number: standardNum,
+        code: `CDPAS-${standardNum}`,
+        title: standardTitle.trim(),
+        description: null,
+        sort_order: standardNum,
+        is_synthetic: false,
+      });
+    }
+
+    const standardId = standardByNumber.get(standardNum) ?? standards[0]?.id ?? crypto.randomUUID();
+
+    const methods: Array<"examine" | "interview" | "test"> = [];
+    if (row["examine"] && ["x", "yes", "true", "1"].includes(row["examine"].toLowerCase())) methods.push("examine");
+    if (row["interview"] && ["x", "yes", "true", "1"].includes(row["interview"].toLowerCase())) methods.push("interview");
+    if (row["test"] && ["x", "yes", "true", "1"].includes(row["test"].toLowerCase())) methods.push("test");
+
+    const subReqId = crypto.randomUUID();
+    subRequirements.push({
+      id: subReqId,
+      scf_version_id: versionId,
+      cdpas_standard_id: standardId,
+      requirement_code: requirementCode.trim(),
+      title: reqTitle.trim(),
+      description: description?.trim() || null,
+      assessment_methods: methods,
+      sort_order: subRequirements.length + 1,
+      is_synthetic: false,
+    });
+
+    const controlsRaw =
+      row["scf_control_#"] || row["scf_control_mappings"] || row["scf_controls"] || "";
+    if (controlsRaw) {
+      for (const code of controlsRaw.split(/[,;]/).map((s: string) => s.trim()).filter(Boolean)) {
+        const controlId = controlByCode.get(code);
+        if (controlId) {
+          controlMappings.push({
+            id: crypto.randomUUID(),
+            scf_version_id: versionId,
+            cdpas_sub_requirement_id: subReqId,
+            scf_control_id: controlId,
+            relationship_note: null,
+            is_synthetic: false,
+          });
+        }
+      }
+    }
+  }
+
+  return { standards, subRequirements, controlMappings };
+};
+
+// ──── MA&D Tab Parser ────
+
+const parseMadTab = (
+  rows: ParsedRow[],
+  versionId: string,
+  controlByCode: Map<string, string>,
+): {
+  standards: MadStandard[];
+  subRequirements: MadSubRequirement[];
+  maturityCriteria: MadMaturityCriteria[];
+  controlMappings: MadControlMappingRecord[];
+} => {
+  const standards: MadStandard[] = [];
+  const subRequirements: MadSubRequirement[] = [];
+  const maturityCriteria: MadMaturityCriteria[] = [];
+  const controlMappings: MadControlMappingRecord[] = [];
+  const standardByNumber = new Map<number, string>();
+
+  for (const row of rows) {
+    const standardNumRaw =
+      row["standard_#"] || row["standard_number"] || row["madss_standard_number"];
+    const requirementCode =
+      row["sub_requirement_#"] || row["requirement_code"] || row["sub_requirement_code"];
+    if (!requirementCode) continue;
+
+    const standardNum = standardNumRaw ? parseInt(standardNumRaw.toString(), 10) : 0;
+    const standardTitle = row["standard_title"] || row["standard"] || `Standard ${standardNum}`;
+    const phaseRaw = (row["phase"] || row["mad_phase"] || "pre_transaction")
+      .toLowerCase().replace(/[ \-]/g, "_") as MadStandard["phase"];
+
+    if (standardNum > 0 && !standardByNumber.has(standardNum)) {
+      const sId = crypto.randomUUID();
+      standardByNumber.set(standardNum, sId);
+      standards.push({
+        id: sId,
+        scf_version_id: versionId,
+        standard_number: standardNum,
+        code: `MADSS-${standardNum}`,
+        title: standardTitle.trim(),
+        description: null,
+        phase: phaseRaw,
+        sort_order: standardNum,
+        is_synthetic: false,
+      });
+    }
+
+    const standardId = standardByNumber.get(standardNum) ?? standards[0]?.id ?? crypto.randomUUID();
+    const subReqTitle = row["sub_requirement"] || row["requirement_title"] || row["title"] || requirementCode;
+    const description = row["description"] || row["requirement_description"] || undefined;
+
+    const subReqId = crypto.randomUUID();
+    subRequirements.push({
+      id: subReqId,
+      scf_version_id: versionId,
+      mad_standard_id: standardId,
+      requirement_code: requirementCode.trim(),
+      title: subReqTitle.trim(),
+      description: description?.trim() || null,
+      sort_order: subRequirements.length + 1,
+      is_synthetic: false,
+    });
+
+    for (let level = 0; level <= 5; level++) {
+      const criteriaText =
+        row[`l${level}`] ||
+        row[`level_${level}`] ||
+        row[`level_${level}_criteria`] ||
+        row[`l${level}_criteria`] ||
+        row[`maturity_level_${level}`];
+      if (criteriaText && criteriaText.trim()) {
+        maturityCriteria.push({
+          id: crypto.randomUUID(),
+          scf_version_id: versionId,
+          mad_sub_requirement_id: subReqId,
+          level,
+          criteria_text: criteriaText.trim(),
+          remediation_guidance: null,
+          is_synthetic: false,
+        });
+      }
+    }
+
+    const controlsRaw =
+      row["scf_control_#"] || row["scf_control_mappings"] || row["scf_controls"] || "";
+    if (controlsRaw) {
+      for (const code of controlsRaw.split(/[,;]/).map((s: string) => s.trim()).filter(Boolean)) {
+        const controlId = controlByCode.get(code);
+        if (controlId) {
+          controlMappings.push({
+            id: crypto.randomUUID(),
+            scf_version_id: versionId,
+            mad_sub_requirement_id: subReqId,
+            scf_control_id: controlId,
+            relationship_note: null,
+            is_synthetic: false,
+          });
+        }
+      }
+    }
+  }
+
+  return { standards, subRequirements, maturityCriteria, controlMappings };
+};
+
 // ──── Main XLSX Importer ────
 
 export const createXlsxScfImporter = (): ScfImporter => ({
@@ -790,7 +1082,7 @@ export const createXlsxScfImporter = (): ScfImporter => ({
       }
     }
 
-    // Phase 1.5: Parse extended meta-model tabs (AOs, ERL, Risks, Threats, Maturity)
+    // Phase 1.5: Parse extended meta-model tabs (AOs, ERL, Risks, Threats, Maturity, DPMP, MA&D)
     const allAssessmentObjectives: ScfAssessmentObjective[] = [];
     const allEvidenceRequests: ScfEvidenceRequest[] = [];
     const allMaturityCriteria: ScfMaturityCriteria[] = [];
@@ -798,6 +1090,15 @@ export const createXlsxScfImporter = (): ScfImporter => ({
     const allThreats: ScfThreat[] = [];
     const allRiskControlMappings: any[] = [];
     const allThreatControlMappings: any[] = [];
+    const allDpmpPrinciples: DpmpPrinciple[] = [];
+    const allDpmpFrameworkMappings: DpmpFrameworkMapping[] = [];
+    const allCdpasStandards: CdpasStandard[] = [];
+    const allCdpasSubRequirements: CdpasSubRequirement[] = [];
+    const allCdpasControlMappings: CdpasControlMapping[] = [];
+    const allMadStandards: MadStandard[] = [];
+    const allMadSubRequirements: MadSubRequirement[] = [];
+    const allMadMaturityCriteria: MadMaturityCriteria[] = [];
+    const allMadControlMappings: MadControlMappingRecord[] = [];
 
     const riskByCode = new Map<string, string>();
     const threatByCode = new Map<string, string>();
@@ -835,6 +1136,12 @@ export const createXlsxScfImporter = (): ScfImporter => ({
           controlByCode,
         );
         allAssessmentObjectives.push(...objectives);
+      } else if (classification.type === "cdpas") {
+        const rows = parseSheetToRows(sheet);
+        const { standards, subRequirements, controlMappings } = parseCdpasTab(rows, versionId, controlByCode);
+        allCdpasStandards.push(...standards);
+        allCdpasSubRequirements.push(...subRequirements);
+        allCdpasControlMappings.push(...controlMappings);
       } else if (classification.type === "evidence_requests") {
         const rows = parseSheetToRows(sheet);
         const requests = parseEvidenceRequestsTab(
@@ -867,6 +1174,19 @@ export const createXlsxScfImporter = (): ScfImporter => ({
         for (const t of threats) {
           threatByCode.set(t.threat_code.toUpperCase(), t.id);
         }
+      } else if (classification.type === "dpmp") {
+        const rows = parseSheetToRows(sheet);
+        const { principles, frameworkMappings } = parseDpmpTab(rows, versionId);
+        allDpmpPrinciples.push(...principles);
+        allDpmpFrameworkMappings.push(...frameworkMappings);
+      } else if (classification.type === "mad") {
+        const rows = parseSheetToRows(sheet);
+        const { standards, subRequirements, maturityCriteria, controlMappings } =
+          parseMadTab(rows, versionId, controlByCode);
+        allMadStandards.push(...standards);
+        allMadSubRequirements.push(...subRequirements);
+        allMadMaturityCriteria.push(...maturityCriteria);
+        allMadControlMappings.push(...controlMappings);
       }
     }
 
@@ -925,6 +1245,12 @@ export const createXlsxScfImporter = (): ScfImporter => ({
         maturity_criteria: allMaturityCriteria.length,
         risks: allRisks.length,
         threats: allThreats.length,
+        dpmp_principles: allDpmpPrinciples.length,
+        dpmp_framework_mappings: allDpmpFrameworkMappings.length,
+        cdpas_standards: allCdpasStandards.length,
+        cdpas_sub_requirements: allCdpasSubRequirements.length,
+        mad_standards: allMadStandards.length,
+        mad_sub_requirements: allMadSubRequirements.length,
       },
       trace_id: `xlsx-importer-${Date.now()}`,
     };
@@ -948,6 +1274,15 @@ export const createXlsxScfImporter = (): ScfImporter => ({
         threats: allThreats,
         riskControlMappings: allRiskControlMappings,
         threatControlMappings: allThreatControlMappings,
+        dpmpPrinciples: allDpmpPrinciples,
+        dpmpFrameworkMappings: allDpmpFrameworkMappings,
+        cdpasStandards: allCdpasStandards,
+        cdpasSubRequirements: allCdpasSubRequirements,
+        cdpasControlMappings: allCdpasControlMappings,
+        madStandards: allMadStandards,
+        madSubRequirements: allMadSubRequirements,
+        madMaturityCriteria: allMadMaturityCriteria,
+        madControlMappings: allMadControlMappings,
       },
       warnings: allWarnings,
     };
