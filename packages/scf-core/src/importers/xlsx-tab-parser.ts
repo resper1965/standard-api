@@ -24,6 +24,9 @@ export type TabClassification =
   | { type: "evidence_requests"; sheetName: string }
   | { type: "risk_catalog"; sheetName: string }
   | { type: "threat_catalog"; sheetName: string }
+  | { type: "dpmp"; sheetName: string }
+  | { type: "cdpas"; sheetName: string }
+  | { type: "mad"; sheetName: string }
   | { type: "unknown"; sheetName: string };
 
 // ──── Header Normalization ────
@@ -215,9 +218,30 @@ export const classifyTab = (
     return { type: "controls", sheetName };
   }
 
+  // Detect CDPAS tab before generic crosswalk fallback
+  if (
+    nameLower === "cdpas" ||
+    (nameLower.startsWith("cybersecurity") && nameLower.includes("assessment"))
+  ) {
+    return { type: "cdpas" as const, sheetName };
+  }
+
   // If it has control IDs but no body columns → it's a crosswalk
   if (hasControlIdColumn) {
     return { type: "crosswalk", sheetName, frameworkHint: sheetName.trim() };
+  }
+
+  // Check for DPMP (Data Privacy Management Principles) tab
+  if (nameLower === "dpmp" || nameLower.startsWith("data privacy management")) {
+    return { type: "dpmp" as const, sheetName };
+  }
+
+  // MA&D / MADSS tab detection (before generic crosswalk fallback)
+  if (
+    nameLower === "ma&d" || nameLower === "mad" || nameLower === "madss" ||
+    nameLower.startsWith("mergers") || nameLower.startsWith("m&a")
+  ) {
+    return { type: "mad" as const, sheetName };
   }
 
   // Everything else is treated as a crosswalk tab

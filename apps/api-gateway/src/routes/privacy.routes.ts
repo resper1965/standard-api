@@ -633,6 +633,77 @@ export const privacyRoutes: RouteDefinition[] = [
   },
 
   // ═══════════════════════════════════════════════════════════════════
+  // DPMP: Data Privacy Management Principles
+  // ═══════════════════════════════════════════════════════════════════
+
+  {
+    method: "GET",
+    path: "/api/v1/dpmp/principles",
+    authRequired: true,
+    handler: async (ctx) => {
+      const url = new URL(ctx.request.url);
+      const scfVersionId = url.searchParams.get("scf_version") ?? undefined;
+      const domain = url.searchParams.get("domain") ?? undefined;
+      const frameworkId = url.searchParams.get("framework_id") ?? undefined;
+      const q = url.searchParams.get("q") ?? undefined;
+      const limit = url.searchParams.get("limit") ? parseInt(url.searchParams.get("limit")!, 10) : 100;
+      const offset = url.searchParams.get("offset") ? parseInt(url.searchParams.get("offset")!, 10) : 0;
+
+      const principles = await (ctx.deps as any).dpmp.listPrinciples({ scf_version_id: scfVersionId, domain: domain as any, framework_id: frameworkId, q, limit, offset });
+      return json({ data: principles, total: principles.length, trace_id: ctx.traceId });
+    },
+  },
+
+  {
+    method: "GET",
+    path: "/api/v1/dpmp/principles/:principleId",
+    authRequired: true,
+    handler: async (ctx) => {
+      const principleId = routeParam(ctx.params, "principleId");
+      const principle = await (ctx.deps as any).dpmp.getPrincipleWithMappings(principleId);
+      if (!principle) throw new ApiError("NOT_FOUND", "DPMP principle not found.", 404);
+      return json({ ...principle, trace_id: ctx.traceId });
+    },
+  },
+
+  {
+    method: "GET",
+    path: "/api/v1/dpmp/domains",
+    authRequired: true,
+    handler: async (ctx) => {
+      const url = new URL(ctx.request.url);
+      const scfVersionId = url.searchParams.get("scf_version") ?? undefined;
+      const domains = await (ctx.deps as any).dpmp.listDomains(scfVersionId);
+      return json({ data: domains, trace_id: ctx.traceId });
+    },
+  },
+
+  {
+    method: "GET",
+    path: "/api/v1/dpmp/frameworks",
+    authRequired: true,
+    handler: async (ctx) => {
+      const url = new URL(ctx.request.url);
+      const scfVersionId = url.searchParams.get("scf_version") ?? undefined;
+      const frameworks = await (ctx.deps as any).dpmp.listFrameworks(scfVersionId);
+      return json({ data: frameworks, trace_id: ctx.traceId });
+    },
+  },
+
+  {
+    method: "GET",
+    path: "/api/v1/dpmp/frameworks/:frameworkId/principles",
+    authRequired: true,
+    handler: async (ctx) => {
+      const frameworkId = routeParam(ctx.params, "frameworkId");
+      const url = new URL(ctx.request.url);
+      const scfVersionId = url.searchParams.get("scf_version") ?? undefined;
+      const principles = await (ctx.deps as any).dpmp.listPrinciplesByFramework(frameworkId, scfVersionId);
+      return json({ framework_id: frameworkId, data: principles, total: principles.length, trace_id: ctx.traceId });
+    },
+  },
+
+  // ═══════════════════════════════════════════════════════════════════
   // Phase 7: Report Generation
   // ═══════════════════════════════════════════════════════════════════
 

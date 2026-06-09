@@ -71,6 +71,9 @@ const controlResponse = (control: ScfControl) => ({
     ? { expected_evidence: control.expected_evidence }
     : {}),
   ...(control.control_weight ? { control_weight: control.control_weight } : {}),
+  ...(control.compensating_control_guidance
+    ? { compensating_control_guidance: control.compensating_control_guidance }
+    : {}),
   status: control.status,
   is_synthetic: control.is_synthetic,
 });
@@ -285,6 +288,8 @@ export const scfRoutes: RouteDefinition[] = [
 
       const domainCode =
         url.searchParams.get("domain_code") || url.searchParams.get("domain");
+      const weightMin = url.searchParams.get("weight_min") ? parseFloat(url.searchParams.get("weight_min")!) : undefined;
+      const weightMax = url.searchParams.get("weight_max") ? parseFloat(url.searchParams.get("weight_max")!) : undefined;
 
       try {
         const controls = await deps.scf.controls.searchControls({
@@ -305,6 +310,8 @@ export const scfRoutes: RouteDefinition[] = [
                   .filter(Boolean),
               }
             : {}),
+          ...(weightMin !== undefined ? { weight_min: weightMin } : {}),
+          ...(weightMax !== undefined ? { weight_max: weightMax } : {}),
           limit,
           offset,
         });
@@ -324,6 +331,35 @@ export const scfRoutes: RouteDefinition[] = [
         );
         throw err;
       }
+    },
+  },
+  {
+    method: "GET",
+    path: "/api/v1/scf/domains/:domainCode/controls",
+    protected: true,
+    permissions: ["scf:read"],
+    handler: async ({ deps, params, request, traceId }) => {
+      const domainCode = routeParam(params, "domainCode").toUpperCase();
+      const url = new URL(request.url);
+      const scfVersionId = await resolveVersionId(deps, url.searchParams.get("scf_version") || "latest");
+
+      const limitStr = url.searchParams.get("limit");
+      const limit = limitStr ? Math.min(parseInt(limitStr, 10), 200) : 100;
+
+      const controls = await deps.scf.controls.searchControls({
+        scf_version_id: scfVersionId,
+        domain_code: domainCode,
+        limit,
+        offset: 0,
+      });
+
+      return json({
+        domain_code: domainCode,
+        scf_version_id: scfVersionId,
+        data: controls.map(controlResponse),
+        total: controls.length,
+        trace_id: traceId,
+      });
     },
   },
   {
