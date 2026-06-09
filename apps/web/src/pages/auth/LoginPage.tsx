@@ -1,11 +1,14 @@
+/**
+ * LoginPage — b.standard Authentication & Landing
+ * Nordic Tech Design System — Enterprise Grade
+ * Be Secure · bekaa
+ */
 import { useState, useEffect, useRef } from "react"
 import { useNavigate, Navigate } from "react-router-dom"
 import { signIn, signUp, useSession, authClient } from "@/lib/auth-client"
 import "./LoginPage.css"
 
-/* ─────────────────────────────────────────────
-   Minimal SVG Icon Set — Inline, zero-dep
-   ───────────────────────────────────────────── */
+/* ─── Icon Set — Inline SVG, zero-dep ─────────────────────── */
 const IconMail = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <rect x="2" y="4" width="20" height="16" rx="2.5" />
@@ -51,23 +54,63 @@ const IconAlert = () => (
   </svg>
 )
 
-/* Typographic logo — no SVG needed */
-
 const IconCheck = () => (
-  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <polyline points="20 6 9 17 4 12" />
   </svg>
 )
 
 const IconArrow = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="M5 12h14M12 5l7 7-7 7" />
   </svg>
 )
 
-/* ─────────────────────────────────────────────
-   Animated noise background orb
-   ───────────────────────────────────────────── */
+const IconClock = () => (
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="10" />
+    <path d="M12 6v6l4 2" />
+  </svg>
+)
+
+const IconShield = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+  </svg>
+)
+
+const IconLayers = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <polygon points="12 2 2 7 12 12 22 7 12 2" />
+    <polyline points="2 17 12 22 22 17" />
+    <polyline points="2 12 12 17 22 12" />
+  </svg>
+)
+
+const IconCpu = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <rect x="4" y="4" width="16" height="16" rx="2" />
+    <rect x="9" y="9" width="6" height="6" />
+    <line x1="9" y1="1" x2="9" y2="4" />
+    <line x1="15" y1="1" x2="15" y2="4" />
+    <line x1="9" y1="20" x2="9" y2="23" />
+    <line x1="15" y1="20" x2="15" y2="23" />
+    <line x1="20" y1="9" x2="23" y2="9" />
+    <line x1="20" y1="14" x2="23" y2="14" />
+    <line x1="1" y1="9" x2="4" y2="9" />
+    <line x1="1" y1="14" x2="4" y2="14" />
+  </svg>
+)
+
+const IconGlobe = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="10" />
+    <line x1="2" y1="12" x2="22" y2="12" />
+    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+  </svg>
+)
+
+/* ─── Floating particles (low-opacity dots) ────────────────── */
 function ParticleCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   useEffect(() => {
@@ -77,7 +120,6 @@ function ParticleCanvas() {
     if (!ctx) return
 
     let animId: number
-    let t = 0
 
     const resize = () => {
       canvas.width = window.innerWidth
@@ -86,21 +128,17 @@ function ParticleCanvas() {
     resize()
     window.addEventListener("resize", resize)
 
-    // Floating particles
-    const particles = Array.from({ length: 28 }, () => ({
+    const particles = Array.from({ length: 24 }, () => ({
       x: Math.random() * window.innerWidth,
       y: Math.random() * window.innerHeight,
-      r: Math.random() * 1.5 + 0.3,
-      vx: (Math.random() - 0.5) * 0.15,
-      vy: (Math.random() - 0.5) * 0.15,
-      alpha: Math.random() * 0.25 + 0.05,
+      r: Math.random() * 1.2 + 0.2,
+      vx: (Math.random() - 0.5) * 0.12,
+      vy: (Math.random() - 0.5) * 0.12,
+      alpha: Math.random() * 0.18 + 0.04,
     }))
 
     const render = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
-      t += 0.004
-
-      // Draw particles
       particles.forEach((p) => {
         p.x += p.vx
         p.y += p.vy
@@ -108,30 +146,24 @@ function ParticleCanvas() {
         if (p.x > canvas.width) p.x = 0
         if (p.y < 0) p.y = canvas.height
         if (p.y > canvas.height) p.y = 0
-
         ctx.beginPath()
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(148, 163, 184, ${p.alpha})`
+        ctx.fillStyle = `rgba(143, 168, 155, ${p.alpha})`
         ctx.fill()
       })
-
       animId = requestAnimationFrame(render)
     }
     render()
-
     return () => {
       cancelAnimationFrame(animId)
       window.removeEventListener("resize", resize)
     }
   }, [])
-
   return <canvas ref={canvasRef} className="lp-canvas" aria-hidden="true" />
 }
 
-/* ─────────────────────────────────────────────
-   Feature badge
-   ───────────────────────────────────────────── */
-function FeatureBadge({ children }: { children: React.ReactNode }) {
+/* ─── Trust badge ──────────────────────────────────────────── */
+function TrustBadge({ children }: { children: React.ReactNode }) {
   return (
     <div className="lp-badge">
       <span className="lp-badge-check"><IconCheck /></span>
@@ -140,21 +172,23 @@ function FeatureBadge({ children }: { children: React.ReactNode }) {
   )
 }
 
-/* ─────────────────────────────────────────────
-   Stat card
-   ───────────────────────────────────────────── */
-function StatCard({ value, label }: { value: string; label: string }) {
+/* ─── Capability card ──────────────────────────────────────── */
+function CapabilityCard({
+  icon, label, value, desc
+}: { icon: React.ReactNode; label: string; value: string; desc: string }) {
   return (
-    <div className="lp-stat">
-      <span className="lp-stat-value">{value}</span>
-      <span className="lp-stat-label">{label}</span>
+    <div className="lp-cap-card">
+      <div className="lp-cap-icon">{icon}</div>
+      <div className="lp-cap-body">
+        <span className="lp-cap-value">{value}</span>
+        <span className="lp-cap-label">{label}</span>
+        <span className="lp-cap-desc">{desc}</span>
+      </div>
     </div>
   )
 }
 
-/* ─────────────────────────────────────────────
-   Input Field
-   ───────────────────────────────────────────── */
+/* ─── Input Field ──────────────────────────────────────────── */
 interface InputFieldProps {
   id: string
   label: string
@@ -202,9 +236,7 @@ function InputField({
   )
 }
 
-/* ─────────────────────────────────────────────
-   Main component
-   ───────────────────────────────────────────── */
+/* ─── Main Page ────────────────────────────────────────────── */
 export function LoginPage() {
   const { data: session, isPending } = useSession()
   const navigate = useNavigate()
@@ -228,9 +260,9 @@ export function LoginPage() {
   if (isPending) {
     return (
       <div className="lp-root" role="main">
-        <div className="lp-orb lp-orb--blue" aria-hidden="true" />
-        <div className="lp-orb lp-orb--violet" aria-hidden="true" />
-        <div className="lp-loader-wrap" aria-label="Carregando...">
+        <div className="lp-orb lp-orb--a" aria-hidden="true" />
+        <div className="lp-orb lp-orb--b" aria-hidden="true" />
+        <div className="lp-loader-wrap" aria-label="Loading…">
           <div className="lp-loader" />
         </div>
       </div>
@@ -248,7 +280,6 @@ export function LoginPage() {
         const result = await signIn.email({ email, password })
         if (result.error) {
           const msg = result.error.message || "Invalid email or password"
-          // Detect approval gate error from backend
           if (msg.toLowerCase().includes("pending approval") || result.error.code === "ACCOUNT_PENDING_APPROVAL") {
             setPendingApproval(true)
           } else {
@@ -258,10 +289,7 @@ export function LoginPage() {
       } else {
         const result = await signUp.email({ email, password, name })
         if (result.error) setError(result.error.message || "Sign up failed")
-        else {
-          // Show pending approval message instead of redirecting
-          setPendingApproval(true)
-        }
+        else setPendingApproval(true)
       }
     } catch (err: unknown) {
       const msg =
@@ -292,37 +320,28 @@ export function LoginPage() {
 
   return (
     <div className="lp-root" role="main">
-      {/* ── Background system ── */}
-      <div className="lp-orb lp-orb--blue" aria-hidden="true" />
-      <div className="lp-orb lp-orb--violet" aria-hidden="true" />
-      <div className="lp-orb lp-orb--cyan" aria-hidden="true" />
+
+      {/* ── Ambient background system ── */}
+      <div className="lp-orb lp-orb--a" aria-hidden="true" />
+      <div className="lp-orb lp-orb--b" aria-hidden="true" />
+      <div className="lp-orb lp-orb--c" aria-hidden="true" />
       <div className="lp-grid" aria-hidden="true" />
       <ParticleCanvas />
       <div className="lp-vignette" aria-hidden="true" />
 
       <div className="lp-layout">
 
-        {/* ═══════════════════════════════════════════
-            LEFT PANEL — Branding & social proof
-            ═══════════════════════════════════════════ */}
-        <aside className="lp-left" aria-label="Standard Platform overview">
+        {/* ══ LEFT — Branding & value proposition ══ */}
+        <aside className="lp-left" aria-label="b.standard Platform overview">
 
-          {/* Typographic logo + slogan */}
+          {/* Logo + Slogan */}
           <div className="lp-logo">
-            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+            <div className="lp-logo-stack">
               <span className="lp-logo-mark">
                 b<span className="lp-logo-dot">.</span>standard
               </span>
-              <span style={{
-                fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif",
-                fontWeight: 300,
-                fontSize: "0.8125rem",
-                letterSpacing: "0.07em",
-                color: "#6c757d",
-                textTransform: "lowercase",
-                lineHeight: 1,
-              }}>
-                be secure<span style={{ color: "#8fa89b" }}>.</span>
+              <span className="lp-logo-slogan">
+                be secure<span className="lp-logo-dot">.</span>
               </span>
             </div>
           </div>
@@ -330,58 +349,86 @@ export function LoginPage() {
           {/* Hero copy */}
           <div className="lp-hero">
             <p className="lp-hero-eyebrow">
-              be secure<span className="lp-dot">.</span>
+              Security Assessment Platform
             </p>
             <h1 className="lp-hero-title">
-              Compliance without{" "}
-              <span className="lp-hero-accent">the chaos</span>{" "}
-              <span className="lp-hero-accent lp-hero-accent--delay">or the spreadsheets.</span>
+              Structured compliance.{" "}
+              <span className="lp-hero-accent">Without the chaos.</span>
             </h1>
             <p className="lp-hero-desc">
-              b.standard turns your security assessment lifecycle into a
-              structured, traceable workflow. Every control mapped.
-              Every gap scored. Every finding audit&#8209;ready — at API speed.
+              b.standard transforms your security assessment lifecycle into a
+              structured, traceable workflow — every control mapped, every gap
+              scored, every finding audit-ready. At API speed.
             </p>
           </div>
 
-          {/* Stat grid */}
-          <div className="lp-stats" role="list" aria-label="Platform capabilities">
-            <StatCard value="REST" label="API" />
-            <StatCard value="SDK" label="TypeScript" />
-            <StatCard value="MCP" label="AI Agents" />
-            <StatCard value="231+" label="Frameworks" />
+          {/* Divider */}
+          <div className="lp-divider" aria-hidden="true" />
+
+          {/* Capability cards */}
+          <div className="lp-caps" role="list" aria-label="Platform capabilities">
+            <CapabilityCard
+              icon={<IconShield />}
+              value="231+"
+              label="Frameworks"
+              desc="NIST, ISO 27001, SOC 2, PCI DSS and more"
+            />
+            <CapabilityCard
+              icon={<IconLayers />}
+              value="REST API"
+              label="API-First"
+              desc="Full lifecycle via versioned REST endpoints"
+            />
+            <CapabilityCard
+              icon={<IconCpu />}
+              value="MCP"
+              label="AI Agents"
+              desc="Agentic assessments with Model Context Protocol"
+            />
+            <CapabilityCard
+              icon={<IconGlobe />}
+              value="Edge"
+              label="Infrastructure"
+              desc="Cloudflare Workers — global, zero cold starts"
+            />
           </div>
+
+          {/* Divider */}
+          <div className="lp-divider" aria-hidden="true" />
 
           {/* Trust badges */}
           <div className="lp-badges" role="list" aria-label="Platform certifications">
-            <FeatureBadge>API-First Architecture</FeatureBadge>
-            <FeatureBadge>Multi-Tenant Isolation</FeatureBadge>
-            <FeatureBadge>Enterprise-Grade Security</FeatureBadge>
-            <FeatureBadge>Cloudflare Edge Infrastructure</FeatureBadge>
+            <TrustBadge>Multi-Tenant Isolation</TrustBadge>
+            <TrustBadge>Approval Gate Workflow</TrustBadge>
+            <TrustBadge>Immutable Audit Trail</TrustBadge>
+            <TrustBadge>Schema-Validated Outputs</TrustBadge>
           </div>
 
-          {/* Bottom tagline */}
+          {/* Footer */}
           <div className="lp-left-footer">
             <span className="lp-footer-dot" aria-hidden="true" />
-            <span>bekaa — powered by cloudflare edge</span>
+            <span>bekaa — cloudflare edge infrastructure</span>
           </div>
         </aside>
 
-        {/* ═══════════════════════════════════════════
-            RIGHT PANEL — Auth form
-            ═══════════════════════════════════════════ */}
+        {/* ══ RIGHT — Auth form ══ */}
         <section
           className={`lp-right${formMounted ? " lp-right--in" : ""}`}
           aria-label={isLogin ? "Sign in form" : "Create account form"}
         >
-          {/* Mobile-only logo */}
+          {/* Mobile logo */}
           <div className="lp-mobile-logo" aria-hidden="true">
-            <span className="lp-logo-mark lp-logo-mark--sm">
-              b<span className="lp-logo-dot">.</span>standard
-            </span>
+            <div className="lp-mobile-logo-stack">
+              <span className="lp-logo-mark lp-logo-mark--sm">
+                b<span className="lp-logo-dot">.</span>standard
+              </span>
+              <span className="lp-logo-slogan lp-logo-slogan--sm">
+                be secure<span className="lp-logo-dot">.</span>
+              </span>
+            </div>
           </div>
 
-          {/* Mode switcher */}
+          {/* Mode tabs */}
           <div className="lp-tabs" role="tablist" aria-label="Authentication mode">
             <button
               className={`lp-tab${isLogin ? " lp-tab--active" : ""}`}
@@ -407,170 +454,167 @@ export function LoginPage() {
             </button>
           </div>
 
-            {/* Form card */}
+          {/* Form card */}
           <div className="lp-card" id="lp-form-panel" role="tabpanel" aria-labelledby={isLogin ? "tab-login" : "tab-signup"}>
             {pendingApproval ? (
-              <div className="lp-card-header" style={{ textAlign: "center", padding: "2rem 1.5rem" }}>
-                <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 56, height: 56, borderRadius: "50%", background: "linear-gradient(135deg, rgba(96, 165, 250, 0.15), rgba(167, 139, 250, 0.15))", marginBottom: 16 }}>
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{ color: "#60a5fa" }}>
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="M12 6v6l4 2" />
-                  </svg>
+              <div className="lp-pending">
+                <div className="lp-pending-icon">
+                  <IconClock />
                 </div>
-                <h2 className="lp-card-title" style={{ marginBottom: 8 }}>
-                  {isLogin ? "Account Pending" : "Account Created!"}
+                <h2 className="lp-card-title">
+                  {isLogin ? "Account Pending Review" : "Account Created"}
                 </h2>
-                <p className="lp-card-sub" style={{ lineHeight: 1.6 }}>
+                <p className="lp-card-sub">
                   {isLogin
-                    ? "Your account is awaiting approval by a platform administrator. You will be able to access the platform once your account is approved."
-                    : "Your account has been created successfully. A platform administrator will review and approve your access shortly."}
+                    ? "Your account is awaiting approval by a platform administrator. You will receive access once approved."
+                    : "Your account was created successfully. A platform administrator will review and approve your access shortly."}
                 </p>
                 <button
                   type="button"
                   className="lp-submit"
-                  style={{ marginTop: 24, maxWidth: 200 }}
-                  onClick={() => { setPendingApproval(false); switchMode("login"); }}
+                  style={{ marginTop: "1.5rem" }}
+                  onClick={() => { setPendingApproval(false); switchMode("login") }}
                 >
-                  <span className="lp-submit-content">Back to Sign In</span>
+                  <span className="lp-submit-content">
+                    Back to Sign In
+                    <span className="lp-submit-arrow"><IconArrow /></span>
+                  </span>
                   <span className="lp-submit-shine" aria-hidden="true" />
                 </button>
               </div>
             ) : (
-            <>
-            <div className="lp-card-header">
-              <h2 className="lp-card-title">
-                {isLogin ? "Welcome back" : "Get started"}
-              </h2>
-              <p className="lp-card-sub">
-                {isLogin
-                  ? "Sign in to the Platform Console"
-                  : "Create your platform account"}
-              </p>
-            </div>
+              <>
+                <div className="lp-card-header">
+                  <h2 className="lp-card-title">
+                    {isLogin ? "Welcome back" : "Get started"}
+                  </h2>
+                  <p className="lp-card-sub">
+                    {isLogin
+                      ? "Sign in to the Platform Console"
+                      : "Create your platform account"}
+                  </p>
+                </div>
 
-            <form className="lp-form" onSubmit={handleSubmit} noValidate>
-              {!isLogin && (
-                <div className="lp-field-enter">
+                <form className="lp-form" onSubmit={handleSubmit} noValidate>
+                  {!isLogin && (
+                    <div className="lp-field-enter">
+                      <InputField
+                        id="lp-name"
+                        label="Full Name"
+                        type="text"
+                        value={name}
+                        onChange={setName}
+                        placeholder="Jane Doe"
+                        icon={<IconUser />}
+                        autoComplete="name"
+                        required
+                      />
+                    </div>
+                  )}
+
                   <InputField
-                    id="lp-name"
-                    label="Full Name"
-                    type="text"
-                    value={name}
-                    onChange={setName}
-                    placeholder="Jane Doe"
-                    icon={<IconUser />}
-                    autoComplete="name"
+                    id="lp-email"
+                    label="Work Email"
+                    type="email"
+                    value={email}
+                    onChange={setEmail}
+                    placeholder="you@company.com"
+                    icon={<IconMail />}
+                    autoComplete="email"
                     required
                   />
-                </div>
-              )}
 
-              <InputField
-                id="lp-email"
-                label="Work Email"
-                type="email"
-                value={email}
-                onChange={setEmail}
-                placeholder="you@company.com"
-                icon={<IconMail />}
-                autoComplete="email"
-                required
-              />
+                  <InputField
+                    id="lp-password"
+                    label="Password"
+                    type={showPw ? "text" : "password"}
+                    value={password}
+                    onChange={setPassword}
+                    placeholder={isLogin ? "••••••••" : "Min. 12 characters"}
+                    icon={<IconLock />}
+                    autoComplete={isLogin ? "current-password" : "new-password"}
+                    required
+                    minLength={isLogin ? undefined : 12}
+                    suffix={
+                      <button
+                        type="button"
+                        className="lp-pw-toggle"
+                        onClick={() => setShowPw((v) => !v)}
+                        aria-label={showPw ? "Hide password" : "Show password"}
+                      >
+                        {showPw ? <IconEyeOff /> : <IconEye />}
+                      </button>
+                    }
+                  />
 
-              <InputField
-                id="lp-password"
-                label="Password"
-                type={showPw ? "text" : "password"}
-                value={password}
-                onChange={setPassword}
-                placeholder={isLogin ? "••••••••" : "Min. 12 characters"}
-                icon={<IconLock />}
-                autoComplete={isLogin ? "current-password" : "new-password"}
-                required
-                minLength={isLogin ? undefined : 12}
-                suffix={
-                  <button
-                    type="button"
-                    className="lp-pw-toggle"
-                    onClick={() => setShowPw((v) => !v)}
-                    aria-label={showPw ? "Hide password" : "Show password"}
-                  >
-                    {showPw ? <IconEyeOff /> : <IconEye />}
-                  </button>
-                }
-              />
-
-              {/* Error feedback */}
-              {error && (
-                <div className="lp-error" role="alert" aria-live="assertive">
-                  <span className="lp-error-icon"><IconAlert /></span>
-                  <span>{error}</span>
-                </div>
-              )}
-
-              {/* Forgot password — login mode only */}
-              {isLogin && (
-                <div className="lp-forgot-wrap">
-                  {forgotSent ? (
-                    <p className="lp-forgot-sent" role="status">
-                      ✓ Password reset link sent! Check your email inbox.
-                    </p>
-                  ) : (
-                    <button
-                      type="button"
-                      className="lp-link lp-forgot-link"
-                      onClick={async () => {
-                        if (!email.trim()) {
-                          setError("Enter your email first, then click Forgot password.")
-                          return
-                        }
-                        setError("")
-                        setLoading(true)
-                        try {
-                          const res = await authClient.requestPasswordReset({
-                            email,
-                            redirectTo: window.location.origin + "/auth/reset-password",
-                          })
-                          if (res.error) {
-                            setError(res.error.message || "Failed to send reset link.")
-                          } else {
-                            setForgotSent(true)
-                          }
-                        } catch (err: unknown) {
-                          setError(err instanceof Error ? err.message : "An unexpected error occurred.")
-                        } finally {
-                          setLoading(false)
-                        }
-                      }}
-                    >
-                      Forgot password?
-                    </button>
+                  {error && (
+                    <div className="lp-error" role="alert" aria-live="assertive">
+                      <span className="lp-error-icon"><IconAlert /></span>
+                      <span>{error}</span>
+                    </div>
                   )}
-                </div>
-              )}
 
-              {/* Submit */}
-              <button
-                id="lp-submit"
-                className="lp-submit"
-                type="submit"
-                disabled={loading}
-                aria-busy={loading}
-              >
-                <span className={`lp-submit-content${loading ? " lp-submit-content--hidden" : ""}`}>
-                  {isLogin ? "Sign In" : "Create Account"}
-                  <span className="lp-submit-arrow"><IconArrow /></span>
-                </span>
-                {loading && <span className="lp-spinner" aria-hidden="true" />}
-                <span className="lp-submit-shine" aria-hidden="true" />
-              </button>
-            </form>
-            </>)}
+                  {isLogin && (
+                    <div className="lp-forgot-wrap">
+                      {forgotSent ? (
+                        <p className="lp-forgot-sent" role="status">
+                          ✓ Password reset link sent. Check your inbox.
+                        </p>
+                      ) : (
+                        <button
+                          type="button"
+                          className="lp-link lp-forgot-link"
+                          onClick={async () => {
+                            if (!email.trim()) {
+                              setError("Enter your email first, then click Forgot password.")
+                              return
+                            }
+                            setError("")
+                            setLoading(true)
+                            try {
+                              const res = await authClient.requestPasswordReset({
+                                email,
+                                redirectTo: window.location.origin + "/auth/reset-password",
+                              })
+                              if (res.error) {
+                                setError(res.error.message || "Failed to send reset link.")
+                              } else {
+                                setForgotSent(true)
+                              }
+                            } catch (err: unknown) {
+                              setError(err instanceof Error ? err.message : "An unexpected error occurred.")
+                            } finally {
+                              setLoading(false)
+                            }
+                          }}
+                        >
+                          Forgot password?
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  <button
+                    id="lp-submit"
+                    className="lp-submit"
+                    type="submit"
+                    disabled={loading}
+                    aria-busy={loading}
+                  >
+                    <span className={`lp-submit-content${loading ? " lp-submit-content--hidden" : ""}`}>
+                      {isLogin ? "Sign In" : "Create Account"}
+                      <span className="lp-submit-arrow"><IconArrow /></span>
+                    </span>
+                    {loading && <span className="lp-spinner" aria-hidden="true" />}
+                    <span className="lp-submit-shine" aria-hidden="true" />
+                  </button>
+                </form>
+              </>
+            )}
           </div>
 
-          {/* Footer */}
           <p className="lp-form-footer">
-            {isLogin ? "New to Standard?" : "Already have an account?"}{" "}
+            {isLogin ? "New to b.standard?" : "Already have an account?"}{" "}
             <button
               className="lp-link"
               type="button"
@@ -580,7 +624,6 @@ export function LoginPage() {
             </button>
           </p>
 
-          {/* Bottom brand */}
           <div className="lp-bottom-brand" aria-hidden="true">
             <span className="lp-bottom-dot" />
             b.standard — be secure. — bekaa {new Date().getFullYear()}
