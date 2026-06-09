@@ -307,11 +307,24 @@ export function LoginPage() {
             ═══════════════════════════════════════════ */}
         <aside className="lp-left" aria-label="Standard Platform overview">
 
-          {/* Typographic logo */}
+          {/* Typographic logo + slogan */}
           <div className="lp-logo">
-            <span className="lp-logo-mark">
-              b<span className="lp-logo-dot">.</span>standard
-            </span>
+            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+              <span className="lp-logo-mark">
+                b<span className="lp-logo-dot">.</span>standard
+              </span>
+              <span style={{
+                fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif",
+                fontWeight: 300,
+                fontSize: "0.8125rem",
+                letterSpacing: "0.07em",
+                color: "#6c757d",
+                textTransform: "lowercase",
+                lineHeight: 1,
+              }}>
+                be secure<span style={{ color: "#8fa89b" }}>.</span>
+              </span>
+            </div>
           </div>
 
           {/* Hero copy */}
