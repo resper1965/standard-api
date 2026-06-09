@@ -43,7 +43,8 @@ export const qk = {
 export function useUserOrgs() {
   return useQuery({
     queryKey: qk.userOrgs(),
-    queryFn: () => api<{ data: OrgListItem[] }>("/api/v1/users/me/organizations"),
+    queryFn: () =>
+      api<{ data: OrgListItem[] }>("/api/v1/users/me/organizations"),
   });
 }
 
@@ -62,7 +63,8 @@ export function useOrgDetail(orgId: string | undefined) {
 export function useOrgApiKeys(orgId: string | undefined) {
   return useQuery({
     queryKey: qk.orgApiKeys(orgId ?? ""),
-    queryFn: () => api<{ data: ApiKeyRecord[] }>(`/api/v1/organizations/${orgId}/api-keys`),
+    queryFn: () =>
+      api<{ data: ApiKeyRecord[] }>(`/api/v1/organizations/${orgId}/api-keys`),
     enabled: !!orgId,
   });
 }
@@ -71,20 +73,24 @@ export function useCreateApiKey(orgId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: CreateApiKeyBody) =>
-      api<{ data: ApiKeyRecord & { key: string }; trace_id: string }>(`/api/v1/organizations/${orgId}/api-keys`, {
-        method: "POST",
-        body: JSON.stringify(body),
-      }),
+      api<{ data: ApiKeyRecord & { key: string }; trace_id: string }>(
+        `/api/v1/organizations/${orgId}/api-keys`,
+        {
+          method: "POST",
+          body: JSON.stringify(body),
+        },
+      ),
     onSuccess: () => qc.invalidateQueries({ queryKey: qk.orgApiKeys(orgId) }),
   });
 }
-
 
 export function useDeleteApiKey(orgId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (keyId: string) =>
-      api(`/api/v1/organizations/${orgId}/api-keys/${keyId}`, { method: "DELETE" }),
+      api(`/api/v1/organizations/${orgId}/api-keys/${keyId}`, {
+        method: "DELETE",
+      }),
     onSuccess: () => qc.invalidateQueries({ queryKey: qk.orgApiKeys(orgId) }),
   });
 }
@@ -92,11 +98,20 @@ export function useDeleteApiKey(orgId: string) {
 export function useUpdateApiKey(orgId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ keyId, patch }: { keyId: string; patch: UpdateApiKeyBody }) =>
-      api<{ data: ApiKeyRecord }>(`/api/v1/organizations/${orgId}/api-keys/${keyId}`, {
-        method: "PATCH",
-        body: JSON.stringify(patch),
-      }),
+    mutationFn: ({
+      keyId,
+      patch,
+    }: {
+      keyId: string;
+      patch: UpdateApiKeyBody;
+    }) =>
+      api<{ data: ApiKeyRecord }>(
+        `/api/v1/organizations/${orgId}/api-keys/${keyId}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify(patch),
+        },
+      ),
     onSuccess: () => qc.invalidateQueries({ queryKey: qk.orgApiKeys(orgId) }),
   });
 }
@@ -106,17 +121,23 @@ export function useUpdateApiKey(orgId: string) {
 export function useOrgWebhooks(orgId: string | undefined) {
   return useQuery({
     queryKey: qk.orgWebhooks(orgId ?? ""),
-    queryFn: () => api<{ data: WebhookEndpoint[] }>(`/api/v1/organizations/${orgId}/webhooks`),
+    queryFn: () =>
+      api<{ data: WebhookEndpoint[] }>(
+        `/api/v1/organizations/${orgId}/webhooks`,
+      ),
     enabled: !!orgId,
   });
 }
 
-export function useWebhookDeliveries(orgId: string | undefined, endpointId: string | undefined) {
+export function useWebhookDeliveries(
+  orgId: string | undefined,
+  endpointId: string | undefined,
+) {
   return useQuery({
     queryKey: qk.webhookDeliveries(orgId ?? "", endpointId ?? ""),
     queryFn: () =>
       api<{ data: WebhookDelivery[] }>(
-        `/api/v1/organizations/${orgId}/webhooks/${endpointId}/deliveries`
+        `/api/v1/organizations/${orgId}/webhooks/${endpointId}/deliveries`,
       ),
     enabled: !!orgId && !!endpointId,
   });
@@ -126,10 +147,13 @@ export function useCreateWebhook(orgId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: CreateWebhookBody) =>
-      api<{ data: WebhookEndpoint }>(`/api/v1/organizations/${orgId}/webhooks`, {
-        method: "POST",
-        body: JSON.stringify(body),
-      }),
+      api<{ data: WebhookEndpoint }>(
+        `/api/v1/organizations/${orgId}/webhooks`,
+        {
+          method: "POST",
+          body: JSON.stringify(body),
+        },
+      ),
     onSuccess: () => qc.invalidateQueries({ queryKey: qk.orgWebhooks(orgId) }),
   });
 }
@@ -138,7 +162,9 @@ export function useDeleteWebhook(orgId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (endpointId: string) =>
-      api(`/api/v1/organizations/${orgId}/webhooks/${endpointId}`, { method: "DELETE" }),
+      api(`/api/v1/organizations/${orgId}/webhooks/${endpointId}`, {
+        method: "DELETE",
+      }),
     onSuccess: () => qc.invalidateQueries({ queryKey: qk.orgWebhooks(orgId) }),
   });
 }
@@ -146,10 +172,16 @@ export function useDeleteWebhook(orgId: string) {
 function useToggleWebhook(orgId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ endpointId, enabled }: { endpointId: string; enabled: boolean }) =>
+    mutationFn: ({
+      endpointId,
+      enabled,
+    }: {
+      endpointId: string;
+      enabled: boolean;
+    }) =>
       api<{ data: WebhookEndpoint }>(
         `/api/v1/organizations/${orgId}/webhooks/${endpointId}`,
-        { method: "PATCH", body: JSON.stringify({ enabled }) }
+        { method: "PATCH", body: JSON.stringify({ enabled }) },
       ),
     onSuccess: () => qc.invalidateQueries({ queryKey: qk.orgWebhooks(orgId) }),
   });
@@ -158,7 +190,9 @@ function useToggleWebhook(orgId: string) {
 function useTestWebhook(orgId: string) {
   return useMutation({
     mutationFn: (endpointId: string) =>
-      api(`/api/v1/organizations/${orgId}/webhooks/${endpointId}/test`, { method: "POST" }),
+      api(`/api/v1/organizations/${orgId}/webhooks/${endpointId}/test`, {
+        method: "POST",
+      }),
   });
 }
 
@@ -180,13 +214,14 @@ export function useAuditLogs(page: number, filters: AuditLogsFilters) {
   if (filters.action) params.set("action", filters.action);
   if (filters.actorId) params.set("actor_id", filters.actorId);
   if (filters.from) params.set("from", new Date(filters.from).toISOString());
-  if (filters.to) params.set("to", new Date(filters.to + "T23:59:59").toISOString());
+  if (filters.to)
+    params.set("to", new Date(filters.to + "T23:59:59").toISOString());
 
   return useQuery({
     queryKey: qk.auditLogs(undefined, page, JSON.stringify(filters)),
     queryFn: () =>
       api<{ data?: RawAuditEvent[]; events?: RawAuditEvent[] }>(
-        `/api/v1/admin/security-events?${params}`
+        `/api/v1/admin/security-events?${params}`,
       ),
     placeholderData: (prev) => prev,
     retry: (count, err: unknown) => {
@@ -202,13 +237,18 @@ type RawAuditEvent = Record<string, unknown>;
 
 export function useAdminUsers(page: number, search: string) {
   const limit = 25;
-  const params = new URLSearchParams({ limit: String(limit), offset: String(page * limit) });
+  const params = new URLSearchParams({
+    limit: String(limit),
+    offset: String(page * limit),
+  });
   if (search) params.set("search", search);
 
   return useQuery({
     queryKey: qk.adminUsers(page, search),
     queryFn: () =>
-      api<{ data: AdminUser[]; total: number }>(`/api/v1/admin/users?${params}`),
+      api<{ data: AdminUser[]; total: number }>(
+        `/api/v1/admin/users?${params}`,
+      ),
     placeholderData: (prev) => prev,
   });
 }
@@ -225,13 +265,18 @@ export function usePendingUserCount() {
 
 export function useAdminOrgs(page: number, search: string) {
   const limit = 25;
-  const params = new URLSearchParams({ limit: String(limit), offset: String(page * limit) });
+  const params = new URLSearchParams({
+    limit: String(limit),
+    offset: String(page * limit),
+  });
   if (search) params.set("search", search);
 
   return useQuery({
     queryKey: qk.adminOrgs(page, search),
     queryFn: () =>
-      api<{ data: AdminOrg[]; total: number }>(`/api/v1/admin/organizations?${params}`),
+      api<{ data: AdminOrg[]; total: number }>(
+        `/api/v1/admin/organizations?${params}`,
+      ),
     placeholderData: (prev) => prev,
   });
 }
@@ -239,7 +284,10 @@ export function useAdminOrgs(page: number, search: string) {
 function useAdminUsage() {
   return useQuery({
     queryKey: qk.adminUsage(),
-    queryFn: () => api<{ usage: unknown[]; agent_usage: AgentUsage[] }>("/api/v1/admin/usage"),
+    queryFn: () =>
+      api<{ usage: unknown[]; agent_usage: AgentUsage[] }>(
+        "/api/v1/admin/usage",
+      ),
   });
 }
 
@@ -253,10 +301,12 @@ export function useHealthRaw(apiUrl: string) {
     queryKey: qk.health(),
     queryFn: async () => {
       const [basicRes, detailedRes] = await Promise.allSettled([
-        fetch(`${apiUrl}/health`, { signal: AbortSignal.timeout(8000) })
-          .then((r) => (r.ok ? (r.json() as Promise<RawJson>) : null)),
-        fetch(`${apiUrl}/api/v1/health`, { signal: AbortSignal.timeout(8000) })
-          .then((r) => (r.ok ? (r.json() as Promise<RawJson>) : null)),
+        fetch(`${apiUrl}/health`, { signal: AbortSignal.timeout(8000) }).then(
+          (r) => (r.ok ? (r.json() as Promise<RawJson>) : null),
+        ),
+        fetch(`${apiUrl}/api/v1/health`, {
+          signal: AbortSignal.timeout(8000),
+        }).then((r) => (r.ok ? (r.json() as Promise<RawJson>) : null)),
       ]);
       return {
         basic: basicRes.status === "fulfilled" ? basicRes.value : null,
@@ -295,7 +345,9 @@ export function useScfDomains(versionId: string | undefined) {
   return useQuery({
     queryKey: qk.scfDomains(versionId ?? ""),
     queryFn: () =>
-      api<{ data: ScfDomainItem[] }>(`/api/v1/scf/versions/${versionId}/domains`),
+      api<{ data: ScfDomainItem[] }>(
+        `/api/v1/scf/versions/${versionId}/domains`,
+      ),
     enabled: !!versionId,
     staleTime: 1000 * 60 * 30,
   });
@@ -303,7 +355,7 @@ export function useScfDomains(versionId: string | undefined) {
 
 export function useScfControls(
   versionId: string | undefined,
-  filters: { domainCode?: string; q?: string }
+  filters: { domainCode?: string; q?: string },
 ) {
   const params = new URLSearchParams();
   if (filters.domainCode) params.set("domain_code", filters.domainCode);
@@ -311,10 +363,14 @@ export function useScfControls(
   const qs = params.toString();
 
   return useQuery({
-    queryKey: qk.scfControls(versionId ?? "", filters.domainCode ?? "", filters.q ?? ""),
+    queryKey: qk.scfControls(
+      versionId ?? "",
+      filters.domainCode ?? "",
+      filters.q ?? "",
+    ),
     queryFn: () =>
       api<{ data: ScfControlItem[] }>(
-        `/api/v1/scf/versions/${versionId}/controls${qs ? `?${qs}` : ""}`
+        `/api/v1/scf/versions/${versionId}/controls${qs ? `?${qs}` : ""}`,
       ),
     enabled: !!versionId,
     placeholderData: (prev) => prev,
@@ -332,13 +388,13 @@ export function useScfFrameworks() {
 
 export function useScfFrameworkCoverage(
   frameworkId: string | undefined,
-  versionId: string | undefined
+  versionId: string | undefined,
 ) {
   return useQuery<ScfCoverage>({
     queryKey: qk.scfFrameworkCoverage(frameworkId ?? "", versionId ?? ""),
     queryFn: () =>
       api<ScfCoverage>(
-        `/api/v1/scf/frameworks/${frameworkId}/coverage?scf_version=${versionId}`
+        `/api/v1/scf/frameworks/${frameworkId}/coverage?scf_version=${versionId}`,
       ),
     enabled: !!frameworkId && !!versionId,
     staleTime: 1000 * 60 * 10,
@@ -401,7 +457,6 @@ type ScfCoverage = {
   is_synthetic: boolean;
 };
 
-
 type OrgListItem = {
   id: string;
   name: string;
@@ -428,6 +483,7 @@ type ApiKeyRecord = {
 
 type CreateApiKeyBody = {
   name: string;
+  /** Optional — when omitted, key has wildcard access. Provide scopes to restrict M2M access. */
   scopes?: string[];
   expiresAt?: string;
 };
@@ -485,9 +541,14 @@ type AdminUser = {
   id: string;
   name: string;
   email: string;
-  role: string;
+  /** Better Auth role field (may be null or not set in current schema) */
+  role?: string | null;
+  /** True if this user is a platform administrator (Bekaa operator). Cannot be deleted without removing flag first. */
+  platformAdmin?: boolean;
   createdAt: string;
+  updatedAt?: string;
   banned?: boolean;
+  banReason?: string | null;
   approved?: boolean;
 };
 

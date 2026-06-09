@@ -1,6 +1,5 @@
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useState, useEffect } from "react"
-import { useSession } from "@/lib/auth-client"
 import { useOrgDetail, useOrgApiKeys, qk } from "@/lib/queries"
 import { useActiveOrg } from "@/hooks/useActiveOrg"
 import { useQueryClient } from "@tanstack/react-query"
