@@ -230,7 +230,7 @@ export function DashboardLayout() {
   if (!session?.user) return null
 
   const userInitial = session.user.name?.charAt(0).toUpperCase() ?? "?"
-  const userRole = "Admin"
+  const userRole = isPlatformAdmin ? "Platform Admin" : "Member"
 
   const sidebarContent = (
     <>
