@@ -81,6 +81,7 @@ import { adminUsersRoutes } from "./routes/admin-users.routes";
 import { adminOrgsRoutes } from "./routes/admin-orgs.routes";
 import { madRoutes } from "./routes/mad.routes";
 import { maturityRoutes } from "./routes/maturity.routes";
+import { riskRegisterRoutes } from "./routes/risk-register.routes";
 
 /**
  * Route path prefixes that are tenant-exempt by convention.
@@ -159,6 +160,7 @@ export const routes: RouteDefinition[] = [
   ...adminOrgsRoutes, // /api/v1/admin/organizations
   ...madRoutes, // /api/v1/mad — MA&D MADSS transaction assessments
   ...maturityRoutes, // /api/v1/assessments/:id/maturity-versions + /roc-summary
+  ...riskRegisterRoutes, // /api/v1/assessments/:id/risk-register (SCR-RMM Step 13)
 ];
 
 registerRoutesForOpenApi(routes);

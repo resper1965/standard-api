@@ -31,3 +31,4 @@ export * from "./db/auth-schema";
 export * from "./dpmp";
 export * from "./cdpas";
 export * from "./mad";
+export * from "./risk-register";
