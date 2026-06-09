@@ -98,10 +98,12 @@ export function AdminUsersTable({ users, onEdit, onConfirmAction }: AdminUsersTa
               </div>
             </TableCell>
             <TableCell>
-              <Badge variant={u.role === "admin" ? "default" : "muted"} className="gap-1">
-                {u.role === "admin" ? <ShieldAlert className="h-3 w-3" /> : <Shield className="h-3 w-3" />}
-                {u.role || "user"}
-              </Badge>
+              <div className="flex items-center gap-1.5">
+                <Badge variant={u.platformAdmin ? "default" : u.role === "admin" ? "default" : "muted"} className="gap-1">
+                  {u.platformAdmin ? <ShieldAlert className="h-3 w-3" /> : <Shield className="h-3 w-3" />}
+                  {u.platformAdmin ? "Platform Admin" : u.role || "user"}
+                </Badge>
+              </div>
             </TableCell>
             <TableCell>
               {!u.approved ? (
@@ -161,8 +163,9 @@ export function AdminUsersTable({ users, onEdit, onConfirmAction }: AdminUsersTa
                     <Button
                       variant="ghost" size="sm"
                       onClick={() => onConfirmAction("delete", u)}
-                      className="h-8 w-8 p-0 cursor-pointer text-destructive/60 hover:text-destructive hover:bg-destructive/10"
-                      title="Delete user"
+                      disabled={u.platformAdmin === true}
+                      className={`h-8 w-8 p-0 text-destructive/60 hover:text-destructive hover:bg-destructive/10 ${u.platformAdmin ? "opacity-30 cursor-not-allowed" : "cursor-pointer"}`}
+                      title={u.platformAdmin ? "Cannot delete a platform admin — remove the platform_admin flag first" : "Delete user"}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>

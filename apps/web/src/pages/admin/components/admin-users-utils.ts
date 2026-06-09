@@ -2,9 +2,13 @@ export type User = {
   id: string;
   name: string;
   email: string;
-  role: string;
+  role?: string | null;
+  /** True if this user is a platform administrator — cannot be deleted without removing flag first */
+  platformAdmin?: boolean;
   createdAt: string;
+  updatedAt?: string;
   banned?: boolean;
+  banReason?: string | null;
   approved?: boolean;
   image?: string;
 };
@@ -31,11 +35,16 @@ export function relativeTime(dateStr: string): string {
 export function getInitials(name: string | undefined | null): string {
   if (!name) return "?";
   const parts = name.trim().split(/\s+/);
-  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  if (parts.length >= 2)
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   return (parts[0]?.[0] ?? "?").toUpperCase();
 }
 
-export function passwordStrength(pw: string): { score: number; label: string; color: string } {
+export function passwordStrength(pw: string): {
+  score: number;
+  label: string;
+  color: string;
+} {
   let score = 0;
   if (pw.length >= 8) score++;
   if (pw.length >= 12) score++;
