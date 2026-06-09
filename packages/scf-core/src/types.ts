@@ -16,6 +16,8 @@ import type {
   ScfStrmRelationship,
   ScfThreat,
   ScfVersion,
+  DpmpPrinciple,
+  DpmpFrameworkMapping,
 } from "@standard/schemas";
 
 export type {
@@ -36,6 +38,8 @@ export type {
   ScfStrmRelationship,
   ScfThreat,
   ScfVersion,
+  DpmpPrinciple,
+  DpmpFrameworkMapping,
 };
 
 export type ScfDataset = {
@@ -64,6 +68,8 @@ export type ScfDataset = {
     scf_threat_id: string;
     scf_control_id: string;
   }[];
+  dpmpPrinciples?: DpmpPrinciple[];
+  dpmpFrameworkMappings?: DpmpFrameworkMapping[];
 };
 
 export type ScfImportValidationResult = {

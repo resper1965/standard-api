@@ -28,6 +28,7 @@ import type {
   ScfRisk,
   ScfThreat,
 } from "../types";
+import type { DpmpPrinciple, DpmpFrameworkMapping } from "@standard/schemas";
 import type { ScfImporter } from "./scf-importer";
 import { sha256Hex, validateBaseImportSource } from "./scf-importer";
 import {
@@ -406,6 +407,82 @@ const parseAssessmentObjectivesTab = (
     }
   }
   return result;
+};
+
+const parseDpmpTab = (
+  rows: ParsedRow[],
+  versionId: string,
+): { principles: DpmpPrinciple[]; frameworkMappings: DpmpFrameworkMapping[] } => {
+  const principles: DpmpPrinciple[] = [];
+  const frameworkMappings: DpmpFrameworkMapping[] = [];
+
+  // Identify non-data columns (structural columns to skip for framework detection)
+  const STRUCTURAL_COLS = new Set([
+    "principle_code", "dpmp_#", "principle_#", "code", "#",
+    "domain", "dpmp_domain",
+    "title", "principle", "dpmp_principle", "principle_title",
+    "description", "principle_description",
+    "scf_control", "scf_controls", "scf_control_mappings", "scf_control_codes",
+    "sort_order", "order",
+  ]);
+
+  for (const row of rows) {
+    const principleCode =
+      row["principle_code"] || row["dpmp_#"] || row["principle_#"] || row["code"] || row["#"];
+    if (!principleCode) continue;
+
+    const domain = (
+      row["domain"] || row["dpmp_domain"] || "privacy_governance"
+    ).toLowerCase().replace(/ /g, "_") as DpmpPrinciple["domain"];
+
+    const title =
+      row["title"] || row["principle"] || row["dpmp_principle"] || row["principle_title"] || "";
+    if (!title.trim()) continue;
+
+    const description =
+      row["description"] || row["principle_description"] || undefined;
+
+    const scfControlsRaw =
+      row["scf_control"] || row["scf_controls"] || row["scf_control_mappings"] || row["scf_control_codes"] || "";
+    const scfControlCodes = scfControlsRaw
+      ? scfControlsRaw.split(/[,;]/).map((s: string) => s.trim()).filter(Boolean)
+      : [];
+
+    const sortOrder = principles.length + 1;
+
+    const principle: DpmpPrinciple = {
+      id: crypto.randomUUID(),
+      scf_version_id: versionId,
+      principle_code: principleCode.trim(),
+      domain,
+      title: title.trim(),
+      description: description?.trim() || null,
+      scf_control_codes: scfControlCodes,
+      sort_order: sortOrder,
+      is_synthetic: false,
+    };
+
+    principles.push(principle);
+
+    // All remaining columns with values are framework mappings
+    for (const [colKey, cellValue] of Object.entries(row)) {
+      const normalizedCol = colKey.toLowerCase().trim();
+      if (STRUCTURAL_COLS.has(normalizedCol)) continue;
+      if (!cellValue || !cellValue.toString().trim()) continue;
+
+      frameworkMappings.push({
+        id: crypto.randomUUID(),
+        scf_version_id: versionId,
+        dpmp_principle_id: principle.id,
+        framework_id: colKey.trim().toUpperCase(),
+        requirement_reference: cellValue.toString().trim(),
+        mapping_note: null,
+        is_synthetic: false,
+      });
+    }
+  }
+
+  return { principles, frameworkMappings };
 };
 
 const parseEvidenceRequestsTab = (
@@ -807,7 +884,7 @@ export const createXlsxScfImporter = (): ScfImporter => ({
       }
     }
 
-    // Phase 1.5: Parse extended meta-model tabs (AOs, ERL, Risks, Threats, Maturity)
+    // Phase 1.5: Parse extended meta-model tabs (AOs, ERL, Risks, Threats, Maturity, DPMP)
     const allAssessmentObjectives: ScfAssessmentObjective[] = [];
     const allEvidenceRequests: ScfEvidenceRequest[] = [];
     const allMaturityCriteria: ScfMaturityCriteria[] = [];
@@ -815,6 +892,8 @@ export const createXlsxScfImporter = (): ScfImporter => ({
     const allThreats: ScfThreat[] = [];
     const allRiskControlMappings: any[] = [];
     const allThreatControlMappings: any[] = [];
+    const allDpmpPrinciples: DpmpPrinciple[] = [];
+    const allDpmpFrameworkMappings: DpmpFrameworkMapping[] = [];
 
     const riskByCode = new Map<string, string>();
     const threatByCode = new Map<string, string>();
@@ -884,6 +963,11 @@ export const createXlsxScfImporter = (): ScfImporter => ({
         for (const t of threats) {
           threatByCode.set(t.threat_code.toUpperCase(), t.id);
         }
+      } else if (classification.type === "dpmp") {
+        const rows = parseSheetToRows(sheet);
+        const { principles, frameworkMappings } = parseDpmpTab(rows, versionId);
+        allDpmpPrinciples.push(...principles);
+        allDpmpFrameworkMappings.push(...frameworkMappings);
       }
     }
 
@@ -942,6 +1026,8 @@ export const createXlsxScfImporter = (): ScfImporter => ({
         maturity_criteria: allMaturityCriteria.length,
         risks: allRisks.length,
         threats: allThreats.length,
+        dpmp_principles: allDpmpPrinciples.length,
+        dpmp_framework_mappings: allDpmpFrameworkMappings.length,
       },
       trace_id: `xlsx-importer-${Date.now()}`,
     };
@@ -965,6 +1051,8 @@ export const createXlsxScfImporter = (): ScfImporter => ({
         threats: allThreats,
         riskControlMappings: allRiskControlMappings,
         threatControlMappings: allThreatControlMappings,
+        dpmpPrinciples: allDpmpPrinciples,
+        dpmpFrameworkMappings: allDpmpFrameworkMappings,
       },
       warnings: allWarnings,
     };

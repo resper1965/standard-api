@@ -24,6 +24,7 @@ export type TabClassification =
   | { type: "evidence_requests"; sheetName: string }
   | { type: "risk_catalog"; sheetName: string }
   | { type: "threat_catalog"; sheetName: string }
+  | { type: "dpmp"; sheetName: string }
   | { type: "unknown"; sheetName: string };
 
 // ──── Header Normalization ────
@@ -218,6 +219,11 @@ export const classifyTab = (
   // If it has control IDs but no body columns → it's a crosswalk
   if (hasControlIdColumn) {
     return { type: "crosswalk", sheetName, frameworkHint: sheetName.trim() };
+  }
+
+  // Check for DPMP (Data Privacy Management Principles) tab
+  if (nameLower === "dpmp" || nameLower.startsWith("data privacy management")) {
+    return { type: "dpmp" as const, sheetName };
   }
 
   // Everything else is treated as a crosswalk tab

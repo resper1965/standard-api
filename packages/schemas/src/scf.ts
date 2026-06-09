@@ -47,6 +47,8 @@ export const ScfImportStatisticsSchema = z.object({
   maturity_criteria: z.number().int().nonnegative().optional(),
   risks: z.number().int().nonnegative().optional(),
   threats: z.number().int().nonnegative().optional(),
+  dpmp_principles: z.number().int().nonnegative().optional(),
+  dpmp_framework_mappings: z.number().int().nonnegative().optional(),
 });
 
 export const ScfVersionSchema = z.object({
