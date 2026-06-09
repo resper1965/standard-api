@@ -140,6 +140,28 @@ export const gapTypeEnum = pgEnum("gap_type", [
   "no_gap",
   "not_applicable",
 ]);
+/**
+ * SCR-RMM Step 14: Report on Conformity (ROC) Determinations.
+ * Strictly Conforms → material strength. Material Weakness → crosses risk threshold.
+ * Per SCR-RMM, the worst finding in an assessment determines the overall ROC level.
+ */
+export const rocDeterminationEnum = pgEnum("roc_determination", [
+  "strictly_conforms", // Controls exceed requirements — positive assurance
+  "conforms", // Controls meet requirements — baseline assurance
+  "significant_deficiency", // Notable gap but below material threshold
+  "material_weakness", // Crosses risk threshold — must be in POA&M
+]);
+
+/**
+ * SCR-RMM Step 8: Assessment Rigor / Assurance Levels.
+ * L1=self-assessment (low assurance), L2=reviewed/corroborated (moderate), L3=tested/independent (high).
+ */
+export const assuranceLevelEnum = pgEnum("assurance_level", [
+  "l1_standard", // Standard Rigor — Low Assurance (self-assessment / inquiry)
+  "l2_enhanced", // Enhanced Rigor — Moderate Assurance (reviewed / corroborated)
+  "l3_comprehensive", // Comprehensive Rigor — High Assurance (tested / verified / independent)
+]);
+
 export const poamStatusEnum = pgEnum("poam_status", [
   "draft",
   "approved",
@@ -892,6 +914,13 @@ export const assessments = pgTable(
     parentAssessmentId: uuid("parent_assessment_id"), // nullable — FK enforced at runtime
     cycleNumber: integer("cycle_number").default(1).notNull(),
     baselineSoaVersionId: uuid("baseline_soa_version_id"), // nullable — SoA to carry forward
+    /**
+     * SCR-RMM Step 8: Assessment rigor / assurance level.
+     * Determines how findings are interpreted by external auditors and downstream ROC reports.
+     * l1_standard = self-assessment, l2_enhanced = reviewed, l3_comprehensive = tested/independent.
+     */
+    assuranceLevel:
+      assuranceLevelEnum("assurance_level").default("l1_standard"),
     ...timestamps(),
   },
   (table) => [
@@ -1726,6 +1755,29 @@ export const gapFindings = pgTable(
     responsibilityType: responsibilityTypeEnum("responsibility_type").default(
       "internal",
     ),
+    /**
+     * SCR-RMM Step 14: Report on Conformity determination for this finding.
+     * Derived automatically from severity during gap analysis draft creation.
+     * critical/high → material_weakness, medium → significant_deficiency,
+     * low + not_met → conforms, met/no_gap → strictly_conforms.
+     * Can be overridden by a human reviewer before approval.
+     */
+    rocDetermination: rocDeterminationEnum("roc_determination"),
+    /**
+     * SCR-RMM Step 12: Inherent risk score = Impact Effect × Occurrence Likelihood (1-36 range).
+     * Null until risk scoring is computed.
+     */
+    inherentRiskScore: numeric("inherent_risk_score", {
+      precision: 6,
+      scale: 2,
+    }),
+    /**
+     * SCR-RMM Step 12: Residual risk score = Inherent × (1 - control_weight × maturity_factor).
+     */
+    residualRiskScore: numeric("residual_risk_score", {
+      precision: 6,
+      scale: 2,
+    }),
     ...timestamps(),
   },
   (table) => [

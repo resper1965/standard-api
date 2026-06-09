@@ -156,6 +156,26 @@ export const GapFindingResponseSchema = z.object({
   confidence_score: z.number().min(0).max(1),
   requires_user_validation: z.boolean(),
   responsibility_type: ResponsibilityTypeSchema,
+  /**
+   * SCR-RMM Step 14: Report on Conformity determination.
+   * Derived from severity at draft time; can be overridden before approval.
+   * material_weakness = crosses risk threshold; must appear in POA&M.
+   */
+  roc_determination: z
+    .enum([
+      "strictly_conforms",
+      "conforms",
+      "significant_deficiency",
+      "material_weakness",
+    ])
+    .optional(),
+  /**
+   * SCR-RMM Step 12: Inherent risk = Impact Effect × Occurrence Likelihood.
+   * Range 1-36. Null until risk score engine runs.
+   */
+  inherent_risk_score: z.string().optional(),
+  /** SCR-RMM Step 12: Residual risk after control weight and maturity factor. */
+  residual_risk_score: z.string().optional(),
   created_at: z.string(),
   updated_at: z.string(),
 });
