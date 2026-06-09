@@ -1,171 +1,35 @@
-/* ══════════════════════════════════════════════════════
-   b.standard — SDK Page
-   Nordic Tech: grafite + verde sálvia
-   ══════════════════════════════════════════════════════ */
-
-.sdk-page {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 2rem 1.5rem;
-  color: #e9ecef;
-}
-
-.sdk-header {
-  margin-bottom: 3rem;
-}
-
-/* Sem gradiente azul — título em sage green limpo */
-.sdk-header h1 {
-  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
-  font-size: 2rem;
-  font-weight: 700;
-  color: #8fa89b;
-  margin-bottom: 0.75rem;
-  letter-spacing: -0.04em;
-}
-
-.sdk-subtitle {
-  color: #adb5bd;
-  font-size: 1.05rem;
-  line-height: 1.6;
-  margin-bottom: 1rem;
-}
-
-.sdk-badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.sdk-badge {
-  display: inline-block;
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-  background: rgba(143, 168, 155, 0.08);
-  border: 1px solid rgba(143, 168, 155, 0.2);
-  color: #8fa89b;
-  font-size: 0.8rem;
-  font-weight: 500;
-}
-
-.sdk-section {
-  margin-bottom: 2.5rem;
-}
-
-.sdk-section h2 {
-  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
-  font-size: 1.15rem;
-  font-weight: 600;
-  color: #e9ecef;
-  margin-bottom: 0.75rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  letter-spacing: -0.02em;
-}
-
-.sdk-note {
-  color: #adb5bd;
-  font-size: 0.9rem;
-  margin-bottom: 0.75rem;
-}
-
-/* ── Code Blocks ────────────────────────────────────── */
-
-.sdk-code-block {
-  border-radius: 10px;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: #13171a;
-  margin-bottom: 1rem;
-}
-
-.sdk-code-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.5rem 1rem;
-  background: rgba(255, 255, 255, 0.02);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.sdk-code-lang {
-  font-size: 0.75rem;
-  color: #6c757d;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-weight: 600;
-}
-
-.sdk-code-label {
-  font-size: 0.75rem;
-  color: #adb5bd;
-  font-weight: 500;
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
-  padding-right: 0.5rem;
-  margin-right: 0.25rem;
-}
-
-.sdk-code-copy {
-  font-size: 0.75rem;
-  color: #8fa89b;
-  background: transparent;
-  border: 1px solid rgba(143, 168, 155, 0.25);
-  border-radius: 6px;
-  padding: 0.25rem 0.75rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-family: 'Inter', sans-serif;
-}
-
-.sdk-code-copy:hover {
-  background: rgba(143, 168, 155, 0.08);
-  border-color: rgba(143, 168, 155, 0.4);
-}
-
-.sdk-code-pre {
-  padding: 1rem 1.25rem;
-  overflow-x: auto;
-  margin: 0;
-}
-
-.sdk-code-pre code {
-  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
-  font-size: 0.85rem;
-  line-height: 1.6;
-  color: #e9ecef;
-  white-space: pre;
-}
-
-/* ── Resources Grid ─────────────────────────────────── */
-
+/* SdkPage local overrides */
 .sdk-resources-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.5rem;
 }
 
 .sdk-resource-card {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  padding: 0.75rem 1rem;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  transition: border-color 0.2s ease;
+  gap: 3px;
+  padding: 0.75rem;
+  background: rgba(255,255,255,0.018);
+  border: 1px solid var(--ds-border);
+  border-radius: var(--ds-r-md);
+  transition: border-color 0.2s ease, background 0.2s ease;
 }
 
 .sdk-resource-card:hover {
-  border-color: rgba(143, 168, 155, 0.25);
+  background: var(--ds-accent-light);
+  border-color: rgba(143,168,155,0.2);
 }
 
 .sdk-resource-name {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.82rem;
-  color: #8fa89b;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ds-accent);
 }
 
 .sdk-resource-desc {
-  font-size: 0.8rem;
-  color: #adb5bd;
+  font-size: 0.75rem;
+  color: var(--ds-text-muted);
+  line-height: 1.4;
 }

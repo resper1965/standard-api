@@ -4,6 +4,8 @@ import { useAuditLogs } from "@/lib/queries"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { PageHeader } from "@/components/ui/PageHeader"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import {
   RefreshCw, ShieldAlert, Filter, ChevronLeft, ChevronRight,
   Key, User, AlertCircle
@@ -51,15 +53,18 @@ function ActionBadge({ action }: { action: string }) {
   const isError = action.includes("fail") || action.includes("error") || action.includes("reject")
   const isCreate = action.includes("creat") || action.includes("add") || action.includes("invite")
   const isDelete = action.includes("delet") || action.includes("revok") || action.includes("ban") || action.includes("remove")
-  const cn = isError
+  const baseClass = isError
     ? "bg-destructive/10 text-destructive border-destructive/20"
-    : isDelete
-    ? "bg-amber-500/10 text-amber-500 border-amber-500/20"
-    : isCreate
-    ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+    : isDelete || isCreate
+    ? ""
     : "bg-muted text-muted-foreground border-border/50"
+  const inlineStyle: React.CSSProperties = isDelete
+    ? { background: 'var(--ds-warning-light)', color: 'var(--ds-warning)', borderColor: 'var(--ds-warning)' }
+    : isCreate
+    ? { background: 'var(--ds-success-light)', color: 'var(--ds-success)', borderColor: 'var(--ds-success)' }
+    : {}
   return (
-    <span className={`inline-block font-mono text-[11px] px-2 py-0.5 rounded border ${cn}`}>
+    <span className={`inline-block font-mono text-[11px] px-2 py-0.5 rounded border ${baseClass}`} style={inlineStyle}>
       {action}
     </span>
   )
@@ -158,6 +163,7 @@ export function AuditLogsPage() {
 
   return (
     <div className="space-y-4 max-w-6xl">
+      <PageHeader title="Audit Log" description="Immutable record of all platform actions" />
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -257,49 +263,53 @@ export function AuditLogsPage() {
 
       {/* Table */}
       <div className="rounded-xl border border-border/60 overflow-hidden bg-card">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/40 border-b border-border/50">
-            <tr>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground text-xs">Timestamp</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground text-xs">Action</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground text-xs">Actor</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground text-xs">Target</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground text-xs">Details</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border/30">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Timestamp</TableHead>
+              <TableHead>Action</TableHead>
+              <TableHead>Actor</TableHead>
+              <TableHead>Target</TableHead>
+              <TableHead>Details</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {loading ? (
-              Array.from({ length: 8 }).map((_, i) => (
-                <tr key={i}>
-                  {Array.from({ length: 5 }).map((_, j) => (
-                    <td key={j} className="px-4 py-3">
-                      <div className="h-3.5 bg-muted/60 rounded animate-pulse" style={{ width: `${60 + Math.random() * 40}%` }} />
-                    </td>
-                  ))}
-                </tr>
-              ))
+              // Stable skeleton widths — no Math.random() to avoid hydration issues
+              (() => {
+                const skeletonWidths = ["65%", "80%", "50%", "75%", "60%", "70%"]
+                return Array.from({ length: 8 }).map((_, i) => (
+                  <TableRow key={i}>
+                    {Array.from({ length: 5 }).map((_, j) => (
+                      <TableCell key={j}>
+                        <div className="h-3.5 bg-muted/60 rounded animate-pulse" style={{ width: skeletonWidths[(i + j) % skeletonWidths.length] }} />
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              })()
             ) : visibleLogs.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="px-4 py-10 text-center text-muted-foreground text-sm">
+              <TableRow>
+                <TableCell colSpan={5} className="px-4 py-10 text-center text-muted-foreground text-sm">
                   No audit events found.
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ) : (
               visibleLogs.map((log, i) => {
                 const ts = new Date(log.createdAt)
                 return (
-                  <tr key={log.id ?? i} className="hover:bg-muted/10 transition-colors">
-                    <td className="px-4 py-3 text-muted-foreground font-mono text-[11px] whitespace-nowrap">
+                  <TableRow key={log.id ?? i} className="hover:bg-muted/10 transition-colors">
+                    <TableCell className="text-muted-foreground font-mono text-[11px] whitespace-nowrap">
                       <div>{ts.toLocaleDateString()}</div>
                       <div className="text-[10px] opacity-70">{ts.toLocaleTimeString()}</div>
-                    </td>
-                    <td className="px-4 py-3">
+                    </TableCell>
+                    <TableCell>
                       <ActionBadge action={log.action} />
-                    </td>
-                    <td className="px-4 py-3">
+                    </TableCell>
+                    <TableCell>
                       <ActorBadge actorId={log.actorId} />
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground font-mono text-[11px]">
+                    </TableCell>
+                    <TableCell className="text-muted-foreground font-mono text-[11px]">
                       {log.targetId ? (
                         <span title={log.targetId}>
                           {log.targetId.length > 12
@@ -307,18 +317,18 @@ export function AuditLogsPage() {
                             : log.targetId}
                         </span>
                       ) : "—"}
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground text-[11px] max-w-[200px] truncate">
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-[11px] max-w-[200px] truncate">
                       {log.metadata && Object.keys(log.metadata).length > 0
                         ? JSON.stringify(log.metadata).slice(0, 80)
                         : "—"}
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 )
               })
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
 
         {/* Pagination */}
         <div className="flex items-center justify-between px-4 py-3 border-t border-border/40 bg-muted/20">

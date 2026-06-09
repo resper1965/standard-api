@@ -1,4 +1,5 @@
-﻿import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { useState, useMemo } from "react";
 import type { FormEvent } from "react";
 import { useUserOrgs, qk } from "../../lib/queries";
@@ -410,6 +411,8 @@ export function AdminOrganizations() {
 
   return (
     <div className="space-y-6">
+      <PageHeader title="Organizations" description="Manage tenant organizations and membership" />
+
       {/* Header bar — search + actions */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="relative w-full sm:w-72">
@@ -429,7 +432,10 @@ export function AdminOrganizations() {
               size="sm"
               onClick={handleDeactivate}
               disabled={deactivating}
-              className="text-amber-500 border-amber-500/30 hover:bg-amber-500/10 hover:text-amber-600 cursor-pointer transition-colors duration-200"
+              className="cursor-pointer transition-colors duration-200"
+              style={{ color: 'var(--ds-warning)', borderColor: 'rgba(251,191,36,0.3)' }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(251,191,36,0.1)'; e.currentTarget.style.color = 'var(--ds-warning)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = ''; e.currentTarget.style.color = 'var(--ds-warning)'; }}
             >
               {deactivating ? (
                 <>
@@ -528,21 +534,19 @@ export function AdminOrganizations() {
                       return (
                         <TableRow
                           key={o.id}
-                          className={`transition-colors duration-150 hover:bg-muted/50 ${
-                            isActive
-                              ? "bg-emerald-500/[0.03] hover:bg-emerald-500/[0.06]"
-                              : ""
-                          }`}
+                          className="transition-colors duration-150 hover:bg-muted/50"
+                          style={isActive ? { background: 'rgba(74,222,128,0.03)' } : undefined}
                         >
                           <TableCell>
                             <div className="flex items-center gap-3">
                               {/* Avatar / icon */}
                               <div
-                                className={`h-9 w-9 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 transition-all duration-200 ${
-                                  isActive
-                                    ? "bg-emerald-500/15 text-emerald-500 ring-2 ring-emerald-500/30 shadow-[0_0_12px_rgba(16,185,129,0.15)]"
-                                    : "bg-muted/60 text-muted-foreground"
-                                }`}
+                                className="h-9 w-9 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 transition-all duration-200"
+                                style={isActive ? {
+                                  background: 'rgba(74,222,128,0.1)',
+                                  color: 'var(--ds-success)',
+                                  boxShadow: '0 0 0 2px rgba(74,222,128,0.15), 0 0 12px rgba(74,222,128,0.08)',
+                                } : { background: 'var(--muted)', color: 'var(--muted-foreground)' }}
                               >
                                 {o.logo ? (
                                   <img
@@ -560,10 +564,13 @@ export function AdminOrganizations() {
                                     {o.name}
                                   </span>
                                   {isActive && (
-                                    <Badge variant="success" className="gap-1">
+                                    <span
+                                      className="ds-badge ds-badge--success gap-1 inline-flex items-center"
+                                      style={{ background: 'rgba(74,222,128,0.1)', color: 'var(--ds-success)', boxShadow: '0 0 0 2px rgba(74,222,128,0.15)' }}
+                                    >
                                       <CheckCircle2 className="h-3 w-3" />
                                       Active
-                                    </Badge>
+                                    </span>
                                   )}
                                   <MetadataPopover metadata={o.metadata as Record<string, unknown>} />
                                 </div>
@@ -623,7 +630,10 @@ export function AdminOrganizations() {
                                   size="sm"
                                   onClick={handleDeactivate}
                                   disabled={deactivating}
-                                  className="text-amber-500 border-amber-500/30 hover:bg-amber-500/10 hover:text-amber-600 cursor-pointer transition-all duration-200 text-xs h-8"
+                                  className="cursor-pointer transition-all duration-200 text-xs h-8"
+                                  style={{ color: 'var(--ds-warning)', borderColor: 'rgba(251,191,36,0.3)' }}
+                                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(251,191,36,0.1)'; }}
+                                  onMouseLeave={(e) => { e.currentTarget.style.background = ''; }}
                                 >
                                   {deactivating ? (
                                     <>
@@ -695,19 +705,19 @@ export function AdminOrganizations() {
                   return (
                     <div
                       key={o.id}
-                      className={`p-4 space-y-3 transition-colors duration-150 ${
-                        isActive ? "bg-emerald-500/[0.03]" : ""
-                      }`}
+                      className="p-4 space-y-3 transition-colors duration-150"
+                      style={isActive ? { background: 'rgba(74,222,128,0.03)' } : undefined}
                     >
                       {/* Name row */}
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-center gap-3 min-w-0">
                           <div
-                            className={`h-9 w-9 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${
-                              isActive
-                                ? "bg-emerald-500/15 text-emerald-500 ring-2 ring-emerald-500/30 shadow-[0_0_12px_rgba(16,185,129,0.15)]"
-                                : "bg-muted/60 text-muted-foreground"
-                            }`}
+                            className="h-9 w-9 rounded-lg flex items-center justify-center text-xs font-bold shrink-0"
+                            style={isActive ? {
+                              background: 'rgba(74,222,128,0.1)',
+                              color: 'var(--ds-success)',
+                              boxShadow: '0 0 0 2px rgba(74,222,128,0.15), 0 0 12px rgba(74,222,128,0.08)',
+                            } : { background: 'var(--muted)', color: 'var(--muted-foreground)' }}
                           >
                             {o.name.charAt(0).toUpperCase()}
                           </div>
@@ -717,10 +727,13 @@ export function AdminOrganizations() {
                                 {o.name}
                               </span>
                               {isActive && (
-                                <Badge variant="success" className="gap-1">
+                                <span
+                                  className="ds-badge ds-badge--success gap-1 inline-flex items-center"
+                                  style={{ background: 'rgba(74,222,128,0.1)', color: 'var(--ds-success)', boxShadow: '0 0 0 2px rgba(74,222,128,0.15)' }}
+                                >
                                   <CheckCircle2 className="h-3 w-3" />
                                   Active
-                                </Badge>
+                                </span>
                               )}
                             </div>
                             <code className="text-[11px] font-mono text-muted-foreground">
@@ -758,7 +771,10 @@ export function AdminOrganizations() {
                             size="sm"
                             onClick={handleDeactivate}
                             disabled={deactivating}
-                            className="text-amber-500 border-amber-500/30 hover:bg-amber-500/10 cursor-pointer text-xs h-8 flex-1"
+                            className="cursor-pointer text-xs h-8 flex-1"
+                            style={{ color: 'var(--ds-warning)', borderColor: 'rgba(251,191,36,0.3)' }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(251,191,36,0.1)'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = ''; }}
                           >
                             {deactivating ? (
                               <>

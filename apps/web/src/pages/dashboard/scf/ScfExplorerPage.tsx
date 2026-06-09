@@ -7,20 +7,21 @@ import {
   useScfFrameworks,
   useScfFrameworkCoverage,
 } from "@/lib/queries";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
+import { PageHeader } from "@/components/ui/PageHeader";
 import {
   Layers, ShieldCheck, BookMarked, Search, Loader2, AlertCircle,
-  X, FileBox, ExternalLink,
+  X, FileBox, ChevronDown,
 } from "lucide-react";
 
-// ─── Types (mirror queries.ts response shapes) ──────────────────────────────────
+// ─── Types ──────────────────────────────────────────────────────────────────────
 
 type ScfDomain = {
   id: string;
@@ -52,73 +53,207 @@ type ScfFramework = {
   category?: string;
 };
 
-// ─── Small helpers ──────────────────────────────────────────────────────────────
+// ─── Helpers ─────────────────────────────────────────────────────────────────────
 
-function EmptyState({ icon: Icon, label }: { icon: typeof Layers; label: string }) {
+function Spinner() {
   return (
-    <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground">
-      <Icon className="h-8 w-8 opacity-40" />
-      <p className="text-sm">{label}</p>
+    <div className="flex items-center justify-center py-16">
+      <Loader2 className="h-5 w-5 animate-spin" style={{ color: "var(--ds-text-muted)" }} />
     </div>
   );
 }
 
 function ErrorState({ error }: { error: unknown }) {
   return (
-    <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-4 text-destructive text-sm flex items-center gap-2">
+    <div className="rounded-lg p-4 text-sm flex items-center gap-2"
+      style={{
+        background: "var(--ds-error-light)",
+        border: "1px solid rgba(248,113,113,0.18)",
+        color: "var(--ds-error)",
+      }}>
       <AlertCircle className="h-4 w-4 shrink-0" />
       {error instanceof Error ? error.message : "Failed to load SCF data."}
     </div>
   );
 }
 
-function Spinner() {
+function DSEmptyState({ icon: Icon, label }: { icon: typeof Layers; label: string }) {
   return (
-    <div className="flex items-center justify-center py-16">
-      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+    <div className="ds-empty">
+      <div className="ds-empty-icon">
+        <Icon className="h-5 w-5" />
+      </div>
+      <p className="ds-empty-title">{label}</p>
     </div>
   );
 }
 
-// ─── Domains Tab ─────────────────────────────────────────────────────────────────
+// ─── Accordion item ─────────────────────────────────────────────────────────────
+
+function DomainAccordion({
+  domain,
+  versionId,
+  onControlClick,
+}: {
+  domain: ScfDomain;
+  versionId?: string;
+  onControlClick: (ctrl: ScfControl) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const { data, isLoading } = useScfControls(
+    open ? versionId : undefined,
+    { domainCode: domain.domain_code }
+  );
+  const controls = (data?.data ?? []) as ScfControl[];
+
+  return (
+    <div className={`ds-accordion-item${open ? " is-open" : ""}`}>
+      <button
+        className="ds-accordion-trigger"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+      >
+        <div className="ds-accordion-trigger-left">
+          <div className="ds-accordion-icon" aria-hidden="true">
+            <ShieldCheck className="h-4 w-4" />
+          </div>
+          <div className="min-w-0">
+            <span className="block font-semibold text-sm leading-tight" style={{ color: "var(--ds-text)" }}>
+              {domain.domain_name}
+            </span>
+            <span className="block text-xs mt-0.5" style={{ color: "var(--ds-text-muted)" }}>
+              {domain.domain_code}
+            </span>
+          </div>
+        </div>
+        <ChevronDown className="ds-accordion-chevron h-4 w-4" />
+      </button>
+
+      <div className="ds-accordion-content">
+        <div className="ds-accordion-inner">
+          <div className="ds-accordion-body">
+            {!open ? null : isLoading ? (
+              <Spinner />
+            ) : controls.length === 0 ? (
+              <DSEmptyState icon={ShieldCheck} label="No controls in this domain." />
+            ) : (
+              controls.map((ctrl) => (
+                <button
+                  key={ctrl.control_id}
+                  className="ds-control-row w-full text-left"
+                  onClick={() => onControlClick(ctrl)}
+                >
+                  <span className="ds-control-code">{ctrl.control_code}</span>
+                  <span className="ds-control-name">{ctrl.control_title}</span>
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Domains Tab (Accordion layout) ──────────────────────────────────────────────
 
 function DomainsTab({
   versionId,
-  onDomainClick,
 }: {
   versionId?: string;
-  onDomainClick: (code: string) => void;
 }) {
+  const [selected, setSelected] = useState<ScfControl | null>(null);
   const { data, isLoading, error } = useScfDomains(versionId);
   const domains = (data?.data ?? []) as ScfDomain[];
 
   if (isLoading) return <Spinner />;
   if (error) return <ErrorState error={error} />;
-  if (domains.length === 0) return <EmptyState icon={Layers} label="No domains found." />;
+  if (domains.length === 0) return <DSEmptyState icon={Layers} label="No domains found." />;
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-      {domains.map((d) => (
-        <Card
-          key={d.id}
-          className="border-border/60 shadow-none hover:border-primary/40 transition-colors cursor-pointer"
-          onClick={() => onDomainClick(d.domain_code)}
-        >
-          <CardContent className="p-4 space-y-1.5">
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className="font-mono text-[10px]">{d.domain_code}</Badge>
+    <>
+      <div className="ds-accordion">
+        {domains.map((d) => (
+          <DomainAccordion
+            key={d.id}
+            domain={d}
+            versionId={versionId}
+            onControlClick={setSelected}
+          />
+        ))}
+      </div>
+
+      {/* Control detail dialog */}
+      <Dialog open={!!selected} onOpenChange={(open) => { if (!open) setSelected(null); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 flex-wrap">
+              <span className="ds-badge ds-badge--active font-mono">{selected?.control_code}</span>
+              <span className="text-base">{selected?.control_title}</span>
+            </DialogTitle>
+            <DialogDescription className="sr-only">SCF control detail</DialogDescription>
+          </DialogHeader>
+          {selected && (
+            <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+              {selected.control_description ? (
+                <div className="space-y-1">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--ds-text-muted)" }}>Description</h4>
+                  <p className="text-sm whitespace-pre-wrap leading-relaxed" style={{ color: "var(--ds-text-sub)" }}>
+                    {selected.control_description}
+                  </p>
+                </div>
+              ) : (
+                <p className="text-sm italic" style={{ color: "var(--ds-text-muted)" }}>No description available.</p>
+              )}
+
+              {selected.control_question && (
+                <div className="space-y-1">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--ds-text-muted)" }}>Control Question</h4>
+                  <p className="text-sm whitespace-pre-wrap leading-relaxed" style={{ color: "var(--ds-text-sub)" }}>
+                    {selected.control_question}
+                  </p>
+                </div>
+              )}
+
+              {selected.control_intent && (
+                <div className="space-y-1">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--ds-text-muted)" }}>Control Intent</h4>
+                  <p className="text-sm whitespace-pre-wrap leading-relaxed" style={{ color: "var(--ds-text-sub)" }}>
+                    {selected.control_intent}
+                  </p>
+                </div>
+              )}
+
+              {selected.implementation_guidance && (
+                <div className="space-y-1">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--ds-text-muted)" }}>Implementation Guidance</h4>
+                  <p className="text-sm whitespace-pre-wrap leading-relaxed" style={{ color: "var(--ds-text-sub)" }}>
+                    {selected.implementation_guidance}
+                  </p>
+                </div>
+              )}
+
+              {selected.expected_evidence && (
+                <div className="space-y-1">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--ds-text-muted)" }}>Expected Evidence</h4>
+                  <p className="text-sm whitespace-pre-wrap leading-relaxed" style={{ color: "var(--ds-text-sub)" }}>
+                    {selected.expected_evidence}
+                  </p>
+                </div>
+              )}
+
+              <div className="flex items-center gap-2 pt-1">
+                <span className="ds-badge ds-badge--muted capitalize">{selected.status}</span>
+              </div>
+              <div className="rounded-lg p-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid var(--ds-border)" }}>
+                <p className="text-[11px] font-medium uppercase tracking-wider mb-1" style={{ color: "var(--ds-text-muted)" }}>Control ID</p>
+                <p className="font-mono text-xs break-all select-all" style={{ color: "var(--ds-text-muted)" }}>{selected.control_id}</p>
+              </div>
             </div>
-            <p className="text-sm font-medium leading-snug">{d.domain_name}</p>
-            {d.description && (
-              <p className="text-xs text-muted-foreground line-clamp-2">{d.description}</p>
-            )}
-            <p className="text-[11px] text-primary/70 pt-1 flex items-center gap-1">
-              View controls <ExternalLink className="h-2.5 w-2.5" />
-            </p>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
@@ -149,7 +284,7 @@ function ControlsTab({
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row gap-2">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 pointer-events-none" style={{ color: "var(--ds-text-muted)" }} />
           <Input
             placeholder="Search controls by code or title…"
             value={searchInput}
@@ -161,21 +296,20 @@ function ControlsTab({
         <Button onClick={applySearch} disabled={isFetching}>Search</Button>
       </div>
 
-      {/* Active filters */}
       {(domainCode || query) && (
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-xs text-muted-foreground">Filters:</span>
+          <span className="text-xs" style={{ color: "var(--ds-text-muted)" }}>Filters:</span>
           {domainCode && (
-            <Badge variant="muted" className="gap-1">
+            <span className="ds-badge ds-badge--active gap-1">
               Domain: {domainCode}
-              <button onClick={onClearDomain} className="hover:text-foreground"><X className="h-3 w-3" /></button>
-            </Badge>
+              <button onClick={onClearDomain} aria-label="Clear domain filter"><X className="h-3 w-3" /></button>
+            </span>
           )}
           {query && (
-            <Badge variant="muted" className="gap-1">
+            <span className="ds-badge ds-badge--muted gap-1">
               "{query}"
-              <button onClick={() => { setQuery(""); setSearchInput(""); }} className="hover:text-foreground"><X className="h-3 w-3" /></button>
-            </Badge>
+              <button onClick={() => { setQuery(""); setSearchInput(""); }} aria-label="Clear search"><X className="h-3 w-3" /></button>
+            </span>
           )}
         </div>
       )}
@@ -185,22 +319,24 @@ function ControlsTab({
       ) : error ? (
         <ErrorState error={error} />
       ) : controls.length === 0 ? (
-        <EmptyState icon={ShieldCheck} label="No controls match your filters." />
+        <DSEmptyState icon={ShieldCheck} label="No controls match your filters." />
       ) : (
         <>
-          <p className="text-xs text-muted-foreground">{controls.length} control{controls.length !== 1 ? "s" : ""}</p>
-          <div className="rounded-xl border border-border/60 overflow-hidden bg-card divide-y divide-border/30">
+          <p className="text-xs" style={{ color: "var(--ds-text-muted)" }}>{controls.length} control{controls.length !== 1 ? "s" : ""}</p>
+          <div className="ds-table-wrapper">
             {controls.map((c) => (
               <button
                 key={c.control_id}
                 onClick={() => setSelected(c)}
-                className="w-full text-left flex items-start gap-3 px-4 py-3 hover:bg-muted/20 transition-colors"
+                className="ds-control-row w-full text-left"
               >
-                <Badge variant="outline" className="font-mono text-[10px] shrink-0 mt-0.5">{c.control_code}</Badge>
+                <span className="ds-control-code">{c.control_code}</span>
                 <div className="min-w-0">
-                  <p className="text-sm font-medium truncate">{c.control_title}</p>
+                  <span className="ds-control-name block">{c.control_title}</span>
                   {c.control_description && (
-                    <p className="text-xs text-muted-foreground line-clamp-1">{c.control_description}</p>
+                    <span className="text-xs block mt-0.5 line-clamp-1" style={{ color: "var(--ds-text-muted)" }}>
+                      {c.control_description}
+                    </span>
                   )}
                 </div>
               </button>
@@ -213,67 +349,40 @@ function ControlsTab({
       <Dialog open={!!selected} onOpenChange={(open) => { if (!open) setSelected(null); }}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Badge variant="outline" className="font-mono text-[11px]">{selected?.control_code}</Badge>
-              {selected?.control_title}
+            <DialogTitle className="flex items-center gap-2 flex-wrap">
+              <span className="ds-badge ds-badge--active font-mono">{selected?.control_code}</span>
+              <span className="text-base">{selected?.control_title}</span>
             </DialogTitle>
             <DialogDescription className="sr-only">SCF control detail</DialogDescription>
           </DialogHeader>
           {selected && (
             <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
-              {selected.control_description ? (
+              {selected.control_description && (
                 <div className="space-y-1">
-                  <h4 className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">Description</h4>
-                  <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
-                    {selected.control_description}
-                  </p>
+                  <h4 className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--ds-text-muted)" }}>Description</h4>
+                  <p className="text-sm whitespace-pre-wrap leading-relaxed" style={{ color: "var(--ds-text-sub)" }}>{selected.control_description}</p>
                 </div>
-              ) : (
-                <p className="text-sm text-muted-foreground italic">No description available.</p>
               )}
-
               {selected.control_question && (
                 <div className="space-y-1">
-                  <h4 className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">Control Question</h4>
-                  <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
-                    {selected.control_question}
-                  </p>
+                  <h4 className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--ds-text-muted)" }}>Control Question</h4>
+                  <p className="text-sm whitespace-pre-wrap leading-relaxed" style={{ color: "var(--ds-text-sub)" }}>{selected.control_question}</p>
                 </div>
               )}
-
-              {selected.control_intent && (
-                <div className="space-y-1">
-                  <h4 className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">Control Intent</h4>
-                  <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
-                    {selected.control_intent}
-                  </p>
-                </div>
-              )}
-
               {selected.implementation_guidance && (
                 <div className="space-y-1">
-                  <h4 className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">Implementation Guidance</h4>
-                  <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
-                    {selected.implementation_guidance}
-                  </p>
+                  <h4 className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--ds-text-muted)" }}>Implementation Guidance</h4>
+                  <p className="text-sm whitespace-pre-wrap leading-relaxed" style={{ color: "var(--ds-text-sub)" }}>{selected.implementation_guidance}</p>
                 </div>
               )}
-
               {selected.expected_evidence && (
                 <div className="space-y-1">
-                  <h4 className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">Expected Evidence</h4>
-                  <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
-                    {selected.expected_evidence}
-                  </p>
+                  <h4 className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--ds-text-muted)" }}>Expected Evidence</h4>
+                  <p className="text-sm whitespace-pre-wrap leading-relaxed" style={{ color: "var(--ds-text-sub)" }}>{selected.expected_evidence}</p>
                 </div>
               )}
-
-              <div className="flex items-center gap-2 pt-2">
-                <Badge variant="muted" className="text-[10px] capitalize">{selected.status}</Badge>
-              </div>
-              <div className="rounded-lg bg-muted/20 border border-border/40 p-3">
-                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-1">Control ID</p>
-                <p className="font-mono text-xs text-muted-foreground break-all select-all">{selected.control_id}</p>
+              <div className="flex items-center gap-2 pt-1">
+                <span className="ds-badge ds-badge--muted capitalize">{selected.status}</span>
               </div>
             </div>
           )}
@@ -287,18 +396,18 @@ function ControlsTab({
 
 function FrameworkCoverage({ frameworkId, versionId }: { frameworkId: string; versionId?: string }) {
   const { data, isLoading } = useScfFrameworkCoverage(frameworkId, versionId);
-  if (isLoading) return <span className="text-[11px] text-muted-foreground">Loading…</span>;
+  if (isLoading) return <span className="text-[11px]" style={{ color: "var(--ds-text-muted)" }}>Loading…</span>;
   if (!data) return null;
   const pct = data.requirement_count > 0
     ? Math.round((data.mapped_requirement_count / data.requirement_count) * 100)
     : 0;
   return (
-    <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+    <div className="flex items-center gap-3 text-[11px]" style={{ color: "var(--ds-text-muted)" }}>
       <span>{data.requirement_count} reqs</span>
       <span>·</span>
       <span>{data.control_count} controls</span>
       <span>·</span>
-      <span className="text-primary font-medium">{pct}% mapped</span>
+      <span style={{ color: "var(--ds-accent)", fontWeight: 600 }}>{pct}% mapped</span>
     </div>
   );
 }
@@ -326,7 +435,7 @@ function FrameworksTab({ versionId }: { versionId?: string }) {
   return (
     <div className="space-y-4">
       <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 pointer-events-none" style={{ color: "var(--ds-text-muted)" }} />
         <Input
           placeholder="Search frameworks…"
           value={search}
@@ -336,36 +445,49 @@ function FrameworksTab({ versionId }: { versionId?: string }) {
       </div>
 
       {filtered.length === 0 ? (
-        <EmptyState icon={BookMarked} label="No frameworks match your search." />
+        <DSEmptyState icon={BookMarked} label="No frameworks match your search." />
       ) : (
         <>
-          <p className="text-xs text-muted-foreground">{filtered.length} framework{filtered.length !== 1 ? "s" : ""}</p>
+          <p className="text-xs" style={{ color: "var(--ds-text-muted)" }}>
+            {filtered.length} framework{filtered.length !== 1 ? "s" : ""}
+          </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {filtered.map((f) => (
-              <Card key={f.framework_id} className="border-border/60 shadow-none">
-                <CardContent className="p-4 space-y-2">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium leading-snug">{f.framework_name}</p>
-                      <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                        <Badge variant="outline" className="font-mono text-[10px]">{f.framework_code}</Badge>
-                        {f.framework_version && (
-                          <span className="text-[10px] text-muted-foreground">v{f.framework_version}</span>
-                        )}
-                      </div>
+              <div
+                key={f.framework_id}
+                className="p-4 rounded-xl space-y-2 transition-colors"
+                style={{
+                  background: "rgba(255,255,255,0.018)",
+                  border: "1px solid var(--ds-border)",
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(143,168,155,0.25)";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLDivElement).style.borderColor = "var(--ds-border)";
+                }}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium leading-snug" style={{ color: "var(--ds-text)" }}>{f.framework_name}</p>
+                    <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                      <span className="ds-badge ds-badge--active font-mono text-[10px]">{f.framework_code}</span>
+                      {f.framework_version && (
+                        <span className="text-[10px]" style={{ color: "var(--ds-text-muted)" }}>v{f.framework_version}</span>
+                      )}
                     </div>
-                    {f.category && (
-                      <Badge variant="muted" className="text-[9px] shrink-0 capitalize">{f.category}</Badge>
-                    )}
                   </div>
-                  {(f.publisher || f.jurisdiction) && (
-                    <p className="text-xs text-muted-foreground">
-                      {[f.publisher, f.jurisdiction].filter(Boolean).join(" · ")}
-                    </p>
+                  {f.category && (
+                    <span className="ds-badge ds-badge--muted text-[9px] shrink-0 capitalize">{f.category}</span>
                   )}
-                  <FrameworkCoverage frameworkId={f.framework_id} versionId={versionId} />
-                </CardContent>
-              </Card>
+                </div>
+                {(f.publisher || f.jurisdiction) && (
+                  <p className="text-xs" style={{ color: "var(--ds-text-muted)" }}>
+                    {[f.publisher, f.jurisdiction].filter(Boolean).join(" · ")}
+                  </p>
+                )}
+                <FrameworkCoverage frameworkId={f.framework_id} versionId={versionId} />
+              </div>
             ))}
           </div>
         </>
@@ -385,28 +507,13 @@ export function ScfExplorerPage() {
   const [tab, setTab] = useState("domains");
   const [domainFilter, setDomainFilter] = useState("");
 
-  const goToControlsByDomain = (code: string) => {
-    setDomainFilter(code);
-    setTab("controls");
-  };
-
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <p className="text-sm text-muted-foreground max-w-2xl">
-            Browse the Secure Controls Framework catalog — security domains, individual
-            controls, and the compliance frameworks they map to.
-          </p>
-        </div>
-        {version && (
-          <Badge variant="outline" className="gap-1.5 shrink-0">
-            <FileBox className="h-3 w-3" />
-            SCF {version.version_label}
-          </Badge>
-        )}
-      </div>
+      <PageHeader
+        title="Control Framework Explorer"
+        description="Browse security domains, individual controls, and the compliance frameworks they map to."
+        badge={version?.version_label ? `SCF ${version.version_label}` : undefined}
+      />
 
       {versionError ? (
         <ErrorState error={versionError} />
@@ -420,11 +527,11 @@ export function ScfExplorerPage() {
             <TabsTrigger value="frameworks"><BookMarked className="w-4 h-4 mr-2" />Frameworks</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="domains">
-            <DomainsTab versionId={versionId} onDomainClick={goToControlsByDomain} />
+          <TabsContent value="domains" className="animate-slide-up">
+            <DomainsTab versionId={versionId} />
           </TabsContent>
 
-          <TabsContent value="controls">
+          <TabsContent value="controls" className="animate-slide-up">
             <ControlsTab
               versionId={versionId}
               domainCode={domainFilter}
@@ -432,7 +539,7 @@ export function ScfExplorerPage() {
             />
           </TabsContent>
 
-          <TabsContent value="frameworks">
+          <TabsContent value="frameworks" className="animate-slide-up">
             <FrameworksTab versionId={versionId} />
           </TabsContent>
         </Tabs>

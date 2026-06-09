@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { api, ApiError } from "@/lib/api";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useActiveOrg } from "@/hooks/useActiveOrg";
@@ -151,13 +152,13 @@ function DeliveryRow({ d }: { d: WebhookDelivery }) {
       >
         <div className="flex items-center gap-2 min-w-0">
           {ok
-            ? <CircleCheck className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+            ? <CircleCheck className="h-3.5 w-3.5 shrink-0" style={{ color: 'var(--ds-success)' }} />
             : <AlertCircle className="h-3.5 w-3.5 text-destructive shrink-0" />
           }
           <span className="font-mono text-foreground truncate">{d.event_type}</span>
         </div>
         <div className="flex items-center gap-3 shrink-0 ml-2">
-          <span className={ok ? "text-emerald-500" : "text-destructive"}>
+          <span style={{ color: ok ? 'var(--ds-success)' : 'var(--ds-error)' }}>
             {d.http_status ?? "—"}
           </span>
           <span className="text-muted-foreground">
@@ -202,7 +203,10 @@ function WebhookRow({
       <CardContent className="p-0">
         <div className="flex items-start justify-between gap-3 p-4">
           <div className="flex items-start gap-3 min-w-0">
-            <div className={`mt-0.5 h-2 w-2 rounded-full shrink-0 ${endpoint.enabled ? "bg-emerald-500" : "bg-muted-foreground/40"}`} />
+            <div
+              className="mt-0.5 h-2 w-2 rounded-full shrink-0"
+              style={{ background: endpoint.enabled ? "var(--ds-success)" : "rgba(255,255,255,0.2)" }}
+            />
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <a
@@ -227,7 +231,7 @@ function WebhookRow({
                 {endpoint.events.map((ev) => (
                   <span
                     key={ev}
-                    className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary/80 font-mono"
+                    className="ds-badge ds-badge--active font-mono text-[10px]"
                   >
                     {ev}
                   </span>
@@ -243,7 +247,7 @@ function WebhookRow({
                   onClick={() => copy(endpoint.signing_secret_masked, endpoint.id + "-secret")}
                 >
                   {copied === endpoint.id + "-secret"
-                    ? <Check className="h-3 w-3 text-emerald-500" />
+                    ? <Check className="h-3 w-3" style={{ color: "var(--ds-success)" }} />
                     : <Copy className="h-3 w-3" />
                   }
                 </button>
@@ -264,7 +268,10 @@ function WebhookRow({
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 text-muted-foreground hover:text-amber-500"
+              className="h-7 w-7 text-muted-foreground"
+              style={{ ['--hover-color' as string]: 'var(--ds-warning)' }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--ds-warning)'; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = ''; }}
               title="Rotate signing secret"
               onClick={() => onRotateSecret(endpoint.id)}
             >
@@ -403,31 +410,27 @@ export function WebhooksPage() {
 
   return (
     <div className="space-y-6 pb-10">
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-sm text-muted-foreground max-w-xl">
-            Register HTTP endpoints to receive real-time event notifications when lifecycle states
-            change. All deliveries are signed with HMAC-SHA256.
-          </p>
-        </div>
-        <Button
-          size="sm"
-          className="shrink-0"
-          onClick={() => { setCreateOpen(true); setCreateError(""); }}
-          disabled={!orgId}
-        >
-          <Plus className="h-4 w-4 mr-1.5" />
-          Add Endpoint
-        </Button>
-      </div>
+      <PageHeader
+        title="Webhooks"
+        description="Register HTTP endpoints to receive real-time lifecycle events, signed with HMAC-SHA256."
+        actions={
+          <Button
+            size="sm"
+            onClick={() => { setCreateOpen(true); setCreateError(""); }}
+            disabled={!orgId}
+          >
+            <Plus className="h-4 w-4 mr-1.5" />
+            Add Endpoint
+          </Button>
+        }
+      />
 
       {/* Signing secret reveal banner */}
       {revealSecret && (
-        <Card className="border-amber-500/40 bg-amber-500/5 shadow-none">
+        <Card className="shadow-none" style={{ border: '1px solid rgba(251,191,36,0.3)', background: 'rgba(251,191,36,0.04)' }}>
           <CardContent className="p-4">
             <div className="flex items-start gap-3">
-              <AlertCircle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+              <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" style={{ color: 'var(--ds-warning)' }} />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground">Signing Secret — store this now</p>
                 <p className="text-xs text-muted-foreground mt-0.5 mb-2">
@@ -450,7 +453,7 @@ export function WebhooksPage() {
                     title="Copy"
                   >
                     {copied === "reveal"
-                      ? <Check className="h-4 w-4 text-emerald-500" />
+                      ? <Check className="h-4 w-4" style={{ color: 'var(--ds-success)' }} />
                       : <Copy className="h-4 w-4" />
                     }
                   </button>

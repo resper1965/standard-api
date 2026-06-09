@@ -9,6 +9,7 @@
  * - `isPlatformAdmin` computed once, passed as prop — never re-derived.
  */
 import { useState, useCallback, useEffect, useMemo } from "react"
+import "@/styles/dashboard.css"
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom"
 import { useSession, signOut } from "@/lib/auth-client"
 import {
