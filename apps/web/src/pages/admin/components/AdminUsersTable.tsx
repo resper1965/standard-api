@@ -85,7 +85,7 @@ export function AdminUsersTable({ users, onEdit, onConfirmAction }: AdminUsersTa
           <TableRow
             key={u.id}
             className={`transition-colors duration-150 ${
-              u.banned ? "opacity-60" : u.approved === false ? "bg-amber-500/5" : "hover:bg-muted/40"
+              u.banned ? "opacity-60" : !u.approved ? "bg-amber-500/5" : "hover:bg-muted/40"
             }`}
           >
             <TableCell>
@@ -104,7 +104,7 @@ export function AdminUsersTable({ users, onEdit, onConfirmAction }: AdminUsersTa
               </Badge>
             </TableCell>
             <TableCell>
-              {u.approved === false ? (
+              {!u.approved ? (
                 <Badge variant="outline" className="gap-1 border-amber-500/40 text-amber-600">
                   <Clock className="h-3 w-3" />
                   Pending
@@ -126,7 +126,7 @@ export function AdminUsersTable({ users, onEdit, onConfirmAction }: AdminUsersTa
             </TableCell>
             <TableCell className="text-right">
               <div className="flex items-center justify-end gap-0.5">
-                {u.approved === false ? (
+                {!u.approved ? (
                   <>
                     <Button
                       variant="ghost" size="sm"

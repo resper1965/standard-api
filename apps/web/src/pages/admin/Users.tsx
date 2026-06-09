@@ -69,7 +69,7 @@ export function AdminUsers() {
 
   // Client-side filter for pending-only mode
   const displayUsers = showPendingOnly
-    ? filteredUsers.filter((u) => u.approved === false)
+    ? filteredUsers.filter((u) => !u.approved)
     : filteredUsers;
 
   if (forbidden) {
