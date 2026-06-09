@@ -297,12 +297,29 @@ export function DashboardLayout() {
     <div className="flex min-h-screen w-full bg-background text-foreground">
       {/* ── Desktop Sidebar ───────────────────────────── */}
       <aside className="w-[260px] flex-col border-r border-border/60 bg-card hidden md:flex h-screen sticky top-0">
-        <div className="flex h-14 items-center px-6 border-b border-border/50 shrink-0">
-          <Link to="/dashboard" className="flex flex-col gap-0">
-            <span style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif", fontWeight: 300, fontSize: "1.3rem", letterSpacing: "-0.04em", color: "#e9ecef", lineHeight: 1 }}>
+        <div className="flex h-[68px] items-center px-6 border-b border-border/50 shrink-0">
+          <Link to="/dashboard" className="flex flex-col" style={{ gap: "2px" }}>
+            {/* Logo — b.standard */}
+            <span style={{
+              fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif",
+              fontWeight: 300,
+              fontSize: "1.75rem",
+              letterSpacing: "-0.05em",
+              color: "#e9ecef",
+              lineHeight: 1,
+            }}>
               b<span style={{ color: "#8fa89b" }}>.</span>standard
             </span>
-            <span style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif", fontWeight: 300, fontSize: "0.65rem", letterSpacing: "0.06em", color: "#6c757d", textTransform: "lowercase" }}>
+            {/* Slogan — be secure. */}
+            <span style={{
+              fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif",
+              fontWeight: 300,
+              fontSize: "0.6875rem",
+              letterSpacing: "0.07em",
+              color: "#6c757d",
+              textTransform: "lowercase",
+              lineHeight: 1,
+            }}>
               be secure<span style={{ color: "#8fa89b" }}>.</span>
             </span>
           </Link>
@@ -324,10 +341,30 @@ export function DashboardLayout() {
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="flex h-14 items-center justify-between px-5 border-b border-border/50">
-          <span style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif", fontWeight: 300, fontSize: "1.2rem", letterSpacing: "-0.04em", color: "#e9ecef" }}>
-            b<span style={{ color: "#8fa89b" }}>.</span>standard
-          </span>
+        <div className="flex h-[68px] items-center justify-between px-5 border-b border-border/50">
+          <div className="flex flex-col" style={{ gap: "2px" }}>
+            <span style={{
+              fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif",
+              fontWeight: 300,
+              fontSize: "1.6rem",
+              letterSpacing: "-0.05em",
+              color: "#e9ecef",
+              lineHeight: 1,
+            }}>
+              b<span style={{ color: "#8fa89b" }}>.</span>standard
+            </span>
+            <span style={{
+              fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif",
+              fontWeight: 300,
+              fontSize: "0.6875rem",
+              letterSpacing: "0.07em",
+              color: "#6c757d",
+              textTransform: "lowercase",
+              lineHeight: 1,
+            }}>
+              be secure<span style={{ color: "#8fa89b" }}>.</span>
+            </span>
+          </div>
           <Button variant="ghost" size="icon" onClick={closeMobile} className="h-8 w-8">
             <X className="h-4 w-4" />
             <span className="sr-only">Close menu</span>
