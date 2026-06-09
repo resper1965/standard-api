@@ -25,9 +25,16 @@ import {
   createInMemoryMaturityRepositories,
 } from "@standard/maturity";
 import type { AppDependencies, RouteDefinition } from "../http";
-import { json, routeUuidParam, requireOrganizationId } from "../http";
+import {
+  json,
+  parseJson,
+  routeUuidParam,
+  requireOrganizationId,
+} from "../http";
 import { ApiError } from "../errors/api-error";
 import type { AssessmentRecord } from "../http";
+import { eq } from "drizzle-orm";
+import { assessments } from "@standard/schemas";
 
 // ── Helper ───────────────────────────────────────────────────────────────────
 
@@ -478,6 +485,95 @@ export const maturityRoutes: RouteDefinition[] = [
               "Controls exceed requirements. Positive assurance documented.",
           },
         },
+        trace_id: traceId,
+      });
+    },
+  },
+
+  // ── PUT /assessments/:id/maturity-targets ─────────────────────────────────
+  // SCR-CMM §Use Case 1: Set target maturity level per SCF domain.
+  // Enables spider chart: current (from maturity scores) vs target (from this map).
+  // Format: { "ACM": 3, "CPL": 2, "GOV": 3 } — domain_code → L0–L5 integer
+  {
+    method: "PUT",
+    path: "/api/v1/assessments/:id/maturity-targets",
+    authRequired: true,
+    tenantRequired: true,
+    handler: async ({ deps, params, request, organizationId, traceId }) => {
+      const orgId = requireOrganizationId({ organizationId });
+      const assessmentId = routeUuidParam(params, "id");
+      await requireAssessment(deps, assessmentId, orgId);
+
+      if (!deps._db)
+        throw new ApiError("INTERNAL_ERROR", "DB client not available.", 500);
+
+      const body = (await request.json()) as Record<string, unknown>;
+
+      // Validate: keys are strings, values are integers 0–5
+      for (const [key, val] of Object.entries(body)) {
+        if (typeof key !== "string" || key.length === 0)
+          throw new ApiError(
+            "VALIDATION_ERROR",
+            `Invalid domain key: ${key}`,
+            400,
+          );
+        if (
+          typeof val !== "number" ||
+          !Number.isInteger(val) ||
+          val < 0 ||
+          val > 5
+        )
+          throw new ApiError(
+            "VALIDATION_ERROR",
+            `Target for domain ${key} must be integer 0–5, got: ${val}`,
+            400,
+          );
+      }
+
+      const targets = body as Record<string, number>;
+
+      await deps._db
+        .update(assessments)
+        .set({ maturityDomainTargets: targets, updatedAt: new Date() })
+        .where(eq(assessments.id, assessmentId));
+
+      return json({
+        assessment_id: assessmentId,
+        maturity_domain_targets: targets,
+        domain_count: Object.keys(targets).length,
+        trace_id: traceId,
+      });
+    },
+  },
+
+  // ── GET /assessments/:id/maturity-targets ─────────────────────────────────
+  {
+    method: "GET",
+    path: "/api/v1/assessments/:id/maturity-targets",
+    authRequired: true,
+    tenantRequired: true,
+    handler: async ({ deps, params, organizationId, traceId }) => {
+      const orgId = requireOrganizationId({ organizationId });
+      const assessmentId = routeUuidParam(params, "id");
+
+      if (!deps._db)
+        throw new ApiError("INTERNAL_ERROR", "DB client not available.", 500);
+
+      const [row] = await deps._db
+        .select({
+          id: assessments.id,
+          maturityDomainTargets: assessments.maturityDomainTargets,
+        })
+        .from(assessments)
+        .where(eq(assessments.id, assessmentId))
+        .limit(1);
+
+      if (!row) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
+
+      return json({
+        assessment_id: assessmentId,
+        maturity_domain_targets: row.maturityDomainTargets ?? {},
+        domain_count: Object.keys(row.maturityDomainTargets ?? {}).length,
         trace_id: traceId,
       });
     },
