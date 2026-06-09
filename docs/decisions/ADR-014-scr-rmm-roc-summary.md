@@ -95,6 +95,39 @@ This prevents the ROC Summary from being empty during active assessment work whi
 - ADR-004: SCF as normative data source — informs why normative determinations must be derived, not inferred
 - ADR-011: HITL Fully Headless — confirms that approval gates must not be bypassed by agents
 
+## Open Questions — Resolved (2026-06-09)
+
+The following design questions from the initial plan were resolved by the product owner:
+
+### Q-A — Auto-recalculate `roc_determination` on PATCH gap-finding? → **YES**
+
+**Decision:** `roc_determination` is recalculated deterministically whenever `severity` or `assessment_status` is patched on a gap finding (while the parent version is still mutable).
+
+**Implementation:** `GapReviewService.updateGapFinding()` calls `deriveRocDetermination()` after applying the patch. Risk scores (`inherent_risk_score`, `residual_risk_score`) are also recalculated when `severity` changes. Both operations are non-blocking — a failure to recalculate does not prevent the patch from saving.
+
+**Rationale:** Consistency. A reviewer changing severity from `medium` to `high` should immediately see `material_weakness` without needing to re-run the draft. Manual `roc_determination` override is still allowed (set it explicitly in the patch after auto-recalc).
+
 ---
 
+### Q-C — Should `accept` risk treatment at extreme/severe require mandatory approval event? → **NO**
+
+**Decision:** `accept` treatment does **not** require a mandatory approval event or hard gate, regardless of risk rating.
+
+**Rationale:** Risk-mature organizations have formal risk acceptance processes that operate outside the assessment workflow (risk committees, executive sign-off, board records). The platform should not replicate or conflict with those processes. The `assessment_risk_register` entry itself is the audit record. The ROC Summary flags `accept` treatments at extreme/severe rating in `roc_guidance` for human attention, but the API does not block the operation.
+
+**Future:** If a future customer requires hard-gating, add an opt-in `require_accept_approval` flag to the organization configuration.
+
+---
+
+### Q-D — Add `scf_version_id` to `assessment_risk_register`? → **YES**
+
+**Decision:** `scf_version_id` is a **required** (NOT NULL) column on `assessment_risk_register`.
+
+**Implementation:** Column added in migration 0043. References `scf_versions.id`. Must be populated from the assessment's `scf_version_id` at risk register entry creation time.
+
+**Rationale:** AGENTS.md §8: _"Toda saída relevante deve registrar `scf_version`."_ A risk treatment decision made under SCF v2026.1 is not equivalent to the same decision under v2027.1 if control requirements change. Traceability requires knowing which version was authoritative at the time of treatment.
+
+---
+
+_Decisions recorded by: product owner, 2026-06-09_  
 _Co-Authored-By: Antigravity (Google DeepMind Advanced Agentic Coding)_
