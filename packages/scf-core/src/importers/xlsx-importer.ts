@@ -28,7 +28,16 @@ import type {
   ScfRisk,
   ScfThreat,
 } from "../types";
-import type { DpmpPrinciple, DpmpFrameworkMapping, CdpasStandard, CdpasSubRequirement, CdpasControlMapping, MadStandard, MadSubRequirement, MadMaturityCriteria } from "@standard/schemas";
+import type {
+  DpmpPrinciple,
+  DpmpFrameworkMapping,
+  CdpasStandard,
+  CdpasSubRequirement,
+  CdpasControlMapping,
+  MadStandard,
+  MadSubRequirement,
+  MadMaturityCriteria,
+} from "@standard/schemas";
 
 type MadControlMappingRecord = {
   id: string;
@@ -189,7 +198,8 @@ const parseControlsTab = (
     const controlDescription = findControlDescription(row);
     const controlQuestion = findControlQuestion(row);
     const controlWeight = findControlWeight(row);
-    const compensatingGuidance = row["compensating_control_guidance"] ||
+    const compensatingGuidance =
+      row["compensating_control_guidance"] ||
       row["compensating_controls"] ||
       row["proposed_compensating_controls"] ||
       row["compensating_control"] ||
@@ -206,7 +216,9 @@ const parseControlsTab = (
         : {}),
       ...(controlQuestion ? { control_question: controlQuestion } : {}),
       ...(controlWeight !== undefined ? { control_weight: controlWeight } : {}),
-      ...(compensatingGuidance ? { compensating_control_guidance: compensatingGuidance } : {}),
+      ...(compensatingGuidance
+        ? { compensating_control_guidance: compensatingGuidance }
+        : {}),
       status: "active",
       is_synthetic: false,
     });
@@ -346,6 +358,92 @@ const parseCrosswalkTab = (
   return { framework, requirements, mappings, warnings };
 };
 
+// ──── STRM Inference Engine (NIST IR 8477) ────
+
+/**
+ * Infers STRM relationship types for all parsed mappings using structural
+ * cardinality analysis (Opção A — inference from mapping structure).
+ *
+ * Rules (based on set theory from NIST IR 8477):
+ *   - 1 req → 1 control  : equal      (single requirement maps to single control)
+ *   - N reqs → 1 control : superset   (control scope exceeds individual requirement)
+ *   - 1 req → N controls : subset     (requirement is a subset of control scope)
+ *   - N:N               : intersecting (partial overlap)
+ *
+ * Source is always marked as "inferred_structural_analysis_v1" — never official_scf.
+ * These records qualify the corresponding scf_mappings rows.
+ */
+type StrmInferredEntry = {
+  /** Matches the scf_mapping.id this STRM qualifies */
+  mapping_id: string;
+  relationship_type: string;
+  relationship_strength: string;
+  rationale: string;
+  source: string;
+};
+
+const inferStrmRelationships = (
+  mappings: ScfMapping[],
+): StrmInferredEntry[] => {
+  // Count how many controls each requirement maps to (within same framework)
+  const reqToControlCount = new Map<string, number>();
+  // Count how many requirements each control maps to (within same framework)
+  const controlToReqCount = new Map<string, number>();
+
+  for (const m of mappings) {
+    const reqKey = `${m.scf_framework_id}::${m.scf_framework_requirement_id}`;
+    const ctrlKey = `${m.scf_framework_id}::${m.scf_control_id}`;
+    reqToControlCount.set(reqKey, (reqToControlCount.get(reqKey) ?? 0) + 1);
+    controlToReqCount.set(ctrlKey, (controlToReqCount.get(ctrlKey) ?? 0) + 1);
+  }
+
+  const entries: StrmInferredEntry[] = [];
+
+  for (const m of mappings) {
+    const reqKey = `${m.scf_framework_id}::${m.scf_framework_requirement_id}`;
+    const ctrlKey = `${m.scf_framework_id}::${m.scf_control_id}`;
+    const controlsForReq = reqToControlCount.get(reqKey) ?? 1;
+    const reqsForControl = controlToReqCount.get(ctrlKey) ?? 1;
+
+    let relationship_type: string;
+    let relationship_strength: string;
+    let rationale: string;
+
+    if (controlsForReq === 1 && reqsForControl === 1) {
+      // 1:1 — candidate for equal (same scope)
+      relationship_type = "equal";
+      relationship_strength = "strong";
+      rationale =
+        "1:1 structural mapping — single requirement maps to single SCF control";
+    } else if (controlsForReq === 1 && reqsForControl > 1) {
+      // 1 req → N controls: requirement is a subset of the combined controls
+      relationship_type = "superset";
+      relationship_strength = reqsForControl <= 3 ? "strong" : "moderate";
+      rationale = `${reqsForControl} requirements map to this SCF control — requirement scope is a subset of the control's broader scope`;
+    } else if (controlsForReq > 1 && reqsForControl === 1) {
+      // N controls → 1 req: requirement covers multiple controls → superset of each
+      relationship_type = "subset";
+      relationship_strength = controlsForReq <= 3 ? "strong" : "moderate";
+      rationale = `Requirement maps to ${controlsForReq} SCF controls — requirement addresses a subset of this control's scope`;
+    } else {
+      // N:N — intersecting (partial overlap)
+      relationship_type = "intersecting";
+      relationship_strength = "weak";
+      rationale = `N:N mapping (${reqsForControl} reqs × ${controlsForReq} controls) — partial scope overlap`;
+    }
+
+    entries.push({
+      mapping_id: m.id,
+      relationship_type,
+      relationship_strength,
+      rationale,
+      source: "inferred_structural_analysis_v1",
+    });
+  }
+
+  return entries;
+};
+
 // ──── Extended Catalog Parsers ────
 
 const parsePptdfBool = (value: string | undefined): boolean | undefined => {
@@ -407,11 +505,23 @@ const parseAssessmentObjectivesTab = (
         scf_control_id: controlId,
         objective_code: objectiveCode.trim(),
         text: text.trim(),
-        pptdf_people: parsePptdfBool(row["people"] || row["pptdf_people"] || row["pptdf - people"]),
-        pptdf_process: parsePptdfBool(row["process"] || row["pptdf_process"] || row["pptdf - process"]),
-        pptdf_technology: parsePptdfBool(row["technology"] || row["pptdf_technology"] || row["pptdf - technology"]),
-        pptdf_data: parsePptdfBool(row["data"] || row["pptdf_data"] || row["pptdf - data"]),
-        pptdf_facility: parsePptdfBool(row["facility"] || row["pptdf_facility"] || row["pptdf - facility"]),
+        pptdf_people: parsePptdfBool(
+          row["people"] || row["pptdf_people"] || row["pptdf - people"],
+        ),
+        pptdf_process: parsePptdfBool(
+          row["process"] || row["pptdf_process"] || row["pptdf - process"],
+        ),
+        pptdf_technology: parsePptdfBool(
+          row["technology"] ||
+            row["pptdf_technology"] ||
+            row["pptdf - technology"],
+        ),
+        pptdf_data: parsePptdfBool(
+          row["data"] || row["pptdf_data"] || row["pptdf - data"],
+        ),
+        pptdf_facility: parsePptdfBool(
+          row["facility"] || row["pptdf_facility"] || row["pptdf - facility"],
+        ),
       });
     }
   }
@@ -421,40 +531,71 @@ const parseAssessmentObjectivesTab = (
 const parseDpmpTab = (
   rows: ParsedRow[],
   versionId: string,
-): { principles: DpmpPrinciple[]; frameworkMappings: DpmpFrameworkMapping[] } => {
+): {
+  principles: DpmpPrinciple[];
+  frameworkMappings: DpmpFrameworkMapping[];
+} => {
   const principles: DpmpPrinciple[] = [];
   const frameworkMappings: DpmpFrameworkMapping[] = [];
 
   // Identify non-data columns (structural columns to skip for framework detection)
   const STRUCTURAL_COLS = new Set([
-    "principle_code", "dpmp_#", "principle_#", "code", "#",
-    "domain", "dpmp_domain",
-    "title", "principle", "dpmp_principle", "principle_title",
-    "description", "principle_description",
-    "scf_control", "scf_controls", "scf_control_mappings", "scf_control_codes",
-    "sort_order", "order",
+    "principle_code",
+    "dpmp_#",
+    "principle_#",
+    "code",
+    "#",
+    "domain",
+    "dpmp_domain",
+    "title",
+    "principle",
+    "dpmp_principle",
+    "principle_title",
+    "description",
+    "principle_description",
+    "scf_control",
+    "scf_controls",
+    "scf_control_mappings",
+    "scf_control_codes",
+    "sort_order",
+    "order",
   ]);
 
   for (const row of rows) {
     const principleCode =
-      row["principle_code"] || row["dpmp_#"] || row["principle_#"] || row["code"] || row["#"];
+      row["principle_code"] ||
+      row["dpmp_#"] ||
+      row["principle_#"] ||
+      row["code"] ||
+      row["#"];
     if (!principleCode) continue;
 
-    const domain = (
-      row["domain"] || row["dpmp_domain"] || "privacy_governance"
-    ).toLowerCase().replace(/ /g, "_") as DpmpPrinciple["domain"];
+    const domain = (row["domain"] || row["dpmp_domain"] || "privacy_governance")
+      .toLowerCase()
+      .replace(/ /g, "_") as DpmpPrinciple["domain"];
 
     const title =
-      row["title"] || row["principle"] || row["dpmp_principle"] || row["principle_title"] || "";
+      row["title"] ||
+      row["principle"] ||
+      row["dpmp_principle"] ||
+      row["principle_title"] ||
+      "";
     if (!title.trim()) continue;
 
     const description =
       row["description"] || row["principle_description"] || undefined;
 
     const scfControlsRaw =
-      row["scf_control"] || row["scf_controls"] || row["scf_control_mappings"] || row["scf_control_codes"] || "";
+      row["scf_control"] ||
+      row["scf_controls"] ||
+      row["scf_control_mappings"] ||
+      row["scf_control_codes"] ||
+      "";
     const scfControlCodes = scfControlsRaw
-      ? scfControlsRaw.split(/[,;]/).map((s: string) => s.trim()).filter(Boolean)
+      ? scfControlsRaw
+          .split(/[,;]/)
+          .map((s: string) => s.trim())
+          .filter(Boolean)
       : [];
 
     const sortOrder = principles.length + 1;
@@ -723,13 +864,23 @@ const parseCdpasTab = (
     const standardNumRaw =
       row["standard_#"] || row["standard_number"] || row["cdpas_standard"];
     const requirementCode =
-      row["sub_requirement_#"] || row["requirement_code"] || row["sub_requirement_code"];
+      row["sub_requirement_#"] ||
+      row["requirement_code"] ||
+      row["sub_requirement_code"];
     if (!requirementCode) continue;
 
-    const standardNum = standardNumRaw ? parseInt(standardNumRaw.toString(), 10) : 0;
-    const standardTitle = row["standard_title"] || row["standard"] || `Standard ${standardNum}`;
-    const reqTitle = row["sub_requirement"] || row["requirement_title"] || row["title"] || requirementCode;
-    const description = row["description"] || row["requirement_description"] || undefined;
+    const standardNum = standardNumRaw
+      ? parseInt(standardNumRaw.toString(), 10)
+      : 0;
+    const standardTitle =
+      row["standard_title"] || row["standard"] || `Standard ${standardNum}`;
+    const reqTitle =
+      row["sub_requirement"] ||
+      row["requirement_title"] ||
+      row["title"] ||
+      requirementCode;
+    const description =
+      row["description"] || row["requirement_description"] || undefined;
 
     if (standardNum > 0 && !standardByNumber.has(standardNum)) {
       const sId = crypto.randomUUID();
@@ -746,12 +897,27 @@ const parseCdpasTab = (
       });
     }
 
-    const standardId = standardByNumber.get(standardNum) ?? standards[0]?.id ?? crypto.randomUUID();
+    const standardId =
+      standardByNumber.get(standardNum) ??
+      standards[0]?.id ??
+      crypto.randomUUID();
 
     const methods: Array<"examine" | "interview" | "test"> = [];
-    if (row["examine"] && ["x", "yes", "true", "1"].includes(row["examine"].toLowerCase())) methods.push("examine");
-    if (row["interview"] && ["x", "yes", "true", "1"].includes(row["interview"].toLowerCase())) methods.push("interview");
-    if (row["test"] && ["x", "yes", "true", "1"].includes(row["test"].toLowerCase())) methods.push("test");
+    if (
+      row["examine"] &&
+      ["x", "yes", "true", "1"].includes(row["examine"].toLowerCase())
+    )
+      methods.push("examine");
+    if (
+      row["interview"] &&
+      ["x", "yes", "true", "1"].includes(row["interview"].toLowerCase())
+    )
+      methods.push("interview");
+    if (
+      row["test"] &&
+      ["x", "yes", "true", "1"].includes(row["test"].toLowerCase())
+    )
+      methods.push("test");
 
     const subReqId = crypto.randomUUID();
     subRequirements.push({
@@ -767,9 +933,15 @@ const parseCdpasTab = (
     });
 
     const controlsRaw =
-      row["scf_control_#"] || row["scf_control_mappings"] || row["scf_controls"] || "";
+      row["scf_control_#"] ||
+      row["scf_control_mappings"] ||
+      row["scf_controls"] ||
+      "";
     if (controlsRaw) {
-      for (const code of controlsRaw.split(/[,;]/).map((s: string) => s.trim()).filter(Boolean)) {
+      for (const code of controlsRaw
+        .split(/[,;]/)
+        .map((s: string) => s.trim())
+        .filter(Boolean)) {
         const controlId = controlByCode.get(code);
         if (controlId) {
           controlMappings.push({
@@ -808,15 +980,23 @@ const parseMadTab = (
 
   for (const row of rows) {
     const standardNumRaw =
-      row["standard_#"] || row["standard_number"] || row["madss_standard_number"];
+      row["standard_#"] ||
+      row["standard_number"] ||
+      row["madss_standard_number"];
     const requirementCode =
-      row["sub_requirement_#"] || row["requirement_code"] || row["sub_requirement_code"];
+      row["sub_requirement_#"] ||
+      row["requirement_code"] ||
+      row["sub_requirement_code"];
     if (!requirementCode) continue;
 
-    const standardNum = standardNumRaw ? parseInt(standardNumRaw.toString(), 10) : 0;
-    const standardTitle = row["standard_title"] || row["standard"] || `Standard ${standardNum}`;
+    const standardNum = standardNumRaw
+      ? parseInt(standardNumRaw.toString(), 10)
+      : 0;
+    const standardTitle =
+      row["standard_title"] || row["standard"] || `Standard ${standardNum}`;
     const phaseRaw = (row["phase"] || row["mad_phase"] || "pre_transaction")
-      .toLowerCase().replace(/[ \-]/g, "_") as MadStandard["phase"];
+      .toLowerCase()
+      .replace(/[ -]/g, "_") as MadStandard["phase"];
 
     if (standardNum > 0 && !standardByNumber.has(standardNum)) {
       const sId = crypto.randomUUID();
@@ -834,9 +1014,17 @@ const parseMadTab = (
       });
     }
 
-    const standardId = standardByNumber.get(standardNum) ?? standards[0]?.id ?? crypto.randomUUID();
-    const subReqTitle = row["sub_requirement"] || row["requirement_title"] || row["title"] || requirementCode;
-    const description = row["description"] || row["requirement_description"] || undefined;
+    const standardId =
+      standardByNumber.get(standardNum) ??
+      standards[0]?.id ??
+      crypto.randomUUID();
+    const subReqTitle =
+      row["sub_requirement"] ||
+      row["requirement_title"] ||
+      row["title"] ||
+      requirementCode;
+    const description =
+      row["description"] || row["requirement_description"] || undefined;
 
     const subReqId = crypto.randomUUID();
     subRequirements.push({
@@ -871,9 +1059,15 @@ const parseMadTab = (
     }
 
     const controlsRaw =
-      row["scf_control_#"] || row["scf_control_mappings"] || row["scf_controls"] || "";
+      row["scf_control_#"] ||
+      row["scf_control_mappings"] ||
+      row["scf_controls"] ||
+      "";
     if (controlsRaw) {
-      for (const code of controlsRaw.split(/[,;]/).map((s: string) => s.trim()).filter(Boolean)) {
+      for (const code of controlsRaw
+        .split(/[,;]/)
+        .map((s: string) => s.trim())
+        .filter(Boolean)) {
         const controlId = controlByCode.get(code);
         if (controlId) {
           controlMappings.push({
@@ -1138,7 +1332,11 @@ export const createXlsxScfImporter = (): ScfImporter => ({
         allAssessmentObjectives.push(...objectives);
       } else if (classification.type === "cdpas") {
         const rows = parseSheetToRows(sheet);
-        const { standards, subRequirements, controlMappings } = parseCdpasTab(rows, versionId, controlByCode);
+        const { standards, subRequirements, controlMappings } = parseCdpasTab(
+          rows,
+          versionId,
+          controlByCode,
+        );
         allCdpasStandards.push(...standards);
         allCdpasSubRequirements.push(...subRequirements);
         allCdpasControlMappings.push(...controlMappings);
@@ -1181,8 +1379,12 @@ export const createXlsxScfImporter = (): ScfImporter => ({
         allDpmpFrameworkMappings.push(...frameworkMappings);
       } else if (classification.type === "mad") {
         const rows = parseSheetToRows(sheet);
-        const { standards, subRequirements, maturityCriteria, controlMappings } =
-          parseMadTab(rows, versionId, controlByCode);
+        const {
+          standards,
+          subRequirements,
+          maturityCriteria,
+          controlMappings,
+        } = parseMadTab(rows, versionId, controlByCode);
         allMadStandards.push(...standards);
         allMadSubRequirements.push(...subRequirements);
         allMadMaturityCriteria.push(...maturityCriteria);
@@ -1218,6 +1420,35 @@ export const createXlsxScfImporter = (): ScfImporter => ({
       }
     }
 
+    // ──── STRM Inference ────
+    // Infer STRM relationship types for all parsed crosswalk mappings.
+    // Source: structural cardinality analysis (NIST IR 8477 — Opção A MVP).
+    // These qualify scf_mappings rows and are stored in scf_strm_relationships.
+    const strmInferred = inferStrmRelationships(allMappings);
+    const strmRelationships: ScfStrmRelationship[] = strmInferred.map((e) => ({
+      id: newId(),
+      scf_mapping_id: e.mapping_id,
+      relationship_type:
+        e.relationship_type as ScfStrmRelationship["relationship_type"],
+      relationship_strength:
+        e.relationship_strength as ScfStrmRelationship["relationship_strength"],
+      rationale: e.rationale,
+      source: e.source,
+    }));
+
+    // Also update allMappings relationship_type to the inferred STRM type
+    // so scf_mappings.relationship_type reflects actual STRM (not hardcoded "related")
+    const mappingIdToStrmType = new Map<string, string>();
+    for (const e of strmInferred) {
+      mappingIdToStrmType.set(e.mapping_id, e.relationship_type);
+    }
+    for (const m of allMappings) {
+      const inferredType = mappingIdToStrmType.get(m.id);
+      if (inferredType) {
+        (m as { relationship_type: string }).relationship_type = inferredType;
+      }
+    }
+
     const importRun: ScfImportRun = {
       id: newId(),
       scf_version_id: versionId,
@@ -1236,7 +1467,7 @@ export const createXlsxScfImporter = (): ScfImporter => ({
         frameworks: allFrameworks.length,
         requirements: allRequirements.length,
         mappings: allMappings.length,
-        strm_relationships: 0,
+        strm_relationships: strmInferred.length,
         warnings: allWarnings.length,
         synthetic_records: 0,
         // Extended stats
@@ -1254,8 +1485,6 @@ export const createXlsxScfImporter = (): ScfImporter => ({
       },
       trace_id: `xlsx-importer-${Date.now()}`,
     };
-
-    const strmRelationships: ScfStrmRelationship[] = [];
 
     return {
       dataset: {

@@ -201,14 +201,68 @@ export const ScfMappingResponseSchema = ScfStructuredMappingSchema.extend({
   trace_id: z.string().optional(),
 });
 
+/**
+ * ScfStrmRelationshipSchema — reflects the `scf_strm_relationships` Drizzle table.
+ * Each record qualifies one `scf_mappings` row with a formal STRM type (NIST IR 8477).
+ *
+ * source values:
+ *   - "inferred_structural_analysis_v1" — derived from cardinality analysis
+ *   - URL string                        — from official SCF STRM PDF crosswalk
+ */
 export const ScfStrmRelationshipSchema = z.object({
   id: UuidSchema,
   organization_id: UuidSchema.optional(),
+  scf_mapping_id: UuidSchema,
   relationship_type: ScfRelationshipTypeSchema,
-  label: z.string(),
-  description: z.string().optional(),
-  directionality: z.string().optional(),
-  default_strength_range: z.string().optional(),
+  relationship_strength: z.enum(["strong", "moderate", "weak"]),
+  rationale: z.string().optional(),
+  source: z.string().min(1),
+});
+
+export const ScfStrmRelationshipResponseSchema =
+  ScfStrmRelationshipSchema.extend({
+    // denormalized fields for convenience
+    scf_version_id: UuidSchema.optional(),
+    framework_code: z.string().optional(),
+    framework_name: z.string().optional(),
+    requirement_code: z.string().optional(),
+    control_code: z.string().optional(),
+    trace_id: z.string().optional(),
+  });
+
+export const ScfStrmQuerySchema = z.object({
+  scf_version_id: UuidSchema,
+  framework_id: UuidSchema.optional(),
+  control_id: UuidSchema.optional(),
+  relationship_type: ScfRelationshipTypeSchema.optional(),
+  limit: z.coerce.number().int().positive().max(500).default(100),
+  offset: z.coerce.number().int().nonnegative().default(0),
+});
+
+const strmBreakdownItemSchema = z.object({
+  count: z.number().int().nonnegative(),
+  percentage: z.number().min(0).max(100),
+});
+
+export const ScfStrmCoverageResponseSchema = z.object({
+  framework_id: UuidSchema,
+  framework_code: z.string(),
+  framework_name: z.string(),
+  scf_version_id: UuidSchema,
+  total_mappings: z.number().int().nonnegative(),
+  strm_breakdown: z.object({
+    equal: strmBreakdownItemSchema,
+    subset: strmBreakdownItemSchema,
+    superset: strmBreakdownItemSchema,
+    intersecting: strmBreakdownItemSchema,
+    related: strmBreakdownItemSchema,
+    no_relationship: strmBreakdownItemSchema,
+    source_defined: strmBreakdownItemSchema,
+  }),
+  /** Fraction of mappings with equal | subset | superset (high-confidence coverage) */
+  coverage_quality_score: z.number().min(0).max(1),
+  inference_source: z.string(),
+  trace_id: z.string().optional(),
 });
 
 export const ScfImportRunSchema = z.object({
@@ -278,6 +332,13 @@ export type ScfFrameworkRequirement = z.infer<
 >;
 export type ScfMapping = z.infer<typeof ScfStructuredMappingSchema>;
 export type ScfStrmRelationship = z.infer<typeof ScfStrmRelationshipSchema>;
+export type ScfStrmRelationshipResponse = z.infer<
+  typeof ScfStrmRelationshipResponseSchema
+>;
+export type ScfStrmQuery = z.infer<typeof ScfStrmQuerySchema>;
+export type ScfStrmCoverageResponse = z.infer<
+  typeof ScfStrmCoverageResponseSchema
+>;
 export type ScfImportRun = z.infer<typeof ScfImportRunSchema>;
 export type ScfImportSource = z.infer<typeof ScfImportSourceSchema>;
 export type ScfImportResult = z.infer<typeof ScfImportResultSchema>;

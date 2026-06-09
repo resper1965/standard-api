@@ -15,6 +15,8 @@
     "db:seed": "tsx --env-file=../../.env src/seed.ts",
     "db:seed:scf": "tsx --env-file=../../.env src/seed-scf-catalog.ts",
     "db:seed:scf:dry-run": "tsx --env-file=../../.env src/seed-scf-catalog.ts --dry-run",
+    "db:seed:strm": "tsx --env-file=../../.env src/seed-strm-bundle.ts",
+    "db:seed:strm:dry-run": "tsx --env-file=../../.env src/seed-strm-bundle.ts --dry-run",
     "db:lifecycle-proof": "tsx --env-file=../../.env src/lifecycle-proof.ts"
   },
   "dependencies": {

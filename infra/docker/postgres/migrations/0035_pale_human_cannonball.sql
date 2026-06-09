@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "scf_strm_mapping_uidx" ON "scf_strm_relationships" USING btree ("scf_mapping_id");

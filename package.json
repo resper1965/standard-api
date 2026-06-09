@@ -38,6 +38,8 @@
     "cf:deploy:production": "node scripts/deploy-cloudflare.mjs production",
     "db:seed": "pnpm --filter @standard/schemas db:seed",
     "db:seed:scf": "pnpm --filter @standard/schemas db:seed:scf",
+    "db:seed:strm": "pnpm --filter @standard/schemas db:seed:strm",
+    "db:seed:strm:dry-run": "pnpm --filter @standard/schemas db:seed:strm:dry-run",
     "db:studio": "echo \"db:studio ainda não configurado\""
   },
   "lint-staged": {
