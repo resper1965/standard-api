@@ -251,9 +251,9 @@ export function DashboardLayout() {
       {/* User footer */}
       <div className="border-t border-border/50 p-3">
         <div className="mb-3 flex items-center gap-3 rounded-lg px-3 py-2.5 bg-muted/40">
-          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground text-xs font-bold shrink-0">
-            {userInitial}
-          </div>
+          <div className="h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0" style={{ background: "rgba(143,168,155,0.15)", border: "1px solid rgba(143,168,155,0.3)", color: "#8fa89b" }}>
+              {userInitial}
+            </div>
           <div className="flex-1 overflow-hidden min-w-0">
             <p className="truncate text-sm font-medium text-foreground">{session.user.name}</p>
             <p className="truncate text-[11px] text-muted-foreground">{session.user.email}</p>
@@ -298,9 +298,12 @@ export function DashboardLayout() {
       {/* ── Desktop Sidebar ───────────────────────────── */}
       <aside className="w-[260px] flex-col border-r border-border/60 bg-card hidden md:flex h-screen sticky top-0">
         <div className="flex h-14 items-center px-6 border-b border-border/50 shrink-0">
-          <Link to="/dashboard" className="flex items-center gap-2">
-            <span className="text-[1.46rem] tracking-tighter">
-              <span className="brand-logo">standard<span className="brand-logo-dot">.</span></span>
+          <Link to="/dashboard" className="flex flex-col gap-0">
+            <span style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif", fontWeight: 300, fontSize: "1.3rem", letterSpacing: "-0.04em", color: "#e9ecef", lineHeight: 1 }}>
+              b<span style={{ color: "#8fa89b" }}>.</span>standard
+            </span>
+            <span style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif", fontWeight: 300, fontSize: "0.65rem", letterSpacing: "0.06em", color: "#6c757d", textTransform: "lowercase" }}>
+              be secure<span style={{ color: "#8fa89b" }}>.</span>
             </span>
           </Link>
         </div>
@@ -322,8 +325,8 @@ export function DashboardLayout() {
         }`}
       >
         <div className="flex h-14 items-center justify-between px-5 border-b border-border/50">
-          <span className="text-[1.46rem] tracking-tighter">
-            <span className="brand-logo">standard<span className="brand-logo-dot">.</span></span>
+          <span style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif", fontWeight: 300, fontSize: "1.2rem", letterSpacing: "-0.04em", color: "#e9ecef" }}>
+            b<span style={{ color: "#8fa89b" }}>.</span>standard
           </span>
           <Button variant="ghost" size="icon" onClick={closeMobile} className="h-8 w-8">
             <X className="h-4 w-4" />
@@ -437,10 +440,10 @@ function DesktopTopbar({
           aria-label="Notifications"
         >
           <Bell className="h-4 w-4" />
-          <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-primary" />
+          <span className="absolute top-1 right-1 h-2 w-2 rounded-full" style={{ background: "#8fa89b" }} />
         </button>
 
-        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground text-xs font-bold">
+        <div className="h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: "rgba(143,168,155,0.15)", border: "1px solid rgba(143,168,155,0.3)", color: "#8fa89b" }}>
           {userInitial}
         </div>
       </div>
