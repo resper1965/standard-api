@@ -1,7 +1,19 @@
-import { CreateAssessmentRequestSchema, UpdateAssessmentRequestSchema, type ComplianceGateResponse, type ComplianceGateStatus } from "@standard/schemas";
+import {
+  CreateAssessmentRequestSchema,
+  UpdateAssessmentRequestSchema,
+  type ComplianceGateResponse,
+  type ComplianceGateStatus,
+} from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";
-import { json, newId, parseJson, routeParam, routeUuidParam , requireOrganizationId } from "../http";
+import {
+  json,
+  newId,
+  parseJson,
+  routeParam,
+  routeUuidParam,
+  requireOrganizationId,
+} from "../http";
 import { assessmentResponse, lifecycleEventResponse } from "../presenters";
 import { z } from "zod";
 
@@ -19,7 +31,7 @@ import { z } from "zod";
 function assertTenantOwnership(
   resourceTenantId: string | undefined | null,
   resolvedTenantId: string,
-  resourceType = "Assessment"
+  resourceType = "Assessment",
 ): void {
   // !resourceTenantId covers undefined, null and empty string —
   // all are treated as FORBIDDEN (corrupted data must never pass the guard).
@@ -27,17 +39,19 @@ function assertTenantOwnership(
     throw new ApiError(
       "FORBIDDEN",
       `${resourceType} does not belong to the current tenant.`,
-      403
+      403,
     );
   }
 }
 
-const AssessmentAutomationConfigSchema = z.object({
-  agents_enabled: z.array(z.string()).optional(),
-  auto_remediation: z.boolean().optional(),
-  approval_gates: z.boolean().optional(),
-  schedule: z.string().optional()
-}).openapi("AssessmentAutomationConfig");
+const AssessmentAutomationConfigSchema = z
+  .object({
+    agents_enabled: z.array(z.string()).optional(),
+    auto_remediation: z.boolean().optional(),
+    approval_gates: z.boolean().optional(),
+    schedule: z.string().optional(),
+  })
+  .openapi("AssessmentAutomationConfig");
 
 export const assessmentsRoutes: RouteDefinition[] = [
   {
@@ -49,19 +63,25 @@ export const assessmentsRoutes: RouteDefinition[] = [
     permissions: ["assessment:create"],
     bodySchema: CreateAssessmentRequestSchema,
     handler: async ({ validatedBody, deps, organizationId, traceId }) => {
-      const body = validatedBody as import("@standard/schemas").CreateAssessmentRequest;
+      const body =
+        validatedBody as import("@standard/schemas").CreateAssessmentRequest;
 
       // Bridge Standard Native Auth text ID → Standard domain UUID context
-      const standardAuthOrgId = body.organization_id ?? requireOrganizationId({ organizationId });
+      const standardAuthOrgId =
+        body.organization_id ?? requireOrganizationId({ organizationId });
       if (!deps.resolveOrganizationContext) {
-        throw new ApiError("INTERNAL_ERROR", "Tenant mapping not configured.", 500);
+        throw new ApiError(
+          "INTERNAL_ERROR",
+          "Tenant mapping not configured.",
+          500,
+        );
       }
       const ctx = await deps.resolveOrganizationContext(standardAuthOrgId);
       if (!ctx) {
         throw new ApiError(
           "NOT_FOUND",
           `Organization "${standardAuthOrgId}" not found in Standard Native Auth. Please create an organization first.`,
-          404
+          404,
         );
       }
 
@@ -71,15 +91,17 @@ export const assessmentsRoutes: RouteDefinition[] = [
         name: body.name,
         scf_version_id: body.scf_version_id,
         documentCount: body.document_count,
-        trace_id: traceId
+        trace_id: traceId,
       });
 
-      const version = await deps.scf.versions.getVersion(assessment.scf_version_id);
+      const version = await deps.scf.versions.getVersion(
+        assessment.scf_version_id,
+      );
       const res = assessmentResponse(assessment);
       if (version) res.scf_version_label = version.version_label;
 
       return json(res, { status: 201 });
-    }
+    },
   },
   {
     method: "GET",
@@ -90,16 +112,21 @@ export const assessmentsRoutes: RouteDefinition[] = [
       const resolvedTenantId = requireOrganizationId({ organizationId });
 
       const tenantDb = deps.assessments.withOrganization(resolvedTenantId);
-      const assessment = await tenantDb.get(routeUuidParam(params, "assessmentId"));
-      if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
+      const assessment = await tenantDb.get(
+        routeUuidParam(params, "assessmentId"),
+      );
+      if (!assessment)
+        throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
       assertTenantOwnership(assessment.organization_id, resolvedTenantId);
 
-      const version = await deps.scf.versions.getVersion(assessment.scf_version_id);
+      const version = await deps.scf.versions.getVersion(
+        assessment.scf_version_id,
+      );
       const res = assessmentResponse(assessment);
       if (version) res.scf_version_label = version.version_label;
 
       return json(res);
-    }
+    },
   },
   {
     method: "GET",
@@ -112,15 +139,15 @@ export const assessmentsRoutes: RouteDefinition[] = [
       const tenantDb = deps.assessments.withOrganization(resolvedTenantId);
       const assessments = await tenantDb.listAll();
       const versions = await deps.scf.versions.listVersions();
-      const versionMap = new Map(versions.map(v => [v.id, v.version_label]));
-      const enriched = assessments.map(a => {
+      const versionMap = new Map(versions.map((v) => [v.id, v.version_label]));
+      const enriched = assessments.map((a) => {
         const res = assessmentResponse(a);
         const label = versionMap.get(a.scf_version_id);
         if (label) res.scf_version_label = label;
         return res;
       });
       return json({ data: enriched, trace_id: traceId });
-    }
+    },
   },
   {
     method: "GET",
@@ -131,17 +158,19 @@ export const assessmentsRoutes: RouteDefinition[] = [
       const resolvedTenantId = requireOrganizationId({ organizationId });
 
       const tenantDb = deps.assessments.withOrganization(resolvedTenantId);
-      const assessments = await tenantDb.listByOrganization(routeUuidParam(params, "organizationId"));
+      const assessments = await tenantDb.listByOrganization(
+        routeUuidParam(params, "organizationId"),
+      );
       const versions = await deps.scf.versions.listVersions();
-      const versionMap = new Map(versions.map(v => [v.id, v.version_label]));
-      const enriched = assessments.map(a => {
+      const versionMap = new Map(versions.map((v) => [v.id, v.version_label]));
+      const enriched = assessments.map((a) => {
         const res = assessmentResponse(a);
         const label = versionMap.get(a.scf_version_id);
         if (label) res.scf_version_label = label;
         return res;
       });
       return json({ data: enriched, trace_id: traceId });
-    }
+    },
   },
   {
     method: "PATCH",
@@ -151,22 +180,28 @@ export const assessmentsRoutes: RouteDefinition[] = [
     permissions: ["assessment:update"],
     bodySchema: UpdateAssessmentRequestSchema,
     handler: async ({ validatedBody, deps, params, organizationId }) => {
-      const body = validatedBody as import("@standard/schemas").UpdateAssessmentRequest;
+      const body =
+        validatedBody as import("@standard/schemas").UpdateAssessmentRequest;
       const resolvedTenantId = requireOrganizationId({ organizationId });
       const tenantDb = deps.assessments.withOrganization(resolvedTenantId);
-      const assessment = await tenantDb.get(routeUuidParam(params, "assessmentId"));
-      if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
+      const assessment = await tenantDb.get(
+        routeUuidParam(params, "assessmentId"),
+      );
+      if (!assessment)
+        throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
       assertTenantOwnership(assessment.organization_id, resolvedTenantId);
 
       const updated = { ...assessment, name: body.name ?? assessment.name };
       await tenantDb.save(updated);
-      
-      const version = await deps.scf.versions.getVersion(updated.scf_version_id);
+
+      const version = await deps.scf.versions.getVersion(
+        updated.scf_version_id,
+      );
       const res = assessmentResponse(updated);
       if (version) res.scf_version_label = version.version_label;
 
       return json(res);
-    }
+    },
   },
   {
     method: "GET",
@@ -176,16 +211,19 @@ export const assessmentsRoutes: RouteDefinition[] = [
     handler: async ({ deps, params, organizationId, traceId }) => {
       const resolvedTenantId = requireOrganizationId({ organizationId });
       const tenantDb = deps.assessments.withOrganization(resolvedTenantId);
-      const assessment = await tenantDb.get(routeUuidParam(params, "assessmentId"));
-      if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
+      const assessment = await tenantDb.get(
+        routeUuidParam(params, "assessmentId"),
+      );
+      if (!assessment)
+        throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
       assertTenantOwnership(assessment.organization_id, resolvedTenantId);
       return json({
         assessment_id: assessment.assessment_id,
         organization_id: assessment.organization_id,
         state: assessment.snapshot.state,
-        trace_id: traceId
+        trace_id: traceId,
       });
-    }
+    },
   },
   {
     method: "GET",
@@ -197,16 +235,20 @@ export const assessmentsRoutes: RouteDefinition[] = [
       const assessmentId = routeUuidParam(params, "assessmentId");
       const tenantDb = deps.assessments.withOrganization(resolvedTenantId);
       const assessment = await tenantDb.get(assessmentId);
-      if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
+      if (!assessment)
+        throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
       assertTenantOwnership(assessment.organization_id, resolvedTenantId);
-      const events = await deps.lifecycleEvents.listByAssessment(assessmentId, resolvedTenantId);
+      const events = await deps.lifecycleEvents.listByAssessment(
+        assessmentId,
+        resolvedTenantId,
+      );
       return json({
         assessment_id: assessment.assessment_id,
         organization_id: assessment.organization_id,
         events: events.map(lifecycleEventResponse),
-        trace_id: traceId
+        trace_id: traceId,
       });
-    }
+    },
   },
   {
     method: "GET",
@@ -218,11 +260,16 @@ export const assessmentsRoutes: RouteDefinition[] = [
       const assessmentId = routeUuidParam(params, "assessmentId");
       const tenantDb = deps.assessments.withOrganization(resolvedTenantId);
       const assessment = await tenantDb.get(assessmentId);
-      if (!assessment) throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
+      if (!assessment)
+        throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
       assertTenantOwnership(assessment.organization_id, resolvedTenantId);
 
       // Find latest approved gap analysis version
-      const versions = await deps.gapAnalysis.repositories.gapVersions.listByAssessment(assessmentId, resolvedTenantId);
+      const versions =
+        await deps.gapAnalysis.repositories.gapVersions.listByAssessment(
+          assessmentId,
+          resolvedTenantId,
+        );
       const approved = versions
         .filter((v) => v.status === "approved")
         .sort((a, b) => b.version_number - a.version_number)[0];
@@ -235,19 +282,25 @@ export const assessmentsRoutes: RouteDefinition[] = [
           critical_findings: 0,
           high_findings: 0,
           total_findings: 0,
-          findings_summary: "No approved gap analysis found for this assessment.",
+          findings_summary:
+            "No approved gap analysis found for this assessment.",
           checked_at: new Date().toISOString(),
-          trace_id: traceId
+          trace_id: traceId,
         };
         return json(gate);
       }
 
-      const findings = await deps.gapAnalysis.repositories.gapFindings.listByVersion(approved.gap_analysis_version_id, resolvedTenantId);
+      const findings =
+        await deps.gapAnalysis.repositories.gapFindings.listByVersion(
+          approved.gap_analysis_version_id,
+          resolvedTenantId,
+        );
       const critical = findings.filter((f) => f.severity === "critical").length;
       const high = findings.filter((f) => f.severity === "high").length;
       const total = findings.length;
 
-      const status: ComplianceGateStatus = critical > 0 ? "fail" : high > 3 ? "fail" : "pass";
+      const status: ComplianceGateStatus =
+        critical > 0 ? "fail" : high > 3 ? "fail" : "pass";
 
       const gate: ComplianceGateResponse = {
         gate_id: newId(),
@@ -258,11 +311,12 @@ export const assessmentsRoutes: RouteDefinition[] = [
         high_findings: high,
         total_findings: total,
         gap_analysis_version_id: approved.gap_analysis_version_id,
-        findings_summary: status === "pass"
-          ? `Assessment passes compliance gate. ${total} findings, none critical.`
-          : `Assessment BLOCKED: ${critical} critical, ${high} high findings require remediation.`,
+        findings_summary:
+          status === "pass"
+            ? `Assessment passes compliance gate. ${total} findings, none critical.`
+            : `Assessment BLOCKED: ${critical} critical, ${high} high findings require remediation.`,
         checked_at: new Date().toISOString(),
-        trace_id: traceId
+        trace_id: traceId,
       };
 
       // Best-effort webhook dispatch for CI/CD subscribers
@@ -270,7 +324,7 @@ export const assessmentsRoutes: RouteDefinition[] = [
         try {
           const subscribers = await deps.webhooks.findSubscribers(
             assessment.organization_id,
-            "compliance.gate.evaluated"
+            "compliance.gate.evaluated",
           );
           for (const endpoint of subscribers) {
             if (!endpoint.enabled) continue;
@@ -286,7 +340,7 @@ export const assessmentsRoutes: RouteDefinition[] = [
               last_attempted_at: null,
               next_retry_at: new Date().toISOString(),
               response_body: null,
-              created_at: new Date().toISOString()
+              created_at: new Date().toISOString(),
             });
           }
         } catch {
@@ -295,7 +349,7 @@ export const assessmentsRoutes: RouteDefinition[] = [
       }
 
       return json(gate);
-    }
+    },
   },
   {
     method: "PUT",
@@ -304,12 +358,20 @@ export const assessmentsRoutes: RouteDefinition[] = [
     requireActor: true,
     permissions: ["assessment:update"],
     bodySchema: AssessmentAutomationConfigSchema,
-    handler: async ({ validatedBody, deps, params, organizationId, traceId }) => {
+    handler: async ({
+      validatedBody,
+      deps,
+      params,
+      organizationId,
+      traceId,
+    }) => {
       const resolvedTenantId = requireOrganizationId({ organizationId });
 
       const assessmentId = routeUuidParam(params, "assessmentId");
-      const assessment = await deps.assessments.withOrganization(resolvedTenantId).get(assessmentId);
-      
+      const assessment = await deps.assessments
+        .withOrganization(resolvedTenantId)
+        .get(assessmentId);
+
       if (!assessment) {
         throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
       }
@@ -317,27 +379,100 @@ export const assessmentsRoutes: RouteDefinition[] = [
 
       // Instead of changing the schema natively, we'll embed the config in snapshot.automation_config
       // to keep it within the existing AssessmentRecord bounds without schema migrations
-      const config = validatedBody as import("zod").infer<typeof AssessmentAutomationConfigSchema>;
-      
+      const config = validatedBody as import("zod").infer<
+        typeof AssessmentAutomationConfigSchema
+      >;
+
       const snapshot = assessment.snapshot || {};
       (snapshot as any).automation_config = config;
-      
+
       const updated = {
         ...assessment,
         snapshot,
-        trace_id: traceId
+        trace_id: traceId,
       };
-      
-      await deps.assessments.withOrganization(updated.organization_id).save(updated);
+
+      await deps.assessments
+        .withOrganization(updated.organization_id)
+        .save(updated);
       await deps.audit.record("assessment.rules.updated", {
         assessment_id: assessmentId,
         organization_id: resolvedTenantId,
         trace_id: traceId,
-        config
+        config,
       });
-      
-      return json({ data: updated, trace_id: traceId });
-    }
-  }
-];
 
+      return json({ data: updated, trace_id: traceId });
+    },
+  },
+  {
+    method: "POST",
+    path: "/api/v1/assessments/:assessmentId/new-cycle",
+    protected: true,
+    requireActor: true,
+    permissions: ["assessment:create"],
+    handler: async ({ deps, params, organizationId, actorId, traceId }) => {
+      const resolvedTenantId = requireOrganizationId({ organizationId });
+      const parentId = routeUuidParam(params, "assessmentId");
+
+      const tenantDb = deps.assessments.withOrganization(resolvedTenantId);
+      const parent = await tenantDb.get(parentId);
+      if (!parent)
+        throw new ApiError("NOT_FOUND", "Assessment not found.", 404);
+      assertTenantOwnership(parent.organization_id, resolvedTenantId);
+
+      // Only closed assessments can start a new cycle (AGENTS.md §11: closed is terminal and immutable)
+      if (parent.snapshot.state !== "closed") {
+        throw new ApiError(
+          "VALIDATION_ERROR",
+          `Only closed assessments can start a new cycle. Current state: ${parent.snapshot.state}`,
+          400,
+        );
+      }
+
+      // Resolve the latest approved SoA version for this assessment (carries forward as baseline)
+      const soaVersions =
+        await deps.gapAnalysis.repositories.gapVersions.listByAssessment(
+          parentId,
+          resolvedTenantId,
+        );
+      const latestApprovedGap = soaVersions
+        .filter((v) => v.status === "approved")
+        .sort((a, b) => b.version_number - a.version_number)[0];
+
+      const cycleNumber = (parent.cycle_number ?? 1) + 1;
+      const newAssessment = await tenantDb.create({
+        assessment_id: newId(),
+        name: `${parent.name} — Cycle ${cycleNumber}`,
+        scf_version_id: parent.scf_version_id,
+        parent_assessment_id: parentId,
+        cycle_number: cycleNumber,
+        baseline_soa_version_id:
+          latestApprovedGap?.gap_analysis_version_id ?? null,
+        trace_id: traceId,
+        documentCount: 0,
+      });
+
+      await deps.audit.record("assessment.cycle.started", {
+        organization_id: resolvedTenantId,
+        parent_assessment_id: parentId,
+        new_assessment_id: newAssessment.assessment_id,
+        cycle_number: cycleNumber,
+        actor_id: actorId,
+        trace_id: traceId,
+      });
+
+      const res = assessmentResponse(newAssessment);
+      return json(
+        {
+          ...res,
+          parent_assessment_id: parentId,
+          cycle_number: cycleNumber,
+          baseline_soa_version_id:
+            latestApprovedGap?.gap_analysis_version_id ?? null,
+        },
+        { status: 201 },
+      );
+    },
+  },
+];

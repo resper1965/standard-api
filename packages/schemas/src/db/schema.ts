@@ -463,6 +463,13 @@ export const scfControls = pgTable(
     sortOrder: integer("sort_order").default(0).notNull(),
     status: text("status").default("active").notNull(),
     isSynthetic: boolean("is_synthetic").default(false).notNull(),
+    /**
+     * SCRMS-PIG step (1-30) this control contributes to.
+     * null = control not yet mapped to a SCRMS-PIG step.
+     * Set at import time or via admin tooling; never inferred by LLM.
+     */
+    scrmsPigStep: integer("scrms_pig_step"),
+    scrmsPigCategory: text("scrms_pig_category"), // "due_diligence" | "due_care" | null
     ...timestamps(),
   },
   (table) => [
@@ -878,6 +885,13 @@ export const assessments = pgTable(
     observationStartDate: date("observation_start_date"),
     observationEndDate: date("observation_end_date"),
     traceId: text("trace_id").notNull(),
+    /**
+     * Continuous Assessment Cycle support (SCRMS-PIG Due Care: Steps 27-30)
+     * New cycles are new entities — closed assessments remain immutable (AGENTS.md §11).
+     */
+    parentAssessmentId: uuid("parent_assessment_id"), // nullable — FK enforced at runtime
+    cycleNumber: integer("cycle_number").default(1).notNull(),
+    baselineSoaVersionId: uuid("baseline_soa_version_id"), // nullable — SoA to carry forward
     ...timestamps(),
   },
   (table) => [
@@ -1707,6 +1721,8 @@ export const gapFindings = pgTable(
     requiresUserValidation: boolean("requires_user_validation")
       .default(true)
       .notNull(),
+    /** MCR flag: true when the gap is tied to a Minimum Compliance Requirement (SCRMS-PIG Step 1c) */
+    isMcrGap: boolean("is_mcr_gap").default(false).notNull(),
     responsibilityType: responsibilityTypeEnum("responsibility_type").default(
       "internal",
     ),

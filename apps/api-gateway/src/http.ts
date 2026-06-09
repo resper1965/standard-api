@@ -57,6 +57,10 @@ export type AssessmentRecord = {
   created_at?: string;
   updated_at?: string;
   scf_version_label?: string;
+  /** Continuous Assessment Cycle (SCRMS-PIG Due Care: Steps 27-30) */
+  parent_assessment_id?: string | null;
+  cycle_number?: number;
+  baseline_soa_version_id?: string | null;
 };
 
 export type ApprovalRecord = ApprovalEvent & {
