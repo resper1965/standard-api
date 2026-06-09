@@ -13,6 +13,12 @@ import type {
   SoaItemResponse,
   SoaVersionResponse,
 } from "../types";
+import {
+  deriveRocDetermination,
+  calculateRiskScore,
+  severityToImpactEffect,
+  likelihoodToOccurrenceLikelihood,
+} from "./risk-score.service";
 
 export class GapDraftService {
   constructor(private readonly deps: GapAnalysisDependencies) {}
@@ -109,6 +115,42 @@ export class GapDraftService {
       }
     }
 
+    // SCR-RMM Step 14: Derive ROC determination deterministically from severity + assessment_status
+    // Non-blocking: on any error, omit the field (conservative — do not escalate)
+    const rocDetermination = (() => {
+      try {
+        return (
+          deriveRocDetermination(
+            assessment.severity,
+            assessment.status,
+            assessment.gapType,
+          ) ?? undefined
+        );
+      } catch {
+        return undefined;
+      }
+    })();
+
+    // SCR-RMM Step 12: Calculate inherent and residual risk scores
+    // Uses severity-mapped IE and likelihood string-mapped OL (conservative defaults if absent)
+    const riskScores = (() => {
+      try {
+        const ie = severityToImpactEffect(assessment.severity);
+        // likelihood is not on EvidenceFindingResponse — default to conservative OL=3 (unlikely)
+        const ol = likelihoodToOccurrenceLikelihood(undefined);
+        const scores = calculateRiskScore({
+          impactValue: ie,
+          likelihoodValue: ol,
+        });
+        return {
+          inherent_risk_score: String(scores.inherentRisk),
+          residual_risk_score: String(scores.residualRisk),
+        };
+      } catch {
+        return {};
+      }
+    })();
+
     return {
       gap_finding_id: crypto.randomUUID(),
       organization_id: context.organizationId,
@@ -137,6 +179,8 @@ export class GapDraftService {
       responsibility_type: "internal",
       confidence_score: evidenceFinding?.confidence_score ?? 0,
       requires_user_validation: assessment.requiresUserValidation,
+      ...(rocDetermination ? { roc_determination: rocDetermination } : {}),
+      ...riskScores,
       created_at: now,
       updated_at: now,
     };
