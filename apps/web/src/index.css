@@ -174,7 +174,7 @@
   }
   
   .text-gradient-premium {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary via-blue-400 to-indigo-500 dark:from-primary dark:via-sky-300 dark:to-primary/80;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-[#8fa89b] via-[#adc4b8] to-[#8fa89b];
   }
 
   @keyframes auraPulse {

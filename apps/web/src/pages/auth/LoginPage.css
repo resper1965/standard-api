@@ -55,7 +55,8 @@
   -moz-osx-font-smoothing: grayscale;
   letter-spacing: -0.01em;
 
-  min-height: 100vh;
+  min-height: 100dvh;
+  height: 100dvh;
   background: var(--lp-bg);
   color: var(--lp-text);
   display: flex;
@@ -176,7 +177,7 @@
   z-index: 10;
   display: flex;
   width: 100%;
-  min-height: 100vh;
+  height: 100%;
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -426,9 +427,15 @@
   justify-content: center;
   padding: 2.5rem 2rem;
   position: relative;
+  overflow-y: auto;
+  scrollbar-width: none;
   opacity: 0;
   transform: translateY(14px);
   transition: opacity 0.55s var(--lp-ease-out), transform 0.55s var(--lp-ease-out);
+}
+
+.lp-right::-webkit-scrollbar {
+  display: none;
 }
 
 .lp-right--in {
