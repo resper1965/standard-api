@@ -349,16 +349,16 @@ export function LoginPage() {
           {/* Hero copy */}
           <div className="lp-hero">
             <p className="lp-hero-eyebrow">
-              Security Assessment Platform
+              API · MCP · SDK
             </p>
             <h1 className="lp-hero-title">
-              Structured compliance.{" "}
-              <span className="lp-hero-accent">Without the chaos.</span>
+              Security assessments{" "}
+              <span className="lp-hero-accent">as infrastructure.</span>
             </h1>
             <p className="lp-hero-desc">
-              b.standard transforms your security assessment lifecycle into a
-              structured, traceable workflow — every control mapped, every gap
-              scored, every finding audit-ready. At API speed.
+              b.standard is a headless assessment engine — REST API, MCP server
+              and TypeScript SDK. Build your own compliance workflows, integrate
+              with any tool, run assessments programmatically.
             </p>
           </div>
 
