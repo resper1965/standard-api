@@ -502,29 +502,43 @@ const parseAssessmentObjectivesTab = (
     }
 
     if (objectiveCode && text) {
+      const pptdfPeople = parsePptdfBool(
+        row["people"] || row["pptdf_people"] || row["pptdf - people"],
+      );
+      const pptdfProcess = parsePptdfBool(
+        row["process"] || row["pptdf_process"] || row["pptdf - process"],
+      );
+      const pptdfTechnology = parsePptdfBool(
+        row["technology"] ||
+          row["pptdf_technology"] ||
+          row["pptdf - technology"],
+      );
+      const pptdfData = parsePptdfBool(
+        row["data"] || row["pptdf_data"] || row["pptdf - data"],
+      );
+      const pptdfFacility = parsePptdfBool(
+        row["facility"] || row["pptdf_facility"] || row["pptdf - facility"],
+      );
+
       result.push({
         id: crypto.randomUUID(),
         scf_version_id: versionId,
         scf_control_id: controlId,
         objective_code: objectiveCode.trim(),
         text: text.trim(),
-        pptdf_people: parsePptdfBool(
-          row["people"] || row["pptdf_people"] || row["pptdf - people"],
-        ),
-        pptdf_process: parsePptdfBool(
-          row["process"] || row["pptdf_process"] || row["pptdf - process"],
-        ),
-        pptdf_technology: parsePptdfBool(
-          row["technology"] ||
-            row["pptdf_technology"] ||
-            row["pptdf - technology"],
-        ),
-        pptdf_data: parsePptdfBool(
-          row["data"] || row["pptdf_data"] || row["pptdf - data"],
-        ),
-        pptdf_facility: parsePptdfBool(
-          row["facility"] || row["pptdf_facility"] || row["pptdf - facility"],
-        ),
+        pptdf_people: pptdfPeople,
+        pptdf_process: pptdfProcess,
+        pptdf_technology: pptdfTechnology,
+        pptdf_data: pptdfData,
+        pptdf_facility: pptdfFacility,
+        // Computed: collapsed array of active dimensions
+        pptdf_dimensions: [
+          ...(pptdfPeople ? (["people"] as const) : []),
+          ...(pptdfProcess ? (["process"] as const) : []),
+          ...(pptdfTechnology ? (["technology"] as const) : []),
+          ...(pptdfData ? (["data"] as const) : []),
+          ...(pptdfFacility ? (["facility"] as const) : []),
+        ],
       });
     }
   }
