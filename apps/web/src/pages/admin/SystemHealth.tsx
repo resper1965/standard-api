@@ -1,4 +1,5 @@
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { Card, CardContent } from "../../components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "../../components/ui/table";
 import { Button } from "../../components/ui/button";
@@ -88,18 +89,19 @@ export function AdminSystemHealth() {
     : error instanceof Error ? `Network error: ${error.message}` : null;
 
   const statusBadge = (status: string) => {
-    const styles = status === "operational"
-      ? "bg-success/10 text-success"
+    const style: React.CSSProperties = status === "operational"
+      ? { background: 'var(--ds-success-light)', color: 'var(--ds-success)' }
       : status === "degraded"
-        ? "bg-warning/10 text-warning"
-        : "bg-destructive/10 text-destructive";
+        ? { background: 'var(--ds-warning-light)', color: 'var(--ds-warning)' }
+        : undefined as unknown as React.CSSProperties;
+    const className = (!style) ? "bg-destructive/10 text-destructive" : "";
     const label = status === "operational" ? "Operational" : status === "degraded" ? "Degraded" : "Down";
-    return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${styles}`}>{label}</span>;
+    return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${className}`} style={style}>{label}</span>;
   };
 
   const overallIcon = (overall: string) => {
-    if (overall === "operational") return <CheckCircle2 className="h-8 w-8 text-success flex-shrink-0" />;
-    if (overall === "degraded") return <AlertTriangle className="h-8 w-8 text-warning flex-shrink-0" />;
+    if (overall === "operational") return <CheckCircle2 className="h-8 w-8 flex-shrink-0" style={{ color: 'var(--ds-success)' }} />;
+    if (overall === "degraded") return <AlertTriangle className="h-8 w-8 flex-shrink-0" style={{ color: 'var(--ds-warning)' }} />;
     return <XCircle className="h-8 w-8 text-destructive flex-shrink-0" />;
   };
 
@@ -111,6 +113,7 @@ export function AdminSystemHealth() {
 
   return (
     <div className="space-y-6">
+      <PageHeader title="System Health" description="Real-time API and service status" />
 
       <div className="flex justify-end">
         <Button
@@ -182,11 +185,11 @@ export function AdminSystemHealth() {
 
           {/* Connection error hint */}
           {health.connectionError && (
-            <Card className="border-warning/30 shadow-none bg-warning/5">
+            <Card className="border-border/60 shadow-none" style={{ borderColor: 'var(--ds-warning)', background: 'var(--ds-warning-light)' }}>
               <CardContent className="py-4 flex items-start gap-3">
-                <WifiOff className="h-5 w-5 text-warning flex-shrink-0 mt-0.5" />
+                <WifiOff className="h-5 w-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--ds-warning)' }} />
                 <div className="text-sm">
-                  <p className="font-medium text-warning">Connection Failed</p>
+                  <p className="font-medium" style={{ color: 'var(--ds-warning)' }}>Connection Failed</p>
                   <p className="text-muted-foreground mt-1">
                     The Cloudflare Worker at <code className="bg-muted px-1 py-0.5 rounded text-[10px]">{API_URL}</code> is not responding.
                     Check the Cloudflare Dashboard → Workers & Pages to verify the deployment status.

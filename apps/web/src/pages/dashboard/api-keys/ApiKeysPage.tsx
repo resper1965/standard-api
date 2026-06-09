@@ -5,9 +5,26 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { PageHeader } from "@/components/ui/PageHeader"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell,
+} from "@/components/ui/table"
 import {
   Key, Plus, Trash2, Loader2, Copy, Check, Pencil,
-  ShieldCheck, ShieldOff, Clock, AlertCircle
+  ShieldCheck, ShieldOff, Clock, AlertCircle, Eye, EyeOff
 } from "lucide-react"
 import { useOrgApiKeys, useCreateApiKey, useDeleteApiKey, useUpdateApiKey } from "@/lib/queries"
 
@@ -80,7 +97,7 @@ function formatExpiry(dateStr: string | null): { label: string; expired: boolean
 
 function StatusBadge({ status }: { status: KeyStatus }) {
   if (status === "active") return (
-    <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+    <span className="ds-badge ds-badge--active inline-flex items-center gap-1">
       <ShieldCheck className="h-3 w-3" /> Active
     </span>
   )
@@ -90,7 +107,7 @@ function StatusBadge({ status }: { status: KeyStatus }) {
     </span>
   )
   return (
-    <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-destructive/10 text-destructive border border-destructive/20">
+    <span className="ds-badge ds-badge--muted inline-flex items-center gap-1">
       <ShieldOff className="h-3 w-3" /> Revoked
     </span>
   )
@@ -117,32 +134,62 @@ function ScopeBadges({ scopes }: { scopes: string[] }) {
   )
 }
 
+// ─── Key Secret with blur-reveal spell ────────────────────────────────────────
+
+function MaskedKey({ maskedKey }: { maskedKey: string }) {
+  const [showKey, setShowKey] = useState(false)
+  return (
+    <div className="flex items-center gap-1">
+      <code className="rounded bg-muted px-2 py-1 font-mono text-[12px] text-muted-foreground">
+        <span className={`ds-secret ${showKey ? "ds-secret--visible" : "ds-secret--hidden"}`}>
+          {maskedKey}
+        </span>
+      </code>
+      <button
+        type="button"
+        onClick={() => setShowKey(v => !v)}
+        className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+        title={showKey ? "Hide key" : "Reveal key"}
+      >
+        {showKey ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+      </button>
+    </div>
+  )
+}
+
 
 
 // ─── Modals ───────────────────────────────────────────────────────────────────
 
-function RevokeModal({ keyName, onConfirm, onCancel, loading }: {
+function RevokeModal({ keyName, open, onConfirm, onCancel, loading }: {
   keyName: string
+  open: boolean
   onConfirm: () => void
   onCancel: () => void
   loading: boolean
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="bg-card border border-border/60 rounded-2xl shadow-xl p-6 max-w-sm w-full mx-4">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 rounded-lg bg-destructive/10">
-            <AlertCircle className="h-5 w-5 text-destructive" />
+    <Dialog open={open} onOpenChange={(v) => { if (!v) onCancel() }}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <div className="flex items-center gap-3 mb-1">
+            <div className="p-2 rounded-lg bg-destructive/10">
+              <AlertCircle className="h-5 w-5 text-destructive" />
+            </div>
+            <DialogTitle>Revoke API Key</DialogTitle>
           </div>
-          <h3 className="text-lg font-semibold">Revoke API Key</h3>
-        </div>
-        <p className="text-sm text-muted-foreground mb-2">
-          You are about to revoke <strong className="text-foreground">"{keyName}"</strong>.
-        </p>
-        <p className="text-sm text-destructive font-medium mb-6">
-          This action cannot be undone. Any integrations using this key will immediately lose access.
-        </p>
-        <div className="flex gap-3">
+          <DialogDescription asChild>
+            <div>
+              <p className="text-sm text-muted-foreground mb-2">
+                You are about to revoke <strong className="text-foreground">"{keyName}"</strong>.
+              </p>
+              <p className="text-sm text-destructive font-medium">
+                This action cannot be undone. Any integrations using this key will immediately lose access.
+              </p>
+            </div>
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="gap-3 sm:gap-3">
           <Button variant="destructive" onClick={onConfirm} disabled={loading} className="flex-1 cursor-pointer">
             {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
             Revoke Key
@@ -150,14 +197,15 @@ function RevokeModal({ keyName, onConfirm, onCancel, loading }: {
           <Button variant="outline" onClick={onCancel} disabled={loading} className="flex-1 cursor-pointer">
             Cancel
           </Button>
-        </div>
-      </div>
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 
-function EditModal({ keyRecord, onSave, onCancel, loading }: {
+function EditModal({ keyRecord, open, onSave, onCancel, loading }: {
   keyRecord: ApiKeyRecord
+  open: boolean
   onSave: (patch: { name?: string; expiresAt?: string | null }) => void
   onCancel: () => void
   loading: boolean
@@ -175,14 +223,14 @@ function EditModal({ keyRecord, onSave, onCancel, loading }: {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-card border border-border/60 rounded-2xl shadow-xl max-w-lg w-full mx-4 flex flex-col max-h-[90vh]">
-        <div className="flex items-center gap-3 p-6 pb-4 border-b border-border/50 shrink-0">
+    <Dialog open={open} onOpenChange={(v) => { if (!v) onCancel() }}>
+      <DialogContent className="max-w-lg max-h-[90vh] flex flex-col p-0">
+        <DialogHeader className="flex-row items-center gap-3 p-6 pb-4 border-b border-border/50 shrink-0 space-y-0">
           <div className="p-2 rounded-lg bg-primary/10">
             <Pencil className="h-5 w-5 text-primary" />
           </div>
-          <h3 className="text-lg font-semibold">Edit API Key</h3>
-        </div>
+          <DialogTitle>Edit API Key</DialogTitle>
+        </DialogHeader>
 
         <div className="overflow-y-auto flex-1 p-6 space-y-5">
           <div className="space-y-2">
@@ -215,7 +263,7 @@ function EditModal({ keyRecord, onSave, onCancel, loading }: {
           </div>
         </div>
 
-        <div className="flex gap-3 p-6 pt-4 border-t border-border/50 shrink-0">
+        <DialogFooter className="gap-3 sm:gap-3 p-6 pt-4 border-t border-border/50 shrink-0">
           <Button onClick={handleSave} disabled={loading || !name.trim()} className="flex-1 cursor-pointer">
             {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Check className="h-4 w-4 mr-2" />}
             Save Changes
@@ -223,9 +271,9 @@ function EditModal({ keyRecord, onSave, onCancel, loading }: {
           <Button variant="outline" onClick={onCancel} disabled={loading} className="flex-1 cursor-pointer">
             Cancel
           </Button>
-        </div>
-      </div>
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -305,6 +353,11 @@ export function ApiKeysPage() {
 
   return (
     <div className="space-y-6 max-w-5xl">
+      <PageHeader
+        title="API Keys"
+        description="Machine-to-machine bearer tokens for authenticating API requests"
+      />
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -455,66 +508,62 @@ export function ApiKeysPage() {
           </label>
         </div>
         <div className="rounded-xl overflow-hidden border-0">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-muted/40 text-muted-foreground border-b border-border/50">
-              <tr>
-                <th className="px-6 py-3.5 font-medium">Name</th>
-                <th className="px-6 py-3.5 font-medium">Key</th>
-                <th className="px-6 py-3.5 font-medium">Scopes</th>
-                <th className="px-6 py-3.5 font-medium">Expires</th>
-                <th className="px-6 py-3.5 font-medium">Last Used</th>
-                <th className="px-6 py-3.5 font-medium">Activity</th>
-                <th className="px-6 py-3.5 font-medium">Status</th>
-                <th className="px-6 py-3.5 font-medium text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border/40">
+          <Table>
+            <TableHeader className="bg-muted/40 text-muted-foreground border-b border-border/50">
+              <TableRow>
+                <TableHead className="px-6 py-3.5 font-medium">Name</TableHead>
+                <TableHead className="px-6 py-3.5 font-medium">Key</TableHead>
+                <TableHead className="px-6 py-3.5 font-medium">Scopes</TableHead>
+                <TableHead className="px-6 py-3.5 font-medium">Expires</TableHead>
+                <TableHead className="px-6 py-3.5 font-medium">Last Used</TableHead>
+                <TableHead className="px-6 py-3.5 font-medium">Activity</TableHead>
+                <TableHead className="px-6 py-3.5 font-medium">Status</TableHead>
+                <TableHead className="px-6 py-3.5 font-medium text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody className="divide-y divide-border/40">
               {loading ? (
-                <tr>
-                  <td colSpan={8} className="px-6 py-8 text-center text-muted-foreground">
+                <TableRow>
+                  <TableCell colSpan={8} className="px-6 py-8 text-center text-muted-foreground">
                     <Loader2 className="h-5 w-5 animate-spin mx-auto" />
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ) : displayedKeys.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="px-6 py-8 text-center text-muted-foreground">
+                <TableRow>
+                  <TableCell colSpan={8} className="px-6 py-8 text-center text-muted-foreground">
                     No API keys found. Generate one to get started.
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ) : (
                 displayedKeys.map(key => {
                   const expiry = formatExpiry(key.expires_at)
                   return (
-                    <tr key={key.id} className={`hover:bg-muted/20 transition-colors ${key.status === "revoked" ? "opacity-50" : ""}`}>
-                      <td className="px-6 py-4">
+                    <TableRow key={key.id} className={`hover:bg-muted/20 transition-colors ${key.status === "revoked" ? "opacity-50" : ""}`}>
+                      <TableCell className="px-6 py-4">
                         <div className="font-medium text-foreground">{key.name}</div>
                         <div className="text-[11px] text-muted-foreground mt-0.5">{new Date(key.created_at).toLocaleDateString()}</div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-1">
-                          <code className="rounded bg-muted px-2 py-1 font-mono text-[12px] text-muted-foreground">
-                            {key.masked_key}
-                          </code>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 max-w-[180px]">
+                      </TableCell>
+                      <TableCell className="px-6 py-4">
+                        <MaskedKey maskedKey={key.masked_key} />
+                      </TableCell>
+                      <TableCell className="px-6 py-4 max-w-[180px]">
                         <ScopeBadges scopes={key.scopes} />
-                      </td>
-                      <td className="px-6 py-4">
+                      </TableCell>
+                      <TableCell className="px-6 py-4">
                         <span className={`text-[13px] ${expiry.expired ? "text-amber-500 font-medium" : "text-muted-foreground"}`}>
                           {expiry.label}
                         </span>
-                      </td>
-                      <td className="px-6 py-4 text-muted-foreground text-[13px]">
+                      </TableCell>
+                      <TableCell className="px-6 py-4 text-muted-foreground text-[13px]">
                         {formatRelative(key.last_used_at)}
-                      </td>
-                      <td className="px-6 py-4">
+                      </TableCell>
+                      <TableCell className="px-6 py-4">
                         <ActivityBadge active={isRecentlyActive(key.last_used_at)} />
-                      </td>
-                      <td className="px-6 py-4">
+                      </TableCell>
+                      <TableCell className="px-6 py-4">
                         <StatusBadge status={key.status} />
-                      </td>
-                      <td className="px-6 py-4 text-right">
+                      </TableCell>
+                      <TableCell className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-1">
                           {key.status !== "revoked" && (
                             <>
@@ -539,27 +588,27 @@ export function ApiKeysPage() {
                             </>
                           )}
                         </div>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   )
                 })
               )}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       </Card>
 
       {/* Modals */}
-      {revokeTarget && (
-        <RevokeModal
-          keyName={revokeTarget.name}
-          onConfirm={handleRevoke}
-          onCancel={() => { setRevokeTarget(null); deleteMutation.reset() }}
-          loading={deleteMutation.isPending}
-        />
-      )}
+      <RevokeModal
+        open={revokeTarget !== null}
+        keyName={revokeTarget?.name ?? ""}
+        onConfirm={handleRevoke}
+        onCancel={() => { setRevokeTarget(null); deleteMutation.reset() }}
+        loading={deleteMutation.isPending}
+      />
       {editTarget && (
         <EditModal
+          open={editTarget !== null}
           keyRecord={editTarget}
           onSave={handleEdit}
           onCancel={() => { setEditTarget(null); updateMutation.reset() }}
