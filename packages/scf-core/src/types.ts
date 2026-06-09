@@ -16,6 +16,14 @@ import type {
   ScfStrmRelationship,
   ScfThreat,
   ScfVersion,
+  DpmpPrinciple,
+  DpmpFrameworkMapping,
+  CdpasStandard,
+  CdpasSubRequirement,
+  CdpasControlMapping,
+  MadStandard,
+  MadSubRequirement,
+  MadMaturityCriteria,
 } from "@standard/schemas";
 
 export type {
@@ -36,6 +44,14 @@ export type {
   ScfStrmRelationship,
   ScfThreat,
   ScfVersion,
+  DpmpPrinciple,
+  DpmpFrameworkMapping,
+  CdpasStandard,
+  CdpasSubRequirement,
+  CdpasControlMapping,
+  MadStandard,
+  MadSubRequirement,
+  MadMaturityCriteria,
 };
 
 export type ScfDataset = {
@@ -64,6 +80,22 @@ export type ScfDataset = {
     scf_threat_id: string;
     scf_control_id: string;
   }[];
+  dpmpPrinciples?: DpmpPrinciple[];
+  dpmpFrameworkMappings?: DpmpFrameworkMapping[];
+  cdpasStandards?: CdpasStandard[];
+  cdpasSubRequirements?: CdpasSubRequirement[];
+  cdpasControlMappings?: CdpasControlMapping[];
+  madStandards?: MadStandard[];
+  madSubRequirements?: MadSubRequirement[];
+  madMaturityCriteria?: MadMaturityCriteria[];
+  madControlMappings?: Array<{
+    id: string;
+    scf_version_id: string;
+    mad_sub_requirement_id: string;
+    scf_control_id: string;
+    relationship_note: null;
+    is_synthetic: false;
+  }>;
 };
 
 export type ScfImportValidationResult = {

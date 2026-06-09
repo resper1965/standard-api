@@ -48,6 +48,7 @@ import { observabilityRoutes } from "./routes/observability.routes";
 import { poamRoutes } from "./routes/poam.routes";
 import { reportingRoutes } from "./routes/reporting.routes";
 import { scfRoutes } from "./routes/scf.routes";
+import { cdpasRoutes } from "./routes/cdpas.routes";
 import { soaRoutes } from "./routes/soa.routes";
 import { emailRoutes } from "./routes/email.routes";
 import { tenantsRoutes } from "./routes/tenants.routes";
@@ -78,6 +79,7 @@ import { tpraRoutes } from "./routes/tpra.routes";
 import { userOrgsRoutes } from "./routes/user-orgs.routes";
 import { adminUsersRoutes } from "./routes/admin-users.routes";
 import { adminOrgsRoutes } from "./routes/admin-orgs.routes";
+import { madRoutes } from "./routes/mad.routes";
 
 /**
  * Route path prefixes that are tenant-exempt by convention.
@@ -90,6 +92,7 @@ import { adminOrgsRoutes } from "./routes/admin-orgs.routes";
  */
 const TENANT_EXEMPT_PREFIXES = [
   "/api/v1/scf",
+  "/api/v1/cdpas",
   "/api/v1/admin/scf",
   "/api/v1/admin/users",
   "/api/v1/admin/security",
@@ -125,6 +128,7 @@ export const routes: RouteDefinition[] = [
   ...approvalsRoutes,
   ...artifactsRoutes,
   ...scfRoutes,
+  ...cdpasRoutes,
   ...soaRoutes,
   ...emailRoutes,
   ...agentToolsRoutes,
@@ -152,6 +156,7 @@ export const routes: RouteDefinition[] = [
   ...tpraRoutes, // /api/v1/tpra/{questionnaires,tiers,score,...}
   ...adminUsersRoutes, // /api/v1/admin/users — platform admin user management
   ...adminOrgsRoutes, // /api/v1/admin/organizations
+  ...madRoutes, // /api/v1/mad — MA&D MADSS transaction assessments
 ];
 
 registerRoutesForOpenApi(routes);

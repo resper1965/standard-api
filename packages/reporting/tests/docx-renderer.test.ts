@@ -1,4 +1,4 @@
-import { renderDocxArtifact } from "../src/renderers/docx-renderer.placeholder";
+import { renderDocxArtifact } from "../src/renderers/docx-renderer";
 import { expect, test } from "./test-kit";
 
 // ═══════════════════════════════════════════════════════════════
@@ -18,7 +18,8 @@ const makeSections = (overrides?: Record<string, unknown>[]): any[] =>
       title: "Executive Summary",
       section_type: "executive_summary",
       order: 1,
-      content: "## Overview\n\nThis is the executive summary.\n\n- Finding A\n- Finding B",
+      content:
+        "## Overview\n\nThis is the executive summary.\n\n- Finding A\n- Finding B",
     },
     {
       section_id: "s2",
@@ -34,7 +35,9 @@ test("DOCX renderer gera artifact com formato correto", () => {
   const result = renderDocxArtifact("Test Report", "rv-001", makeSections());
   expect(result.format).toBe("docx");
   expect(result.artifact_type).toBe("report");
-  expect(result.mime_type).toBe("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+  expect(result.mime_type).toBe(
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  );
 });
 
 test("DOCX renderer gera conteúdo base64 não-vazio", () => {
@@ -43,7 +46,11 @@ test("DOCX renderer gera conteúdo base64 não-vazio", () => {
 });
 
 test("DOCX renderer inclui título na XML gerada", () => {
-  const result = renderDocxArtifact("My Assessment Report", "rv-001", makeSections());
+  const result = renderDocxArtifact(
+    "My Assessment Report",
+    "rv-001",
+    makeSections(),
+  );
   const xml = atob(result.content);
   expect(xml).toContain("My Assessment Report");
 });
@@ -70,14 +77,16 @@ test("DOCX renderer parseia headings markdown", () => {
 });
 
 test("DOCX renderer escapa XML corretamente", () => {
-  const sections = makeSections([{
-    section_id: "s-xss",
-    report_version_id: "rv-001",
-    title: "Test <script>alert('xss')</script>",
-    section_type: "executive_summary",
-    order: 1,
-    content: "Content with & ampersand and \"quotes\"",
-  }]);
+  const sections = makeSections([
+    {
+      section_id: "s-xss",
+      report_version_id: "rv-001",
+      title: "Test <script>alert('xss')</script>",
+      section_type: "executive_summary",
+      order: 1,
+      content: 'Content with & ampersand and "quotes"',
+    },
+  ]);
 
   const result = renderDocxArtifact("Safe <Report>", "rv-001", sections);
   const xml = atob(result.content);
@@ -87,14 +96,16 @@ test("DOCX renderer escapa XML corretamente", () => {
 });
 
 test("DOCX renderer lida com seções vazias sem crash", () => {
-  const sections = makeSections([{
-    section_id: "s-empty",
-    report_version_id: "rv-001",
-    title: "Empty Section",
-    section_type: "executive_summary",
-    order: 1,
-    content: "",
-  }]);
+  const sections = makeSections([
+    {
+      section_id: "s-empty",
+      report_version_id: "rv-001",
+      title: "Empty Section",
+      section_type: "executive_summary",
+      order: 1,
+      content: "",
+    },
+  ]);
 
   const result = renderDocxArtifact("Test", "rv-001", sections);
   const xml = atob(result.content);

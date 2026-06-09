@@ -28,3 +28,6 @@ export * from "./webhooks";
 export * from "./api-key-scopes";
 export * from "./privacy";
 export * from "./db/auth-schema";
+export * from "./dpmp";
+export * from "./cdpas";
+export * from "./mad";

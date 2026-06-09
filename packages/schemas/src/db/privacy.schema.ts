@@ -1,4 +1,11 @@
-import { boolean, index, jsonb, pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { boolean, index, integer, jsonb, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { scfVersions } from "./schema";
+
+const timestamps = () => ({
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
+});
 
 // ─── Enums ──────────────────────────────────────────────────────────
 
@@ -235,3 +242,61 @@ export const privacyProcessingActivityScfControls = pgTable("privacy_processing_
   index("idx_privacy_scf_controls_org").on(table.organizationId),
   index("idx_privacy_scf_controls_code").on(table.controlCode),
 ]);
+
+// ─── DPMP: Data Privacy Management Principles ─────────────────────
+
+export const dpmpDomainEnum = pgEnum("dpmp_domain", [
+  "privacy_by_design",
+  "data_minimization",
+  "consent_management",
+  "data_subject_rights",
+  "data_retention",
+  "third_party_privacy",
+  "cross_border_transfers",
+  "privacy_governance",
+  "breach_notification",
+  "privacy_impact_assessment",
+  "business_environment",
+]);
+
+export const dpmpPrinciples = pgTable(
+  "dpmp_principles",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    scfVersionId: uuid("scf_version_id").references(() => scfVersions.id),
+    principleCode: text("principle_code").notNull(),
+    domain: dpmpDomainEnum("domain").notNull(),
+    title: text("title").notNull(),
+    description: text("description"),
+    scfControlCodes: jsonb("scf_control_codes").$type<string[]>().default([]).notNull(),
+    sortOrder: integer("sort_order").default(0).notNull(),
+    isSynthetic: boolean("is_synthetic").default(false).notNull(),
+    ...timestamps(),
+  },
+  (table) => [
+    index("idx_dpmp_principles_version").on(table.scfVersionId),
+    index("idx_dpmp_principles_domain").on(table.domain),
+    uniqueIndex("dpmp_principles_version_code_uidx").on(table.scfVersionId, table.principleCode),
+  ],
+);
+
+export const dpmpFrameworkMappings = pgTable(
+  "dpmp_framework_mappings",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    scfVersionId: uuid("scf_version_id").references(() => scfVersions.id),
+    dpmpPrincipleId: uuid("dpmp_principle_id").notNull().references(() => dpmpPrinciples.id),
+    frameworkId: text("framework_id").notNull(),
+    requirementReference: text("requirement_reference"),
+    mappingNote: text("mapping_note"),
+    isSynthetic: boolean("is_synthetic").default(false).notNull(),
+    ...timestamps(),
+  },
+  (table) => [
+    index("idx_dpmp_fw_mappings_principle").on(table.dpmpPrincipleId),
+    index("idx_dpmp_fw_mappings_framework").on(table.frameworkId),
+    uniqueIndex("dpmp_fw_mappings_principle_fw_req_uidx").on(
+      table.dpmpPrincipleId, table.frameworkId, table.requirementReference,
+    ),
+  ],
+);
