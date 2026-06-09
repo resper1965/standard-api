@@ -179,6 +179,11 @@ const parseControlsTab = (
     const controlDescription = findControlDescription(row);
     const controlQuestion = findControlQuestion(row);
     const controlWeight = findControlWeight(row);
+    const compensatingGuidance = row["compensating_control_guidance"] ||
+      row["compensating_controls"] ||
+      row["proposed_compensating_controls"] ||
+      row["compensating_control"] ||
+      undefined;
 
     controls.push({
       id: newId(),
@@ -191,6 +196,7 @@ const parseControlsTab = (
         : {}),
       ...(controlQuestion ? { control_question: controlQuestion } : {}),
       ...(controlWeight !== undefined ? { control_weight: controlWeight } : {}),
+      ...(compensatingGuidance ? { compensating_control_guidance: compensatingGuidance } : {}),
       status: "active",
       is_synthetic: false,
     });
@@ -332,6 +338,12 @@ const parseCrosswalkTab = (
 
 // ──── Extended Catalog Parsers ────
 
+const parsePptdfBool = (value: string | undefined): boolean | undefined => {
+  if (value === undefined || value === null || value === "") return undefined;
+  const v = value.toString().toLowerCase().trim();
+  return v === "x" || v === "yes" || v === "true" || v === "1" ? true : false;
+};
+
 const parseAssessmentObjectivesTab = (
   rows: ParsedRow[],
   versionId: string,
@@ -385,6 +397,11 @@ const parseAssessmentObjectivesTab = (
         scf_control_id: controlId,
         objective_code: objectiveCode.trim(),
         text: text.trim(),
+        pptdf_people: parsePptdfBool(row["people"] || row["pptdf_people"] || row["pptdf - people"]),
+        pptdf_process: parsePptdfBool(row["process"] || row["pptdf_process"] || row["pptdf - process"]),
+        pptdf_technology: parsePptdfBool(row["technology"] || row["pptdf_technology"] || row["pptdf - technology"]),
+        pptdf_data: parsePptdfBool(row["data"] || row["pptdf_data"] || row["pptdf - data"]),
+        pptdf_facility: parsePptdfBool(row["facility"] || row["pptdf_facility"] || row["pptdf - facility"]),
       });
     }
   }

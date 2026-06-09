@@ -129,6 +129,7 @@ export const ScfStructuredControlSchema = z.object({
   implementation_guidance: z.string().optional(),
   expected_evidence: z.string().optional(),
   control_weight: z.number().optional(),
+  compensating_control_guidance: z.string().optional(),
   maturity_criteria_ref: z.string().optional(),
   status: ScfRecordStatusSchema,
   is_synthetic: z.boolean().default(false),
@@ -238,6 +239,8 @@ export const ScfControlSearchQuerySchema = z.object({
   domain_code: z.string().optional(),
   q: z.string().optional(),
   tags: z.array(z.string()).optional(),
+  weight_min: z.number().optional(),
+  weight_max: z.number().optional(),
   limit: z.number().int().optional(),
   offset: z.number().int().optional(),
 });
@@ -295,6 +298,11 @@ export const ScfAssessmentObjectiveSchema = z.object({
   scf_control_id: UuidSchema,
   objective_code: z.string().min(1),
   text: z.string().min(1),
+  pptdf_people: z.boolean().optional(),
+  pptdf_process: z.boolean().optional(),
+  pptdf_technology: z.boolean().optional(),
+  pptdf_data: z.boolean().optional(),
+  pptdf_facility: z.boolean().optional(),
 });
 
 export const ScfEvidenceRequestSchema = z.object({
@@ -309,7 +317,7 @@ export const ScfMaturityCriteriaSchema = z.object({
   id: UuidSchema,
   scf_version_id: UuidSchema,
   scf_control_id: UuidSchema,
-  level: z.number().int().min(1).max(5),
+  level: z.number().int().min(0).max(5),
   criteria_text: z.string().min(1),
   remediation_guidance: z.string().optional(),
 });

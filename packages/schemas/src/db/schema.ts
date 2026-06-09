@@ -458,6 +458,7 @@ export const scfControls = pgTable(
     implementationGuidance: text("implementation_guidance"),
     expectedEvidence: text("expected_evidence"),
     controlWeight: numeric("control_weight", { precision: 6, scale: 3 }),
+    compensatingControlGuidance: text("compensating_control_guidance"),
     maturityCriteriaRef: text("maturity_criteria_ref"),
     sortOrder: integer("sort_order").default(0).notNull(),
     status: text("status").default("active").notNull(),
@@ -625,6 +626,11 @@ export const scfAssessmentObjectives = pgTable(
       .references(() => scfControls.id),
     objectiveCode: text("objective_code").notNull(), // e.g. GOV-01.1a
     text: text("text").notNull(),
+    pptdfPeople: boolean("pptdf_people"),
+    pptdfProcess: boolean("pptdf_process"),
+    pptdfTechnology: boolean("pptdf_technology"),
+    pptdfData: boolean("pptdf_data"),
+    pptdfFacility: boolean("pptdf_facility"),
     ...timestamps(),
   },
   (table) => [
