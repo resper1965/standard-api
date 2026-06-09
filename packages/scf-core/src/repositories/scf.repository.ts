@@ -54,6 +54,9 @@ export type ScfRepository = {
   listFrameworks(): Promise<ScfFramework[]>;
   getFramework(id: string): Promise<ScfFramework | null>;
   listRequirements(frameworkId: string): Promise<ScfFrameworkRequirement[]>;
+  /** Returns only requirements classified as MCR (Minimum Compliance Requirements)
+   *  for a given framework. MCR gaps are compliance blockers, not risk-based decisions. */
+  listMcrRequirements(frameworkId: string): Promise<ScfFrameworkRequirement[]>;
   getRequirement(id: string): Promise<ScfFrameworkRequirement | null>;
   listMappingsByRequirement(
     requirementId: string,
@@ -214,7 +217,16 @@ export const createInMemoryScfRepository = (
       [...requirements.values()]
         .filter((item) => item.scf_framework_id === frameworkId)
         .sort((a, b) => a.sort_order - b.sort_order),
+    listMcrRequirements: async (frameworkId) =>
+      [...requirements.values()]
+        .filter(
+          (item) =>
+            item.scf_framework_id === frameworkId &&
+            (item as any).is_mcr === true,
+        )
+        .sort((a, b) => a.sort_order - b.sort_order),
     getRequirement: async (id) => requirements.get(id) ?? null,
+
     listMappingsByRequirement: async (requirementId, versionId) =>
       [...mappings.values()].filter(
         (item) =>

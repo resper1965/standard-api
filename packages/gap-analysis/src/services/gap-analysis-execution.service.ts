@@ -21,10 +21,14 @@ import {
   type EvidenceClassificationOutput,
   GapIdentificationPrompt,
   PROMPT_VERSION_GAP_IDENTIFICATION,
-  type GapIdentificationOutput
+  type GapIdentificationOutput,
 } from "@standard/agent-runtime";
 import { KbSearchService } from "@standard/kb";
-import { assertActor, assertContext, GapAnalysisWorkflowError } from "../errors";
+import {
+  assertActor,
+  assertContext,
+  GapAnalysisWorkflowError,
+} from "../errors";
 import type {
   EvidenceFindingResponse,
   GapAnalysisContext,
@@ -33,7 +37,7 @@ import type {
   GapFindingResponse,
   KbSearchResult,
   SoaItemResponse,
-  SoaVersionResponse
+  SoaVersionResponse,
 } from "../types";
 
 // ── Types ────────────────────────────────────────────────────────────
@@ -46,7 +50,11 @@ export type GapAnalysisExecutionConfig = {
   /** Optional LLM response cache */
   cache?: LlmResponseCache;
   /** Token usage telemetry callback */
-  onUsage?: (usage: { prompt_tokens: number; completion_tokens: number; total_tokens: number }) => void;
+  onUsage?: (usage: {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+  }) => void;
   /** Top-K KB search results to retrieve per SoA item */
   topK?: number;
 };
@@ -68,7 +76,8 @@ export type GapAnalysisSummary = {
   mean_confidence: number;
 };
 
-const snippet = (value: string): string => value.length <= 300 ? value : `${value.slice(0, 297)}...`;
+const snippet = (value: string): string =>
+  value.length <= 300 ? value : `${value.slice(0, 297)}...`;
 
 // ── Service ──────────────────────────────────────────────────────────
 
@@ -81,9 +90,13 @@ export class GapAnalysisExecutionService {
   constructor(
     private readonly deps: GapAnalysisDependencies,
     private readonly llmProvider: LlmProvider,
-    config: GapAnalysisExecutionConfig
+    config: GapAnalysisExecutionConfig,
   ) {
-    const usageTracker = (usage: { prompt_tokens: number; completion_tokens: number; total_tokens: number }) => {
+    const usageTracker = (usage: {
+      prompt_tokens: number;
+      completion_tokens: number;
+      total_tokens: number;
+    }) => {
       this.totalTokensUsed += usage.total_tokens;
       config.onUsage?.(usage);
     };
@@ -92,14 +105,14 @@ export class GapAnalysisExecutionService {
       provider: llmProvider,
       model: config.classificationModel,
       onUsage: usageTracker,
-      ...(config.cache !== undefined ? { cache: config.cache } : {})
+      ...(config.cache !== undefined ? { cache: config.cache } : {}),
     });
 
     this.gapPrompt = new GapIdentificationPrompt({
       provider: llmProvider,
       model: config.gapModel,
       onUsage: usageTracker,
-      ...(config.cache !== undefined ? { cache: config.cache } : {})
+      ...(config.cache !== undefined ? { cache: config.cache } : {}),
     });
 
     this.topK = config.topK ?? 5;
@@ -112,12 +125,15 @@ export class GapAnalysisExecutionService {
   async execute(
     assessmentId: string,
     soaVersionId: string,
-    context: GapAnalysisContext
+    context: GapAnalysisContext,
   ): Promise<GapAnalysisExecutionResult> {
     assertContext(context);
     assertActor(context);
     if (assessmentId !== context.assessmentId) {
-      throw new GapAnalysisWorkflowError("TENANT_CONTEXT_MISMATCH", "Assessment id does not match context.");
+      throw new GapAnalysisWorkflowError(
+        "TENANT_CONTEXT_MISMATCH",
+        "Assessment id does not match context.",
+      );
     }
 
     this.totalTokensUsed = 0;
@@ -126,13 +142,23 @@ export class GapAnalysisExecutionService {
     const soaVersion = await this.getApprovedSoa(soaVersionId, context);
 
     // 2. Get all SoA items
-    const soaItems = await this.deps.soa.repositories.items.listByVersion(soaVersionId, context.organizationId);
+    const soaItems = await this.deps.soa.repositories.items.listByVersion(
+      soaVersionId,
+      context.organizationId,
+    );
     if (soaItems.length === 0) {
-      throw new GapAnalysisWorkflowError("EMPTY_SOA", "SoA contains no items to analyze.");
+      throw new GapAnalysisWorkflowError(
+        "EMPTY_SOA",
+        "SoA contains no items to analyze.",
+      );
     }
 
     // 3. Create gap analysis version
-    const existingVersions = await this.deps.repositories.gapVersions.listByAssessment(assessmentId, context.organizationId);
+    const existingVersions =
+      await this.deps.repositories.gapVersions.listByAssessment(
+        assessmentId,
+        context.organizationId,
+      );
     const version: GapAnalysisVersionResponse = {
       gap_analysis_version_id: crypto.randomUUID(),
       organization_id: context.organizationId,
@@ -148,10 +174,10 @@ export class GapAnalysisExecutionService {
       metadata: {
         prompt_versions: {
           evidence_classification: PROMPT_VERSION_EVIDENCE_CLASSIFICATION,
-          gap_identification: PROMPT_VERSION_GAP_IDENTIFICATION
+          gap_identification: PROMPT_VERSION_GAP_IDENTIFICATION,
         },
-        execution_mode: "llm_assisted"
-      }
+        execution_mode: "llm_assisted",
+      },
     };
 
     // 4. Process each SoA item through the LLM pipeline
@@ -162,7 +188,11 @@ export class GapAnalysisExecutionService {
       const item = soaItems[i];
       if (!item) continue;
       const { evidenceFinding, gapFinding } = await this.processItem(
-        item, context, soaVersion, version, i + 1
+        item,
+        context,
+        soaVersion,
+        version,
+        i + 1,
       );
       allEvidenceFindings.push(evidenceFinding);
       allGapFindings.push(gapFinding);
@@ -171,7 +201,11 @@ export class GapAnalysisExecutionService {
     // 5. Persist everything
     await this.deps.repositories.gapVersions.save(version);
     for (const ef of allEvidenceFindings) {
-      const existing = await this.deps.repositories.evidenceFindings.findBySoaItem(ef.soa_item_id, context.organizationId);
+      const existing =
+        await this.deps.repositories.evidenceFindings.findBySoaItem(
+          ef.soa_item_id,
+          context.organizationId,
+        );
       if (existing) await this.deps.repositories.evidenceFindings.update(ef);
       else await this.deps.repositories.evidenceFindings.save(ef);
     }
@@ -185,7 +219,7 @@ export class GapAnalysisExecutionService {
       findings: allGapFindings,
       evidenceFindings: allEvidenceFindings,
       summary,
-      totalTokensUsed: this.totalTokensUsed
+      totalTokensUsed: this.totalTokensUsed,
     };
   }
 
@@ -198,21 +232,33 @@ export class GapAnalysisExecutionService {
     context: GapAnalysisContext,
     soaVersion: SoaVersionResponse,
     gapVersion: GapAnalysisVersionResponse,
-    index: number
-  ): Promise<{ evidenceFinding: EvidenceFindingResponse; gapFinding: GapFindingResponse }> {
+    index: number,
+  ): Promise<{
+    evidenceFinding: EvidenceFindingResponse;
+    gapFinding: GapFindingResponse;
+  }> {
     const now = new Date().toISOString();
 
     // Step 1: KB Search
     const kbResults = await this.searchKb(soaItem, context);
 
     // Step 2: LLM Evidence Classification
-    const classificationResult = await this.classifyEvidence(soaItem, kbResults, context);
+    const classificationResult = await this.classifyEvidence(
+      soaItem,
+      kbResults,
+      context,
+    );
     const classification = classificationResult.data;
 
     // Step 3: Build and persist evidence finding
-    const existingFinding = await this.deps.repositories.evidenceFindings.findBySoaItem(soaItem.soa_item_id, context.organizationId);
+    const existingFinding =
+      await this.deps.repositories.evidenceFindings.findBySoaItem(
+        soaItem.soa_item_id,
+        context.organizationId,
+      );
     const evidenceFinding: EvidenceFindingResponse = {
-      evidence_finding_id: existingFinding?.evidence_finding_id ?? crypto.randomUUID(),
+      evidence_finding_id:
+        existingFinding?.evidence_finding_id ?? crypto.randomUUID(),
       organization_id: context.organizationId,
       assessment_id: context.assessmentId,
       soa_version_id: soaVersion.soa_version_id,
@@ -220,7 +266,9 @@ export class GapAnalysisExecutionService {
       framework_id: soaItem.framework_id,
       framework_requirement_id: soaItem.framework_requirement_id,
       scf_version_id: soaItem.scf_version_id,
-      ...(soaItem.scf_control_id ? { scf_control_id: soaItem.scf_control_id } : {}),
+      ...(soaItem.scf_control_id
+        ? { scf_control_id: soaItem.scf_control_id }
+        : {}),
       evidence_strength: classification.evidence_strength,
       evidence_status: classification.evidence_status,
       evidence_summary: classification.evidence_summary,
@@ -228,12 +276,12 @@ export class GapAnalysisExecutionService {
       confidence_score: classification.confidence_score,
       trace_id: context.traceId,
       created_at: existingFinding?.created_at ?? now,
-      updated_at: now
+      updated_at: now,
     };
 
     // Step 3b: Persist evidence sources
     await this.deps.repositories.evidenceSources.saveMany(
-      this.toSources(evidenceFinding, kbResults, context)
+      this.toSources(evidenceFinding, kbResults, context),
     );
 
     // Step 4: LLM Gap Identification
@@ -251,12 +299,16 @@ export class GapAnalysisExecutionService {
       framework_id: soaItem.framework_id,
       framework_requirement_id: soaItem.framework_requirement_id,
       scf_version_id: soaItem.scf_version_id,
-      ...(soaItem.scf_control_id ? { scf_control_id: soaItem.scf_control_id } : {}),
+      ...(soaItem.scf_control_id
+        ? { scf_control_id: soaItem.scf_control_id }
+        : {}),
       evidence_finding_id: evidenceFinding.evidence_finding_id,
       gap_code: `GAP-${String(index).padStart(3, "0")}`,
       assessment_status: gap.assessment_status,
       gap_type: gap.gap_type,
       severity: gap.severity,
+      // MCR enrichment deferred to Iniciativa 4 (Gap×STRM linkage).
+      is_mcr_gap: false,
       gap_summary: gap.gap_summary,
       gap_rationale: gap.gap_rationale,
       recommendation_summary: gap.recommendation_summary,
@@ -264,7 +316,7 @@ export class GapAnalysisExecutionService {
       confidence_score: gap.confidence_score,
       requires_user_validation: gap.requires_user_validation,
       created_at: now,
-      updated_at: now
+      updated_at: now,
     };
 
     return { evidenceFinding, gapFinding };
@@ -272,21 +324,27 @@ export class GapAnalysisExecutionService {
 
   // ── KB Search ────────────────────────────────────────────────────────
 
-  private async searchKb(item: SoaItemResponse, context: GapAnalysisContext): Promise<KbSearchResult[]> {
+  private async searchKb(
+    item: SoaItemResponse,
+    context: GapAnalysisContext,
+  ): Promise<KbSearchResult[]> {
     if (!this.deps.kb) return [];
     try {
-      const response = await new KbSearchService(this.deps.kb).semanticSearch({
-        organizationId: context.organizationId,
-        assessmentId: context.assessmentId,
-        ...(context.actorId ? { actorId: context.actorId } : {}),
-        traceId: context.traceId
-      }, {
-        query: `${item.framework_requirement_id} ${item.scf_control_id ?? ""}`,
-        search_type: "semantic",
-        filters: {},
-        top_k: this.topK,
-        include_context: false
-      });
+      const response = await new KbSearchService(this.deps.kb).semanticSearch(
+        {
+          organizationId: context.organizationId,
+          assessmentId: context.assessmentId,
+          ...(context.actorId ? { actorId: context.actorId } : {}),
+          traceId: context.traceId,
+        },
+        {
+          query: `${item.framework_requirement_id} ${item.scf_control_id ?? ""}`,
+          search_type: "semantic",
+          filters: {},
+          top_k: this.topK,
+          include_context: false,
+        },
+      );
       return response.data;
     } catch {
       // KB unavailable should not block gap analysis
@@ -299,7 +357,7 @@ export class GapAnalysisExecutionService {
   private async classifyEvidence(
     soaItem: SoaItemResponse,
     kbResults: KbSearchResult[],
-    context: GapAnalysisContext
+    context: GapAnalysisContext,
   ) {
     return this.classificationPrompt.classify({
       controlId: soaItem.scf_control_id ?? soaItem.framework_requirement_id,
@@ -308,9 +366,9 @@ export class GapAnalysisExecutionService {
       evidenceSnippets: kbResults.map((r) => ({
         snippet: r.snippet,
         source: r.document_title ?? r.document_id,
-        retrievalScore: r.score
+        retrievalScore: r.score,
       })),
-      organizationId: context.organizationId
+      organizationId: context.organizationId,
     });
   }
 
@@ -319,7 +377,7 @@ export class GapAnalysisExecutionService {
   private async identifyGap(
     soaItem: SoaItemResponse,
     classification: EvidenceClassificationOutput,
-    context: GapAnalysisContext
+    context: GapAnalysisContext,
   ) {
     return this.gapPrompt.identify({
       controlId: soaItem.scf_control_id ?? soaItem.framework_requirement_id,
@@ -330,17 +388,23 @@ export class GapAnalysisExecutionService {
         evidence_status: classification.evidence_status,
         evidence_summary: classification.evidence_summary,
         confidence_score: classification.confidence_score,
-        supporting_quotes: classification.supporting_quotes
+        supporting_quotes: classification.supporting_quotes,
       },
       soaApplicabilityStatus: soaItem.applicability_status ?? "applicable",
-      ...(soaItem.non_applicability_rationale !== undefined ? { soaNonApplicabilityRationale: soaItem.non_applicability_rationale } : {}),
-      organizationId: context.organizationId
+      ...(soaItem.non_applicability_rationale !== undefined
+        ? { soaNonApplicabilityRationale: soaItem.non_applicability_rationale }
+        : {}),
+      organizationId: context.organizationId,
     });
   }
 
   // ── Helpers ─────────────────────────────────────────────────────────
 
-  private toSources(finding: EvidenceFindingResponse, kbResults: KbSearchResult[], context: GapAnalysisContext) {
+  private toSources(
+    finding: EvidenceFindingResponse,
+    kbResults: KbSearchResult[],
+    context: GapAnalysisContext,
+  ) {
     return kbResults.map((result) => ({
       evidence_source_id: crypto.randomUUID(),
       organization_id: context.organizationId,
@@ -348,15 +412,19 @@ export class GapAnalysisExecutionService {
       evidence_finding_id: finding.evidence_finding_id,
       document_id: result.document_id,
       chunk_id: result.chunk_id,
-      ...(result.vector_reference_id ? { vector_reference_id: result.vector_reference_id } : {}),
+      ...(result.vector_reference_id
+        ? { vector_reference_id: result.vector_reference_id }
+        : {}),
       source_type: result.document_type,
       ...(result.document_title ? { source_title: result.document_title } : {}),
-      ...(result.page_number ? { source_location: `page:${result.page_number}` } : {}),
+      ...(result.page_number
+        ? { source_location: `page:${result.page_number}` }
+        : {}),
       snippet: snippet(result.snippet),
       retrieval_score: result.score,
       retrieval_method: result.retrieval_method,
       candidate_evidence: true,
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
     }));
   }
 
@@ -381,14 +449,28 @@ export class GapAnalysisExecutionService {
       by_severity: bySeverity,
       by_gap_type: byGapType,
       requires_validation_count: validationCount,
-      mean_confidence: findings.length > 0 ? totalConfidence / findings.length : 0
+      mean_confidence:
+        findings.length > 0 ? totalConfidence / findings.length : 0,
     };
   }
 
-  private async getApprovedSoa(soaVersionId: string, context: GapAnalysisContext): Promise<SoaVersionResponse> {
-    const soaVersion = await this.deps.soa.repositories.versions.get(soaVersionId, context.organizationId);
-    if (!soaVersion || soaVersion.assessment_id !== context.assessmentId || soaVersion.status !== "approved") {
-      throw new GapAnalysisWorkflowError("APPROVED_SOA_REQUIRED", "Gap Analysis requires an approved SoA.");
+  private async getApprovedSoa(
+    soaVersionId: string,
+    context: GapAnalysisContext,
+  ): Promise<SoaVersionResponse> {
+    const soaVersion = await this.deps.soa.repositories.versions.get(
+      soaVersionId,
+      context.organizationId,
+    );
+    if (
+      !soaVersion ||
+      soaVersion.assessment_id !== context.assessmentId ||
+      soaVersion.status !== "approved"
+    ) {
+      throw new GapAnalysisWorkflowError(
+        "APPROVED_SOA_REQUIRED",
+        "Gap Analysis requires an approved SoA.",
+      );
     }
     return soaVersion;
   }

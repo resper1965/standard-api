@@ -158,22 +158,30 @@ export const ScfFrameworkRequirementSchema = z.object({
   organization_id: UuidSchema.optional(),
   scf_framework_id: UuidSchema,
   requirement_code: z.string().min(1),
+  fde_code: z.string().optional(),
   requirement_title: z.string().min(1),
   requirement_text: z.string().optional(),
   parent_requirement_id: UuidSchema.optional(),
   sort_order: z.number().int().default(0),
   status: ScfRecordStatusSchema,
   is_synthetic: z.boolean().default(false),
+  /** True when this requirement is a Minimum Compliance Requirement (MCR) —
+   *  a legally mandated obligation. MCR gaps are compliance blockers. */
+  is_mcr: z.boolean().default(false),
+  mcr_rationale: z.string().optional(),
 });
 
 export const ScfRequirementResponseSchema = z.object({
   requirement_id: UuidSchema,
   framework_id: UuidSchema,
   requirement_code: z.string(),
+  fde_code: z.string().optional(),
   requirement_title: z.string(),
   requirement_text: z.string().optional(),
   status: ScfRecordStatusSchema,
   is_synthetic: z.boolean(),
+  is_mcr: z.boolean().default(false),
+  mcr_rationale: z.string().optional(),
   trace_id: z.string().optional(),
 });
 
