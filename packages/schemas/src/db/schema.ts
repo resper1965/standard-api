@@ -585,7 +585,10 @@ export const scfStrmRelationships = pgTable(
     source: text("source").notNull(),
     ...timestamps(),
   },
-  (table) => [index("scf_strm_mapping_idx").on(table.scfMappingId)],
+  (table) => [
+    index("scf_strm_mapping_idx").on(table.scfMappingId),
+    uniqueIndex("scf_strm_mapping_uidx").on(table.scfMappingId),
+  ],
 );
 
 export const scfControlMetadata = pgTable(
@@ -2397,7 +2400,9 @@ export const cdpasStandards = pgTable(
   "cdpas_standards",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    scfVersionId: uuid("scf_version_id").notNull().references(() => scfVersions.id),
+    scfVersionId: uuid("scf_version_id")
+      .notNull()
+      .references(() => scfVersions.id),
     standardNumber: integer("standard_number").notNull(),
     code: text("code").notNull(),
     title: text("title").notNull(),
@@ -2408,7 +2413,10 @@ export const cdpasStandards = pgTable(
   },
   (table) => [
     index("cdpas_standards_version_idx").on(table.scfVersionId),
-    uniqueIndex("cdpas_standards_version_code_uidx").on(table.scfVersionId, table.code),
+    uniqueIndex("cdpas_standards_version_code_uidx").on(
+      table.scfVersionId,
+      table.code,
+    ),
   ],
 );
 
@@ -2416,8 +2424,12 @@ export const cdpasSubRequirements = pgTable(
   "cdpas_sub_requirements",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    scfVersionId: uuid("scf_version_id").notNull().references(() => scfVersions.id),
-    cdpasStandardId: uuid("cdpas_standard_id").notNull().references(() => cdpasStandards.id),
+    scfVersionId: uuid("scf_version_id")
+      .notNull()
+      .references(() => scfVersions.id),
+    cdpasStandardId: uuid("cdpas_standard_id")
+      .notNull()
+      .references(() => cdpasStandards.id),
     requirementCode: text("requirement_code").notNull(),
     title: text("title").notNull(),
     description: text("description"),
@@ -2431,7 +2443,10 @@ export const cdpasSubRequirements = pgTable(
   },
   (table) => [
     index("cdpas_subreq_standard_idx").on(table.cdpasStandardId),
-    uniqueIndex("cdpas_subreq_version_code_uidx").on(table.scfVersionId, table.requirementCode),
+    uniqueIndex("cdpas_subreq_version_code_uidx").on(
+      table.scfVersionId,
+      table.requirementCode,
+    ),
   ],
 );
 
@@ -2439,11 +2454,15 @@ export const cdpasControlMappings = pgTable(
   "cdpas_control_mappings",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    scfVersionId: uuid("scf_version_id").notNull().references(() => scfVersions.id),
+    scfVersionId: uuid("scf_version_id")
+      .notNull()
+      .references(() => scfVersions.id),
     cdpasSubRequirementId: uuid("cdpas_sub_requirement_id")
       .notNull()
       .references(() => cdpasSubRequirements.id),
-    scfControlId: uuid("scf_control_id").notNull().references(() => scfControls.id),
+    scfControlId: uuid("scf_control_id")
+      .notNull()
+      .references(() => scfControls.id),
     relationshipNote: text("relationship_note"),
     isSynthetic: boolean("is_synthetic").default(false).notNull(),
     ...timestamps(),
@@ -2462,8 +2481,12 @@ export const cdpasAssessmentFindings = pgTable(
   "cdpas_assessment_findings",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    organizationId: uuid("organization_id").notNull().references(() => organizations.id),
-    assessmentId: uuid("assessment_id").notNull().references(() => assessments.id),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id),
+    assessmentId: uuid("assessment_id")
+      .notNull()
+      .references(() => assessments.id),
     cdpasSubRequirementId: uuid("cdpas_sub_requirement_id")
       .notNull()
       .references(() => cdpasSubRequirements.id),
@@ -2479,7 +2502,10 @@ export const cdpasAssessmentFindings = pgTable(
     ...timestamps(),
   },
   (table) => [
-    index("cdpas_findings_assessment_idx").on(table.organizationId, table.assessmentId),
+    index("cdpas_findings_assessment_idx").on(
+      table.organizationId,
+      table.assessmentId,
+    ),
     index("cdpas_findings_subreq_idx").on(table.cdpasSubRequirementId),
     uniqueIndex("cdpas_findings_assessment_subreq_uidx").on(
       table.assessmentId,
@@ -2682,7 +2708,9 @@ export const madStandards = pgTable(
   "mad_standards",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    scfVersionId: uuid("scf_version_id").notNull().references(() => scfVersions.id),
+    scfVersionId: uuid("scf_version_id")
+      .notNull()
+      .references(() => scfVersions.id),
     standardNumber: integer("standard_number").notNull(),
     code: text("code").notNull(),
     title: text("title").notNull(),
@@ -2694,7 +2722,10 @@ export const madStandards = pgTable(
   },
   (table) => [
     index("mad_standards_version_idx").on(table.scfVersionId),
-    uniqueIndex("mad_standards_version_code_uidx").on(table.scfVersionId, table.code),
+    uniqueIndex("mad_standards_version_code_uidx").on(
+      table.scfVersionId,
+      table.code,
+    ),
   ],
 );
 
@@ -2702,8 +2733,12 @@ export const madSubRequirements = pgTable(
   "mad_sub_requirements",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    scfVersionId: uuid("scf_version_id").notNull().references(() => scfVersions.id),
-    madStandardId: uuid("mad_standard_id").notNull().references(() => madStandards.id),
+    scfVersionId: uuid("scf_version_id")
+      .notNull()
+      .references(() => scfVersions.id),
+    madStandardId: uuid("mad_standard_id")
+      .notNull()
+      .references(() => madStandards.id),
     requirementCode: text("requirement_code").notNull(),
     title: text("title").notNull(),
     description: text("description"),
@@ -2713,7 +2748,10 @@ export const madSubRequirements = pgTable(
   },
   (table) => [
     index("mad_subreq_standard_idx").on(table.madStandardId),
-    uniqueIndex("mad_subreq_version_code_uidx").on(table.scfVersionId, table.requirementCode),
+    uniqueIndex("mad_subreq_version_code_uidx").on(
+      table.scfVersionId,
+      table.requirementCode,
+    ),
   ],
 );
 
@@ -2721,7 +2759,9 @@ export const madMaturityCriteria = pgTable(
   "mad_maturity_criteria",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    scfVersionId: uuid("scf_version_id").notNull().references(() => scfVersions.id),
+    scfVersionId: uuid("scf_version_id")
+      .notNull()
+      .references(() => scfVersions.id),
     madSubRequirementId: uuid("mad_sub_requirement_id")
       .notNull()
       .references(() => madSubRequirements.id),
@@ -2733,7 +2773,10 @@ export const madMaturityCriteria = pgTable(
   },
   (table) => [
     index("mad_mc_subreq_idx").on(table.madSubRequirementId),
-    uniqueIndex("mad_mc_subreq_level_uidx").on(table.madSubRequirementId, table.level),
+    uniqueIndex("mad_mc_subreq_level_uidx").on(
+      table.madSubRequirementId,
+      table.level,
+    ),
   ],
 );
 
@@ -2741,11 +2784,15 @@ export const madControlMappings = pgTable(
   "mad_control_mappings",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    scfVersionId: uuid("scf_version_id").notNull().references(() => scfVersions.id),
+    scfVersionId: uuid("scf_version_id")
+      .notNull()
+      .references(() => scfVersions.id),
     madSubRequirementId: uuid("mad_sub_requirement_id")
       .notNull()
       .references(() => madSubRequirements.id),
-    scfControlId: uuid("scf_control_id").notNull().references(() => scfControls.id),
+    scfControlId: uuid("scf_control_id")
+      .notNull()
+      .references(() => scfControls.id),
     relationshipNote: text("relationship_note"),
     isSynthetic: boolean("is_synthetic").default(false).notNull(),
     ...timestamps(),
@@ -2764,7 +2811,9 @@ export const madTransactionAssessments = pgTable(
   "mad_transaction_assessments",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    organizationId: uuid("organization_id").notNull().references(() => organizations.id),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id),
     assessmentId: uuid("assessment_id").references(() => assessments.id),
     transactionName: text("transaction_name").notNull(),
     transactionType: madTransactionTypeEnum("transaction_type").notNull(),
@@ -2785,7 +2834,9 @@ export const madMaturityScores = pgTable(
   "mad_maturity_scores",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    organizationId: uuid("organization_id").notNull().references(() => organizations.id),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id),
     madTransactionAssessmentId: uuid("mad_transaction_assessment_id")
       .notNull()
       .references(() => madTransactionAssessments.id),

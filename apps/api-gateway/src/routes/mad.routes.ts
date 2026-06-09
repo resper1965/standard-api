@@ -1,7 +1,10 @@
 import type { RouteDefinition } from "../http";
 import { json, parseJson, routeParam } from "../http";
 import { ApiError } from "../errors/api-error";
-import { CreateMadTransactionAssessmentSchema, UpsertMadMaturityScoreSchema } from "@standard/schemas";
+import {
+  CreateMadTransactionAssessmentSchema,
+  UpsertMadMaturityScoreSchema,
+} from "@standard/schemas";
 
 export const madRoutes: RouteDefinition[] = [
   {
@@ -13,8 +16,15 @@ export const madRoutes: RouteDefinition[] = [
       const url = new URL(request.url);
       const scfVersionId = url.searchParams.get("scf_version") ?? undefined;
       const phase = url.searchParams.get("phase") ?? undefined;
-      const standards = await (deps as any).mad.listStandards(scfVersionId, phase);
-      return json({ data: standards, total: standards.length, trace_id: traceId });
+      const standards = await (deps as any).mad.listStandards(
+        scfVersionId,
+        phase,
+      );
+      return json({
+        data: standards,
+        total: standards.length,
+        trace_id: traceId,
+      });
     },
   },
   {
@@ -44,10 +54,17 @@ export const madRoutes: RouteDefinition[] = [
     path: "/api/v1/mad/transaction-assessments",
     protected: true,
     requireActor: true,
-    permissions: ["assessment:write"],
+    permissions: ["assessment:create"],
     handler: async ({ deps, request, organizationId, actorId, traceId }) => {
-      const body = await parseJson(request, CreateMadTransactionAssessmentSchema);
-      const ta = await (deps as any).mad.createTransactionAssessment(organizationId, actorId, body);
+      const body = await parseJson(
+        request,
+        CreateMadTransactionAssessmentSchema,
+      );
+      const ta = await (deps as any).mad.createTransactionAssessment(
+        organizationId,
+        actorId,
+        body,
+      );
       return json({ ...ta, trace_id: traceId }, { status: 201 });
     },
   },
@@ -59,9 +76,17 @@ export const madRoutes: RouteDefinition[] = [
     permissions: ["assessment:read"],
     handler: async ({ deps, organizationId, request, traceId }) => {
       const url = new URL(request.url);
-      const limit = url.searchParams.get("limit") ? parseInt(url.searchParams.get("limit")!, 10) : 50;
-      const offset = url.searchParams.get("offset") ? parseInt(url.searchParams.get("offset")!, 10) : 0;
-      const tas = await (deps as any).mad.listTransactionAssessments(organizationId, limit, offset);
+      const limit = url.searchParams.get("limit")
+        ? parseInt(url.searchParams.get("limit")!, 10)
+        : 50;
+      const offset = url.searchParams.get("offset")
+        ? parseInt(url.searchParams.get("offset")!, 10)
+        : 0;
+      const tas = await (deps as any).mad.listTransactionAssessments(
+        organizationId,
+        limit,
+        offset,
+      );
       return json({ data: tas, total: tas.length, trace_id: traceId });
     },
   },
@@ -73,8 +98,16 @@ export const madRoutes: RouteDefinition[] = [
     permissions: ["assessment:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
       const taId = routeParam(params, "taId");
-      const ta = await (deps as any).mad.getTransactionAssessment(organizationId, taId);
-      if (!ta) throw new ApiError("NOT_FOUND", "Transaction assessment not found.", 404);
+      const ta = await (deps as any).mad.getTransactionAssessment(
+        organizationId,
+        taId,
+      );
+      if (!ta)
+        throw new ApiError(
+          "NOT_FOUND",
+          "Transaction assessment not found.",
+          404,
+        );
       return json({ ...ta, trace_id: traceId });
     },
   },
@@ -83,12 +116,25 @@ export const madRoutes: RouteDefinition[] = [
     path: "/api/v1/mad/transaction-assessments/:taId/scores/:subReqId",
     protected: true,
     requireActor: true,
-    permissions: ["assessment:write"],
-    handler: async ({ deps, params, request, organizationId, actorId, traceId }) => {
+    permissions: ["assessment:update"],
+    handler: async ({
+      deps,
+      params,
+      request,
+      organizationId,
+      actorId,
+      traceId,
+    }) => {
       const taId = routeParam(params, "taId");
       const subReqId = routeParam(params, "subReqId");
       const body = await parseJson(request, UpsertMadMaturityScoreSchema);
-      const score = await (deps as any).mad.upsertMaturityScore(organizationId, taId, subReqId, actorId, body);
+      const score = await (deps as any).mad.upsertMaturityScore(
+        organizationId,
+        taId,
+        subReqId,
+        actorId,
+        body,
+      );
       return json({ ...score, trace_id: traceId });
     },
   },
@@ -100,7 +146,10 @@ export const madRoutes: RouteDefinition[] = [
     permissions: ["assessment:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
       const taId = routeParam(params, "taId");
-      const summary = await (deps as any).mad.getMaturitySummary(organizationId, taId);
+      const summary = await (deps as any).mad.getMaturitySummary(
+        organizationId,
+        taId,
+      );
       return json({ ...summary, trace_id: traceId });
     },
   },

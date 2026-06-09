@@ -64,6 +64,12 @@ tsc-errors.txt
 evals/fixtures/*.xlsx
 evals/fixtures/*.xls
 
+# Purchased STRM bundle — commercial data, never commit
+assets/strm/
+# Main SCF XLSX (large binary, not tracked)
+assets/*.xlsx
+assets/*.xls
+
 # Generated SCF seed files (regenerate from XLSX)
 infra/docker/postgres/seeds/0010_scf_official_frameworks_seed.sql
 
