@@ -19,6 +19,7 @@
 import type { RouteDefinition } from "../http";
 import { json } from "../http";
 import { MCP_TOOLS, dispatchMcpTool } from "../mcp/server";
+import { checkMcpQuota } from "../middleware/mcp-quota.middleware";
 
 const MCP_VERSION = "2025-03-26";
 const SERVER_NAME = "standard-grc";
@@ -131,6 +132,44 @@ export const mcpRoutes: RouteDefinition[] = [
 
         // ── ADR-003: Bifurcação sync / async ──────────────────────────
         if (ASYNC_TOOLS.has(toolName)) {
+          // ── M2: Per-org MCP quota check before async dispatch ────────
+          // Uses STANDARD_CACHE KV sliding window. Skip gracefully in local dev.
+          if (ctx.env?.STANDARD_CACHE && ctx.organizationId) {
+            const quota = await checkMcpQuota(
+              ctx.organizationId,
+              ctx.env.STANDARD_CACHE,
+            );
+            if (!quota.allowed) {
+              return json(
+                {
+                  jsonrpc: "2.0",
+                  id,
+                  error: {
+                    code: -32000,
+                    message: `MCP quota exceeded. Retry after ${quota.retryAfterSeconds}s.`,
+                    data: {
+                      error: "QUOTA_EXCEEDED",
+                      retry_after_seconds: quota.retryAfterSeconds,
+                      limit_per_minute: quota.limitPerMinute,
+                      trace_id: ctx.traceId,
+                    },
+                  },
+                },
+                {
+                  status: 429,
+                  headers: {
+                    "Retry-After": String(quota.retryAfterSeconds),
+                    "X-RateLimit-Limit": String(quota.limitPerMinute),
+                    "X-RateLimit-Remaining": "0",
+                    "X-RateLimit-Reset": String(
+                      Math.floor(Date.now() / 60_000) * 60_000 + 60_000,
+                    ),
+                  },
+                },
+              );
+            }
+          }
+
           // ── Grupo B — Async (LLM / heavy) → 202 + job_id ───────────
           const jobId = crypto.randomUUID();
           const traceId = ctx.traceId ?? crypto.randomUUID();
