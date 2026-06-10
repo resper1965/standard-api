@@ -1,16 +1,15 @@
 /**
  * @module @standard/auth
- * @description Standard Auth Server — Self-hosted Standard Native Auth.
+ * @description Standard Auth Server — Better Auth configurado para o auth Neon branch.
  *
- * Runs inside the API Gateway (Cloudflare Worker).
- * Uses email/password authentication with organization-based tenancy.
+ * Arquitectura simplificada:
+ * - baUser é a única entidade de utilizador (sem users do domínio)
+ * - Sem customSession plugin — org context resolvido no middleware via KV
+ * - Sem databaseHooks de user_lifecycle — sem users do domínio para sincronizar
+ * - Sessions em baSession (auth branch) + cache KV 60s no middleware
  */
-import { AsyncLocalStorage } from "node:async_hooks";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { customSession } from "better-auth/plugins";
-import { eq } from "drizzle-orm";
-import { organizations, memberships, users } from "@standard/schemas";
 import {
   baUser,
   baSession,
@@ -20,47 +19,37 @@ import {
 import { sendStandardEmail, type SendEmail } from "@standard/email";
 import type { DrizzleClient } from "./types";
 
-/** Minimal KV-like cache interface for session enrichment caching.
- *  Compatible with Cloudflare KV, but doesn't import @cloudflare/workers-types. */
-interface SessionCacheStore {
-  get(key: string, type: "json"): Promise<unknown>;
-  put(
-    key: string,
-    value: string,
-    options?: { expirationTtl?: number },
-  ): Promise<void>;
-  delete(key: string): Promise<void>;
-}
-
 export type AuthEnv = {
-  DATABASE_URL: string;
+  /** Connection string do auth Neon branch */
+  AUTH_DATABASE_URL?: string;
+  /** HMAC-SHA256 secret — mínimo 32 caracteres */
   BETTER_AUTH_SECRET: string;
+  /** URL base da auth API (ex: https://standard-api.bekaa.eu/api/auth) */
   BETTER_AUTH_URL?: string;
+  /** Origins permitidos — vírgula separados */
   ALLOWED_ORIGINS?: string;
+  /** Ambiente actual: 'production' | 'staging' | 'development' */
   STANDARD_ENV?: string;
-  email?: SendEmail | undefined;
-  // KV cache for session enrichment (eliminates per-request DB queries)
-  sessionCache?: SessionCacheStore | undefined;
-  // Event-driven lifecycle callbacks (injected by API Gateway)
-  onUserCreated?: ((payload: unknown) => Promise<void>) | undefined;
-  onUserUpdated?: ((payload: unknown) => Promise<void>) | undefined;
+  /** Serviço de email injectado pelo API Gateway */
+  email?: SendEmail;
 };
 
 /**
- * Creates the Standard Native Auth server instance.
- * Call once at Worker startup and reuse across requests.
+ * Cria a instância Better Auth.
+ * Chamar uma vez no startup do Worker e reutilizar em todos os requests.
+ *
+ * @param env  Variáveis de ambiente e serviços injectados
+ * @param db   Cliente Drizzle apontando para o auth Neon branch (HYPERDRIVE_AUTH)
  */
 export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
-  // ── H1: Validate BETTER_AUTH_SECRET at startup ────────────────────
-  // HMAC-SHA256 needs ≥32 bytes of entropy. Reject weak secrets early.
+  // ── Validação de startup ─────────────────────────────────────────────────
   if (!env.BETTER_AUTH_SECRET || env.BETTER_AUTH_SECRET.length < 32) {
     throw new Error(
-      `[standard:auth] BETTER_AUTH_SECRET must be at least 32 characters. Got ${env.BETTER_AUTH_SECRET?.length ?? 0}.`,
+      `[standard:auth] BETTER_AUTH_SECRET must be ≥32 characters. Got ${env.BETTER_AUTH_SECRET?.length ?? 0}.`,
     );
   }
 
-  // ── H2: Resolve trustedOrigins from env (single source of truth) ──
-  // M2 fix: localhost only in non-production environments
+  // ── Trusted origins ──────────────────────────────────────────────────────
   const isProduction = env.STANDARD_ENV === "production";
   const trustedOrigins = env.ALLOWED_ORIGINS
     ? env.ALLOWED_ORIGINS.split(",")
@@ -93,222 +82,127 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
     }),
     secret: env.BETTER_AUTH_SECRET,
     baseURL: env.BETTER_AUTH_URL,
-    logger: {
-      disabled: false,
-    },
+    logger: { disabled: false },
 
+    // ── Email + Password ──────────────────────────────────────────────────
     emailAndPassword: {
       enabled: true,
       requireEmailVerification: true,
-      /**
-       * Password policy: minimum 12 characters.
-       * Complexity rules (uppercase, lowercase, digit, special char,
-       * common-password blocklist) are enforced in the `password.hash`
-       * wrapper below — the only Better Auth interception point where
-       * we have access to the raw password.
-       */
       minPasswordLength: 12,
       maxPasswordLength: 128,
+
       password: {
         hash: async (password: string): Promise<string> => {
-          // ── Password complexity validation ──────────────────────────
-          const COMMON_PASSWORDS = ["password", "123456789012", "qwertyuiopas"];
+          // Complexidade: uppercase, lowercase, dígito, especial
           const errors: string[] = [];
-          if (!/[A-Z]/.test(password))
-            errors.push("at least one uppercase letter");
-          if (!/[a-z]/.test(password))
-            errors.push("at least one lowercase letter");
-          if (!/[0-9]/.test(password)) errors.push("at least one number");
-          if (!/[^A-Za-z0-9]/.test(password))
-            errors.push("at least one special character");
-          if (COMMON_PASSWORDS.includes(password.toLowerCase())) {
-            errors.push("password is too common");
+          if (!/[A-Z]/.test(password)) errors.push("uppercase letter");
+          if (!/[a-z]/.test(password)) errors.push("lowercase letter");
+          if (!/[0-9]/.test(password)) errors.push("number");
+          if (!/[^A-Za-z0-9]/.test(password)) errors.push("special character");
+          if (errors.length) {
+            throw new Error(`Password requires: ${errors.join(", ")}.`);
           }
-          if (errors.length > 0) {
-            throw new Error(
-              `Password does not meet complexity requirements: ${errors.join(", ")}.`,
-            );
-          }
-
-          // Delegate to Better Auth's default scrypt hashing
           const { hashPassword } = await import("@better-auth/utils/password");
           return hashPassword(password);
         },
-        verify: async (data: {
+        verify: async ({
+          hash,
+          password,
+        }: {
           hash: string;
           password: string;
         }): Promise<boolean> => {
           const { verifyPassword } =
             await import("@better-auth/utils/password");
-          return verifyPassword(data.hash, data.password);
+          return verifyPassword(hash, password);
         },
       },
-      sendVerificationEmail: async (
-        {
-          user,
-          url,
-          token,
-        }: {
-          user: { email: string; name: string | null };
-          url: string;
-          token: string;
-        },
-        request?: Request,
-      ) => {
-        const emailService = env.email;
-        if (emailService) {
-          try {
-            await sendStandardEmail(
-              emailService,
-              {
-                type: "verification",
-                to: user.email,
-                firstName: user.name || "User",
-                verificationUrl: url,
-                expiresIn: "24 hours",
-              },
-              {
-                domain: "bekaa.eu",
-              },
-            );
-          } catch (err) {
-            console.error(
-              "[standard:auth] Failed to send verification email:",
-              err,
-            );
-          }
-        } else {
-          console.log(
-            `[standard:auth:dev] Email verification requested for ${user.email}. Link: ${url}`,
+
+      sendVerificationEmail: async ({
+        user,
+        url,
+      }: {
+        user: { email: string; name: string | null };
+        url: string;
+      }) => {
+        if (env.email) {
+          await sendStandardEmail(
+            env.email,
+            {
+              type: "verification",
+              to: user.email,
+              firstName: user.name || "User",
+              verificationUrl: url,
+              expiresIn: "24 hours",
+            },
+            { domain: "bekaa.eu" },
+          ).catch((err: unknown) =>
+            console.error("[standard:auth] sendVerificationEmail failed:", err),
           );
+        } else {
+          console.log(`[standard:auth:dev] verify → ${url}`);
         }
       },
-      sendResetPassword: async (
-        {
-          user,
-          url,
-          token,
-        }: {
-          user: { email: string; name: string | null };
-          url: string;
-          token: string;
-        },
-        request?: Request,
-      ) => {
-        const emailService = env.email;
-        if (emailService) {
-          try {
-            await sendStandardEmail(
-              emailService,
-              {
-                type: "password_reset",
-                to: user.email,
-                firstName: user.name || "User",
-                resetUrl: url,
-                expiresIn: "1 hour",
-              },
-              {
-                domain: "bekaa.eu",
-              },
-            );
-          } catch (err) {
-            console.error(
-              "[standard:auth] Failed to send password reset email:",
-              err,
-            );
-          }
-        } else {
-          console.log(
-            `[standard:auth:dev] Password reset requested for ${user.email}. Link: ${url}`,
+
+      sendResetPassword: async ({
+        user,
+        url,
+      }: {
+        user: { email: string; name: string | null };
+        url: string;
+      }) => {
+        if (env.email) {
+          await sendStandardEmail(
+            env.email,
+            {
+              type: "password_reset",
+              to: user.email,
+              firstName: user.name || "User",
+              resetUrl: url,
+              expiresIn: "1 hour",
+            },
+            { domain: "bekaa.eu" },
+          ).catch((err: unknown) =>
+            console.error("[standard:auth] sendResetPassword failed:", err),
           );
+        } else {
+          console.log(`[standard:auth:dev] reset → ${url}`);
         }
       },
     },
 
     trustedOrigins,
 
+    // ── User additional fields ────────────────────────────────────────────
+    // fieldName mapeia para o nome real da coluna na DB (snake_case)
     user: {
       additionalFields: {
-        jobTitle: {
-          type: "string",
-        },
-        phone: {
-          type: "string",
-        },
-        metadata: {
-          type: "string",
-        },
-
-        /**
-         * Platform-level admin flag.
-         * When true, the user has cross-tenant access (Bekaa operator).
-         * - Never settable via public API (input: false).
-         * - Only set via SQL migration/seed by operators.
-         * - Checked by requirePlatformAdmin() in rbac.middleware.ts.
-         *
-         * F7 fix: fieldName must match the actual DB column name (snake_case).
-         * Without fieldName, Better Auth looks for a column named "platformAdmin"
-         * which does not exist — the real column is "platform_admin".
-         * This caused isPlatformAdmin() to always return false.
-         */
         platformAdmin: {
           type: "boolean",
           defaultValue: false,
           returned: true,
-          input: false,
+          input: false, // nunca settável via API pública
           fieldName: "platform_admin",
         },
-        /**
-         * Account approval gate.
-         * New users default to false; platform admin must approve before access.
-         * - Never settable via public signup (input: false).
-         * - Managed via /api/v1/admin/users/:id/approve endpoint.
-         *
-         * F7 fix: fieldName maps to the actual DB column "approved".
-         */
         approved: {
           type: "boolean",
           defaultValue: false,
           returned: true,
-          input: false,
+          input: false, // gerido via /admin/users/:id/approve
           fieldName: "approved",
         },
+        jobTitle: { type: "string" },
+        phone: { type: "string" },
       },
     },
 
-    advanced: {
-      useSecureCookies: true,
-      generateId: () => crypto.randomUUID(),
-      // Cross-subdomain cookies: share session between
-      // standard.bekaa.eu (frontend) and standard-api.bekaa.eu (API gateway)
-      crossSubDomainCookies: {
-        enabled: true,
-        domain: ".bekaa.eu",
-      },
-      defaultCookieAttributes: {
-        sameSite: "none", // Required for cross-origin credentials
-        secure: true, // Required when sameSite=none
-        httpOnly: true,
-        path: "/",
-      },
-    },
-
+    // ── Session ───────────────────────────────────────────────────────────
     session: {
-      // ── M1: Session TTL — 4 hours (BA default is 7 days) ────────────
-      // GRC platform handles sensitive compliance data; shorter sessions
-      // reduce window of exposure for stolen cookies.
-      expiresIn: 4 * 60 * 60, // 4h session lifetime (seconds)
-      updateAge: 30 * 60, // Refresh session token every 30min of activity
-      cookieCache: {
-        enabled: true,
-        maxAge: 5 * 60,
-      },
+      expiresIn: 4 * 60 * 60, // 4h — GRC lida com dados sensíveis
+      updateAge: 30 * 60, // refresh token a cada 30min de actividade
       additionalFields: {
-        /**
-         * Active organization ID — set by /api/v1/users/me/active-org endpoint.
-         * Returned in getSession so the frontend can scope all API calls.
-         * Without this, useActiveOrg() returns null → pages show infinite spinner.
-         */
+        // Org activa — actualizada via POST /v1/auth/activate-org
+        // O middleware lê daqui e faz cache em KV (STANDARD_CACHE, TTL 60s)
         activeOrganizationId: {
           type: "string",
           returned: true,
@@ -317,252 +211,23 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
       },
     },
 
-    databaseHooks: {
-      user: {
-        create: {
-          after: async (user) => {
-            if (env.onUserCreated) {
-              try {
-                await env.onUserCreated({
-                  event: "user.created",
-                  queue_type: "user_lifecycle",
-                  idempotency_key: crypto.randomUUID(),
-                  user: { id: user.id, email: user.email, name: user.name },
-                  timestamp: new Date().toISOString(),
-                });
-              } catch (err) {
-                console.error(
-                  "[standard:auth] onUserCreated hook failed:",
-                  err,
-                );
-              }
-            }
-          },
-        },
-        update: {
-          after: async (user) => {
-            if (env.onUserUpdated) {
-              try {
-                await env.onUserUpdated({
-                  event: "user.updated",
-                  queue_type: "user_lifecycle",
-                  idempotency_key: crypto.randomUUID(),
-                  user: { id: user.id, email: user.email, name: user.name },
-                  timestamp: new Date().toISOString(),
-                });
-              } catch (err) {
-                console.error(
-                  "[standard:auth] onUserUpdated hook failed:",
-                  err,
-                );
-              }
-            }
-          },
-        },
+    // ── Advanced ─────────────────────────────────────────────────────────
+    advanced: {
+      useSecureCookies: true,
+      generateId: () => crypto.randomUUID(),
+      // Cookies cross-subdomain: partilha sessão entre
+      // standard.bekaa.eu (frontend) e standard-api.bekaa.eu (API gateway)
+      crossSubDomainCookies: {
+        enabled: true,
+        domain: ".bekaa.eu",
       },
-      // M9 fix: Purge KV session cache on sign-out so the session is
-      // immediately invalidated instead of waiting for 60s TTL expiry.
-      session: {
-        create: {
-          // F6 fix: Auto-set activeOrganizationId for platform admins on session creation.
-          // Platform admins (bekaa operators) never go through the /activate flow —
-          // they need activeOrganizationId from the first request so customSession
-          // can enrich the session with org context and isPlatformAdmin can return true.
-          after: async (session) => {
-            if (!db) return;
-            try {
-              const [user] = await db
-                .select({
-                  platformAdmin:
-                    (baUser as any).platform_admin ??
-                    (baUser as any).platformAdmin,
-                })
-                .from(baUser)
-                .where(eq((baUser as any).id, session.userId))
-                .limit(1);
-
-              if (!user?.platformAdmin) return;
-
-              // Find the platform admin's primary org in the Standard domain
-              const [org] = await db
-                .select({ id: organizations.id })
-                .from(organizations)
-                .innerJoin(
-                  users,
-                  eq(users.identityProviderSubject, session.userId),
-                )
-                .limit(1);
-
-              if (!org) return;
-
-              // Set activeOrganizationId directly on the session row
-              await db
-                .update(baSession)
-                .set({ activeOrganizationId: org.id })
-                .where(eq(baSession.id, session.id));
-
-              console.log(
-                `[standard:auth] F6: auto-set activeOrganizationId=${org.id} for platform admin session=${session.id}`,
-              );
-            } catch (err) {
-              // Non-blocking — session is still valid, admin can activate manually
-              console.error(
-                "[standard:auth] F6: session.create hook failed:",
-                err,
-              );
-            }
-          },
-        },
-        delete: {
-          after: async (session) => {
-            if (env.sessionCache && session?.id) {
-              try {
-                await env.sessionCache.delete(`session-ctx:${session.id}`);
-              } catch {
-                // fire-and-forget — logout succeeds even if KV cleanup fails
-              }
-            }
-          },
-        },
+      defaultCookieAttributes: {
+        sameSite: "none", // obrigatório para cross-origin credentials
+        secure: true, // obrigatório quando sameSite=none
+        httpOnly: true,
+        path: "/",
       },
     },
-
-    plugins: [
-      customSession(async ({ user, session }) => {
-        // Use the `db` closure param from createAuth
-        if (!db) {
-          return { user, session };
-        }
-
-        const sessionId = (session as any).id;
-        const kv = env.sessionCache;
-
-        // ── KV Cache: avoid 2x DB queries on every getSession() ────────
-        if (kv && sessionId) {
-          try {
-            const cached = (await kv.get(
-              `session-ctx:${sessionId}`,
-              "json",
-            )) as any;
-            if (cached) {
-              return {
-                user: {
-                  ...user,
-                  platformAdmin: (user as any).platformAdmin ?? false,
-                  approved: (user as any).approved ?? false,
-                },
-                session: {
-                  ...session,
-                  ...cached,
-                },
-              };
-            }
-          } catch {
-            // Cache miss or KV error — fall through to DB query
-          }
-        }
-
-        try {
-          // Query memberships for this BA user
-          const memberOrgs = await (db as any)
-            .select({
-              orgId: organizations.id,
-              orgName: organizations.name,
-              orgSlug: organizations.slug,
-              role: memberships.role,
-            })
-            .from(memberships)
-            .innerJoin(users, eq(users.id, memberships.userId))
-            .innerJoin(
-              organizations,
-              eq(organizations.id, memberships.organizationId),
-            )
-            .where(eq(users.identityProviderSubject, user.id));
-
-          // Also include orgs where user is direct owner
-          const ownedOrgs = await (db as any)
-            .select({
-              orgId: organizations.id,
-              orgName: organizations.name,
-              orgSlug: organizations.slug,
-            })
-            .from(organizations)
-            .where(eq(organizations.userId, user.id));
-
-          // Merge without duplicates
-          const allOrgs = [
-            ...memberOrgs,
-            ...ownedOrgs.map((o: any) => ({ ...o, role: "owner" })),
-          ];
-          const uniqueOrgs = allOrgs.filter(
-            (o, i, a) => a.findIndex((x: any) => x.orgId === o.orgId) === i,
-          );
-
-          // Query domain user ID
-          const [domainUser] = await (db as any)
-            .select({ id: users.id })
-            .from(users)
-            .where(eq(users.identityProviderSubject, user.id))
-            .limit(1);
-
-          const domainUserId = domainUser?.id || null;
-
-          // Determine active org
-          const activeOrgId =
-            (session as any).activeOrganizationId ||
-            uniqueOrgs[0]?.orgId ||
-            null;
-          const activeOrg = uniqueOrgs.find((o) => o.orgId === activeOrgId);
-
-          // Build the enrichment payload
-          const sessionEnrichment = {
-            domainUserId,
-            activeOrganizationId: activeOrgId,
-            activeOrganizationSlug: activeOrg?.orgSlug ?? null,
-            activeOrganizationRole: activeOrg?.role ?? null,
-            allowedOrganizations: uniqueOrgs.map((o) => ({
-              id: o.orgId,
-              name: o.orgName,
-              slug: o.orgSlug,
-              role: o.role,
-            })),
-          };
-
-          // ── Cache the enrichment in KV (60s TTL) ────────────────────
-          if (kv && sessionId) {
-            kv.put(
-              `session-ctx:${sessionId}`,
-              JSON.stringify(sessionEnrichment),
-              { expirationTtl: 60 },
-            ).catch(() => {}); // fire-and-forget
-          }
-
-          return {
-            user: {
-              ...user,
-              platformAdmin: (user as any).platformAdmin ?? false,
-              approved: (user as any).approved ?? false,
-            },
-            session: {
-              ...session,
-              ...sessionEnrichment,
-            },
-          };
-        } catch (err) {
-          console.error("[standard:auth] customSession query failed:", err);
-          // F1 fix: preserve platformAdmin and approved from base BA user even on DB failure.
-          // Without this, isPlatformAdmin() returns false and all admin routes throw 403.
-          return {
-            user: {
-              ...user,
-              platformAdmin: (user as any).platformAdmin ?? false,
-              approved: (user as any).approved ?? false,
-            },
-            session,
-          };
-        }
-      }),
-    ],
   });
 };
 
