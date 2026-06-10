@@ -22,7 +22,7 @@ import type { DrizzleClient } from "./types";
 export type BaUser = typeof baUser.$inferSelect;
 export type BaSession = typeof baSession.$inferSelect;
 
-/** Campos públicos de um usuário BA — nunca expõe password hash ou tokens internos. */
+/** Campos públicos de um utilizador BA — nunca expõe password hash ou tokens internos. */
 export type UserSummary = Pick<
   BaUser,
   | "id"
@@ -30,9 +30,6 @@ export type UserSummary = Pick<
   | "name"
   | "emailVerified"
   | "image"
-  | "banned"
-  | "banReason"
-  | "banExpires"
   | "platformAdmin"
   | "approved"
   | "jobTitle"
@@ -48,9 +45,6 @@ export type UserUpdateInput = Partial<
     | "email"
     | "emailVerified"
     | "image"
-    | "banned"
-    | "banReason"
-    | "banExpires"
     | "platformAdmin"
     | "approved"
     | "jobTitle"
@@ -89,9 +83,6 @@ export const createAuthRepository = (db: DrizzleClient) => ({
         name: baUser.name,
         emailVerified: baUser.emailVerified,
         image: baUser.image,
-        banned: baUser.banned,
-        banReason: baUser.banReason,
-        banExpires: baUser.banExpires,
         platformAdmin: baUser.platformAdmin,
         approved: baUser.approved,
         jobTitle: baUser.jobTitle,
@@ -129,9 +120,6 @@ export const createAuthRepository = (db: DrizzleClient) => ({
       name: baUser.name,
       emailVerified: baUser.emailVerified,
       image: baUser.image,
-      banned: baUser.banned,
-      banReason: baUser.banReason,
-      banExpires: baUser.banExpires,
       platformAdmin: baUser.platformAdmin,
       approved: baUser.approved,
       jobTitle: baUser.jobTitle,
@@ -225,42 +213,22 @@ export const createAuthRepository = (db: DrizzleClient) => ({
     });
   },
 
-  // ── Ban management ────────────────────────────────────────────────────────
+  // ── Revocation ────────────────────────────────────────────────────────────
 
   /**
-   * Bane um usuário e revoga todas as sessões ativas em transação única.
-   * Atômico: ou ban + revogação ocorrem juntos, ou nenhum.
+   * Revoga acesso de um utilizador:
+   * - Marca approved=false
+   * - Revoga todas as sessões activas
+   * Para reactivar, usar approveUser().
    */
-  async banUser(
-    userId: string,
-    opts: { reason: string; expiresAt?: Date },
-  ): Promise<void> {
+  async revokeUser(userId: string): Promise<void> {
     await (db as any).transaction(async (tx: any) => {
       await tx
         .update(baUser)
-        .set({
-          banned: true,
-          banReason: opts.reason,
-          banExpires: opts.expiresAt ?? null,
-          updatedAt: new Date(),
-        })
+        .set({ approved: false, updatedAt: new Date() })
         .where(eq(baUser.id, userId));
-      // Revogar sessões ativas imediatamente após ban
       await tx.delete(baSession).where(eq(baSession.userId, userId));
     });
-  },
-
-  /** Remove ban do usuário. Não restaura sessões — usuário precisa fazer login novamente. */
-  async unbanUser(userId: string): Promise<void> {
-    await (db as any)
-      .update(baUser)
-      .set({
-        banned: false,
-        banReason: null,
-        banExpires: null,
-        updatedAt: new Date(),
-      })
-      .where(eq(baUser.id, userId));
   },
 
   // ── Approval ──────────────────────────────────────────────────────────────
