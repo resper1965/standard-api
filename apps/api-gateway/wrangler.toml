@@ -65,6 +65,14 @@ name = "standard-council-orchestration-dev"
 class_name = "CouncilOrchestrationWorkflow"
 script_name = "standard-workflows"
 
+# Hyperdrive — product Neon branch (SCF, assessments, findings)
+# Local dev uses DATABASE_URL directly via miniflare — no Hyperdrive needed locally
+
+# Auth Neon branch — control plane (user, org, api_keys)
+[[hyperdrive]]
+binding = "HYPERDRIVE_AUTH"
+id = "0cdc4cfbf47a472fb1fda01d5987499c"
+
 [env.staging]
 name = "standard-api-gateway-staging"
 
@@ -119,11 +127,16 @@ id = "757b7c1c18f744a8ab8b8fcafa84bc9d"
 binding = "STANDARD_CACHE"
 id = "094323d4e27d4b92994c89d412d27f74"
 
-# Hyperdrive — regional Neon connection pooler
-# Create: wrangler hyperdrive create standard-neon-staging --connection-string="<NEON_URL>"
+# Hyperdrive — product branch (staging)
 [[env.staging.hyperdrive]]
 binding = "HYPERDRIVE"
 id = "69f8233cfd0f4614a9249e4a8867d148"
+
+# Auth branch (staging) — create with:
+# npx wrangler hyperdrive create standard-neon-auth-staging --connection-string="<AUTH_STAGING_URL>"
+[[env.staging.hyperdrive]]
+binding = "HYPERDRIVE_AUTH"
+id = "REPLACE_WITH_AUTH_STAGING_HYPERDRIVE_ID"
 
 [[env.staging.workflows]]
 binding = "ASSESSMENT_WORKFLOW"
@@ -195,11 +208,16 @@ id = "23e073ec707d4803a8957e13a4046810"
 binding = "STANDARD_CACHE"
 id = "55f97abbf9794b0196bdf51e8c1dedec"
 
-# Hyperdrive — regional Neon connection pooler
-# Create: wrangler hyperdrive create standard-neon-prod --connection-string="<NEON_URL>"
+# Hyperdrive — product branch (production)
 [[env.production.hyperdrive]]
 binding = "HYPERDRIVE"
 id = "aa6fb63a67f24cbd82d28bf5a43f08e5"
+
+# Auth branch (production) — create with:
+# npx wrangler hyperdrive create standard-neon-auth-prod --connection-string="<AUTH_PROD_URL>"
+[[env.production.hyperdrive]]
+binding = "HYPERDRIVE_AUTH"
+id = "REPLACE_WITH_AUTH_PROD_HYPERDRIVE_ID"
 
 [[env.production.workflows]]
 binding = "ASSESSMENT_WORKFLOW"
