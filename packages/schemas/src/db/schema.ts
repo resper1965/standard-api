@@ -303,6 +303,41 @@ export const controlImplementationStatusEnum = pgEnum(
   ],
 );
 
+// ── STRM Canonical Operators (NIST IR 8477 / ADR-001) ────────────────────────
+// ⛔ NEVER add "direct", "related", "intersecting", "no_relationship", "source_defined"
+// Reference: docs/decisions/ADR-001-strm-weights-algorithm.md
+export const strmOperatorEnum = pgEnum("strm_operator", [
+  "equal", // = (1.0 weight — full compliance coverage)
+  "subset", // ⊂ (1.0 weight — SCF broader than requirement)
+  "intersects", // ∩ (dynamic strength_score weight, 0.1–0.9)
+  "superset", // ⊃ (max 0.5 weight — SCF narrower than requirement)
+  "no_relation", // Ø (0.0 weight — not counted in denominator)
+]);
+
+// ── TPRA Enums ────────────────────────────────────────────────────────────────
+export const tpraVendorTypeEnum = pgEnum("tpra_vendor_type", [
+  "saas",
+  "infrastructure",
+  "processor",
+  "controller",
+  "subprocessor",
+]);
+
+export const tpraAssessmentStatusEnum = pgEnum("tpra_assessment_status", [
+  "draft",
+  "submitted",
+  "scoring",
+  "scored",
+  "archived",
+]);
+
+export const tpraRiskCategoryEnum = pgEnum("tpra_risk_category", [
+  "low",
+  "medium",
+  "high",
+  "critical",
+]);
+
 export const organizations = pgTable(
   "organizations",
   {
@@ -603,8 +638,11 @@ export const scfMappings = pgTable(
     scfControlId: uuid("scf_control_id")
       .notNull()
       .references(() => scfControls.id),
-    relationshipType: text("relationship_type").notNull(),
-    relationshipStrength: text("relationship_strength"),
+    // ⛔ ADR-001: usar strmOperatorEnum — NUNCA text livre com "direct"/"related"
+    relationshipType: strmOperatorEnum("relationship_type").notNull(),
+    // Peso numérico 0.0–1.0 usado pelo STRMWeightCalculator para operador "intersects"
+    // null = usar default (0.5) conforme ADR-001
+    strengthScore: numeric("strength_score", { precision: 4, scale: 3 }),
     mappingRationale: text("mapping_rationale"),
     mappingSource: mappingSourceEnum("mapping_source")
       .default("official_scf")
@@ -639,8 +677,10 @@ export const scfStrmRelationships = pgTable(
     fdeCode: text("fde_code"),
     /** Human-readable name of the FDE requirement. */
     fdeName: text("fde_name"),
-    relationshipType: text("relationship_type").notNull(),
-    relationshipStrength: text("relationship_strength").notNull(),
+    // ⛔ ADR-001: usar strmOperatorEnum — NUNCA text livre com "direct"/"related"
+    relationshipType: strmOperatorEnum("relationship_type").notNull(),
+    // Peso numérico 0.0–1.0 para operador "intersects"
+    strengthScore: numeric("strength_score", { precision: 4, scale: 3 }),
     rationale: text("rationale"),
     source: text("source").notNull(),
     ...timestamps(),
@@ -3090,5 +3130,142 @@ export const madMaturityScores = pgTable(
       table.madTransactionAssessmentId,
       table.madSubRequirementId,
     ),
+  ],
+);
+
+// ── Assessment Control Events — Ledger Append-Only (ADR-002) ─────────────────
+// ⛔ NEVER UPDATE OR DELETE rows from this table.
+// ⛔ State = reducer over all events for (assessment_id, scf_control_id).
+// Reference: docs/decisions/ADR-002-ledger-append-only.md
+export const assessmentControlEvents = pgTable(
+  "assessment_control_events",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id),
+    assessmentId: uuid("assessment_id")
+      .notNull()
+      .references(() => assessments.id),
+    scfControlId: uuid("scf_control_id")
+      .notNull()
+      .references(() => scfControls.id),
+    scfVersionId: uuid("scf_version_id")
+      .notNull()
+      .references(() => scfVersions.id),
+    // 'status_changed' | 'evidence_added' | 'finding_created' | 'approval_gate' | 'mutation_blocked'
+    eventType: text("event_type").notNull(),
+    previousValue: jsonb("previous_value").$type<Record<string, unknown>>(),
+    newValue: jsonb("new_value").$type<Record<string, unknown>>().notNull(),
+    actorId: uuid("actor_id").references(() => users.id),
+    agentRunId: uuid("agent_run_id").references(() => agentRuns.id),
+    traceId: text("trace_id").notNull(),
+    // NO updated_at. NO deleted_at. Append-only = immutable record.
+    occurredAt: timestamp("occurred_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    index("ace_org_assessment_idx").on(
+      table.organizationId,
+      table.assessmentId,
+    ),
+    index("ace_control_idx").on(table.assessmentId, table.scfControlId),
+    index("ace_trace_idx").on(table.traceId),
+    index("ace_occurred_at_idx").on(table.occurredAt),
+  ],
+);
+
+// ── TPRA: Third-Party Risk Assessment ────────────────────────────────────────
+export const tpraVendors = pgTable(
+  "tpra_vendors",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id),
+    vendorName: text("vendor_name").notNull(),
+    vendorType: tpraVendorTypeEnum("vendor_type"),
+    contactEmail: text("contact_email"),
+    metadata: jsonb("metadata")
+      .$type<Record<string, unknown>>()
+      .default({})
+      .notNull(),
+    traceId: text("trace_id").notNull(),
+    ...timestamps(),
+  },
+  (table) => [
+    index("tpra_vendors_org_idx").on(table.organizationId),
+    uniqueIndex("tpra_vendors_org_name_uidx").on(
+      table.organizationId,
+      table.vendorName,
+    ),
+  ],
+);
+
+export const tpraAssessments = pgTable(
+  "tpra_assessments",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id),
+    vendorId: uuid("vendor_id")
+      .notNull()
+      .references(() => tpraVendors.id),
+    assessmentId: uuid("assessment_id").references(() => assessments.id),
+    status: tpraAssessmentStatusEnum("status").default("draft").notNull(),
+    submittedAt: timestamp("submitted_at", { withTimezone: true }),
+    responses: jsonb("responses")
+      .$type<Record<string, unknown>>()
+      .default({})
+      .notNull(),
+    scfVersionId: uuid("scf_version_id")
+      .notNull()
+      .references(() => scfVersions.id),
+    traceId: text("trace_id").notNull(),
+    ...timestamps(),
+  },
+  (table) => [
+    index("tpra_assessments_org_vendor_idx").on(
+      table.organizationId,
+      table.vendorId,
+    ),
+    index("tpra_assessments_status_idx").on(table.status),
+  ],
+);
+
+export const tpraRiskScores = pgTable(
+  "tpra_risk_scores",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id),
+    tpraAssessmentId: uuid("tpra_assessment_id")
+      .notNull()
+      .references(() => tpraAssessments.id),
+    vendorId: uuid("vendor_id")
+      .notNull()
+      .references(() => tpraVendors.id),
+    rawScore: numeric("raw_score", { precision: 5, scale: 2 }).notNull(),
+    riskCategory: tpraRiskCategoryEnum("risk_category").notNull(),
+    scfDomainFailures: jsonb("scf_domain_failures")
+      .$type<string[]>()
+      .default([])
+      .notNull(),
+    scfVersionId: uuid("scf_version_id")
+      .notNull()
+      .references(() => scfVersions.id),
+    traceId: text("trace_id").notNull(),
+    // Append-only: no updated_at, no deleted_at
+    computedAt: timestamp("computed_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    index("tpra_risk_scores_assessment_idx").on(table.tpraAssessmentId),
+    index("tpra_risk_scores_vendor_idx").on(table.vendorId),
+    index("tpra_risk_scores_computed_at_idx").on(table.computedAt),
   ],
 );

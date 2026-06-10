@@ -275,8 +275,34 @@ async function main() {
             fdeCode: row.fde_code,
             fdeName: row.fde_name,
             scfMappingId: row.scf_mapping_id,
-            relationshipType: row.relationship_type,
-            relationshipStrength: row.relationship_strength,
+            // ADR-001: map legacy relationship_type strings to canonical STRM operators
+            relationshipType: (row.relationship_type === "direct"
+              ? "equal"
+              : row.relationship_type === "related"
+                ? "intersects"
+                : row.relationship_type === "intersecting"
+                  ? "intersects"
+                  : row.relationship_type === "no_relationship"
+                    ? "no_relation"
+                    : [
+                          "equal",
+                          "subset",
+                          "intersects",
+                          "superset",
+                          "no_relation",
+                        ].includes(row.relationship_type)
+                      ? row.relationship_type
+                      : "intersects") as  // safe fallback for unknown values
+              | "equal"
+              | "subset"
+              | "intersects"
+              | "superset"
+              | "no_relation",
+            // strengthScore replaces legacy relationshipStrength (text → numeric string for Drizzle)
+            strengthScore:
+              row.relationship_strength && row.relationship_strength !== ""
+                ? (parseFloat(row.relationship_strength) || 0.5).toFixed(3)
+                : null,
             rationale: row.rationale,
             source: row.source,
           })),
@@ -290,7 +316,7 @@ async function main() {
             fdeName: sql`EXCLUDED.fde_name`,
             scfMappingId: sql`EXCLUDED.scf_mapping_id`,
             relationshipType: sql`EXCLUDED.relationship_type`,
-            relationshipStrength: sql`EXCLUDED.relationship_strength`,
+            strengthScore: sql`EXCLUDED.strength_score`,
             rationale: sql`EXCLUDED.rationale`,
             source: sql`EXCLUDED.source`,
             updatedAt: new Date(),

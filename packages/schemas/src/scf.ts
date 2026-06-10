@@ -21,15 +21,24 @@ export const ScfSourceTypeSchema = z.enum([
   "oscal_json",
   "synthetic_fixture",
 ]);
-export const ScfRelationshipTypeSchema = z.enum([
-  "equal",
-  "subset",
-  "superset",
-  "intersecting",
-  "related",
-  "no_relationship",
-  "source_defined",
+// ── STRM Canonical Operators — ADR-001 (NIST IR 8477) ───────────────────────
+// ⛔ NEVER add "direct", "related", "intersecting", "no_relationship", "source_defined"
+// These 5 values MUST match the pgEnum "strm_operator" in packages/schemas/src/db/schema.ts
+export const StrmOperatorSchema = z.enum([
+  "equal", // = (1.0 weight) — full compliance coverage
+  "subset", // ⊂ (1.0 weight) — SCF broader than requirement
+  "intersects", // ∩ (dynamic strength_score) — partial overlap
+  "superset", // ⊃ (max 0.5 weight) — SCF narrower than requirement
+  "no_relation", // Ø (0.0 weight) — not counted in denominator
 ]);
+export type StrmOperator = z.infer<typeof StrmOperatorSchema>;
+
+/**
+ * @deprecated Use StrmOperatorSchema instead.
+ * Kept for backward compatibility during migration of existing callsites.
+ * Will be removed after all usages are updated.
+ */
+export const ScfRelationshipTypeSchema = StrmOperatorSchema;
 
 export const ScfImportStatisticsSchema = z.object({
   versions: z.number().int().nonnegative().default(0),
@@ -212,7 +221,7 @@ export const ScfMappingResponseSchema = ScfStructuredMappingSchema.extend({
 /**
  * ScfStrmRelationshipSchema — reflects the `scf_strm_relationships` Drizzle table.
  * Each record links an FDE (Focal Document Element) to an SCF control with a formal
- * STRM type (NIST IR 8477).
+ * STRM operator (NIST IR 8477 / ADR-001).
  *
  * source values:
  *   - "scf_official_strm_bundle_2026.1" — from official SCF STRM bundle XLSXs
@@ -229,8 +238,16 @@ export const ScfStrmRelationshipSchema = z.object({
   fde_code: z.string().optional(),
   /** Human-readable name of the FDE requirement. */
   fde_name: z.string().optional(),
-  relationship_type: ScfRelationshipTypeSchema,
-  relationship_strength: z.enum(["strong", "moderate", "weak"]),
+  // ADR-001: canonical 5-value STRM operator
+  relationship_type: StrmOperatorSchema,
+  /**
+   * Numeric weight 0.0–1.0 used by STRMWeightCalculator for "intersects" operator.
+   * null = use default 0.5 per ADR-001.
+   * Replaces legacy text "strong" | "moderate" | "weak" from pre-ADR-001 era.
+   * @deprecated field name kept as relationship_strength for API backward-compat;
+   * DB column is strength_score (numeric 4,3).
+   */
+  relationship_strength: z.string().nullable().optional(),
   rationale: z.string().optional(),
   source: z.string().min(1),
 });
