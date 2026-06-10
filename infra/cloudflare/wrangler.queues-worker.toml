@@ -75,6 +75,10 @@ bucket_name = "standard-exports-dev"
 binding = "STANDARD_KB_INDEX"
 index_name = "standard-kb-dev"
 
+[[kv_namespaces]]
+binding = "STANDARD_CACHE"
+id = "55f97abbf9794b0196bdf51e8c1dedec"
+
 [ai]
 binding = "AI"
 
@@ -165,6 +169,10 @@ bucket_name = "standard-exports-staging"
 binding = "STANDARD_KB_INDEX"
 index_name = "standard-kb-staging"
 
+[[env.staging.kv_namespaces]]
+binding = "STANDARD_CACHE"
+id = "55f97abbf9794b0196bdf51e8c1dedec"
+
 [env.staging.ai]
 binding = "AI"
 
@@ -231,6 +239,10 @@ bucket_name = "standard-exports-prod"
 [[env.production.vectorize]]
 binding = "STANDARD_KB_INDEX"
 index_name = "standard-kb-prod"
+
+[[env.production.kv_namespaces]]
+binding = "STANDARD_CACHE"
+id = "55f97abbf9794b0196bdf51e8c1dedec"
 
 [env.production.ai]
 binding = "AI"
