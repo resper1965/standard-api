@@ -10,7 +10,9 @@
     "./client": "./src/client.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "pnpx vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "better-auth": "1.6.11",
@@ -21,6 +23,7 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260430.1",
-    "typescript": "latest"
+    "typescript": "latest",
+    "vitest": "^3.2.3"
   }
 }
