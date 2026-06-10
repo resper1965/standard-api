@@ -27,6 +27,7 @@ import type { PrivacyDependencies } from "@standard/privacy";
 import type { WorkflowDependencies } from "@standard/workflows";
 import type { SendEmail } from "@standard/email";
 import type { WebhookRepositoryAdapter } from "@standard/schemas";
+import type { AuthRepository } from "@standard/auth";
 import { ApiError } from "./errors/api-error";
 import type { ResolvedTenantContext } from "./adapters/tenant-mapping";
 
@@ -327,8 +328,15 @@ export type AppDependencies = {
   ) => Promise<{ id: string }>;
   /** Bans/flags a user for deletion via Standard Native Auth admin API (optional — delegates to cachedAuth) */
   banUser?: (userId: string, reason?: string) => Promise<void>;
-  /** Raw Drizzle DB client — internal escape hatch for admin routes that query auth tables directly.
-   *  Prefer domain-specific repository adapters for all tenant-scoped data access. */
+  /**
+   * Repositório tipado para operações nas tabelas internas do Better Auth.
+   * Este é o ÚNICO acesso permitido a baUser, baSession, baAccount (ADR-009).
+   */
+  authRepo: AuthRepository;
+  /**
+   * @deprecated Use `authRepo` para operações em tabelas BA.
+   * Mantido temporariamente durante migração — será removido após Tasks 3 e 4.
+   */
   _db?: import("./adapters/db").DbClient | undefined;
 };
 
