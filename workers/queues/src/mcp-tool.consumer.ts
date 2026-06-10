@@ -29,6 +29,8 @@ export interface McpToolEnv {
   AI_GATEWAY_URL?: string;
   AI_GATEWAY_TOKEN?: string;
   WEBHOOK_SECRET?: string;
+  /** KV namespace for writing job status (agent-runs polling) */
+  STANDARD_CACHE?: KVNamespace;
   AGENT_RUN_QUEUE?: { send: (msg: unknown) => Promise<void> };
 }
 
@@ -112,6 +114,24 @@ export async function processMcpToolMessage(
       }),
     );
 
+    // Write job status: running (for polling endpoint)
+    if (env.STANDARD_CACHE) {
+      await env.STANDARD_CACHE.put(
+        `agent_run:${body.job_id}`,
+        JSON.stringify({
+          job_id: body.job_id,
+          tool_name: body.tool_name,
+          status: "running",
+          organization_id: body.organization_id,
+          trace_id: traceId,
+          started_at: new Date().toISOString(),
+        }),
+        { expirationTtl: 3600 },
+      ).catch(() => {
+        /* non-fatal — polling is best-effort */
+      });
+    }
+
     // Tool execution dispatch
     const result = await dispatchTool(
       body.tool_name,
@@ -172,6 +192,26 @@ export async function processMcpToolMessage(
       }),
     );
 
+    // Write job status: completed (for polling endpoint)
+    if (env.STANDARD_CACHE) {
+      await env.STANDARD_CACHE.put(
+        `agent_run:${body.job_id}`,
+        JSON.stringify({
+          job_id: body.job_id,
+          tool_name: body.tool_name,
+          status: "completed",
+          organization_id: body.organization_id,
+          trace_id: traceId,
+          result,
+          duration_ms: durationMs,
+          completed_at: new Date().toISOString(),
+        }),
+        { expirationTtl: 3600 },
+      ).catch(() => {
+        /* non-fatal */
+      });
+    }
+
     if (body.idempotency_key) {
       processedKeys.add(body.idempotency_key);
     }
@@ -191,6 +231,25 @@ export async function processMcpToolMessage(
         },
       }),
     );
+    // Write job status: failed (for polling endpoint)
+    if (env.STANDARD_CACHE) {
+      env.STANDARD_CACHE.put(
+        `agent_run:${body.job_id}`,
+        JSON.stringify({
+          job_id: body.job_id,
+          tool_name: body.tool_name,
+          status: "failed",
+          organization_id: body.organization_id,
+          trace_id: traceId,
+          error: err instanceof Error ? err.message : String(err),
+          duration_ms: Date.now() - startTime,
+          failed_at: new Date().toISOString(),
+        }),
+        { expirationTtl: 3600 },
+      ).catch(() => {
+        /* non-fatal */
+      });
+    }
     throw err; // Re-throw for queue retry
   }
 }
