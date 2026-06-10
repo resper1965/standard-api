@@ -20,6 +20,9 @@ import type { RouteDefinition } from "../http";
 import { json } from "../http";
 import { MCP_TOOLS, dispatchMcpTool } from "../mcp/server";
 import { checkMcpQuota } from "../middleware/mcp-quota.middleware";
+import { MCP_RESOURCES, readMcpResource } from "../mcp/resources";
+import { MCP_PROMPTS, getMcpPrompt } from "../mcp/prompts";
+
 
 const MCP_VERSION = "2025-03-26";
 const SERVER_NAME = "standard-grc";
@@ -41,13 +44,16 @@ const ASYNC_TOOLS = new Set<string>([
 const CAPABILITIES_RESPONSE = {
   protocolVersion: MCP_VERSION,
   capabilities: {
-    tools: { listChanged: false },
+    tools:     { listChanged: false },
+    resources: { subscribe: false, listChanged: false },
+    prompts:   { listChanged: false },
   },
   serverInfo: {
     name: SERVER_NAME,
     version: SERVER_VERSION,
   },
 };
+
 
 export const mcpRoutes: RouteDefinition[] = [
   // ── GET /mcp — Discovery endpoint ─────────────────────────────────────
@@ -65,6 +71,8 @@ export const mcpRoutes: RouteDefinition[] = [
         auth: "Authorization: Bearer <api-key>",
         tools: MCP_TOOLS.length,
         async_tools: ASYNC_TOOLS.size,
+        resources: MCP_RESOURCES.length,
+        prompts: MCP_PROMPTS.length,
         docs: "/docs/mcp",
         openapi: "/docs/openapi.json",
       });
@@ -218,6 +226,76 @@ export const mcpRoutes: RouteDefinition[] = [
       if (method === "ping") {
         return json({ jsonrpc: "2.0", id, result: {} });
       }
+
+      // ── resources/list ───────────────────────────────────────────────
+      if (method === "resources/list") {
+        return json({
+          jsonrpc: "2.0",
+          id,
+          result: { resources: MCP_RESOURCES },
+        });
+      }
+
+      // ── resources/read ───────────────────────────────────────────────
+      if (method === "resources/read") {
+        const uri = params["uri"] as string;
+        if (!uri) {
+          return json({
+            jsonrpc: "2.0",
+            id,
+            error: { code: -32602, message: "Missing uri parameter" },
+          });
+        }
+        try {
+          const content = await readMcpResource(uri, ctx.deps);
+          return json({
+            jsonrpc: "2.0",
+            id,
+            result: {
+              contents: [{ uri, ...content }],
+            },
+          });
+        } catch {
+          return json({
+            jsonrpc: "2.0",
+            id,
+            error: { code: -32002, message: `Resource not found: ${uri}` },
+          }, { status: 404 });
+        }
+      }
+
+      // ── prompts/list ─────────────────────────────────────────────────
+      if (method === "prompts/list") {
+        return json({
+          jsonrpc: "2.0",
+          id,
+          result: { prompts: MCP_PROMPTS },
+        });
+      }
+
+      // ── prompts/get ──────────────────────────────────────────────────
+      if (method === "prompts/get") {
+        const promptName = params["name"] as string;
+        const promptArgs = (params["arguments"] ?? {}) as Record<string, string>;
+        if (!promptName) {
+          return json({
+            jsonrpc: "2.0",
+            id,
+            error: { code: -32602, message: "Missing prompt name" },
+          });
+        }
+        try {
+          const result = getMcpPrompt(promptName, promptArgs);
+          return json({ jsonrpc: "2.0", id, result });
+        } catch {
+          return json({
+            jsonrpc: "2.0",
+            id,
+            error: { code: -32002, message: `Prompt not found: ${promptName}` },
+          }, { status: 404 });
+        }
+      }
+
 
       // ── Unknown method ────────────────────────────────────────────────
       return json(
