@@ -365,29 +365,19 @@ export type RequestContext = {
   /** @deprecated Use `session` instead — legacy auth context */
   auth?: AuthContext | undefined;
   securityTenant?: SecurityTenantContext | undefined;
-  /** Standard Native Auth session (user + session data) */
+  /** Better Auth session (user + session data). Populated by auth middleware. */
   session?: {
     user: {
       id: string;
       email: string;
       name: string;
-      role?: string | null | undefined;
-      /** Bekaa operator flag — cross-tenant access. Populated from platform_admin DB column. */
-      platformAdmin?: boolean;
+      platformAdmin: boolean;
+      approved: boolean;
       [key: string]: unknown;
     };
     session: {
       id: string;
-      domainUserId?: string | null | undefined;
-      activeOrganizationId?: string | null | undefined;
-      activeOrganizationSlug?: string | null | undefined;
-      activeOrganizationRole?: string | null | undefined;
-      allowedOrganizations?: Array<{
-        id: string;
-        name: string;
-        slug: string;
-        role: string;
-      }>;
+      activeOrganizationId: string | null;
       [key: string]: unknown;
     };
   } | null;

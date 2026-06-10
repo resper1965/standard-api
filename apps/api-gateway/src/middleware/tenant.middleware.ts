@@ -40,30 +40,23 @@ export const resolveOrganizationContext = async (
     if (headerTenantId && headerTenantId !== sessionOrgId) {
       // Header is requesting a DIFFERENT org than the session's active org.
       // Only allow if the user is a member of that org (platform admins bypass).
+      // Simplified auth: 1 user = 1 org. No org switching for non-platform-admins.
       if (!isPlatformAdmin) {
-        const allowedOrgs = context.session.session?.allowedOrganizations ?? [];
-        const isAllowed = allowedOrgs.some(
-          (org: { id?: string; organizationId?: string }) =>
-            org.id === headerTenantId || org.organizationId === headerTenantId,
+        void new SecurityEventService(context.deps.observability).record({
+          organization_id: sessionOrgId,
+          event_type: "cross_tenant_access_blocked",
+          severity: "critical",
+          outcome: "blocked",
+          source: "api-gateway",
+          message_safe:
+            "Header x-standard-tenant-id does not match session org (1:1 model).",
+          trace_id: context.traceId,
+        });
+        throw new ApiError(
+          "FORBIDDEN",
+          "You can only access your own organization.",
+          403,
         );
-
-        if (!isAllowed) {
-          void new SecurityEventService(context.deps.observability).record({
-            organization_id: sessionOrgId,
-            event_type: "cross_tenant_access_blocked",
-            severity: "critical",
-            outcome: "blocked",
-            source: "api-gateway",
-            message_safe:
-              "Header x-standard-tenant-id references an organization the user is not a member of.",
-            trace_id: context.traceId,
-          });
-          throw new ApiError(
-            "FORBIDDEN",
-            "You are not a member of the requested organization.",
-            403,
-          );
-        }
       }
       // User IS a member — allow org switch via header
       rawTenantId = headerTenantId;
@@ -117,48 +110,51 @@ export const resolveOrganizationContext = async (
   }
 
   if (pathTenantId && headerTenantId && pathTenantId !== headerTenantId) {
-    // Build structured mismatch alert for SOC
-    const mismatchAlert = {
-      queue_type: "soc_monitoring_alert" as const,
-      alert_subtype: "tenant_mismatch_alert" as const,
-      session_tenant_id: headerTenantId,
-      payload_tenant_id: pathTenantId,
-      actor_id: context.actorId ?? "anonymous",
-      request_path: new URL(context.request.url).pathname,
-      request_method: context.request.method,
-      trace_id: context.traceId,
-      ip_country: context.request.headers.get("cf-ipcountry") ?? undefined,
-    };
+    // Platform admins have cross-tenant access — skip mismatch check
+    if (!isPlatformAdmin) {
+      // Build structured mismatch alert for SOC
+      const mismatchAlert = {
+        queue_type: "soc_monitoring_alert" as const,
+        alert_subtype: "tenant_mismatch_alert" as const,
+        session_tenant_id: headerTenantId,
+        payload_tenant_id: pathTenantId,
+        actor_id: context.actorId ?? "anonymous",
+        request_path: new URL(context.request.url).pathname,
+        request_method: context.request.method,
+        trace_id: context.traceId,
+        ip_country: context.request.headers.get("cf-ipcountry") ?? undefined,
+      };
 
-    // Fire via AlertService if configured (high-fidelity path)
-    if (context.deps.alerts) {
-      void context.deps.alerts.fireTenantMismatch({
-        organizationId: headerTenantId,
-        expectedTenantId: pathTenantId,
-        traceId: context.traceId,
-        ...(context.actorId ? { actorId: context.actorId } : {}),
+      // Fire via AlertService if configured (high-fidelity path)
+      if (context.deps.alerts) {
+        void context.deps.alerts.fireTenantMismatch({
+          organizationId: headerTenantId,
+          expectedTenantId: pathTenantId,
+          traceId: context.traceId,
+          ...(context.actorId ? { actorId: context.actorId } : {}),
+        });
+      }
+
+      // Also enqueue to SOC queue for durable persistence (belt-and-suspenders)
+      if ((context.deps as any).SOC_TRIAGE_QUEUE) {
+        void (context.deps as any).SOC_TRIAGE_QUEUE.send(mismatchAlert).catch(
+          () => {},
+        );
+      }
+
+      // SecurityEventService fallback (always record locally)
+      void new SecurityEventService(context.deps.observability).record({
+        organization_id: headerTenantId,
+        event_type: "tenant_context_mismatch",
+        severity: "critical",
+        outcome: "blocked",
+        source: "api-gateway",
+        message_safe: "Tenant context mismatch — request blocked.",
+        trace_id: context.traceId,
       });
+
+      throw new ApiError("FORBIDDEN", "Tenant context mismatch.", 403);
     }
-
-    // Also enqueue to SOC queue for durable persistence (belt-and-suspenders)
-    if ((context.deps as any).SOC_TRIAGE_QUEUE) {
-      void (context.deps as any).SOC_TRIAGE_QUEUE.send(mismatchAlert).catch(
-        () => {},
-      );
-    }
-
-    // SecurityEventService fallback (always record locally)
-    void new SecurityEventService(context.deps.observability).record({
-      organization_id: headerTenantId,
-      event_type: "tenant_context_mismatch",
-      severity: "critical",
-      outcome: "blocked",
-      source: "api-gateway",
-      message_safe: "Tenant context mismatch — request blocked.",
-      trace_id: context.traceId,
-    });
-
-    throw new ApiError("FORBIDDEN", "Tenant context mismatch.", 403);
   }
 
   context.organizationId = resolvedTenantId;
