@@ -22,16 +22,22 @@ import { Label } from "@/components/ui/label";
 
 // ─── Types ───────────────────────────────────────────────────────
 const WEBHOOK_EVENTS = [
-  { value: "assessment.created",         label: "Assessment Created",         group: "Assessment" },
-  { value: "assessment.status_changed",  label: "Assessment Status Changed",  group: "Assessment" },
-  { value: "assessment.closed",          label: "Assessment Closed",          group: "Assessment" },
-  { value: "gap.approved",              label: "Gap Analysis Approved",      group: "Gap Analysis" },
-  { value: "maturity.approved",         label: "Maturity Approved",          group: "Maturity" },
-  { value: "poam.approved",             label: "POA&M Approved",             group: "POA&M" },
-  { value: "report.generated",          label: "Report Generated",           group: "Report" },
-  { value: "document.uploaded",         label: "Document Uploaded",          group: "Documents" },
-  { value: "api_key.created",           label: "API Key Created",            group: "Security" },
-  { value: "api_key.revoked",           label: "API Key Revoked",            group: "Security" },
+  { value: "assessment.created",            label: "Assessment Created",           group: "Assessment" },
+  { value: "assessment.status_changed",     label: "Assessment Status Changed",    group: "Assessment" },
+  { value: "assessment.closed",             label: "Assessment Closed",            group: "Assessment" },
+  { value: "gap.approved",                  label: "Gap Analysis Approved",        group: "Gap Analysis" },
+  { value: "maturity.approved",             label: "Maturity Approved",            group: "Maturity" },
+  { value: "poam.approved",                 label: "POA&M Approved",               group: "POA&M" },
+  { value: "report.generated",              label: "Report Generated",             group: "Report" },
+  { value: "document.uploaded",             label: "Document Uploaded",            group: "Documents" },
+  // G15 — TPRA events
+  { value: "tpra.assessment.completed",     label: "TPRA Assessment Completed",    group: "TPRA" },
+  { value: "vendor.risk_score.updated",     label: "Vendor Risk Score Updated",    group: "TPRA" },
+  // G15 — Ledger events (append-only, ADR-002)
+  { value: "ledger.audit.alert",            label: "Ledger Audit Alert",           group: "Ledger" },
+  // Security
+  { value: "api_key.created",               label: "API Key Created",              group: "Security" },
+  { value: "api_key.revoked",               label: "API Key Revoked",              group: "Security" },
 ] as const;
 
 type WebhookEventValue = (typeof WEBHOOK_EVENTS)[number]["value"];
