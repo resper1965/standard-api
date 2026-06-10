@@ -334,6 +334,13 @@ const mapGapFindingRow = (row: any): GapFindingResponse => ({
   responsibility_type: row.responsibilityType ?? "internal",
   confidence_score: row.confidenceScore ? Number(row.confidenceScore) : 0,
   requires_user_validation: row.requiresUserValidation,
+  ...(row.rocDetermination ? { roc_determination: row.rocDetermination } : {}),
+  ...(row.inherentRiskScore
+    ? { inherent_risk_score: String(row.inherentRiskScore) }
+    : {}),
+  ...(row.residualRiskScore
+    ? { residual_risk_score: String(row.residualRiskScore) }
+    : {}),
   created_at: row.createdAt?.toISOString?.() ?? row.createdAt,
   updated_at: row.updatedAt?.toISOString?.() ?? row.updatedAt,
 });
@@ -360,6 +367,7 @@ export const createDrizzleGapFindingRepository = (
         assessmentStatus: finding.assessment_status,
         gapType: finding.gap_type,
         severity: finding.severity,
+        isMcrGap: finding.is_mcr_gap ?? false,
         impact: finding.impact ?? null,
         likelihood: finding.likelihood ?? null,
         gapSummary: finding.gap_summary,
@@ -368,6 +376,9 @@ export const createDrizzleGapFindingRepository = (
         responsibilityType: finding.responsibility_type,
         confidenceScore: finding.confidence_score?.toString(),
         requiresUserValidation: finding.requires_user_validation,
+        rocDetermination: finding.roc_determination ?? null,
+        inherentRiskScore: finding.inherent_risk_score ?? null,
+        residualRiskScore: finding.residual_risk_score ?? null,
       })),
     );
   },
