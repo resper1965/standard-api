@@ -1,20 +1,28 @@
-# Auth Simplification — Task Tracker
+# Task Tracker — Standard API
 
-> Plano: `docs/plans/2026-06-10-auth-simplification.md`
+| # | Tarefa | Status | Evidência |
+|---|--------|--------|-----------|
+| T1 | MCP Queue Consumer Handler (C2) | ✅ done | 3/3 testes GREEN · commit e22a10e |
+| T2 | Dashboard Compliance Real (C1) | ✅ done | 9/9 testes GREEN · typecheck OK · commit 2a6e13d |
+| T3 | Particionamento Ledger (A1) | ✅ done | 1348 rows migradas · 5 partições · commit ff02a52 |
+| T4 | SCF Versions Index + Tenancy Helper (A2) | ✅ done | 5/5 testes GREEN · index Neon OK · commit 7a7d960 |
+| T5 | Streaming SCF Controls (M1) | ✅ done | NDJSON TransformStream · backward compat · commit 1cb41e7 |
+# Task Tracker — Standard API
 
-| Task | Descrição | Status |
-|------|-----------|--------|
-| A1 | Criar Neon auth branch + Hyperdrive binding | ✅ done — `ede76dc` |
-| A2 | Novo schema auth (baUser, organizations, api_keys) | ✅ done — `0c8f0e8` |
-| A3 | Drizzle config separada + migration auth branch | ✅ done — `1d13a9b` |
-| A4 | Simplificar `packages/auth/src/auth.ts` | ✅ done — `03236e6` |
-| A5 | Novo `auth.middleware.ts` — KV-first, 1:1 org model | ✅ done — `a62a8a8` |
-| A6 | `wrangler.toml` — binding HYPERDRIVE_AUTH | ✅ done — `ede76dc` |
-| A7 | Remover dual-identity sync, deprecate users/memberships/roles | ✅ done — `4e81b51` |
-| A8 | Seed sintético para auth branch | ✅ done — `7836d9d` |
-| A9 | Testes de contrato do middleware | ✅ done — `7836d9d` |
-| A10 | Typecheck monorepo completo — 0 erros, 28 packages | ✅ done — `7836d9d` |
+| # | Tarefa | Status | Evidência |
+|---|--------|--------|-----------|
+| T1 | MCP Queue Consumer Handler (C2) | ✅ done | 3/3 testes GREEN · commit e22a10e |
+| T2 | Dashboard Compliance Real (C1) | ✅ done | 9/9 testes GREEN · typecheck OK · commit 2a6e13d |
+| T3 | Particionamento Ledger (A1) | ✅ done | 1348 rows migradas · 5 partições · commit ff02a52 |
+| T4 | SCF Versions Index + Tenancy Helper (A2) | ✅ done | 5/5 testes GREEN · index Neon OK · commit 7a7d960 |
+| T5 | Streaming SCF Controls (M1) | ✅ done | NDJSON TransformStream · backward compat · commit 1cb41e7 |
+| T6 | MCP Quota Dedicada (M2) | ✅ done | 7/7 testes GREEN · KV sliding window · commit 1cb41e7 |
 
-## ✅ Plano Completo
+## Fase 2 — Gaps de Negócio Críticos
 
-Todos os commits pusheados para `main`.
+| # | Tarefa | Status | Evidência |
+|---|--------|--------|-----------|
+| F2-T1 | API Key Cache KV M2M (G01) | ✅ done | 5/5 testes GREEN · KV invalidation on revoke · commit 815512d |
+| F2-T2 | STRM Canonical Enums + strength_score (G04) | 🔄 in_progress | |
+| F2-T3 | TPRA Persistido + Webhooks (G06) | ⬜ pending | |
+| F2-T4 | MCP Resources + Prompts JSON-RPC (G07) | ⬜ pending | |
