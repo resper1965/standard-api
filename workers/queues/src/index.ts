@@ -22,6 +22,7 @@ import {
 import {
   processMcpToolMessage,
   type McpToolQueueMessage,
+  type McpToolEnv,
 } from "./mcp-tool.consumer";
 
 export interface Env {
@@ -36,6 +37,10 @@ export interface Env {
   AI_GATEWAY_BASE_URL?: string;
   AI_GATEWAY_TOKEN?: string;
   SENTRY_DSN?: string;
+  /** Cloudflare Secret — used for HMAC-signing webhook deliveries (ADR-003) */
+  WEBHOOK_SECRET?: string;
+  /** KV namespace for job status store (agent-runs polling endpoint) */
+  STANDARD_CACHE?: KVNamespace;
 }
 
 type QueueMessageBody = {
@@ -73,7 +78,12 @@ export default Sentry.withSentry(
               // ADR-003 Grupo B — async tool execution via queue
               await processMcpToolMessage(
                 body as unknown as McpToolQueueMessage,
-                env,
+                {
+                  AI_GATEWAY_URL: env.AI_GATEWAY_BASE_URL ?? undefined,
+                  AI_GATEWAY_TOKEN: env.AI_GATEWAY_TOKEN ?? undefined,
+                  WEBHOOK_SECRET: env.WEBHOOK_SECRET ?? undefined,
+                  STANDARD_CACHE: env.STANDARD_CACHE ?? undefined,
+                } as McpToolEnv,
               );
               break;
 
