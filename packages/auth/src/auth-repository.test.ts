@@ -72,9 +72,6 @@ const FAKE_USER: UserSummary = {
   name: "Alice Standard",
   emailVerified: true,
   image: null,
-  banned: false,
-  banReason: null,
-  banExpires: null,
   platformAdmin: false,
   approved: true,
   jobTitle: "Security Analyst",
@@ -131,7 +128,7 @@ describe("AuthRepository.deleteUserCascade", () => {
   });
 });
 
-describe("AuthRepository.banUser", () => {
+describe("AuthRepository.revokeUser", () => {
   let mockDb: ReturnType<typeof createMockDb>;
   let repo: ReturnType<typeof createAuthRepository>;
 
@@ -140,9 +137,9 @@ describe("AuthRepository.banUser", () => {
     repo = createAuthRepository(mockDb as any);
   });
 
-  it("chama db.transaction para ban + revogação de sessões", async () => {
+  it("chama db.transaction para revogar acesso + sessões", async () => {
     mockDb.transaction.mockImplementationOnce(async (fn: any) => fn(mockDb));
-    await repo.banUser("ba-user-001", { reason: "spam" });
+    await repo.revokeUser("ba-user-001");
     expect(mockDb.transaction).toHaveBeenCalledTimes(1);
   });
 });
