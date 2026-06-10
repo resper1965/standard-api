@@ -22,12 +22,12 @@
 
 | # | Task | Status | Notas |
 |---|---|---|---|
-| F1 | Dependências + Shadcn components | 🔄 in_progress | |
-| F2 | Zustand stores (SecretDisplay + McpPlayground) | ⬜ todo | |
-| F3 | SecretDisplayOverlay + CreateApiKeyModal (G13) | ⬜ todo | |
-| F4 | Página /admin/api-keys | ⬜ todo | |
-| F5 | AsyncTimeline + JobStatusPoller (G14) | ⬜ todo | |
-| F6 | ToolExplorer + McpPlayground page | ⬜ todo | |
-| F7 | Webhook Manager (G15) | ⬜ todo | |
-| F8 | DocsLayout + ApiReference + /llms.txt + rotas | ⬜ todo | |
-| F9 | Verificação final + push | ⬜ todo | |
+| F1 | Dependências + Shadcn components | ✅ done | commit f272908 — zustand, sonner, sheet/alert-dialog/scroll-area/checkbox |
+| F2 | Zustand stores (SecretDisplay + McpPlayground) | ✅ done | commit bba8886 — secretDisplay.store + mcpPlayground.store |
+| F3 | SecretDisplayOverlay + CreateApiKeyModal (G13) | ✅ done | commit 9277798 — one-shot token, amber warning, clear() on close |
+| F4 | Integrar G13 na ApiKeysPage existente | ✅ done | commit 206ec86 — Zustand token substitui useState |
+| F5 | AsyncTimeline + JobStatusPoller (G14) | ✅ done | commit d48724f — ADR-003 poller headless, 2s interval, 30 polls max |
+| F6 | ToolExplorer + McpPlayground page | ✅ done | commit 017fbd6 — 3 colunas, demo/real hybrid, rota /dashboard/mcp |
+| F7 | Webhook Manager G15 events | ✅ done | commit 0940404 — tpra.assessment.completed, vendor.risk_score.updated, ledger.audit.alert |
+| F8 | DocsLayout + ApiReference + /llms.txt + rotas | ✅ done | commit cfbce98 — portal público /docs, llms.txt optimizado para AI agents |
+| F9 | Verificação final + push | ✅ done | 28/28 typecheck OK — pushed cfbce98 |
