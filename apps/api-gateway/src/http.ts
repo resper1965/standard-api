@@ -30,6 +30,8 @@ import type { WebhookRepositoryAdapter } from "@standard/schemas";
 import type { AuthRepository } from "@standard/auth";
 import { ApiError } from "./errors/api-error";
 import type { ResolvedTenantContext } from "./adapters/tenant-mapping";
+import type { LedgerServiceAdapter } from "./adapters/ledger.repository";
+import type { TpraRepositoryAdapter } from "./adapters/tpra.repository";
 
 export type TenantRecord = {
   organization_id: string;
@@ -312,6 +314,17 @@ export type AppDependencies = {
   USER_LIFECYCLE_QUEUE?: Queue | undefined;
   /** Webhook endpoint management (optional — requires storage adapter) */
   webhooks?: WebhookRepositoryAdapter | undefined;
+  /**
+   * Ledger de eventos de controlos (ADR-002 — append-only).
+   * Regista status_changed, evidence_added, finding_created, approval_gate, mutation_blocked.
+   * ⛔ NUNCA fazer UPDATE/DELETE neste repositório.
+   */
+  ledger: LedgerServiceAdapter;
+  /**
+   * Repositório TPRA — Third-Party Risk Assessment.
+   * Persiste vendors, assessments e risk scores por organization.
+   */
+  tpra: TpraRepositoryAdapter;
   /** READ-ONLY: resolves Standard Native Auth org ID → Standard domain UUIDs. Returns null if not provisioned. */
   resolveOrganizationContext?: (
     standardAuthOrgId: string,

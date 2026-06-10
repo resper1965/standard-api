@@ -88,6 +88,14 @@ import {
 import { createAuthRepository } from "@standard/auth";
 import { users } from "@standard/schemas";
 import { eq } from "drizzle-orm";
+import {
+  createLedgerService,
+  createDrizzleLedgerService,
+} from "./ledger.repository";
+import {
+  createTpraRepository,
+  createDrizzleTpraRepository,
+} from "./tpra.repository";
 
 /**
  * Type bridge: NeonHttpDatabase (edge) ↔ PostgresJsDatabase (packages).
@@ -204,6 +212,8 @@ export const createMockRepositories = (): AppDependencies => {
     ),
     privacy: createInMemoryPrivacyDependencies(),
     webhooks: createInMemoryWebhookRepository(),
+    ledger: createLedgerService(),
+    tpra: createTpraRepository(),
     resolveOrganizationContext,
     // In-memory path provisions on resolve; the same creating fn serves both roles.
     provisionOrganizationContext: resolveOrganizationContext,
@@ -282,6 +292,8 @@ export const createDrizzleRepositories = (
     alerts,
     privacy: { repositories: createDrizzlePrivacyRepositories(db) },
     webhooks: createDrizzleWebhookRepository(db),
+    ledger: createDrizzleLedgerService(db),
+    tpra: createDrizzleTpraRepository(db),
     resolveOrganizationContext: (baOrgId: string) =>
       resolveOrganizationContext(db, baOrgId),
     provisionOrganizationContext: (baOrgId: string) =>
