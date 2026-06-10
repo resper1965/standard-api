@@ -6,6 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { PageHeader } from "@/components/ui/PageHeader"
+import { SecretDisplayOverlay } from "@/components/api-keys/SecretDisplayOverlay"
+import { useSecretDisplay } from "@/stores/secretDisplay.store"
 import {
   Dialog,
   DialogContent,
@@ -298,8 +300,7 @@ export function ApiKeysPage() {
   const [newName, setNewName] = useState("")
   const [expiryOption, setExpiryOption] = useState("never")
   const [customDate, setCustomDate] = useState("")
-  const [newKey, setNewKey] = useState<string | null>(null)
-  const [newKeyCopied, setNewKeyCopied] = useState(false)
+  const { set: setToken, clear: clearToken, token: newKey } = useSecretDisplay()
   const [revokeTarget, setRevokeTarget] = useState<ApiKeyRecord | null>(null)
   const [editTarget, setEditTarget] = useState<ApiKeyRecord | null>(null)
 
@@ -317,7 +318,7 @@ export function ApiKeysPage() {
       {
         onSuccess: (res) => {
           const rawKey = (res as any)?.data?.key ?? null
-          setNewKey(rawKey)
+          if (rawKey) setToken(rawKey)  // G13: stored in Zustand, destroyed on clear()
           setNewName(""); setExpiryOption("never")
           setIsCreating(false)
         },
@@ -381,32 +382,25 @@ export function ApiKeysPage() {
         </div>
       )}
 
-      {/* One-time key display */}
+      {/* One-time key display — G13 SecretDisplayOverlay */}
       {newKey && (
-        <Card className="border-primary/50 shadow-md shadow-primary/10 bg-primary/5 relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
+        <Card className="border-amber-500/30 shadow-md bg-amber-950/20 relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-1 h-full bg-amber-500" />
           <CardHeader>
-            <CardTitle className="text-lg">Key Generated Successfully</CardTitle>
+            <CardTitle className="text-lg">Chave Gerada com Sucesso</CardTitle>
             <CardDescription className="text-foreground/80 font-medium">
-              Copy your API key now — you will not be able to see it again.
+              Guarda a chave agora — não poderás vê-la novamente.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex gap-2 items-center">
-              <code className="flex-1 rounded-md bg-background px-4 py-3 font-mono text-sm border border-border/60 break-all select-all shadow-inner text-primary font-semibold">
-                {newKey}
-              </code>
-              <Button
-                onClick={() => { navigator.clipboard.writeText(newKey); setNewKeyCopied(true); setTimeout(() => setNewKeyCopied(false), 2000) }}
-                variant="secondary"
-                className="gap-2 shrink-0 h-[46px] cursor-pointer"
-              >
-                {newKeyCopied ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
-                {newKeyCopied ? "Copied" : "Copy"}
-              </Button>
-            </div>
-            <Button variant="outline" className="w-full border-primary/20 hover:bg-primary/10 cursor-pointer" onClick={() => setNewKey(null)}>
-              I have saved my key
+            <SecretDisplayOverlay />
+            <Button
+              id="btn-key-dismiss"
+              variant="outline"
+              className="w-full"
+              onClick={() => clearToken()}
+            >
+              Já guardei a minha chave
             </Button>
           </CardContent>
         </Card>
