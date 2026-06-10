@@ -85,6 +85,7 @@ import {
   resolveOrganizationContext,
   provisionOrganizationContext,
 } from "./tenant-mapping";
+import { createAuthRepository } from "@standard/auth";
 import { users } from "@standard/schemas";
 import { eq } from "drizzle-orm";
 
@@ -211,6 +212,19 @@ export const createMockRepositories = (): AppDependencies => {
       displayName: string,
       identityProviderSubject?: string,
     ) => ({ id: crypto.randomUUID() }),
+    // Mock AuthRepository — no-ops for test environments without DB
+    authRepo: {
+      getUserById: async () => null,
+      listUsers: async () => [],
+      updateUser: async () => {},
+      setSessionOrg: async () => {},
+      revokeAllUserSessions: async () => {},
+      revokeSession: async () => {},
+      deleteUserCascade: async () => {},
+      banUser: async () => {},
+      unbanUser: async () => {},
+      approveUser: async () => {},
+    } as any,
   };
 };
 
@@ -310,5 +324,7 @@ export const createDrizzleRepositories = (
         .returning();
       return { id: inserted!.id };
     },
+    // AuthRepository — single typed access to BA internal tables (ADR-009)
+    authRepo: createAuthRepository(db),
   };
 };
