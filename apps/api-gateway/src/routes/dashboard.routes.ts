@@ -12,6 +12,8 @@ import type {
 import { AuditLogTenantQuerySchema } from "@standard/schemas";
 // ADR-001: STRM-weighted compliance replaces binary implementedControls/totalControls
 import { computeComplianceIndex } from "@standard/assessment-engine";
+import { buildStrmControlInputs } from "../lib/strm-compliance-query";
+import type { SoaItemWithMapping } from "../lib/strm-compliance-query";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";
 import {
@@ -22,34 +24,81 @@ import {
 } from "../http";
 
 /**
- * strmProxyFromSoaItems — conservative STRM proxy when no explicit maturity data.
+ * computeRealStrmCompliance — builds STRM inputs from real scf_mappings data.
  *
- * Maps SoA implementation_status to maturity levels:
- *   implemented        → 5  (fully mature)
- *   partially_implemented → 2  (partial)
- *   not_implemented    → 0
- *   planned / unknown  → 0
+ * Replaces strmProxyFromSoaItems() which used intersects/0.5 hardcoded.
+ * Now reads actual relationship_type + strength_score from scf_mappings (ADR-001).
  *
- * Uses 'intersects' operator with default strength 0.5 as conservative estimate.
- * This avoids over-reporting compliance vs the forbidden binary formula.
- *
- * ⛔ NOT (implemented / total) * 100 — see ADR-001 and IMPLEMENTATION-CONSTRAINTS.md
+ * Falls back to conservative proxy (intersects/0.5) when scf.repository unavailable.
  */
-function strmProxyFromSoaItems(
-  items: Array<{ implementation_status?: string }>,
-): { index: number; percentage: number } {
-  if (items.length === 0) return { index: 0, percentage: 0 };
-  const controls = items.map((item) => ({
+async function computeRealStrmCompliance(
+  deps: {
+    scf?: {
+      repository?: {
+        listMappingsByControlIds?: (
+          ids: string[],
+          versionId: string,
+        ) => Promise<
+          Array<{
+            scf_control_id: string;
+            relationship_type: string;
+            strength_score: number | null;
+          }>
+        >;
+      };
+    };
+  },
+  soaItems: Array<{ scfControlId?: string | null; maturityLevel?: number | null; implementation_status?: string }>,
+  scfVersionId: string | null | undefined,
+): Promise<{ index: number; percentage: number }> {
+  if (soaItems.length === 0) return { index: 0, percentage: 0 };
+
+  // Use real mappings if repository available and we have a scf_version_id
+  if (deps.scf?.repository?.listMappingsByControlIds && scfVersionId) {
+    const controlIds = soaItems
+      .map((i) => i.scfControlId)
+      .filter((id): id is string => !!id);
+
+    if (controlIds.length > 0) {
+      const rawMappings = await (deps.scf.repository as any).listMappingsByControlIds(
+        controlIds,
+        scfVersionId,
+      );
+      const mappingMap = new Map(
+        rawMappings.map((m: { scf_control_id: string; relationship_type: string; strength_score: number | null }) =>
+          [m.scf_control_id, m],
+        ),
+      );
+
+      const soaItemsWithMappings: SoaItemWithMapping[] = soaItems.map((item) => ({
+        control_id: item.scfControlId ?? "",
+        maturity_level: item.maturityLevel ?? null,
+        relationship_type:
+          (mappingMap.get(item.scfControlId ?? "") as any)?.relationship_type ?? null,
+        strength_score:
+          (mappingMap.get(item.scfControlId ?? "") as any)?.strength_score ?? null,
+      }));
+
+      const strmInputs = buildStrmControlInputs(soaItemsWithMappings);
+      if (strmInputs.length > 0) {
+        return computeComplianceIndex(strmInputs);
+      }
+    }
+  }
+
+  // Fallback: conservative STRM proxy (no scf_version_id or no mappings found)
+  // Maps implementation_status → maturity level, uses intersects/0.5 as conservative estimate
+  const fallbackControls = soaItems.map((item) => ({
     maturity_level:
       item.implementation_status === "implemented"
         ? 5
         : item.implementation_status === "partially_implemented"
           ? 2
           : 0,
-    strm_operator: "intersects" as const, // conservative default
-    strength_score: 0.5, // default intersects weight per ADR-001
+    strm_operator: "intersects" as const,
+    strength_score: 0.5,
   }));
-  return computeComplianceIndex(controls);
+  return computeComplianceIndex(fallbackControls);
 }
 
 const parseQuery = (
@@ -153,16 +202,20 @@ export const dashboardRoutes: RouteDefinition[] = [
         ).length;
       }
 
-      // ADR-001: STRM-weighted compliance index (conservative proxy)
-      // ⛔ was: Math.round((implementedControls / totalControls) * 10000) / 100
-      const strmResult = latestSoa
-        ? strmProxyFromSoaItems(
-            await deps.soa.repositories.items.listByVersion(
-              latestSoa.soa_version_id,
-              requireOrganizationId({ organizationId }),
-            ),
-          )
-        : { index: 0, percentage: 0 };
+      // ADR-001: STRM-weighted compliance index — real scf_mappings data
+      // ⛔ was: strmProxyFromSoaItems() with hardcoded intersects/0.5
+      let strmResult = { index: 0, percentage: 0 };
+      if (latestSoa) {
+        const soaItemsForStrm = await deps.soa.repositories.items.listByVersion(
+          latestSoa.soa_version_id,
+          requireOrganizationId({ organizationId }),
+        );
+        strmResult = await computeRealStrmCompliance(
+          deps as any,
+          soaItemsForStrm as any[],
+          assessment.scf_version_id,
+        );
+      }
 
       const summary: AssessmentSummary = {
         assessment_id: assessmentId,
@@ -186,7 +239,7 @@ export const dashboardRoutes: RouteDefinition[] = [
       return json({
         ...summary,
         // Traceability: document how compliance was computed
-        compliance_method: "strm_proxy_intersects_0.5",
+        compliance_method: "strm_real_scf_mappings",
         trace_id: traceId,
       });
     },
@@ -229,9 +282,13 @@ export const dashboardRoutes: RouteDefinition[] = [
             requireOrganizationId({ organizationId }),
           );
           if (items.length > 0) {
-            // ADR-001: STRM-weighted compliance index (conservative proxy)
-            // ⛔ was: (implemented / items.length) * 100
-            const strmResult = strmProxyFromSoaItems(items);
+            // ADR-001: STRM-weighted compliance index — real scf_mappings data
+            // ⛔ was: strmProxyFromSoaItems() with hardcoded intersects/0.5
+            const strmResult = await computeRealStrmCompliance(
+              deps as any,
+              items as any[],
+              a.scf_version_id,
+            );
             complianceSum += strmResult.percentage;
             complianceCount++;
           }
