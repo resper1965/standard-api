@@ -243,7 +243,38 @@ standard-api-standard/
 - Não apagar dados, migrations ou histórico sem instrução explícita.
 - Não acoplar o produto a Codex, Cursor, Claude Code ou Antigravity.
 - Não assumir que ausência de evidência significa ausência de implementação.
+- **Não usar `"direct"` ou `"related"` como `relationship_type` STRM** — os valores canónicos são `equal | subset | intersects | superset | no_relation`.
+- **Não calcular compliance como `(implementedControls / totalControls) * 100`** — usar Weights Matrix STRM (ADR-001).
+- **Não despachar tools MCP de IA de forma síncrona** — usar `AGENT_RUN_QUEUE` + 202 (ADR-003).
+- **Não fazer UPDATE em tabelas de ledger** — `assessment_control_events` é append-only (ADR-002).
+- **Não cachear API Keys no DB a cada request** — usar `STANDARD_CACHE` KV com TTL (Secção 5 de IMPLEMENTATION-CONSTRAINTS.md).
 
+## 18. Contamination Control — Leitura Obrigatória
+
+> Este repositório contém anti-padrões ativos que existem por razões históricas.
+> Antes de implementar qualquer feature nas áreas abaixo, ler o documento de constraints:
+
+**→ [`docs/decisions/IMPLEMENTATION-CONSTRAINTS.md`](docs/decisions/IMPLEMENTATION-CONSTRAINTS.md)**
+
+### Áreas de risco de contaminação (anti-padrões ativos no código):
+
+| Área | Anti-Padrão Existente | Localização |
+|---|---|---|
+| Compliance score | Fórmula binária `implementedControls/totalControls` | `dashboard.routes.ts:67` |
+| STRM types | Valores `"direct"/"related"` no Neon DB | `scf_mappings` (81k registos) |
+| STRM types | `"intersecting"` em vez de `"intersects"` | `xlsx-importer.ts`, `scf.ts` |
+| MCP dispatch | `await dispatchMcpTool()` síncrono para IA | `mcp.routes.ts:108` |
+| API Keys | Query Neon DB em toda request M2M | `auth.middleware.ts:~84` |
+
+### ADRs de Decisão Arquitectural
+
+- [ADR-001](docs/decisions/ADR-001-strm-weights-algorithm.md) — Algoritmo STRM (NIST IR 8477)
+- [ADR-002](docs/decisions/ADR-002-ledger-append-only.md) — Ledger Append-Only
+- [ADR-003](docs/decisions/ADR-003-mcp-async-pattern.md) — MCP Assíncrono
+
+### Testes de Contrato (escritos antes da implementação)
+
+- `packages/assessment-engine/src/__tests__/strm-weight-calculator.contract.test.ts`
 
 ---
 

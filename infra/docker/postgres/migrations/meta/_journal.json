@@ -330,6 +330,13 @@
       "when": 1781096786353,
       "tag": "0046_quiet_nomad",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1781101681924,
+      "tag": "0047_wooden_hemingway",
+      "breakpoints": true
     }
   ]
 }

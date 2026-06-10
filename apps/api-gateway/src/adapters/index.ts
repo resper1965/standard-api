@@ -86,7 +86,6 @@ import {
   provisionOrganizationContext,
 } from "./tenant-mapping";
 import { createAuthRepository } from "@standard/auth";
-import { users } from "@standard/schemas";
 import { eq } from "drizzle-orm";
 import {
   createLedgerService,
@@ -298,43 +297,17 @@ export const createDrizzleRepositories = (
       resolveOrganizationContext(db, baOrgId),
     provisionOrganizationContext: (baOrgId: string) =>
       provisionOrganizationContext(db, baOrgId),
+    // resolveUserContext: baUser.id IS the domain identity in 1:1 simplified auth model.
+    // The domain `users` table is being removed (A7). This stub ensures adapters that
+    // still reference resolveUserContext continue to compile during transition.
     resolveUserContext: async (
-      email: string,
-      displayName: string,
+      _email: string,
+      _displayName: string,
       identityProviderSubject?: string,
     ) => {
-      const [existing] = await db
-        .select()
-        .from(users)
-        .where(eq(users.email, email))
-        .limit(1);
-      if (existing) {
-        if (
-          identityProviderSubject &&
-          existing.identityProviderSubject !== identityProviderSubject
-        ) {
-          await db
-            .update(users)
-            .set({
-              identityProviderSubject,
-              identityProvider: "better-auth",
-              updatedAt: new Date(),
-            })
-            .where(eq(users.id, existing.id));
-        }
-        return { id: existing.id };
-      }
-
-      const [inserted] = await db
-        .insert(users)
-        .values({
-          email,
-          displayName,
-          identityProvider: identityProviderSubject ? "better-auth" : null,
-          identityProviderSubject: identityProviderSubject || null,
-        })
-        .returning();
-      return { id: inserted!.id };
+      // In simplified auth, baUser.id === actorId === domain identity.
+      // Callers should use context.actorId directly.
+      return { id: identityProviderSubject ?? _email };
     },
     // AuthRepository — single typed access to BA internal tables (ADR-009)
     authRepo: createAuthRepository(db),
