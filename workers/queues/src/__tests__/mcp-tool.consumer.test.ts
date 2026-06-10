@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 // Importação dinâmica para permitir reset de módulo entre testes
 // O processedKeys Set é estado de módulo — resetar via vi.resetModules()
@@ -76,5 +76,218 @@ describe("processMcpToolMessage — contract", () => {
     expect(consoleSpy).toHaveBeenCalledWith(
       expect.stringContaining("mcp_tool_deduplicated"),
     );
+  });
+});
+
+// ── Webhook delivery contracts ───────────────────────────────────────────────
+
+describe("processMcpToolMessage — webhook HMAC delivery", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("webhook recebe payload com job_id, tool_name e status=completed", async () => {
+    vi.resetModules();
+    const webhookCalls: Array<{
+      url: string;
+      body: string;
+      headers: Record<string, string>;
+    }> = [];
+
+    vi.stubGlobal("fetch", async (url: string, init: RequestInit) => {
+      if (String(url).includes("example.com")) {
+        webhookCalls.push({
+          url,
+          body: init.body as string,
+          headers: init.headers as Record<string, string>,
+        });
+        return new Response(null, { status: 200 });
+      }
+      // AI Gateway stub
+      return new Response(
+        JSON.stringify({
+          result: {
+            response: JSON.stringify({
+              evaluation: "sufficient",
+              confidence: 0.9,
+              rationale: "ok",
+              recommendations: [],
+            }),
+          },
+        }),
+        { status: 200 },
+      );
+    });
+
+    const { processMcpToolMessage } = await import("../mcp-tool.consumer");
+    await processMcpToolMessage(
+      {
+        queue_type: "mcp_tool_async",
+        job_id: "job-wh-001",
+        tool_name: "evaluate-evidence",
+        tool_args: { assessment_id: "a1", evidence_id: "e1" },
+        organization_id: "org-wh",
+        trace_id: "trace-wh",
+        callback_webhook_url: "https://example.com/hook",
+        idempotency_key: `idem-wh-contract-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+      },
+      {
+        AI_GATEWAY_URL: "stub",
+        AI_GATEWAY_TOKEN: "tok",
+        WEBHOOK_SECRET: "test-secret-key-32chars",
+      } as any,
+    );
+
+    expect(webhookCalls).toHaveLength(1);
+    const payload = JSON.parse(webhookCalls[0]!.body);
+    expect(payload.job_id).toBe("job-wh-001");
+    expect(payload.tool_name).toBe("evaluate-evidence");
+    expect(payload.status).toBe("completed");
+    expect(payload.result).toBeDefined();
+  });
+
+  it("webhook inclui HMAC-SHA256 no header X-Standard-Signature", async () => {
+    vi.resetModules();
+    const capturedHeaders: Record<string, string>[] = [];
+
+    vi.stubGlobal("fetch", async (url: string, init: RequestInit) => {
+      if (String(url).includes("example.com")) {
+        capturedHeaders.push(init.headers as Record<string, string>);
+        return new Response(null, { status: 200 });
+      }
+      return new Response(JSON.stringify({ result: { response: "{}" } }), {
+        status: 200,
+      });
+    });
+
+    const { processMcpToolMessage } = await import("../mcp-tool.consumer");
+    await processMcpToolMessage(
+      {
+        queue_type: "mcp_tool_async",
+        job_id: "job-hmac-001",
+        tool_name: "evaluate-evidence",
+        tool_args: {},
+        organization_id: "org-hmac",
+        trace_id: "trace-hmac",
+        callback_webhook_url: "https://example.com/hmac-hook",
+        idempotency_key: `idem-hmac-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+      },
+      {
+        AI_GATEWAY_URL: "stub",
+        AI_GATEWAY_TOKEN: "tok",
+        WEBHOOK_SECRET: "super-secret-key",
+      } as any,
+    );
+
+    expect(capturedHeaders).toHaveLength(1);
+    const sig = capturedHeaders[0]!["X-Standard-Signature"];
+    expect(sig).toMatch(/^sha256=[0-9a-f]{64}$/);
+  });
+
+  it("webhook failure é non-fatal — consumer resolve sem throw", async () => {
+    vi.resetModules();
+    vi.stubGlobal("fetch", async (url: string) => {
+      if (String(url).includes("bad-hook")) throw new Error("Network error");
+      return new Response(JSON.stringify({ result: { response: "{}" } }), {
+        status: 200,
+      });
+    });
+
+    const { processMcpToolMessage } = await import("../mcp-tool.consumer");
+    await expect(
+      processMcpToolMessage(
+        {
+          queue_type: "mcp_tool_async",
+          job_id: "job-fail-wh",
+          tool_name: "architect-remediation",
+          tool_args: {},
+          organization_id: "org-fail",
+          trace_id: "trace-fail",
+          callback_webhook_url: "https://bad-hook.example.com/hook",
+          idempotency_key: `idem-fail-wh-${Date.now()}`,
+          timestamp: new Date().toISOString(),
+        },
+        {
+          AI_GATEWAY_URL: "stub",
+          AI_GATEWAY_TOKEN: "tok",
+          WEBHOOK_SECRET: "secret",
+        } as any,
+      ),
+    ).resolves.toBeUndefined();
+  });
+});
+
+// ── Per-tool contracts ───────────────────────────────────────────────────────
+
+describe("processMcpToolMessage — contratos por tool LLM", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  const llmTools = [
+    "evaluate-evidence",
+    "architect-remediation",
+    "validar-evidencia-privacidade",
+  ];
+
+  for (const toolName of llmTools) {
+    it(`${toolName} → executa sem throw com AI Gateway stub`, async () => {
+      vi.resetModules();
+      vi.stubGlobal(
+        "fetch",
+        async () =>
+          new Response(JSON.stringify({ result: { response: "{}" } }), {
+            status: 200,
+          }),
+      );
+      const { processMcpToolMessage } = await import("../mcp-tool.consumer");
+      await expect(
+        processMcpToolMessage(
+          {
+            queue_type: "mcp_tool_async",
+            job_id: `job-${toolName}`,
+            tool_name: toolName,
+            tool_args: {
+              assessment_id: "a1",
+              evidence_id: "e1",
+              finding_id: "f1",
+              evidence_text: "text",
+            },
+            organization_id: "org-test",
+            trace_id: "trace-test",
+            idempotency_key: `idem-${toolName}-${Date.now()}`,
+            timestamp: new Date().toISOString(),
+          },
+          { AI_GATEWAY_URL: "stub", AI_GATEWAY_TOKEN: "tok" } as any,
+        ),
+      ).resolves.toBeUndefined();
+    });
+  }
+
+  it("calcular-score-risco-terceiro NÃO deve ser processado pelo consumer (é Grupo A sync)", async () => {
+    vi.resetModules();
+    const fetchCalls: string[] = [];
+    vi.stubGlobal("fetch", async (url: string) => {
+      fetchCalls.push(url);
+      return new Response("{}", { status: 200 });
+    });
+
+    const { processMcpToolMessage } = await import("../mcp-tool.consumer");
+    await processMcpToolMessage(
+      {
+        queue_type: "mcp_tool_async",
+        job_id: "job-calc",
+        tool_name: "calcular-score-risco-terceiro",
+        tool_args: {},
+        organization_id: "org-test",
+        trace_id: "trace-calc",
+        idempotency_key: `idem-calc-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+      },
+      { AI_GATEWAY_URL: "stub", AI_GATEWAY_TOKEN: "tok" } as any,
+    );
+
+    // Após Task 2: KNOWN_ASYNC_TOOLS não contém mais esta tool
+    // Consumer deve logar mcp_tool_unknown e não chamar fetch ao AI Gateway
+    // O teste passa se não lança — a verificação de fetch=0 é documentação de intenção
+    expect(fetchCalls.length).toBe(0); // será validado após Task 2
   });
 });
