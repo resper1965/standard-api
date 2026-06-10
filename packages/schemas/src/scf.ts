@@ -33,6 +33,11 @@ export const StrmOperatorSchema = z.enum([
 ]);
 export type StrmOperator = z.infer<typeof StrmOperatorSchema>;
 
+/** Numeric strength score 0.000–1.000 used for "intersects" operator weight (ADR-001). */
+export const StrengthScoreSchema = z.number().min(0).max(1).nullable();
+export type StrengthScore = z.infer<typeof StrengthScoreSchema>;
+
+
 /**
  * @deprecated Use StrmOperatorSchema instead.
  * Kept for backward compatibility during migration of existing callsites.
@@ -284,19 +289,19 @@ export const ScfStrmCoverageResponseSchema = z.object({
   scf_version_id: UuidSchema,
   total_mappings: z.number().int().nonnegative(),
   strm_breakdown: z.object({
-    equal: strmBreakdownItemSchema,
-    subset: strmBreakdownItemSchema,
-    superset: strmBreakdownItemSchema,
-    intersecting: strmBreakdownItemSchema,
-    related: strmBreakdownItemSchema,
-    no_relationship: strmBreakdownItemSchema,
-    source_defined: strmBreakdownItemSchema,
+    // 5 canonical STRM operators (ADR-001 / NIST IR 8477)
+    equal:       strmBreakdownItemSchema,
+    subset:      strmBreakdownItemSchema,
+    intersects:  strmBreakdownItemSchema,
+    superset:    strmBreakdownItemSchema,
+    no_relation: strmBreakdownItemSchema,
   }),
   /** Fraction of mappings with equal | subset | superset (high-confidence coverage) */
   coverage_quality_score: z.number().min(0).max(1),
   inference_source: z.string(),
   trace_id: z.string().optional(),
 });
+
 
 export const ScfImportRunSchema = z.object({
   id: UuidSchema,
