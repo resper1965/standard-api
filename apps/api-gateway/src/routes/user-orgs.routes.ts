@@ -1,12 +1,13 @@
 /**
  * User Organization Routes — User-Scoped (no tenant context)
  *
- * BA table access (baSession) is encapsulated in AuthRepository (ADR-009).
- * Domain table queries (organizations, memberships, users) use _db directly
- * as they are not Better Auth internal tables.
+ * Simplified auth model: 1 user = 1 org (organizations.userId === baUser.id).
+ * No memberships table — ownership verified directly on organizations.userId.
+ *
+ * Auth simplification: replaced memberships+users join with direct userId lookup (A7).
  */
-import { eq, and, or } from "drizzle-orm";
-import { organizations, memberships, users } from "@standard/schemas";
+import { eq } from "drizzle-orm";
+import { organizations } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition, RequestContext } from "../http";
 import { json, routeUuidParam, parseJson } from "../http";
@@ -25,10 +26,7 @@ const getRepo = (context: RequestContext): AuthRepository => {
   return repo;
 };
 
-/**
- * Domain DB accessor — for organizations, memberships, users tables.
- * These are NOT Better Auth internals.
- */
+/** Domain DB accessor — for the organizations table. */
 const getDomainDb = (context: RequestContext): DbClient => {
   if (!context.deps._db) {
     throw new ApiError(
@@ -56,8 +54,9 @@ export const userOrgsRoutes: RouteDefinition[] = [
 
       const db = getDomainDb(context);
 
+      // 1:1 model — each user owns exactly one org (organizations.userId = baUser.id)
       const rows = await db
-        .selectDistinct({
+        .select({
           id: organizations.id,
           name: organizations.name,
           slug: organizations.slug,
@@ -66,14 +65,7 @@ export const userOrgsRoutes: RouteDefinition[] = [
           createdAt: organizations.createdAt,
         })
         .from(organizations)
-        .leftJoin(memberships, eq(organizations.id, memberships.organizationId))
-        .leftJoin(users, eq(users.id, memberships.userId))
-        .where(
-          or(
-            eq(organizations.userId, userId),
-            eq(users.identityProviderSubject, userId),
-          ),
-        );
+        .where(eq(organizations.userId, userId));
 
       return json(
         { data: rows, trace_id: context.traceId },
@@ -99,41 +91,28 @@ export const userOrgsRoutes: RouteDefinition[] = [
       const db = getDomainDb(context);
       const repo = getRepo(context);
 
-      // Verify the user owns or is a member of this organization
+      // Verify the user owns this organization (1:1 model)
       const [org] = await db
         .select({ id: organizations.id })
         .from(organizations)
-        .leftJoin(memberships, eq(organizations.id, memberships.organizationId))
-        .leftJoin(users, eq(users.id, memberships.userId))
-        .where(
-          and(
-            eq(organizations.id, organizationId),
-            or(
-              eq(organizations.userId, userId),
-              eq(users.identityProviderSubject, userId),
-            ),
-          ),
-        )
+        .where(eq(organizations.userId, userId))
         .limit(1);
 
-      if (!org) {
+      if (!org || org.id !== organizationId) {
         throw new ApiError(
           "FORBIDDEN",
-          "You are not a member of this organization.",
+          "You are not the owner of this organization.",
           403,
         );
       }
 
       // H4 fix: Session rotation on privilege change.
-      // Org switch changes the user's role context — invalidate old session
-      // to prevent session fixation with stale role data.
       const sessionId = context.session?.session?.id;
       if (sessionId) {
-        // Set org context, then delete session (forces re-auth with new context)
         await repo.setSessionOrg(sessionId, organizationId);
         await repo.revokeSession(sessionId);
 
-        // Bust the customSession KV cache
+        // Bust the session-ctx KV cache
         if (context.env?.STANDARD_CACHE) {
           await context.env.STANDARD_CACHE.delete(
             `session-ctx:${sessionId}`,
@@ -161,7 +140,6 @@ export const userOrgsRoutes: RouteDefinition[] = [
         {
           ok: true,
           active_organization_id: organizationId,
-          // H4: Signal to frontend that re-authentication is required
           session_rotated: true,
           trace_id: context.traceId,
         },
@@ -187,27 +165,17 @@ export const userOrgsRoutes: RouteDefinition[] = [
       const db = getDomainDb(context);
       const repo = getRepo(context);
 
-      // Verify the user owns or is a member of this organization
+      // Verify the user owns this organization (1:1 model)
       const [org] = await db
         .select({ id: organizations.id })
         .from(organizations)
-        .leftJoin(memberships, eq(organizations.id, memberships.organizationId))
-        .leftJoin(users, eq(users.id, memberships.userId))
-        .where(
-          and(
-            eq(organizations.id, organizationId),
-            or(
-              eq(organizations.userId, userId),
-              eq(users.identityProviderSubject, userId),
-            ),
-          ),
-        )
+        .where(eq(organizations.userId, userId))
         .limit(1);
 
-      if (!org) {
+      if (!org || org.id !== organizationId) {
         throw new ApiError(
           "FORBIDDEN",
-          "You are not a member of this organization.",
+          "You are not the owner of this organization.",
           403,
         );
       }
@@ -217,7 +185,6 @@ export const userOrgsRoutes: RouteDefinition[] = [
       if (sessionId) {
         await repo.setSessionOrg(sessionId, null);
 
-        // Bust the customSession KV cache
         if (context.env?.STANDARD_CACHE) {
           await context.env.STANDARD_CACHE.delete(
             `session-ctx:${sessionId}`,
@@ -225,7 +192,6 @@ export const userOrgsRoutes: RouteDefinition[] = [
         }
       }
 
-      // Soft revocation — clears downstream caches, does NOT cause 401
       if (context.env?.STANDARD_CACHE) {
         await context.env.STANDARD_CACHE.put(
           `revocations:user:${userId}`,

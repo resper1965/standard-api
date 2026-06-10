@@ -8,8 +8,8 @@
  * These are cross-tenant operations — no organization_id scoping required.
  */
 import { z } from "zod";
-import { eq, ilike, or, sql, desc, and } from "drizzle-orm";
-import { organizations, memberships, users } from "@standard/schemas";
+import { eq } from "drizzle-orm";
+import { organizations } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition, RequestContext } from "../http";
 import { json, parseJson, routeParam } from "../http";
@@ -318,7 +318,6 @@ export const adminUsersRoutes: RouteDefinition[] = [
       await requirePlatformAdmin(context);
 
       const repo = getRepo(context);
-      const db = getDomainDb(context);
       const userId = routeParam(context.params, "userId");
       const body = await parseJson(context.request, ApproveUserBodySchema);
 
@@ -334,88 +333,24 @@ export const adminUsersRoutes: RouteDefinition[] = [
         });
       }
 
-      // Verify the target organization exists
-      const [org] = await (db as any)
-        .select({ id: organizations.id, name: organizations.name })
-        .from(organizations)
-        .where(eq(organizations.id, body.organization_id))
-        .limit(1);
-      if (!org) {
-        throw new ApiError(
-          "NOT_FOUND",
-          "Organization not found. Select a valid organization.",
-          404,
-        );
-      }
-
-      // 1. approveUser() atomically: marks approved=true + invalidates pre-approval session (transaction)
+      // approveUser() atomically: marks approved=true + invalidates pre-approval session
       await repo.approveUser(userId);
 
-      // 2. Upsert into domain users
-      let domainUserId: string;
-      const [existingDomainUser] = await (db as any)
-        .select({ id: users.id })
-        .from(users)
-        .where(eq(users.email, existing.email))
-        .limit(1);
-
-      if (existingDomainUser) {
-        domainUserId = existingDomainUser.id;
-        await (db as any)
-          .update(users)
-          .set({ identityProviderSubject: userId })
-          .where(eq(users.id, domainUserId));
-      } else {
-        const [newDomainUser] = await (db as any)
-          .insert(users)
-          .values({
-            email: existing.email,
-            displayName: existing.name || "User",
-            identityProvider: "standard-native-auth",
-            identityProviderSubject: userId,
-          })
-          .returning({ id: users.id });
-        domainUserId = newDomainUser!.id;
-      }
-
-      // 3. Upsert into memberships
-      const [existingMembership] = await (db as any)
-        .select({ id: memberships.id })
-        .from(memberships)
-        .where(
-          and(
-            eq(memberships.organizationId, body.organization_id),
-            eq(memberships.userId, domainUserId),
-          ),
-        )
-        .limit(1);
-
-      if (!existingMembership) {
-        await (db as any).insert(memberships).values({
-          organizationId: body.organization_id,
-          userId: domainUserId,
-          email: existing.email,
-          displayName: existing.name,
-          role: body.role ?? "member",
-          status: "active",
-          acceptedAt: new Date(),
-        });
-      }
-
+      // Link the session org — baUser.id IS the domain identity in 1:1 model
+      // The user must activate an org via POST /v1/auth/activate-org after approval
       await context.deps.audit.record("admin.user.approved", {
         actor_id: context.actorId,
         target_user_id: userId,
         organization_id: body.organization_id,
-        assigned_role: body.role ?? "member",
         trace_id: context.traceId,
       });
 
-      // Edge cache soft revocation — clears downstream caches on next request.
+      // Bust KV session cache for this user
       if (context.env?.STANDARD_CACHE) {
         await context.env.STANDARD_CACHE.put(
           `revocations:user:${userId}`,
-          "membership_change",
-          { expirationTtl: 10 }, // 10s — just enough to bust cached session data
+          "approved",
+          { expirationTtl: 10 }, // 10s — bust caches on next request
         ).catch(() => {});
       }
 
