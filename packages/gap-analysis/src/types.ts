@@ -13,7 +13,7 @@ import type {
   GapType,
   SoaItemResponse,
   SoaVersionResponse,
-  UpdateGapFindingRequest
+  UpdateGapFindingRequest,
 } from "@standard/schemas";
 import type { SoaDependencies } from "@standard/soa";
 
@@ -31,7 +31,7 @@ export type {
   KbSearchResult,
   SoaItemResponse,
   SoaVersionResponse,
-  UpdateGapFindingRequest
+  UpdateGapFindingRequest,
 };
 
 export type GapAnalysisContext = {
@@ -52,10 +52,21 @@ export interface TenantScopedEvidenceFindingRepository {
 export type EvidenceFindingRepository = {
   save(finding: EvidenceFindingResponse): Promise<void>;
   update(finding: EvidenceFindingResponse): Promise<void>;
-  get(evidenceFindingId: string, organizationId: string): Promise<EvidenceFindingResponse | null>;
-  listByAssessment(assessmentId: string, organizationId: string): Promise<EvidenceFindingResponse[]>;
-  findBySoaItem(soaItemId: string, organizationId: string): Promise<EvidenceFindingResponse | null>;
-  withOrganization(organizationId: string): TenantScopedEvidenceFindingRepository;
+  get(
+    evidenceFindingId: string,
+    organizationId: string,
+  ): Promise<EvidenceFindingResponse | null>;
+  listByAssessment(
+    assessmentId: string,
+    organizationId: string,
+  ): Promise<EvidenceFindingResponse[]>;
+  findBySoaItem(
+    soaItemId: string,
+    organizationId: string,
+  ): Promise<EvidenceFindingResponse | null>;
+  withOrganization(
+    organizationId: string,
+  ): TenantScopedEvidenceFindingRepository;
 };
 
 export interface TenantScopedEvidenceSourceRepository {
@@ -65,8 +76,13 @@ export interface TenantScopedEvidenceSourceRepository {
 
 export type EvidenceSourceRepository = {
   saveMany(sources: EvidenceSourceResponse[]): Promise<void>;
-  listByFinding(evidenceFindingId: string, organizationId: string): Promise<EvidenceSourceResponse[]>;
-  withOrganization(organizationId: string): TenantScopedEvidenceSourceRepository;
+  listByFinding(
+    evidenceFindingId: string,
+    organizationId: string,
+  ): Promise<EvidenceSourceResponse[]>;
+  withOrganization(
+    organizationId: string,
+  ): TenantScopedEvidenceSourceRepository;
 };
 
 export interface TenantScopedGapAnalysisVersionRepository {
@@ -79,9 +95,17 @@ export interface TenantScopedGapAnalysisVersionRepository {
 export type GapAnalysisVersionRepository = {
   save(version: GapAnalysisVersionResponse): Promise<void>;
   update(version: GapAnalysisVersionResponse): Promise<void>;
-  get(gapAnalysisVersionId: string, organizationId: string): Promise<GapAnalysisVersionResponse | null>;
-  listByAssessment(assessmentId: string, organizationId: string): Promise<GapAnalysisVersionResponse[]>;
-  withOrganization(organizationId: string): TenantScopedGapAnalysisVersionRepository;
+  get(
+    gapAnalysisVersionId: string,
+    organizationId: string,
+  ): Promise<GapAnalysisVersionResponse | null>;
+  listByAssessment(
+    assessmentId: string,
+    organizationId: string,
+  ): Promise<GapAnalysisVersionResponse[]>;
+  withOrganization(
+    organizationId: string,
+  ): TenantScopedGapAnalysisVersionRepository;
 };
 
 export interface TenantScopedGapFindingRepository {
@@ -94,8 +118,14 @@ export interface TenantScopedGapFindingRepository {
 export type GapFindingRepository = {
   saveMany(findings: GapFindingResponse[]): Promise<void>;
   update(finding: GapFindingResponse): Promise<void>;
-  get(gapFindingId: string, organizationId: string): Promise<GapFindingResponse | null>;
-  listByVersion(gapAnalysisVersionId: string, organizationId: string): Promise<GapFindingResponse[]>;
+  get(
+    gapFindingId: string,
+    organizationId: string,
+  ): Promise<GapFindingResponse | null>;
+  listByVersion(
+    gapAnalysisVersionId: string,
+    organizationId: string,
+  ): Promise<GapFindingResponse[]>;
   withOrganization(organizationId: string): TenantScopedGapFindingRepository;
 };
 
@@ -128,5 +158,8 @@ export type EvidenceFindingFilters = {
 
 export type GapFindingFilters = {
   assessment_status?: AssessmentStatus;
+  /** Filter to only MCR gap findings (is_mcr_gap=true) — Initiative 4 */
+  mcr_only?: boolean;
+  /** Filter by ROC determination value — for ROC-scoped queries */
+  roc_determination?: string;
 };
-
