@@ -10,7 +10,11 @@
 | A4 | Simplificar `packages/auth/src/auth.ts` | ✅ done — `03236e6` |
 | A5 | Novo `auth.middleware.ts` — KV-first, 1:1 org model | ✅ done — `a62a8a8` |
 | A6 | `wrangler.toml` — binding HYPERDRIVE_AUTH | ✅ done — `ede76dc` |
-| A7 | Remover `users`, `memberships`, `roles` do product schema | ⬜ pendente |
-| A8 | Seed de desenvolvimento para auth branch | ⬜ pendente |
-| A9 | Testes de contrato do middleware | ⬜ pendente |
-| A10 | Typecheck final + documentação | ⬜ pendente |
+| A7 | Remover dual-identity sync, deprecate users/memberships/roles | ✅ done — `4e81b51` |
+| A8 | Seed sintético para auth branch | ✅ done — `7836d9d` |
+| A9 | Testes de contrato do middleware | ✅ done — `7836d9d` |
+| A10 | Typecheck monorepo completo — 0 erros, 28 packages | ✅ done — `7836d9d` |
+
+## ✅ Plano Completo
+
+Todos os commits pusheados para `main`.
