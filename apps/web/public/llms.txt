@@ -1,0 +1,119 @@
+# Standard Platform — llms.txt
+# Machine-readable context for AI agents (Cursor, Claude Code, Antigravity, Copilot, etc.)
+# https://llmstxt.org/
+
+> Standard is an API-first SaaS platform for security, compliance, and maturity assessments
+> based on the Secure Controls Framework (SCF). Multi-tenant, Cloudflare-oriented, TypeScript.
+
+## Product
+
+- Name: Standard
+- Type: GRC + Privacy + TPRA SaaS Platform
+- Architecture: API-first / Cloudflare Workers / PostgreSQL / Vectorize
+- SCF Version: 2026.1
+- Base URL: https://api.standard.com/v1
+- Authentication: Bearer token (API Key) or session (Better Auth)
+
+## Key Concepts
+
+- **Assessment**: Lifecycle entity (draft → closed) governing a security/compliance review
+- **SCF Control**: Normative control from the Secure Controls Framework — never inferred
+- **SoA**: Statement of Applicability — scope of controls for an assessment
+- **Gap Analysis**: Delta between current state and required state — append-only findings
+- **TPRA**: Third-Party Risk Assessment — vendor risk scoring based on SCF controls
+- **Ledger**: Append-only event log (ADR-002) — assessment_control_events table
+- **KB**: Knowledge Base — client evidence store (RAG) — never normative authority
+
+## API Endpoints (v1)
+
+### Assessments
+- GET    /v1/assessments               — list assessments (org-scoped)
+- POST   /v1/assessments               — create (returns: id, status: "draft")
+- GET    /v1/assessments/:id           — detail
+- PATCH  /v1/assessments/:id           — update metadata
+
+### API Keys
+- GET    /v1/api-keys                  — list (masked_key only)
+- POST   /v1/api-keys                  — create (raw_key returned ONCE — one-shot)
+- DELETE /v1/api-keys/:id              — revoke immediately (401 instant)
+- PATCH  /v1/api-keys/:id              — update name/expiration
+
+### MCP Tools (Async — ADR-003)
+- POST   /v1/mcp/dispatch              — dispatch tool → 202 + job_id
+- GET    /v1/mcp/jobs/:id              — poll: pending | completed | failed
+- GET    /v1/mcp/tools                 — list available tools
+
+### Webhooks (G15)
+- GET    /v1/webhooks                  — list endpoints
+- POST   /v1/webhooks                  — register (signing_secret returned ONCE)
+- DELETE /v1/webhooks/:id              — delete
+- POST   /v1/webhooks/:id/test         — send test event
+- POST   /v1/webhooks/:id/rotate-secret — rotate signing secret (one-shot)
+
+### TPRA
+- GET    /v1/tpra/vendors              — list vendors
+- POST   /v1/tpra/vendors              — register vendor
+- GET    /v1/tpra/assessments          — list TPRA assessments
+- POST   /v1/tpra/assessments          — start TPRA for vendor
+- GET    /v1/tpra/risk-scores          — calculated risk scores
+
+## MCP Tools Available
+
+- validar_evidencia_privacidade        — validates evidence chunk against SCF privacy controls
+- calcular_score_risco_terceiro        — calculates vendor risk score from TPRA evidence
+- analisar_gap_controlo               — analyzes SCF control gap vs KB evidence
+
+All MCP tools are ASYNC. POST /v1/mcp/dispatch returns 202 + job_id. Poll /v1/mcp/jobs/:id.
+
+## Webhook Events (G15)
+
+Assessment: assessment.created, assessment.status_changed, assessment.closed
+Gap Analysis: gap.approved
+Maturity: maturity.approved
+POA&M: poam.approved
+Reports: report.generated
+Documents: document.uploaded
+TPRA: tpra.assessment.completed, vendor.risk_score.updated
+Ledger: ledger.audit.alert
+Security: api_key.created, api_key.revoked
+
+## Error Format
+
+All errors follow: { "error": { "code": "...", "message": "...", "trace_id": "trc_...", "details": [] } }
+
+## Architecture Rules for AI Agents
+
+- NEVER infer SCF mappings not in the normative base (packages/scf-core)
+- NEVER use vector search as normative authority
+- NEVER write final findings directly from LLM output (schema validation + approval gate required)
+- NEVER cache API keys in DB per request — use STANDARD_CACHE KV with TTL
+- NEVER call MCP tools synchronously — POST /v1/mcp/dispatch returns 202, always poll
+- NEVER update assessment_control_events — it is append-only (ADR-002)
+- ALWAYS scope queries by organization_id and assessment_id
+- ALWAYS include trace_id in error reporting
+- Compliance score = STRM weight matrix (ADR-001), NOT implementedControls/totalControls
+
+## Repository Structure
+
+standard-api-standard/
+├── apps/api-gateway/     — Hono API (Cloudflare Workers)
+├── apps/web/             — Vite SPA (React 19, Tailwind, Shadcn)
+├── workers/              — Cloudflare Workflows, Queues, Ingestion
+├── packages/
+│   ├── assessment-engine/ — Core lifecycle rules
+│   ├── scf-core/          — Normative SCF data layer
+│   ├── schemas/           — Shared TypeScript contracts
+│   ├── agent-runtime/     — Agent execution rules
+│   ├── gap-analysis/      — Gap analysis engine
+│   └── tpra/             — Third-party risk engine
+├── docs/decisions/        — ADRs (ADR-001, ADR-002, ADR-003)
+└── evals/                 — Synthetic fixtures + golden outputs
+
+## Docs
+
+- API Reference: https://standard.com/docs/api
+- Quickstart: https://standard.com/docs/quickstart
+- MCP Tools: https://standard.com/docs/mcp
+- ADR-001 (STRM Weights): docs/decisions/ADR-001-strm-weights-algorithm.md
+- ADR-002 (Ledger Append-Only): docs/decisions/ADR-002-ledger-append-only.md
+- ADR-003 (MCP Async Pattern): docs/decisions/ADR-003-mcp-async-pattern.md
