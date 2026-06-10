@@ -2,6 +2,7 @@
 import { redirect, Navigate } from "react-router-dom"
 import { AuthLayout } from "./components/layouts/AuthLayout"
 import { DashboardLayout } from "./components/layouts/DashboardLayout"
+import { DocsLayout } from "./components/layouts/DocsLayout"
 import { LoginPage } from "./pages/auth/LoginPage"
 import { OnboardingPage } from "./pages/auth/OnboardingPage"
 import { ResetPasswordPage } from "./pages/auth/ResetPasswordPage"
@@ -17,6 +18,11 @@ const ApiKeysPage = lazy(() => import("./pages/dashboard/api-keys/ApiKeysPage").
 const WebhooksPage = lazy(() => import("./pages/dashboard/webhooks/WebhooksPage").then(m => ({ default: m.WebhooksPage })))
 const ScfExplorerPage = lazy(() => import("./pages/dashboard/scf/ScfExplorerPage").then(m => ({ default: m.ScfExplorerPage })))
 const McpPlaygroundPage = lazy(() => import("./pages/dashboard/mcp/McpPlaygroundPage").then(m => ({ default: m.McpPlaygroundPage })))
+
+// Docs pages (public — no auth)
+const DocsOverviewPage = lazy(() => import("./pages/docs/DocsOverviewPage").then(m => ({ default: m.DocsOverviewPage })))
+const ApiReferencePage = lazy(() => import("./pages/docs/ApiReferencePage").then(m => ({ default: m.ApiReferencePage })))
+const QuickstartPage  = lazy(() => import("./pages/docs/QuickstartPage").then(m => ({ default: m.QuickstartPage })))
 
 // Admin pages
 const AdminOrganizations = lazy(() => import("./pages/admin/Organizations").then(m => ({ default: m.AdminOrganizations })))
@@ -100,6 +106,17 @@ export const routes = [
             {
                 path: "*",
                 loader: () => redirect("/dashboard")
+            },
+            // ── Public docs — no auth required ──────────────────
+            {
+                path: "docs",
+                element: <DocsLayout />,
+                children: [
+                    { index: true,             element: <SuspenseWrap><DocsOverviewPage /></SuspenseWrap> },
+                    { path: "api",             element: <SuspenseWrap><ApiReferencePage /></SuspenseWrap> },
+                    { path: "quickstart",      element: <SuspenseWrap><QuickstartPage /></SuspenseWrap> },
+                    { path: "mcp",             element: <SuspenseWrap><ApiReferencePage /></SuspenseWrap> },
+                ]
             }
         ]
     }
