@@ -24,49 +24,73 @@ ALTER TABLE "scf_mappings"
 ALTER TABLE "scf_strm_relationships"
   ADD COLUMN IF NOT EXISTS "strength_score" NUMERIC(4,3);
 
--- 3. Popular strength_score a partir de relationship_strength (text) em scf_mappings
-UPDATE "scf_mappings"
-SET "strength_score" = CASE
-  WHEN LOWER("relationship_strength") IN ('strong', 'high')       THEN 1.000
-  WHEN LOWER("relationship_strength") IN ('moderate', 'medium')   THEN 0.500
-  WHEN LOWER("relationship_strength") IN ('related')              THEN 0.500
-  WHEN LOWER("relationship_strength") IN ('weak', 'low')          THEN 0.250
-  ELSE 0.500
-END
-WHERE "strength_score" IS NULL;
+-- 3. Popular strength_score e converter relationship_type com segurança (PL/pgSQL dinâmico)
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 
+    FROM information_schema.columns 
+    WHERE table_name='scf_mappings' AND column_name='relationship_strength'
+  ) THEN
+    EXECUTE 'UPDATE "scf_mappings"
+      SET "strength_score" = CASE
+        WHEN LOWER("relationship_strength") IN (''strong'', ''high'')       THEN 1.000
+        WHEN LOWER("relationship_strength") IN (''moderate'', ''medium'')   THEN 0.500
+        WHEN LOWER("relationship_strength") IN (''related'')              THEN 0.500
+        WHEN LOWER("relationship_strength") IN (''weak'', ''low'')          THEN 0.250
+        ELSE 0.500
+      END
+      WHERE "strength_score" IS NULL';
+  END IF;
 
--- 4. Popular strength_score em scf_strm_relationships
-UPDATE "scf_strm_relationships"
-SET "strength_score" = CASE
-  WHEN LOWER("relationship_strength") IN ('strong', 'high')       THEN 1.000
-  WHEN LOWER("relationship_strength") IN ('moderate', 'medium')   THEN 0.500
-  WHEN LOWER("relationship_strength") IN ('related')              THEN 0.500
-  WHEN LOWER("relationship_strength") IN ('weak', 'low')          THEN 0.250
-  ELSE 0.500
-END
-WHERE "strength_score" IS NULL;
+  IF EXISTS (
+    SELECT 1 
+    FROM information_schema.columns 
+    WHERE table_name='scf_strm_relationships' AND column_name='relationship_strength'
+  ) THEN
+    EXECUTE 'UPDATE "scf_strm_relationships"
+      SET "strength_score" = CASE
+        WHEN LOWER("relationship_strength") IN (''strong'', ''high'')       THEN 1.000
+        WHEN LOWER("relationship_strength") IN (''moderate'', ''medium'')   THEN 0.500
+        WHEN LOWER("relationship_strength") IN (''related'')              THEN 0.500
+        WHEN LOWER("relationship_strength") IN (''weak'', ''low'')          THEN 0.250
+        ELSE 0.500
+      END
+      WHERE "strength_score" IS NULL';
+  END IF;
 
--- 5. Converter relationship_type para operadores canónicos em scf_mappings
-UPDATE "scf_mappings"
-SET "relationship_type" = CASE
-  WHEN "relationship_type" = 'direct'                                     THEN 'equal'
-  WHEN "relationship_type" IN ('related', 'intersecting')                 THEN 'intersects'
-  WHEN "relationship_type" IN ('no_relationship')                         THEN 'no_relation'
-  WHEN "relationship_type" = 'source_defined'                             THEN 'intersects'
-  WHEN "relationship_type" IN ('equal','subset','intersects','superset','no_relation') THEN "relationship_type"
-  ELSE 'intersects'
-END;
+  IF EXISTS (
+    SELECT 1 
+    FROM information_schema.columns 
+    WHERE table_name='scf_mappings' AND column_name='relationship_type' AND data_type IN ('character varying', 'text')
+  ) THEN
+    EXECUTE 'UPDATE "scf_mappings"
+      SET "relationship_type" = CASE
+        WHEN "relationship_type" = ''direct''                                     THEN ''equal''
+        WHEN "relationship_type" IN (''related'', ''intersecting'')                 THEN ''intersects''
+        WHEN "relationship_type" IN (''no_relationship'')                         THEN ''no_relation''
+        WHEN "relationship_type" = ''source_defined''                             THEN ''intersects''
+        WHEN "relationship_type" IN (''equal'',''subset'',''intersects'',''superset'',''no_relation'') THEN "relationship_type"
+        ELSE ''intersects''
+      END';
+  END IF;
 
--- 6. Converter relationship_type para operadores canónicos em scf_strm_relationships
-UPDATE "scf_strm_relationships"
-SET "relationship_type" = CASE
-  WHEN "relationship_type" = 'direct'                                     THEN 'equal'
-  WHEN "relationship_type" IN ('related', 'intersecting')                 THEN 'intersects'
-  WHEN "relationship_type" IN ('no_relationship')                         THEN 'no_relation'
-  WHEN "relationship_type" = 'source_defined'                             THEN 'intersects'
-  WHEN "relationship_type" IN ('equal','subset','intersects','superset','no_relation') THEN "relationship_type"
-  ELSE 'intersects'
-END;
+  IF EXISTS (
+    SELECT 1 
+    FROM information_schema.columns 
+    WHERE table_name='scf_strm_relationships' AND column_name='relationship_type' AND data_type IN ('character varying', 'text')
+  ) THEN
+    EXECUTE 'UPDATE "scf_strm_relationships"
+      SET "relationship_type" = CASE
+        WHEN "relationship_type" = ''direct''                                     THEN ''equal''
+        WHEN "relationship_type" IN (''related'', ''intersecting'')                 THEN ''intersects''
+        WHEN "relationship_type" IN (''no_relationship'')                         THEN ''no_relation''
+        WHEN "relationship_type" = ''source_defined''                             THEN ''intersects''
+        WHEN "relationship_type" IN (''equal'',''subset'',''intersects'',''superset'',''no_relation'') THEN "relationship_type"
+        ELSE ''intersects''
+      END';
+  END IF;
+END $$;
 
 -- 7. Índice para filtros por operador STRM (P3.6 — filtro ?relationship_type=subset)
 CREATE INDEX IF NOT EXISTS "scf_mappings_rel_type_idx"

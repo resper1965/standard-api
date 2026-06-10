@@ -186,6 +186,7 @@ const buildMockSession = (
       name: "Mock Test Actor",
       platformAdmin: isPlatAdmin,
       approved: true,
+      role: mockRole,
     },
     session: {
       id: `mock-session-${legacyActor}`,

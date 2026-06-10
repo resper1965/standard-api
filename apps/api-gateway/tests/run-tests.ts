@@ -7,6 +7,7 @@ import "./document-reprocessing-verify.test";
 import "./kb.test";
 import "./scf.test";
 import "./soa.test";
+import "./dashboard.test";
 import "./gap-analysis.test";
 import "./poam.test";
 import "./risk-exposure.test";
