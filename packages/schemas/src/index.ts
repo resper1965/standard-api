@@ -28,6 +28,12 @@ export * from "./webhooks";
 export * from "./api-key-scopes";
 export * from "./privacy";
 export * from "./db/auth-schema";
+// Auth branch entities — explicitly exported to avoid collision with legacy schema.ts
+// Use these when working with the auth/control-plane database (HYPERDRIVE_AUTH)
+export {
+  organizations as authOrganizations,
+  apiKeys as authApiKeys,
+} from "./db/organization-schema";
 export * from "./dpmp";
 export * from "./cdpas";
 export * from "./mad";
