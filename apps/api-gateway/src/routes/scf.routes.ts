@@ -288,7 +288,80 @@ export const scfRoutes: RouteDefinition[] = [
         routeParam(params, "scfVersionId"),
       );
       const url = new URL(request.url);
+      const acceptHeader = request.headers.get("Accept") ?? "";
+      const wantsStream = acceptHeader.includes("application/x-ndjson");
 
+      // ── NDJSON streaming path ──────────────────────────────────────────────
+      // Activated by Accept: application/x-ndjson
+      // Fetches controls in batches of 50 via offset pagination, streams each
+      // row immediately. Avoids loading 1400+ controls into Worker memory.
+      if (wantsStream) {
+        const { readable, writable } = new TransformStream<Uint8Array, Uint8Array>();
+        const writer = writable.getWriter();
+        const encoder = new TextEncoder();
+
+        const domainCode =
+          url.searchParams.get("domain_code") ||
+          url.searchParams.get("domain") ||
+          undefined;
+        const batchSize = 50;
+
+        // Stream in background — do not await, response returns immediately
+        (async () => {
+          try {
+            let offset = 0;
+            let hasMore = true;
+
+            while (hasMore) {
+              const batch = await deps.scf.controls.searchControls({
+                scf_version_id: scfVersionId,
+                ...(domainCode ? { domain_code: domainCode } : {}),
+                limit: batchSize,
+                offset,
+              });
+
+              for (const control of batch) {
+                await writer.write(
+                  encoder.encode(JSON.stringify(controlResponse(control)) + "\n"),
+                );
+              }
+
+              hasMore = batch.length === batchSize;
+              offset += batch.length;
+            }
+          } catch (err: any) {
+            // Write error sentinel as last NDJSON line so clients can detect failure
+            try {
+              await writer.write(
+                encoder.encode(
+                  JSON.stringify({ _error: true, message: err?.message ?? "Stream error", trace_id: traceId }) + "\n",
+                ),
+              );
+            } catch {
+              // writer may already be closed — ignore
+            }
+          } finally {
+            try {
+              await writer.close();
+            } catch {
+              // already closed — ignore
+            }
+          }
+        })();
+
+        return new Response(readable, {
+          status: 200,
+          headers: {
+            "Content-Type": "application/x-ndjson",
+            "Transfer-Encoding": "chunked",
+            "X-Standard-Stream": "controls",
+            "X-Standard-Trace-Id": traceId ?? "",
+          },
+        });
+      }
+
+      // ── Standard paginated JSON path ───────────────────────────────────────
+      // Backward compatible — used by all existing clients.
       const limitStr =
         url.searchParams.get("limit") || url.searchParams.get("per_page");
       const pageStr = url.searchParams.get("page");
