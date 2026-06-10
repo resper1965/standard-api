@@ -11,5 +11,23 @@
 | 2.2 | Compliance-gap route + fix dashboard binário | ✅ done | commit 5bcbca5 — strmProxyFromSoaItems() substitui fórmula binária |
 | 3.1 | MCP bifurcação sync/async | ✅ done | commit b0df3bf — ASYNC_TOOLS Set, 202+job_id, ADR-003 |
 | 3.2 | 2 tools MCP novas (G11) | ✅ done | validar-evidencia-privacidade + calcular-score-risco-terceiro em ASYNC_TOOLS |
-| 4.1 | TPRA persistência + webhooks | ⬜ todo | |
-| 4.2 | LedgerService + ledger.audit.alert | ⬜ todo | |
+| 4.1 | TPRA persistência + webhooks | ✅ done | commit a7b6f87 — vendors+assessments+risk scores CRUD |
+| 4.2 | LedgerService + ledger.audit.alert | ✅ done | commit a7b6f87 — append-only, ADR-002 |
+
+---
+
+# Frontend Part 5 — Task Tracker
+
+> Plano: `docs/plans/2026-06-10-frontend-part5.md`
+
+| # | Task | Status | Notas |
+|---|---|---|---|
+| F1 | Dependências + Shadcn components | 🔄 in_progress | |
+| F2 | Zustand stores (SecretDisplay + McpPlayground) | ⬜ todo | |
+| F3 | SecretDisplayOverlay + CreateApiKeyModal (G13) | ⬜ todo | |
+| F4 | Página /admin/api-keys | ⬜ todo | |
+| F5 | AsyncTimeline + JobStatusPoller (G14) | ⬜ todo | |
+| F6 | ToolExplorer + McpPlayground page | ⬜ todo | |
+| F7 | Webhook Manager (G15) | ⬜ todo | |
+| F8 | DocsLayout + ApiReference + /llms.txt + rotas | ⬜ todo | |
+| F9 | Verificação final + push | ⬜ todo | |
