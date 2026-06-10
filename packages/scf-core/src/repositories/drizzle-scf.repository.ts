@@ -134,7 +134,8 @@ const mapMapping = (row: typeof scfMappings.$inferSelect): ScfMapping => ({
   scf_framework_requirement_id: row.scfFrameworkRequirementId,
   scf_control_id: row.scfControlId,
   relationship_type: row.relationshipType as ScfMapping["relationship_type"],
-  relationship_strength: row.relationshipStrength ?? undefined,
+  // strengthScore (numeric 0–1) replaces legacy relationshipStrength (text enum)
+  relationship_strength: row.strengthScore?.toString() ?? undefined,
   mapping_rationale: row.mappingRationale ?? undefined,
   mapping_source: row.mappingSource,
   is_official: row.isOfficial,
@@ -454,8 +455,8 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
       fde_name: row.fdeName ?? undefined,
       relationship_type:
         row.relationshipType as ScfStrmRelationship["relationship_type"],
-      relationship_strength:
-        row.relationshipStrength as ScfStrmRelationship["relationship_strength"],
+      // strengthScore replaces legacy relationshipStrength
+      relationship_strength: row.strengthScore?.toString() ?? undefined,
       rationale: row.rationale ?? undefined,
       source: row.source,
       organization_id: row.organizationId ?? undefined,
@@ -471,7 +472,8 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
         fdeCode: scfStrmRelationships.fdeCode,
         fdeName: scfStrmRelationships.fdeName,
         relationshipType: scfStrmRelationships.relationshipType,
-        relationshipStrength: scfStrmRelationships.relationshipStrength,
+        // strengthScore replaces legacy relationshipStrength
+        strengthScore: scfStrmRelationships.strengthScore,
         rationale: scfStrmRelationships.rationale,
         source: scfStrmRelationships.source,
         organizationId: scfStrmRelationships.organizationId,
@@ -488,7 +490,17 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
         and(
           ilike(scfStrmRelationships.fdeCode, fdeCode.trim()),
           ...(opts?.relationshipType
-            ? [eq(scfStrmRelationships.relationshipType, opts.relationshipType)]
+            ? [
+                eq(
+                  scfStrmRelationships.relationshipType,
+                  opts.relationshipType as
+                    | "equal"
+                    | "subset"
+                    | "intersects"
+                    | "superset"
+                    | "no_relation",
+                ),
+              ]
             : []),
         ),
       )
@@ -502,8 +514,8 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
       fde_name: row.fdeName ?? undefined,
       relationship_type:
         row.relationshipType as ScfStrmRelationship["relationship_type"],
-      relationship_strength:
-        row.relationshipStrength as ScfStrmRelationship["relationship_strength"],
+      // strengthScore replaces legacy relationshipStrength
+      relationship_strength: row.strengthScore?.toString() ?? undefined,
       rationale: row.rationale ?? undefined,
       source: row.source,
       organization_id: row.organizationId ?? undefined,
@@ -535,7 +547,8 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
         fdeCode: scfStrmRelationships.fdeCode,
         fdeName: scfStrmRelationships.fdeName,
         relationshipType: scfStrmRelationships.relationshipType,
-        relationshipStrength: scfStrmRelationships.relationshipStrength,
+        // strengthScore replaces legacy relationshipStrength
+        strengthScore: scfStrmRelationships.strengthScore,
         rationale: scfStrmRelationships.rationale,
         source: scfStrmRelationships.source,
         organizationId: scfStrmRelationships.organizationId,
@@ -545,7 +558,17 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
         and(
           eq(scfStrmRelationships.scfControlId, control[0]!.id),
           ...(opts?.relationshipType
-            ? [eq(scfStrmRelationships.relationshipType, opts.relationshipType)]
+            ? [
+                eq(
+                  scfStrmRelationships.relationshipType,
+                  opts.relationshipType as
+                    | "equal"
+                    | "subset"
+                    | "intersects"
+                    | "superset"
+                    | "no_relation",
+                ),
+              ]
             : []),
         ),
       )
@@ -559,8 +582,8 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
       fde_name: row.fdeName ?? undefined,
       relationship_type:
         row.relationshipType as ScfStrmRelationship["relationship_type"],
-      relationship_strength:
-        row.relationshipStrength as ScfStrmRelationship["relationship_strength"],
+      // strengthScore replaces legacy relationshipStrength
+      relationship_strength: row.strengthScore?.toString() ?? undefined,
       rationale: row.rationale ?? undefined,
       source: row.source,
       organization_id: row.organizationId ?? undefined,
@@ -864,8 +887,17 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
               scfVersionId: m.scf_version_id,
               scfFrameworkRequirementId: m.scf_framework_requirement_id,
               scfControlId: m.scf_control_id,
-              relationshipType: m.relationship_type,
-              relationshipStrength: m.relationship_strength ?? null,
+              // ADR-001: relationshipType must be a StrmOperator enum value
+              relationshipType: m.relationship_type as
+                | "equal"
+                | "subset"
+                | "intersects"
+                | "superset"
+                | "no_relation",
+              // strengthScore replaces legacy relationshipStrength
+              strengthScore: m.relationship_strength
+                ? m.relationship_strength.toString()
+                : null,
               mappingRationale: m.mapping_rationale ?? null,
               mappingSource: m.mapping_source as
                 | "official_scf"
@@ -880,7 +912,7 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
             target: scfMappings.id,
             set: {
               relationshipType: sql`EXCLUDED.relationship_type`,
-              relationshipStrength: sql`EXCLUDED.relationship_strength`,
+              strengthScore: sql`EXCLUDED.strength_score`,
               isOfficial: sql`EXCLUDED.is_official`,
               status: sql`EXCLUDED.status`,
               updatedAt: new Date(),

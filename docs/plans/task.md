@@ -1,10 +1,15 @@
-# Task Tracker — P0 Fixes (Audit 2026-06-09)
+# Blueprint Surgical Implementation — Task Tracker
 
-| # | Task | File | Status |
+> Plano: `docs/plans/2026-06-10-blueprint-surgical-implementation.md`
+
+| # | Task | Status | Notas |
 |---|---|---|---|
-| 1 | Usar `useActiveOrg()` em `SettingsPage` (linha 481) | `apps/web/src/pages/dashboard/settings/SettingsPage.tsx` | `[x]` |
-| 2 | Adicionar `platformAdmin` ao tipo `AdminUser` | `apps/web/src/lib/queries.ts` | `[x]` |
-| 3 | Tornar `scopes` required em `CreateApiKeyBody` e fix do `handleGenerateKey` | `apps/web/src/lib/queries.ts` + `SettingsPage.tsx` | `[x]` |
-| 4 | Desabilitar botão Delete para `platformAdmin === true` na tabela | `apps/web/src/pages/admin/components/AdminUsersTable.tsx` | `[x]` |
-| 5 | Corrigir role hardcoded "Admin" no sidebar | `apps/web/src/components/layouts/DashboardLayout.tsx` | `[x]` |
-| 6 | Verificar typecheck e lint | monorepo | `[x]` ✅ 0 errors |
+| 1.1 | Enum STRM Canónico no Drizzle Schema + data migration | 🔄 in_progress | Blocker identificado e corrigido no plano: data migration para 81k rows |
+| 1.2 | Tabela Ledger Append-Only | ⬜ todo | |
+| 1.3 | Tabelas TPRA (vendors, assessments, risk_scores) | ⬜ todo | |
+| 2.1 | Implementar STRMWeightCalculator | ⬜ todo | |
+| 2.2 | Compliance-gap route + fix dashboard binário | ⬜ todo | |
+| 3.1 | MCP bifurcação sync/async | ⬜ todo | |
+| 3.2 | 2 tools MCP novas (G11) | ⬜ todo | |
+| 4.1 | TPRA persistência + webhooks | ⬜ todo | |
+| 4.2 | LedgerService + ledger.audit.alert | ⬜ todo | |

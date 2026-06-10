@@ -349,7 +349,8 @@ const parseCrosswalkTab = (
         scf_framework_id: frameworkId,
         scf_framework_requirement_id: requirementId,
         scf_control_id: controlId,
-        relationship_type: "related",
+        // ADR-001: canonical STRM operator — crosswalk rows default to intersects
+        relationship_type: "intersects",
         mapping_source: `SCF XLSX crosswalk: ${sheetName}`,
         is_official: true,
         status: "active",
