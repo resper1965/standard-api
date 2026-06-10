@@ -7,6 +7,13 @@
  * Protocol: Model Context Protocol 2025-03-26
  * Auth:     Authorization: Bearer <api-key>  (same as REST API)
  * Docs:     https://standard-api.bekaa.eu/docs/mcp
+ *
+ * ADR-003: MCP tools bifurcated into sync and async groups.
+ * - Grupo A (sync)  — DB reads, calculations: respond 200 immediately
+ * - Grupo B (async) — LLM/heavy processing: respond 202 + job_id via AGENT_RUN_QUEUE
+ *
+ * ⛔ Forbidden: await dispatchMcpTool() síncrono para tools do Grupo B
+ *    Cloudflare Workers CPU time limit → timeout silencioso em LLM calls (2–30s)
  */
 
 import type { RouteDefinition } from "../http";
@@ -16,6 +23,18 @@ import { MCP_TOOLS, dispatchMcpTool } from "../mcp/server";
 const MCP_VERSION = "2025-03-26";
 const SERVER_NAME = "standard-grc";
 const SERVER_VERSION = "1.0.0";
+
+// ── ADR-003: Async Tools Allowlist ────────────────────────────────────────
+// Tools that invoke LLMs or heavy processing via Cloudflare AI Gateway.
+// These MUST be dispatched via AGENT_RUN_QUEUE and return 202 immediately.
+// Adding a tool here = opting into async pattern automatically.
+const ASYNC_TOOLS = new Set<string>([
+  "evaluate-evidence",
+  "architect-remediation",
+  // G11 — new async tools (Surgery 3)
+  "validar-evidencia-privacidade",
+  "calcular-score-risco-terceiro",
+]);
 
 // Server capabilities response (returned on initialize)
 const CAPABILITIES_RESPONSE = {
@@ -44,6 +63,7 @@ export const mcpRoutes: RouteDefinition[] = [
         endpoint: "POST /mcp",
         auth: "Authorization: Bearer <api-key>",
         tools: MCP_TOOLS.length,
+        async_tools: ASYNC_TOOLS.size,
         docs: "/docs/mcp",
         openapi: "/docs/openapi.json",
       });
@@ -62,11 +82,15 @@ export const mcpRoutes: RouteDefinition[] = [
     handler: async (ctx) => {
       let body: Record<string, unknown>;
       try {
-        body = await ctx.request.json() as Record<string, unknown>;
+        body = (await ctx.request.json()) as Record<string, unknown>;
       } catch {
         return json(
-          { jsonrpc: "2.0", id: null, error: { code: -32700, message: "Parse error" } },
-          { status: 400 }
+          {
+            jsonrpc: "2.0",
+            id: null,
+            error: { code: -32700, message: "Parse error" },
+          },
+          { status: 400 },
         );
       }
 
@@ -105,6 +129,48 @@ export const mcpRoutes: RouteDefinition[] = [
           });
         }
 
+        // ── ADR-003: Bifurcação sync / async ──────────────────────────
+        if (ASYNC_TOOLS.has(toolName)) {
+          // ── Grupo B — Async (LLM / heavy) → 202 + job_id ───────────
+          const jobId = crypto.randomUUID();
+          const traceId = ctx.traceId ?? crypto.randomUUID();
+
+          if (ctx.deps.AGENT_RUN_QUEUE) {
+            await ctx.deps.AGENT_RUN_QUEUE.send({
+              queue_type: "mcp_tool_async",
+              job_id: jobId,
+              tool_name: toolName,
+              tool_args: toolArgs,
+              organization_id: ctx.organizationId ?? null,
+              actor_id: ctx.actorId ?? null,
+              trace_id: traceId,
+              mcp_request_id: id,
+              // caller webhook endpoint — optional, set in args if provided
+              webhook_url:
+                (toolArgs["webhook_url"] as string | undefined) ?? null,
+            });
+          }
+          // Note: even without queue (local dev), return 202 to preserve
+          // the async contract — caller must not rely on sync behaviour.
+
+          return json(
+            {
+              jsonrpc: "2.0",
+              id,
+              result: {
+                status: "queued",
+                job_id: jobId,
+                trace_id: traceId,
+                tool_name: toolName,
+                message:
+                  "Tool dispatched asynchronously. Subscribe to mcp.tool.completed webhook or poll /api/v1/agent-runs.",
+              },
+            },
+            { status: 202 },
+          );
+        }
+
+        // ── Grupo A — Sync (DB reads, calculations) → 200 immediately ─
         const result = await dispatchMcpTool(toolName, toolArgs, ctx);
         return json({ jsonrpc: "2.0", id, result });
       }
@@ -121,7 +187,7 @@ export const mcpRoutes: RouteDefinition[] = [
           id,
           error: { code: -32601, message: `Method not found: ${method}` },
         },
-        { status: 404 }
+        { status: 404 },
       );
     },
   },
