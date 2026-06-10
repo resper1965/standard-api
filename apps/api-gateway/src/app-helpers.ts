@@ -184,16 +184,12 @@ const buildMockSession = (
       id: legacyActor,
       email: `${legacyActor}@mock.test`,
       name: "Mock Test Actor",
-      role: mockRole,
       platformAdmin: isPlatAdmin,
+      approved: true,
     },
     session: {
       id: `mock-session-${legacyActor}`,
-      domainUserId: legacyActor,
       activeOrganizationId: tenantId ?? null,
-      activeOrganizationSlug: tenantId ? `org-${tenantId.slice(0, 6)}` : null,
-      activeOrganizationRole: mockRole,
-      allowedOrganizations,
     },
   };
 };

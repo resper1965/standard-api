@@ -1,443 +1,179 @@
 /**
  * @module auth.middleware
- * @description Resolves authentication context from Standard Native Auth session.
+ * @description Resolve contexto de autenticação a partir de cookie (browser) ou API Key (M2M).
  *
- * Standard Native Auth sessions are resolved from cookies (browser) or API keys (programmatic).
- * The active organization in the session maps to the Standard organization_id.
+ * Arquitectura simplificada (auth simplification):
+ * - Um único user (baUser) — sem dual-identity, sem domainUserId
+ * - Org context lido do baSession.activeOrganizationId + cache KV (TTL 60s)
+ * - API Keys: KV fast path (TTL 300s) → auth DB fallback
+ * - Hard revocation: KV key revocations:user:{id} → 401 imediato
+ * - Approval gate: user.approved === false (non-platform-admin) → 403
  *
- * Type safety contract:
- * - Session user fields are read via `StandardUser` (packages/auth/src/types.ts)
- * - Session fields are read via `StandardSession` (packages/auth/src/types.ts)
- * - No `as any`, `as StandardUser`, or `as StandardSession` casts in this file.
- *   The single cast boundary is in resolveSessionFields() below.
+ * Sets: context.actorId, context.organizationId, context.m2mScopes, context.session
  */
-import type {
-  StandardAuth,
-  StandardUser,
-  StandardSession,
-} from "@standard/auth";
-import { StructuredLogger } from "@standard/observability";
-import { baSession } from "@standard/schemas";
-import { eq } from "drizzle-orm";
+import type { StandardAuth } from "@standard/auth";
 import { ApiError } from "../errors/api-error";
 import { isApiKeyToken, extractApiKeyToken } from "../utils/api-key-crypto";
 import type { RequestContext } from "../http";
-import type { DbClient } from "../adapters/db";
 
-const logger = new StructuredLogger();
+// ── Cache TTLs ────────────────────────────────────────────────────────────────
+const KV_API_KEY_TTL = 300; // 5 min — API key verification cache
+const KV_SESSION_TTL = 60; // 60s  — session org context cache
 
-const isUuid = (val?: string): boolean =>
-  val
-    ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-        val,
-      )
-    : false;
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
-/**
- * Typed session field extraction.
- *
- * Standard Native Auth's `getSession()` returns an opaque inferred type that does not expose
- * plugin-injected fields (role, activeOrganizationId, platformAdmin) in the base TS type.
- * We perform a single cast here at the boundary — all callers receive typed objects.
- */
-function resolveSessionFields(rawSession: {
-  user: unknown;
-  session: unknown;
-}): {
-  user: StandardUser;
-  session: StandardSession;
-} {
-  // Single cast boundary: Standard Native Auth returns plugin-augmented objects at runtime.
-  // StandardUser and StandardSession in @standard/auth/types include all plugin fields.
-  const user = rawSession.user as StandardUser;
-  const session = rawSession.session as StandardSession;
-  return { user, session };
-}
+const sha256 = async (text: string): Promise<string> => {
+  const buf = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(text),
+  );
+  return Array.from(new Uint8Array(buf))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+};
+
+const isUuid = (v?: string | null): v is string =>
+  !!v &&
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
+
+// ── Main ──────────────────────────────────────────────────────────────────────
 
 /**
- * Resolve auth context from Standard Native Auth session.
+ * Resolve autenticação e popula context.actorId, context.organizationId, context.session.
  *
- * Sets `context.actorId`, `context.organizationId`, and `context.session`.
- * If `requireAuth` is true and no valid session exists, throws 401.
+ * @param context     RequestContext mutável — campos de auth são escritos aqui
+ * @param auth        Instância Better Auth (createAuth)
+ * @param requireAuth Se true, lança 401 quando nenhuma credencial é encontrada
  */
 export const resolveAuthContext = async (
   context: RequestContext,
   auth: StandardAuth,
   requireAuth: boolean,
 ): Promise<void> => {
-  try {
-    const authHeader = context.request.headers.get("Authorization");
+  const kv = context.env?.STANDARD_CACHE as any;
+  const authHeader = context.request.headers.get("Authorization");
 
-    // Machine-to-Machine API Key
-    if (authHeader && isApiKeyToken(authHeader)) {
-      const token = extractApiKeyToken(authHeader);
+  // ── Path 1: M2M API Key ────────────────────────────────────────────────────
+  if (authHeader && isApiKeyToken(authHeader)) {
+    const token = extractApiKeyToken(authHeader);
+    const hash = await sha256(token);
+    const kvKey = `apikey:${hash}`;
 
-      // Hash the token using Web Crypto API
-      const encoder = new TextEncoder();
-      const data = encoder.encode(token);
-      const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      const keyHash = hashArray
-        .map((b) => b.toString(16).padStart(2, "0"))
-        .join("");
-
-      const apiKeyRecord = await context.deps.apiKeys.verifyKey(keyHash);
-      if (apiKeyRecord) {
-        context.actorId = `m2m:${apiKeyRecord.id}`;
-        context.organizationId = apiKeyRecord.organizationId;
-
-        // Store scopes for downstream scope enforcement middleware
-        context.m2mScopes = apiKeyRecord.scopes;
-
-        // Asynchronous update of last used time
-        context.deps.apiKeys.markUsed(apiKeyRecord.id).catch((e) => {
-          console.error("Failed to mark API key used", e);
-        });
-
-        // SOC 2 compliance: audit trail for every M2M key verification
-        context.deps.audit
-          .record("api_key.verified", {
-            organization_id: apiKeyRecord.organizationId,
-            actor_id: `m2m:${apiKeyRecord.id}`,
-            key_id: apiKeyRecord.id,
-            scopes: apiKeyRecord.scopes,
-            route: new URL(context.request.url).pathname,
-            method: context.request.method,
-            trace_id: context.traceId,
-          })
-          .catch(() => {}); // Fire-and-forget, don't block request
-
-        logger.log({
-          level: "info",
-          message: "m2m_api_key_resolved",
-          service: "api-gateway",
-          module: "auth",
-          environment: "production",
-          trace_id: context.traceId,
-          organization_id: apiKeyRecord.organizationId,
-          metadata: {
-            actor_id: `m2m:${apiKeyRecord.id}`,
-            key_id: apiKeyRecord.id,
-          },
-        });
-
+    // 1a. KV fast path (5 min TTL)
+    if (kv) {
+      const cached = (await kv.get(kvKey, "json").catch(() => null)) as any;
+      if (cached?.organizationId) {
+        context.actorId = `m2m:${cached.keyId}`;
+        context.organizationId = cached.organizationId;
+        context.m2mScopes = cached.scopes ?? [];
         return;
       }
     }
 
-    // Interactive Session (Standard Native Auth cookie-based session)
-    const rawSession = await auth.api.getSession({
-      headers: context.request.headers,
-    });
+    // 1b. Auth DB fallback
+    const record = await context.deps.apiKeys
+      ?.verifyKey?.(hash)
+      .catch(() => null);
+    if (record) {
+      context.actorId = `m2m:${record.id}`;
+      context.organizationId = record.organizationId;
+      context.m2mScopes = record.scopes ?? [];
 
-    if (rawSession?.user) {
-      // Enforce revocation from Edge Cache
-      if (context.env?.STANDARD_CACHE) {
-        const revocationReason = await context.env.STANDARD_CACHE.get(
-          `revocations:user:${rawSession.user.id}`,
-        );
-        if (revocationReason) {
-          // Hard revocations: user banned/deleted — block with 401
-          const HARD_REVOCATIONS = [
-            "user_banned",
-            "user_deleted",
-            "security_lockout",
-          ];
-          if (HARD_REVOCATIONS.includes(revocationReason)) {
-            logger.log({
-              level: "warn",
-              message: "token_revoked_hard",
-              service: "api-gateway",
-              module: "auth",
-              environment: "production",
-              trace_id: context.traceId,
-              organization_id: isUuid(context.organizationId)
-                ? context.organizationId
-                : undefined,
-              metadata: {
-                actor_id: rawSession.user.id,
-                reason: revocationReason,
-              },
-            });
-            throw new ApiError("UNAUTHORIZED", "Token has been revoked.", 401);
-          }
-
-          // Soft revocations: org_switch, membership_change, org_deactivate
-          // Purpose: invalidate downstream caches. getSession() above already
-          // fetched fresh data from DB, so we just clear the key and proceed.
-          logger.log({
-            level: "info",
-            message: "token_revoked_soft_cleared",
-            service: "api-gateway",
-            module: "auth",
-            environment: "production",
-            trace_id: context.traceId,
-            metadata: {
-              actor_id: rawSession.user.id,
-              reason: revocationReason,
-            },
-          });
-          // Fire-and-forget cleanup — don't block the request
-          context.env.STANDARD_CACHE.delete(
-            `revocations:user:${rawSession.user.id}`,
-          ).catch(() => {});
-        }
+      // Warm KV para próximos requests
+      if (kv) {
+        kv.put(
+          kvKey,
+          JSON.stringify({
+            keyId: record.id,
+            organizationId: record.organizationId,
+            scopes: record.scopes,
+          }),
+          { expirationTtl: KV_API_KEY_TTL },
+        ).catch(() => {});
       }
 
-      // Extract typed fields at the single cast boundary
-      const { user, session } = resolveSessionFields(rawSession);
-
-      // ── Approval gate ──────────────────────────────────────────────────────
-      // New users are created with approved=false. Block access until a
-      // platform admin approves the account. Platform admins themselves
-      // are always allowed through.
-      const isPlatformAdminUser =
-        user.platformAdmin === true || user.platform_admin === true;
-      if (user.approved === false && !isPlatformAdminUser) {
-        logger.log({
-          level: "warn",
-          message: "account_pending_approval",
-          service: "api-gateway",
-          module: "auth",
-          environment: "production",
-          trace_id: context.traceId,
-          metadata: { actor_id: user.id },
-        });
-        throw new ApiError(
-          "ACCOUNT_PENDING_APPROVAL",
-          "Your account is pending approval by a platform administrator.",
-          403,
-        );
-      }
-
-      // Extract domain user UUID if present in the customSession (cached in KV).
-      // This bypasses the synchronous DB fallback query completely on the fast path.
-      let resolvedActorId = session.domainUserId || user.id;
-
-      if (!session.domainUserId && context.deps.resolveUserContext) {
-        try {
-          const resolvedUser = await context.deps.resolveUserContext(
-            user.email,
-            user.name,
-            user.id,
-          );
-          resolvedActorId = resolvedUser.id;
-
-          // Track fallback usage — when this reaches zero, the fallback can be removed
-          logger.log({
-            level: "warn",
-            message: "user_context_fallback_used",
-            service: "api-gateway",
-            module: "auth",
-            environment: "production",
-            trace_id: context.traceId,
-            metadata: {
-              ba_user_id_hash: user.id.slice(0, 8),
-              ba_user_id: user.id,
-              resolved_domain_id: resolvedUser.id,
-              deprecation: "remove_when_metric_reaches_zero_for_7_days",
-            },
-          });
-        } catch (err) {
-          logger.log({
-            level: "error",
-            message: "user_context_resolution_failed",
-            service: "api-gateway",
-            module: "auth",
-            environment: "production",
-            trace_id: context.traceId,
-            metadata: {
-              error: err instanceof Error ? err.message : String(err),
-              ba_user_id: user.id,
-            },
-          });
-        }
-      }
-
-      context.actorId = resolvedActorId;
-
-      // Restore context.session with customSession-enriched fields.
-      // The customSession plugin injects org context at login time,
-      // so we no longer need to query the DB for org resolution per-request.
-      context.session = {
-        user: {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          platformAdmin: user.platformAdmin ?? user.platform_admin ?? false,
-          approved: user.approved ?? false,
-        },
-        session: {
-          id: session.id,
-          domainUserId: session.domainUserId ?? null,
-          activeOrganizationId: session.activeOrganizationId ?? null,
-          activeOrganizationSlug: session.activeOrganizationSlug ?? null,
-          activeOrganizationRole: session.activeOrganizationRole ?? null,
-          allowedOrganizations: session.allowedOrganizations ?? [],
-        },
-      };
-
-      // ── Organization context resolution (Session-first, DB-fallback) ─────
-      // Priority 1: Use the activeOrganizationId from the enriched session
-      //             (injected by customSession plugin at login time — ZERO DB query).
-      // Priority 2: For platform admins with no active org, auto-scope to bekaa.
-      // Priority 3: Legacy fallback via resolveOrganizationContext (DB JOINs).
-
-      if (
-        session.activeOrganizationId &&
-        isUuid(session.activeOrganizationId)
-      ) {
-        // ✅ Fast path: org context already in session (customSession plugin)
-        context.organizationId = session.activeOrganizationId;
-
-        logger.log({
-          level: "info",
-          message: "org_resolved_from_session",
-          service: "api-gateway",
-          module: "auth",
-          environment: "production",
-          trace_id: context.traceId,
-          organization_id: session.activeOrganizationId,
-          metadata: {
-            actor_id: user.id,
-            org_slug: session.activeOrganizationSlug,
-            org_role: session.activeOrganizationRole,
-            source: "custom_session",
-          },
-        });
-      } else if (isPlatformAdminUser) {
-        // Platform admin without an active org → auto-scope to the Bekaa operator org.
-        const platformOrgSlug = context.env?.PLATFORM_ADMIN_ORG_SLUG ?? "bekaa";
-
-        // Platform admin resolution still needs a DB lookup by slug (one-time).
-        if (context.deps.resolveOrganizationContext) {
-          try {
-            const resolved =
-              await context.deps.resolveOrganizationContext(platformOrgSlug);
-            if (resolved) {
-              context.organizationId = resolved.organization_id;
-            }
-          } catch (e) {
-            logger.log({
-              level: "error",
-              message: "platform_admin_org_resolution_failed",
-              service: "api-gateway",
-              module: "auth",
-              environment: "production",
-              trace_id: context.traceId,
-              metadata: {
-                error: e instanceof Error ? e.message : String(e),
-                platform_org_slug: platformOrgSlug,
-              },
-            });
-          }
-        }
-
-        logger.log({
-          level: "info",
-          message: "platform_admin_org_auto_scoped",
-          service: "api-gateway",
-          module: "auth",
-          environment: "production",
-          trace_id: context.traceId,
-          metadata: {
-            actor_id: user.id,
-            platform_org_slug: context.env?.PLATFORM_ADMIN_ORG_SLUG ?? "bekaa",
-          },
-        });
-      } else {
-        // No active organization and not a platform admin.
-        // We do NOT throw here — the 403 is deferred to the `requireAuth` check
-        // or to an explicit `requireOrganizationContext` guard so that public /auth
-        // routes still work. We log a warning for observability.
-        logger.log({
-          level: "warn",
-          message: "session_missing_organization",
-          service: "api-gateway",
-          module: "auth",
-          environment: "production",
-          trace_id: context.traceId,
-          metadata: {
-            actor_id: user.id,
-            session_id: session.id,
-            platform_admin: isPlatformAdminUser,
-          },
-        });
-      }
-
-      logger.log({
-        level: "info",
-        message: "session_resolved",
-        service: "api-gateway",
-        module: "auth",
-        environment: "production",
-        trace_id: context.traceId,
-        organization_id: isUuid(context.organizationId)
-          ? context.organizationId
-          : undefined,
-        metadata: {
-          actor_id: user.id,
-          session_id: session.id,
-          active_org_id: context.organizationId ?? null,
-          role: user.role ?? "viewer",
-          platform_admin: isPlatformAdminUser,
-        },
-      });
+      // Actualizar lastUsedAt — fire-and-forget
+      context.deps.apiKeys?.markUsed?.(record.id).catch(() => {});
+      return;
     }
-  } catch (err: any) {
-    // Session resolution failed — log structured event and treat as unauthenticated
-    if (err && err.name === "ApiError") throw err; // Re-throw intentional ApiErrors (revocation)
-    logger.log({
-      level: "warn",
-      message: "session_resolution_failed",
-      service: "api-gateway",
-      module: "auth",
-      environment: "production",
-      trace_id: context.traceId,
-      organization_id: isUuid(context.organizationId)
-        ? context.organizationId
-        : undefined,
-      metadata: {
-        error: err instanceof Error ? err.message : String(err),
-        raw_tenant_id: context.organizationId,
-      },
-    });
+
+    // API Key inválida ou revogada
+    throw new ApiError("UNAUTHORIZED", "Invalid or revoked API key.", 401);
   }
 
-  if (requireAuth && !context.actorId) {
-    const ip =
-      context.request.headers.get("cf-connecting-ip") ??
-      context.request.headers.get("x-forwarded-for") ??
-      "unknown_ip";
+  // ── Path 2: Session cookie ─────────────────────────────────────────────────
+  const rawSession = await auth.api
+    .getSession({ headers: context.request.headers })
+    .catch(() => null);
 
-    if (context.deps.SOC_TRIAGE_QUEUE) {
-      // Best-effort context for the Incident Triager
-      const userAgent = context.request.headers.get("user-agent") ?? "unknown";
-      const authHeaderSize =
-        context.request.headers.get("Authorization")?.length ?? 0;
+  if (rawSession?.user) {
+    const user = rawSession.user as any;
+    const session = rawSession.session as any;
 
-      const sendOp = context.deps.SOC_TRIAGE_QUEUE.send({
-        job_id: crypto.randomUUID(),
-        organizationId: "system",
-        traceId: context.traceId,
-        systemModuleName: "API Gateway - Identity Service",
-        rawLogsExcerpt: `[Auth Rejection] Access denied to protected route.\nIP: ${ip}\nUser-Agent: ${userAgent}\nAuth Header Size: ${authHeaderSize} bytes\nAction: HTTP 401 Unauthorized triggered. Possible credential stuffing, expired session, or unauthenticated probing.`,
-      }).catch((err) => {
-        console.error(
-          "[standard:auth] Failed to queue SOC event. Attempting DLQ...",
-          err,
-        );
-      });
-
-      if (context.execCtx?.waitUntil) {
-        context.execCtx.waitUntil(sendOp);
+    // 2a. Hard revocation check (user banned/deleted/locked)
+    if (kv) {
+      const revoked = await kv
+        .get(`revocations:user:${user.id}`)
+        .catch(() => null);
+      if (revoked) {
+        throw new ApiError("UNAUTHORIZED", "Session revoked.", 401);
       }
     }
 
-    throw new ApiError(
-      "UNAUTHORIZED",
-      "Authentication is required for this operation.",
-      401,
-    );
+    // 2b. Approval gate — platform admins bypassa
+    const isPlatformAdmin = user.platformAdmin ?? user.platform_admin ?? false;
+    const isApproved = user.approved ?? false;
+    if (!isApproved && !isPlatformAdmin) {
+      throw new ApiError(
+        "ACCOUNT_PENDING_APPROVAL",
+        "Account pending administrator approval.",
+        403,
+      );
+    }
+
+    // 2c. Org context — KV first (60s TTL), fallback para session.activeOrganizationId
+    let orgId: string | null = null;
+    const kvSessionKey = `session-ctx:${session.id}`;
+
+    if (kv) {
+      const cached = (await kv
+        .get(kvSessionKey, "json")
+        .catch(() => null)) as any;
+      if (isUuid(cached?.activeOrganizationId)) {
+        orgId = cached.activeOrganizationId;
+      }
+    }
+
+    if (!orgId && isUuid(session.activeOrganizationId)) {
+      orgId = session.activeOrganizationId;
+      // Warm KV para próximos requests
+      if (kv) {
+        kv.put(kvSessionKey, JSON.stringify({ activeOrganizationId: orgId }), {
+          expirationTtl: KV_SESSION_TTL,
+        }).catch(() => {});
+      }
+    }
+
+    // 2d. Popular contexto
+    context.actorId = user.id;
+    context.organizationId = orgId ?? undefined;
+    context.session = {
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name ?? "",
+        platformAdmin: isPlatformAdmin,
+        approved: isApproved,
+      },
+      session: {
+        id: session.id,
+        activeOrganizationId: orgId,
+      },
+    };
+  }
+
+  // ── RequireAuth gate ───────────────────────────────────────────────────────
+  if (requireAuth && !context.actorId) {
+    throw new ApiError("UNAUTHORIZED", "Authentication required.", 401);
   }
 };
