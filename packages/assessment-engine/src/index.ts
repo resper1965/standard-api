@@ -8,3 +8,4 @@ export * from "./states";
 export * from "./transitions";
 export * from "./types";
 export * from "./compliance-optimizer";
+export * from "./strm-weight-calculator";
