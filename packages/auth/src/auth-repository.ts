@@ -106,6 +106,70 @@ export const createAuthRepository = (db: DrizzleClient) => ({
     return rows as UserSummary[];
   },
 
+  /**
+   * Lista usuários com suporte a busca textual e retorna total para paginação.
+   * Usa ilike para busca case-insensitive em name e email.
+   */
+  async listUsersWithSearch(opts?: {
+    limit?: number;
+    offset?: number;
+    search?: string;
+  }): Promise<{ data: UserSummary[]; total: number }> {
+    const { ilike, or, sql, desc } = await import("drizzle-orm");
+    const conditions = opts?.search
+      ? or(
+          ilike(baUser.name, `%${opts.search.replace(/[%_\\]/g, "\\$&")}%`),
+          ilike(baUser.email, `%${opts.search.replace(/[%_\\]/g, "\\$&")}%`),
+        )
+      : undefined;
+
+    const userCols = {
+      id: baUser.id,
+      email: baUser.email,
+      name: baUser.name,
+      emailVerified: baUser.emailVerified,
+      image: baUser.image,
+      banned: baUser.banned,
+      banReason: baUser.banReason,
+      banExpires: baUser.banExpires,
+      platformAdmin: baUser.platformAdmin,
+      approved: baUser.approved,
+      jobTitle: baUser.jobTitle,
+      phone: baUser.phone,
+      createdAt: baUser.createdAt,
+      updatedAt: baUser.updatedAt,
+    };
+
+    const [data, countResult] = await Promise.all([
+      (db as any)
+        .select(userCols)
+        .from(baUser)
+        .where(conditions)
+        .orderBy(desc(baUser.createdAt))
+        .limit(opts?.limit ?? 50)
+        .offset(opts?.offset ?? 0),
+      (db as any)
+        .select({ count: sql<number>`count(*)::int` })
+        .from(baUser)
+        .where(conditions),
+    ]);
+
+    return {
+      data: data as UserSummary[],
+      total: (countResult[0]?.count as number) ?? 0,
+    };
+  },
+
+  /** Retorna a contagem de usuários pendentes de aprovacao. */
+  async getPendingCount(): Promise<number> {
+    const { eq, sql } = await import("drizzle-orm");
+    const [result] = await (db as any)
+      .select({ count: sql<number>`count(*)::int` })
+      .from(baUser)
+      .where(eq(baUser.approved, false));
+    return (result?.count as number) ?? 0;
+  },
+
   /** Atualiza campos do usuário. Sempre seta updatedAt = now(). */
   async updateUser(userId: string, data: UserUpdateInput): Promise<void> {
     await (db as any)
