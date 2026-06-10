@@ -10,13 +10,15 @@ const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl) {
   throw new Error(
     "DATABASE_URL is not set. " +
-    "In CI: add it as a GitHub Actions secret. " +
-    "Locally: create .env at the monorepo root with DATABASE_URL=..."
+      "In CI: add it as a GitHub Actions secret. " +
+      "Locally: create .env at the monorepo root with DATABASE_URL=...",
   );
 }
 
 export default defineConfig({
-  schema: ["./src/db/schema.ts", "./src/db/auth-schema.ts"],
+  // Product branch — SCF, assessments, findings, evidence, etc.
+  // Auth tables (user, session, org, api_keys) live in the auth branch → drizzle-auth.config.ts
+  schema: ["./src/db/schema.ts"],
   out: "../../infra/docker/postgres/migrations",
   dialect: "postgresql",
   dbCredentials: {
