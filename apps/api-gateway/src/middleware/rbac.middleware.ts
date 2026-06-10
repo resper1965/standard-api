@@ -25,7 +25,9 @@ const isPlatformAdmin = (context: RequestContext): boolean => {
  *
  * Use on all /api/v1/tenants/* and /api/v1/admin/* routes.
  */
-export const requirePlatformAdmin = async (context: RequestContext): Promise<void> => {
+export const requirePlatformAdmin = async (
+  context: RequestContext,
+): Promise<void> => {
   if (isPlatformAdmin(context)) {
     // Log successful platform admin access for auditability.
     await context.deps.audit.record("platform_admin.access", {
@@ -56,7 +58,10 @@ export const requirePlatformAdmin = async (context: RequestContext): Promise<voi
   ]);
 };
 
-export const assertRbac = async (context: RequestContext, requiredPermissions: Permission[] = []): Promise<void> => {
+export const assertRbac = async (
+  context: RequestContext,
+  requiredPermissions: Permission[] = [],
+): Promise<void> => {
   if (requiredPermissions.length === 0) return;
 
   // Platform admins bypass all permission checks
@@ -64,7 +69,7 @@ export const assertRbac = async (context: RequestContext, requiredPermissions: P
 
   let allowed = true;
   let reason = "";
-  
+
   // Step 1: Verify auth context exists
   if (!context.auth && !context.session && !context.m2mScopes) {
     allowed = false;
@@ -88,32 +93,24 @@ export const assertRbac = async (context: RequestContext, requiredPermissions: P
       actorPermissions.push(...context.auth.permissions);
     }
 
-    // Session-based role resolution: resolve GRC permissions from the user's role.
-    // Priority 1: session.user.role (populated by Better Auth admin plugin, if installed).
-    // Priority 2: session.activeOrganizationRole (populated by customSession plugin — this is
-    //   the org membership role, e.g. "owner"/"admin"/"member"). Mapped to GRC role via
-    //   resolveGrcRoleFromOrgRole() which bridges Better Auth org roles → Standard GRC roles.
+    // Session-based role resolution.
+    // Simplified auth: org-scoped roles are resolved via platformAdmin flag.
+    // Full RBAC via org permissions table will be added in A9.
     if (actorPermissions.length === 0 && context.session) {
-      const { DEFAULT_ROLE_PERMISSIONS, resolveGrcRoleFromOrgRole } = await import("@standard/security");
+      const { DEFAULT_ROLE_PERMISSIONS } = await import("@standard/security");
 
-      // Priority 1: explicit user.role (future-proof — not currently populated)
-      let resolvedGrcRole = context.session.user?.role as keyof typeof DEFAULT_ROLE_PERMISSIONS | undefined;
-
-      // Priority 2: org role from session enrichment → GRC role mapping
-      if (!resolvedGrcRole && context.session.session?.activeOrganizationRole) {
-        resolvedGrcRole = resolveGrcRoleFromOrgRole(
-          context.session.session.activeOrganizationRole
-        ) as keyof typeof DEFAULT_ROLE_PERMISSIONS | undefined ?? undefined;
-      }
-
-      if (resolvedGrcRole) {
-        const rolePerms = DEFAULT_ROLE_PERMISSIONS[resolvedGrcRole];
+      // platformAdmin gets full admin permissions
+      if (context.session.user?.platformAdmin) {
+        const rolePerms =
+          DEFAULT_ROLE_PERMISSIONS[
+            "admin" as keyof typeof DEFAULT_ROLE_PERMISSIONS
+          ];
         if (rolePerms) actorPermissions.push(...rolePerms);
       }
     }
 
     const missingPermissions = requiredPermissions.filter(
-      (perm) => !actorPermissions.includes(perm)
+      (perm) => !actorPermissions.includes(perm),
     );
 
     if (missingPermissions.length > 0) {
@@ -128,25 +125,35 @@ export const assertRbac = async (context: RequestContext, requiredPermissions: P
       organization_id: context.organizationId,
       trace_id: context.traceId,
       reason,
-      required_permissions: requiredPermissions
+      required_permissions: requiredPermissions,
     });
-    
-    const isApprovalBypass = requiredPermissions.some((permission) => permission.includes(":approve"));
 
-    if (isApprovalBypass && context.deps.alerts && context.organizationId && context.params.assessmentId) {
+    const isApprovalBypass = requiredPermissions.some((permission) =>
+      permission.includes(":approve"),
+    );
+
+    if (
+      isApprovalBypass &&
+      context.deps.alerts &&
+      context.organizationId &&
+      context.params.assessmentId
+    ) {
       void context.deps.alerts.fireApprovalBypass({
         organizationId: context.organizationId,
         assessmentId: context.params.assessmentId,
         artifactType: "assessment_state",
         traceId: context.traceId,
-        ...(context.actorId ? { actorId: context.actorId } : {})
+        ...(context.actorId ? { actorId: context.actorId } : {}),
       });
     } else {
       await new SecurityEventService(context.deps.observability).record({
-        organization_id: context.organizationId ?? context.securityTenant?.organization_id,
+        organization_id:
+          context.organizationId ?? context.securityTenant?.organization_id,
         assessment_id: context.params.assessmentId,
         actor_id: context.actorId,
-        event_type: isApprovalBypass ? "approval_permission_denied" : "forbidden_access_attempt",
+        event_type: isApprovalBypass
+          ? "approval_permission_denied"
+          : "forbidden_access_attempt",
         severity: "medium",
         outcome: "denied",
         source: "api-gateway",
@@ -154,11 +161,13 @@ export const assertRbac = async (context: RequestContext, requiredPermissions: P
         resource_id: context.request.url,
         message_safe: "Permission denied.",
         trace_id: context.traceId,
-        metadata_safe: { reason, required_permissions: requiredPermissions }
+        metadata_safe: { reason, required_permissions: requiredPermissions },
       });
     }
 
-    throw new ApiError("FORBIDDEN", "Permission denied.", 403, [{ reason, required_permissions: requiredPermissions }]);
+    throw new ApiError("FORBIDDEN", "Permission denied.", 403, [
+      { reason, required_permissions: requiredPermissions },
+    ]);
   }
 };
 
@@ -171,7 +180,9 @@ export const assertRbac = async (context: RequestContext, requiredPermissions: P
  *
  * Use on any route that writes or reads tenant-scoped data (assessments, KB, etc.).
  */
-const requireOrganizationContext = async (context: RequestContext): Promise<void> => {
+const requireOrganizationContext = async (
+  context: RequestContext,
+): Promise<void> => {
   if (context.organizationId && context.organizationId) return;
 
   await new SecurityEventService(context.deps.observability).record({
@@ -183,7 +194,8 @@ const requireOrganizationContext = async (context: RequestContext): Promise<void
     source: "api-gateway",
     resource_type: "organization_context",
     resource_id: context.request.url,
-    message_safe: "Organization context required. Select or create an organization first.",
+    message_safe:
+      "Organization context required. Select or create an organization first.",
     trace_id: context.traceId,
     metadata_safe: { reason: "organization_context_missing" },
   });
@@ -192,6 +204,6 @@ const requireOrganizationContext = async (context: RequestContext): Promise<void
     "ORGANIZATION_REQUIRED",
     "An active organization is required for this operation. Please select or create an organization.",
     403,
-    [{ reason: "organization_context_missing" }]
+    [{ reason: "organization_context_missing" }],
   );
 };

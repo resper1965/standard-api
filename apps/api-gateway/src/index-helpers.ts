@@ -177,10 +177,15 @@ function buildDrizzleDeps(env: Env): {
     banUser: createBanUser(),
   };
 
-  // Initialize Standard Native Auth — self-hosted, no JWKS dependency
+  // Initialize Better Auth — auth DB (HYPERDRIVE_AUTH) takes priority over product DB
+  const authDbUrl = (env as any).AUTH_DATABASE_URL || env.DATABASE_URL!;
+  const authDb = (env as any).HYPERDRIVE_AUTH
+    ? createDb(authDbUrl, (env as any).HYPERDRIVE_AUTH)
+    : createDb(authDbUrl, undefined);
+
   const auth = createAuth(
     {
-      DATABASE_URL: env.DATABASE_URL!,
+      AUTH_DATABASE_URL: authDbUrl,
       BETTER_AUTH_SECRET: env.BETTER_AUTH_SECRET,
       ...(env.BETTER_AUTH_URL !== undefined
         ? { BETTER_AUTH_URL: env.BETTER_AUTH_URL }
@@ -191,21 +196,12 @@ function buildDrizzleDeps(env: Env): {
       ...(env.STANDARD_ENV !== undefined
         ? { STANDARD_ENV: env.STANDARD_ENV }
         : {}),
-      email: deps.email,
-      // KV cache for customSession enrichment (eliminates per-request DB queries)
-      sessionCache: env.STANDARD_CACHE,
-      // Event-driven lifecycle: send user events to the lifecycle queue
-      onUserCreated: env.USER_LIFECYCLE_QUEUE
-        ? (payload) => env.USER_LIFECYCLE_QUEUE!.send(payload)
-        : undefined,
-      onUserUpdated: env.USER_LIFECYCLE_QUEUE
-        ? (payload) => env.USER_LIFECYCLE_QUEUE!.send(payload)
-        : undefined,
+      ...(deps.email !== undefined ? { email: deps.email } : {}),
     },
-    db,
+    authDb,
   );
 
-  console.log("[standard:init] Standard Native Auth self-hosted initialized.");
+  console.log("[standard:init] Better Auth initialized (auth branch).");
   return { deps, auth };
 }
 

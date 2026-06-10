@@ -147,7 +147,6 @@ export const adminUsersRoutes: RouteDefinition[] = [
             name: body.name,
             email: body.email,
             password: body.password,
-            metadata: "",
             jobTitle: "",
             phone: "",
           },
@@ -245,22 +244,16 @@ export const adminUsersRoutes: RouteDefinition[] = [
         );
       }
 
-      // banUser() atomically: updates banned=true + deletes all sessions (transaction)
-      await repo.banUser(userId, {
-        reason: body.reason ?? "Banned by platform admin",
-        ...(body.banExpires !== undefined
-          ? { expiresAt: body.banExpires }
-          : {}),
-      });
+      // revokeUser() atomically: marks approved=false + deletes all sessions (transaction)
+      await repo.revokeUser(userId);
 
       // Fetch updated for response
       const updated = await repo.getUserById(userId);
 
-      await context.deps.audit.record("admin.user.banned", {
+      await context.deps.audit.record("admin.user.revoked", {
         actor_id: context.actorId,
         target_user_id: userId,
         reason: body.reason ?? "no reason provided",
-        ban_expires: body.banExpires?.toISOString() ?? "permanent",
         trace_id: context.traceId,
       });
 
@@ -297,12 +290,13 @@ export const adminUsersRoutes: RouteDefinition[] = [
         throw new ApiError("NOT_FOUND", "User not found.", 404);
       }
 
-      await repo.unbanUser(userId);
+      // approveUser() atomically: marks approved=true + invalidates pre-revocation sessions
+      await repo.approveUser(userId);
 
       // Fetch updated for response
       const updated = await repo.getUserById(userId);
 
-      await context.deps.audit.record("admin.user.unbanned", {
+      await context.deps.audit.record("admin.user.reactivated", {
         actor_id: context.actorId,
         target_user_id: userId,
         trace_id: context.traceId,
