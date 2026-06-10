@@ -1,49 +1,31 @@
 /**
  * @module auth-schema
- * @description Standard Native Auth database tables for Drizzle ORM.
+ * @description Better Auth core tables — auth Neon branch (control plane).
  *
- * Generated based on Standard Native Auth v1.2+ with plugins: admin, organization, apiKey.
- * These tables are managed by Standard Native Auth at runtime.
+ * Geridas pelo Better Auth runtime. Não alterar estrutura sem migration BA.
+ * Este ficheiro é a única fonte de verdade para as tabelas de autenticação.
  *
- * NOTE: The `baApikey` table exported below is **deprecated and dead**.
- * All M2M API key operations use the domain `api_keys` table in schema.ts.
- * See ADR-008 for removal tracking.
- *
- * Reference: https://standard-native-auth.com/docs/concepts/database
+ * Campos adicionados ao baUser além do core BA:
+ * - platform_admin : flag Bekaa operator (cross-tenant). Só via SQL por operadores.
+ * - approved       : gate de aprovação manual por platform admin antes do primeiro acesso.
  */
-import {
-  boolean,
-  index,
-  integer,
-  pgTable,
-  text,
-  timestamp,
-} from "drizzle-orm/pg-core";
+import { boolean, index, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 
-// ── Core Standard Native Auth Tables ───────────────────────────────────────────
+// ── Better Auth core ─────────────────────────────────────────────────────────
 
 export const baUser = pgTable("user", {
-  id: text("id").primaryKey(),
+  id: text("id").primaryKey(), // UUID gerado pelo BA
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").notNull().default(false),
   image: text("image"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-  // Admin plugin fields
-  banned: boolean("banned").default(false),
-  banReason: text("ban_reason"),
-  banExpires: timestamp("ban_expires"),
-  // Platform-level admin flag — cross-tenant access.
-  // Never set via public API. Only via SQL seed/migration by operators.
-  platformAdmin: boolean("platform_admin").notNull().default(false),
-  // Account approval gate — new users require platform admin activation before access.
-  // Existing users (pre-migration) are marked approved=true by the migration.
-  approved: boolean("approved").notNull().default(false),
-  // Custom Standard fields
+  // Standard-specific
+  platformAdmin: boolean("platform_admin").notNull().default(false), // Bekaa operator
+  approved: boolean("approved").notNull().default(false), // approval gate
   jobTitle: text("job_title"),
   phone: text("phone"),
-  metadata: text("metadata"), // Captured full raw JSON profiles
 });
 
 export const baSession = pgTable(
@@ -59,16 +41,13 @@ export const baSession = pgTable(
     userId: text("user_id")
       .notNull()
       .references(() => baUser.id, { onDelete: "cascade" }),
-    // Organization context — tracks which org the user is currently operating in.
-    // Updated via POST /api/v1/users/me/organizations/:orgId/activate.
-    // Read by customSession plugin to enrich session with org context.
+    // Org activa — actualizada via POST /v1/auth/activate-org
+    // Cached em KV (STANDARD_CACHE) com TTL 60s para evitar DB query por request
     activeOrganizationId: text("active_organization_id"),
-    // Admin plugin
-    impersonatedBy: text("impersonated_by"),
   },
-  (table) => [
-    index("ba_session_user_idx").on(table.userId),
-    index("ba_session_token_idx").on(table.token),
+  (t) => [
+    index("ba_session_user_idx").on(t.userId),
+    index("ba_session_token_idx").on(t.token),
   ],
 );
 
@@ -81,17 +60,16 @@ export const baAccount = pgTable(
     userId: text("user_id")
       .notNull()
       .references(() => baUser.id, { onDelete: "cascade" }),
+    password: text("password"), // scrypt hash
     accessToken: text("access_token"),
     refreshToken: text("refresh_token"),
-    idToken: text("id_token"),
     accessTokenExpiresAt: timestamp("access_token_expires_at"),
     refreshTokenExpiresAt: timestamp("refresh_token_expires_at"),
     scope: text("scope"),
-    password: text("password"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
-  (table) => [index("ba_account_user_idx").on(table.userId)],
+  (t) => [index("ba_account_user_idx").on(t.userId)],
 );
 
 export const baVerification = pgTable("verification", {
