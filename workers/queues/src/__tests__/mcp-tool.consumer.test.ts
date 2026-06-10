@@ -13,10 +13,15 @@ describe("processMcpToolMessage — contract", () => {
   beforeEach(() => {
     vi.resetModules();
     vi.restoreAllMocks();
-    // Mock fetch to prevent real HTTP calls in test env (webhook delivery)
+    // Mock fetch to return valid JSON for AI Gateway calls (real implementation calls res.json())
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue(new Response(null, { status: 200 })),
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ result: { response: "{}" } }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      ),
     );
   });
 
