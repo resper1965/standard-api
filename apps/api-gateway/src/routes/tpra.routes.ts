@@ -23,6 +23,8 @@ import type { RouteDefinition } from "../http";
 import { json, routeUuidParam, requireOrganizationId } from "../http";
 import { ApiError } from "../errors/api-error";
 import { flattenI18n } from "../utils/i18n";
+import { categoriseRisk } from "./tpra-score-service";
+
 
 // ── TPRA Questionnaire Data ─────────────────────────────────────────────────
 
@@ -641,14 +643,9 @@ export const tpraRoutes: RouteDefinition[] = [
       }
 
       const finalScore = Math.round(totalWeightedScore);
-      const riskLevel =
-        finalScore < q.scoring.critical_below
-          ? "critical"
-          : finalScore < q.scoring.high_below
-            ? "high"
-            : finalScore < q.scoring.medium_below
-              ? "medium"
-              : "low";
+      // Usa categoriseRisk do tpra-score-service (DRY — mesma lógica de thresholds)
+      const riskLevel = categoriseRisk(finalScore);
+
       const interpretation = q.scoring.interpretation.find(
         (i) => i.level === riskLevel,
       );
