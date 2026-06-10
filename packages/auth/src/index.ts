@@ -7,8 +7,20 @@
 export { createAuth } from "./auth";
 export type { StandardAuth, AuthEnv } from "./auth";
 
-
-
+// Auth Repository — single access point for Better Auth internal tables (ADR-009)
+export { createAuthRepository } from "./auth-repository";
+export type {
+  AuthRepository,
+  BaUser,
+  BaSession,
+  UserSummary,
+  UserUpdateInput,
+} from "./auth-repository";
 
 // Types
-export type { DrizzleClient, StandardUser, StandardSession, StandardAuthSession } from "./types";
+export type {
+  DrizzleClient,
+  StandardUser,
+  StandardSession,
+  StandardAuthSession,
+} from "./types";
