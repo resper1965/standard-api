@@ -213,11 +213,22 @@ export class GapDraftService {
       gapAnalysisVersionId,
       context.organizationId,
     );
-    return filters.assessment_status
-      ? findings.filter(
-          (finding) => finding.assessment_status === filters.assessment_status,
-        )
-      : findings;
+
+    let result = findings;
+    if (filters.assessment_status) {
+      result = result.filter(
+        (f) => f.assessment_status === filters.assessment_status,
+      );
+    }
+    if (filters.mcr_only) {
+      result = result.filter((f) => f.is_mcr_gap === true);
+    }
+    if (filters.roc_determination) {
+      result = result.filter(
+        (f) => f.roc_determination === filters.roc_determination,
+      );
+    }
+    return result;
   }
 
   async getGapFinding(

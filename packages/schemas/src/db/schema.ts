@@ -1924,6 +1924,8 @@ export const gapFindings = pgTable(
       table.gapAnalysisVersionId,
       table.gapCode,
     ),
+    index("gap_findings_roc_idx").on(table.rocDetermination),
+    index("gap_findings_mcr_idx").on(table.isMcrGap),
   ],
 );
 

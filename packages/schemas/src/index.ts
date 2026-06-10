@@ -32,3 +32,5 @@ export * from "./dpmp";
 export * from "./cdpas";
 export * from "./mad";
 export * from "./risk-register";
+export * from "./risk-catalog";
+export * from "./roc-summary";
