@@ -421,11 +421,25 @@ export const apiKeysRoutes: RouteDefinition[] = [
         orgIdForContext(context, organizationId),
       );
 
+      // Fetch keyHash BEFORE revoking — needed to invalidate KV cache
+      const existing = await context.deps.apiKeys.getById(
+        keyId!,
+        tenantCtx.organization_id,
+      );
+      if (!existing) throw new ApiError("NOT_FOUND", "API key not found.", 404);
+
       const revoked = await context.deps.apiKeys.revokeKey(
         keyId!,
         tenantCtx.organization_id,
       );
       if (!revoked) throw new ApiError("NOT_FOUND", "API key not found.", 404);
+
+      // Invalidar KV cache — evita que a chave revogada continue a ser aceite
+      // até ao TTL de 5 minutos expirar naturalmente
+      const kv = context.env?.STANDARD_CACHE as any;
+      if (kv && existing.keyHash) {
+        kv.delete(`apikey:${existing.keyHash}`).catch(() => {});
+      }
 
       await context.deps.audit.record("api_key.revoked", {
         organization_id: tenantCtx.organization_id,
@@ -545,6 +559,11 @@ export const apiKeysRoutes: RouteDefinition[] = [
         await context.deps.apiKeys.revokeKey(keyId!, tenantCtx.organization_id);
         oldKeyStatus = "revoked";
         revokesAt = new Date().toISOString();
+        // Invalidar KV cache para a chave antiga — revogação imediata
+        const kv = context.env?.STANDARD_CACHE as any;
+        if (kv && existing.keyHash) {
+          kv.delete(`apikey:${existing.keyHash}`).catch(() => {});
+        }
       } else {
         // Schedule revocation after grace period
         const revokeAt = new Date(
