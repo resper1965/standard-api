@@ -48,7 +48,14 @@ async function computeRealStrmCompliance(
       };
     };
   },
-  soaItems: Array<{ scfControlId?: string | null; maturityLevel?: number | null; implementation_status?: string }>,
+  soaItems: Array<{
+    scfControlId?: string | null;
+    scf_control_id?: string | null;
+    maturityLevel?: number | null;
+    maturity_level?: number | null;
+    implementation_status?: string;
+    implementationStatus?: string;
+  }>,
   scfVersionId: string | null | undefined,
 ): Promise<{ index: number; percentage: number }> {
   if (soaItems.length === 0) return { index: 0, percentage: 0 };
@@ -56,28 +63,54 @@ async function computeRealStrmCompliance(
   // Use real mappings if repository available and we have a scf_version_id
   if (deps.scf?.repository?.listMappingsByControlIds && scfVersionId) {
     const controlIds = soaItems
-      .map((i) => i.scfControlId)
+      .map((i) => i.scfControlId ?? i.scf_control_id)
       .filter((id): id is string => !!id);
 
     if (controlIds.length > 0) {
-      const rawMappings = await (deps.scf.repository as any).listMappingsByControlIds(
-        controlIds,
-        scfVersionId,
-      );
-      const mappingMap = new Map(
-        rawMappings.map((m: { scf_control_id: string; relationship_type: string; strength_score: number | null }) =>
-          [m.scf_control_id, m],
+      const rawMappings = await (
+        deps.scf.repository as any
+      ).listMappingsByControlIds(controlIds, scfVersionId);
+      const mappingMap = new Map<
+        string,
+        {
+          scf_control_id: string;
+          relationship_type: string;
+          strength_score: number | null;
+        }
+      >(
+        rawMappings.map(
+          (m: {
+            scf_control_id: string;
+            relationship_type: string;
+            strength_score: number | null;
+          }) => [m.scf_control_id, m],
         ),
       );
 
-      const soaItemsWithMappings: SoaItemWithMapping[] = soaItems.map((item) => ({
-        control_id: item.scfControlId ?? "",
-        maturity_level: item.maturityLevel ?? null,
-        relationship_type:
-          (mappingMap.get(item.scfControlId ?? "") as any)?.relationship_type ?? null,
-        strength_score:
-          (mappingMap.get(item.scfControlId ?? "") as any)?.strength_score ?? null,
-      }));
+      const soaItemsWithMappings: SoaItemWithMapping[] = soaItems.map(
+        (item) => {
+          const ctrlId = item.scfControlId ?? item.scf_control_id ?? "";
+          const mapping = mappingMap.get(ctrlId);
+          const implStatus =
+            item.implementation_status ??
+            item.implementationStatus ??
+            "not_assessed";
+          const maturityVal =
+            item.maturityLevel ??
+            item.maturity_level ??
+            (implStatus === "implemented"
+              ? 5
+              : implStatus === "partially_implemented"
+                ? 2
+                : 0);
+          return {
+            control_id: ctrlId,
+            maturity_level: maturityVal,
+            relationship_type: mapping?.relationship_type ?? null,
+            strength_score: mapping?.strength_score ?? null,
+          };
+        },
+      );
 
       const strmInputs = buildStrmControlInputs(soaItemsWithMappings);
       if (strmInputs.length > 0) {
@@ -88,16 +121,23 @@ async function computeRealStrmCompliance(
 
   // Fallback: conservative STRM proxy (no scf_version_id or no mappings found)
   // Maps implementation_status → maturity level, uses intersects/0.5 as conservative estimate
-  const fallbackControls = soaItems.map((item) => ({
-    maturity_level:
-      item.implementation_status === "implemented"
+  const fallbackControls = soaItems.map((item) => {
+    const implStatus =
+      item.implementation_status ?? item.implementationStatus ?? "not_assessed";
+    const maturityVal =
+      item.maturityLevel ??
+      item.maturity_level ??
+      (implStatus === "implemented"
         ? 5
-        : item.implementation_status === "partially_implemented"
+        : implStatus === "partially_implemented"
           ? 2
-          : 0,
-    strm_operator: "intersects" as const,
-    strength_score: 0.5,
-  }));
+          : 0);
+    return {
+      maturity_level: maturityVal,
+      strm_operator: "intersects" as const,
+      strength_score: 0.5,
+    };
+  });
   return computeComplianceIndex(fallbackControls);
 }
 
