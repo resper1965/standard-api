@@ -137,8 +137,8 @@ export const createSyntheticScfFixture = (): ScfDataset => ({
       scf_framework_id: SYNTHETIC_FRAMEWORK_ID,
       scf_framework_requirement_id: SYNTHETIC_REQ_1_1_ID,
       scf_control_id: SYNTHETIC_GOV_001_CONTROL_ID,
-      relationship_type: "related",
-      relationship_strength: "source-defined",
+      // ADR-001: canonical STRM operator — was "related"
+      relationship_type: "intersects" as const,
       mapping_source: "synthetic/test fixture",
       is_official: true,
       status: "active",
@@ -150,8 +150,8 @@ export const createSyntheticScfFixture = (): ScfDataset => ({
       scf_framework_id: SYNTHETIC_FRAMEWORK_ID,
       scf_framework_requirement_id: SYNTHETIC_REQ_1_2_ID,
       scf_control_id: SYNTHETIC_IAC_001_CONTROL_ID,
-      relationship_type: "related",
-      relationship_strength: "source-defined",
+      // ADR-001: canonical STRM operator — was "related"
+      relationship_type: "intersects" as const,
       mapping_source: "synthetic/test fixture",
       is_official: true,
       status: "active",
@@ -162,17 +162,17 @@ export const createSyntheticScfFixture = (): ScfDataset => ({
     {
       id: "20000000-0000-4000-8000-000000000701",
       scf_mapping_id: SYNTHETIC_MAPPING_1_ID,
+      // ADR-001: canonical STRM operator
       relationship_type: "equal" as const,
-      relationship_strength: "strong" as const,
       rationale: "Synthetic STRM reference row — equal.",
       source: "synthetic_fixture",
     },
     {
       id: "20000000-0000-4000-8000-000000000702",
       scf_mapping_id: SYNTHETIC_MAPPING_2_ID,
-      relationship_type: "intersecting" as const,
-      relationship_strength: "moderate" as const,
-      rationale: "Synthetic STRM reference row — intersecting.",
+      // ADR-001: "intersecting" → canonical "intersects"
+      relationship_type: "intersects" as const,
+      rationale: "Synthetic STRM reference row — intersects.",
       source: "synthetic_fixture",
     },
   ],
