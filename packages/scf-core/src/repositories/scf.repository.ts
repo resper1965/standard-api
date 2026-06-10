@@ -66,6 +66,18 @@ export type ScfRepository = {
     controlId: string,
     versionId: string,
   ): Promise<ScfMapping[]>;
+  /** Bulk fetch minimal mapping data (relationship_type + strength_score) for multiple controls.
+   *  Used by dashboard compliance calculation (ADR-001) to avoid N+1 queries. */
+  listMappingsByControlIds(
+    controlIds: string[],
+    scfVersionId: string,
+  ): Promise<
+    Array<{
+      scf_control_id: string;
+      relationship_type: string;
+      strength_score: number | null;
+    }>
+  >;
   listMappingsByFramework(
     frameworkId: string,
     versionId: string,
@@ -239,6 +251,22 @@ export const createInMemoryScfRepository = (
           item.scf_version_id === versionId &&
           item.scf_control_id === controlId,
       ),
+    listMappingsByControlIds: async (controlIds, scfVersionId) => {
+      const idSet = new Set(controlIds);
+      return [...mappings.values()]
+        .filter(
+          (item) =>
+            item.scf_version_id === scfVersionId &&
+            idSet.has(item.scf_control_id),
+        )
+        .map((m) => ({
+          scf_control_id: m.scf_control_id,
+          relationship_type: m.relationship_type,
+          strength_score: m.relationship_strength
+            ? parseFloat(m.relationship_strength)
+            : null,
+        }));
+    },
     listMappingsByFramework: async (frameworkId, versionId) =>
       [...mappings.values()].filter(
         (item) =>

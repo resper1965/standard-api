@@ -413,6 +413,64 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
     return rows.map(mapMapping);
   },
 
+  /**
+   * listMappingsByControlIds — bulk fetch scf_mappings for multiple control IDs.
+   * Used by dashboard to avoid N+1 queries when computing STRM-weighted compliance (ADR-001).
+   *
+   * Returns minimal projection needed by buildStrmControlInputs():
+   *   scf_control_id, relationship_type, strength_score
+   *
+   * Processes in batches of 100 to avoid SQL parameter limits.
+   */
+  listMappingsByControlIds: async (
+    controlIds: string[],
+    scfVersionId: string,
+  ): Promise<
+    Array<{
+      scf_control_id: string;
+      relationship_type: string;
+      strength_score: number | null;
+    }>
+  > => {
+    if (controlIds.length === 0) return [];
+
+    const result: Array<{
+      scf_control_id: string;
+      relationship_type: string;
+      strength_score: number | null;
+    }> = [];
+
+    const BATCH_SIZE = 100;
+    for (let i = 0; i < controlIds.length; i += BATCH_SIZE) {
+      const batch = controlIds.slice(i, i + BATCH_SIZE);
+      const rows = await db
+        .select({
+          scf_control_id: scfMappings.scfControlId,
+          relationship_type: scfMappings.relationshipType,
+          strength_score: scfMappings.strengthScore,
+        })
+        .from(scfMappings)
+        .where(
+          and(
+            inArray(scfMappings.scfControlId, batch),
+            eq(scfMappings.scfVersionId, scfVersionId),
+          ),
+        );
+      result.push(
+        ...rows.map((r) => ({
+          scf_control_id: r.scf_control_id,
+          relationship_type: r.relationship_type,
+          strength_score:
+            r.strength_score != null
+              ? parseFloat(r.strength_score as unknown as string)
+              : null,
+        })),
+      );
+    }
+
+    return result;
+  },
+
   listMappingsByFramework: async (frameworkId, versionId) => {
     // Join through requirements to filter by framework
     const reqRows = await db
