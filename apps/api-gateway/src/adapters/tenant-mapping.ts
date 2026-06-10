@@ -14,16 +14,17 @@
  * mask resolution bugs by inventing "phantom" tenants.
  */
 import { eq, or } from "drizzle-orm";
-import { organizations, memberships, users } from "@standard/schemas";
+import { organizations } from "@standard/schemas";
 import type { DbClient } from "./db";
 
 export interface ResolvedTenantContext {
   organization_id: string; // UUID from `organizations` table
-  ba_org_id: string;       // Original Org ID or slug
-  org_name: string;        // Organization display name
+  ba_org_id: string; // Original Org ID or slug
+  org_name: string; // Organization display name
 }
 
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
  * READ-ONLY resolution of an identifier (UUID, slug, or baUser.id) into Standard
@@ -31,7 +32,7 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
  */
 export async function resolveOrganizationContext(
   db: DbClient,
-  identifier: string
+  identifier: string,
 ): Promise<ResolvedTenantContext | null> {
   if (UUID_RE.test(identifier)) {
     // Resolve by organization UUID directly.
@@ -59,10 +60,12 @@ export async function resolveOrganizationContext(
       name: organizations.name,
     })
     .from(organizations)
-    .where(or(
-      eq(organizations.userId, identifier),
-      eq(organizations.slug, identifier)
-    ))
+    .where(
+      or(
+        eq(organizations.userId, identifier),
+        eq(organizations.slug, identifier),
+      ),
+    )
     .limit(1);
 
   if (existingOrg) {
@@ -73,27 +76,8 @@ export async function resolveOrganizationContext(
     };
   }
 
-  // Check if identifier is a baUser.id that belongs to an org via memberships
-  const [memberOrg] = await db
-    .select({
-      id: organizations.id,
-      slug: organizations.slug,
-      name: organizations.name,
-    })
-    .from(organizations)
-    .innerJoin(memberships, eq(memberships.organizationId, organizations.id))
-    .innerJoin(users, eq(users.id, memberships.userId))
-    .where(eq(users.identityProviderSubject, identifier))
-    .limit(1);
-
-  if (memberOrg) {
-    return {
-      organization_id: memberOrg.id,
-      ba_org_id: memberOrg.slug,
-      org_name: memberOrg.name,
-    };
-  }
-
+  // organizations.userId IS the baUser.id (1:1 model — set in auth simplification A2)
+  // No memberships join needed
   return null;
 }
 
@@ -103,7 +87,7 @@ export async function resolveOrganizationContext(
  */
 export async function provisionOrganizationContext(
   db: DbClient,
-  identifier: string
+  identifier: string,
 ): Promise<ResolvedTenantContext> {
   const existing = await resolveOrganizationContext(db, identifier);
   if (existing) return existing;
@@ -116,22 +100,24 @@ export async function provisionOrganizationContext(
 
   const [newOrg] = await db
     .insert(organizations)
-    .values({ 
-      ...(convergedId ? { id: convergedId } : {}), 
-      slug, 
-      name, 
+    .values({
+      ...(convergedId ? { id: convergedId } : {}),
+      slug,
+      name,
       status: "active",
-      userId: identifier // Set userId to baUser.id or identifier
+      userId: identifier, // Set userId to baUser.id or identifier
     })
     .returning();
 
   // C3 fix: guard INSERT result — Drizzle may return empty on constraint violations
   if (!newOrg) {
-    throw new Error(`[standard:tenant-mapping] Failed to provision organization for identifier=${identifier} — possible duplicate slug or DB constraint violation.`);
+    throw new Error(
+      `[standard:tenant-mapping] Failed to provision organization for identifier=${identifier} — possible duplicate slug or DB constraint violation.`,
+    );
   }
 
   console.log(
-    `[standard:tenant-mapping] provisioned org=${newOrg.id} for identifier=${identifier}`
+    `[standard:tenant-mapping] provisioned org=${newOrg.id} for identifier=${identifier}`,
   );
 
   return {
@@ -140,4 +126,3 @@ export async function provisionOrganizationContext(
     org_name: name,
   };
 }
-

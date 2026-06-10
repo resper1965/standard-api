@@ -355,6 +355,19 @@ export const organizations = pgTable(
   ],
 );
 
+// ─────────────────────────────────────────────────────────────────────────────
+// DEPRECATED: users, roles, memberships
+// Auth simplification A7 — these tables are replaced by the auth branch
+// (packages/schemas/src/db/organization-schema.ts + auth-schema.ts).
+// baUser.id IS the domain user identity in the 1:1 simplified model.
+//
+// These definitions are kept temporarily so that the Drizzle migration tool
+// can generate the DROP TABLE migration. Once `pnpm db:migrate` is run
+// against the product branch, these can be removed from schema.ts.
+// DO NOT add new columns or references to these tables.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** @deprecated Use baUser from auth branch. Scheduled for DROP in migration A7. */
 export const users = pgTable(
   "users",
   {
@@ -368,6 +381,7 @@ export const users = pgTable(
   (table) => [uniqueIndex("users_email_uidx").on(table.email)],
 );
 
+/** @deprecated Scheduled for DROP in migration A7. */
 export const roles = pgTable(
   "roles",
   {
@@ -380,6 +394,7 @@ export const roles = pgTable(
   (table) => [uniqueIndex("roles_key_uidx").on(table.key)],
 );
 
+/** @deprecated Scheduled for DROP in migration A7. */
 export const memberships = pgTable(
   "memberships",
   {
@@ -387,14 +402,10 @@ export const memberships = pgTable(
     organizationId: uuid("organization_id")
       .notNull()
       .references(() => organizations.id),
-    /** Nullable — user may not exist yet (invite-first flow) */
     userId: uuid("user_id").references(() => users.id),
-    /** Nullable — role FK; prefer inline `role` text field for invite-first */
     roleId: uuid("role_id").references(() => roles.id),
-    /** Invite target email — set before user accepts */
     email: text("email"),
     displayName: text("display_name"),
-    /** Text role: 'member' | 'admin' | 'owner' — used for invite-first memberships */
     role: text("role").default("member"),
     status: text("status").default("active").notNull(),
     invitedAt: timestamp("invited_at", { withTimezone: true }),
