@@ -355,69 +355,6 @@ export const organizations = pgTable(
   ],
 );
 
-// ─────────────────────────────────────────────────────────────────────────────
-// DEPRECATED: users, roles, memberships
-// Auth simplification A7 — these tables are replaced by the auth branch
-// (packages/schemas/src/db/organization-schema.ts + auth-schema.ts).
-// baUser.id IS the domain user identity in the 1:1 simplified model.
-//
-// These definitions are kept temporarily so that the Drizzle migration tool
-// can generate the DROP TABLE migration. Once `pnpm db:migrate` is run
-// against the product branch, these can be removed from schema.ts.
-// DO NOT add new columns or references to these tables.
-// ─────────────────────────────────────────────────────────────────────────────
-
-/** @deprecated Use baUser from auth branch. Scheduled for DROP in migration A7. */
-export const users = pgTable(
-  "users",
-  {
-    id: uuid("id").defaultRandom().primaryKey(),
-    email: text("email").notNull(),
-    displayName: text("display_name").notNull(),
-    identityProvider: text("identity_provider"),
-    identityProviderSubject: text("identity_provider_subject"),
-    ...timestamps(),
-  },
-  (table) => [uniqueIndex("users_email_uidx").on(table.email)],
-);
-
-/** @deprecated Scheduled for DROP in migration A7. */
-export const roles = pgTable(
-  "roles",
-  {
-    id: uuid("id").defaultRandom().primaryKey(),
-    key: text("key").notNull(),
-    name: text("name").notNull(),
-    description: text("description"),
-    ...timestamps(),
-  },
-  (table) => [uniqueIndex("roles_key_uidx").on(table.key)],
-);
-
-/** @deprecated Scheduled for DROP in migration A7. */
-export const memberships = pgTable(
-  "memberships",
-  {
-    id: uuid("id").defaultRandom().primaryKey(),
-    organizationId: uuid("organization_id")
-      .notNull()
-      .references(() => organizations.id),
-    userId: uuid("user_id").references(() => users.id),
-    roleId: uuid("role_id").references(() => roles.id),
-    email: text("email"),
-    displayName: text("display_name"),
-    role: text("role").default("member"),
-    status: text("status").default("active").notNull(),
-    invitedAt: timestamp("invited_at", { withTimezone: true }),
-    acceptedAt: timestamp("accepted_at", { withTimezone: true }),
-    ...timestamps(),
-  },
-  (table) => [
-    index("memberships_org_user_idx").on(table.organizationId, table.userId),
-    index("memberships_org_email_idx").on(table.organizationId, table.email),
-  ],
-);
-
 export const apiKeys = pgTable(
   "api_keys",
   {
@@ -961,7 +898,7 @@ export const assessmentRiskRegister = pgTable(
     /** Rationale for treatment decision. Required for `accept` at extreme/severe (advisory). */
     treatmentRationale: text("treatment_rationale"),
     /** Owner responsible for executing or monitoring the treatment. */
-    ownerId: uuid("owner_id").references(() => users.id),
+    ownerId: uuid("owner_id"),
     /** Target date for treatment completion or next periodic review. */
     reviewDate: date("review_date"),
     /** ROC determination inherited from source gap finding (denormalized for reporting). */
@@ -1045,7 +982,7 @@ export const controlAssessmentStatus = pgTable(
       evidenceStrengthEnum("evidence_strength").default("not_checked"),
     maturityLevel: integer("maturity_level"),
     confidenceScore: numeric("confidence_score", { precision: 5, scale: 4 }),
-    assessedBy: uuid("assessed_by").references(() => users.id),
+    assessedBy: uuid("assessed_by"),
     assessedByAgentRunId: uuid("assessed_by_agent_run_id").references(
       () => agentRuns.id,
     ),
@@ -1078,7 +1015,7 @@ export const assessments = pgTable(
     scfVersionId: uuid("scf_version_id")
       .notNull()
       .references(() => scfVersions.id),
-    createdBy: uuid("created_by").references(() => users.id),
+    createdBy: uuid("created_by"),
     observationStartDate: date("observation_start_date"),
     observationEndDate: date("observation_end_date"),
     traceId: text("trace_id").notNull(),
@@ -1128,7 +1065,7 @@ export const assessmentFrameworks = pgTable(
       .notNull()
       .references(() => scfFrameworks.id),
     status: artifactStatusEnum("status").default("draft").notNull(),
-    selectedBy: uuid("selected_by").references(() => users.id),
+    selectedBy: uuid("selected_by"),
     selectedAt: timestamp("selected_at", { withTimezone: true }),
     ...timestamps(),
   },
@@ -1157,7 +1094,7 @@ export const assessmentEvents = pgTable(
     previousState: assessmentStateEnum("previous_state"),
     nextState: assessmentStateEnum("next_state").notNull(),
     eventType: text("event_type").notNull(),
-    actorId: uuid("actor_id").references(() => users.id),
+    actorId: uuid("actor_id"),
     traceId: text("trace_id").notNull(),
     metadata: auditMetadata(),
     createdAt: timestamp("created_at", { withTimezone: true })
@@ -1187,9 +1124,7 @@ export const approvalEvents = pgTable(
     decision: approvalDecisionEnum("decision").notNull(),
     artifactType: text("artifact_type").notNull(),
     artifactId: uuid("artifact_id").notNull(),
-    reviewerUserId: uuid("reviewer_user_id")
-      .notNull()
-      .references(() => users.id),
+    reviewerUserId: uuid("reviewer_user_id").notNull(),
     comment: text("comment"),
     traceId: text("trace_id").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
@@ -1225,7 +1160,7 @@ export const documents = pgTable(
     contentHash: text("content_hash").notNull(),
     mimeType: text("mime_type").notNull(),
     fileSize: bigint("file_size", { mode: "number" }).notNull(),
-    uploadedBy: uuid("uploaded_by").references(() => users.id),
+    uploadedBy: uuid("uploaded_by"),
     uploadedAt: timestamp("uploaded_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -1460,7 +1395,7 @@ export const kbSearchLogs = pgTable(
     assessmentId: uuid("assessment_id")
       .notNull()
       .references(() => assessments.id),
-    actorId: uuid("actor_id").references(() => users.id),
+    actorId: uuid("actor_id"),
     queryHash: text("query_hash").notNull(),
     searchType: text("search_type").notNull(),
     filters: jsonb("filters")
@@ -1518,7 +1453,7 @@ export const assessmentScope = pgTable(
     exclusions: jsonb("exclusions").$type<string[]>().default([]).notNull(),
     assumptions: jsonb("assumptions").$type<string[]>().default([]).notNull(),
     constraints: jsonb("constraints").$type<string[]>().default([]).notNull(),
-    createdBy: uuid("created_by").references(() => users.id),
+    createdBy: uuid("created_by"),
     approvalEventId: uuid("approval_event_id").references(
       () => approvalEvents.id,
     ),
@@ -1555,11 +1490,11 @@ export const soaVersions = pgTable(
     createdByAgentRunId: uuid("created_by_agent_run_id").references(
       () => agentRuns.id,
     ),
-    createdBy: uuid("created_by").references(() => users.id),
+    createdBy: uuid("created_by"),
     submittedForReviewAt: timestamp("submitted_for_review_at", {
       withTimezone: true,
     }),
-    approvedBy: uuid("approved_by").references(() => users.id),
+    approvedBy: uuid("approved_by"),
     approvedAt: timestamp("approved_at", { withTimezone: true }),
     supersededBy: uuid("superseded_by"),
     traceId: text("trace_id"),
@@ -1863,11 +1798,11 @@ export const gapAnalysisVersions = pgTable(
     generatedByAgentRunId: uuid("generated_by_agent_run_id").references(
       () => agentRuns.id,
     ),
-    createdBy: uuid("created_by").references(() => users.id),
+    createdBy: uuid("created_by"),
     submittedForReviewAt: timestamp("submitted_for_review_at", {
       withTimezone: true,
     }),
-    approvedBy: uuid("approved_by").references(() => users.id),
+    approvedBy: uuid("approved_by"),
     approvedAt: timestamp("approved_at", { withTimezone: true }),
     approvalEventId: uuid("approval_event_id").references(
       () => approvalEvents.id,
@@ -2082,11 +2017,11 @@ export const poamVersions = pgTable(
     generatedByAgentRunId: uuid("generated_by_agent_run_id").references(
       () => agentRuns.id,
     ),
-    createdBy: uuid("created_by").references(() => users.id),
+    createdBy: uuid("created_by"),
     submittedForReviewAt: timestamp("submitted_for_review_at", {
       withTimezone: true,
     }),
-    approvedBy: uuid("approved_by").references(() => users.id),
+    approvedBy: uuid("approved_by"),
     approvedAt: timestamp("approved_at", { withTimezone: true }),
     supersededBy: uuid("superseded_by"),
     traceId: text("trace_id"),
@@ -2278,11 +2213,11 @@ export const reportVersions = pgTable(
     generatedByAgentRunId: uuid("generated_by_agent_run_id").references(
       () => agentRuns.id,
     ),
-    createdBy: uuid("created_by").references(() => users.id),
+    createdBy: uuid("created_by"),
     submittedForReviewAt: timestamp("submitted_for_review_at", {
       withTimezone: true,
     }),
-    approvedBy: uuid("approved_by").references(() => users.id),
+    approvedBy: uuid("approved_by"),
     approvedAt: timestamp("approved_at", { withTimezone: true }),
     supersededBy: uuid("superseded_by"),
     traceId: text("trace_id").notNull().default("trace-not-set"),
@@ -2371,9 +2306,7 @@ export const exportJobs = pgTable(
     jobType: text("job_type").notNull(),
     status: exportJobStatusEnum("status").default("queued").notNull(),
     requestedFormat: reportFormatEnum("requested_format").notNull(),
-    requestedBy: uuid("requested_by")
-      .notNull()
-      .references(() => users.id),
+    requestedBy: uuid("requested_by").notNull(),
     queuedAt: timestamp("queued_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -2486,7 +2419,7 @@ export const workflowAuditEvents = pgTable(
       .references(() => workflowRuns.id),
     eventType: text("event_type").notNull(),
     stepName: text("step_name"),
-    actorId: uuid("actor_id").references(() => users.id),
+    actorId: uuid("actor_id"),
     systemActor: text("system_actor"),
     traceId: text("trace_id").notNull(),
     metadata: jsonb("metadata")
@@ -2511,7 +2444,7 @@ export const auditLogs = pgTable(
   "audit_logs",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    actorId: uuid("actor_id").references(() => users.id),
+    actorId: uuid("actor_id"),
     organizationId: uuid("organization_id").references(() => organizations.id),
     action: text("action").notNull(),
     resourceType: text("resource_type").notNull(),
@@ -2537,7 +2470,7 @@ export const securityEvents = pgTable(
     id: uuid("id").defaultRandom().primaryKey(),
     organizationId: uuid("organization_id").references(() => organizations.id),
     assessmentId: uuid("assessment_id").references(() => assessments.id),
-    actorId: uuid("actor_id").references(() => users.id),
+    actorId: uuid("actor_id"),
     eventType: text("event_type").notNull(),
     severity: text("severity").notNull(),
     outcome: text("outcome").notNull(),
@@ -2783,7 +2716,7 @@ export const cdpasAssessmentFindings = pgTable(
       .notNull(),
     findingSummary: text("finding_summary"),
     evidenceSummary: text("evidence_summary"),
-    assessedBy: uuid("assessed_by").references(() => users.id),
+    assessedBy: uuid("assessed_by"),
     assessedAt: timestamp("assessed_at", { withTimezone: true }),
     ...timestamps(),
   },
@@ -2800,13 +2733,9 @@ export const cdpasAssessmentFindings = pgTable(
   ],
 );
 
-export const organizationRelations = relations(
-  organizations,
-  ({ one, many }) => ({
-    memberships: many(memberships),
-    assessments: many(assessments),
-  }),
-);
+export const organizationRelations = relations(organizations, ({ many }) => ({
+  assessments: many(assessments),
+}));
 
 export const assessmentRelations = relations(assessments, ({ one, many }) => ({
   organization: one(organizations, {
@@ -3107,7 +3036,7 @@ export const madTransactionAssessments = pgTable(
     transactionDate: text("transaction_date"),
     status: text("status").default("draft").notNull(),
     scfVersionId: uuid("scf_version_id").references(() => scfVersions.id),
-    createdBy: uuid("created_by").references(() => users.id),
+    createdBy: uuid("created_by"),
     ...timestamps(),
   },
   (table) => [
@@ -3131,7 +3060,7 @@ export const madMaturityScores = pgTable(
       .references(() => madSubRequirements.id),
     score: integer("score").notNull(),
     rationale: text("rationale"),
-    assessedBy: uuid("assessed_by").references(() => users.id),
+    assessedBy: uuid("assessed_by"),
     assessedAt: timestamp("assessed_at", { withTimezone: true }),
     ...timestamps(),
   },
@@ -3168,7 +3097,7 @@ export const assessmentControlEvents = pgTable(
     eventType: text("event_type").notNull(),
     previousValue: jsonb("previous_value").$type<Record<string, unknown>>(),
     newValue: jsonb("new_value").$type<Record<string, unknown>>().notNull(),
-    actorId: uuid("actor_id").references(() => users.id),
+    actorId: uuid("actor_id"),
     agentRunId: uuid("agent_run_id").references(() => agentRuns.id),
     traceId: text("trace_id").notNull(),
     // NO updated_at. NO deleted_at. Append-only = immutable record.
