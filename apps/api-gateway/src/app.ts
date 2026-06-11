@@ -80,6 +80,7 @@ import { tpraRoutes } from "./routes/tpra.routes";
 import { userOrgsRoutes } from "./routes/user-orgs.routes";
 import { adminUsersRoutes } from "./routes/admin-users.routes";
 import { adminOrgsRoutes } from "./routes/admin-orgs.routes";
+import { authSessionsRoutes } from "./routes/auth-sessions.routes";
 import { madRoutes } from "./routes/mad.routes";
 import { maturityRoutes } from "./routes/maturity.routes";
 import { riskRegisterRoutes } from "./routes/risk-register.routes";
@@ -141,6 +142,7 @@ export const routes: RouteDefinition[] = [
   ...privacyRoutes,
   ...dataSubjectRoutes, // LGPD/GDPR data subject rights: /me/data-export, /me/account
   ...userOrgsRoutes, // User-scoped org listing & activation: /users/me/organizations
+  ...authSessionsRoutes, // Auth sessions: /auth/sessions/others
   ...socRoutes,
   ...executiveRoutes,
   ...dashboardRoutes,

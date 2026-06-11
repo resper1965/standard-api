@@ -17,6 +17,7 @@ import {
   baVerification,
 } from "@standard/schemas";
 import { sendStandardEmail, type SendEmail } from "@standard/email";
+import { eq, desc, inArray } from "drizzle-orm";
 import type { DrizzleClient } from "./types";
 
 export type AuthEnv = {
@@ -172,6 +173,39 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
     },
 
     trustedOrigins,
+
+    // ── Database Hooks (Auth Containment) ───────────────────────────────
+    databaseHooks: {
+      session: {
+        create: {
+          after: async (session: any) => {
+            const MAX_CONCURRENT_SESSIONS = 3;
+            // Encontra todas as sessões ativas do usuário, da mais nova para a mais velha
+            const rows = await (db as any)
+              .select({ id: baSession.id })
+              .from(baSession)
+              .where(eq(baSession.userId, session.userId))
+              .orderBy(desc(baSession.createdAt));
+
+            // Se exceder o limite, revoga as mais antigas
+            if (rows.length > MAX_CONCURRENT_SESSIONS) {
+              const toRevoke = rows
+                .slice(MAX_CONCURRENT_SESSIONS)
+                .map((r: any) => r.id as string);
+
+              if (toRevoke.length > 0) {
+                await (db as any)
+                  .delete(baSession)
+                  .where(inArray(baSession.id, toRevoke));
+                console.log(
+                  `[standard:auth] Revoked ${toRevoke.length} old session(s) for user ${session.userId} (limit: ${MAX_CONCURRENT_SESSIONS})`,
+                );
+              }
+            }
+          },
+        },
+      },
+    },
 
     // ── User additional fields ────────────────────────────────────────────
     // fieldName mapeia para o nome real da coluna na DB (snake_case)

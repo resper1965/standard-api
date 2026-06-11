@@ -81,6 +81,7 @@ We believe that great architecture requires great documentation. Our knowledge b
 
 | Topic | Primary Resource | Description |
 | :--- | :--- | :--- |
+| **For Developers** | [Developer Guide](docs/developer-guide.md) | How to authenticate, consume APIs, and handle async polling workflows. |
 | **System Architecture** | [Arc42 Document](docs/architecture/arc42.md) | Complete system context, containers, and structural decisions. |
 | **Data Model** | [Data Architecture](docs/architecture/data-model.md) | PostgreSQL schemas, tenancy isolation, and state transitions. |
 | **Agent Behavior** | [Agentic AI Model](docs/architecture/standard-agentic-ai-operating-model.md) | How the AI specialists interact, handle memory, and validate schemas. |

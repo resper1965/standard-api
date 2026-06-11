@@ -13,6 +13,7 @@ export const engineCodeMap = {
   APPROVAL_GATE_MISMATCH: ["CONFLICT", 409],
   ARTIFACT_VERSION_NOT_REVIEWABLE: ["CONFLICT", 409],
   ARTIFACT_VERSION_NOT_REJECTED: ["CONFLICT", 409],
+  TPRA_SCORE_TOO_LOW: ["BAD_REQUEST", 400],
 } as const;
 
 export const errorResponse = (
