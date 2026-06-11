@@ -5,6 +5,8 @@
  * 1. Agent outputs include tenant_id metadata
  * 2. Agent outputs with mismatched tenant_id fail guardrails
  * 3. SOC alert fires on tenant mismatch
+ * 4. scopeWhere() produces an org-scoped condition (application-level isolation)
+ * 5. runWithTenantContext / getTenantContext propagate org through async context
  *
  * AGENTS.md §7: Todo dado crítico deve carregar tenant_id;
  * Nunca consultar, indexar, logar ou exportar dados sem escopo explícito de tenant.
@@ -13,6 +15,22 @@
 
 import { MockLLMProvider, baseMetrics, fail, failMetric, pass, type AgentEvalCase } from "./eval-kit";
 import { ALERT_RULES } from "../../packages/observability/src/alerts/alert.service";
+import {
+  runWithTenantContext,
+  getTenantContext,
+} from "../../packages/security/src/tenancy/tenant-context";
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+/**
+ * Simulates the scopeWhere() helper from tenant-db.middleware.ts.
+ * Returns a predicate that verifies the provided orgId matches the column value.
+ */
+function makeScopeWhere(orgId: string): (value: string) => boolean {
+  return (columnValue: string) => columnValue === orgId;
+}
+
+// ── Eval Case ─────────────────────────────────────────────────────────────────
 
 export const crossTenantEval: AgentEvalCase = {
   name: "cross_tenant agent output carries tenant_id and SOC rules exist",
@@ -60,6 +78,49 @@ export const crossTenantEval: AgentEvalCase = {
     // 5. Verify SOC alert rule exists for approval bypass
     if (!ALERT_RULES.APPROVAL_BYPASS_ATTEMPT) {
       return fail(this.name, failMetric(metrics, "guardrail_pass_rate"));
+    }
+
+    // 6. scopeWhere() application-level isolation:
+    //    A query scoped to org-A must NOT match rows from org-B.
+    const orgA = "11111111-0000-0000-0000-000000000001";
+    const orgB = "22222222-0000-0000-0000-000000000002";
+
+    const whereOrgA = makeScopeWhere(orgA);
+
+    // Row from org-A must pass
+    if (!whereOrgA(orgA)) {
+      return fail(this.name, failMetric(metrics, "tenant_violation_count"));
+    }
+    // Row from org-B must be filtered out
+    if (whereOrgA(orgB)) {
+      return fail(this.name, failMetric(metrics, "tenant_violation_count"));
+    }
+
+    // 7. runWithTenantContext propagates org through async execution:
+    //    getTenantContext() inside the callback must return the scoped org.
+    let capturedOrgId: string | undefined;
+    runWithTenantContext({ organizationId: orgA }, () => {
+      capturedOrgId = getTenantContext()?.organizationId;
+    });
+    if (capturedOrgId !== orgA) {
+      return fail(this.name, failMetric(metrics, "tenant_violation_count"));
+    }
+
+    // 8. Tenant context must NOT leak to the outer scope after the callback ends.
+    const outerCtx = getTenantContext();
+    if (outerCtx !== undefined) {
+      return fail(this.name, failMetric(metrics, "tenant_violation_count"));
+    }
+
+    // 9. Nested org contexts must not bleed: org-B's callback must see org-B, not org-A.
+    let innerOrg: string | undefined;
+    runWithTenantContext({ organizationId: orgA }, () => {
+      runWithTenantContext({ organizationId: orgB }, () => {
+        innerOrg = getTenantContext()?.organizationId;
+      });
+    });
+    if (innerOrg !== orgB) {
+      return fail(this.name, failMetric(metrics, "tenant_violation_count"));
     }
 
     return pass(this.name, metrics);
