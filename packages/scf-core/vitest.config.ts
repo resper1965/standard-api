@@ -7,7 +7,8 @@ export default defineConfig({
     include: [
       "tests/version.test.ts",
       "tests/control-search.test.ts",
-      "tests/mapping-integrity.test.ts"
+      "tests/mapping-integrity.test.ts",
+      "src/__tests__/**/*.test.ts",
     ],
   },
 });

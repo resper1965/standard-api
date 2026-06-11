@@ -133,7 +133,7 @@ export async function processMcpToolMessage(
     }
 
     // Tool execution dispatch
-    const result = await dispatchTool(
+    const { result, tokensUsed } = await dispatchTool(
       body.tool_name,
       body.tool_args,
       env,
@@ -176,6 +176,25 @@ export async function processMcpToolMessage(
       });
     }
 
+    // ── M2: Record AI token usage for monthly quota enforcement ──────────
+    if (tokensUsed > 0 && env.STANDARD_CACHE && body.organization_id) {
+      const month = new Date().toISOString().slice(0, 7); // YYYY-MM
+      const tokenKey = `org:${body.organization_id}:ai_tokens:${month}`;
+      // Atomic increment via read-then-write (KV has no native INCR).
+      // TTL = 35 days so the key auto-expires shortly after the month ends.
+      const currentTokens = parseInt(
+        (await env.STANDARD_CACHE.get(tokenKey)) ?? "0",
+        10,
+      );
+      await env.STANDARD_CACHE.put(
+        tokenKey,
+        String(currentTokens + tokensUsed),
+        { expirationTtl: 35 * 24 * 3600 }, // ~35 days
+      ).catch(() => {
+        /* non-fatal — token tracking is best-effort */
+      });
+    }
+
     console.log(
       JSON.stringify({
         level: "info",
@@ -188,6 +207,7 @@ export async function processMcpToolMessage(
           job_id: body.job_id,
           duration_ms: durationMs,
           has_callback: !!webhookUrl,
+          tokens_used: tokensUsed,
         },
       }),
     );
@@ -256,8 +276,21 @@ export async function processMcpToolMessage(
 
 // ── AI Gateway helper ────────────────────────────────────────────────────────
 
+/** Token usage data returned by Cloudflare Workers AI / AI Gateway. */
+interface AiUsage {
+  prompt_tokens: number;
+  completion_tokens: number;
+  total_tokens: number;
+}
+
+interface AiGatewayResult {
+  text: string;
+  usage: AiUsage;
+}
+
 /**
  * Calls Cloudflare AI Gateway with a chat-completion style request.
+ * Returns both the response text and token usage for quota tracking.
  * Falls back gracefully when gateway config is absent (local dev).
  */
 async function callAiGateway(
@@ -265,12 +298,15 @@ async function callAiGateway(
   model: string,
   systemPrompt: string,
   userPrompt: string,
-): Promise<string> {
+): Promise<AiGatewayResult> {
   const gatewayUrl = env.AI_GATEWAY_URL;
   const token = env.AI_GATEWAY_TOKEN;
   if (!gatewayUrl || !token || gatewayUrl === "stub") {
-    // Local dev or no gateway configured — return empty JSON object
-    return "{}";
+    // Local dev or no gateway configured — return empty JSON object, zero usage
+    return {
+      text: "{}",
+      usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
+    };
   }
   const url = `${gatewayUrl}/workers-ai/run/${model}`;
   const res = await fetch(url, {
@@ -291,8 +327,30 @@ async function callAiGateway(
   if (!res.ok) {
     throw new Error(`AI Gateway ${res.status}: ${await res.text()}`);
   }
-  const data = (await res.json()) as { result?: { response?: string } };
-  return data.result?.response ?? "{}";
+  const data = (await res.json()) as {
+    result?: { response?: string };
+    usage?: {
+      prompt_tokens?: number;
+      completion_tokens?: number;
+      total_tokens?: number;
+    };
+  };
+  const promptTokens = data.usage?.prompt_tokens ?? 0;
+  const completionTokens = data.usage?.completion_tokens ?? 0;
+  return {
+    text: data.result?.response ?? "{}",
+    usage: {
+      prompt_tokens: promptTokens,
+      completion_tokens: completionTokens,
+      total_tokens: data.usage?.total_tokens ?? promptTokens + completionTokens,
+    },
+  };
+}
+
+/** Result from tool dispatch including token usage for quota tracking. */
+interface ToolDispatchResult {
+  result: Record<string, unknown>;
+  tokensUsed: number;
 }
 
 /** Dispatch to the appropriate tool implementation */
@@ -301,7 +359,7 @@ async function dispatchTool(
   args: Record<string, unknown>,
   env: McpToolEnv,
   traceId: string,
-): Promise<Record<string, unknown>> {
+): Promise<ToolDispatchResult> {
   switch (toolName) {
     case "evaluate-evidence":
       return evaluateEvidenceTool(args, env, traceId);
@@ -321,7 +379,7 @@ async function evaluateEvidenceTool(
   args: Record<string, unknown>,
   env: McpToolEnv,
   traceId: string,
-): Promise<Record<string, unknown>> {
+): Promise<ToolDispatchResult> {
   const assessmentId = String(args["assessment_id"] ?? "");
   const evidenceId = String(args["evidence_id"] ?? "");
   const controlCode = args["control_code"]
@@ -342,7 +400,12 @@ async function evaluateEvidenceTool(
     ? `Evaluate evidence '${evidenceId}' for SCF control '${controlCode}' in assessment '${assessmentId}'.`
     : `Evaluate evidence '${evidenceId}' in assessment '${assessmentId}'.`;
 
-  const raw = await callAiGateway(env, MODEL, systemPrompt, userPrompt);
+  const { text: raw, usage } = await callAiGateway(
+    env,
+    MODEL,
+    systemPrompt,
+    userPrompt,
+  );
   let parsed: Record<string, unknown>;
   try {
     parsed = JSON.parse(raw);
@@ -351,19 +414,22 @@ async function evaluateEvidenceTool(
   }
 
   return {
-    assessment_id: assessmentId,
-    evidence_id: evidenceId,
-    control_code: controlCode,
-    evaluation: parsed["evaluation"] ?? "insufficient",
-    confidence:
-      typeof parsed["confidence"] === "number" ? parsed["confidence"] : 0,
-    rationale: String(parsed["rationale"] ?? raw),
-    recommendations: Array.isArray(parsed["recommendations"])
-      ? parsed["recommendations"]
-      : [],
-    agent_run_id: traceId,
-    model: MODEL,
-    prompt_version: PROMPT_VERSION,
+    result: {
+      assessment_id: assessmentId,
+      evidence_id: evidenceId,
+      control_code: controlCode,
+      evaluation: parsed["evaluation"] ?? "insufficient",
+      confidence:
+        typeof parsed["confidence"] === "number" ? parsed["confidence"] : 0,
+      rationale: String(parsed["rationale"] ?? raw),
+      recommendations: Array.isArray(parsed["recommendations"])
+        ? parsed["recommendations"]
+        : [],
+      agent_run_id: traceId,
+      model: MODEL,
+      prompt_version: PROMPT_VERSION,
+    },
+    tokensUsed: usage.total_tokens,
   };
 }
 
@@ -372,7 +438,7 @@ async function architectRemediationTool(
   args: Record<string, unknown>,
   env: McpToolEnv,
   traceId: string,
-): Promise<Record<string, unknown>> {
+): Promise<ToolDispatchResult> {
   const assessmentId = String(args["assessment_id"] ?? "");
   const findingId = String(args["finding_id"] ?? "");
   const gapLevel = args["gap_level"] ? String(args["gap_level"]) : "medium";
@@ -388,7 +454,12 @@ async function architectRemediationTool(
 
   const userPrompt = `Create remediation plan for gap finding '${findingId}' (gap level: ${gapLevel}) in assessment '${assessmentId}'.`;
 
-  const raw = await callAiGateway(env, MODEL, systemPrompt, userPrompt);
+  const { text: raw, usage } = await callAiGateway(
+    env,
+    MODEL,
+    systemPrompt,
+    userPrompt,
+  );
   let parsed: Record<string, unknown>;
   try {
     parsed = JSON.parse(raw);
@@ -397,19 +468,22 @@ async function architectRemediationTool(
   }
 
   return {
-    assessment_id: assessmentId,
-    finding_id: findingId,
-    remediation_plan: {
-      priority: parsed["priority"] ?? "medium",
-      estimated_effort_days:
-        typeof parsed["estimated_effort_days"] === "number"
-          ? parsed["estimated_effort_days"]
-          : 30,
-      actions: Array.isArray(parsed["actions"]) ? parsed["actions"] : [],
+    result: {
+      assessment_id: assessmentId,
+      finding_id: findingId,
+      remediation_plan: {
+        priority: parsed["priority"] ?? "medium",
+        estimated_effort_days:
+          typeof parsed["estimated_effort_days"] === "number"
+            ? parsed["estimated_effort_days"]
+            : 30,
+        actions: Array.isArray(parsed["actions"]) ? parsed["actions"] : [],
+      },
+      agent_run_id: traceId,
+      model: MODEL,
+      prompt_version: PROMPT_VERSION,
     },
-    agent_run_id: traceId,
-    model: MODEL,
-    prompt_version: PROMPT_VERSION,
+    tokensUsed: usage.total_tokens,
   };
 }
 
@@ -418,7 +492,7 @@ async function validarEvidenciaPrivacidadeTool(
   args: Record<string, unknown>,
   env: McpToolEnv,
   traceId: string,
-): Promise<Record<string, unknown>> {
+): Promise<ToolDispatchResult> {
   const evidenceText = String(args["evidence_text"] ?? "");
   const scfControls = Array.isArray(args["scf_controls"])
     ? (args["scf_controls"] as string[])
@@ -435,7 +509,12 @@ async function validarEvidenciaPrivacidadeTool(
 
   const userPrompt = `Validate privacy compliance for this evidence:\n${evidenceText.slice(0, 2000)}`;
 
-  const raw = await callAiGateway(env, MODEL, systemPrompt, userPrompt);
+  const { text: raw, usage } = await callAiGateway(
+    env,
+    MODEL,
+    systemPrompt,
+    userPrompt,
+  );
   let parsed: Record<string, unknown>;
   try {
     parsed = JSON.parse(raw);
@@ -444,16 +523,19 @@ async function validarEvidenciaPrivacidadeTool(
   }
 
   return {
-    compliant: Boolean(parsed["compliant"]),
-    lgpd_articles: Array.isArray(parsed["lgpd_articles"])
-      ? parsed["lgpd_articles"]
-      : [],
-    gaps: Array.isArray(parsed["gaps"]) ? parsed["gaps"] : [],
-    confidence:
-      typeof parsed["confidence"] === "number" ? parsed["confidence"] : 0,
-    agent_run_id: traceId,
-    model: MODEL,
-    prompt_version: PROMPT_VERSION,
+    result: {
+      compliant: Boolean(parsed["compliant"]),
+      lgpd_articles: Array.isArray(parsed["lgpd_articles"])
+        ? parsed["lgpd_articles"]
+        : [],
+      gaps: Array.isArray(parsed["gaps"]) ? parsed["gaps"] : [],
+      confidence:
+        typeof parsed["confidence"] === "number" ? parsed["confidence"] : 0,
+      agent_run_id: traceId,
+      model: MODEL,
+      prompt_version: PROMPT_VERSION,
+    },
+    tokensUsed: usage.total_tokens,
   };
 }
 

@@ -4,16 +4,16 @@ import type { ScfImportRun, ScfImportStatistics, ScfVersion } from "../types";
 export class ScfVersionService {
   constructor(private readonly repository: ScfRepository) {}
 
-  listVersions(): Promise<ScfVersion[]> {
-    return this.repository.listVersions();
+  listVersions(organizationId?: string): Promise<ScfVersion[]> {
+    return this.repository.listVersions(organizationId);
   }
 
   getVersion(versionId: string): Promise<ScfVersion | null> {
     return this.repository.getVersion(versionId);
   }
 
-  getLatestVersion(): Promise<ScfVersion | null> {
-    return this.repository.getLatestVersion();
+  getLatestVersion(organizationId?: string): Promise<ScfVersion | null> {
+    return this.repository.getLatestVersion(organizationId);
   }
 
   registerImportRun(input: {
@@ -27,32 +27,45 @@ export class ScfVersionService {
       id: crypto.randomUUID(),
       ...(input.scfVersionId ? { scf_version_id: input.scfVersionId } : {}),
       source_type: input.sourceType,
-      ...(input.sourceFilename ? { source_filename: input.sourceFilename } : {}),
+      ...(input.sourceFilename
+        ? { source_filename: input.sourceFilename }
+        : {}),
       source_hash: input.sourceHash,
       status: "running",
       started_at: new Date().toISOString(),
       import_statistics: emptyImportStatistics(),
-      trace_id: input.traceId
+      trace_id: input.traceId,
     };
     return this.repository.createImportRun(run);
   }
 
-  async completeImportRun(importRunId: string, statistics: ScfImportStatistics): Promise<ScfImportRun | null> {
+  async completeImportRun(
+    importRunId: string,
+    statistics: ScfImportStatistics,
+  ): Promise<ScfImportRun | null> {
     const run = await this.repository.getImportRun(importRunId);
     if (!run) return null;
-    const completed = { ...run, status: "succeeded" as const, completed_at: new Date().toISOString(), import_statistics: statistics };
+    const completed = {
+      ...run,
+      status: "succeeded" as const,
+      completed_at: new Date().toISOString(),
+      import_statistics: statistics,
+    };
     await this.repository.saveImportRun(completed);
     return completed;
   }
 
-  async failImportRun(importRunId: string, errorSummarySafe: string): Promise<ScfImportRun | null> {
+  async failImportRun(
+    importRunId: string,
+    errorSummarySafe: string,
+  ): Promise<ScfImportRun | null> {
     const run = await this.repository.getImportRun(importRunId);
     if (!run) return null;
     const failed = {
       ...run,
       status: "failed" as const,
       completed_at: new Date().toISOString(),
-      error_summary_safe: errorSummarySafe.slice(0, 240)
+      error_summary_safe: errorSummarySafe.slice(0, 240),
     };
     await this.repository.saveImportRun(failed);
     return failed;
@@ -68,5 +81,5 @@ export const emptyImportStatistics = (): ScfImportStatistics => ({
   mappings: 0,
   strm_relationships: 0,
   warnings: 0,
-  synthetic_records: 0
+  synthetic_records: 0,
 });

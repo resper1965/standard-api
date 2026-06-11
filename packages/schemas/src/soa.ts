@@ -1,13 +1,55 @@
 import { z } from "zod";
 import { TraceIdSchema, UuidSchema } from "./common";
+import { StrmOperatorSchema } from "./scf";
 
-export const ScopeStatusSchema = z.enum(["draft", "under_review", "approved", "superseded", "archived"]);
-export const SoaVersionStatusSchema = z.enum(["draft", "under_review", "approved", "superseded", "archived"]);
-export const SoaItemApplicabilityStatusSchema = z.enum(["applicable", "partially_applicable", "not_applicable", "to_be_defined", "requires_validation", "out_of_scope"]);
-export const SoaItemImplementationStatusSchema = z.enum(["implemented", "partially_implemented", "not_implemented", "not_evidenced", "not_assessed", "not_applicable"]);
-export const EvidenceCoverageStatusSchema = z.enum(["strong", "partial", "weak", "absent", "conflicting", "not_checked"]);
-export const SoaMappingStatusSchema = z.enum(["official_mapping", "no_official_mapping"]);
-export const ResponsibilityTypeSchema = z.enum(["internal", "customer", "third_party_provider", "shared"]);
+export const ScopeStatusSchema = z.enum([
+  "draft",
+  "under_review",
+  "approved",
+  "superseded",
+  "archived",
+]);
+export const SoaVersionStatusSchema = z.enum([
+  "draft",
+  "under_review",
+  "approved",
+  "superseded",
+  "archived",
+]);
+export const SoaItemApplicabilityStatusSchema = z.enum([
+  "applicable",
+  "partially_applicable",
+  "not_applicable",
+  "to_be_defined",
+  "requires_validation",
+  "out_of_scope",
+]);
+export const SoaItemImplementationStatusSchema = z.enum([
+  "implemented",
+  "partially_implemented",
+  "not_implemented",
+  "not_evidenced",
+  "not_assessed",
+  "not_applicable",
+]);
+export const EvidenceCoverageStatusSchema = z.enum([
+  "strong",
+  "partial",
+  "weak",
+  "absent",
+  "conflicting",
+  "not_checked",
+]);
+export const SoaMappingStatusSchema = z.enum([
+  "official_mapping",
+  "no_official_mapping",
+]);
+export const ResponsibilityTypeSchema = z.enum([
+  "internal",
+  "customer",
+  "third_party_provider",
+  "shared",
+]);
 
 export const CreateScopeRequestSchema = z.strictObject({
   title: z.string().min(1),
@@ -21,7 +63,7 @@ export const CreateScopeRequestSchema = z.strictObject({
   third_parties: z.array(z.string()).default([]),
   exclusions: z.array(z.string()).default([]),
   assumptions: z.array(z.string()).default([]),
-  constraints: z.array(z.string()).default([])
+  constraints: z.array(z.string()).default([]),
 });
 
 export const UpdateScopeRequestSchema = CreateScopeRequestSchema.partial();
@@ -36,13 +78,13 @@ export const ScopeResponseSchema = CreateScopeRequestSchema.extend({
   approval_event_id: UuidSchema.optional(),
   created_at: z.string(),
   updated_at: z.string(),
-  trace_id: TraceIdSchema
+  trace_id: TraceIdSchema,
 });
 
 export const CreateSoaDraftRequestSchema = z.strictObject({
   framework_id: UuidSchema,
   scf_version_id: UuidSchema,
-  source_scope_id: UuidSchema.optional()
+  source_scope_id: UuidSchema.optional(),
 });
 
 export const SoaVersionResponseSchema = z.object({
@@ -63,7 +105,7 @@ export const SoaVersionResponseSchema = z.object({
   approval_event_id: UuidSchema.optional(),
   superseded_by: UuidSchema.optional(),
   trace_id: TraceIdSchema,
-  metadata: z.record(z.string(), z.unknown()).default({})
+  metadata: z.record(z.string(), z.unknown()).default({}),
 });
 
 export const SoaItemResponseSchema = z.object({
@@ -87,11 +129,12 @@ export const SoaItemResponseSchema = z.object({
   validation_notes: z.string().optional(),
   source_mapping_id: UuidSchema.optional(),
   mapping_status: SoaMappingStatusSchema,
-  relationship_type: z.string().optional(),
+  // ADR-001: canonical STRM operators only
+  relationship_type: StrmOperatorSchema.optional(),
   relationship_strength: z.string().optional(),
   responsibility_type: ResponsibilityTypeSchema,
   created_at: z.string(),
-  updated_at: z.string()
+  updated_at: z.string(),
 });
 
 export const UpdateSoaItemRequestSchema = z.strictObject({
@@ -105,23 +148,27 @@ export const UpdateSoaItemRequestSchema = z.strictObject({
   confidence_score: z.number().min(0).max(1).optional(),
   requires_user_validation: z.boolean().optional(),
   validation_notes: z.string().optional(),
-  responsibility_type: ResponsibilityTypeSchema.optional()
+  responsibility_type: ResponsibilityTypeSchema.optional(),
 });
 
 export const BulkUpdateSoaItemsRequestSchema = z.strictObject({
-  items: z.array(z.object({ soa_item_id: UuidSchema, patch: UpdateSoaItemRequestSchema })).min(1)
+  items: z
+    .array(
+      z.object({ soa_item_id: UuidSchema, patch: UpdateSoaItemRequestSchema }),
+    )
+    .min(1),
 });
 
 export const SubmitSoaReviewRequestSchema = z.strictObject({
-  exception_rationale: z.string().optional()
+  exception_rationale: z.string().optional(),
 });
 
 export const ApproveSoaRequestSchema = z.strictObject({
-  approval_event_id: UuidSchema
+  approval_event_id: UuidSchema,
 });
 
 export const RefreshSoaEvidenceRequestSchema = z.strictObject({
-  top_k: z.number().int().min(1).max(10).default(3)
+  top_k: z.number().int().min(1).max(10).default(3),
 });
 
 export const SoaEvidenceCandidateResponseSchema = z.object({
@@ -129,22 +176,27 @@ export const SoaEvidenceCandidateResponseSchema = z.object({
   candidate_evidence: z.literal(true),
   evidence_summary: z.string(),
   evidence_coverage: EvidenceCoverageStatusSchema,
-  trace_id: TraceIdSchema
+  trace_id: TraceIdSchema,
 });
 
 export const SoaValidationResponseSchema = z.object({
   valid: z.boolean(),
   blocking_errors: z.array(z.string()),
   warnings: z.array(z.string()),
-  trace_id: TraceIdSchema
+  trace_id: TraceIdSchema,
 });
-
 
 export type ScopeStatus = z.infer<typeof ScopeStatusSchema>;
 export type SoaVersionStatus = z.infer<typeof SoaVersionStatusSchema>;
-export type SoaItemApplicabilityStatus = z.infer<typeof SoaItemApplicabilityStatusSchema>;
-export type SoaItemImplementationStatus = z.infer<typeof SoaItemImplementationStatusSchema>;
-export type EvidenceCoverageStatus = z.infer<typeof EvidenceCoverageStatusSchema>;
+export type SoaItemApplicabilityStatus = z.infer<
+  typeof SoaItemApplicabilityStatusSchema
+>;
+export type SoaItemImplementationStatus = z.infer<
+  typeof SoaItemImplementationStatusSchema
+>;
+export type EvidenceCoverageStatus = z.infer<
+  typeof EvidenceCoverageStatusSchema
+>;
 export type SoaMappingStatus = z.infer<typeof SoaMappingStatusSchema>;
 export type ResponsibilityType = z.infer<typeof ResponsibilityTypeSchema>;
 export type CreateScopeRequest = z.input<typeof CreateScopeRequestSchema>;
@@ -154,9 +206,17 @@ export type CreateSoaDraftRequest = z.infer<typeof CreateSoaDraftRequestSchema>;
 export type SoaVersionResponse = z.infer<typeof SoaVersionResponseSchema>;
 export type SoaItemResponse = z.infer<typeof SoaItemResponseSchema>;
 export type UpdateSoaItemRequest = z.infer<typeof UpdateSoaItemRequestSchema>;
-export type BulkUpdateSoaItemsRequest = z.infer<typeof BulkUpdateSoaItemsRequestSchema>;
-export type SubmitSoaReviewRequest = z.infer<typeof SubmitSoaReviewRequestSchema>;
+export type BulkUpdateSoaItemsRequest = z.infer<
+  typeof BulkUpdateSoaItemsRequestSchema
+>;
+export type SubmitSoaReviewRequest = z.infer<
+  typeof SubmitSoaReviewRequestSchema
+>;
 export type ApproveSoaRequest = z.infer<typeof ApproveSoaRequestSchema>;
-export type RefreshSoaEvidenceRequest = z.infer<typeof RefreshSoaEvidenceRequestSchema>;
-export type SoaEvidenceCandidateResponse = z.infer<typeof SoaEvidenceCandidateResponseSchema>;
+export type RefreshSoaEvidenceRequest = z.infer<
+  typeof RefreshSoaEvidenceRequestSchema
+>;
+export type SoaEvidenceCandidateResponse = z.infer<
+  typeof SoaEvidenceCandidateResponseSchema
+>;
 export type SoaValidationResponse = z.infer<typeof SoaValidationResponseSchema>;

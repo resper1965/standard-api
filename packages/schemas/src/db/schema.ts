@@ -1557,7 +1557,8 @@ export const soaItems = pgTable(
     validationNotes: text("validation_notes"),
     sourceMappingId: uuid("source_mapping_id").references(() => scfMappings.id),
     mappingStatus: text("mapping_status").default("official_mapping").notNull(),
-    relationshipType: text("relationship_type"),
+    // ADR-001: canonical STRM operator (same as scf_mappings/scf_strm_relationships)
+    relationshipType: strmOperatorEnum("relationship_type"),
     relationshipStrength: text("relationship_strength"),
     responsibilityType: responsibilityTypeEnum("responsibility_type").default(
       "internal",

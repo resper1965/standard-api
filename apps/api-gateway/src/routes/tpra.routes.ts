@@ -20,11 +20,10 @@
  *   GET  /api/v1/tpra/vendors/:vendorId/risk-scores       — risk score history
  */
 import type { RouteDefinition } from "../http";
-import { json, routeUuidParam, requireOrganizationId } from "../http";
+import { json, newId, routeUuidParam, requireOrganizationId } from "../http";
 import { ApiError } from "../errors/api-error";
 import { flattenI18n } from "../utils/i18n";
 import { categoriseRisk } from "./tpra-score-service";
-
 
 // ── TPRA Questionnaire Data ─────────────────────────────────────────────────
 
@@ -714,6 +713,35 @@ export const tpraRoutes: RouteDefinition[] = [
         metadata: body.metadata ?? {},
         trace_id: traceId,
       });
+      // Best-effort webhook dispatch for TPRA vendor creation
+      if (deps.webhooks) {
+        try {
+          const subscribers = await deps.webhooks.findSubscribers(
+            orgId,
+            "tpra.vendor.created",
+          );
+          for (const endpoint of subscribers) {
+            if (!endpoint.enabled) continue;
+            await deps.webhooks.logDelivery({
+              delivery_id: newId(),
+              endpoint_id: endpoint.id,
+              event_id: newId(),
+              event_type: "tpra.vendor.created",
+              status: "pending",
+              http_status: null,
+              attempt_count: 0,
+              max_attempts: 3,
+              last_attempted_at: null,
+              next_retry_at: new Date().toISOString(),
+              response_body: null,
+              created_at: new Date().toISOString(),
+            });
+          }
+        } catch {
+          // Non-blocking — webhook delivery is best-effort
+        }
+      }
+
       return json({ data: vendor, trace_id: traceId }, { status: 201 });
     },
   },
@@ -813,6 +841,36 @@ export const tpraRoutes: RouteDefinition[] = [
       );
       if (!updated)
         throw new ApiError("NOT_FOUND", "TPRA assessment not found.", 404);
+
+      // Best-effort webhook dispatch for TPRA assessment submission
+      if (deps.webhooks) {
+        try {
+          const subscribers = await deps.webhooks.findSubscribers(
+            orgId,
+            "tpra.assessment.submitted",
+          );
+          for (const endpoint of subscribers) {
+            if (!endpoint.enabled) continue;
+            await deps.webhooks.logDelivery({
+              delivery_id: newId(),
+              endpoint_id: endpoint.id,
+              event_id: newId(),
+              event_type: "tpra.assessment.submitted",
+              status: "pending",
+              http_status: null,
+              attempt_count: 0,
+              max_attempts: 3,
+              last_attempted_at: null,
+              next_retry_at: new Date().toISOString(),
+              response_body: null,
+              created_at: new Date().toISOString(),
+            });
+          }
+        } catch {
+          // Non-blocking — webhook delivery is best-effort
+        }
+      }
+
       return json({ data: updated, trace_id: traceId });
     },
   },
@@ -866,6 +924,35 @@ export const tpraRoutes: RouteDefinition[] = [
         scf_version_id: assessment.scf_version_id,
         trace_id: traceId,
       });
+      // Best-effort webhook dispatch for TPRA risk score creation
+      if (deps.webhooks) {
+        try {
+          const subscribers = await deps.webhooks.findSubscribers(
+            orgId,
+            "tpra.risk_score.created",
+          );
+          for (const endpoint of subscribers) {
+            if (!endpoint.enabled) continue;
+            await deps.webhooks.logDelivery({
+              delivery_id: newId(),
+              endpoint_id: endpoint.id,
+              event_id: newId(),
+              event_type: "tpra.risk_score.created",
+              status: "pending",
+              http_status: null,
+              attempt_count: 0,
+              max_attempts: 3,
+              last_attempted_at: null,
+              next_retry_at: new Date().toISOString(),
+              response_body: null,
+              created_at: new Date().toISOString(),
+            });
+          }
+        } catch {
+          // Non-blocking — webhook delivery is best-effort
+        }
+      }
+
       return json({ data: riskScore, trace_id: traceId }, { status: 201 });
     },
   },

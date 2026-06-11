@@ -21,9 +21,10 @@ import { eq, and } from "drizzle-orm";
 const resolveVersionId = async (
   deps: AppDependencies,
   versionParam: string,
+  organizationId?: string,
 ): Promise<string> => {
   if (versionParam === "latest") {
-    const latest = await deps.scf.versions.getLatestVersion();
+    const latest = await deps.scf.versions.getLatestVersion(organizationId);
     if (!latest)
       throw new ApiError("NOT_FOUND", "No published SCF versions found.", 404);
     return latest.id;
@@ -216,8 +217,8 @@ export const scfRoutes: RouteDefinition[] = [
     path: "/api/v1/scf/versions",
     protected: true,
     permissions: ["scf:read"],
-    handler: async ({ deps, traceId }) => {
-      const versions = await deps.scf.versions.listVersions();
+    handler: async ({ deps, traceId, organizationId }) => {
+      const versions = await deps.scf.versions.listVersions(organizationId);
       return json({ data: versions.map(versionResponse), trace_id: traceId });
     },
   },
@@ -226,8 +227,8 @@ export const scfRoutes: RouteDefinition[] = [
     path: "/api/v1/scf/versions/latest",
     protected: true,
     permissions: ["scf:read"],
-    handler: async ({ deps, traceId }) => {
-      const version = await deps.scf.versions.getLatestVersion();
+    handler: async ({ deps, traceId, organizationId }) => {
+      const version = await deps.scf.versions.getLatestVersion(organizationId);
       if (!version)
         throw new ApiError("NOT_FOUND", "SCF version not found.", 404);
       return json({ ...versionResponse(version), trace_id: traceId });
@@ -296,7 +297,10 @@ export const scfRoutes: RouteDefinition[] = [
       // Fetches controls in batches of 50 via offset pagination, streams each
       // row immediately. Avoids loading 1400+ controls into Worker memory.
       if (wantsStream) {
-        const { readable, writable } = new TransformStream<Uint8Array, Uint8Array>();
+        const { readable, writable } = new TransformStream<
+          Uint8Array,
+          Uint8Array
+        >();
         const writer = writable.getWriter();
         const encoder = new TextEncoder();
 
@@ -322,7 +326,9 @@ export const scfRoutes: RouteDefinition[] = [
 
               for (const control of batch) {
                 await writer.write(
-                  encoder.encode(JSON.stringify(controlResponse(control)) + "\n"),
+                  encoder.encode(
+                    JSON.stringify(controlResponse(control)) + "\n",
+                  ),
                 );
               }
 
@@ -334,7 +340,11 @@ export const scfRoutes: RouteDefinition[] = [
             try {
               await writer.write(
                 encoder.encode(
-                  JSON.stringify({ _error: true, message: err?.message ?? "Stream error", trace_id: traceId }) + "\n",
+                  JSON.stringify({
+                    _error: true,
+                    message: err?.message ?? "Stream error",
+                    trace_id: traceId,
+                  }) + "\n",
                 ),
               );
             } catch {
@@ -362,6 +372,7 @@ export const scfRoutes: RouteDefinition[] = [
 
       // ── Standard paginated JSON path ───────────────────────────────────────
       // Backward compatible — used by all existing clients.
+      const afterCursor = url.searchParams.get("after") ?? undefined;
       const limitStr =
         url.searchParams.get("limit") || url.searchParams.get("per_page");
       const pageStr = url.searchParams.get("page");
@@ -400,10 +411,42 @@ export const scfRoutes: RouteDefinition[] = [
           ...(weightMin !== undefined ? { weight_min: weightMin } : {}),
           ...(weightMax !== undefined ? { weight_max: weightMax } : {}),
           limit,
-          offset,
+          // When `after` is present, ignore page/offset — use cursor pagination
+          ...(afterCursor ? { after: afterCursor } : { offset }),
         });
+
+        // ── Cursor pagination response ────────────────────────────────────
+        if (afterCursor) {
+          const hasMore = controls.length > limit;
+          const pageControls = hasMore ? controls.slice(0, limit) : controls;
+          const lastControl = pageControls[pageControls.length - 1];
+          const nextCursor =
+            hasMore && lastControl
+              ? btoa(
+                  JSON.stringify({
+                    c: lastControl.control_code,
+                    i: lastControl.id,
+                  }),
+                )
+              : undefined;
+
+          return json({
+            data: pageControls.map(controlResponse),
+            pagination: {
+              has_more: hasMore,
+              ...(nextCursor ? { next_cursor: nextCursor } : {}),
+            },
+            scf_version_id: scfVersionId,
+            trace_id: traceId,
+          });
+        }
+
+        // ── Legacy offset pagination response (backward compat) ───────────
         return json({
-          data: controls.map(controlResponse),
+          data:
+            controls.length > limit
+              ? controls.slice(0, limit).map(controlResponse)
+              : controls.map(controlResponse),
           scf_version_id: scfVersionId,
           page,
           per_page: limit,
@@ -580,7 +623,8 @@ export const scfRoutes: RouteDefinition[] = [
         if (versionQuery) {
           versionId = versionQuery;
         } else {
-          const latestVersion = await deps.scf.versions.getLatestVersion();
+          const latestVersion =
+            await deps.scf.versions.getLatestVersion(organizationId);
           if (!latestVersion) {
             throw new ApiError(
               "NOT_FOUND",
@@ -1300,7 +1344,7 @@ export const scfRoutes: RouteDefinition[] = [
     path: "/api/v1/scf/strm/control/:control_code",
     protected: true,
     permissions: ["scf:read"],
-    handler: async ({ deps, request, traceId, params }) => {
+    handler: async ({ deps, request, traceId, params, organizationId }) => {
       const controlCode = routeParam(params, "control_code");
       const url = new URL(request.url);
       const relationshipType =
@@ -1319,7 +1363,8 @@ export const scfRoutes: RouteDefinition[] = [
       );
 
       if (!rows.length) {
-        const version = await deps.scf.versions.getLatestVersion();
+        const version =
+          await deps.scf.versions.getLatestVersion(organizationId);
         const versionId = version?.id ?? "";
         const control = versionId
           ? await deps.scf.controls.getControlByCode(versionId, controlCode)

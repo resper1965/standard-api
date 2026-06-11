@@ -431,7 +431,7 @@ const inferStrmRelationships = (
       rationale = `Requirement maps to ${controlsForReq} SCF controls — requirement addresses a subset of this control's scope`;
     } else {
       // N:N — intersecting (partial overlap)
-      relationship_type = "intersecting";
+      relationship_type = "intersects";
       relationship_strength = "weak";
       rationale = `N:N mapping (${reqsForControl} reqs × ${controlsForReq} controls) — partial scope overlap`;
     }
