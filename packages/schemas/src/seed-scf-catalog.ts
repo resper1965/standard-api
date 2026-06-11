@@ -152,12 +152,12 @@ async function main() {
     const validation = await importer.validate(source);
     if (!validation.valid) {
       console.error("❌ XLSX validation failed:");
-      validation.errors.forEach((e) => console.error(`   - ${e}`));
+      validation.errors.forEach((e: string) => console.error(`   - ${e}`));
       process.exit(1);
     }
     if (validation.warnings.length > 0) {
       console.log("  ⚠️  Validation warnings:");
-      validation.warnings.forEach((w) => console.log(`     - ${w}`));
+      validation.warnings.forEach((w: string) => console.log(`     - ${w}`));
     }
 
     // Parse
@@ -185,7 +185,7 @@ async function main() {
       console.log(
         `\n  ⚠️  Parse warnings (${parsed.warnings.length} total, showing first 10):`,
       );
-      shown.forEach((w) => console.log(`     - ${w}`));
+      shown.forEach((w: string) => console.log(`     - ${w}`));
       if (parsed.warnings.length > 10) {
         console.log(`     ... and ${parsed.warnings.length - 10} more`);
       }
