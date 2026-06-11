@@ -75,7 +75,7 @@
       "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.2/xlsx-0.20.2.tgz",
       "i18next": "^25.1.0",
       "mysql2": "^3.22.0",
-      "zod": "^4.4.3",
+      "zod": ">=3.23.8",
       "astro": "^6.3.3",
       "undici": ">=7.0.0",
       "ws": ">=8.17.1",
