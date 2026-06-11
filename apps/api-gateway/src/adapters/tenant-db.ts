@@ -1,45 +1,57 @@
 /**
  * @module tenant-db (adapter)
- * @deprecated This module is dead code with the Neon HTTP driver.
  *
- * `set_config('app.current_org_id', ..., true)` scopes to the current
- * transaction, but the Neon HTTP driver executes each statement as an
- * independent HTTP call (separate transaction). The value does NOT
- * persist to the callback's queries.
+ * Provides PostgreSQL Row-Level Security (RLS) enforcement via SET LOCAL
+ * within a Drizzle transaction. Requires the Pool (WebSocket) driver —
+ * see adapters/db.ts.
  *
- * Use `context.tenantScope` (from middleware/tenant-db.middleware.ts)
- * for application-level tenant scoping instead.
+ * Usage in app.ts (wrapped around every authenticated route handler):
+ *   withRlsTenantContext(db, organizationId, (tx) => handler(ctx with tx))
  *
- * When migrating to Neon WebSocket Pool driver, this module can be
- * resurrected with `pool.transaction()` for real RLS enforcement.
- *
- * @see middleware/tenant-db.middleware.ts for the active implementation
+ * The SET LOCAL call scopes app.current_org_id to the current transaction.
+ * All queries within the callback execute against that same transaction, so
+ * the RLS policies in migrations 0028 and 0053 enforce tenant isolation at
+ * the database layer — defence-in-depth on top of the application-level
+ * scopeWhere() helpers in middleware/tenant-db.middleware.ts.
  */
 import { sql } from "drizzle-orm";
 import type { DbClient } from "./db";
 
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 /**
- * @deprecated Does NOT work with Neon HTTP driver. Use context.tenantScope instead.
+ * Executes `fn` within a PostgreSQL transaction that binds `app.current_org_id`
+ * to `organizationId` via SET LOCAL. Because SET LOCAL scopes to the current
+ * transaction, every query issued through `tx` will be subject to the RLS
+ * policies that filter by `app.current_org_id`.
  */
+export async function withRlsTenantContext<T>(
+  db: DbClient,
+  organizationId: string,
+  fn: (tx: DbClient) => Promise<T>,
+): Promise<T> {
+  if (!UUID_REGEX.test(organizationId)) {
+    throw new Error(`[tenant-db] Invalid organization UUID: ${organizationId}`);
+  }
+  return db.transaction(async (tx) => {
+    await tx.execute(
+      sql`SELECT set_config('app.current_org_id', ${organizationId}, true)`,
+    );
+    return fn(tx as unknown as DbClient);
+  });
+}
+
+/** @deprecated — alias kept for backward compatibility; use withRlsTenantContext */
 export async function withTenantContext<T>(
   db: DbClient,
   organizationId: string,
   fn: (db: DbClient) => Promise<T>,
 ): Promise<T> {
-  const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  if (!UUID_REGEX.test(organizationId)) {
-    throw new Error(`[tenant-db] Invalid organization UUID: ${organizationId}`);
-  }
-
-  // ⚠️ This set_config dies with the HTTP statement — fn() never sees it
-  await db.execute(sql`SELECT set_config('app.current_org_id', ${organizationId}, true)`);
-
-  return fn(db);
+  return withRlsTenantContext(db, organizationId, fn);
 }
 
-/**
- * @deprecated Does NOT work with Neon HTTP driver.
- */
-export async function clearTenantContext(db: DbClient): Promise<void> {
-  await db.execute(sql`SELECT set_config('app.current_org_id', '', true)`);
+/** @deprecated — SET LOCAL is cleared automatically on transaction end */
+export async function clearTenantContext(_db: DbClient): Promise<void> {
+  // no-op
 }
