@@ -1,6 +1,6 @@
 # Standard MCP Server — Contexto
 
-> **Última atualização:** 2026-05-30
+> **Última atualização:** 2026-06-11
 
 ## O que é
 
@@ -11,7 +11,7 @@ O Standard expõe um servidor MCP (Model Context Protocol) remoto em `POST /mcp`
 | Endpoint | Auth | Descrição |
 |----------|------|-----------|
 | `GET /mcp` | Não | Discovery — retorna capabilities e número de tools |
-| `POST /mcp` | Bearer API Key | JSON-RPC 2.0 — processa tool calls |
+| `POST /mcp` | Bearer API Key | JSON-RPC 2.0 — processa tool calls, resources e prompts |
 | `GET /docs/mcp` | Não | Página HTML de integração (guia completo) |
 
 ## Protocol
@@ -20,8 +20,21 @@ O Standard expõe um servidor MCP (Model Context Protocol) remoto em `POST /mcp`
 - **Transport:** Streamable HTTP (JSON response)
 - **Auth:** `Authorization: Bearer <api-key>` — mesmo sistema de API Keys M2M da plataforma
 - **Organization isolation:** automático — cada API key é escopada ao organization do criador
+- **Async dispatch:** tools de IA são despachadas via `AGENT_RUN_QUEUE` com resposta 202 + polling KV (ADR-003)
+- **AI token quota:** 429 rate limiting por organization quando quota excedida
 
-## Tools (32)
+## JSON-RPC Methods
+
+Além de `tools/list` e `tools/call`, o servidor implementa:
+
+| Method | Descrição |
+|--------|-----------|
+| `resources/list` | Lista recursos disponíveis (assessments, SCF versions, frameworks) |
+| `resources/read` | Lê conteúdo de um recurso específico por URI |
+| `prompts/list` | Lista prompts pré-configurados para workflows comuns |
+| `prompts/get` | Obtém um prompt específico com argumentos preenchidos |
+
+## Tools (38)
 
 ### Assessment Management (4)
 - `list-assessments` — lista assessments do organization (filtro por status)
@@ -65,9 +78,20 @@ O Standard expõe um servidor MCP (Model Context Protocol) remoto em `POST /mcp`
 - `validate-soa` — valida a integridade lógica e assinaturas do SoA
 - `get-soa-summary` — estatísticas gerais de aplicabilidade do SoA
 
+### TPRA — Third-Party Risk Assessment (3)
+- `tpra-vendor-risk` — avalia risco de um vendor/terceiro com base em controles SCF
+- `tpra-assessment` — executa assessment de risco de terceiros vinculado ao SoA
+- `tpra-risk-score` — calcula score de risco agregado de terceiros
+
 ### Platform (2)
 - `get-platform-health` — saúde da API (taxa de erro, latência em janela de 1h)
 - `list-soc-alerts` — alertas SOC e incidentes de segurança recentes (requer platform admin)
+
+### Async Dispatch (via ADR-003)
+- Tools de IA (KB search, evidence evaluation, remediation) são despachadas assincronamente
+- Resposta inicial: `202 Accepted` com `agent_run_id`
+- Polling: resultado recuperado via KV com TTL
+- Rationale: evitar timeout de Workers (30s) em operações de LLM
 
 ## Configuração (AI clients)
 
@@ -94,3 +118,4 @@ O Standard expõe um servidor MCP (Model Context Protocol) remoto em `POST /mcp`
 - Página online: `https://standard-api.bekaa.eu/docs/mcp`
 - Código: `apps/api-gateway/src/mcp/`
 - Routes: `apps/api-gateway/src/routes/mcp.routes.ts`, `mcp-docs.routes.ts`
+- ADR async dispatch: [`docs/decisions/ADR-003-mcp-async-pattern.md`](../decisions/ADR-003-mcp-async-pattern.md)
