@@ -16,7 +16,7 @@ jobs:
       ENGAGE_ID: ${{ vars.DEFECTDOJO_ENGAGEMENT_ID || '2' }}
       
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
 
       - name: CodeQL/Semgrep SAST
         run: docker run --rm -v "${{ github.workspace }}:/src" returntocorp/semgrep semgrep scan --config auto --json -o /src/semgrep.json --severity ERROR --error
@@ -33,7 +33,7 @@ jobs:
             -F "file=@semgrep.json" || echo "Falha ao enviar SAST"
 
       - name: Gitleaks Scan
-        uses: gitleaks/gitleaks-action@v3
+        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e
         with:
           report-format: json
           report-path: gitleaks.json

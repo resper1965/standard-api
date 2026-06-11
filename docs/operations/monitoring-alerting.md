@@ -95,9 +95,9 @@
 ## UptimeRobot Monitors
 
 > Status: ✅ ativos desde 2026-05-25  
-> Account key (rw): `u2205468-59923ece045f1f4344d9cdd8`  
-> Read-only key:    `ur2205468-7a46372f6cca29d280252cf2`  
-> Monitor key `/docs`: `m803152544-433e929c80345fafa70433c4`
+> Account key (rw): `<YOUR_UPTIMEROBOT_ACCOUNT_KEY>`  
+> Read-only key:    `<YOUR_UPTIMEROBOT_READ_ONLY_KEY>`  
+> Monitor key `/docs`: `<YOUR_UPTIMEROBOT_MONITOR_KEY>`
 
 | ID | Monitor | URL | Intervalo | Latência |
 |----|---------|-----|-----------|----------|

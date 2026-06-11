@@ -37,7 +37,7 @@ O servidor requer dois parâmetros obrigatórios:
 
 ### Executando via Node.js:
 ```bash
-node dist/index.js --url http://127.0.0.1:8787 --token sk-seu-token-aqui
+node dist/index.js --url http://127.0.0.1:8787 --token <YOUR_API_KEY>
 ```
 
 ### Executando via Docker:
@@ -50,7 +50,7 @@ docker build -t standard-mcp -f packages/mcp-server/Dockerfile .
 # Execute o container passando as variáveis de ambiente:
 docker run -i --rm \
   -e STANDARD_API_URL="http://127.0.0.1:8787" \
-  -e STANDARD_API_KEY="sk-seu-token-aqui" \
+  -e STANDARD_API_KEY="<YOUR_API_KEY>" \
   standard-mcp
 ```
 
@@ -69,7 +69,7 @@ Adicione a configuração no arquivo `claude_desktop_config.json` (geralmente lo
       "args": [
         "C:/Users/SEU_USUARIO/OneDrive/Área de Trabalho/standard-api/packages/mcp-server/dist/index.js",
         "--url", "http://127.0.0.1:8787",
-        "--token", "sk-seu-token-aqui"
+        "--token", "<YOUR_API_KEY>"
       ]
     }
   }
@@ -85,7 +85,7 @@ Adicione a configuração no arquivo `claude_desktop_config.json` (geralmente lo
 4. Configure:
    - **Name**: `standard-grc`
    - **Type**: `command`
-   - **Command**: `node C:/caminho/para/standard-api/packages/mcp-server/dist/index.js --url http://127.0.0.1:8787 --token sk-seu-token-aqui`
+   - **Command**: `node C:/caminho/para/standard-api/packages/mcp-server/dist/index.js --url http://127.0.0.1:8787 --token <YOUR_API_KEY>`
 
 ---
 
