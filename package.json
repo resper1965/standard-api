@@ -73,7 +73,7 @@
     "overrides": {
       "better-auth": "1.6.11",
       "@better-auth/api-key": "1.6.11",
-      "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.2/xlsx-0.20.2.tgz",
+      "xlsx": "0.18.5",
       "undici": ">=7.0.0",
       "ws": ">=8.17.1",
       "@electric-sql/pglite": "0.5.1"
