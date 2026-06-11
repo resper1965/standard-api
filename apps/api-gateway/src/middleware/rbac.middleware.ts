@@ -58,6 +58,93 @@ export const requirePlatformAdmin = async (
   ]);
 };
 
+async function gatherActorPermissions(
+  context: RequestContext,
+): Promise<string[]> {
+  const actorPermissions: string[] = [];
+
+  // M2M API key scopes (highest priority — explicit scope grants)
+  if (context.m2mScopes && context.m2mScopes.length > 0) {
+    actorPermissions.push(...context.m2mScopes);
+  }
+
+  // Auth context permissions (from MockAuthProvider or Standard Native Auth)
+  if (context.auth?.permissions) {
+    actorPermissions.push(...context.auth.permissions);
+  }
+
+  // Session-based role resolution.
+  if (actorPermissions.length === 0 && context.session) {
+    const { DEFAULT_ROLE_PERMISSIONS } = await import("@standard/security");
+
+    // platformAdmin gets full admin permissions
+    if (context.session.user?.platformAdmin) {
+      const rolePerms =
+        DEFAULT_ROLE_PERMISSIONS[
+          "admin" as keyof typeof DEFAULT_ROLE_PERMISSIONS
+        ];
+      if (rolePerms) actorPermissions.push(...rolePerms);
+    }
+  }
+
+  return actorPermissions;
+}
+
+async function handleRbacDenied(
+  context: RequestContext,
+  reason: string,
+  requiredPermissions: Permission[],
+): Promise<never> {
+  await context.deps.audit.record("security_permission_denied", {
+    actor_id: context.actorId,
+    organization_id: context.organizationId,
+    trace_id: context.traceId,
+    reason,
+    required_permissions: requiredPermissions,
+  });
+
+  const isApprovalBypass = requiredPermissions.some((permission) =>
+    permission.includes(":approve"),
+  );
+
+  if (
+    isApprovalBypass &&
+    context.deps.alerts &&
+    context.organizationId &&
+    context.params.assessmentId
+  ) {
+    void context.deps.alerts.fireApprovalBypass({
+      organizationId: context.organizationId,
+      assessmentId: context.params.assessmentId,
+      artifactType: "assessment_state",
+      traceId: context.traceId,
+      ...(context.actorId ? { actorId: context.actorId } : {}),
+    });
+  } else {
+    await new SecurityEventService(context.deps.observability).record({
+      organization_id:
+        context.organizationId ?? context.securityTenant?.organization_id,
+      assessment_id: context.params.assessmentId,
+      actor_id: context.actorId,
+      event_type: isApprovalBypass
+        ? "approval_permission_denied"
+        : "forbidden_access_attempt",
+      severity: "medium",
+      outcome: "denied",
+      source: "api-gateway",
+      resource_type: "route",
+      resource_id: context.request.url,
+      message_safe: "Permission denied.",
+      trace_id: context.traceId,
+      metadata_safe: { reason, required_permissions: requiredPermissions },
+    });
+  }
+
+  throw new ApiError("FORBIDDEN", "Permission denied.", 403, [
+    { reason, required_permissions: requiredPermissions },
+  ]);
+}
+
 export const assertRbac = async (
   context: RequestContext,
   requiredPermissions: Permission[] = [],
@@ -67,107 +154,27 @@ export const assertRbac = async (
   // Platform admins bypass all permission checks
   if (isPlatformAdmin(context)) return;
 
-  let allowed = true;
-  let reason = "";
-
-  // Step 1: Verify auth context exists
+  // Verify auth context exists
   if (!context.auth && !context.session && !context.m2mScopes) {
-    allowed = false;
-    reason = "missing_auth_context";
+    await handleRbacDenied(
+      context,
+      "missing_auth_context",
+      requiredPermissions,
+    );
   }
 
-  // Step 2: Check that the actor's permissions include ALL required permissions.
-  // M2M scopes are checked first (API keys); then auth.permissions (session-based roles).
-  // M4 fix: empty scopes = no permissions (least privilege).
-  // If an API key has no scopes, it should be rejected, not granted full access.
-  if (allowed && requiredPermissions.length > 0) {
-    const actorPermissions: string[] = [];
+  // Check that the actor's permissions include ALL required permissions
+  const actorPermissions = await gatherActorPermissions(context);
+  const missingPermissions = requiredPermissions.filter(
+    (perm) => !actorPermissions.includes(perm),
+  );
 
-    // M2M API key scopes (highest priority — explicit scope grants)
-    if (context.m2mScopes && context.m2mScopes.length > 0) {
-      actorPermissions.push(...context.m2mScopes);
-    }
-
-    // Auth context permissions (from MockAuthProvider or Standard Native Auth)
-    if (context.auth?.permissions) {
-      actorPermissions.push(...context.auth.permissions);
-    }
-
-    // Session-based role resolution.
-    // Simplified auth: org-scoped roles are resolved via platformAdmin flag.
-    // Full RBAC via org permissions table will be added in A9.
-    if (actorPermissions.length === 0 && context.session) {
-      const { DEFAULT_ROLE_PERMISSIONS } = await import("@standard/security");
-
-      // platformAdmin gets full admin permissions
-      if (context.session.user?.platformAdmin) {
-        const rolePerms =
-          DEFAULT_ROLE_PERMISSIONS[
-            "admin" as keyof typeof DEFAULT_ROLE_PERMISSIONS
-          ];
-        if (rolePerms) actorPermissions.push(...rolePerms);
-      }
-    }
-
-    const missingPermissions = requiredPermissions.filter(
-      (perm) => !actorPermissions.includes(perm),
+  if (missingPermissions.length > 0) {
+    await handleRbacDenied(
+      context,
+      "insufficient_permissions",
+      requiredPermissions,
     );
-
-    if (missingPermissions.length > 0) {
-      allowed = false;
-      reason = "insufficient_permissions";
-    }
-  }
-
-  if (!allowed) {
-    await context.deps.audit.record("security_permission_denied", {
-      actor_id: context.actorId,
-      organization_id: context.organizationId,
-      trace_id: context.traceId,
-      reason,
-      required_permissions: requiredPermissions,
-    });
-
-    const isApprovalBypass = requiredPermissions.some((permission) =>
-      permission.includes(":approve"),
-    );
-
-    if (
-      isApprovalBypass &&
-      context.deps.alerts &&
-      context.organizationId &&
-      context.params.assessmentId
-    ) {
-      void context.deps.alerts.fireApprovalBypass({
-        organizationId: context.organizationId,
-        assessmentId: context.params.assessmentId,
-        artifactType: "assessment_state",
-        traceId: context.traceId,
-        ...(context.actorId ? { actorId: context.actorId } : {}),
-      });
-    } else {
-      await new SecurityEventService(context.deps.observability).record({
-        organization_id:
-          context.organizationId ?? context.securityTenant?.organization_id,
-        assessment_id: context.params.assessmentId,
-        actor_id: context.actorId,
-        event_type: isApprovalBypass
-          ? "approval_permission_denied"
-          : "forbidden_access_attempt",
-        severity: "medium",
-        outcome: "denied",
-        source: "api-gateway",
-        resource_type: "route",
-        resource_id: context.request.url,
-        message_safe: "Permission denied.",
-        trace_id: context.traceId,
-        metadata_safe: { reason, required_permissions: requiredPermissions },
-      });
-    }
-
-    throw new ApiError("FORBIDDEN", "Permission denied.", 403, [
-      { reason, required_permissions: requiredPermissions },
-    ]);
   }
 };
 

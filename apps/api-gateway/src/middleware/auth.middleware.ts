@@ -45,63 +45,62 @@ const isUuid = (v?: string | null): v is string =>
  * @param auth        Instância Better Auth (createAuth)
  * @param requireAuth Se true, lança 401 quando nenhuma credencial é encontrada
  */
-export const resolveAuthContext = async (
+async function resolveM2MAuthContext(
   context: RequestContext,
-  auth: StandardAuth,
-  requireAuth: boolean,
-): Promise<void> => {
-  const kv = context.env?.STANDARD_CACHE as any;
-  const authHeader = context.request.headers.get("Authorization");
+  authHeader: string,
+  kv: any,
+): Promise<void> {
+  const token = extractApiKeyToken(authHeader);
+  const hash = await sha256(token);
+  const kvKey = `apikey:${hash}`;
 
-  // ── Path 1: M2M API Key ────────────────────────────────────────────────────
-  if (authHeader && isApiKeyToken(authHeader)) {
-    const token = extractApiKeyToken(authHeader);
-    const hash = await sha256(token);
-    const kvKey = `apikey:${hash}`;
-
-    // 1a. KV fast path (5 min TTL)
-    if (kv) {
-      const cached = (await kv.get(kvKey, "json").catch(() => null)) as any;
-      if (cached?.organizationId) {
-        context.actorId = `m2m:${cached.keyId}`;
-        context.organizationId = cached.organizationId;
-        context.m2mScopes = cached.scopes ?? [];
-        return;
-      }
-    }
-
-    // 1b. Auth DB fallback
-    const record = await context.deps.apiKeys
-      ?.verifyKey?.(hash)
-      .catch(() => null);
-    if (record) {
-      context.actorId = `m2m:${record.id}`;
-      context.organizationId = record.organizationId;
-      context.m2mScopes = record.scopes ?? [];
-
-      // Warm KV para próximos requests
-      if (kv) {
-        kv.put(
-          kvKey,
-          JSON.stringify({
-            keyId: record.id,
-            organizationId: record.organizationId,
-            scopes: record.scopes,
-          }),
-          { expirationTtl: KV_API_KEY_TTL },
-        ).catch(() => {});
-      }
-
-      // Actualizar lastUsedAt — fire-and-forget
-      context.deps.apiKeys?.markUsed?.(record.id).catch(() => {});
+  // 1a. KV fast path (5 min TTL)
+  if (kv) {
+    const cached = (await kv.get(kvKey, "json").catch(() => null)) as any;
+    if (cached?.organizationId) {
+      context.actorId = `m2m:${cached.keyId}`;
+      context.organizationId = cached.organizationId;
+      context.m2mScopes = cached.scopes ?? [];
       return;
     }
-
-    // API Key inválida ou revogada
-    throw new ApiError("UNAUTHORIZED", "Invalid or revoked API key.", 401);
   }
 
-  // ── Path 2: Session cookie ─────────────────────────────────────────────────
+  // 1b. Auth DB fallback
+  const record = await context.deps.apiKeys
+    ?.verifyKey?.(hash)
+    .catch(() => null);
+  if (record) {
+    context.actorId = `m2m:${record.id}`;
+    context.organizationId = record.organizationId;
+    context.m2mScopes = record.scopes ?? [];
+
+    // Warm KV para próximos requests
+    if (kv) {
+      kv.put(
+        kvKey,
+        JSON.stringify({
+          keyId: record.id,
+          organizationId: record.organizationId,
+          scopes: record.scopes,
+        }),
+        { expirationTtl: KV_API_KEY_TTL },
+      ).catch(() => {});
+    }
+
+    // Actualizar lastUsedAt — fire-and-forget
+    context.deps.apiKeys?.markUsed?.(record.id).catch(() => {});
+    return;
+  }
+
+  // API Key inválida ou revogada
+  throw new ApiError("UNAUTHORIZED", "Invalid or revoked API key.", 401);
+}
+
+async function resolveSessionAuthContext(
+  context: RequestContext,
+  auth: StandardAuth,
+  kv: any,
+): Promise<void> {
   const rawSession = await auth.api
     .getSession({ headers: context.request.headers })
     .catch(() => null);
@@ -171,6 +170,31 @@ export const resolveAuthContext = async (
       },
     };
   }
+}
+
+/**
+ * Resolve autenticação e popula context.actorId, context.organizationId, context.session.
+ *
+ * @param context     RequestContext mutável — campos de auth são escritos aqui
+ * @param auth        Instância Better Auth (createAuth)
+ * @param requireAuth Se true, lança 401 quando nenhuma credencial é encontrada
+ */
+export const resolveAuthContext = async (
+  context: RequestContext,
+  auth: StandardAuth,
+  requireAuth: boolean,
+): Promise<void> => {
+  const kv = context.env?.STANDARD_CACHE as any;
+  const authHeader = context.request.headers.get("Authorization");
+
+  // ── Path 1: M2M API Key ────────────────────────────────────────────────────
+  if (authHeader && isApiKeyToken(authHeader)) {
+    await resolveM2MAuthContext(context, authHeader, kv);
+    return;
+  }
+
+  // ── Path 2: Session cookie ─────────────────────────────────────────────────
+  await resolveSessionAuthContext(context, auth, kv);
 
   // ── RequireAuth gate ───────────────────────────────────────────────────────
   if (requireAuth && !context.actorId) {

@@ -1,7 +1,7 @@
 import { createMockRepositories } from "./adapters";
 import { runWithTenantContext } from "@standard/security";
 import type { StandardAuth } from "@standard/auth";
-import type { Env } from "./index";
+import type { Env } from "./types/env";
 import { ApiError } from "./errors/api-error";
 import type { AppDependencies, RouteDefinition } from "./http";
 import { json, parseJson, type RequestContext } from "./http";
