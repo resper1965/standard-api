@@ -20,6 +20,7 @@ import type { RouteDefinition } from "../http";
 import { json } from "../http";
 import { MCP_TOOLS, dispatchMcpTool } from "../mcp/server";
 import { checkMcpQuota } from "../middleware/mcp-quota.middleware";
+import { checkAiTokenQuota } from "../middleware/ai-token-quota.middleware";
 import { MCP_RESOURCES, readMcpResource } from "../mcp/resources";
 import { MCP_PROMPTS, getMcpPrompt } from "../mcp/prompts";
 
@@ -175,6 +176,41 @@ export const mcpRoutes: RouteDefinition[] = [
             }
           }
 
+          // ── M2: Per-org AI token budget check before async dispatch ──────
+          // Uses STANDARD_CACHE KV monthly counter. Skip gracefully in local dev.
+          if (ctx.env?.STANDARD_CACHE && ctx.organizationId) {
+            const tokenQuota = await checkAiTokenQuota(
+              ctx.organizationId,
+              ctx.env.STANDARD_CACHE,
+            ).catch(() => null); // non-fatal — don't block if KV fails
+            if (tokenQuota && !tokenQuota.allowed) {
+              return json(
+                {
+                  jsonrpc: "2.0",
+                  id,
+                  error: {
+                    code: -32000,
+                    message: "Monthly AI token quota exceeded.",
+                    data: {
+                      error: "AI_TOKEN_QUOTA_EXCEEDED",
+                      budget: tokenQuota.budget,
+                      used: tokenQuota.used,
+                      reset_date: tokenQuota.resetDate,
+                      trace_id: ctx.traceId,
+                    },
+                  },
+                },
+                {
+                  status: 429,
+                  headers: {
+                    "Retry-After": tokenQuota.resetDate,
+                    "X-AI-Token-Budget": String(tokenQuota.budget),
+                    "X-AI-Token-Used": String(tokenQuota.used),
+                  },
+                },
+              );
+            }
+          }
           // ── Grupo B — Async (LLM / heavy) → 202 + job_id ───────────
           const jobId = crypto.randomUUID();
           const traceId = ctx.traceId ?? crypto.randomUUID();

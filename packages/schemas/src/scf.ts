@@ -37,7 +37,6 @@ export type StrmOperator = z.infer<typeof StrmOperatorSchema>;
 export const StrengthScoreSchema = z.number().min(0).max(1).nullable();
 export type StrengthScore = z.infer<typeof StrengthScoreSchema>;
 
-
 /**
  * @deprecated Use StrmOperatorSchema instead.
  * Kept for backward compatibility during migration of existing callsites.
@@ -290,10 +289,10 @@ export const ScfStrmCoverageResponseSchema = z.object({
   total_mappings: z.number().int().nonnegative(),
   strm_breakdown: z.object({
     // 5 canonical STRM operators (ADR-001 / NIST IR 8477)
-    equal:       strmBreakdownItemSchema,
-    subset:      strmBreakdownItemSchema,
-    intersects:  strmBreakdownItemSchema,
-    superset:    strmBreakdownItemSchema,
+    equal: strmBreakdownItemSchema,
+    subset: strmBreakdownItemSchema,
+    intersects: strmBreakdownItemSchema,
+    superset: strmBreakdownItemSchema,
     no_relation: strmBreakdownItemSchema,
   }),
   /** Fraction of mappings with equal | subset | superset (high-confidence coverage) */
@@ -301,7 +300,6 @@ export const ScfStrmCoverageResponseSchema = z.object({
   inference_source: z.string(),
   trace_id: z.string().optional(),
 });
-
 
 export const ScfImportRunSchema = z.object({
   id: UuidSchema,
@@ -341,6 +339,8 @@ export const ScfControlSearchQuerySchema = z.object({
   weight_max: z.number().optional(),
   limit: z.number().int().optional(),
   offset: z.number().int().optional(),
+  /** Base64-encoded cursor for keyset pagination. When present, `page` and `offset` are ignored. */
+  after: z.string().optional(),
 });
 
 export const ScfMappingQuerySchema = z.object({
