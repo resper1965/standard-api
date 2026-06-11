@@ -2,7 +2,7 @@
 
 > **For Antigravity:** REQUIRED WORKFLOW: Use `.agent/workflows/execute-plan.md` to execute this plan in single-flow mode.
 
-**Goal:** Completar a arquitetura "GRC Brain" da Aegis API implementando a ingestão integral do SCF (AOs, ERL, Maturity Criteria, Risks e Threats), servindo esses dados via API/SDK/MCP e construindo os engines de maturidade SCR-CMM e análise de risco dinâmica.
+**Goal:** Completar a arquitetura "GRC Brain" da Standard API implementando a ingestão integral do SCF (AOs, ERL, Maturity Criteria, Risks e Threats), servindo esses dados via API/SDK/MCP e construindo os engines de maturidade SCR-CMM e análise de risco dinâmica.
 
 **Architecture:** Implementação baseada em camadas no monorepo (schemas do Drizzle, XLSX importer isomórfico, services do packages/scf-core, rotas de API, SDK client, MCP Server tools e Council Agents). A arquitetura é stateless, rodando em Cloudflare Workers com banco Neon PostgreSQL transacional.
 
@@ -12,7 +12,7 @@
 
 ## Introdução e Contexto Arquitetural
 
-A Aegis API (Standard) foi desenhada como uma plataforma de assessments de segurança com base no SCF. Hoje, a fundação está sólida: o state machine de 27 estados está pronto e os imports básicos funcionam. No entanto, a plataforma extrai apenas metade do potencial dos dados fornecidos trimestralmente pelo SCF Council. 
+A Standard API foi desenhada como uma plataforma de assessments de segurança com base no SCF. Hoje, a fundação está sólida: o state machine de 27 estados está pronto e os imports básicos funcionam. No entanto, a plataforma extrai apenas metade do potencial dos dados fornecidos trimestralmente pelo SCF Council. 
 
 Este plano detalha como evoluir o sistema de um avaliador de gaps básico para um **Mecanismo de Inteligência de Conformidade e Risco Computável**, consumindo Assessment Objectives, Evidence Request Lists, rubricas SCR-CMM de maturidade por controle, catálogos de riscos e ameaças, e a taxonomia de relacionamentos STRM (NIST IR 8477).
 
@@ -489,7 +489,7 @@ git commit -am "feat(risk,poam): calculate dynamic risk exposure and sort POA&M 
 
 ## Fase 5: Compliance-as-Code e Multi-Framework Compliance Optimizer
 
-Esta fase habilita pipelines de CI/CD automatizados a usarem a Aegis API para validar compliance antes do deploy e otimizar rotas de auditoria.
+Esta fase habilita pipelines de CI/CD automatizados a usarem a Standard API para validar compliance antes do deploy e otimizar rotas de auditoria.
 
 ### Entregáveis da Fase 5:
 - [ ] Endpoint do otimizador de compliance multi-framework.
