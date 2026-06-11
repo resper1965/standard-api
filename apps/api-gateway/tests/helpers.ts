@@ -255,7 +255,7 @@ export const getTestDb = async () => {
   // Run Drizzle migrations in order
   const files = fs
     .readdirSync(migrationsFolder)
-    .filter((f) => f.endsWith(".sql"))
+    .filter((f) => f.endsWith(".sql") && !f.endsWith(".down.sql"))
     .sort();
   for (const file of files) {
     let sql = fs.readFileSync(path.join(migrationsFolder, file), "utf8");

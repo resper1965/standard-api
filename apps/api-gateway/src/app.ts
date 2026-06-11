@@ -336,38 +336,34 @@ export const createApp = (
       //   3. Also set the AsyncLocalStorage tenant context for code that reads
       //      getCurrentOrganizationId() without going through the DB client.
       const response = await (ctx.organizationId && ctx.deps._db
-        ? withRlsTenantContext(
-            ctx.deps._db,
-            ctx.organizationId,
-            (tx) => {
-              const rlsCtx: RequestContext = {
-                ...ctx,
-                deps: { ...ctx.deps, _db: tx },
-                ...(ctx.tenantScope
-                  ? {
-                      tenantScope: {
-                        ...ctx.tenantScope,
-                        db: tx as unknown as typeof ctx.tenantScope.db,
-                      },
-                    }
-                  : {}),
-              };
-              return runWithTenantContext(
-                {
-                  organizationId: ctx.organizationId!,
-                  ...(ctx.actorId ? { actorId: ctx.actorId } : {}),
-                },
-                () => route.handler(rlsCtx),
-              );
-            },
-          )
+        ? withRlsTenantContext(ctx.deps._db, ctx.organizationId, async (tx) => {
+            const rlsCtx: RequestContext = {
+              ...ctx,
+              deps: { ...ctx.deps, _db: tx },
+              ...(ctx.tenantScope
+                ? {
+                    tenantScope: {
+                      ...ctx.tenantScope,
+                      db: tx as unknown as typeof ctx.tenantScope.db,
+                    },
+                  }
+                : {}),
+            };
+            return runWithTenantContext(
+              {
+                organizationId: ctx.organizationId!,
+                ...(ctx.actorId ? { actorId: ctx.actorId } : {}),
+              },
+              async () => route.handler(rlsCtx),
+            );
+          })
         : ctx.organizationId
           ? runWithTenantContext(
               {
                 organizationId: ctx.organizationId,
                 ...(ctx.actorId ? { actorId: ctx.actorId } : {}),
               },
-              () => route.handler(ctx),
+              async () => route.handler(ctx),
             )
           : route.handler(ctx));
 
