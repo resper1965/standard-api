@@ -4,6 +4,7 @@ export * from "./factory";
 export * from "./repositories/poam.repositories";
 export * from "./schemas";
 export * from "./services/poam-approval.service";
+export * from "./services/poam-dependency.service";
 export * from "./services/poam-draft.service";
 export * from "./services/poam-milestone.service";
 export * from "./services/poam-prioritization.service";
