@@ -79,7 +79,12 @@
       "astro": "^6.3.3",
       "undici": ">=7.0.0",
       "ws": ">=8.17.1",
-      "@electric-sql/pglite": "0.5.1"
+      "@electric-sql/pglite": "0.5.1",
+      "cross-spawn": ">=7.0.6",
+      "yaml": ">=2.8.3",
+      "vite": ">=6.4.2",
+      "@hono/node-server": ">=1.19.13",
+      "esbuild": ">=0.25.0"
     }
   }
 }
