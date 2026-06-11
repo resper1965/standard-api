@@ -54,6 +54,10 @@ api-docs-for-ai-devs.md
 api-gaps-*.md
 execution-plan-*.md
 tech-debt-resolution.md
+implementation_plan.md
+
+# npm lockfile (pnpm-only monorepo)
+/package-lock.json
 # IDE workspace files
 *.code-workspace
 
