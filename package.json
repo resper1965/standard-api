@@ -72,7 +72,6 @@
   "pnpm": {
     "overrides": {
       "better-auth": "1.6.11",
-      "@better-auth/api-key": "1.6.11",
       "xlsx": "0.18.5",
       "undici": ">=7.0.0",
       "ws": ">=8.17.1",
