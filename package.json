@@ -66,13 +66,17 @@
     "wrangler": "^4.95.0"
   },
   "dependencies": {
-    "better-auth": "1.5.0",
+    "better-auth": "1.6.13",
     "dotenv": "^17.4.2"
   },
   "pnpm": {
     "overrides": {
-      "better-auth": "1.6.11",
-      "xlsx": "0.18.5",
+      "better-auth": "1.6.13",
+      "xlsx": "https://cdn.sheetjs.com/xlsx-0.19.3/xlsx-0.19.3.tgz",
+      "i18next": "^24.1.2",
+      "mysql2": "^3.17.0",
+      "zod": "^4.4.0",
+      "astro": "^6.3.3",
       "undici": ">=7.0.0",
       "ws": ">=8.17.1",
       "@electric-sql/pglite": "0.5.1"
