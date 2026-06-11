@@ -2,6 +2,7 @@ export * from "./approvals";
 export * from "./artifacts";
 export * from "./engine";
 export * from "./errors";
+export * from "./tpra";
 export * from "./events";
 export * from "./schemas";
 export * from "./states";

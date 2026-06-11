@@ -8,29 +8,17 @@ info:
     assessment lifecycle management, document ingestion, knowledge base search,
     and multi-tenant authorization.
 
-
     ---
 
+    > **📖 Developer Guide**: For a complete overview of authentication, 
+    asynchronous workflows, and polling, please read our 
+    [Developer Guide](../developer-guide.md).
 
-
-    > **🤖 AI-Dev First**: Se você é um Agente Autônomo ou está configurando uma
-    integração LLM, consuma nossa documentação contextual nativa em
-    [`/llms-full.txt`](/llms-full.txt).
-      
-
-    ---
-
-
-
+    > **🤖 AI-Dev First**: If you are an Autonomous Agent or configuring an 
+    LLM integration, consume our native contextual documentation at
+    [`/llms-full.txt`](/llms-full.txt) and [`/llms.txt`](/llms.txt).
 
     ---
-
-
-    ## 📖 Manuais & Cookbook
-
-
-    Consulte [`/llms-full.txt`](/llms-full.txt) para workflows completos e
-    [`/llms.txt`](/llms.txt) para referência rápida.
 servers:
   - url: /
     description: Current environment

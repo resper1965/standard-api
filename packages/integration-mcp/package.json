@@ -1,0 +1,22 @@
+{
+  "name": "@standard-api/integration-mcp",
+  "version": "1.0.0",
+  "description": "Integration MCP (Agentic SDK) for Standard GRC Platform",
+  "type": "module",
+  "bin": {
+    "standard-mcp": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "latest"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "tsup": "^8.0.0",
+    "@types/node": "^20.0.0"
+  }
+}

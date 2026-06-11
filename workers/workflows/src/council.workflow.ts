@@ -107,16 +107,25 @@ export class CouncilOrchestrationWorkflow extends WorkflowEntrypoint<
     if (this.env.OPENAI_API_KEY && this.env.AI_GATEWAY_BASE_URL) {
       try {
         const { createOpenAI } = await import("@ai-sdk/openai");
+
+        const headers: Record<string, string> = {
+          "cf-aig-metadata": JSON.stringify({
+            organization_id: organizationId,
+            agent_id: "council_orchestrator",
+            agent_run_id: runId,
+          }),
+          "cf-aig-cache-ttl": "86400",
+        };
+
+        if (this.env.AI_GATEWAY_TOKEN) {
+          headers["cf-aig-authorization"] =
+            `Bearer ${this.env.AI_GATEWAY_TOKEN}`;
+        }
+
         llm = createOpenAI({
           apiKey: this.env.OPENAI_API_KEY,
           baseURL: this.env.AI_GATEWAY_BASE_URL,
-          ...(this.env.AI_GATEWAY_TOKEN
-            ? {
-                headers: {
-                  "cf-aig-authorization": `Bearer ${this.env.AI_GATEWAY_TOKEN}`,
-                },
-              }
-            : {}),
+          headers,
         });
       } catch (e) {
         console.error("Failed to load @ai-sdk/openai in Workflows", e);

@@ -2,6 +2,7 @@ export * from "./assessment-lifecycle.workflow";
 export { AssessmentLifecycleWorkflow } from "./assessment-lifecycle";
 export { default } from "./assessment-lifecycle";
 export { CouncilOrchestrationWorkflow } from "./council.workflow";
+export * from "./tpra-approval.workflow";
 export * from "./constants";
 export * from "./errors";
 export * from "./repositories";
