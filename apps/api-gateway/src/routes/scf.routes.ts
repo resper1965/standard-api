@@ -57,7 +57,49 @@ const versionResponse = (version: ScfVersion) => ({
   is_synthetic: version.is_synthetic,
 });
 
-const controlResponse = (control: ScfControl) => ({
+// ── Sparse Fields Whitelist ─────────────────────────────────────────────
+const CONTROL_FIELD_WHITELIST = new Set([
+  "control_id",
+  "scf_version_id",
+  "scf_domain_id",
+  "control_code",
+  "control_title",
+  "control_description",
+  "control_question",
+  "control_intent",
+  "implementation_guidance",
+  "expected_evidence",
+  "control_weight",
+  "compensating_control_guidance",
+  "status",
+  "is_synthetic",
+]);
+
+/** Parse `?fields=id,title,code` into validated field set. Returns null for full response. */
+const parseSparseFields = (raw: string | null): Set<string> | null => {
+  if (!raw) return null;
+  const requested = raw
+    .split(",")
+    .map((f) => f.trim().toLowerCase())
+    .filter(Boolean);
+  // Normalize short aliases → full field names
+  const aliasMap: Record<string, string> = {
+    id: "control_id",
+    code: "control_code",
+    title: "control_title",
+    description: "control_description",
+    question: "control_question",
+    intent: "control_intent",
+    guidance: "implementation_guidance",
+    evidence: "expected_evidence",
+    weight: "control_weight",
+  };
+  const resolved = requested.map((f) => aliasMap[f] ?? f);
+  const valid = resolved.filter((f) => CONTROL_FIELD_WHITELIST.has(f));
+  return valid.length > 0 ? new Set(valid) : null;
+};
+
+const controlResponseFull = (control: ScfControl) => ({
   control_id: control.id,
   scf_version_id: control.scf_version_id,
   scf_domain_id: control.scf_domain_id,
@@ -83,6 +125,21 @@ const controlResponse = (control: ScfControl) => ({
   status: control.status,
   is_synthetic: control.is_synthetic,
 });
+
+/** Build control response with optional sparse field projection. */
+const controlResponse = (
+  control: ScfControl,
+  fields?: Set<string> | null,
+): Record<string, unknown> => {
+  const full = controlResponseFull(control);
+  if (!fields) return full;
+  // Always include control_id for cursor stability
+  const result: Record<string, unknown> = { control_id: full.control_id };
+  for (const key of fields) {
+    if (key in full) result[key] = (full as Record<string, unknown>)[key];
+  }
+  return result;
+};
 
 const frameworkResponse = (framework: ScfFramework) => ({
   framework_id: framework.id,
@@ -373,6 +430,7 @@ export const scfRoutes: RouteDefinition[] = [
       // ── Standard paginated JSON path ───────────────────────────────────────
       // Backward compatible — used by all existing clients.
       const afterCursor = url.searchParams.get("after") ?? undefined;
+      const sparseFields = parseSparseFields(url.searchParams.get("fields"));
       const limitStr =
         url.searchParams.get("limit") || url.searchParams.get("per_page");
       const pageStr = url.searchParams.get("page");
@@ -431,7 +489,7 @@ export const scfRoutes: RouteDefinition[] = [
               : undefined;
 
           return json({
-            data: pageControls.map(controlResponse),
+            data: pageControls.map((c) => controlResponse(c, sparseFields)),
             pagination: {
               has_more: hasMore,
               ...(nextCursor ? { next_cursor: nextCursor } : {}),
@@ -445,8 +503,10 @@ export const scfRoutes: RouteDefinition[] = [
         return json({
           data:
             controls.length > limit
-              ? controls.slice(0, limit).map(controlResponse)
-              : controls.map(controlResponse),
+              ? controls
+                  .slice(0, limit)
+                  .map((c) => controlResponse(c, sparseFields))
+              : controls.map((c) => controlResponse(c, sparseFields)),
           scf_version_id: scfVersionId,
           page,
           per_page: limit,
@@ -489,7 +549,7 @@ export const scfRoutes: RouteDefinition[] = [
       return json({
         domain_code: domainCode,
         scf_version_id: scfVersionId,
-        data: controls.map(controlResponse),
+        data: controls.map((c) => controlResponse(c)),
         total: controls.length,
         trace_id: traceId,
       });
