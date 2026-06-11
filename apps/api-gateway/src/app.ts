@@ -29,6 +29,7 @@ import {
   applySecurityHeaders,
   resolveAuth,
 } from "./app-helpers";
+import { withRlsTenantContext } from "./adapters/tenant-db";
 import { agentRuntimeRoutes } from "./routes/agent-runtime.routes";
 import { agentToolsRoutes } from "./routes/agent-tools.routes";
 import { apiKeysRoutes } from "./routes/api-keys.routes";
@@ -326,15 +327,45 @@ export const createApp = (
         ctx._bodyConsumed = true;
       }
 
-      const response = await (ctx.organizationId
-        ? runWithTenantContext(
-            {
-              organizationId: ctx.organizationId,
-              ...(ctx.actorId ? { actorId: ctx.actorId } : {}),
-            },
-            () => route.handler(ctx),
-          )
-        : route.handler(ctx));
+      // Dispatch the route handler. When an organization context is present:
+      //   1. Wrap in a DB transaction that sets app.current_org_id via SET LOCAL
+      //      so PostgreSQL RLS policies (migrations 0028 + 0053) enforce tenant
+      //      isolation at the database layer.
+      //   2. Pass the transaction client as _db so all handler queries run
+      //      within the same transaction and benefit from the SET LOCAL scope.
+      //   3. Also set the AsyncLocalStorage tenant context for code that reads
+      //      getCurrentOrganizationId() without going through the DB client.
+      const response = await (ctx.organizationId && ctx.deps._db
+        ? withRlsTenantContext(ctx.deps._db, ctx.organizationId, async (tx) => {
+            const rlsCtx: RequestContext = {
+              ...ctx,
+              deps: { ...ctx.deps, _db: tx },
+              ...(ctx.tenantScope
+                ? {
+                    tenantScope: {
+                      ...ctx.tenantScope,
+                      db: tx as unknown as typeof ctx.tenantScope.db,
+                    },
+                  }
+                : {}),
+            };
+            return runWithTenantContext(
+              {
+                organizationId: ctx.organizationId!,
+                ...(ctx.actorId ? { actorId: ctx.actorId } : {}),
+              },
+              async () => route.handler(rlsCtx),
+            );
+          })
+        : ctx.organizationId
+          ? runWithTenantContext(
+              {
+                organizationId: ctx.organizationId,
+                ...(ctx.actorId ? { actorId: ctx.actorId } : {}),
+              },
+              async () => route.handler(ctx),
+            )
+          : route.handler(ctx));
 
       storeIdempotencyResult(
         request,
