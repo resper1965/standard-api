@@ -35,9 +35,9 @@ export type ScfRepository = {
     controlCode: string,
     frameworkFilter?: string,
   ): Promise<ScfControlCrossMapping | null>;
-  listVersions(): Promise<ScfVersion[]>;
+  listVersions(organizationId?: string): Promise<ScfVersion[]>;
   getVersion(id: string): Promise<ScfVersion | null>;
-  getLatestVersion(): Promise<ScfVersion | null>;
+  getLatestVersion(organizationId?: string): Promise<ScfVersion | null>;
   findVersionByLabel(label: string): Promise<ScfVersion | null>;
   saveVersion(version: ScfVersion): Promise<void>;
   listDomains(versionId: string): Promise<ScfDomain[]>;
@@ -149,12 +149,36 @@ export const createInMemoryScfRepository = (
   );
 
   return {
-    listVersions: async () => [...versions.values()],
+    listVersions: async (organizationId) => {
+      const all = [...versions.values()];
+      // SCF versions without organization_id are global (visible to all).
+      // Org-specific versions are visible only to the owning org.
+      if (organizationId) {
+        return all.filter(
+          (v) =>
+            (v as any).organization_id == null ||
+            (v as any).organization_id === organizationId,
+        );
+      }
+      // Unauthenticated: only global versions
+      return all.filter((v) => (v as any).organization_id == null);
+    },
     getVersion: async (id) => versions.get(id) ?? null,
-    getLatestVersion: async () =>
-      [...versions.values()].sort((a, b) =>
-        (b.imported_at ?? "").localeCompare(a.imported_at ?? ""),
-      )[0] ?? null,
+    getLatestVersion: async (organizationId) => {
+      const all = [...versions.values()];
+      const filtered = organizationId
+        ? all.filter(
+            (v) =>
+              (v as any).organization_id == null ||
+              (v as any).organization_id === organizationId,
+          )
+        : all.filter((v) => (v as any).organization_id == null);
+      return (
+        filtered.sort((a, b) =>
+          (b.imported_at ?? "").localeCompare(a.imported_at ?? ""),
+        )[0] ?? null
+      );
+    },
     findVersionByLabel: async (label) =>
       [...versions.values()].find(
         (v) => v.version_label.toLowerCase() === label.toLowerCase(),

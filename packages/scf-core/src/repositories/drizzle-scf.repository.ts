@@ -6,6 +6,7 @@ import {
   asc,
   desc,
   sql,
+  isNull,
   isNotNull,
   inArray,
 } from "drizzle-orm";
@@ -161,10 +162,19 @@ const mapImportRun = (
 
 export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
   // ─── Versions ────────────────────────────────────────────
-  listVersions: async () => {
+  listVersions: async (organizationId) => {
+    // Tenant filter: show global (org IS NULL) + org-specific versions.
+    // Unauthenticated: show only global versions.
+    const orgFilter = organizationId
+      ? or(
+          isNull(scfVersions.organizationId),
+          eq(scfVersions.organizationId, organizationId),
+        )
+      : isNull(scfVersions.organizationId);
     const rows = await db
       .select()
       .from(scfVersions)
+      .where(orgFilter)
       .orderBy(desc(scfVersions.createdAt));
     return rows.map(mapVersion);
   },
@@ -178,13 +188,20 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
     return row ? mapVersion(row) : null;
   },
 
-  getLatestVersion: async () => {
+  getLatestVersion: async (organizationId) => {
+    // Tenant filter: show global (org IS NULL) + org-specific versions.
+    const orgFilter = organizationId
+      ? or(
+          isNull(scfVersions.organizationId),
+          eq(scfVersions.organizationId, organizationId),
+        )
+      : isNull(scfVersions.organizationId);
     // Prefer published versions — an unpublished draft should never be "latest" in the explorer.
     // Fall back to newest by created_at only if no versions have been published yet.
     const [published] = await db
       .select()
       .from(scfVersions)
-      .where(isNotNull(scfVersions.publishedAt))
+      .where(and(isNotNull(scfVersions.publishedAt), orgFilter))
       .orderBy(desc(scfVersions.publishedAt))
       .limit(1);
     if (published) return mapVersion(published);
@@ -192,6 +209,7 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
     const [fallback] = await db
       .select()
       .from(scfVersions)
+      .where(orgFilter)
       .orderBy(desc(scfVersions.createdAt))
       .limit(1);
     return fallback ? mapVersion(fallback) : null;
@@ -299,16 +317,34 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
       );
     }
 
-    if (query.limit) {
-      dbQuery = dbQuery.limit(query.limit);
+    // ── Cursor-based (keyset) pagination ─────────────────────────────────
+    if (query.after) {
+      try {
+        const decoded = JSON.parse(atob(query.after));
+        const cursorCode = decoded.c as string;
+        const cursorId = decoded.i as string;
+        // Keyset condition: (control_code, id) > (cursor_code, cursor_id)
+        conditions.push(
+          sql`(${scfControls.controlCode}, ${scfControls.id}) > (${cursorCode}, ${cursorId})`,
+        );
+      } catch {
+        // Invalid cursor — ignore and fall through to default behavior
+      }
     }
-    if (query.offset) {
-      dbQuery = dbQuery.offset(query.offset);
+
+    const fetchLimit = (query.limit ?? 50) + 1; // +1 to detect has_more
+    dbQuery = dbQuery.limit(fetchLimit);
+
+    // When using cursor pagination, skip offset-based params
+    if (!query.after) {
+      if (query.offset) {
+        dbQuery = dbQuery.offset(query.offset);
+      }
     }
 
     const rows = await dbQuery
       .where(and(...conditions))
-      .orderBy(asc(scfControls.controlCode));
+      .orderBy(asc(scfControls.controlCode), asc(scfControls.id));
     return rows.map((r: any) => mapControl(r.control));
   },
 

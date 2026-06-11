@@ -1,7 +1,7 @@
 /**
  * Webhook types and delivery system for Standard Platform.
  *
- * Supports 11 lifecycle events as defined in public-api-guidelines.md.
+ * Supports 15 lifecycle events as defined in public-api-guidelines.md.
  * Delivery uses HMAC-SHA256 signatures for verification.
  *
  * @module @standard/schemas/webhooks
@@ -22,6 +22,9 @@ export const WEBHOOK_EVENT_TYPES = [
   "assessment.closed",
   "workflow.failed",
   "compliance.gate.evaluated",
+  "tpra.assessment.submitted",
+  "tpra.risk_score.created",
+  "tpra.vendor.created",
 ] as const;
 
 export type WebhookEventType = (typeof WEBHOOK_EVENT_TYPES)[number];
@@ -40,7 +43,9 @@ export const CreateWebhookEndpointSchema = z.object({
   enabled: z.boolean().default(true),
 });
 
-export type CreateWebhookEndpointInput = z.infer<typeof CreateWebhookEndpointSchema>;
+export type CreateWebhookEndpointInput = z.infer<
+  typeof CreateWebhookEndpointSchema
+>;
 
 export const UpdateWebhookEndpointSchema = z.object({
   url: z.string().url().optional(),
@@ -49,7 +54,9 @@ export const UpdateWebhookEndpointSchema = z.object({
   enabled: z.boolean().optional(),
 });
 
-export type UpdateWebhookEndpointInput = z.infer<typeof UpdateWebhookEndpointSchema>;
+export type UpdateWebhookEndpointInput = z.infer<
+  typeof UpdateWebhookEndpointSchema
+>;
 
 // ── Webhook Endpoint Record ──────────────────────────────────────
 export type WebhookEndpointRecord = {
@@ -106,7 +113,11 @@ export type WebhookDeliveryHeaders = {
 };
 
 // ── Delivery Log ──────────────────────────────────────────────────
-export type WebhookDeliveryStatus = "pending" | "delivered" | "failed" | "retrying";
+export type WebhookDeliveryStatus =
+  | "pending"
+  | "delivered"
+  | "failed"
+  | "retrying";
 
 export type WebhookDeliveryLog = {
   delivery_id: string;
@@ -134,14 +145,19 @@ export type WebhookRepositoryAdapter = {
     signing_secret_masked: string;
   }): Promise<WebhookEndpointRecord>;
 
-  getEndpoint(id: string, organization_id: string): Promise<WebhookEndpointRecord | null>;
+  getEndpoint(
+    id: string,
+    organization_id: string,
+  ): Promise<WebhookEndpointRecord | null>;
 
   listEndpoints(organization_id: string): Promise<WebhookEndpointRecord[]>;
 
   updateEndpoint(
     id: string,
     organization_id: string,
-    patch: Partial<Pick<WebhookEndpointRecord, "url" | "events" | "description" | "enabled">>
+    patch: Partial<
+      Pick<WebhookEndpointRecord, "url" | "events" | "description" | "enabled">
+    >,
   ): Promise<WebhookEndpointRecord | null>;
 
   deleteEndpoint(id: string, organization_id: string): Promise<boolean>;
@@ -149,18 +165,21 @@ export type WebhookRepositoryAdapter = {
   /** Find all endpoints subscribed to a specific event for a tenant */
   findSubscribers(
     organization_id: string,
-    event_type: WebhookEventType
+    event_type: WebhookEventType,
   ): Promise<WebhookEndpointRecord[]>;
 
   logDelivery(log: WebhookDeliveryLog): Promise<void>;
 
-  listDeliveries(endpoint_id: string, limit?: number): Promise<WebhookDeliveryLog[]>;
+  listDeliveries(
+    endpoint_id: string,
+    limit?: number,
+  ): Promise<WebhookDeliveryLog[]>;
 
   /** Rotate the signing secret for an endpoint */
   rotateSecret(
     id: string,
     organization_id: string,
     newSecretHash: string,
-    newSecretMasked: string
+    newSecretMasked: string,
   ): Promise<WebhookEndpointRecord | null>;
 };

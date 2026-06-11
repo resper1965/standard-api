@@ -40,14 +40,14 @@ const projectRoot = path.resolve(
 
 // ──── Types ────
 
+// ADR-001: Only canonical STRM operators (NIST IR 8477)
+// ⛔ NEVER add "direct", "related", "intersecting", "no_relationship", "source_defined"
 export type StrmRelationshipType =
   | "equal"
   | "subset"
+  | "intersects"
   | "superset"
-  | "intersecting"
-  | "related"
-  | "no_relationship"
-  | "source_defined";
+  | "no_relation";
 
 export type StrmRelationshipStrength = "strong" | "moderate" | "weak";
 
@@ -100,33 +100,37 @@ export interface StrmBundleImportSummary {
 // ──── Helpers ────
 
 /**
- * Normaliza o campo "STRM Relationship" do XLSX para o enum do schema.
+ * Normaliza o campo "STRM Relationship" do XLSX para operadores canónicos (ADR-001).
  *
  * Valores reais nos 183 arquivos do bundle (raw scan):
- *   "Intersects With"    39,373  → intersecting
+ *   "Intersects With"    39,373  → intersects
  *   "Subset Of"           8,856  → subset
  *   "Equal"               4,850  → equal
  *   "Functional"            567  → null (leaked header row, skip)
- *   "Instersects With"      295  → intersecting (typo no bundle)
+ *   "Instersects With"      295  → intersects (typo no bundle)
  *   "STRM\nRelationship"    179  → null (leaked header row, skip)
- *   "intersects"            120  → intersecting
+ *   "intersects"            120  → intersects
  *   "Subset of"             116  → subset
  *   "Superset Of"            42  → superset
  *   "superset of"             1  → superset
+ *
+ * ⛔ NEVER return "intersecting", "no_relationship", "related", or "source_defined".
+ *    See docs/decisions/ADR-001-strm-weights-algorithm.md
  */
 function normalizeRelationshipType(raw: string): StrmRelationshipType | null {
   const v = raw.trim().toLowerCase();
   if (v === "") return null;
-  if (v === "equal") return "equal";
+  if (v === "equal" || v === "direct") return "equal";
   if (v === "subset" || v === "subset of") return "subset";
   if (v === "superset" || v === "superset of") return "superset";
-  if (v.startsWith("intersect")) return "intersecting";
-  if (v === "no relationship" || v === "no_relationship")
-    return "no_relationship";
+  if (v.startsWith("intersect") || v === "related" || v === "source_defined")
+    return "intersects";
+  if (v === "no relationship" || v === "no_relationship" || v === "no relation")
+    return "no_relation";
   // Leaked header rows — not data, skip
   if (v === "functional" || v.startsWith("strm")) return null;
-  // Unknown — preserve as source_defined for investigation
-  return "source_defined";
+  // Unknown — conservative fallback to intersects (partial overlap)
+  return "intersects";
 }
 
 /**
@@ -148,7 +152,7 @@ function normalizeStrength(raw: number | string): StrmRelationshipStrength {
 /**
  * Parseia um único arquivo XLSX do STRM bundle.
  * Pula rows com SCF # = "N/A" ou vazio.
- * Pula rows com relationship_type = "no_relationship" (sem controle SCF aplicável).
+ * Pula rows com relationship_type = "no_relation" (sem controle SCF aplicável).
  */
 export function parseStrmBundleFile(
   filePath: string,
@@ -249,11 +253,8 @@ export function parseStrmBundleFile(
       continue;
     }
 
-    // Skip no_relationship unless explicitly included
-    if (
-      relationship_type === "no_relationship" &&
-      !options.includeNoRelationship
-    ) {
+    // Skip no_relation unless explicitly included
+    if (relationship_type === "no_relation" && !options.includeNoRelationship) {
       skipped++;
       continue;
     }
