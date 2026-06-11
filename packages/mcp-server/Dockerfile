@@ -22,8 +22,10 @@ WORKDIR /app
 COPY --from=builder /app/packages/mcp-server/dist ./dist
 COPY --from=builder /app/packages/mcp-server/package.json ./
 
-# We only need production dependencies
-RUN npm install --omit=dev
+# We only need production dependencies and ensure node user has access
+RUN npm install --omit=dev && chown -R node:node /app
+
+USER node
 
 # Entrypoint for running the MCP server
 # Note: we don't start the app right away without args; 

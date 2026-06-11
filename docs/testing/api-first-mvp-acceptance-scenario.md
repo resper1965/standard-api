@@ -42,7 +42,7 @@ Este documento é um cenário de aceitação MVP. Ele deve poder ser automatizad
 Headers mínimos recomendados:
 
 ```text
-Authorization: Bearer synthetic-token
+Authorization: Bearer <YOUR_API_KEY>
 x-standard-tenant-id: org_synth_healthtech
 x-standard-actor-id: assessor_user
 x-standard-trace-id: trace_acceptance_001

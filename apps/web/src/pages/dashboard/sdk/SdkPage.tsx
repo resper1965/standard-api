@@ -99,12 +99,12 @@ export function SdkPage() {
   const curlHealth = `curl ${API_URL}/health`;
 
   const curlAuth = `curl -X GET "${API_URL}/api/v1/assessments" \\
-  -H "Authorization: Bearer standard_live_..." \\
+  -H "Authorization: Bearer <YOUR_API_KEY>" \\
   -H "x-standard-tenant-id: ${organizationId}" \\
   -H "Content-Type: application/json"`;
 
   const curlCreateAssessment = `curl -X POST "${API_URL}/api/v1/assessments" \\
-  -H "Authorization: Bearer standard_live_..." \\
+  -H "Authorization: Bearer <YOUR_API_KEY>" \\
   -H "x-standard-tenant-id: ${organizationId}" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -115,12 +115,12 @@ export function SdkPage() {
 
   const curlSCF = `# List all 231 compliance frameworks
 curl "${API_URL}/api/v1/scf/frameworks" \\
-  -H "Authorization: Bearer standard_live_..." \\
+  -H "Authorization: Bearer <YOUR_API_KEY>" \\
   -H "x-standard-tenant-id: ${organizationId}"
 
 # Get 1,468 controls for a specific SCF version
 curl "${API_URL}/api/v1/scf/versions/latest/controls" \\
-  -H "Authorization: Bearer standard_live_..." \\
+  -H "Authorization: Bearer <YOUR_API_KEY>" \\
   -H "x-standard-tenant-id: ${organizationId}"`;
 
   // ── SDK snippets ──────────────────────────────────────────────
@@ -129,7 +129,7 @@ curl "${API_URL}/api/v1/scf/versions/latest/controls" \\
   const sdkInit = `import { StandardClient } from "@standard/sdk";
 
 const client = new StandardClient({
-  apiKey: process.env.STANDARD_API_KEY,  // standard_live_...
+  apiKey: process.env.STANDARD_API_KEY,  // <YOUR_API_KEY>
   organizationId: "${organizationId}",
   baseUrl: "${API_URL}",                 // optional — defaults to production
 });`;
@@ -184,13 +184,13 @@ console.log("Signing secret:", webhook.signing_secret);`;
   // ── MCP snippets ──────────────────────────────────────────────
   const mcpDocker = `docker run -i --rm \\
   -e STANDARD_API_URL="${API_URL}" \\
-  -e STANDARD_API_KEY="standard_live_..." \\
+  -e STANDARD_API_KEY="<YOUR_API_KEY>" \\
   -e STANDARD_TENANT_ID="${organizationId}" \\
   standard-mcp`;
 
   const mcpNpx = `npx @standard/mcp-server \\
   --api-url "${API_URL}" \\
-  --api-key "standard_live_..." \\
+  --api-key "<YOUR_API_KEY>" \\
   --tenant-id "${organizationId}"`;
 
   const mcpCursorConfig = `// cursor.json / .cursor/mcp.json
@@ -201,7 +201,7 @@ console.log("Signing secret:", webhook.signing_secret);`;
       "args": [
         "@standard/mcp-server",
         "--api-url", "${API_URL}",
-        "--api-key", "standard_live_...",
+        "--api-key", "<YOUR_API_KEY>",
         "--tenant-id", "${organizationId}"
       ]
     }
