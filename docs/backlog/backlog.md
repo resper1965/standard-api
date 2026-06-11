@@ -67,7 +67,7 @@
 |---|------|:----------:|--------|--------|
 | 3.1 | API Playground | P1 | concluído \| 2026-05-25 | plano novo |
 | 3.2 | Organization Self-Service (perfil, membros, convites) | P1 | concluído | plano novo |
-| 3.3 | API Keys Self-Service (criação, revogação, monitoramento) | P1 | pendente | pendencias |
+| 3.3 | API Keys Self-Service (criação, revogação, monitoramento) | P1 | concluído | pendencias |
 | 3.4 | Billing/Plans dashboard | P2 | concluído | plano novo |
 | 3.5 | Onboarding wizard | P2 | pendente | plano novo |
 | 3.6 | Separação Master Admin vs Organization Admin vs User | P0 | concluído \| 2026-05-25 | Standard Native Auth: admin() plugin (platform) + organization roles (organization) |
