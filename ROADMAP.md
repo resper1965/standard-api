@@ -69,9 +69,9 @@
 - [x] MCP resources/list, resources/read, prompts/list, prompts/get (JSON-RPC)
 
 **Próximos**:
-- [ ] Sparse fields selection em API responses
-- [ ] STRM relationship_type filter em endpoints SCF
-- [ ] API Key caching via KV com TTL (eliminar query Neon por request — IMPLEMENTATION-CONSTRAINTS.md)
+- [x] Sparse fields selection em API responses
+- [x] STRM relationship_type filter em endpoints SCF
+- [x] API Key caching via KV com TTL (eliminar query Neon por request — IMPLEMENTATION-CONSTRAINTS.md)
 - [ ] Contract tests para endpoints compartilhados
 - [ ] Regression tests para agent outputs
 
