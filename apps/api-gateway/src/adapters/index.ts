@@ -25,7 +25,7 @@ import { createInMemoryPrivacyDependencies } from "@standard/privacy";
 import { createInMemoryWorkflowDependencies } from "@standard/workflows";
 import { createInMemoryDocumentIngestionDependencies } from "@standard/document-ingestion";
 import type { AppDependencies } from "../http";
-import type { Env } from "../index";
+import type { Env } from "../types/env";
 import type { DbClient } from "./db";
 
 // Per-domain composition factories

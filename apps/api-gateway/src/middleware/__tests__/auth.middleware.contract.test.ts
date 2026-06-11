@@ -10,8 +10,8 @@
  * Uses synthetic fixtures — no real user data, no network calls.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { resolveAuthContext } from "../../apps/api-gateway/src/middleware/auth.middleware";
-import type { RequestContext } from "../../apps/api-gateway/src/http";
+import { resolveAuthContext } from "../auth.middleware";
+import type { RequestContext } from "../../http";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -193,7 +193,7 @@ describe("resolveAuthContext — M2M API key path", () => {
   it("resolves from KV fast path (no DB call)", async () => {
     const keyId = uuid();
     const orgId = uuid();
-    const token = "sk_test_synth_key_" + keyId.slice(0, 8);
+    const token = "standard_live_" + keyId.slice(0, 8);
 
     // Compute the sha256 of the token to build the KV key
     const hashBuf = await crypto.subtle.digest(

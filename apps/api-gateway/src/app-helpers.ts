@@ -1,6 +1,6 @@
 import { MockAuthProvider } from "@standard/security";
 import type { StandardAuth } from "@standard/auth";
-import type { Env } from "./index";
+import type { Env } from "./types/env";
 import { ApiError } from "./errors/api-error";
 import type { RequestContext, RouteDefinition } from "./http";
 import { resolveAuthContext } from "./middleware/auth.middleware";
