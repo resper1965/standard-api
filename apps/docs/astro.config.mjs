@@ -60,7 +60,7 @@ export default defineConfig({
         {
           label: "Architecture",
           collapsed: false,
-          autogenerate: { directory: "architecture" },
+          items: [{ autogenerate: { directory: "architecture" } }],
         },
         {
           label: "API Reference",
@@ -83,22 +83,22 @@ export default defineConfig({
         {
           label: "Agents",
           collapsed: true,
-          autogenerate: { directory: "agents" },
+          items: [{ autogenerate: { directory: "agents" } }],
         },
         {
           label: "Decisions (ADR)",
           collapsed: true,
-          autogenerate: { directory: "decisions" },
+          items: [{ autogenerate: { directory: "decisions" } }],
         },
         {
           label: "Security",
           collapsed: true,
-          autogenerate: { directory: "security" },
+          items: [{ autogenerate: { directory: "security" } }],
         },
         {
           label: "Guides",
           collapsed: true,
-          autogenerate: { directory: "guides" },
+          items: [{ autogenerate: { directory: "guides" } }],
         },
         {
           label: "Operations",
@@ -106,11 +106,11 @@ export default defineConfig({
           items: [
             {
               label: "Runbooks",
-              autogenerate: { directory: "runbooks" },
+              items: [{ autogenerate: { directory: "runbooks" } }],
             },
             {
               label: "Releases",
-              autogenerate: { directory: "releases" },
+              items: [{ autogenerate: { directory: "releases" } }],
             },
           ],
         },
