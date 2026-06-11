@@ -15,12 +15,16 @@
  */
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import type { NeonHttpDatabase } from "drizzle-orm/neon-http";
+import type { NeonDatabase } from "drizzle-orm/neon-serverless";
 
 /**
  * Drizzle client type — supports both Neon serverless and postgres.js drivers.
  * Standard Native Auth's drizzle adapter accepts any drizzle instance.
  */
-export type DrizzleClient = PostgresJsDatabase<any> | NeonHttpDatabase<any>;
+export type DrizzleClient =
+  | PostgresJsDatabase<any>
+  | NeonHttpDatabase<any>
+  | NeonDatabase<any>;
 
 /**
  * Standard Native Auth user type extended with plugin-injected fields.
