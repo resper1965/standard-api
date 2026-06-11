@@ -2,7 +2,7 @@ import {
   ApiKeyAuthProvider,
   JwtTenantResolver,
   RateLimiter,
-  RATE_LIMIT_TIERS
+  RATE_LIMIT_TIERS,
 } from "../src";
 import { expect, test } from "./test-kit";
 
@@ -12,7 +12,7 @@ import { expect, test } from "./test-kit";
 async function sha256(data: string): Promise<string> {
   const buffer = await crypto.subtle.digest(
     "SHA-256",
-    new TextEncoder().encode(data)
+    new TextEncoder().encode(data),
   );
   return Array.from(new Uint8Array(buffer))
     .map((b) => b.toString(16).padStart(2, "0"))
@@ -52,14 +52,14 @@ test("ApiKeyAuthProvider retorna null para key inexistente", async () => {
   const mock = createMockDb(null);
   const provider = new ApiKeyAuthProvider(mock.db, mock.apiKeysTable);
   const result = await provider.authenticate({
-    apiKey: "sk-invalid-key",
+    apiKey: "mock_invalid_key",
     traceId: "t2",
   });
   expect(result).toBe(null);
 });
 
 test("ApiKeyAuthProvider autentica key válida com SHA-256", async () => {
-  const rawKey = "sk-test-valid-key-12345";
+  const rawKey = "mock_test_valid_key_12345";
   const hash = await sha256(rawKey);
 
   const mock = createMockDb({
@@ -86,7 +86,7 @@ test("ApiKeyAuthProvider autentica key válida com SHA-256", async () => {
 });
 
 test("ApiKeyAuthProvider rejeita key expirada", async () => {
-  const rawKey = "sk-expired-key";
+  const rawKey = "mock_expired_key";
   const hash = await sha256(rawKey);
 
   const mock = createMockDb({
@@ -107,7 +107,7 @@ test("ApiKeyAuthProvider rejeita key expirada", async () => {
 });
 
 test("ApiKeyAuthProvider rejeita key soft-deleted", async () => {
-  const rawKey = "sk-deleted-key";
+  const rawKey = "mock_deleted_key";
   const hash = await sha256(rawKey);
 
   const mock = createMockDb({
@@ -128,7 +128,7 @@ test("ApiKeyAuthProvider rejeita key soft-deleted", async () => {
 });
 
 test("ApiKeyAuthProvider extrai key de Bearer header", async () => {
-  const rawKey = "sk-bearer-key-xyz";
+  const rawKey = "mock_bearer_key_xyz";
   const hash = await sha256(rawKey);
 
   const mock = createMockDb({
@@ -151,7 +151,7 @@ test("ApiKeyAuthProvider extrai key de Bearer header", async () => {
 });
 
 test("ApiKeyAuthProvider extrai key de ApiKey header", async () => {
-  const rawKey = "sk-apikey-header-xyz";
+  const rawKey = "mock_apikey_header_xyz";
   const hash = await sha256(rawKey);
 
   const mock = createMockDb({
@@ -174,7 +174,7 @@ test("ApiKeyAuthProvider extrai key de ApiKey header", async () => {
 });
 
 test("ApiKeyAuthProvider: scopes vazio = full integration_service permissions", async () => {
-  const rawKey = "sk-full-access";
+  const rawKey = "mock_full_access";
   const hash = await sha256(rawKey);
 
   const mock = createMockDb({

@@ -31,6 +31,12 @@
 import * as XLSX from "xlsx";
 import * as path from "node:path";
 import * as fs from "node:fs";
+import { fileURLToPath } from "node:url";
+
+const projectRoot = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "../../../../",
+);
 
 // ──── Types ────
 
@@ -149,11 +155,17 @@ export function parseStrmBundleFile(
   filename: string,
   options: { includeNoRelationship?: boolean } = {},
 ): StrmBundleFileResult {
+  const resolvedPath = path.resolve(filePath);
+  const relativePath = path.relative(projectRoot, resolvedPath);
+  if (relativePath.startsWith("..") || path.isAbsolute(relativePath)) {
+    throw new Error(`Path traversal detected: ${filePath}`);
+  }
+
   const warnings: string[] = [];
   let skipped = 0;
 
   // Read via buffer (avoid SheetJS Unicode path bug on Windows)
-  const buf = fs.readFileSync(filePath);
+  const buf = fs.readFileSync(resolvedPath);
   const wb = XLSX.read(buf, { cellDates: true });
 
   const sheetName = wb.SheetNames[0];
@@ -293,8 +305,14 @@ export function parseStrmBundleDirectory(
     fileFilter?: (filename: string) => boolean;
   } = {},
 ): StrmBundleImportSummary {
+  const resolvedDir = path.resolve(dirPath);
+  const relativeDir = path.relative(projectRoot, resolvedDir);
+  if (relativeDir.startsWith("..") || path.isAbsolute(relativeDir)) {
+    throw new Error(`Path traversal detected: ${dirPath}`);
+  }
+
   const files = fs
-    .readdirSync(dirPath)
+    .readdirSync(resolvedDir)
     .filter((f: string) => f.endsWith(".xlsx"))
     .filter(options.fileFilter ?? (() => true))
     .sort();
