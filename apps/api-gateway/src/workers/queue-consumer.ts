@@ -36,7 +36,7 @@ interface MessageBatch<T = unknown> {
 
 import { IncidentTriagerUseCase } from "@standard/agent-runtime";
 import { TenantMismatchError } from "../errors/tenant-mismatch-error";
-import type { Env } from "../index";
+import type { Env } from "../types/env";
 import { createDb } from "../adapters/db";
 import { createDrizzleAuditRepository } from "../adapters/audit.repository";
 import { CloudflareAiGatewayAdapter } from "../adapters/ai-gateway.adapter";
@@ -74,7 +74,7 @@ const assertTenantIntegrity = (payload: SocTriagePayload): void => {
   if (!payload.organizationId || payload.organizationId.length < 8) {
     throw new TenantMismatchError(
       `Payload job_id=${payload.job_id} has invalid organizationId="${payload.organizationId}". ` +
-      `Possible cross-tenant contamination or malformed dispatch.`
+        `Possible cross-tenant contamination or malformed dispatch.`,
     );
   }
 };
@@ -84,7 +84,7 @@ const assertTenantIntegrity = (payload: SocTriagePayload): void => {
 async function processMessage(
   message: QueueMessage,
   audit: { record: (event: string, payload: any) => Promise<void> },
-  llm: any
+  llm: any,
 ): Promise<void> {
   const raw = message.body;
   const msgStartedAt = Date.now();
@@ -140,29 +140,29 @@ async function processMessage(
 
     // ── Metric: successful processing duration ──
     const processingMs = Date.now() - msgStartedAt;
-    console.log(JSON.stringify({
-      metric: "queue.processing.duration_ms",
-      queue: "SOC_TRIAGE_QUEUE",
-      outcome: "success",
-      value: processingMs,
-      organization_id: payload.organizationId,
-      trace_id: payload.traceId,
-      job_id: payload.job_id,
-      timestamp: new Date().toISOString(),
-    }));
+    console.log(
+      JSON.stringify({
+        metric: "queue.processing.duration_ms",
+        queue: "SOC_TRIAGE_QUEUE",
+        outcome: "success",
+        value: processingMs,
+        organization_id: payload.organizationId,
+        trace_id: payload.traceId,
+        job_id: payload.job_id,
+        timestamp: new Date().toISOString(),
+      }),
+    );
 
     message.ack();
   } catch (error) {
     const isFatal =
-      error instanceof TenantMismatchError ||
-      (message.attempts ?? 0) >= 3;
+      error instanceof TenantMismatchError || (message.attempts ?? 0) >= 3;
 
     if (isFatal) {
       // ── DLQ: Grave no banco, não tente de novo ──
       const errorMessage =
         error instanceof Error ? error.message : "Unknown fatal error";
-      const errorName =
-        error instanceof Error ? error.name : "UnknownError";
+      const errorName = error instanceof Error ? error.name : "UnknownError";
 
       console.error(
         `[soc:queue] ☠️ POISONED — Job ${payload.job_id} sent to DLQ after ${message.attempts ?? "?"} attempts. Reason: ${errorName}`,
@@ -184,35 +184,38 @@ async function processMessage(
       message.ack(); // Acknowledge to stop retries — it's in the DB now.
 
       // ── Metric: DLQ processing duration ──
-      console.log(JSON.stringify({
-        metric: "queue.processing.duration_ms",
-        queue: "SOC_TRIAGE_QUEUE",
-        outcome: "dlq",
-        value: Date.now() - msgStartedAt,
-        organization_id: payload.organizationId,
-        trace_id: payload.traceId,
-        job_id: payload.job_id,
-        timestamp: new Date().toISOString(),
-      }));
+      console.log(
+        JSON.stringify({
+          metric: "queue.processing.duration_ms",
+          queue: "SOC_TRIAGE_QUEUE",
+          outcome: "dlq",
+          value: Date.now() - msgStartedAt,
+          organization_id: payload.organizationId,
+          trace_id: payload.traceId,
+          job_id: payload.job_id,
+          timestamp: new Date().toISOString(),
+        }),
+      );
     } else {
       // ── Transient failure: let Cloudflare retry ──
-      const errMsg =
-        error instanceof Error ? error.message : String(error);
+      const errMsg = error instanceof Error ? error.message : String(error);
       console.warn(
         `[soc:queue] ⚠️ Job ${payload.job_id} failed (attempt ${message.attempts ?? "?"}). Will retry. Error: ${errMsg}`,
       );
 
       // ── Metric: retry processing duration ──
-      console.log(JSON.stringify({
-        metric: "queue.processing.duration_ms",
-        queue: "SOC_TRIAGE_QUEUE",
-        outcome: "retry",
-        value: Date.now() - msgStartedAt,
-        organization_id: payload.organizationId,
-        trace_id: payload.traceId,
-        job_id: payload.job_id,
-        timestamp: new Date().toISOString(),
-      }));
+      console.log(
+        JSON.stringify({
+          metric: "queue.processing.duration_ms",
+          queue: "SOC_TRIAGE_QUEUE",
+          outcome: "retry",
+          value: Date.now() - msgStartedAt,
+          organization_id: payload.organizationId,
+          trace_id: payload.traceId,
+          job_id: payload.job_id,
+          timestamp: new Date().toISOString(),
+        }),
+      );
 
       message.retry();
     }
@@ -220,11 +223,7 @@ async function processMessage(
 }
 
 export default {
-  async queue(
-    batch: MessageBatch,
-    env: Env,
-    _ctx: unknown,
-  ): Promise<void> {
+  async queue(batch: MessageBatch, env: Env, _ctx: unknown): Promise<void> {
     // Bootstrap lightweight dependencies for background processing.
     // We intentionally avoid the full cachedApp to keep memory low.
     const hasDb = Boolean(env.DATABASE_URL);
@@ -237,12 +236,14 @@ export default {
         ? new CloudflareAiGatewayAdapter({
             baseUrl: env.AI_GATEWAY_BASE_URL,
             apiKey: env.OPENAI_API_KEY,
-            ...(env.AI_GATEWAY_TOKEN ? { gatewayToken: env.AI_GATEWAY_TOKEN } : {}),
+            ...(env.AI_GATEWAY_TOKEN
+              ? { gatewayToken: env.AI_GATEWAY_TOKEN }
+              : {}),
             metadata: { source: "queue-consumer", queue: "SOC_TRIAGE_QUEUE" },
           })
         : (() => {
             console.warn(
-              "[soc:queue] ⚠️ AI_GATEWAY_BASE_URL or OPENAI_API_KEY missing. Using MOCK LLM — all AI responses will be empty."
+              "[soc:queue] ⚠️ AI_GATEWAY_BASE_URL or OPENAI_API_KEY missing. Using MOCK LLM — all AI responses will be empty.",
             );
             return createInMemoryAgentRuntimeDependencies().llm;
           })();

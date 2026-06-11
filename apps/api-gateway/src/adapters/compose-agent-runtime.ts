@@ -13,7 +13,7 @@ import {
 } from "@standard/agent-runtime";
 import type { AgentRuntimeDependencies } from "@standard/agent-runtime";
 import { CloudflareAiGatewayAdapter } from "./ai-gateway.adapter";
-import type { Env } from "../index";
+import type { Env } from "../types/env";
 import type { DbClient } from "./db";
 
 const asDb = (db: DbClient) =>
