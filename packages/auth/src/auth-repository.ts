@@ -8,7 +8,7 @@
  *
  * ADR: docs/decisions/ADR-009-better-auth-containment.md
  */
-import { eq } from "drizzle-orm";
+import { eq, ne, and } from "drizzle-orm";
 import {
   baUser,
   baSession,
@@ -190,6 +190,21 @@ export const createAuthRepository = (db: DrizzleClient) => ({
   /** Revoga (deleta) uma sessão específica por ID. */
   async revokeSession(sessionId: string): Promise<void> {
     await (db as any).delete(baSession).where(eq(baSession.id, sessionId));
+  },
+
+  /**
+   * Revoga (deleta) todas as sessões de um usuário, EXCETO a sessão atual especificada.
+   * Usado para a funcionalidade "Sair de todos os outros dispositivos".
+   */
+  async revokeOtherSessions(
+    userId: string,
+    currentSessionId: string,
+  ): Promise<void> {
+    await (db as any)
+      .delete(baSession)
+      .where(
+        and(eq(baSession.userId, userId), ne(baSession.id, currentSessionId)),
+      );
   },
 
   // ── Transactional user deletion ───────────────────────────────────────────

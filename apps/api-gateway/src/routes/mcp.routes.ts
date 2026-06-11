@@ -251,7 +251,45 @@ export const mcpRoutes: RouteDefinition[] = [
         }
 
         // ── Grupo A — Sync (DB reads, calculations) → 200 immediately ─
-        const result = await dispatchMcpTool(toolName, toolArgs, ctx);
+        let result: any;
+        let cacheKey: string | null = null;
+        const cacheTTL = 3600; // 1 hour TTL
+
+        if (ctx.env?.STANDARD_CACHE && ctx.organizationId) {
+          const argsString = JSON.stringify(toolArgs);
+          const argsHashBuffer = await crypto.subtle.digest(
+            "SHA-256",
+            new TextEncoder().encode(argsString),
+          );
+          const argsHash = Array.from(new Uint8Array(argsHashBuffer))
+            .map((b) => b.toString(16).padStart(2, "0"))
+            .join("");
+
+          cacheKey = `mcp:cache:${ctx.organizationId}:${toolName}:${argsHash}`;
+          try {
+            const cachedValue = await ctx.env.STANDARD_CACHE.get(
+              cacheKey,
+              "json",
+            );
+            if (cachedValue) {
+              result = cachedValue;
+            }
+          } catch (e) {
+            // Non-fatal cache miss
+          }
+        }
+
+        if (!result) {
+          result = await dispatchMcpTool(toolName, toolArgs, ctx);
+
+          if (cacheKey && ctx.env?.STANDARD_CACHE && !result.isError) {
+            // Fire and forget cache write
+            ctx.env.STANDARD_CACHE.put(cacheKey, JSON.stringify(result), {
+              expirationTtl: cacheTTL,
+            }).catch(console.error);
+          }
+        }
+
         return json({ jsonrpc: "2.0", id, result });
       }
 

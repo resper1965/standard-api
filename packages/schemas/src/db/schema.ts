@@ -3094,7 +3094,7 @@ export const assessmentControlEvents = pgTable(
     scfVersionId: uuid("scf_version_id")
       .notNull()
       .references(() => scfVersions.id),
-    // 'status_changed' | 'evidence_added' | 'finding_created' | 'approval_gate' | 'mutation_blocked'
+    // 'status_changed' | 'evidence_added' | 'finding_created' | 'approval_gate' | 'mutation_blocked' | 'third_party_inherited'
     eventType: text("event_type").notNull(),
     previousValue: jsonb("previous_value").$type<Record<string, unknown>>(),
     newValue: jsonb("new_value").$type<Record<string, unknown>>().notNull(),
@@ -3140,6 +3140,34 @@ export const tpraVendors = pgTable(
     uniqueIndex("tpra_vendors_org_name_uidx").on(
       table.organizationId,
       table.vendorName,
+    ),
+  ],
+);
+
+export const tpraVendorControls = pgTable(
+  "tpra_vendor_controls",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id),
+    vendorId: uuid("vendor_id")
+      .notNull()
+      .references(() => tpraVendors.id),
+    scfControlId: uuid("scf_control_id")
+      .notNull()
+      .references(() => scfControls.id),
+    scfVersionId: uuid("scf_version_id")
+      .notNull()
+      .references(() => scfVersions.id),
+    traceId: text("trace_id").notNull(),
+    ...timestamps(),
+  },
+  (table) => [
+    index("tpra_vendor_ctrls_org_idx").on(table.organizationId),
+    uniqueIndex("tpra_vendor_ctrls_uidx").on(
+      table.vendorId,
+      table.scfControlId,
     ),
   ],
 );

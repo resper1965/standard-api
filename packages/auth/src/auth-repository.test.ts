@@ -181,3 +181,19 @@ describe("AuthRepository.setSessionOrg", () => {
     );
   });
 });
+
+describe("AuthRepository.revokeOtherSessions", () => {
+  let mockDb: ReturnType<typeof createMockDb>;
+  let repo: ReturnType<typeof createAuthRepository>;
+
+  beforeEach(() => {
+    mockDb = createMockDb();
+    repo = createAuthRepository(mockDb as any);
+  });
+
+  it("chama db.delete para apagar outras sessoes", async () => {
+    await repo.revokeOtherSessions("ba-user-001", "sess-keep");
+    expect(mockDb.delete).toHaveBeenCalledTimes(1);
+    expect(mockDb.where).toHaveBeenCalledTimes(1);
+  });
+});

@@ -82,8 +82,8 @@
 **Objetivo**: Escalar a plataforma para multi-region e completar integrações avançadas.
 
 **Planejado**:
-- [ ] TPRA ↔ SoA integration (Third-Party Risk Assessment vinculado ao SoA)
-- [ ] `pg_partman` automation para particionamento de tabelas de alto volume
+- [x] TPRA ↔ SoA integration (Third-Party Risk Assessment vinculado ao SoA)
+- [x] `pg_partman` automation para particionamento de tabelas de alto volume
 - [ ] Auth containment (ADR-015 — isolamento e limites de sessão)
 - [ ] Multi-region deployment (Cloudflare edge + PostgreSQL read replicas)
 - [ ] Custom domains via Cloudflare for SaaS
