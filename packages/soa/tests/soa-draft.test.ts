@@ -19,7 +19,7 @@ test("Cria SoA draft a partir de framework e mappings oficiais SCF", async () =>
   expect(items[0]!.framework_requirement_id).toBeDefined();
   expect(items[0]!.scf_control_id).toBeDefined();
   expect(items[0]!.source_mapping_id).toBeDefined();
-  expect(items[0]!.relationship_type).toBe("related");
+  expect(items[0]!.relationship_type).toBe("intersects");
 });
 
 test("Requisito sem mapping oficial vira item requires_validation", async () => {
