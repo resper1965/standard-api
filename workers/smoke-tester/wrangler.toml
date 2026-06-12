@@ -1,0 +1,23 @@
+name = "standard-smoke-tester"
+main = "src/index.ts"
+compatibility_date = "2026-04-28"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+STANDARD_ENV = "development"
+LOG_LEVEL = "info"
+API_GATEWAY_URL = "http://localhost:8787"
+SMOKE_TEST_ORG_ID = "00000000-0000-0000-0000-000000000000"
+
+[triggers]
+crons = ["*/5 * * * *"]
+
+[env.production]
+workers_dev = true
+vars = { STANDARD_ENV = "production", LOG_LEVEL = "info", API_GATEWAY_URL = "https://standard-api.bekaa.eu", SMOKE_TEST_ORG_ID = "00000000-0000-0000-0000-000000000000" }
+
+# Service Binding: Worker-to-Worker call bypasses Cloudflare public proxy.
+# Prevents CF error 1003 (Direct IP Access Not Allowed) on same-zone calls.
+[[env.production.services]]
+binding = "STANDARD_API_GATEWAY"
+service = "standard-api-gateway-production"
