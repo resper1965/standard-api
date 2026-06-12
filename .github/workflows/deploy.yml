@@ -21,7 +21,8 @@ jobs:
           node-version: '20'
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v3
+        # pnpm/action-setup@v3.0.0 — pinned to commit hash (supply chain security)
+        uses: pnpm/action-setup@a3252b78c470c02df07e9d59298aecedc3ccdd6d
         with:
           version: 9
 
@@ -44,13 +45,13 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
-      # Note: Add 'pnpm test' here when tests are fully configured
-      # - name: Run Tests
-      #   run: pnpm test
+      - name: Run Tests
+        run: pnpm test
 
       - name: Deploy API Gateway to Cloudflare
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        uses: cloudflare/wrangler-action@v3
+        # cloudflare/wrangler-action@v3 — pinned to commit hash (supply chain security)
+        uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
@@ -58,7 +59,7 @@ jobs:
 
       - name: Deploy Workflows to Cloudflare
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
@@ -66,7 +67,7 @@ jobs:
 
       - name: Deploy Queues Consumer to Cloudflare
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
@@ -74,7 +75,7 @@ jobs:
 
       - name: Deploy Ingestion Worker to Cloudflare
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
