@@ -1,4 +1,4 @@
-import { spawnSync } from "node:child_process";
+import { spawn } from "node:child_process";
 
 const environment = process.argv[2];
 const allowedEnvironments = new Set(["staging", "production"]);
@@ -18,14 +18,42 @@ const configs = [
   "workers/smoke-tester/wrangler.toml"
 ];
 
-for (const config of configs) {
-  console.log(`\n🚀 Deploying ${config} to ${environment}...`);
-  const result = spawnSync("npx", ["--yes", "wrangler", "deploy", "-c", config, "-e", environment], {
-    stdio: "inherit",
-    shell: true
-  });
+console.log(`\n🚀 Iniciando deploy paralelo de ${configs.length} workers para ${environment}...`);
 
-  if (result.status !== 0) {
-    process.exit(result.status ?? 1);
-  }
+const deploy = (config) => {
+  return new Promise((resolve, reject) => {
+    const child = spawn("npx", ["--yes", "wrangler", "deploy", "-c", config, "-e", environment], {
+      shell: true
+    });
+
+    let stdout = "";
+    let stderr = "";
+
+    child.stdout.on("data", (data) => {
+      stdout += data.toString();
+    });
+
+    child.stderr.on("data", (data) => {
+      stderr += data.toString();
+    });
+
+    child.on("close", (code) => {
+      if (code === 0) {
+        console.log(`✅ [Sucesso] Deployed: ${config}`);
+        resolve({ config, status: 0 });
+      } else {
+        console.error(`❌ [Falha] Deploying: ${config} failed with code ${code}.\nErrors:\n${stderr || stdout}`);
+        reject(new Error(`Failed to deploy ${config}`));
+      }
+    });
+  });
+};
+
+try {
+  await Promise.all(configs.map(config => deploy(config)));
+  console.log(`\n✨ Deploy paralelo para ${environment} concluído com sucesso!`);
+} catch (err) {
+  console.error(`\n❌ Falha no deploy paralelo:`, err.message);
+  process.exit(1);
 }
+
