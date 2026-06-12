@@ -9,8 +9,10 @@ import {
   isNull,
   isNotNull,
   inArray,
+  gte,
 } from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
+import { getSparseSelect } from "@standard/schemas";
 import {
   scfVersions,
   scfDomains,
@@ -287,7 +289,8 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
       );
     }
 
-    let dbQuery = db.select({ control: scfControls }).from(scfControls) as any;
+    const selectFields = getSparseSelect(scfControls, query.fields);
+    let dbQuery = db.select({ control: selectFields }).from(scfControls) as any;
 
     if (query.domain_code) {
       dbQuery = dbQuery.innerJoin(
@@ -682,6 +685,117 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
       source: row.source,
       organization_id: row.organizationId ?? undefined,
     }));
+  },
+
+  searchStrm: async (query) => {
+    const conditions = [];
+
+    if (query.control_id) {
+      conditions.push(eq(scfStrmRelationships.scfControlId, query.control_id));
+    }
+
+    if (query.relationship_type) {
+      conditions.push(
+        eq(
+          scfStrmRelationships.relationshipType,
+          query.relationship_type as any,
+        ),
+      );
+    }
+
+    if (query.min_confidence_score !== undefined) {
+      conditions.push(
+        gte(
+          scfStrmRelationships.strengthScore,
+          query.min_confidence_score.toString(),
+        ),
+      );
+    }
+
+    let dbQuery = db
+      .select({
+        id: scfStrmRelationships.id,
+        scfMappingId: scfStrmRelationships.scfMappingId,
+        scfControlId: scfStrmRelationships.scfControlId,
+        fdeCode: scfStrmRelationships.fdeCode,
+        fdeName: scfStrmRelationships.fdeName,
+        relationshipType: scfStrmRelationships.relationshipType,
+        strengthScore: scfStrmRelationships.strengthScore,
+        rationale: scfStrmRelationships.rationale,
+        source: scfStrmRelationships.source,
+        organizationId: scfStrmRelationships.organizationId,
+      })
+      .from(scfStrmRelationships)
+      .$dynamic();
+
+    // If we need to filter by framework_id, source_framework_id, or target_framework_id,
+    // we need to join scfMappings -> scfFrameworkRequirements
+    if (
+      query.framework_id ||
+      query.source_framework_id ||
+      query.scf_version_id
+    ) {
+      // For now we assume framework_id or source_framework_id filters by the requirement's framework
+      // We join scfMappings to get the requirement, then scfFrameworkRequirements to get the frameworkId
+      dbQuery = dbQuery
+        .leftJoin(
+          scfMappings,
+          eq(scfMappings.id, scfStrmRelationships.scfMappingId),
+        )
+        .leftJoin(
+          scfFrameworkRequirements,
+          eq(
+            scfFrameworkRequirements.id,
+            scfMappings.scfFrameworkRequirementId,
+          ),
+        );
+
+      if (query.framework_id) {
+        conditions.push(
+          eq(scfFrameworkRequirements.scfFrameworkId, query.framework_id),
+        );
+      }
+      if (query.source_framework_id) {
+        conditions.push(
+          eq(
+            scfFrameworkRequirements.scfFrameworkId,
+            query.source_framework_id,
+          ),
+        );
+      }
+      if (query.scf_version_id) {
+        // Optionally filter by SCF version from mappings
+        conditions.push(eq(scfMappings.scfVersionId, query.scf_version_id));
+      }
+    }
+
+    if (conditions.length > 0) {
+      dbQuery = dbQuery.where(and(...conditions));
+    }
+
+    const rows = await dbQuery
+      .limit(query.limit ?? 100)
+      .offset(query.offset ?? 0);
+
+    return rows.map((row) => {
+      const strm =
+        "id" in row && "scfMappingId" in row
+          ? row
+          : (row as any).scf_strm_relationships;
+      return {
+        id: strm.id,
+        scf_mapping_id: strm.scfMappingId ?? undefined,
+        scf_control_id: strm.scfControlId ?? undefined,
+        fde_code: strm.fdeCode ?? undefined,
+        fde_name: strm.fdeName ?? undefined,
+        relationship_type:
+          strm.relationshipType as ScfStrmRelationship["relationship_type"],
+        relationship_strength: strm.strengthScore?.toString() ?? undefined,
+        rationale: strm.rationale ?? undefined,
+        source: strm.source,
+        organization_id: strm.organizationId ?? undefined,
+      };
+    });
   },
 
   createImportRun: async (run) => {

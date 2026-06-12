@@ -4,7 +4,7 @@ import type {
   AgentRuntimeContext,
   AgentToolInvocationResponse,
   AgentToolName,
-  FunctionalAgentId
+  FunctionalAgentId,
 } from "@standard/schemas";
 
 export type StartAgentRunInput = {
@@ -31,12 +31,20 @@ export type AgentRunRepository = {
   create(input: AgentRunResponse): Promise<AgentRunResponse>;
   get(agentRunId: string): Promise<AgentRunResponse | null>;
   save(run: AgentRunResponse): Promise<void>;
-  listByAssessment(assessmentId: string, organizationId: string): Promise<AgentRunResponse[]>;
+  listByAssessment(
+    assessmentId: string,
+    organizationId: string,
+  ): Promise<AgentRunResponse[]>;
 };
 
 export type AgentToolCallRepository = {
-  create(input: AgentToolInvocationResponse): Promise<AgentToolInvocationResponse>;
-  listByRun(agentRunId: string, organizationId: string): Promise<AgentToolInvocationResponse[]>;
+  create(
+    input: AgentToolInvocationResponse,
+  ): Promise<AgentToolInvocationResponse>;
+  listByRun(
+    agentRunId: string,
+    organizationId: string,
+  ): Promise<AgentToolInvocationResponse[]>;
 };
 
 import type { LlmProvider } from "./llm";
@@ -44,10 +52,12 @@ import type { LlmProvider } from "./llm";
  * Registry of real tool implementations that execute domain logic.
  * Keys are tool names matching AgentToolName.
  */
-export type ToolRegistry = Record<string, {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  execute: (args: any) => Promise<unknown>;
-}>;
+export type ToolRegistry = Record<
+  string,
+  {
+    execute: (args: any) => Promise<unknown>;
+  }
+>;
 
 /**
  * Observability callback for agent run telemetry.
@@ -56,6 +66,9 @@ export type ToolRegistry = Record<string, {
 export type AgentRunObservability = {
   record: (data: {
     agent_run_id: string;
+    organization_id: string;
+    assessment_id: string;
+    trace_id: string;
     model: string;
     prompt_tokens?: number;
     completion_tokens?: number;
@@ -72,4 +85,3 @@ export type AgentRuntimeDependencies = {
   toolRegistry?: ToolRegistry;
   observability?: AgentRunObservability;
 };
-

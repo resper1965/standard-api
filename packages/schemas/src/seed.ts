@@ -332,7 +332,7 @@ async function main() {
         scfVersionId: scfVersion.id,
         scfFrameworkRequirementId: reqId,
         scfControlId: ctrlId,
-        relationshipType: "direct",
+        relationshipType: "equal",
         relationshipStrength: "strong",
         mappingSource: "official_scf",
       })

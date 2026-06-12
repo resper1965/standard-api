@@ -272,6 +272,9 @@ export const ScfStrmQuerySchema = z.object({
   framework_id: UuidSchema.optional(),
   control_id: UuidSchema.optional(),
   relationship_type: ScfRelationshipTypeSchema.optional(),
+  min_confidence_score: z.coerce.number().min(0).max(1).optional(),
+  source_framework_id: UuidSchema.optional(),
+  target_framework_id: UuidSchema.optional(),
   limit: z.coerce.number().int().positive().max(500).default(100),
   offset: z.coerce.number().int().nonnegative().default(0),
 });
@@ -339,6 +342,7 @@ export const ScfControlSearchQuerySchema = z.object({
   weight_max: z.number().optional(),
   limit: z.number().int().optional(),
   offset: z.number().int().optional(),
+  fields: z.string().optional(),
   /** Base64-encoded cursor for keyset pagination. When present, `page` and `offset` are ignored. */
   after: z.string().optional(),
 });

@@ -953,6 +953,40 @@ export const tpraRoutes: RouteDefinition[] = [
         }
       }
 
+      // M3: Reverse Mapping — dispatch workflow to inherit vendor controls into SoA ledger
+      // The workflow maps approved TPRA controls back into assessment_control_events (ADR-002).
+      // Only dispatch when risk score is acceptable (raw_score >= 70) — same gate as inheritVendorControls.
+      if (deps.TPRA_APPROVAL_WORKFLOW && body.raw_score >= 70) {
+        try {
+          const runId = newId();
+          // Map scf_domain_failures (list of SCF control IDs) → vendorControls payload
+          const vendorControls = (body.scf_domain_failures ?? []).map(
+            (scfControlId) => ({ scfControlId }),
+          );
+          await deps.TPRA_APPROVAL_WORKFLOW.create({
+            id: runId,
+            params: {
+              organizationId: orgId,
+              assessmentId: assessment.assessment_id ?? assessment.id,
+              tpraAssessmentId: assessment.id,
+              vendorId: assessment.vendor_id,
+              scfVersionId: assessment.scf_version_id,
+              tpraRiskScore: body.raw_score,
+              vendorControls,
+              traceId,
+            },
+          });
+          console.log(
+            `[standard:tpra] Dispatched TPRA_APPROVAL_WORKFLOW run=${runId} for assessment=${assessment.id}`,
+          );
+        } catch (wfErr) {
+          console.error(
+            `[standard:tpra] Failed to dispatch workflow: ${wfErr instanceof Error ? wfErr.message : String(wfErr)}`,
+          );
+          // Non-blocking: we still return the created risk score
+        }
+      }
+
       return json({ data: riskScore, trace_id: traceId }, { status: 201 });
     },
   },
