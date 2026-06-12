@@ -81,7 +81,14 @@ async function gatherActorPermissions(
     if (context.session.user?.platformAdmin) {
       const rolePerms =
         DEFAULT_ROLE_PERMISSIONS[
-          "admin" as keyof typeof DEFAULT_ROLE_PERMISSIONS
+          "platform_admin" as keyof typeof DEFAULT_ROLE_PERMISSIONS
+        ];
+      if (rolePerms) actorPermissions.push(...rolePerms);
+    } else {
+      // Regular tenant owner/admin gets tenant_admin permissions to manage their org
+      const rolePerms =
+        DEFAULT_ROLE_PERMISSIONS[
+          "tenant_admin" as keyof typeof DEFAULT_ROLE_PERMISSIONS
         ];
       if (rolePerms) actorPermissions.push(...rolePerms);
     }
