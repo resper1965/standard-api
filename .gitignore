@@ -89,3 +89,5 @@ scratch/
 workers/smoke-tester/
 tests/unit/
 
+# Temporary directories (test scaffolding, local experiments)
+tmp/
