@@ -1,6 +1,0 @@
-{
-  "name": "test-pnpm",
-  "dependencies": {
-    "vite": "latest"
-  }
-}
