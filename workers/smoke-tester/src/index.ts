@@ -51,8 +51,15 @@ export default Sentry.withSentry(
 
       // Use Service Binding when available (production): Worker-to-Worker call
       // bypasses Cloudflare public proxy and avoids error 1003.
+      // IMPORTANT: when using a service binding, the URL hostname is irrelevant —
+      // Cloudflare routes directly to the bound worker. Use a plain internal URL
+      // to avoid triggering CF 1003 (Direct IP Access Not Allowed) that occurs
+      // when a Worker fetches its own public custom hostname within the same zone.
       // Fall back to plain fetch for local/staging environments without bindings.
-      const req = new Request(healthUrl, {
+      const fetchUrl = env.STANDARD_API_GATEWAY
+        ? `http://internal/health`
+        : healthUrl;
+      const req = new Request(fetchUrl, {
         headers: { "x-smoke-test-run-id": runId },
       });
       const healthRes = env.STANDARD_API_GATEWAY
