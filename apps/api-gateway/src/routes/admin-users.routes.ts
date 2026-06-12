@@ -8,7 +8,7 @@
  * These are cross-tenant operations — no organization_id scoping required.
  */
 import { z } from "zod";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { organizations } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition, RequestContext } from "../http";
@@ -51,9 +51,10 @@ const ListUsersQuerySchema = z.object({
 const UpdateUserBodySchema = z
   .object({
     name: z.string().min(1).max(255).optional(),
+    role: z.enum(["user", "admin"]).optional(),
   })
-  .refine((d) => d.name, {
-    message: "At least one of 'name' must be provided.",
+  .refine((d) => d.name || d.role, {
+    message: "At least one of 'name' or 'role' must be provided.",
   });
 
 /** Zod schema for the ban body. */
@@ -202,13 +203,22 @@ export const adminUsersRoutes: RouteDefinition[] = [
         await repo.updateUser(userId, { name: body.name });
       }
 
+      // Role update — Better Auth doesn't expose a role-change API through the
+      // adapter, so we update the `role` column directly via the auth DB client.
+      if (body.role) {
+        const db = getDomainDb(context);
+        await db.execute(
+          sql`UPDATE public."user" SET role = ${body.role}, updated_at = NOW() WHERE id = ${userId}`,
+        );
+      }
+
       // Fetch updated user for response
       const updated = await repo.getUserById(userId);
 
       await context.deps.audit.record("admin.user.updated", {
         actor_id: context.actorId,
         target_user_id: userId,
-        changes: { name: body.name },
+        changes: { name: body.name, role: body.role },
         trace_id: context.traceId,
       });
 

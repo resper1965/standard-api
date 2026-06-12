@@ -109,8 +109,8 @@ export const buildSecurityHeaders = (
       "camera=(), microphone=(), geolocation=(), payment=()",
     "X-Download-Options": "noopen",
     "X-Permitted-Cross-Domain-Policies": "none",
-    "Cross-Origin-Opener-Policy": "same-origin",
-    "Cross-Origin-Resource-Policy": "same-origin",
+    "Cross-Origin-Opener-Policy": "same-origin-allow-popups",
+    "Cross-Origin-Resource-Policy": "cross-origin",
   };
 };
 
