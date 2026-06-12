@@ -1,13 +1,14 @@
 import { useSession } from "@/lib/auth-client"
-import { useUserOrgs } from "@/lib/queries"
+import { useUserOrgs, useUserMe } from "@/lib/queries"
 
 export function useActiveOrg() {
   const { data: session } = useSession()
   const { data: userOrgsData } = useUserOrgs()
+  // Read platformAdmin from API (reads DB directly) — not from Better Auth
+  // session, which coerces boolean additionalFields to undefined in the proxy.
+  const { data: meData } = useUserMe()
 
-  const isPlatformAdmin =
-    ((session?.user as Record<string, unknown> | undefined)
-      ?.platformAdmin as boolean | undefined) === true
+  const isPlatformAdmin = meData?.data?.platformAdmin === true
 
   const sessionOrgId =
     ((session?.session as Record<string, unknown> | undefined)

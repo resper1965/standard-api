@@ -39,7 +39,35 @@ const getDomainDb = (context: RequestContext): DbClient => {
 };
 
 export const userOrgsRoutes: RouteDefinition[] = [
+  // ── GET /api/v1/users/me ─────────────────────────────────────────────────────
+  // Returns the current user's profile with platformAdmin and approved flags.
+  // The frontend reads platformAdmin from here (not from the Better Auth session
+  // proxy, which coerces boolean additionalFields to undefined).
+  {
+    method: "GET",
+    path: "/api/v1/users/me",
+    protected: true,
+    permissions: [],
+    tenantRequired: false,
+    handler: async (context) => {
+      const user = context.session?.user;
+      if (!user) {
+        throw new ApiError("UNAUTHORIZED", "Session required.", 401);
+      }
+      return json({
+        data: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          platformAdmin: user.platformAdmin,
+          approved: user.approved,
+        },
+      });
+    },
+  },
+
   // ── GET /api/v1/users/me/organizations ──────────────────────────────────────
+
   {
     method: "GET",
     path: "/api/v1/users/me/organizations",

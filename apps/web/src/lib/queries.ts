@@ -36,6 +36,7 @@ export const qk = {
   scfFrameworkCoverage: (frameworkId: string, versionId: string) =>
     ["scf", "frameworks", frameworkId, "coverage", versionId] as const,
   pendingUserCount: () => ["admin", "users", "pending-count"] as const,
+  userMe: () => ["user", "me"] as const,
 } as const;
 
 // ─── Auth / Orgs ──────────────────────────────────────────────────────────────
@@ -45,6 +46,16 @@ export function useUserOrgs() {
     queryKey: qk.userOrgs(),
     queryFn: () =>
       api<{ data: OrgListItem[] }>("/api/v1/users/me/organizations"),
+  });
+}
+
+/** Fetch the current user's profile including platformAdmin flag from DB. */
+export function useUserMe() {
+  return useQuery({
+    queryKey: qk.userMe(),
+    queryFn: () =>
+      api<{ data: { id: string; email: string; name: string; platformAdmin: boolean; approved: boolean } }>("/api/v1/users/me"),
+    staleTime: 5 * 60 * 1000, // 5 min — matches server KV TTL
   });
 }
 
