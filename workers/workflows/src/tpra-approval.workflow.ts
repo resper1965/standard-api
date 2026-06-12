@@ -4,8 +4,17 @@ import {
   WorkflowEvent,
 } from "cloudflare:workers";
 import { inheritVendorControls } from "@standard/assessment-engine";
+import { Pool, neonConfig } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-serverless";
+import { assessmentControlEvents } from "@standard/schemas";
 
-export type Env = Record<string, unknown>;
+if (typeof WebSocket !== "undefined") {
+  neonConfig.webSocketConstructor = WebSocket;
+}
+
+export type Env = {
+  DATABASE_URL: string;
+};
 
 export type TpraApprovalPayload = {
   organizationId: string;
@@ -50,8 +59,11 @@ export class TpraApprovalWorkflow extends WorkflowEntrypoint<
     // 2. Dispatch events to the ledger
     if (inheritedEvents && inheritedEvents.length > 0) {
       await step.do("dispatch_soa_events", async () => {
-        // Here we would typically insert these into assessment_control_events via DB call.
-        // For now, we mock the DB call or place it in the event queue for the ledger.
+        const pool = new Pool({ connectionString: this.env.DATABASE_URL });
+        const db = drizzle({ client: pool });
+
+        await db.insert(assessmentControlEvents).values(inheritedEvents);
+
         return { dispatchedCount: inheritedEvents.length };
       });
     }

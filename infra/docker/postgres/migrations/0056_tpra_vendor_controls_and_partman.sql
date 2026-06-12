@@ -1,10 +1,11 @@
--- Migration: 0056 — TPRA Vendor Controls & pg_partman for security_events
+-- Migration: 0056 — TPRA Vendor Controls
 -- Date: 2026-06-11
 -- Author: Antigravity
 
 BEGIN;
 
--- 1. Create tpra_vendor_controls
+-- Create tpra_vendor_controls: links vendors to the SCF controls they certify.
+-- Used by TpraApprovalWorkflow to know which controls a vendor covers.
 CREATE TABLE "tpra_vendor_controls" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"organization_id" uuid NOT NULL,
@@ -23,49 +24,5 @@ ALTER TABLE "tpra_vendor_controls" ADD CONSTRAINT "tpra_vendor_controls_scf_vers
 
 CREATE INDEX "tpra_vendor_ctrls_org_idx" ON "tpra_vendor_controls" USING btree ("organization_id");
 CREATE UNIQUE INDEX "tpra_vendor_ctrls_uidx" ON "tpra_vendor_controls" USING btree ("vendor_id","scf_control_id");
-
--- 2. Enable pg_partman
-CREATE SCHEMA IF NOT EXISTS partman;
-CREATE EXTENSION IF NOT EXISTS pg_partman SCHEMA partman;
-
--- 3. Partition security_events
-ALTER TABLE "security_events" RENAME TO "security_events_old";
-
-CREATE TABLE "security_events" (
-    "id" uuid DEFAULT gen_random_uuid() NOT NULL,
-    "organization_id" uuid,
-    "assessment_id" uuid,
-    "actor_id" uuid,
-    "event_type" text NOT NULL,
-    "severity" text NOT NULL,
-    "outcome" text NOT NULL,
-    "source" text NOT NULL,
-    "resource_type" text,
-    "resource_id" text,
-    "message_safe" text NOT NULL,
-    "trace_id" text NOT NULL,
-    "ip_address" text,
-    "user_agent" text,
-    "metadata_safe" jsonb DEFAULT '{}' NOT NULL,
-    "created_at" timestamp with time zone DEFAULT now() NOT NULL
-) PARTITION BY RANGE ("created_at");
-
-CREATE INDEX "security_events_org_idx" ON "security_events" USING btree ("organization_id");
-CREATE INDEX "security_events_type_idx" ON "security_events" USING btree ("event_type");
-CREATE INDEX "security_events_severity_idx" ON "security_events" USING btree ("severity");
-CREATE INDEX "security_events_trace_idx" ON "security_events" USING btree ("trace_id");
-CREATE INDEX "security_events_created_idx" ON "security_events" USING btree ("created_at");
-
-SELECT partman.create_parent(
-    p_parent_table := 'public.security_events',
-    p_control := 'created_at',
-    p_type := 'native',
-    p_interval := '1 month',
-    p_premake := 3
-);
-
-INSERT INTO "security_events" SELECT * FROM "security_events_old";
-
-DROP TABLE "security_events_old";
 
 COMMIT;

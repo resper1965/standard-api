@@ -21,8 +21,8 @@ import {
   computeSummary,
   submitMaturityForReview,
   validateMaturityVersion,
+  approveMaturityVersion,
   MATURITY_LEVELS,
-  createInMemoryMaturityRepositories,
 } from "@standard/maturity";
 import type { AppDependencies, RouteDefinition } from "../http";
 import {
@@ -33,6 +33,7 @@ import {
 } from "../http";
 import { ApiError } from "../errors/api-error";
 import type { AssessmentRecord } from "../http";
+import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { assessments } from "@standard/schemas";
 
@@ -53,40 +54,10 @@ const requireAssessment = async (
 
 /**
  * Build maturity deps from AppDependencies.
- * The maturity package uses in-memory repos by default; here we wire
- * the real repositories through the artifact adapter.
- *
- * NOTE: Drizzle-backed maturity repos are a future migration step.
- * For now, the in-memory repos are sufficient for the approval gate flow.
+ * Uses deps.maturity (Drizzle-backed in production, in-memory in tests).
  */
-const buildMaturityDeps = (deps: AppDependencies, _organizationId: string) => {
-  // ESM import of in-memory repos (Drizzle-backed repos are a future migration step)
-  const repos = createInMemoryMaturityRepositories();
-
-  return {
-    repositories: repos,
-    /** Fetches the approved gap analysis for an assessment (required by maturity draft creation) */
-    getApprovedGapAnalysis: async (assessmentId: string, orgId: string) => {
-      try {
-        const versions =
-          await deps.gapAnalysis.repositories.gapVersions.listByAssessment(
-            assessmentId,
-            orgId,
-          );
-        const approved = versions.find((v: any) => v.status === "approved");
-        if (!approved) return null;
-        const findings =
-          await deps.gapAnalysis.repositories.gapFindings.listByVersion(
-            approved.gap_analysis_version_id,
-            orgId,
-          );
-        return { version: approved, findings };
-      } catch {
-        return null;
-      }
-    },
-  };
-};
+const buildMaturityDeps = (deps: AppDependencies, _organizationId: string) =>
+  deps.maturity;
 
 // ── Domain Summary Calculator (by SCF domain) ────────────────────────────────
 
@@ -574,6 +545,54 @@ export const maturityRoutes: RouteDefinition[] = [
         assessment_id: assessmentId,
         maturity_domain_targets: row.maturityDomainTargets ?? {},
         domain_count: Object.keys(row.maturityDomainTargets ?? {}).length,
+        trace_id: traceId,
+      });
+    },
+  },
+  // ── POST /assessments/:id/maturity-versions/:vid/approve ─────────────────
+  // AGENTS.md §11: Mandatory approval gate for Maturity Assessment.
+  // Requires a pre-existing approval_event_id from the approvals service.
+  {
+    method: "POST",
+    path: "/api/v1/assessments/:id/maturity-versions/:vid/approve",
+    protected: true,
+    requireActor: true,
+    permissions: ["maturity:approve"],
+    handler: async ({
+      deps,
+      params,
+      request,
+      organizationId,
+      actorId,
+      traceId,
+    }) => {
+      const orgId = requireOrganizationId({ organizationId });
+      const assessmentId = routeUuidParam(params, "id");
+      const versionId = routeUuidParam(params, "vid");
+      await requireAssessment(deps, assessmentId, orgId);
+
+      const body = await parseJson(
+        request,
+        z.object({ approval_event_id: z.string().uuid() }),
+      );
+
+      const maturityDeps = buildMaturityDeps(deps, orgId);
+      const ctx = {
+        organizationId: orgId,
+        assessmentId,
+        ...(actorId ? { actorId } : {}),
+        traceId,
+      };
+
+      const approved = await approveMaturityVersion(
+        versionId,
+        body.approval_event_id,
+        ctx,
+        maturityDeps,
+      );
+
+      return json({
+        data: approved,
         trace_id: traceId,
       });
     },

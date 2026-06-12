@@ -24,6 +24,7 @@ import {
   type McpToolQueueMessage,
   type McpToolEnv,
 } from "./mcp-tool.consumer";
+import { processAgentUsageQueueMessage } from "./agent-usage.consumer";
 
 export interface Env {
   STANDARD_DOCUMENTS_BUCKET: R2Bucket;
@@ -41,6 +42,7 @@ export interface Env {
   WEBHOOK_SECRET?: string;
   /** KV namespace for job status store (agent-runs polling endpoint) */
   STANDARD_CACHE?: KVNamespace;
+  AGENT_USAGE_QUEUE?: Queue;
 }
 
 type QueueMessageBody = {
@@ -74,6 +76,10 @@ export default Sentry.withSentry(
               await processAgentRunQueueMessage(message.body, env);
               break;
 
+            case "agent_usage":
+              await processAgentUsageQueueMessage(message.body, env);
+              break;
+
             case "mcp_tool_async":
               // ADR-003 Grupo B — async tool execution via queue
               await processMcpToolMessage(
@@ -83,6 +89,10 @@ export default Sentry.withSentry(
                   AI_GATEWAY_TOKEN: env.AI_GATEWAY_TOKEN ?? undefined,
                   WEBHOOK_SECRET: env.WEBHOOK_SECRET ?? undefined,
                   STANDARD_CACHE: env.STANDARD_CACHE ?? undefined,
+                  DATABASE_URL: env.DATABASE_URL ?? undefined,
+                  AGENT_USAGE_QUEUE: env.AGENT_USAGE_QUEUE
+                    ? { send: (msg) => env.AGENT_USAGE_QUEUE!.send(msg as any) }
+                    : undefined,
                 } as McpToolEnv,
               );
               break;
@@ -166,6 +176,7 @@ export default Sentry.withSentry(
           "standard-kb-embedding",
           "standard-report-export",
           "standard-agent-run",
+          "standard-agent-usage",
           "standard-soc-triage",
           "standard-user-lifecycle",
         ],
@@ -174,8 +185,12 @@ export default Sentry.withSentry(
     },
 
     /**
-     * Scheduled cron trigger for data retention purge.
-     * Configured in wrangler.toml: crons = ["0 2 * * SUN"] (every Sunday 02:00 UTC)
+     * Scheduled cron trigger — runs every Sunday at 02:00 UTC.
+     * Configured in wrangler.toml: crons = ["0 2 * * SUN"]
+     *
+     * Tasks performed:
+     *  1. Data retention purge (delete rows older than 1 year)
+     *  2. pg_partman maintenance (create future monthly partitions for security_events)
      *
      * To run a dry-run manually via Cloudflare Dashboard:
      *   Workers > standard-queues > Triggers > Crons > Run
@@ -189,6 +204,7 @@ export default Sentry.withSentry(
         `[queues] Scheduled cron fired: ${controller.cron} at ${new Date(controller.scheduledTime).toISOString()}`,
       );
 
+      // 1. Data retention purge
       ctx.waitUntil(
         processDataRetentionPurge(
           {
@@ -209,6 +225,20 @@ export default Sentry.withSentry(
             console.error(`[queues] Scheduled retention purge failed:`, err);
           }),
       );
+
+      // 2. pg_partman maintenance — create future monthly partitions for security_events.
+      //    Requires migration 0057 to have been applied (pg_partman extension).
+      //    Best-effort: if DATABASE_URL is absent or partman not installed, logs and continues.
+      if (env.DATABASE_URL) {
+        ctx.waitUntil(
+          runPartmanMaintenance(env.DATABASE_URL).catch((err) => {
+            console.error(
+              `[queues] pg_partman maintenance failed:`,
+              err instanceof Error ? err.message : String(err),
+            );
+          }),
+        );
+      }
     },
   } satisfies ExportedHandler<Env>,
 );
@@ -228,6 +258,8 @@ function detectQueueType(queueName: string, body: QueueMessageBody): string {
     return "document_ingestion";
   if (queueName.includes("agent-run") || body?.job_type === "agent_run")
     return "agent_run";
+  if (queueName.includes("agent-usage") || body?.job_type === "agent_usage")
+    return "agent_usage";
   if (queueName.includes("soc-triage") || body?.job_type === "soc_triage")
     return "soc_triage";
   if (
@@ -239,4 +271,35 @@ function detectQueueType(queueName: string, body: QueueMessageBody): string {
   if (queueName.includes("dead-letter") || queueName.includes("dlq"))
     return "dlq_passthrough";
   return "unknown";
+}
+
+/**
+ * Runs pg_partman maintenance to auto-create future monthly partitions.
+ * Called from the weekly cron after data retention purge.
+ *
+ * Requires migration 0057 (pg_partman extension) to have been applied.
+ * Safe to call even if no new partitions are needed — partman is idempotent.
+ *
+ * Uses @neondatabase/serverless (HTTP mode — no persistent connection).
+ */
+async function runPartmanMaintenance(databaseUrl: string): Promise<void> {
+  const { neon } = await import("@neondatabase/serverless");
+  const sql = neon(databaseUrl);
+
+  // run_maintenance_proc is the recommended entrypoint for pg_partman ≥ 5.x
+  // Falls back gracefully if partman schema doesn't exist yet.
+  await sql`SELECT partman.run_maintenance_proc()`;
+
+  console.log(
+    JSON.stringify({
+      level: "info",
+      message: "partman_maintenance_complete",
+      service: "queue-worker",
+      module: "partman",
+      metadata: {
+        table: "security_events",
+        ran_at: new Date().toISOString(),
+      },
+    }),
+  );
 }

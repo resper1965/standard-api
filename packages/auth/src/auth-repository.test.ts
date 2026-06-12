@@ -192,8 +192,14 @@ describe("AuthRepository.revokeOtherSessions", () => {
   });
 
   it("chama db.delete para apagar outras sessoes", async () => {
+    // The delete chain returns its own `where` child spy (not the root chain.where).
+    // We capture it here to assert correctly.
+    const deleteWhere = vi.fn().mockResolvedValue(undefined);
+    mockDb.delete.mockReturnValueOnce({ ...mockDb, where: deleteWhere });
+
     await repo.revokeOtherSessions("ba-user-001", "sess-keep");
+
     expect(mockDb.delete).toHaveBeenCalledTimes(1);
-    expect(mockDb.where).toHaveBeenCalledTimes(1);
+    expect(deleteWhere).toHaveBeenCalledTimes(1);
   });
 });

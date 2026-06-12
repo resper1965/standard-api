@@ -259,6 +259,12 @@ export const getTestDb = async () => {
     .sort();
   for (const file of files) {
     let sql = fs.readFileSync(path.join(migrationsFolder, file), "utf8");
+
+    // Skip migrations that require extensions not available in PGlite
+    // (e.g. pg_partman). Mark production-only migrations with:
+    //   -- pglite-skip: <reason>
+    if (sql.includes("-- pglite-skip")) continue;
+
     if (file === "0016_poam_workflow.sql") {
       sql = sql.replace(
         "UPDATE poam_items SET poam_code = COALESCE(poam_code, item_code) WHERE poam_code IS NULL;",

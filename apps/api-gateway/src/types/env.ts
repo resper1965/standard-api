@@ -20,6 +20,8 @@ export interface Env {
   AI_GATEWAY_BASE_URL?: string;
   AI_GATEWAY_TOKEN?: string;
   ASSESSMENT_WORKFLOW?: Workflow;
+  COUNCIL_WORKFLOW?: Workflow;
+  TPRA_APPROVAL_WORKFLOW?: Workflow;
   STANDARD_DOCUMENTS_BUCKET: R2Bucket;
   STANDARD_REPORTS_BUCKET?: R2Bucket;
   STANDARD_EXPORTS_BUCKET?: R2Bucket;
@@ -29,6 +31,7 @@ export interface Env {
   AGENT_RUN_QUEUE: Queue;
   SOC_TRIAGE_QUEUE?: Queue;
   USER_LIFECYCLE_QUEUE?: Queue;
+  AGENT_USAGE_QUEUE?: Queue;
   EMAIL: Fetcher;
   STANDARD_CACHE?: KVNamespace;
   STANDARD_CONFIG_KV?: KVNamespace;

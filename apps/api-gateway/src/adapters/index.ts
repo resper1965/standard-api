@@ -15,6 +15,8 @@ import {
 } from "@standard/observability";
 import { createInMemoryPoamDependencies } from "@standard/poam";
 import { createInMemoryReportingDependencies } from "@standard/reporting";
+import { createInMemoryMaturityDependencies } from "@standard/maturity";
+import { createDrizzleMaturityRepositories } from "@standard/maturity";
 import {
   createInMemoryScfCore,
   createScfCoreFromRepository,
@@ -109,6 +111,7 @@ export const createMockRepositories = (): AppDependencies => {
   const scf = createInMemoryScfCore();
   const soa = createInMemorySoaDependencies({ scf, kb });
   const gapAnalysis = createInMemoryGapAnalysisDependencies({ scf, kb, soa });
+  const maturity = createInMemoryMaturityDependencies();
   const poam = createInMemoryPoamDependencies({ gapAnalysis, scf });
 
   const tenants = createTenantRepository();
@@ -196,6 +199,7 @@ export const createMockRepositories = (): AppDependencies => {
     scf,
     soa,
     gapAnalysis,
+    maturity,
     poam,
     reporting: createInMemoryReportingDependencies({
       soa,
@@ -258,6 +262,57 @@ export const createDrizzleRepositories = (
   const poamRepositories = createDrizzlePoamRepositories(db);
   const poam = { repositories: poamRepositories, gapAnalysis, scf };
 
+  // Maturity — Drizzle-backed (replaces in-memory MVP)
+  const maturityRepositories = createDrizzleMaturityRepositories(db);
+  const getApprovedGapAnalysis = async (
+    assessmentId: string,
+    organizationId: string,
+  ) => {
+    try {
+      const versions = await gapRepositories.gapVersions.listByAssessment(
+        assessmentId,
+        organizationId,
+      );
+      const approved = versions.find((v: any) => v.status === "approved");
+      if (!approved) return null;
+      const findings = await gapRepositories.gapFindings.listByVersion(
+        approved.gap_analysis_version_id,
+        organizationId,
+      );
+      return { version: approved, findings };
+    } catch {
+      return null;
+    }
+  };
+  const maturity = {
+    repositories: maturityRepositories,
+    getApprovedGapAnalysis,
+  };
+
+  // MaturityReportProvider — bridges MaturityRepositories → ReportingDependencies.maturity
+  // findApprovedByAssessment is called by source-resolution.ts when composing reports.
+  const maturityReportProvider = {
+    findApprovedByAssessment: async (
+      assessmentId: string,
+      organizationId: string,
+    ) => {
+      const versions = await maturityRepositories.versions.listByAssessment(
+        assessmentId,
+        organizationId,
+      );
+      const approved = versions.find((v) => v.status === "approved");
+      if (!approved) return null;
+      return {
+        maturity_assessment_version_id: approved.id,
+        status: "approved" as const,
+        summary: {
+          version_number: approved.versionNumber,
+          approval_event_id: approved.approvalEventId,
+        },
+      };
+    },
+  };
+
   const reportRepositories = createDrizzleReportRepositories(db);
   const reporting = {
     repositories: reportRepositories,
@@ -265,6 +320,7 @@ export const createDrizzleRepositories = (
     gapAnalysis,
     poam,
     scf,
+    maturity: maturityReportProvider,
   };
 
   return {
@@ -283,6 +339,7 @@ export const createDrizzleRepositories = (
     scf,
     soa,
     gapAnalysis,
+    maturity,
     poam,
     reporting,
     agentRuntime: composeDrizzleAgentRuntime(db, env),
