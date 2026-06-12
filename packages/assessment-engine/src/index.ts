@@ -10,3 +10,4 @@ export * from "./transitions";
 export * from "./types";
 export * from "./compliance-optimizer";
 export * from "./strm-weight-calculator";
+export * from "./strm-normaliser";

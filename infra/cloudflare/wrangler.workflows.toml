@@ -45,6 +45,10 @@ class_name = "CouncilOrchestrationWorkflow"
 binding = "STANDARD_CACHE"
 id = "094323d4e27d4b92994c89d412d27f74"
 
+[[env.staging.queues.producers]]
+binding = "AGENT_USAGE_QUEUE"
+queue = "standard-agent-usage-staging"
+
 [env.production]
 name = "standard-workflows-production"
 
@@ -67,4 +71,6 @@ class_name = "CouncilOrchestrationWorkflow"
 binding = "STANDARD_CACHE"
 id = "55f97abbf9794b0196bdf51e8c1dedec"
 
-
+[[env.production.queues.producers]]
+binding = "AGENT_USAGE_QUEUE"
+queue = "standard-agent-usage-prod"

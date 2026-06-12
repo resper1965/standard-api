@@ -36,38 +36,55 @@ describe("ScfControlService — control lookup and search", () => {
   });
 
   it("getControl returns null for unknown id", async () => {
-    const control = await scf.controls.getControl("00000000-0000-0000-0000-000000000000");
+    const control = await scf.controls.getControl(
+      "00000000-0000-0000-0000-000000000000",
+    );
     expect(control).toBeNull();
   });
 
   // ─── getControlByCode ────────────────────────────────────────────────────
 
   it("getControlByCode returns control for existing code", async () => {
-    const control = await scf.controls.getControlByCode(SYNTHETIC_SCF_VERSION_ID, "GOV-001");
+    const control = await scf.controls.getControlByCode(
+      SYNTHETIC_SCF_VERSION_ID,
+      "GOV-001",
+    );
     expect(control).not.toBeNull();
     expect(control!.control_title).toBe("Synthetic governance policy");
   });
 
   it("getControlByCode is case-insensitive", async () => {
-    const control = await scf.controls.getControlByCode(SYNTHETIC_SCF_VERSION_ID, "gov-001");
+    const control = await scf.controls.getControlByCode(
+      SYNTHETIC_SCF_VERSION_ID,
+      "gov-001",
+    );
     expect(control).not.toBeNull();
     expect(control!.control_code).toBe("GOV-001");
   });
 
   it("getControlByCode returns null for code in wrong version", async () => {
-    const control = await scf.controls.getControlByCode("wrong-version-id", "GOV-001");
+    const control = await scf.controls.getControlByCode(
+      "wrong-version-id",
+      "GOV-001",
+    );
     expect(control).toBeNull();
   });
 
   it("getControlByCode returns null for unknown code", async () => {
-    const control = await scf.controls.getControlByCode(SYNTHETIC_SCF_VERSION_ID, "NONEXISTENT-999");
+    const control = await scf.controls.getControlByCode(
+      SYNTHETIC_SCF_VERSION_ID,
+      "NONEXISTENT-999",
+    );
     expect(control).toBeNull();
   });
 
   // ─── listControlsByDomain ────────────────────────────────────────────────
 
   it("listControlsByDomain returns controls for GOV domain", async () => {
-    const controls = await scf.controls.listControlsByDomain(SYNTHETIC_SCF_VERSION_ID, SYNTHETIC_GOV_DOMAIN_ID);
+    const controls = await scf.controls.listControlsByDomain(
+      SYNTHETIC_SCF_VERSION_ID,
+      SYNTHETIC_GOV_DOMAIN_ID,
+    );
     expect(controls).toHaveLength(2);
     const codes = controls.map((c) => c.control_code);
     expect(codes).toContain("GOV-001");
@@ -75,7 +92,10 @@ describe("ScfControlService — control lookup and search", () => {
   });
 
   it("listControlsByDomain returns controls for IAC domain", async () => {
-    const controls = await scf.controls.listControlsByDomain(SYNTHETIC_SCF_VERSION_ID, SYNTHETIC_IAC_DOMAIN_ID);
+    const controls = await scf.controls.listControlsByDomain(
+      SYNTHETIC_SCF_VERSION_ID,
+      SYNTHETIC_IAC_DOMAIN_ID,
+    );
     expect(controls).toHaveLength(2);
     const codes = controls.map((c) => c.control_code);
     expect(codes).toContain("IAC-001");
@@ -83,7 +103,10 @@ describe("ScfControlService — control lookup and search", () => {
   });
 
   it("listControlsByDomain returns empty array for unknown domain", async () => {
-    const controls = await scf.controls.listControlsByDomain(SYNTHETIC_SCF_VERSION_ID, "00000000-0000-0000-0000-000000000000");
+    const controls = await scf.controls.listControlsByDomain(
+      SYNTHETIC_SCF_VERSION_ID,
+      "00000000-0000-0000-0000-000000000000",
+    );
     expect(controls).toHaveLength(0);
   });
 
@@ -118,7 +141,9 @@ describe("ScfControlService — control lookup and search", () => {
 
   it("searchControls without scf_version_id falls back to latest version", async () => {
     // Latest version is the synthetic one; should still return results
-    const controls = await scf.controls.searchControls({ control_code: "GOV-001" });
+    const controls = await scf.controls.searchControls({
+      control_code: "GOV-001",
+    });
     expect(controls).toHaveLength(1);
     expect(controls[0]!.control_code).toBe("GOV-001");
   });
@@ -132,14 +157,36 @@ describe("ScfControlService — control lookup and search", () => {
   });
 
   it("searchControls results are sorted alphabetically by control_code", async () => {
-    const controls = await scf.controls.searchControls({ scf_version_id: SYNTHETIC_SCF_VERSION_ID });
+    const controls = await scf.controls.searchControls({
+      scf_version_id: SYNTHETIC_SCF_VERSION_ID,
+    });
     const codes = controls.map((c) => c.control_code);
     const sorted = [...codes].sort();
     expect(codes).toEqual(sorted);
   });
 
   it("searchControls returns 4 controls total for synthetic fixture version", async () => {
-    const controls = await scf.controls.searchControls({ scf_version_id: SYNTHETIC_SCF_VERSION_ID });
+    const controls = await scf.controls.searchControls({
+      scf_version_id: SYNTHETIC_SCF_VERSION_ID,
+    });
     expect(controls).toHaveLength(4);
+  });
+
+  // ─── G03b: Sparse fields contract ────────────────────────────────────────
+
+  it("searchControls accepts fields param without error (sparse-fields contract)", async () => {
+    // The in-memory repo ignores `fields` (no DB layer), but the call must not throw.
+    // The Drizzle repo uses getSparseSelect() to push projection to the DB layer.
+    // This test guards the interface contract defined in ScfControlSearchQuerySchema.
+    const controls = await scf.controls.searchControls({
+      scf_version_id: SYNTHETIC_SCF_VERSION_ID,
+      fields: "id,control_code,control_title",
+    });
+    expect(controls.length).toBeGreaterThan(0);
+    // All returned controls must have at minimum id and control_code (cursor stability)
+    for (const c of controls) {
+      expect(c).toHaveProperty("id");
+      expect(c).toHaveProperty("control_code");
+    }
   });
 });

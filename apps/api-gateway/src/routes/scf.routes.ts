@@ -15,7 +15,10 @@ import { json, parseJson, routeParam, routeUuidParam } from "../http";
 import { REGULATIONS } from "./regulations.routes";
 import { RISK_TAXONOMY } from "./risk.routes";
 import { DATA_CATEGORIES, RETENTION_RULES } from "./reference-data.routes";
-import { ComplianceOptimizerService } from "@standard/assessment-engine";
+import {
+  ComplianceOptimizerService,
+  normaliseRelationshipType,
+} from "@standard/assessment-engine";
 import { eq, and } from "drizzle-orm";
 
 const resolveVersionId = async (
@@ -97,6 +100,29 @@ const parseSparseFields = (raw: string | null): Set<string> | null => {
   const resolved = requested.map((f) => aliasMap[f] ?? f);
   const valid = resolved.filter((f) => CONTROL_FIELD_WHITELIST.has(f));
   return valid.length > 0 ? new Set(valid) : null;
+};
+
+/**
+ * Parse and normalise the `?relationship_type` query parameter.
+ *
+ * - Returns `undefined` when the parameter is absent (no filter applied).
+ * - Normalises legacy/alias values: `intersecting`→`intersects`, `direct`→`equal`, etc.
+ *   via the canonical LEGACY_MAP in strm-normaliser.ts (ADR-001).
+ * - Throws 400 VALIDATION_ERROR for unrecognised values (security whitelist).
+ *
+ * @see packages/assessment-engine/src/strm-normaliser.ts
+ */
+const parseRelationshipType = (raw: string | null): string | undefined => {
+  if (raw === null || raw === undefined || raw === "") return undefined;
+  const normalised = normaliseRelationshipType(raw.trim());
+  if (normalised === null) {
+    throw new ApiError(
+      "VALIDATION_ERROR",
+      `Invalid relationship_type: "${raw}". Allowed values: equal, subset, intersects, superset, no_relation.`,
+      400,
+    );
+  }
+  return normalised;
 };
 
 const controlResponseFull = (control: ScfControl) => ({
@@ -1404,8 +1430,9 @@ export const scfRoutes: RouteDefinition[] = [
     handler: async ({ deps, request, traceId }) => {
       const url = new URL(request.url);
       const fdeCode = url.searchParams.get("fde_code");
-      const relationshipType =
-        url.searchParams.get("relationship_type") ?? undefined;
+      const relationshipType = parseRelationshipType(
+        url.searchParams.get("relationship_type"),
+      );
       const limitRaw = url.searchParams.get("limit");
       const limit = limitRaw
         ? Math.min(parseInt(limitRaw, 10) || 100, 500)
@@ -1466,8 +1493,9 @@ export const scfRoutes: RouteDefinition[] = [
     handler: async ({ deps, request, traceId, params, organizationId }) => {
       const controlCode = routeParam(params, "control_code");
       const url = new URL(request.url);
-      const relationshipType =
-        url.searchParams.get("relationship_type") ?? undefined;
+      const relationshipType = parseRelationshipType(
+        url.searchParams.get("relationship_type"),
+      );
       const limitRaw = url.searchParams.get("limit");
       const limit = limitRaw
         ? Math.min(parseInt(limitRaw, 10) || 100, 500)
