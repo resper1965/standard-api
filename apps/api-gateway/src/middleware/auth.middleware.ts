@@ -10,15 +10,22 @@
  * - Approval gate: user.approved === false (non-platform-admin) → 403
  *
  * Sets: context.actorId, context.organizationId, context.m2mScopes, context.session
+ *
+ * NOTE: platform_admin and approved are read directly from DB (not from Better
+ * Auth additionalFields) because the Drizzle adapter coerces null→undefined for
+ * boolean fields when returned via the proxy layer, causing isPlatformAdmin to be
+ * always false even when platform_admin=true in the DB.
  */
 import type { StandardAuth } from "@standard/auth";
 import { ApiError } from "../errors/api-error";
 import { isApiKeyToken, extractApiKeyToken } from "../utils/api-key-crypto";
 import type { RequestContext } from "../http";
+import { sql } from "drizzle-orm";
 
 // ── Cache TTLs ────────────────────────────────────────────────────────────────
 const KV_API_KEY_TTL = 300; // 5 min — API key verification cache
 const KV_SESSION_TTL = 60; // 60s  — session org context cache
+const KV_USER_FLAGS_TTL = 300; // 5 min — platform_admin/approved flags cache
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -103,7 +110,13 @@ async function resolveSessionAuthContext(
 ): Promise<void> {
   const rawSession = await auth.api
     .getSession({ headers: context.request.headers })
-    .catch(() => null);
+    .catch((err: unknown) => {
+      console.error(
+        "[standard:auth] getSession threw:",
+        err instanceof Error ? err.message : String(err),
+      );
+      return null;
+    });
 
   if (rawSession?.user) {
     const user = rawSession.user as any;
@@ -119,9 +132,55 @@ async function resolveSessionAuthContext(
       }
     }
 
-    // 2b. Approval gate — platform admins bypassa
-    const isPlatformAdmin = user.platformAdmin ?? user.platform_admin ?? false;
-    const isApproved = user.approved ?? false;
+    // 2b. Read platform_admin + approved directly from DB.
+    //
+    // Better Auth's drizzleAdapter coerces null→undefined for boolean
+    // additionalFields when returned via the internal proxy, making
+    // user.platformAdmin always undefined even when platform_admin=true
+    // in the database. To guarantee correctness we query the DB directly
+    // (single PK lookup) with a short KV cache (5 min TTL).
+    const flagsKvKey = `user-flags:${user.id}`;
+    let flags: { platform_admin: boolean; approved: boolean } | null = null;
+
+    if (kv) {
+      flags = (await kv
+        .get(flagsKvKey, "json")
+        .catch(() => null)) as typeof flags;
+    }
+
+    if (!flags) {
+      const db = (context.deps as any)._db;
+      if (db) {
+        try {
+          const rows = await db.execute(
+            sql`SELECT platform_admin, approved FROM public."user" WHERE id = ${user.id} LIMIT 1`,
+          );
+          const row = rows?.rows?.[0] ?? rows?.[0];
+          if (row) {
+            flags = {
+              platform_admin: row.platform_admin === true,
+              approved: row.approved === true,
+            };
+            if (kv) {
+              kv.put(flagsKvKey, JSON.stringify(flags), {
+                expirationTtl: KV_USER_FLAGS_TTL,
+              }).catch(() => {});
+            }
+          }
+        } catch (dbErr) {
+          console.error(
+            "[standard:auth] flags DB lookup failed:",
+            dbErr instanceof Error ? dbErr.message : String(dbErr),
+          );
+        }
+      }
+    }
+
+    const isPlatformAdmin = flags
+      ? flags.platform_admin
+      : !!(user.platformAdmin ?? user.platform_admin);
+    const isApproved = flags ? flags.approved : !!user.approved;
+
     if (!isApproved && !isPlatformAdmin) {
       throw new ApiError(
         "ACCOUNT_PENDING_APPROVAL",
