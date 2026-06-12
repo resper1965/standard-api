@@ -770,6 +770,15 @@ export const poamRoutes: RouteDefinition[] = [
       if (!version)
         throw new ApiError("NOT_FOUND", "POA&M version not found.", 404);
 
+      // Guard: only detect on draft/under_review — approved versions are immutable
+      if (version.status === "approved") {
+        throw new ApiError(
+          "CONFLICT",
+          "Cannot run dependency detection on an approved POA&M version.",
+          409,
+        );
+      }
+
       // Fetch all items in this version to analyse structural relationships
       const items = await deps.poam.repositories.items
         .withOrganization(orgId)
@@ -784,9 +793,48 @@ export const poamRoutes: RouteDefinition[] = [
         })),
       );
 
+      // Persist detected dependencies (proposals — not final until human review)
+      // Build PoamDependencyResponse records from DetectedDependency proposals.
+      const now = new Date().toISOString();
+      const tenantDepRepo =
+        deps.poam.repositories.dependencies.withOrganization(orgId);
+
+      // Load existing deps per item to avoid duplicates
+      const existingKeys = new Set<string>();
+      for (const item of items) {
+        const existing = await tenantDepRepo.listByItem(item.poam_item_id);
+        for (const dep of existing) {
+          existingKeys.add(
+            `${dep.poam_item_id}:${dep.depends_on_poam_item_id ?? ""}`,
+          );
+        }
+      }
+
+      const toSave = detected
+        .filter(
+          (d) =>
+            !existingKeys.has(`${d.poam_item_id}:${d.depends_on_poam_item_id}`),
+        )
+        .map((d) => ({
+          poam_dependency_id: crypto.randomUUID(),
+          organization_id: orgId,
+          assessment_id: version.assessment_id,
+          poam_item_id: d.poam_item_id,
+          depends_on_poam_item_id: d.depends_on_poam_item_id,
+          dependency_type: d.dependency_type,
+          description: d.description,
+          created_at: now,
+        }));
+
+      if (toSave.length > 0) {
+        await tenantDepRepo.saveMany(toSave);
+      }
+
       return json({
         data: detected,
         total: detected.length,
+        saved: toSave.length,
+        skipped_duplicates: detected.length - toSave.length,
         poam_version_id: poamVersionId,
         trace_id: traceId,
       });
