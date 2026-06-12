@@ -26,6 +26,11 @@ id = "4e027e07e0e5440a8666c3f8ee419333"
 binding = "STANDARD_DOCUMENTS_BUCKET"
 bucket_name = "standard-documents-dev"
 
+[[queues.producers]]
+binding = "AGENT_USAGE_QUEUE"
+queue = "standard-agent-usage-dev"
+
+
 # Database configured via secrets:
 # wrangler secret put DATABASE_URL --name standard-workflows
 
@@ -54,6 +59,11 @@ id = "4e027e07e0e5440a8666c3f8ee419333"
 [[env.staging.r2_buckets]]
 binding = "STANDARD_DOCUMENTS_BUCKET"
 bucket_name = "standard-documents-staging"
+
+[[env.staging.queues.producers]]
+binding = "AGENT_USAGE_QUEUE"
+queue = "standard-agent-usage-staging"
+
 
 # Hyperdrive — regional Neon connection pooler
 # Create: wrangler hyperdrive create standard-neon-staging --connection-string="<NEON_URL>"
@@ -86,6 +96,11 @@ id = "4e027e07e0e5440a8666c3f8ee419333"
 [[env.production.r2_buckets]]
 binding = "STANDARD_DOCUMENTS_BUCKET"
 bucket_name = "standard-documents-prod"
+
+[[env.production.queues.producers]]
+binding = "AGENT_USAGE_QUEUE"
+queue = "standard-agent-usage-prod"
+
 
 # Hyperdrive — regional Neon connection pooler
 # Create: wrangler hyperdrive create standard-neon-prod --connection-string="<NEON_URL>"

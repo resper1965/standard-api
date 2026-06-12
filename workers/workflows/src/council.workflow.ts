@@ -24,6 +24,7 @@ export interface Env {
   STANDARD_CACHE: KVNamespace;
   /** R2 bucket for large payload claim-check (>=256KB). Shared with api-gateway. */
   STANDARD_DOCUMENTS_BUCKET: R2Bucket;
+  AGENT_USAGE_QUEUE?: Queue;
 }
 
 type CouncilWorkflowParams = {
@@ -135,6 +136,30 @@ export class CouncilOrchestrationWorkflow extends WorkflowEntrypoint<
     const agentDeps: AgentRuntimeDependencies = {
       ...createDrizzleAgentRuntimeDependencies(db as never),
       llm,
+      ...(this.env.AGENT_USAGE_QUEUE
+        ? {
+            observability: {
+              record: async (data) => {
+                await this.env.AGENT_USAGE_QUEUE!.send({
+                  queue_type: "agent_usage",
+                  agent_run_id: data.agent_run_id,
+                  organization_id: data.organization_id,
+                  assessment_id: data.assessment_id,
+                  model_provider: "cloudflare-ai-gateway",
+                  model_name: data.model,
+                  prompt_tokens: data.prompt_tokens ?? 0,
+                  completion_tokens: data.completion_tokens ?? 0,
+                  total_tokens:
+                    (data.prompt_tokens ?? 0) + (data.completion_tokens ?? 0),
+                  embedding_tokens: 0,
+                  total_latency_ms: data.total_latency_ms,
+                  tool_calls: data.tool_calls,
+                  trace_id: data.trace_id,
+                });
+              },
+            },
+          }
+        : {}),
     };
 
     const runtimeService = new AgentRuntimeService(agentDeps);

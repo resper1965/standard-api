@@ -93,6 +93,9 @@ export type ScfRepository = {
     controlCode: string,
     opts?: { relationshipType?: string; limit?: number },
   ): Promise<ScfStrmRelationship[]>;
+  searchStrm(
+    query: import("@standard/schemas").ScfStrmQuery,
+  ): Promise<ScfStrmRelationship[]>;
   createImportRun(run: ScfImportRun): Promise<ScfImportRun>;
   saveImportRun(run: ScfImportRun): Promise<void>;
   listImportRuns(): Promise<ScfImportRun[]>;
@@ -156,12 +159,11 @@ export const createInMemoryScfRepository = (
       if (organizationId) {
         return all.filter(
           (v) =>
-            (v as any).organization_id == null ||
-            (v as any).organization_id === organizationId,
+            v.organization_id == null || v.organization_id === organizationId,
         );
       }
       // Unauthenticated: only global versions
-      return all.filter((v) => (v as any).organization_id == null);
+      return all.filter((v) => v.organization_id == null);
     },
     getVersion: async (id) => versions.get(id) ?? null,
     getLatestVersion: async (organizationId) => {
@@ -169,10 +171,9 @@ export const createInMemoryScfRepository = (
       const filtered = organizationId
         ? all.filter(
             (v) =>
-              (v as any).organization_id == null ||
-              (v as any).organization_id === organizationId,
+              v.organization_id == null || v.organization_id === organizationId,
           )
-        : all.filter((v) => (v as any).organization_id == null);
+        : all.filter((v) => v.organization_id == null);
       return (
         filtered.sort((a, b) =>
           (b.imported_at ?? "").localeCompare(a.imported_at ?? ""),
@@ -257,8 +258,7 @@ export const createInMemoryScfRepository = (
       [...requirements.values()]
         .filter(
           (item) =>
-            item.scf_framework_id === frameworkId &&
-            (item as any).is_mcr === true,
+            item.scf_framework_id === frameworkId && item.is_mcr === true,
         )
         .sort((a, b) => a.sort_order - b.sort_order),
     getRequirement: async (id) => requirements.get(id) ?? null,
@@ -373,6 +373,30 @@ export const createInMemoryScfRepository = (
           (r) => r.relationship_type === opts.relationshipType,
         );
       return results.slice(0, opts?.limit ?? 100);
+    },
+    searchStrm: async (query) => {
+      let results = [...strmRelationships.values()];
+
+      if (query.control_id) {
+        results = results.filter((r) => r.scf_control_id === query.control_id);
+      }
+      if (query.relationship_type) {
+        results = results.filter(
+          (r) => r.relationship_type === query.relationship_type,
+        );
+      }
+      if (query.min_confidence_score !== undefined) {
+        results = results.filter(
+          (r) =>
+            Number(r.relationship_strength ?? 0) >= query.min_confidence_score!,
+        );
+      }
+      // Note: Full join-based mock (framework_id, source_framework_id) is simplified here.
+      // A proper in-memory implementation would need to cross-reference mappings and requirements.
+      return results.slice(
+        query.offset ?? 0,
+        (query.offset ?? 0) + (query.limit ?? 100),
+      );
     },
     createImportRun: async (run) => {
       importRuns.set(run.id, run);

@@ -41,6 +41,10 @@ queue = "standard-agent-run-dev"
 binding = "USER_LIFECYCLE_QUEUE"
 queue = "standard-user-lifecycle-dev"
 
+[[queues.producers]]
+binding = "AGENT_USAGE_QUEUE"
+queue = "standard-agent-usage-dev"
+
 [[kv_namespaces]]
 binding = "STANDARD_CONFIG_KV"
 id = "d780e8372a814b049d7283bfdd022d55"
@@ -114,6 +118,10 @@ queue = "standard-agent-run-staging"
 [[env.staging.queues.producers]]
 binding = "USER_LIFECYCLE_QUEUE"
 queue = "standard-user-lifecycle-staging"
+
+[[env.staging.queues.producers]]
+binding = "AGENT_USAGE_QUEUE"
+queue = "standard-agent-usage-staging"
 
 [[env.staging.kv_namespaces]]
 binding = "STANDARD_CONFIG_KV"
@@ -195,6 +203,10 @@ queue = "standard-agent-run-prod"
 [[env.production.queues.producers]]
 binding = "USER_LIFECYCLE_QUEUE"
 queue = "standard-user-lifecycle-prod"
+
+[[env.production.queues.producers]]
+binding = "AGENT_USAGE_QUEUE"
+queue = "standard-agent-usage-prod"
 
 [[env.production.kv_namespaces]]
 binding = "STANDARD_CONFIG_KV"

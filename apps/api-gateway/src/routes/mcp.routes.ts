@@ -223,6 +223,10 @@ export const mcpRoutes: RouteDefinition[] = [
               tool_args: toolArgs,
               organization_id: ctx.organizationId ?? null,
               actor_id: ctx.actorId ?? null,
+              // Pass assessment_id for M2b agent_usage_records persistence.
+              // Extracted from tool_args if present (evaluate-evidence, etc.).
+              assessment_id:
+                (toolArgs["assessment_id"] as string | undefined) ?? null,
               trace_id: traceId,
               mcp_request_id: id,
               // caller webhook endpoint — optional, set in args if provided

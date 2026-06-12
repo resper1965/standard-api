@@ -377,6 +377,9 @@ export const scfRoutes: RouteDefinition[] = [
               const batch = await deps.scf.controls.searchControls({
                 scf_version_id: scfVersionId,
                 ...(domainCode ? { domain_code: domainCode } : {}),
+                ...(url.searchParams.get("fields")
+                  ? { fields: url.searchParams.get("fields")! }
+                  : {}),
                 limit: batchSize,
                 offset,
               });
@@ -468,6 +471,9 @@ export const scfRoutes: RouteDefinition[] = [
             : {}),
           ...(weightMin !== undefined ? { weight_min: weightMin } : {}),
           ...(weightMax !== undefined ? { weight_max: weightMax } : {}),
+          ...(url.searchParams.get("fields")
+            ? { fields: url.searchParams.get("fields")! }
+            : {}),
           limit,
           // When `after` is present, ignore page/offset — use cursor pagination
           ...(afterCursor ? { after: afterCursor } : { offset }),
@@ -542,6 +548,9 @@ export const scfRoutes: RouteDefinition[] = [
       const controls = await deps.scf.controls.searchControls({
         scf_version_id: scfVersionId,
         domain_code: domainCode,
+        ...(url.searchParams.get("fields")
+          ? { fields: url.searchParams.get("fields")! }
+          : {}),
         limit,
         offset: 0,
       });
@@ -1322,6 +1331,56 @@ export const scfRoutes: RouteDefinition[] = [
         data,
         control_id: controlIdParam,
         count: data.length,
+        trace_id: traceId,
+      });
+    },
+  },
+  {
+    /**
+     * GET /api/v1/scf/strm
+     *
+     * Search STRM relationships across all controls and frameworks.
+     */
+    method: "GET",
+    path: "/api/v1/scf/strm",
+    protected: true,
+    permissions: ["scf:read"],
+    handler: async ({ deps, request, traceId, organizationId }) => {
+      const url = new URL(request.url);
+
+      const scfVersionIdQuery = url.searchParams.get("scf_version_id");
+      const scfVersionId = scfVersionIdQuery
+        ? await resolveVersionId(deps, scfVersionIdQuery)
+        : (await deps.scf.versions.getLatestVersion(organizationId))?.id;
+
+      if (!scfVersionId) {
+        throw new ApiError("NOT_FOUND", "SCF version not found.", 404);
+      }
+
+      const rawQuery = {
+        scf_version_id: scfVersionId,
+        framework_id: url.searchParams.get("framework_id") ?? undefined,
+        control_id: url.searchParams.get("control_id") ?? undefined,
+        relationship_type:
+          url.searchParams.get("relationship_type") ?? undefined,
+        min_confidence_score:
+          url.searchParams.get("min_confidence_score") ?? undefined,
+        source_framework_id:
+          url.searchParams.get("source_framework_id") ?? undefined,
+        target_framework_id:
+          url.searchParams.get("target_framework_id") ?? undefined,
+        limit: url.searchParams.get("limit") ?? undefined,
+        offset: url.searchParams.get("offset") ?? undefined,
+      };
+
+      const { ScfStrmQuerySchema } = await import("@standard/schemas");
+      const query = ScfStrmQuerySchema.parse(rawQuery);
+
+      const rows = await deps.scf.repository.searchStrm(query);
+
+      return json({
+        data: rows,
+        count: rows.length,
         trace_id: traceId,
       });
     },

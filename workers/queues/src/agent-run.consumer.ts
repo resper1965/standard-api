@@ -102,6 +102,30 @@ export const processAgentRunQueueMessage = async (
   const agentDeps: AgentRuntimeDependencies = {
     ...createDrizzleAgentRuntimeDependencies(db as never),
     llm,
+    ...(env?.AGENT_USAGE_QUEUE
+      ? {
+          observability: {
+            record: async (data) => {
+              await env.AGENT_USAGE_QUEUE!.send({
+                queue_type: "agent_usage",
+                agent_run_id: data.agent_run_id,
+                organization_id: data.organization_id,
+                assessment_id: data.assessment_id,
+                model_provider: "cloudflare-ai-gateway",
+                model_name: data.model,
+                prompt_tokens: data.prompt_tokens ?? 0,
+                completion_tokens: data.completion_tokens ?? 0,
+                total_tokens:
+                  (data.prompt_tokens ?? 0) + (data.completion_tokens ?? 0),
+                embedding_tokens: 0,
+                total_latency_ms: data.total_latency_ms,
+                tool_calls: data.tool_calls,
+                trace_id: data.trace_id,
+              });
+            },
+          },
+        }
+      : {}),
   };
 
   const runtimeService = new AgentRuntimeService(agentDeps);

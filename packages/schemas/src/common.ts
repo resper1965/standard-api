@@ -6,29 +6,32 @@ export const TraceIdSchema = z.string().min(8);
 export const SupportedLocaleSchema = z.enum(["pt-BR", "en"]).default("pt-BR");
 
 export const TenantContextSchema = z.object({
-  organizationId: UuidSchema
+  organizationId: UuidSchema,
 });
 
 export const ActorContextSchema = z.object({
   actorId: UuidSchema.optional(),
-  systemActor: z.string().min(1).optional()
+  systemActor: z.string().min(1).optional(),
 });
 
 export const ApiTraceContextSchema = z.object({
-  traceId: TraceIdSchema
+  traceId: TraceIdSchema,
 });
 
 export const PaginationParamsSchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(25),
-  cursor: z.string().optional()
+  cursor: z.string().optional(),
+  fields: z.string().optional(),
 });
 
-export const AuditMetadataSchema = z.record(z.string(), z.unknown()).default({});
+export const AuditMetadataSchema = z
+  .record(z.string(), z.unknown())
+  .default({});
 
 export const ApiResponseSchema = <T extends z.ZodType>(dataSchema: T) =>
   z.object({
     data: dataSchema,
-    trace_id: TraceIdSchema
+    trace_id: TraceIdSchema,
   });
 
 export type OrganizationContext = z.infer<typeof TenantContextSchema>;

@@ -172,6 +172,8 @@ function buildDrizzleDeps(env: Env): {
     // double cast via unknown is required and intentional (CF Workers limitation).
     email: env.EMAIL ? (env.EMAIL as unknown as SendEmail) : undefined,
     AGENT_RUN_QUEUE: env.AGENT_RUN_QUEUE ?? undefined,
+    COUNCIL_WORKFLOW: env.COUNCIL_WORKFLOW ?? undefined,
+    TPRA_APPROVAL_WORKFLOW: env.TPRA_APPROVAL_WORKFLOW ?? undefined,
     SOC_TRIAGE_QUEUE: env.SOC_TRIAGE_QUEUE ?? undefined,
     USER_LIFECYCLE_QUEUE: env.USER_LIFECYCLE_QUEUE ?? undefined,
     banUser: createBanUser(),

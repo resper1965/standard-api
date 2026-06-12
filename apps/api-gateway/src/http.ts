@@ -14,6 +14,7 @@ import type {
 import type { DocumentIngestionServiceDependencies } from "@standard/document-ingestion";
 import type { GapAnalysisDependencies } from "@standard/gap-analysis";
 import type { KbServiceDependencies } from "@standard/kb";
+import type { MaturityDependencies } from "@standard/maturity";
 import type { PoamDependencies } from "@standard/poam";
 import type { ReportingDependencies } from "@standard/reporting";
 import type { ScfCoreServices } from "@standard/scf-core";
@@ -295,6 +296,7 @@ export type AppDependencies = {
   scf: ScfCoreServices;
   soa: SoaDependencies;
   gapAnalysis: GapAnalysisDependencies;
+  maturity: MaturityDependencies;
   poam: PoamDependencies;
   reporting: ReportingDependencies;
   agentRuntime: AgentRuntimeDependencies;
@@ -308,6 +310,8 @@ export type AppDependencies = {
   AGENT_RUN_QUEUE?: Queue | undefined;
   /** Cloudflare Workflow engine for durable, stateful parallel council agent runs (optional) */
   COUNCIL_WORKFLOW?: Workflow | undefined;
+  /** Cloudflare Workflow engine for TPRA SoA reverse mapping (optional) */
+  TPRA_APPROVAL_WORKFLOW?: Workflow | undefined;
   /** Cloudflare Queue for SOC incident triage background processing (optional) */
   SOC_TRIAGE_QUEUE?: Queue | undefined;
   /** Cloudflare Queue for user lifecycle events (signup, update) */
