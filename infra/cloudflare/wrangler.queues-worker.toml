@@ -153,6 +153,13 @@ max_batch_size = 10
 max_batch_timeout = 60
 max_retries = 1
 
+[[env.staging.queues.consumers]]
+queue = "standard-agent-usage-staging"
+max_batch_size = 10
+max_batch_timeout = 60
+max_retries = 3
+dead_letter_queue = "standard-dead-letter-staging"
+
 [[env.staging.r2_buckets]]
 binding = "STANDARD_DOCUMENTS_BUCKET"
 bucket_name = "standard-documents-staging"
@@ -223,6 +230,13 @@ queue = "standard-soc-triage-dlq-prod"
 max_batch_size = 10
 max_batch_timeout = 60
 max_retries = 1
+
+[[env.production.queues.consumers]]
+queue = "standard-agent-usage-prod"
+max_batch_size = 10
+max_batch_timeout = 60
+max_retries = 3
+dead_letter_queue = "standard-dead-letter-prod"
 
 [[env.production.r2_buckets]]
 binding = "STANDARD_DOCUMENTS_BUCKET"

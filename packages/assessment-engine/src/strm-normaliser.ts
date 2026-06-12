@@ -26,32 +26,34 @@
 
 /** Os 5 operadores canónicos STRM conforme NIST IR 8477. */
 export const STRM_OPERATORS = [
-  "equal",        // =  (Identidade/Equivalência)  — peso 1.0
-  "subset",       // ⊂  (Subconjunto de)           — peso 1.0
-  "intersects",   // ∩  (Intersecta com)           — peso = strength_score
-  "superset",     // ⊃  (Superconjunto de)         — peso max 0.5
-  "no_relation",  // Ø  (Sem Relação)              — peso 0.0
+  "equal", // =  (Identidade/Equivalência)  — peso 1.0
+  "subset", // ⊂  (Subconjunto de)           — peso 1.0
+  "intersects", // ∩  (Intersecta com)           — peso = strength_score
+  "superset", // ⊃  (Superconjunto de)         — peso max 0.5
+  "no_relation", // Ø  (Sem Relação)              — peso 0.0
 ] as const;
 
-export type StrmOperator = (typeof STRM_OPERATORS)[number];
+// Import the canonical type from @standard/schemas to avoid re-export collision.
+// StrmOperator in @standard/schemas is identical: z.enum(["equal","subset","intersects","superset","no_relation"])
+import type { StrmOperator } from "@standard/schemas";
 
 // Mapa completo: legado → canónico + passthrough para já-canónicos
 const LEGACY_MAP: Record<string, StrmOperator> = {
   // Valores legados do Neon DB (81k registos)
-  direct:        "equal",
-  related:       "intersects",
-  intersecting:  "intersects",  // typo no xlsx-importer.ts
+  direct: "equal",
+  related: "intersects",
+  intersecting: "intersects", // typo no xlsx-importer.ts
 
   // Passthrough para valores já canónicos
-  equal:         "equal",
-  subset:        "subset",
-  intersects:    "intersects",
-  superset:      "superset",
-  no_relation:   "no_relation",
+  equal: "equal",
+  subset: "subset",
+  intersects: "intersects",
+  superset: "superset",
+  no_relation: "no_relation",
 
   // Aliases históricos do schemas/scf.ts (pre-migration)
-  no_relationship:  "no_relation",
-  source_defined:   "intersects",  // fallback conservador
+  no_relationship: "no_relation",
+  source_defined: "intersects", // fallback conservador
 };
 
 /**
@@ -66,13 +68,13 @@ export function normaliseRelationshipType(raw: string): StrmOperator | null {
 
 // Mapa de conversão relationship_strength (texto) → strength_score (numérico 0.0–1.0)
 const STRENGTH_MAP: Record<string, number> = {
-  strong:    1.0,
-  high:      1.0,
-  moderate:  0.5,
-  medium:    0.5,
-  related:   0.5,  // legado ambíguo — usar neutro
-  weak:      0.25,
-  low:       0.25,
+  strong: 1.0,
+  high: 1.0,
+  moderate: 0.5,
+  medium: 0.5,
+  related: 0.5, // legado ambíguo — usar neutro
+  weak: 0.25,
+  low: 0.25,
 };
 
 /** Fallback conservador para valores não mapeados */
