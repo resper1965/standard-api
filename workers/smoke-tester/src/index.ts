@@ -14,6 +14,75 @@ export interface Env {
   STANDARD_API_GATEWAY?: Fetcher;
 }
 
+/**
+ * SSRF mitigation: validate that a URL is safe to fetch.
+ *
+ * Rules enforced:
+ *   1. Must be a valid URL (parseable).
+ *   2. Protocol must be HTTPS (or HTTP only for internal service-binding URLs).
+ *   3. Hostname must NOT be a private/reserved IP range or special TLD.
+ *
+ * This is called before every outbound fetch to prevent Server-Side Request
+ * Forgery (SSRF) attacks in case the environment variable is ever misconfigured.
+ *
+ * @throws {Error} with a descriptive message if the URL fails validation.
+ */
+function assertSafeGatewayUrl(rawUrl: string): URL {
+  let parsed: URL;
+  try {
+    parsed = new URL(rawUrl);
+  } catch {
+    throw new Error(`[SSRF] API_GATEWAY_URL is not a valid URL: "${rawUrl}"`);
+  }
+
+  // 1. Protocol: only HTTPS allowed for external fetches
+  if (parsed.protocol !== "https:") {
+    throw new Error(
+      `[SSRF] API_GATEWAY_URL must use HTTPS, got "${parsed.protocol}" in "${rawUrl}"`
+    );
+  }
+
+  const hostname = parsed.hostname.toLowerCase();
+
+  // 2. Block loopback
+  if (
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "::1" ||
+    hostname.startsWith("127.")
+  ) {
+    throw new Error(`[SSRF] Loopback address not allowed: "${hostname}"`);
+  }
+
+  // 3. Block RFC 1918 private IP ranges
+  const privateRanges = [
+    /^10\./,                          // 10.0.0.0/8
+    /^172\.(1[6-9]|2\d|3[01])\./,    // 172.16.0.0/12
+    /^192\.168\./,                    // 192.168.0.0/16
+    /^169\.254\./,                    // 169.254.0.0/16 link-local
+    /^0\./,                           // 0.0.0.0/8
+    /^100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\./,  // 100.64.0.0/10 CGNAT
+  ];
+  for (const re of privateRanges) {
+    if (re.test(hostname)) {
+      throw new Error(`[SSRF] Private IP range not allowed: "${hostname}"`);
+    }
+  }
+
+  // 4. Block special TLDs used for local/internal resolution
+  if (
+    hostname.endsWith(".internal") ||
+    hostname.endsWith(".local") ||
+    hostname.endsWith(".localhost") ||
+    hostname === "metadata.google.internal" ||
+    hostname === "169.254.169.254"  // AWS/GCP metadata endpoint
+  ) {
+    throw new Error(`[SSRF] Internal/metadata hostname not allowed: "${hostname}"`);
+  }
+
+  return parsed;
+}
+
 export default Sentry.withSentry(
   (env: Env) => ({
     dsn: env.SENTRY_DSN || "https://b7d62614acaef427ce2de36228779c08@o4509995422515200.ingest.us.sentry.io/4511521270792192",
@@ -33,20 +102,6 @@ export default Sentry.withSentry(
       const healthUrl = `${env.API_GATEWAY_URL}/health`;
       console.log(`[SMOKE_TEST] Checking ${healthUrl}`);
 
-      // Guard: never attempt healthcheck against localhost/loopback on the edge.
-      // This would always fail with CF error 1003 (Direct IP Access Not Allowed).
-      const isLoopback =
-        env.API_GATEWAY_URL.includes("localhost") ||
-        env.API_GATEWAY_URL.includes("127.0.0.1") ||
-        env.API_GATEWAY_URL.includes("::1");
-      if (isLoopback) {
-        console.warn(
-          `[SMOKE_TEST] Skipping healthcheck — API_GATEWAY_URL is a loopback address (${env.API_GATEWAY_URL}). ` +
-          `This worker must be deployed with --env production or a valid remote URL.`
-        );
-        return;
-      }
-
       const healthStart = Date.now();
 
       // Use Service Binding when available (production): Worker-to-Worker call
@@ -55,16 +110,25 @@ export default Sentry.withSentry(
       // Cloudflare routes directly to the bound worker. Use a plain internal URL
       // to avoid triggering CF 1003 (Direct IP Access Not Allowed) that occurs
       // when a Worker fetches its own public custom hostname within the same zone.
-      // Fall back to plain fetch for local/staging environments without bindings.
-      const fetchUrl = env.STANDARD_API_GATEWAY
-        ? `http://internal/health`
-        : healthUrl;
-      const req = new Request(fetchUrl, {
-        headers: { "x-smoke-test-run-id": runId },
-      });
-      const healthRes = env.STANDARD_API_GATEWAY
-        ? await env.STANDARD_API_GATEWAY.fetch(req)
-        : await fetch(req);
+      // Fall back to validated plain fetch for staging environments without bindings.
+      let healthRes: Response;
+      if (env.STANDARD_API_GATEWAY) {
+        // Production: Worker-to-Worker via service binding (no external fetch).
+        // Use an opaque internal URL — hostname is ignored by the binding router.
+        const req = new Request("http://internal/health", {
+          headers: { "x-smoke-test-run-id": runId },
+        });
+        healthRes = await env.STANDARD_API_GATEWAY.fetch(req);
+      } else {
+        // Staging / local-dev fallback: validate URL for SSRF before fetching.
+        // assertSafeGatewayUrl throws if API_GATEWAY_URL is private/loopback/metadata.
+        const safeUrl = assertSafeGatewayUrl(healthUrl);
+        const req = new Request(safeUrl.toString(), {
+          headers: { "x-smoke-test-run-id": runId },
+          redirect: "error", // Never follow redirects — prevents open-redirect SSRF
+        });
+        healthRes = await fetch(req);
+      }
 
       if (!healthRes.ok) {
         const text = await healthRes.text();
@@ -118,3 +182,5 @@ export default Sentry.withSentry(
     }
   }
 } satisfies ExportedHandler<Env>);
+
+
