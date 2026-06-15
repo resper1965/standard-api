@@ -276,7 +276,7 @@ export const createDrizzleRepositories = (
       const approved = versions.find((v: any) => v.status === "approved");
       if (!approved) return null;
       const findings = await gapRepositories.gapFindings.listByVersion(
-        approved.gap_analysis_version_id,
+        approved.gap_analysis_version_id as string,
         organizationId,
       );
       return { version: approved, findings };
