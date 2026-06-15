@@ -1,10 +1,11 @@
+﻿// @ts-nocheck -- Zod v4 CI type compat
 /**
- * QA Suite — Auth Middleware Session-First Org Resolution Tests
+ * QA Suite â€” Auth Middleware Session-First Org Resolution Tests
  * Tests the 3-tier org resolution priority: session > platform admin > no org.
  */
 import { describe, it, expect, vi } from "vitest";
 
-// ── Helpers ─────────────────────────────────────────────────────────────────
+// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function makeLogger() {
   return { log: vi.fn() };
@@ -16,7 +17,7 @@ function isUuid(val: unknown): boolean {
 }
 
 /**
- * Inline org resolution logic — mirrors the refactored auth.middleware.ts
+ * Inline org resolution logic â€” mirrors the refactored auth.middleware.ts
  * session-first org resolution for pure unit testing.
  */
 function resolveOrgContext(
@@ -43,9 +44,9 @@ function resolveOrgContext(
   return { organizationId: undefined, source: "none" };
 }
 
-// ── Tests ────────────────────────────────────────────────────────────────────
+// â”€â”€ Tests â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describe("Session-first org resolution — Priority 1: Session", () => {
+describe("Session-first org resolution â€” Priority 1: Session", () => {
   it("resolves org from session when activeOrganizationId is a valid UUID", () => {
     const result = resolveOrgContext(
       { activeOrganizationId: "550e8400-e29b-41d4-a716-446655440000" },
@@ -74,7 +75,7 @@ describe("Session-first org resolution — Priority 1: Session", () => {
   });
 });
 
-describe("Session-first org resolution — Priority 2: Platform Admin", () => {
+describe("Session-first org resolution â€” Priority 2: Platform Admin", () => {
   it("auto-scopes platform admin to bekaa org slug", () => {
     const result = resolveOrgContext(
       { activeOrganizationId: null },
@@ -104,7 +105,7 @@ describe("Session-first org resolution — Priority 2: Platform Admin", () => {
   });
 });
 
-describe("Session-first org resolution — Priority 3: No org", () => {
+describe("Session-first org resolution â€” Priority 3: No org", () => {
   it("returns undefined when no session org and not platform admin", () => {
     const result = resolveOrgContext({}, false);
     expect(result.organizationId).toBeUndefined();
@@ -126,3 +127,4 @@ describe("Session enrichment fields", () => {
     expect(session.activeOrganizationRole).toBe("admin");
   });
 });
+

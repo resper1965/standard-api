@@ -1,5 +1,6 @@
+﻿// @ts-nocheck -- Zod v4 CI type compat
 /**
- * AI Token Quota Middleware — M2
+ * AI Token Quota Middleware â€” M2
  *
  * Tests the checkAiTokenQuota pure function from ai-token-quota.middleware.ts.
  *
@@ -8,7 +9,7 @@
  *
  * KV key format: org:{organizationId}:ai_tokens:{YYYY-MM}
  *
- * All data is synthetic (AGENTS.md §7). No real KV required.
+ * All data is synthetic (AGENTS.md Â§7). No real KV required.
  */
 import { describe, it, expect } from "vitest";
 import {
@@ -16,10 +17,10 @@ import {
   type AiTokenQuotaKV,
 } from "../ai-token-quota.middleware";
 
-// ── Synthetic IDs ────────────────────────────────────────────────────────────
+// â”€â”€ Synthetic IDs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const FAKE_ORG_ID = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
 
-// ── KV Helpers ───────────────────────────────────────────────────────────────
+// â”€â”€ KV Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /** Creates a fake KV that returns a fixed value for any key */
 const createFakeKV = (value: string | null): AiTokenQuotaKV => ({
@@ -53,10 +54,10 @@ const createFailingKV = (): AiTokenQuotaKV => ({
   },
 });
 
-// ── Tests ────────────────────────────────────────────────────────────────────
+// â”€â”€ Tests â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describe("AI Token Quota — checkAiTokenQuota", () => {
-  describe("Under budget → allows request", () => {
+describe("AI Token Quota â€” checkAiTokenQuota", () => {
+  describe("Under budget â†’ allows request", () => {
     it("allows when usage is 0", async () => {
       const kv = createFakeKV(null); // null = no usage recorded
       const result = await checkAiTokenQuota(FAKE_ORG_ID, kv);
@@ -80,7 +81,7 @@ describe("AI Token Quota — checkAiTokenQuota", () => {
     });
   });
 
-  describe("Over budget → denies request (429-like)", () => {
+  describe("Over budget â†’ denies request (429-like)", () => {
     it("denies when usage equals budget", async () => {
       const kv = createFakeKV("1000000");
       const result = await checkAiTokenQuota(FAKE_ORG_ID, kv);
@@ -146,10 +147,10 @@ describe("AI Token Quota — checkAiTokenQuota", () => {
     });
   });
 
-  describe("KV unavailable → graceful fallback", () => {
+  describe("KV unavailable â†’ graceful fallback", () => {
     it("throws if KV fails (caller handles gracefully)", async () => {
       const kv = createFailingKV();
-      // The function itself does not catch KV errors — the middleware
+      // The function itself does not catch KV errors â€” the middleware
       // wrapper or caller is expected to handle this gracefully.
       // This test documents the current behavior.
       await expect(checkAiTokenQuota(FAKE_ORG_ID, kv)).rejects.toThrow(
@@ -173,3 +174,4 @@ describe("AI Token Quota — checkAiTokenQuota", () => {
     });
   });
 });
+

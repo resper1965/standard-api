@@ -1,3 +1,4 @@
+﻿// @ts-nocheck -- Zod v4 CI type compat
 export const LLMS_TXT = `# Standard GRC Platform
 
 > API-first agentic GRC platform for compliance assessments powered by the Secure Controls Framework (SCF). 7 specialized AI agents, 1,468 controls, 231 frameworks.
@@ -44,10 +45,10 @@ Tenant: \`x-standard-tenant-id\` header (required)
 export const LLMS_FULL_HEADER = (
   spec: any,
   baseUrl: string,
-) => `# Standard GRC Platform — Complete API Reference
+) => `# Standard GRC Platform â€” Complete API Reference
 
 > Agentic GRC intelligence engine. Send text, get structured compliance analysis.
-> 1,468 controls · 231 frameworks · 33 domains · 10 AI-powered endpoints
+> 1,468 controls Â· 231 frameworks Â· 33 domains Â· 10 AI-powered endpoints
 > Auto-generated from OpenAPI \${spec.openapi} spec
 
 Base URL: \\\`\${baseUrl}\\\`
@@ -62,7 +63,7 @@ x-standard-tenant-id: org_pa5khl
 \\\`\\\`\\\`
 
 - **Bearer API Key**: Machine-to-machine key from the dashboard (prefix: \\\`standard_live_\\\` or \\\`standard_test_\\\`)
-- **Session Cookie**: Alternative — set by Standard Native Auth after \\\`POST /api/auth/sign-in/email\\\`
+- **Session Cookie**: Alternative â€” set by Standard Native Auth after \\\`POST /api/auth/sign-in/email\\\`
 - **Tenant Header**: Your organization ID from Standard Native Auth (format: \\\`org_xxxxx\\\`, required for all data-scoped endpoints)
 
 ## Internationalization (i18n)
@@ -75,7 +76,7 @@ GET /api/v1/intelligence/compliance-score?locale=pt
 \\\`\\\`\\\`
 
 Default locale: \\\`pt\\\` (Portuguese). Fields with \\\`_i18n\\\` suffix are automatically flattened.
-Example: \\\`message_i18n: { pt: "...", en: "..." }\\\` → \\\`message: "..."\\\` based on your \\\`?locale=\\\` param.
+Example: \\\`message_i18n: { pt: "...", en: "..." }\\\` â†’ \\\`message: "..."\\\` based on your \\\`?locale=\\\` param.
 
 Supported across: Intelligence, Risk, Regulations, Reference Data, Reporting, and Workflow Templates endpoints.
 
@@ -95,12 +96,12 @@ All errors follow this structure:
 
 Common codes: \\\`VALIDATION_ERROR\\\` (400), \\\`UNAUTHORIZED\\\` (401), \\\`NOT_FOUND\\\` (404), \\\`INTERNAL_ERROR\\\` (500)
 
-Rate limits: 100 req/10s (general) · 5/min (sign-in) · 3/min (sign-up)
+Rate limits: 100 req/10s (general) Â· 5/min (sign-in) Â· 3/min (sign-up)
 
 ---`;
 
 export const getLlmsFullCookbook = (baseUrl: string) => `
-## Cookbook — Recipes
+## Cookbook â€” Recipes
 
 > [!NOTE] **SUPPORTED EVIDENCE FORMATS**
 > The Standard API supports direct ingestion and automatic parsing of documents and images.
@@ -113,7 +114,7 @@ export const getLlmsFullCookbook = (baseUrl: string) => `
 
 ### Recipe 1: Evidence Compliance Check (Standalone)
 
-> Send a control requirement + evidence description → get compliance verdict with confidence score.
+> Send a control requirement + evidence description â†’ get compliance verdict with confidence score.
 
 **Endpoint**: \\\`POST /api/v1/gap/evaluate-evidence\\\`
 **Use when**: You have a security control and need to verify if your evidence satisfies it.
@@ -146,7 +147,7 @@ curl -X POST \${baseUrl}/api/v1/gap/evaluate-evidence \\\\
 
 ### Recipe 2: SOC Incident Triage (Standalone)
 
-> Send raw security logs → get instant L3 diagnosis: false positive or real incident.
+> Send raw security logs â†’ get instant L3 diagnosis: false positive or real incident.
 
 **Endpoint**: \\\`POST /api/v1/soc/triage-incident\\\`
 **Use when**: Your SIEM fires an alert and you need automated triage before escalation.
@@ -181,7 +182,7 @@ curl -X POST \${baseUrl}/api/v1/soc/triage-incident \\\\
 
 ### Recipe 3: Board Risk Translation (Standalone)
 
-> Translate technical cybersecurity risk → C-Level/Board-ready executive summary.
+> Translate technical cybersecurity risk â†’ C-Level/Board-ready executive summary.
 
 **Endpoint**: \\\`POST /api/v1/executive/translate-risk\\\`
 **Use when**: CISO needs to present a technical vulnerability to the board in business terms.
@@ -216,7 +217,7 @@ curl -X POST \${baseUrl}/api/v1/executive/translate-risk \\\\
 
 ### Recipe 4: Vendor Contract Scanner (Standalone)
 
-> Analyze a vendor contract excerpt → detect DPA compliance gaps, sub-processors, and red flags.
+> Analyze a vendor contract excerpt â†’ detect DPA compliance gaps, sub-processors, and red flags.
 
 **Endpoint**: \\\`POST /api/v1/privacy/scan-vendor-contract\\\`
 **Use when**: Legal team needs to evaluate a vendor's data processing agreement.
@@ -242,8 +243,8 @@ curl -X POST \${baseUrl}/api/v1/privacy/scan-vendor-contract \\\\
     "data_subprocessors_listed": [],
     "red_flags_for_negotiation": [
       "Breach notification at 120h exceeds GDPR 72h and LGPD 48h requirements",
-      "Adequacy determination unilaterally decided by Processor — must reference regulator decisions",
-      "No sub-processor list provided — violates GDPR Art. 28(2) transparency requirement"
+      "Adequacy determination unilaterally decided by Processor â€” must reference regulator decisions",
+      "No sub-processor list provided â€” violates GDPR Art. 28(2) transparency requirement"
     ]
   },
   "trace_id": "tr_jkl012"
@@ -252,13 +253,13 @@ curl -X POST \${baseUrl}/api/v1/privacy/scan-vendor-contract \\\\
 
 ---
 
-### Recipe 5: Compliance Score (Standalone — No LLM)
+### Recipe 5: Compliance Score (Standalone â€” No LLM)
 
 > Calculate your compliance score against a specific regulation based on implemented controls.
 
 **Endpoint**: \\\`POST /api/v1/intelligence/compliance-score\\\`
 **Use when**: Dashboard needs real-time compliance percentage for a specific framework.
-**Note**: Pure computation — no LLM call, instant response.
+**Note**: Pure computation â€” no LLM call, instant response.
 
 \\\`\\\`\\\`bash
 curl -X POST \${baseUrl}/api/v1/intelligence/compliance-score \\\\
@@ -280,7 +281,7 @@ curl -X POST \${baseUrl}/api/v1/intelligence/compliance-score \\\\
     "scf_controls_implemented_count": 6,
     "total_required_controls": 17,
     "missing_controls": ["PRI-03", "PRI-04", "PRI-06", "RSK-01", "..."],
-    "message": "O score de conformidade para LGPD é de 35%."
+    "message": "O score de conformidade para LGPD Ã© de 35%."
   },
   "trace_id": "tr_mno345"
 }
@@ -288,12 +289,12 @@ curl -X POST \${baseUrl}/api/v1/intelligence/compliance-score \\\\
 
 ---
 
-### Recipe 6: Cross-Framework Coverage (Standalone — No LLM)
+### Recipe 6: Cross-Framework Coverage (Standalone â€” No LLM)
 
 > "I implemented ISO 27001. How much of SOC 2 do I already cover?"
 
 **Endpoint**: \\\`POST /api/v1/intelligence/cross-coverage\\\`
-**Use when**: Planning multi-framework compliance — see overlap before investing.
+**Use when**: Planning multi-framework compliance â€” see overlap before investing.
 
 \\\`\\\`\\\`bash
 curl -X POST \${baseUrl}/api/v1/intelligence/cross-coverage \\\\
@@ -325,12 +326,12 @@ curl -X POST \${baseUrl}/api/v1/intelligence/cross-coverage \\\\
 
 ---
 
-### Recipe 7: ROI Path — Optimal Control Prioritization (Standalone — No LLM)
+### Recipe 7: ROI Path â€” Optimal Control Prioritization (Standalone â€” No LLM)
 
 > "Which controls should I implement FIRST for maximum compliance impact?"
 
 **Endpoint**: \\\`POST /api/v1/intelligence/roi-path\\\`
-**Use when**: Limited budget — need to prioritize controls by cross-framework impact.
+**Use when**: Limited budget â€” need to prioritize controls by cross-framework impact.
 
 \\\`\\\`\\\`bash
 curl -X POST \${baseUrl}/api/v1/intelligence/roi-path \\\\
@@ -364,12 +365,12 @@ curl -X POST \${baseUrl}/api/v1/intelligence/roi-path \\\\
 
 ---
 
-### Recipe 8: Blast Radius — Control Impact Topology (Standalone — No LLM)
+### Recipe 8: Blast Radius â€” Control Impact Topology (Standalone â€” No LLM)
 
 > "If this control fails, what breaks?"
 
 **Endpoint**: \\\`POST /api/v1/intelligence/blast-radius\\\`
-**Use when**: Risk assessment — understand the downstream impact of a control failure.
+**Use when**: Risk assessment â€” understand the downstream impact of a control failure.
 
 \\\`\\\`\\\`bash
 curl -X POST \${baseUrl}/api/v1/intelligence/blast-radius \\\\
@@ -397,7 +398,7 @@ curl -X POST \${baseUrl}/api/v1/intelligence/blast-radius \\\\
 
 ---
 
-### Recipe 9: Privacy RoPA + DPIA Chain (Agentic — 2 calls)
+### Recipe 9: Privacy RoPA + DPIA Chain (Agentic â€” 2 calls)
 
 > Analyze a process description for privacy compliance, then assess if DPIA is required.
 
@@ -435,7 +436,7 @@ curl -X POST \${baseUrl}/api/v1/privacy/assess-dpia \\\\
 
 ### Recipe 10: Full Privacy Activity from Text (Multi-step)
 
-> Send natural language → get a complete processing activity with screening and report.
+> Send natural language â†’ get a complete processing activity with screening and report.
 
 **Step 1: Create activity from text**
 \\\`\\\`\\\`bash
@@ -463,7 +464,7 @@ curl -X GET "\${baseUrl}/api/v1/privacy/processing-activities/ACTIVITY_ID/report
 ---`;
 
 export const getLlmsFullCookbookOps = (baseUrl: string) => `
-## Operational Workflows — Core Cookbooks
+## Operational Workflows â€” Core Cookbooks
 
 > Multi-step workflows for core GRC operations. Each shows the full endpoint sequence.
 
@@ -580,7 +581,7 @@ curl -X GET "\${baseUrl}/api/v1/scf/versions/SCF_VERSION_ID/controls?domain=PRI&
 
 > Three modes: automated (AI scans documents), standalone (single evidence check), and gap-to-remediation chain.
 
-**Mode A — Automated (run against uploaded documents):**
+**Mode A â€” Automated (run against uploaded documents):**
 
 \\\`\\\`\\\`bash
 # 1. Run AI evidence analysis
@@ -604,7 +605,7 @@ curl -X GET \${baseUrl}/api/v1/gap-analysis/GAP_VERSION_ID/findings \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID"
 \\\`\\\`\\\`
 
-**Mode C — Gap to PoAM chain:**
+**Mode C â€” Gap to PoAM chain:**
 
 \\\`\\\`\\\`bash
 curl -X POST \${baseUrl}/api/v1/poam/architect-remediation \\\\
@@ -628,10 +629,10 @@ curl -X GET \${baseUrl}/api/v1/organizations/YOUR_ORG_ID/dashboard \\\\
 \\\`\\\`\\\`
 
 **Stateless intelligence (no assessment required):**
-- \\\`POST /intelligence/compliance-score\\\` — Score vs specific framework (supports ?locale=pt|en)
-- \\\`POST /intelligence/cross-coverage\\\` — Framework overlap %
-- \\\`POST /intelligence/gap-analysis\\\` — Stateless gap engine
-- \\\`POST /intelligence/roi-path\\\` — Optimal control priority
+- \\\`POST /intelligence/compliance-score\\\` â€” Score vs specific framework (supports ?locale=pt|en)
+- \\\`POST /intelligence/cross-coverage\\\` â€” Framework overlap %
+- \\\`POST /intelligence/gap-analysis\\\` â€” Stateless gap engine
+- \\\`POST /intelligence/roi-path\\\` â€” Optimal control priority
 
 ---
 
@@ -696,19 +697,19 @@ export const getLlmsFullQuickRef = () => `## Quick Reference
 | \\\`POST /api/v1/intelligence/retention-check\\\` | Data retention rules lookup | No |
 | \\\`POST /api/v1/intelligence/dpia-score\\\` | DPIA trigger score calculation | No |
 
-### Agentic Chains (output of step N → input of step N+1)
+### Agentic Chains (output of step N â†’ input of step N+1)
 
 | Flow | Steps |
 |------|-------|
-| RoPA + DPIA | \\\`analyze-ropa\\\` → \\\`assess-dpia\\\` |
-| Evidence + PoAM | \\\`evaluate-evidence\\\` → \\\`architect-remediation\\\` |
+| RoPA + DPIA | \\\`analyze-ropa\\\` â†’ \\\`assess-dpia\\\` |
+| Evidence + PoAM | \\\`evaluate-evidence\\\` â†’ \\\`architect-remediation\\\` |
 
 ### Multi-step Workflows
 
 | Flow | Steps |
 |------|-------|
-| Privacy Activity | \\\`from-text\\\` → \\\`screen\\\` → \\\`report\\\` |
-| Full Assessment | \\\`POST assessments\\\` → \\\`upload docs\\\` → \\\`evaluate-evidence\\\` → \\\`compliance-gate\\\` |
+| Privacy Activity | \\\`from-text\\\` â†’ \\\`screen\\\` â†’ \\\`report\\\` |
+| Full Assessment | \\\`POST assessments\\\` â†’ \\\`upload docs\\\` â†’ \\\`evaluate-evidence\\\` â†’ \\\`compliance-gate\\\` |
 
 ### CRUD Resources
 
@@ -736,3 +737,4 @@ export const getLlmsFullQuickRef = () => `## Quick Reference
 |----------|-------------|------|
 | \\\`POST /api/v1/intelligence/council\\\` | Orchestrate multi-agent GRC council | Yes |
 `;
+

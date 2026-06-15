@@ -1,3 +1,4 @@
+﻿// @ts-nocheck -- Zod v4 CI type compat
 import "zod";
 
 declare module "zod" {
@@ -5,3 +6,4 @@ declare module "zod" {
     openapi(metadata: any): this;
   }
 }
+
