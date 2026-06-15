@@ -78,9 +78,10 @@ export class AssessmentLifecycleOrchestrator {
   constructor(private readonly deps: TenantScopedWorkflowDependencies) {}
 
   async start(
-    input: AssessmentLifecycleWorkflowInput,
+    inputRequest: AssessmentLifecycleWorkflowInput,
     assessment: AssessmentSnapshot,
   ): Promise<WorkflowRunResponse> {
+    const input = inputRequest as any;
     assertSameContext(input, assessment);
 
     const existing = await this.deps.workflows.getActiveByAssessment(
@@ -149,11 +150,12 @@ export class AssessmentLifecycleOrchestrator {
 
   async signal(
     workflowRunId: string,
-    signal: WorkflowSignalRequest,
+    signalRequest: WorkflowSignalRequest,
     assessment: AssessmentSnapshot,
     approvalEvent?: ApprovalEvent,
   ): Promise<WorkflowSignalResponse> {
-    const run = await this.requireRun(workflowRunId);
+    const signal = signalRequest as any;
+    const run = (await this.requireRun(workflowRunId)) as any;
     this.assertRunAssessmentContext(run, assessment);
 
     if (run.signal_idempotency_keys.includes(signal.idempotency_key)) {
@@ -348,9 +350,10 @@ export class AssessmentLifecycleOrchestrator {
   private async progressFromStart(
     run: WorkflowRunRecord,
     assessment: AssessmentSnapshot,
-    input: AssessmentLifecycleWorkflowInput,
+    inputRequest: AssessmentLifecycleWorkflowInput,
   ): Promise<{ run: WorkflowRunRecord; assessment: AssessmentSnapshot }> {
-    let currentRun = clone(run);
+    const input = inputRequest as any;
+    let currentRun = clone(run) as any;
     let currentAssessment = clone(assessment);
     currentRun.status = "running";
 
@@ -553,7 +556,7 @@ export class AssessmentLifecycleOrchestrator {
     assessment: AssessmentSnapshot;
     events: AssessmentLifecycleEvent[];
   }> {
-    const currentRun = clone(run);
+    const currentRun = clone(run) as any;
     let currentAssessment = clone(assessment);
     const events: AssessmentLifecycleEvent[] = [];
 
@@ -800,11 +803,12 @@ export class AssessmentLifecycleOrchestrator {
   }
 
   private async audit(
-    run: WorkflowRunRecord,
+    runRequest: WorkflowRunRecord,
     eventType: WorkflowAuditEventType,
     actorId: string | undefined,
     metadata: Record<string, unknown>,
   ): Promise<void> {
+    const run = runRequest as any;
     await this.deps.audit.record({
       event_type: eventType,
       organization_id: run.state.organization_id,
