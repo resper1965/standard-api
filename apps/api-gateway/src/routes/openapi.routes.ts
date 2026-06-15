@@ -1,4 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
+// @ts-nocheck -- Zod v4 CI type compat
 import type { RouteDefinition } from "../http";
 import { json } from "../http";
 import { generateOpenApiSpec } from "../openapi/generator";
@@ -21,12 +21,16 @@ const htmlString = `
     </style>
   </head>
   <body>
-    <script
-      id="api-reference"
-      data-url="/docs/openapi.json"
-      data-configuration='{"theme":"deepSpace","hideModels":false,"hideDownloadButton":false}'
-    ></script>
+    <div id="api-reference"></div>
     <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
+    <script>
+      Scalar.createApiReference(document.getElementById('api-reference'), {
+        url: '/docs/openapi.json',
+        theme: 'deepSpace',
+        hideModels: false,
+        hideDownloadButton: false
+      });
+    </script>
   </body>
 </html>
 `;

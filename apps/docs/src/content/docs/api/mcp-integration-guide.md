@@ -10,6 +10,27 @@ The Standard GRC Platform exposes a **Model Context Protocol (MCP)** endpoint wi
 
 ---
 
+## 🔌 Dual MCP Architecture (Developer vs. End-User)
+
+The Standard GRC platform offers two distinct MCP servers depending on your role and what you are trying to achieve:
+
+### 1. **Developer Integration MCP (`standard-grc-integration-mcp`)**
+* **Who is it for?** Software Developers building integrations or writing code that consumes the Standard GRC API.
+* **Where does it run?** Compiled from `packages/integration-mcp` or run locally.
+* **What does it do?** It provides your IDE assistant (Cursor, VS Code Copilot, Antigravity, etc.) with local technical documentation and API reference metadata.
+* **Exposed Tools:**
+  * `search_standard_cookbook`: Fetches the full interactive LLM-friendly guide and cookbook (`llms-full.txt`) containing step-by-step code recipes.
+  * `get_openapi_schemas`: Fetches the raw OpenAPI 3.0 specification (`openapi.json`) for exact payload structures and types.
+  * `explain_polling_workflow`: Teaches the AI how to handle asynchronous operations (like Gap Analysis and Document Ingestion) returning HTTP 202.
+
+### 2. **GRC Functional MCP (`standard-grc-mcp` / Remote `/mcp`)**
+* **Who is it for?** CISOs, Compliance Officers, Security Analysts, and End-Users performing compliance assessments.
+* **Where does it run?** Hosted on standard-api Gateway at `https://standard-api.bekaa.eu/mcp` or compiled from `packages/mcp-server`.
+* **What does it do?** It exposes **33 GRC tools** that allow your AI assistant (Claude Desktop, Cursor IDE, etc.) to query and interact directly with your assessments, upload evidence, calculate risk scores, and check control compliance.
+* **Exposed Tools:** Functional tools categorized under Assessment Management, SCF Catalog, Intelligence Engine, KB & Evidence AI, SoA Lifecycle, Gap Analysis, and Platform Status.
+
+---
+
 ## Getting Started
 
 ### Step 1: Generate your API Key
