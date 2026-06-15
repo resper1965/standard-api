@@ -423,7 +423,8 @@ export type RouteDefinition = {
   permissions?: Permission[];
   /** Zod schema for request body validation. When defined, body is parsed
    *  and validated before the handler runs. Access via `context.validatedBody`. */
-  bodySchema?: z.ZodType;
+
+  bodySchema?: z.ZodType<any, any, any>;
   /** OpenAPI configuration mapping for this route */
   openapi?: Omit<RouteConfig, "method" | "path">;
   handler: RouteHandler;
@@ -440,7 +441,7 @@ export const json = (body: unknown, init: ResponseInit = {}): Response =>
 
 const MAX_JSON_BODY_BYTES = 1_048_576; // 1 MB
 
-export const parseJson = async <T extends z.ZodType>(
+export const parseJson = async <T extends z.ZodType<any, any, any>>(
   request: Request,
   schema: T,
 ): Promise<z.infer<T>> => {
