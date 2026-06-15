@@ -1,15 +1,6 @@
 import { z } from "zod";
 import { TraceIdSchema, UuidSchema } from "./common";
 
-// Zod v4 type-compatibility helpers for z.record and chained .optional()/.default()
-// In some CI environments Zod v4 types resolve ZodString as not satisfying $ZodRecordKey.
-
-const zStr = z.string() as any;
-
-const zUnknown = z.unknown() as any;
-
-const zBool = z.boolean() as any;
-
 export const WorkflowRunStatusSchema = z.enum([
   "pending",
   "running",
@@ -86,7 +77,7 @@ export const AssessmentLifecycleWorkflowInputSchema = z.object({
   requested_by: UuidSchema,
   trace_id: TraceIdSchema,
   idempotency_key: z.string().min(8),
-  options: z.record(zStr, zUnknown).default({}),
+  options: z.record(z.string(), z.unknown()).default({}),
 });
 
 export const AssessmentLifecycleWorkflowStateSchema = z.object({
@@ -94,18 +85,18 @@ export const AssessmentLifecycleWorkflowStateSchema = z.object({
   assessment_id: UuidSchema,
   current_step: AssessmentLifecycleStepSchema,
   assessment_state: z.string().min(1),
-  selected_framework_id: (UuidSchema as any).optional(),
-  scf_version_id: (UuidSchema as any).optional(),
-  scope_id: (UuidSchema as any).optional(),
-  soa_version_id: (UuidSchema as any).optional(),
-  gap_analysis_version_id: (UuidSchema as any).optional(),
-  maturity_assessment_version_id: (UuidSchema as any).optional(),
-  poam_version_id: (UuidSchema as any).optional(),
-  report_version_id: (UuidSchema as any).optional(),
-  pending_approval_type: (WorkflowApprovalTypeSchema as any).optional(),
-  blocked_reason: (WorkflowBlockedReasonSchema as any).optional(),
-  failed_reason_safe: (z.string().max(500) as any).optional(),
-  last_successful_step: (AssessmentLifecycleStepSchema as any).optional(),
+  selected_framework_id: UuidSchema.optional(),
+  scf_version_id: UuidSchema.optional(),
+  scope_id: UuidSchema.optional(),
+  soa_version_id: UuidSchema.optional(),
+  gap_analysis_version_id: UuidSchema.optional(),
+  maturity_assessment_version_id: UuidSchema.optional(),
+  poam_version_id: UuidSchema.optional(),
+  report_version_id: UuidSchema.optional(),
+  pending_approval_type: WorkflowApprovalTypeSchema.optional(),
+  blocked_reason: WorkflowBlockedReasonSchema.optional(),
+  failed_reason_safe: z.string().max(500).optional(),
+  last_successful_step: AssessmentLifecycleStepSchema.optional(),
   trace_id: TraceIdSchema,
   started_at: z.string(),
   updated_at: z.string(),
@@ -116,39 +107,39 @@ export const WorkflowStepResultSchema = z.object({
   status: z.enum(["completed", "waiting", "blocked", "failed", "skipped"]),
   idempotency_key: z.string().min(8),
   trace_id: TraceIdSchema,
-  metadata: z.record(zStr, zUnknown).default({}),
+  metadata: z.record(z.string(), z.unknown()).default({}),
 });
 
 export const WorkflowSignalRequestSchema = z.strictObject({
   signal_type: WorkflowSignalTypeSchema,
   actor_id: UuidSchema,
-  approval_event_id: (UuidSchema as any).optional(),
+  approval_event_id: UuidSchema.optional(),
   idempotency_key: z.string().min(8),
-  trace_id: (TraceIdSchema as any).optional(),
-  payload: z.record(zStr, zUnknown).default({}),
+  trace_id: TraceIdSchema.optional(),
+  payload: z.record(z.string(), z.unknown()).default({}),
 });
 
 export const StartLifecycleWorkflowRequestSchema = z.strictObject({
   requested_by: UuidSchema,
   idempotency_key: z.string().min(8),
-  trace_id: (TraceIdSchema as any).optional(),
-  force_restart: zBool.default(false),
-  options: z.record(zStr, zUnknown).default({}),
+  trace_id: TraceIdSchema.optional(),
+  force_restart: z.boolean().default(false),
+  options: z.record(z.string(), z.unknown()).default({}),
 });
 
 export const CancelWorkflowRequestSchema = z.strictObject({
   actor_id: UuidSchema,
   reason: z.string().min(1).max(500),
   idempotency_key: z.string().min(8),
-  trace_id: (TraceIdSchema as any).optional(),
+  trace_id: TraceIdSchema.optional(),
 });
 
 export const ResumeWorkflowRequestSchema = z.strictObject({
   actor_id: UuidSchema,
   reason: z.string().min(1).max(500),
   idempotency_key: z.string().min(8),
-  trace_id: (TraceIdSchema as any).optional(),
-  from_step: (AssessmentLifecycleStepSchema as any).optional(),
+  trace_id: TraceIdSchema.optional(),
+  from_step: AssessmentLifecycleStepSchema.optional(),
 });
 
 export const WorkflowRunResponseSchema = z.object({
@@ -167,16 +158,16 @@ export const WorkflowSignalResponseSchema = z.object({
   accepted: z.boolean(),
   status: WorkflowRunStatusSchema,
   current_step: AssessmentLifecycleStepSchema,
-  pending_approval_type: (WorkflowApprovalTypeSchema as any).optional(),
+  pending_approval_type: WorkflowApprovalTypeSchema.optional(),
   trace_id: TraceIdSchema,
 });
 
 export const WorkflowFailureResponseSchema = z.object({
-  workflow_run_id: (UuidSchema as any).optional(),
+  workflow_run_id: UuidSchema.optional(),
   status: z.enum(["blocked", "failed"]),
   reason_code: z.string().min(1),
-  failed_reason_safe: (z.string().max(500) as any).optional(),
-  blocked_reason: (WorkflowBlockedReasonSchema as any).optional(),
+  failed_reason_safe: z.string().max(500).optional(),
+  blocked_reason: WorkflowBlockedReasonSchema.optional(),
   trace_id: TraceIdSchema,
 });
 

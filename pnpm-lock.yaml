@@ -9,7 +9,7 @@ overrides:
   xlsx: https://cdn.sheetjs.com/xlsx-0.20.2/xlsx-0.20.2.tgz
   i18next: ^25.1.0
   mysql2: ^3.22.0
-  zod: '>=3.23.8'
+  zod: ^4.4.0
   astro: ^6.3.3
   undici: '>=7.0.0'
   ws: '>=8.17.1'
@@ -78,7 +78,7 @@ importers:
         specifier: ^4.95.0
         version: 4.99.0(@cloudflare/workers-types@4.20260611.1)
       zod:
-        specifier: '>=3.23.8'
+        specifier: ^4.4.0
         version: 4.4.3
 
   apps/api-gateway:
@@ -150,7 +150,7 @@ importers:
         specifier: ^0.45.2
         version: 0.45.2(@cloudflare/workers-types@4.20260611.1)(@electric-sql/pglite@0.5.1)(@neondatabase/serverless@0.9.5)(@opentelemetry/api@1.9.1)(@prisma/client@7.8.0(prisma@7.8.0(@types/node@25.9.3)(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(magicast@0.5.3)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.11.6)(kysely@0.28.17)(mysql2@3.22.5(@types/node@25.9.3))(pg@8.21.0)(postgres@3.4.9)(prisma@7.8.0(@types/node@25.9.3)(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(magicast@0.5.3)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(typescript@6.0.3))
       zod:
-        specifier: '>=3.23.8'
+        specifier: ^4.4.0
         version: 4.4.3
     devDependencies:
       '@cloudflare/workers-types':
@@ -327,7 +327,7 @@ importers:
         specifier: 6.0.175
         version: 6.0.175(zod@4.4.3)
       zod:
-        specifier: '>=3.23.8'
+        specifier: ^4.4.0
         version: 4.4.3
     devDependencies:
       tsx:
@@ -340,7 +340,7 @@ importers:
         specifier: workspace:*
         version: link:../schemas
       zod:
-        specifier: '>=3.23.8'
+        specifier: ^4.4.0
         version: 4.4.3
     devDependencies:
       '@vitest/coverage-v8':
@@ -393,7 +393,7 @@ importers:
         specifier: workspace:*
         version: link:../schemas
       zod:
-        specifier: '>=3.23.8'
+        specifier: ^4.4.0
         version: 4.4.3
     devDependencies:
       '@cloudflare/workers-types':
@@ -515,7 +515,7 @@ importers:
         specifier: '>=4.12.25'
         version: 4.12.25
       zod:
-        specifier: '>=3.23.8'
+        specifier: ^4.4.0
         version: 4.4.3
       zod-to-json-schema:
         specifier: ^3.23.5
@@ -537,7 +537,7 @@ importers:
         specifier: workspace:*
         version: link:../schemas
       zod:
-        specifier: '>=3.23.8'
+        specifier: ^4.4.0
         version: 4.4.3
     devDependencies:
       tsx:
@@ -668,7 +668,7 @@ importers:
         specifier: ^3.4.9
         version: 3.4.9
       zod:
-        specifier: '>=3.23.8'
+        specifier: ^4.4.0
         version: 4.4.3
     devDependencies:
       '@types/node':
@@ -712,7 +712,7 @@ importers:
         specifier: ^6.2.3
         version: 6.2.3
       zod:
-        specifier: '>=3.23.8'
+        specifier: ^4.4.0
         version: 4.4.3
     devDependencies:
       '@cloudflare/workers-types':
@@ -740,7 +740,7 @@ importers:
         specifier: workspace:*
         version: link:../schemas
       zod:
-        specifier: '>=3.23.8'
+        specifier: ^4.4.0
         version: 4.4.3
     devDependencies:
       tsx:
@@ -843,7 +843,7 @@ importers:
         specifier: ^0.45.2
         version: 0.45.2(@cloudflare/workers-types@4.20260611.1)(@electric-sql/pglite@0.5.1)(@neondatabase/serverless@0.9.5)(@opentelemetry/api@1.9.1)(@prisma/client@7.8.0(prisma@7.8.0(@types/node@25.9.3)(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(magicast@0.5.3)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.11.6)(kysely@0.28.17)(mysql2@3.22.5(@types/node@25.9.3))(pg@8.21.0)(postgres@3.4.9)(prisma@7.8.0(@types/node@25.9.3)(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(magicast@0.5.3)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(typescript@6.0.3))
       zod:
-        specifier: '>=3.23.8'
+        specifier: ^4.4.0
         version: 4.4.3
     devDependencies:
       '@cloudflare/workers-types':
@@ -865,19 +865,19 @@ packages:
     resolution: {integrity: sha512-sbv8+1L9/BRKydn8dMNwoMQKupA4iLJ9N+yvxgW6wMQ/94UepDf3FeYWMj/dLdzolAHZ6izRUP4s5WqQkmJ2Zg==}
     engines: {node: '>=18'}
     peerDependencies:
-      zod: '>=3.23.8'
+      zod: ^4.4.0
 
   '@ai-sdk/openai@3.0.61':
     resolution: {integrity: sha512-L5FdlTo+7IBOdXbnTZqVzowRdLGWnxPn01vHe4leLPp0G4ydoXhySu0tp0ttkoO0ZSzPjHo7iiAkYoT0J91Q8Q==}
     engines: {node: '>=18'}
     peerDependencies:
-      zod: '>=3.23.8'
+      zod: ^4.4.0
 
   '@ai-sdk/provider-utils@4.0.26':
     resolution: {integrity: sha512-CsKNLKsOpvPujRlIYvoz+Ybw+kGn7J4/fIZa/58+R7iWLLfwn6ifE2G6Yq8K9XvH/I/3bzaDAJ3NhRwEMsLBKQ==}
     engines: {node: '>=18'}
     peerDependencies:
-      zod: '>=3.23.8'
+      zod: ^4.4.0
 
   '@ai-sdk/provider@3.0.10':
     resolution: {integrity: sha512-Q3BZ27qfpYqnCYGvE3vt+Qi6LGOF9R5Nmzn+9JoM1lCRsD9mYaIhfJLkSunN48nfGXJ6n+XNV0J/XVpqGQl7Dw==}
@@ -894,7 +894,7 @@ packages:
   '@asteasolutions/zod-to-openapi@8.5.0':
     resolution: {integrity: sha512-SABbKiObg5dLRiTFnqiW1WWwGcg1BJfmHtT2asIBnBHg6Smy/Ms2KHc650+JI4Hw7lSkdiNebEGXpwoxfben8Q==}
     peerDependencies:
-      zod: '>=3.23.8'
+      zod: ^4.4.0
 
   '@astrojs/check@0.9.9':
     resolution: {integrity: sha512-A5UW8uIuErLWEoRQvzgXpO1gTjUFtK8r7nU2Z7GewAMxUb7bPvpk11qaKKgxqXlHJWlAvaaxy+Xg28A6bmQ1Tg==}
@@ -2377,7 +2377,7 @@ packages:
     engines: {node: '>=18'}
     peerDependencies:
       '@cfworker/json-schema': ^4.1.1
-      zod: '>=3.23.8'
+      zod: ^4.4.0
     peerDependenciesMeta:
       '@cfworker/json-schema':
         optional: true
@@ -3539,7 +3539,7 @@ packages:
     resolution: {integrity: sha512-6fFFHzbh6FIZnYc31V6osOxq25ABJYCShfG0O6ajHiA4FB/DgnPi1mP8cO5aAU3HNSbQHiMazdlh9bIsp97mVA==}
     engines: {node: '>=18'}
     peerDependencies:
-      zod: '>=3.23.8'
+      zod: ^4.4.0
 
   ajv-draft-04@1.0.0:
     resolution: {integrity: sha512-mv00Te6nmYbRp5DCwclxtt7yV/joXJPGS7nM+97GdxvuttCOfgI3K4U25zboyeX0O+myI8ERluxQe5wljMmVIw==}
@@ -3735,7 +3735,7 @@ packages:
   better-call@1.3.5:
     resolution: {integrity: sha512-kOFJkBP7utAQLEYrobZm3vkTH8mXq5GNgvjc5/XEST1ilVHaxXUXfeDeFlqoETMtyqS4+3/h4ONX2i++ebZrvA==}
     peerDependencies:
-      zod: '>=3.23.8'
+      zod: ^4.4.0
     peerDependenciesMeta:
       zod:
         optional: true
@@ -7100,13 +7100,13 @@ packages:
   zod-to-json-schema@3.25.2:
     resolution: {integrity: sha512-O/PgfnpT1xKSDeQYSCfRI5Gy3hPf91mKVDuYLUHZJMiDFptvP41MSnWofm8dnCm0256ZNfZIM7DSzuSMAFnjHA==}
     peerDependencies:
-      zod: '>=3.23.8'
+      zod: ^4.4.0
 
   zod-validation-error@4.0.2:
     resolution: {integrity: sha512-Q6/nZLe6jxuU80qb/4uJ4t5v2VEZ44lzQjPDhYJNztRQ4wyWc6VF3D3Kb/fAuPetZQnhS3hnajCf9CsWesghLQ==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
-      zod: '>=3.23.8'
+      zod: ^4.4.0
 
   zod@4.4.3:
     resolution: {integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==}
