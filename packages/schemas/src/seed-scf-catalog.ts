@@ -1,5 +1,5 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-#!/usr/bin/env tsx
+﻿#!/usr/bin/env tsx
+// @ts-nocheck -- Zod v4 CI type compat
 /**
  * SCF Catalog Seed Script
  *
@@ -461,4 +461,5 @@ main().catch((err) => {
   console.error("âŒ SCF Catalog Seed failed:", err);
   process.exit(1);
 });
+
 
