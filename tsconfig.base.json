@@ -12,7 +12,8 @@
     "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
     "paths": {
-      "zod": ["node_modules/zod"],
+      "zod": ["node_modules/zod/v4/classic"],
+      "zod/v4": ["node_modules/zod/v4"],
       "@standard/workflows": ["workers/workflows/src/orchestrator-entry.ts"],
       "@standard/workflows/*": ["workers/workflows/src/*"],
       "@standard/*": ["packages/*/src/index.ts"]
