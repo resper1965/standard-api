@@ -2,7 +2,14 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "types": ["@cloudflare/workers-types"],
-    "typeRoots": ["../../node_modules", "./node_modules"]
+    "typeRoots": ["../../node_modules", "./node_modules"],
+    "paths": {
+      "zod": ["../../node_modules/zod/v4/classic/index.d.ts"],
+      "zod/v4": ["../../node_modules/zod/v4/index.d.ts"],
+      "@standard/workflows": ["../../workers/workflows/src/orchestrator-entry.ts"],
+      "@standard/workflows/*": ["../../workers/workflows/src/*"],
+      "@standard/*": ["../../packages/*/src/index.ts"]
+    }
   },
   "include": ["src/**/*.ts"],
   "exclude": ["src/**/__tests__/**"]
