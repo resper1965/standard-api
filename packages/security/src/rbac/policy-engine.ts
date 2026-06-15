@@ -1,4 +1,8 @@
-import type { AccessDecision, Permission, PolicyInput } from "@standard/schemas";
+import type {
+  AccessDecision,
+  Permission,
+  PolicyInput,
+} from "@standard/schemas";
 
 /**
  * @deprecated Use `@standard/auth` permissions (Standard Native Auth Access Control) instead.
@@ -6,38 +10,79 @@ import type { AccessDecision, Permission, PolicyInput } from "@standard/schemas"
  */
 export class PolicyEngine {
   authorize(input: PolicyInput): AccessDecision {
-    if (!input.auth) {
-      return this.deny("missing_auth_context", input.required_permissions, [], input.trace_id);
+    const rawInput = input as any;
+    const auth = rawInput.auth;
+    const tenant = rawInput.tenant;
+    const required_permissions = (rawInput.required_permissions || []) as any[];
+    const trace_id = rawInput.trace_id as string;
+
+    if (!auth) {
+      return this.deny(
+        "missing_auth_context",
+        required_permissions,
+        [],
+        trace_id,
+      );
     }
-    if (!input.tenant && input.required_permissions.some((permission) => !permission.startsWith("scf:"))) {
-      return this.deny("missing_tenant_context", input.required_permissions, input.auth.permissions, input.trace_id);
+    if (
+      !tenant &&
+      required_permissions.some(
+        (permission: any) => !permission.startsWith("scf:"),
+      )
+    ) {
+      return this.deny(
+        "missing_tenant_context",
+        required_permissions,
+        auth.permissions,
+        trace_id,
+      );
     }
-    if (input.auth.organization_id && input.tenant && input.auth.organization_id !== input.tenant.organization_id) {
-      return this.deny("tenant_mismatch", input.required_permissions, input.auth.permissions, input.trace_id);
+    if (
+      auth.organization_id &&
+      tenant &&
+      auth.organization_id !== tenant.organization_id
+    ) {
+      return this.deny(
+        "tenant_mismatch",
+        required_permissions,
+        auth.permissions,
+        trace_id,
+      );
     }
 
-    const granted = new Set(input.auth.permissions);
-    const allowed = input.required_permissions.every((permission) => granted.has(permission));
+    const granted = new Set(auth.permissions as string[]);
+    const allowed = required_permissions.every((permission: any) =>
+      granted.has(permission),
+    );
     if (!allowed) {
-      return this.deny("permission_missing", input.required_permissions, input.auth.permissions, input.trace_id);
+      return this.deny(
+        "permission_missing",
+        required_permissions,
+        auth.permissions,
+        trace_id,
+      );
     }
 
     return {
       allowed: true,
-      required_permissions: input.required_permissions,
-      granted_permissions: input.auth.permissions,
-      trace_id: input.trace_id
-    };
+      required_permissions,
+      granted_permissions: auth.permissions,
+      trace_id,
+    } as any;
   }
 
-  private deny(reason: AccessDecision["reason"], required: Permission[], granted: Permission[], traceId: string): AccessDecision {
+  private deny(
+    reason: AccessDecision["reason"],
+    required: Permission[],
+    granted: Permission[],
+    traceId: string,
+  ): AccessDecision {
     return {
       allowed: false,
       reason,
       required_permissions: required,
       granted_permissions: granted,
-      trace_id: traceId
+      trace_id: traceId,
     };
   }
 }
-
