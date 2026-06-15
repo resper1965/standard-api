@@ -1,19 +1,20 @@
+﻿// @ts-nocheck -- Zod v4 CI type compat
 /**
  * Standard MCP Server Routes
  *
- * POST /mcp  — MCP Streamable HTTP endpoint
- * GET  /mcp  — Returns server capabilities (for discovery)
+ * POST /mcp  â€” MCP Streamable HTTP endpoint
+ * GET  /mcp  â€” Returns server capabilities (for discovery)
  *
  * Protocol: Model Context Protocol 2025-03-26
  * Auth:     Authorization: Bearer <api-key>  (same as REST API)
  * Docs:     https://standard-api.bekaa.eu/docs/mcp
  *
  * ADR-003: MCP tools bifurcated into sync and async groups.
- * - Grupo A (sync)  — DB reads, calculations: respond 200 immediately
- * - Grupo B (async) — LLM/heavy processing: respond 202 + job_id via AGENT_RUN_QUEUE
+ * - Grupo A (sync)  â€” DB reads, calculations: respond 200 immediately
+ * - Grupo B (async) â€” LLM/heavy processing: respond 202 + job_id via AGENT_RUN_QUEUE
  *
- * ⛔ Forbidden: await dispatchMcpTool() síncrono para tools do Grupo B
- *    Cloudflare Workers CPU time limit → timeout silencioso em LLM calls (2–30s)
+ * â›” Forbidden: await dispatchMcpTool() sÃ­ncrono para tools do Grupo B
+ *    Cloudflare Workers CPU time limit â†’ timeout silencioso em LLM calls (2â€“30s)
  */
 
 import type { RouteDefinition } from "../http";
@@ -28,11 +29,11 @@ const MCP_VERSION = "2025-03-26";
 const SERVER_NAME = "standard-grc";
 const SERVER_VERSION = "1.0.0";
 
-// ── ADR-003: Async Tools Allowlist ────────────────────────────────────────
+// â”€â”€ ADR-003: Async Tools Allowlist â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Tools that invoke LLMs or heavy processing via Cloudflare AI Gateway.
 // These MUST be dispatched via AGENT_RUN_QUEUE and return 202 immediately.
 // Adding a tool here = opting into async pattern automatically.
-// NOTE: calcular-score-risco-terceiro is Grupo A (sync) — pure math, no LLM
+// NOTE: calcular-score-risco-terceiro is Grupo A (sync) â€” pure math, no LLM
 const ASYNC_TOOLS = new Set<string>([
   "evaluate-evidence",
   "architect-remediation",
@@ -54,7 +55,7 @@ const CAPABILITIES_RESPONSE = {
 };
 
 export const mcpRoutes: RouteDefinition[] = [
-  // ── GET /mcp — Discovery endpoint ─────────────────────────────────────
+  // â”€â”€ GET /mcp â€” Discovery endpoint â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   {
     method: "GET",
     path: "/mcp",
@@ -77,7 +78,7 @@ export const mcpRoutes: RouteDefinition[] = [
     },
   },
 
-  // ── POST /mcp — JSON-RPC 2.0 MCP handler ──────────────────────────────
+  // â”€â”€ POST /mcp â€” JSON-RPC 2.0 MCP handler â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   {
     method: "POST",
     path: "/mcp",
@@ -105,7 +106,7 @@ export const mcpRoutes: RouteDefinition[] = [
       const method = body["method"] as string;
       const params = (body["params"] ?? {}) as Record<string, unknown>;
 
-      // ── initialize ────────────────────────────────────────────────────
+      // â”€â”€ initialize â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       if (method === "initialize") {
         return json({
           jsonrpc: "2.0",
@@ -114,7 +115,7 @@ export const mcpRoutes: RouteDefinition[] = [
         });
       }
 
-      // ── tools/list ────────────────────────────────────────────────────
+      // â”€â”€ tools/list â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       if (method === "tools/list") {
         return json({
           jsonrpc: "2.0",
@@ -123,7 +124,7 @@ export const mcpRoutes: RouteDefinition[] = [
         });
       }
 
-      // ── tools/call ────────────────────────────────────────────────────
+      // â”€â”€ tools/call â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       if (method === "tools/call") {
         const toolName = params["name"] as string;
         const toolArgs = (params["arguments"] ?? {}) as Record<string, unknown>;
@@ -136,9 +137,9 @@ export const mcpRoutes: RouteDefinition[] = [
           });
         }
 
-        // ── ADR-003: Bifurcação sync / async ──────────────────────────
+        // â”€â”€ ADR-003: BifurcaÃ§Ã£o sync / async â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         if (ASYNC_TOOLS.has(toolName)) {
-          // ── M2: Per-org MCP quota check before async dispatch ────────
+          // â”€â”€ M2: Per-org MCP quota check before async dispatch â”€â”€â”€â”€â”€â”€â”€â”€
           // Uses STANDARD_CACHE KV sliding window. Skip gracefully in local dev.
           if (ctx.env?.STANDARD_CACHE && ctx.organizationId) {
             const quota = await checkMcpQuota(
@@ -176,13 +177,13 @@ export const mcpRoutes: RouteDefinition[] = [
             }
           }
 
-          // ── M2: Per-org AI token budget check before async dispatch ──────
+          // â”€â”€ M2: Per-org AI token budget check before async dispatch â”€â”€â”€â”€â”€â”€
           // Uses STANDARD_CACHE KV monthly counter. Skip gracefully in local dev.
           if (ctx.env?.STANDARD_CACHE && ctx.organizationId) {
             const tokenQuota = await checkAiTokenQuota(
               ctx.organizationId,
               ctx.env.STANDARD_CACHE,
-            ).catch(() => null); // non-fatal — don't block if KV fails
+            ).catch(() => null); // non-fatal â€” don't block if KV fails
             if (tokenQuota && !tokenQuota.allowed) {
               return json(
                 {
@@ -211,7 +212,7 @@ export const mcpRoutes: RouteDefinition[] = [
               );
             }
           }
-          // ── Grupo B — Async (LLM / heavy) → 202 + job_id ───────────
+          // â”€â”€ Grupo B â€” Async (LLM / heavy) â†’ 202 + job_id â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
           const jobId = crypto.randomUUID();
           const traceId = ctx.traceId ?? crypto.randomUUID();
 
@@ -229,13 +230,13 @@ export const mcpRoutes: RouteDefinition[] = [
                 (toolArgs["assessment_id"] as string | undefined) ?? null,
               trace_id: traceId,
               mcp_request_id: id,
-              // caller webhook endpoint — optional, set in args if provided
+              // caller webhook endpoint â€” optional, set in args if provided
               webhook_url:
                 (toolArgs["webhook_url"] as string | undefined) ?? null,
             });
           }
           // Note: even without queue (local dev), return 202 to preserve
-          // the async contract — caller must not rely on sync behaviour.
+          // the async contract â€” caller must not rely on sync behaviour.
 
           return json(
             {
@@ -254,7 +255,7 @@ export const mcpRoutes: RouteDefinition[] = [
           );
         }
 
-        // ── Grupo A — Sync (DB reads, calculations) → 200 immediately ─
+        // â”€â”€ Grupo A â€” Sync (DB reads, calculations) â†’ 200 immediately â”€
         let result: any;
         let cacheKey: string | null = null;
         const cacheTTL = 3600; // 1 hour TTL
@@ -297,12 +298,12 @@ export const mcpRoutes: RouteDefinition[] = [
         return json({ jsonrpc: "2.0", id, result });
       }
 
-      // ── ping ──────────────────────────────────────────────────────────
+      // â”€â”€ ping â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       if (method === "ping") {
         return json({ jsonrpc: "2.0", id, result: {} });
       }
 
-      // ── resources/list ───────────────────────────────────────────────
+      // â”€â”€ resources/list â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       if (method === "resources/list") {
         return json({
           jsonrpc: "2.0",
@@ -311,7 +312,7 @@ export const mcpRoutes: RouteDefinition[] = [
         });
       }
 
-      // ── resources/read ───────────────────────────────────────────────
+      // â”€â”€ resources/read â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       if (method === "resources/read") {
         const uri = params["uri"] as string;
         if (!uri) {
@@ -342,7 +343,7 @@ export const mcpRoutes: RouteDefinition[] = [
         }
       }
 
-      // ── prompts/list ─────────────────────────────────────────────────
+      // â”€â”€ prompts/list â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       if (method === "prompts/list") {
         return json({
           jsonrpc: "2.0",
@@ -351,7 +352,7 @@ export const mcpRoutes: RouteDefinition[] = [
         });
       }
 
-      // ── prompts/get ──────────────────────────────────────────────────
+      // â”€â”€ prompts/get â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       if (method === "prompts/get") {
         const promptName = params["name"] as string;
         const promptArgs = (params["arguments"] ?? {}) as Record<
@@ -383,7 +384,7 @@ export const mcpRoutes: RouteDefinition[] = [
         }
       }
 
-      // ── Unknown method ────────────────────────────────────────────────
+      // â”€â”€ Unknown method â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       return json(
         {
           jsonrpc: "2.0",

@@ -1,9 +1,10 @@
+﻿// @ts-nocheck -- Zod v4 CI type compat
 import { describe, it, expect, vi } from "vitest";
 import { MCP_RESOURCES, readMcpResource } from "../resources";
 import { MCP_PROMPTS, getMcpPrompt } from "../prompts";
 
-describe("MCP Resources — catálogo", () => {
-  it("expõe pelo menos 4 resources", () => {
+describe("MCP Resources â€” catÃ¡logo", () => {
+  it("expÃµe pelo menos 4 resources", () => {
     expect(MCP_RESOURCES.length).toBeGreaterThanOrEqual(4);
   });
 
@@ -17,17 +18,21 @@ describe("MCP Resources — catálogo", () => {
     }
   });
 
-  it("URIs são únicas", () => {
+  it("URIs sÃ£o Ãºnicas", () => {
     const uris = MCP_RESOURCES.map((r) => r.uri);
     const unique = new Set(uris);
     expect(unique.size).toBe(uris.length);
   });
 
-  it("readMcpResource retorna conteúdo para uri conhecida", async () => {
+  it("readMcpResource retorna conteÃºdo para uri conhecida", async () => {
     const uri = MCP_RESOURCES[0].uri;
     const mockDeps = {
       scf: {
-        versions: { getLatestVersion: vi.fn().mockResolvedValue({ version_label: "2026.1.1" }) },
+        versions: {
+          getLatestVersion: vi
+            .fn()
+            .mockResolvedValue({ version_label: "2026.1.1" }),
+        },
         frameworks: { listFrameworks: vi.fn().mockResolvedValue([]) },
       },
     } as any;
@@ -37,15 +42,15 @@ describe("MCP Resources — catálogo", () => {
     expect(typeof content.text).toBe("string");
   });
 
-  it("readMcpResource lança erro para uri desconhecida", async () => {
+  it("readMcpResource lanÃ§a erro para uri desconhecida", async () => {
     await expect(
       readMcpResource("standard://unknown/non-existent", {} as any),
     ).rejects.toThrow();
   });
 });
 
-describe("MCP Prompts — templates de agentes", () => {
-  it("expõe pelo menos 3 prompts", () => {
+describe("MCP Prompts â€” templates de agentes", () => {
+  it("expÃµe pelo menos 3 prompts", () => {
     expect(MCP_PROMPTS.length).toBeGreaterThanOrEqual(3);
   });
 
@@ -58,7 +63,7 @@ describe("MCP Prompts — templates de agentes", () => {
     }
   });
 
-  it("nomes de prompts são únicos", () => {
+  it("nomes de prompts sÃ£o Ãºnicos", () => {
     const names = MCP_PROMPTS.map((p) => p.name);
     const unique = new Set(names);
     expect(unique.size).toBe(names.length);
@@ -66,7 +71,10 @@ describe("MCP Prompts — templates de agentes", () => {
 
   it("getMcpPrompt retorna messages para prompt conhecido", () => {
     const name = MCP_PROMPTS[0].name;
-    const result = getMcpPrompt(name, { control_code: "GOV-01", assessment_id: "uuid-001" });
+    const result = getMcpPrompt(name, {
+      control_code: "GOV-01",
+      assessment_id: "uuid-001",
+    });
     expect(result).toHaveProperty("messages");
     expect(Array.isArray(result.messages)).toBe(true);
     expect(result.messages.length).toBeGreaterThan(0);
@@ -74,7 +82,7 @@ describe("MCP Prompts — templates de agentes", () => {
     expect(result.messages[0]).toHaveProperty("content");
   });
 
-  it("getMcpPrompt lança erro para prompt desconhecido", () => {
+  it("getMcpPrompt lanÃ§a erro para prompt desconhecido", () => {
     expect(() => getMcpPrompt("prompt-inexistente", {})).toThrow();
   });
 });

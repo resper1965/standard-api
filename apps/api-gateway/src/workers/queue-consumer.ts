@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Inline Cloudflare Workers type stubs.
  */
 interface QueueMessage<T = unknown> {
@@ -17,15 +17,15 @@ interface MessageBatch<T = unknown> {
 }
 
 /**
- * SOC Triage Queue Consumer — Hardened Background Worker
+ * SOC Triage Queue Consumer â€” Hardened Background Worker
  *
  * Processes incident triage jobs dispatched by the SOC route (asyncCall: true).
  * Implements the "Gold Standard" resilience pattern:
  *
- *  1. Tenant Validation   — rejects cross-tenant payloads immediately (DLQ)
- *  2. LLM Invocation       — calls IncidentTriagerUseCase via AI Gateway
- *  3. Audit Persistence    — writes result or failure to the audit trail
- *  4. Dead-Letter Capture  — on 3rd retry or fatal error, persists a `poisoned_dlq`
+ *  1. Tenant Validation   â€” rejects cross-tenant payloads immediately (DLQ)
+ *  2. LLM Invocation       â€” calls IncidentTriagerUseCase via AI Gateway
+ *  3. Audit Persistence    â€” writes result or failure to the audit trail
+ *  4. Dead-Letter Capture  â€” on 3rd retry or fatal error, persists a `poisoned_dlq`
  *                            record into the database so the GRC dashboard can surface it
  *
  * wrangler.toml consumer settings enforce:
@@ -42,7 +42,7 @@ import { createDrizzleAuditRepository } from "../adapters/audit.repository";
 import { CloudflareAiGatewayAdapter } from "../adapters/ai-gateway.adapter";
 import { createInMemoryAgentRuntimeDependencies } from "@standard/agent-runtime";
 
-// ──── Payload contract ────
+// â”€â”€â”€â”€ Payload contract â”€â”€â”€â”€
 
 interface SocTriagePayload {
   job_id: string;
@@ -64,7 +64,7 @@ const isSocTriagePayload = (body: unknown): body is SocTriagePayload => {
   );
 };
 
-// ──── Helpers ────
+// â”€â”€â”€â”€ Helpers â”€â”€â”€â”€
 
 /**
  * Validate that the incoming message has mandatory tenant context.
@@ -79,7 +79,7 @@ const assertTenantIntegrity = (payload: SocTriagePayload): void => {
   }
 };
 
-// ──── Consumer Export ────
+// â”€â”€â”€â”€ Consumer Export â”€â”€â”€â”€
 
 async function processMessage(
   message: QueueMessage,
@@ -89,10 +89,10 @@ async function processMessage(
   const raw = message.body;
   const msgStartedAt = Date.now();
 
-  // ── Step 0: Structural validation ──
+  // â”€â”€ Step 0: Structural validation â”€â”€
   if (!isSocTriagePayload(raw)) {
     console.error(
-      `[soc:queue] ❌ Malformed payload — cannot parse. Sending to DLQ.`,
+      `[soc:queue] âŒ Malformed payload â€” cannot parse. Sending to DLQ.`,
       JSON.stringify(raw).slice(0, 200),
     );
     await audit.record("soc.dlq.event", {
@@ -100,19 +100,19 @@ async function processMessage(
       raw_preview: JSON.stringify(raw).slice(0, 500),
       timestamp: new Date().toISOString(),
     });
-    message.ack(); // Don't retry garbage — it will never become valid.
+    message.ack(); // Don't retry garbage â€” it will never become valid.
     return;
   }
 
   const payload = raw;
 
   try {
-    // ── Step 1: Tenant Integrity Gate ──
+    // â”€â”€ Step 1: Tenant Integrity Gate â”€â”€
     assertTenantIntegrity(payload);
 
-    // ── Step 2: LLM Triage ──
+    // â”€â”€ Step 2: LLM Triage â”€â”€
     console.log(
-      `[soc:queue] 🔍 Processing job ${payload.job_id} for tenant ${payload.organizationId} (trace: ${payload.traceId})`,
+      `[soc:queue] ðŸ” Processing job ${payload.job_id} for tenant ${payload.organizationId} (trace: ${payload.traceId})`,
     );
     const usecase = new IncidentTriagerUseCase(llm as any);
     const result = await usecase.triage({
@@ -121,7 +121,7 @@ async function processMessage(
       organizationId: payload.organizationId,
     });
 
-    // ── Step 3: Audit success ──
+    // â”€â”€ Step 3: Audit success â”€â”€
     await audit.record("soc.incident.triaged", {
       job_id: payload.job_id,
       organization_id: payload.organizationId,
@@ -135,10 +135,10 @@ async function processMessage(
     });
 
     console.log(
-      `[soc:queue] ✅ Job ${payload.job_id} completed. Severity: ${result.severity_level}`,
+      `[soc:queue] âœ… Job ${payload.job_id} completed. Severity: ${result.severity_level}`,
     );
 
-    // ── Metric: successful processing duration ──
+    // â”€â”€ Metric: successful processing duration â”€â”€
     const processingMs = Date.now() - msgStartedAt;
     console.log(
       JSON.stringify({
@@ -159,13 +159,13 @@ async function processMessage(
       error instanceof TenantMismatchError || (message.attempts ?? 0) >= 3;
 
     if (isFatal) {
-      // ── DLQ: Grave no banco, não tente de novo ──
+      // â”€â”€ DLQ: Grave no banco, nÃ£o tente de novo â”€â”€
       const errorMessage =
         error instanceof Error ? error.message : "Unknown fatal error";
       const errorName = error instanceof Error ? error.name : "UnknownError";
 
       console.error(
-        `[soc:queue] ☠️ POISONED — Job ${payload.job_id} sent to DLQ after ${message.attempts ?? "?"} attempts. Reason: ${errorName}`,
+        `[soc:queue] â˜ ï¸ POISONED â€” Job ${payload.job_id} sent to DLQ after ${message.attempts ?? "?"} attempts. Reason: ${errorName}`,
       );
 
       await audit.record("soc.dlq.event", {
@@ -181,9 +181,9 @@ async function processMessage(
         timestamp: new Date().toISOString(),
       });
 
-      message.ack(); // Acknowledge to stop retries — it's in the DB now.
+      message.ack(); // Acknowledge to stop retries â€” it's in the DB now.
 
-      // ── Metric: DLQ processing duration ──
+      // â”€â”€ Metric: DLQ processing duration â”€â”€
       console.log(
         JSON.stringify({
           metric: "queue.processing.duration_ms",
@@ -197,13 +197,13 @@ async function processMessage(
         }),
       );
     } else {
-      // ── Transient failure: let Cloudflare retry ──
+      // â”€â”€ Transient failure: let Cloudflare retry â”€â”€
       const errMsg = error instanceof Error ? error.message : String(error);
       console.warn(
-        `[soc:queue] ⚠️ Job ${payload.job_id} failed (attempt ${message.attempts ?? "?"}). Will retry. Error: ${errMsg}`,
+        `[soc:queue] âš ï¸ Job ${payload.job_id} failed (attempt ${message.attempts ?? "?"}). Will retry. Error: ${errMsg}`,
       );
 
-      // ── Metric: retry processing duration ──
+      // â”€â”€ Metric: retry processing duration â”€â”€
       console.log(
         JSON.stringify({
           metric: "queue.processing.duration_ms",
@@ -243,7 +243,7 @@ export default {
           })
         : (() => {
             console.warn(
-              "[soc:queue] ⚠️ AI_GATEWAY_BASE_URL or OPENAI_API_KEY missing. Using MOCK LLM — all AI responses will be empty.",
+              "[soc:queue] âš ï¸ AI_GATEWAY_BASE_URL or OPENAI_API_KEY missing. Using MOCK LLM â€” all AI responses will be empty.",
             );
             return createInMemoryAgentRuntimeDependencies().llm;
           })();

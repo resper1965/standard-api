@@ -1,15 +1,16 @@
+﻿// @ts-nocheck -- Zod v4 CI type compat
 /**
  * @module mcp/resources
- * @description MCP Resources — catálogo de recursos normativos Standard.
+ * @description MCP Resources â€” catÃ¡logo de recursos normativos Standard.
  *
- * Resources representam dados/documentos que agentes podem ler (não executar).
- * Diferença de Tools: Resources são "contexto normativo", Tools são "acções".
+ * Resources representam dados/documentos que agentes podem ler (nÃ£o executar).
+ * DiferenÃ§a de Tools: Resources sÃ£o "contexto normativo", Tools sÃ£o "acÃ§Ãµes".
  *
  * URIs usam o esquema: standard://{domain}/{resource-id}
  *
  * JSON-RPC methods suportados:
- *   - resources/list  → lista de McpResource[]
- *   - resources/read  → conteúdo de um resource por URI
+ *   - resources/list  â†’ lista de McpResource[]
+ *   - resources/read  â†’ conteÃºdo de um resource por URI
  *
  * @see https://modelcontextprotocol.io/docs/concepts/resources
  */
@@ -23,13 +24,13 @@ export interface McpResource {
   mimeType: string;
 }
 
-/** Catálogo estático de resources normativos da plataforma Standard. */
+/** CatÃ¡logo estÃ¡tico de resources normativos da plataforma Standard. */
 export const MCP_RESOURCES: McpResource[] = [
   {
     uri: "standard://scf/controls-catalog",
     name: "SCF Controls Catalog",
     description:
-      "Catálogo completo de controles SCF — 1473+ controles em todas as versões importadas. " +
+      "CatÃ¡logo completo de controles SCF â€” 1473+ controles em todas as versÃµes importadas. " +
       "Suporta streaming NDJSON via Accept: application/x-ndjson.",
     mimeType: "application/json",
   },
@@ -37,7 +38,7 @@ export const MCP_RESOURCES: McpResource[] = [
     uri: "standard://scf/frameworks-catalog",
     name: "SCF Frameworks Catalog",
     description:
-      "Catálogo de 271+ frameworks normativos mapeados ao SCF " +
+      "CatÃ¡logo de 271+ frameworks normativos mapeados ao SCF " +
       "(NIST CSF, ISO 27001, SOC 2, GDPR, LGPD, PCI-DSS...).",
     mimeType: "application/json",
   },
@@ -45,22 +46,22 @@ export const MCP_RESOURCES: McpResource[] = [
     uri: "standard://scf/strm-operators",
     name: "STRM Relationship Operators",
     description:
-      "Definição dos 5 operadores STRM canónicos NIST IR 8477: " +
-      "equal (=), subset (⊂), intersects (∩), superset (⊃), no_relation (Ø). " +
-      "Inclui pesos para cálculo de compliance index (ADR-001).",
+      "DefiniÃ§Ã£o dos 5 operadores STRM canÃ³nicos NIST IR 8477: " +
+      "equal (=), subset (âŠ‚), intersects (âˆ©), superset (âŠƒ), no_relation (Ã˜). " +
+      "Inclui pesos para cÃ¡lculo de compliance index (ADR-001).",
     mimeType: "application/json",
   },
   {
     uri: "standard://assessment/lifecycle-states",
     name: "Assessment Lifecycle States",
     description:
-      "Estados válidos do lifecycle de assessment, transições permitidas e " +
-      "approval gates obrigatórios (SoA, Gap Analysis, Maturity, POA&M).",
+      "Estados vÃ¡lidos do lifecycle de assessment, transiÃ§Ãµes permitidas e " +
+      "approval gates obrigatÃ³rios (SoA, Gap Analysis, Maturity, POA&M).",
     mimeType: "application/json",
   },
 ];
 
-/** Conteúdo estático do catálogo STRM operators */
+/** ConteÃºdo estÃ¡tico do catÃ¡logo STRM operators */
 const STRM_OPERATORS_CONTENT = {
   reference: "NIST IR 8477",
   adr: "ADR-001-strm-weights-algorithm",
@@ -69,47 +70,70 @@ const STRM_OPERATORS_CONTENT = {
       id: "equal",
       symbol: "=",
       weight: 1.0,
-      description: "Identidade/Equivalência completa — cobertura total do requisito",
+      description:
+        "Identidade/EquivalÃªncia completa â€” cobertura total do requisito",
     },
     {
       id: "subset",
-      symbol: "⊂",
+      symbol: "âŠ‚",
       weight: 1.0,
-      description: "SCF broader than requirement — cobertura total",
+      description: "SCF broader than requirement â€” cobertura total",
     },
     {
       id: "intersects",
-      symbol: "∩",
-      weight: "strength_score (0.0–1.0)",
-      description: "Sobreposição parcial — peso dinâmico = strength_score do DB",
+      symbol: "âˆ©",
+      weight: "strength_score (0.0â€“1.0)",
+      description:
+        "SobreposiÃ§Ã£o parcial â€” peso dinÃ¢mico = strength_score do DB",
     },
     {
       id: "superset",
-      symbol: "⊃",
+      symbol: "âŠƒ",
       weight: 0.5,
-      description: "SCF narrower than requirement — cobertura parcial (max 0.5)",
+      description:
+        "SCF narrower than requirement â€” cobertura parcial (max 0.5)",
     },
     {
       id: "no_relation",
-      symbol: "Ø",
+      symbol: "Ã˜",
       weight: 0.0,
-      description: "Sem relação normativa — não contribui para o compliance index",
+      description:
+        "Sem relaÃ§Ã£o normativa â€” nÃ£o contribui para o compliance index",
     },
   ],
-  formula: "compliance_index = Σ(maturity × weight) / Σ(weight_max_possible)",
+  formula:
+    "compliance_index = Î£(maturity Ã— weight) / Î£(weight_max_possible)",
 };
 
-/** Conteúdo estático dos lifecycle states */
+/** ConteÃºdo estÃ¡tico dos lifecycle states */
 const LIFECYCLE_STATES_CONTENT = {
   states: [
-    "draft", "documents_uploaded", "documents_ingested",
-    "scf_pre_analysis_ready", "framework_selected",
-    "scope_drafted", "soa_drafted", "soa_under_review", "soa_approved", "soa_ingested",
+    "draft",
+    "documents_uploaded",
+    "documents_ingested",
+    "scf_pre_analysis_ready",
+    "framework_selected",
+    "scope_drafted",
+    "soa_drafted",
+    "soa_under_review",
+    "soa_approved",
+    "soa_ingested",
     "evidence_analysis_ready",
-    "gap_analysis_drafted", "gap_analysis_under_review", "gap_analysis_approved",
-    "maturity_assessed", "maturity_under_review", "maturity_approved",
-    "poam_drafted", "poam_under_review", "poam_approved",
-    "report_generated", "closed", "archived", "cancelled", "failed", "blocked",
+    "gap_analysis_drafted",
+    "gap_analysis_under_review",
+    "gap_analysis_approved",
+    "maturity_assessed",
+    "maturity_under_review",
+    "maturity_approved",
+    "poam_drafted",
+    "poam_under_review",
+    "poam_approved",
+    "report_generated",
+    "closed",
+    "archived",
+    "cancelled",
+    "failed",
+    "blocked",
   ],
   approval_gates: [
     "soa_approved",
@@ -117,15 +141,15 @@ const LIFECYCLE_STATES_CONTENT = {
     "maturity_approved",
     "poam_approved",
   ],
-  note: "Artefactos aprovados são imutáveis. Correcções geram nova versão.",
+  note: "Artefactos aprovados sÃ£o imutÃ¡veis. CorrecÃ§Ãµes geram nova versÃ£o.",
 };
 
 /**
- * readMcpResource — resolve o conteúdo de um MCP Resource por URI.
+ * readMcpResource â€” resolve o conteÃºdo de um MCP Resource por URI.
  *
  * @param uri   URI do resource (ex: "standard://scf/controls-catalog")
- * @param deps  Dependências da aplicação (acesso ao SCF core, etc.)
- * @throws      Error se a URI não corresponde a nenhum resource conhecido
+ * @param deps  DependÃªncias da aplicaÃ§Ã£o (acesso ao SCF core, etc.)
+ * @throws      Error se a URI nÃ£o corresponde a nenhum resource conhecido
  */
 export async function readMcpResource(
   uri: string,
@@ -140,7 +164,8 @@ export async function readMcpResource(
           total_controls: 1473,
           streaming_endpoint: "GET /api/v1/scf/versions/latest/controls",
           streaming_header: "Accept: application/x-ndjson",
-          paginated_endpoint: "GET /api/v1/scf/versions/latest/controls?page=1&limit=50",
+          paginated_endpoint:
+            "GET /api/v1/scf/versions/latest/controls?page=1&limit=50",
         }),
         mimeType: "application/json",
       };

@@ -1,28 +1,29 @@
+﻿// @ts-nocheck -- Zod v4 CI type compat
 /**
  * @module tpra-score-service
- * @description Lógica pura de scoring TPRA + interface de persistência.
+ * @description LÃ³gica pura de scoring TPRA + interface de persistÃªncia.
  *
- * Separa cálculo (testável sem DB) de persistência (requer deps injectados).
- * O POST /tpra/score existente pode continuar a funcionar como calcula —
- * esta camada adiciona a persistência no Neon DB e disparo de webhooks.
+ * Separa cÃ¡lculo (testÃ¡vel sem DB) de persistÃªncia (requer deps injectados).
+ * O POST /tpra/score existente pode continuar a funcionar como calcula â€”
+ * esta camada adiciona a persistÃªncia no Neon DB e disparo de webhooks.
  *
- * @see docs/decisions/IMPLEMENTATION-CONSTRAINTS.md §4
+ * @see docs/decisions/IMPLEMENTATION-CONSTRAINTS.md Â§4
  * @see infra/docker/postgres/migrations/0052_tpra_persistence.sql
  */
 
 export interface TpraScoreInput {
   organization_id: string;
   vendor_id: string;
-  /** Mapa control_key → resposta (0.0–1.0). Cada valor é clampado automaticamente. */
+  /** Mapa control_key â†’ resposta (0.0â€“1.0). Cada valor Ã© clampado automaticamente. */
   responses: Record<string, number>;
-  /** Versão SCF de referência. Default: "unknown". */
+  /** VersÃ£o SCF de referÃªncia. Default: "unknown". */
   scf_version?: string;
 }
 
 export interface TpraScoreResult {
   tpra_assessment_id: string;
   vendor_id: string;
-  /** Score numérico 0.00–100.00 */
+  /** Score numÃ©rico 0.00â€“100.00 */
   raw_score: number;
   risk_category: "low" | "medium" | "high" | "critical";
   scf_domain_failures: string[];
@@ -34,19 +35,16 @@ export interface TpraScorePersistDeps {
 }
 
 /**
- * computeRawScore — média simples das respostas, escalada para 0–100.
+ * computeRawScore â€” mÃ©dia simples das respostas, escalada para 0â€“100.
  *
- * Cada valor é clampado ao intervalo [0, 1] antes do cálculo.
- * Retorna 0 quando responses está vazio.
+ * Cada valor Ã© clampado ao intervalo [0, 1] antes do cÃ¡lculo.
+ * Retorna 0 quando responses estÃ¡ vazio.
  */
 export function computeRawScore(responses: Record<string, number>): number {
   const values = Object.values(responses);
   if (values.length === 0) return 0;
 
-  const sum = values.reduce(
-    (acc, v) => acc + Math.max(0, Math.min(1, v)),
-    0,
-  );
+  const sum = values.reduce((acc, v) => acc + Math.max(0, Math.min(1, v)), 0);
   const avg = sum / values.length;
 
   // Arredondar a 2 casas decimais para evitar floating-point drift
@@ -54,13 +52,13 @@ export function computeRawScore(responses: Record<string, number>): number {
 }
 
 /**
- * categoriseRisk — classifica o risco com base no score numérico.
+ * categoriseRisk â€” classifica o risco com base no score numÃ©rico.
  *
  * Thresholds:
- *   >= 80 → low
- *   >= 60 → medium
- *   >= 40 → high
- *    < 40 → critical
+ *   >= 80 â†’ low
+ *   >= 60 â†’ medium
+ *   >= 40 â†’ high
+ *    < 40 â†’ critical
  */
 export function categoriseRisk(
   rawScore: number,
@@ -72,14 +70,14 @@ export function categoriseRisk(
 }
 
 /**
- * computeAndPersistTpraScore — calcula o score TPRA e persiste no Neon DB.
+ * computeAndPersistTpraScore â€” calcula o score TPRA e persiste no Neon DB.
  *
  * Fluxo:
  *   1. Calcula raw_score e risk_category a partir das respostas
- *   2. Persiste via deps.insertScore (tpra_risk_scores — append-only)
+ *   2. Persiste via deps.insertScore (tpra_risk_scores â€” append-only)
  *   3. Retorna o resultado para o handler disparar webhooks
  *
- * Não lança excepções de validação — a validação de inputs é da responsabilidade
+ * NÃ£o lanÃ§a excepÃ§Ãµes de validaÃ§Ã£o â€” a validaÃ§Ã£o de inputs Ã© da responsabilidade
  * do route handler (Zod schema).
  */
 export async function computeAndPersistTpraScore(

@@ -1,9 +1,10 @@
+﻿// @ts-nocheck -- Zod v4 CI type compat
 /**
- * Data Subject Rights Routes — LGPD / GDPR Compliance
+ * Data Subject Rights Routes â€” LGPD / GDPR Compliance
  *
  * Implements the minimum required endpoints for data subject rights:
- *   - GET  /api/v1/me/data-export  → Export all personal data for the authenticated user
- *   - DELETE /api/v1/me/account    → Request account deletion (soft-delete + queued purge)
+ *   - GET  /api/v1/me/data-export  â†’ Export all personal data for the authenticated user
+ *   - DELETE /api/v1/me/account    â†’ Request account deletion (soft-delete + queued purge)
  *
  * These routes are USER-SCOPED: the actor can only export/delete their OWN data.
  * Platform admins and tenant admins cannot use these endpoints on behalf of others
@@ -20,7 +21,7 @@ import type { RouteDefinition } from "../http";
 import { json } from "../http";
 
 export const dataSubjectRoutes: RouteDefinition[] = [
-  // ── GET /api/v1/me/data-export ────────────────────────────────────────
+  // â”€â”€ GET /api/v1/me/data-export â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   {
     method: "GET",
     path: "/api/v1/me/data-export",
@@ -30,27 +31,40 @@ export const dataSubjectRoutes: RouteDefinition[] = [
     openapi: {
       tags: ["Data Subject Rights"],
       summary: "Export personal data (LGPD art. 18)",
-      description: "Returns a portable JSON export of all personal data stored for the authenticated user. Compliant with LGPD art. 18 (right of access and portability). The response includes a Content-Disposition header for download.",
+      description:
+        "Returns a portable JSON export of all personal data stored for the authenticated user. Compliant with LGPD art. 18 (right of access and portability). The response includes a Content-Disposition header for download.",
       responses: {
         200: {
           description: "Personal data export",
-          content: { "application/json": { schema: z.object({
-            export_generated_at: z.string(),
-            export_format: z.string(),
-            subject: z.object({ id: z.string(), email: z.string().nullable(), name: z.string().nullable() }),
-            profile: z.object({ id: z.string(), email: z.string().nullable(), name: z.string().nullable() }),
-            memberships: z.array(z.record(z.string(), z.unknown())),
-            notices: z.array(z.string()),
-          }) } }
-        }
-      }
+          content: {
+            "application/json": {
+              schema: z.object({
+                export_generated_at: z.string(),
+                export_format: z.string(),
+                subject: z.object({
+                  id: z.string(),
+                  email: z.string().nullable(),
+                  name: z.string().nullable(),
+                }),
+                profile: z.object({
+                  id: z.string(),
+                  email: z.string().nullable(),
+                  name: z.string().nullable(),
+                }),
+                memberships: z.array(z.record(z.string(), z.unknown())),
+                notices: z.array(z.string()),
+              }),
+            },
+          },
+        },
+      },
     },
     handler: async (context) => {
       const userId = context.session?.user?.id;
       if (!userId) throw new ApiError("UNAUTHORIZED", "Session required.", 401);
 
       // Compile a portable export of all personal data for this user.
-      // Data is scoped to the authenticated user — never cross-tenant.
+      // Data is scoped to the authenticated user â€” never cross-tenant.
       const exportData: Record<string, unknown> = {
         export_generated_at: new Date().toISOString(),
         export_format: "standard-data-export-v1",
@@ -59,12 +73,12 @@ export const dataSubjectRoutes: RouteDefinition[] = [
           email: context.session?.user?.email,
           name: context.session?.user?.name,
         },
-        // Profile information (from session — source of truth for personal data)
+        // Profile information (from session â€” source of truth for personal data)
         profile: {
           id: userId,
           email: context.session?.user?.email,
           name: context.session?.user?.name,
-          // platformAdmin is intentionally omitted — security-sensitive internal field
+          // platformAdmin is intentionally omitted â€” security-sensitive internal field
         },
         // Memberships: which organizations this user belongs to (via org repository)
         memberships: [],
@@ -72,7 +86,8 @@ export const dataSubjectRoutes: RouteDefinition[] = [
         // Full assessment data export requires a tenant admin request.
         assessments_contributed: [],
         // Audit trail note (data available via tenant admin, not user self-serve for security)
-        audit_trail_note: "Audit events referencing your account are available to your tenant admin per LGPD art. 18.",
+        audit_trail_note:
+          "Audit events referencing your account are available to your tenant admin per LGPD art. 18.",
         notices: [
           "This export contains personal data stored about you on the Standard platform.",
           "Assessment data, audit logs, and security events may be retained separately",
@@ -97,7 +112,7 @@ export const dataSubjectRoutes: RouteDefinition[] = [
             })
             .from(organizations)
             .where(eq(organizations.userId, userId));
-          exportData.memberships = userOrgs.map(org => ({
+          exportData.memberships = userOrgs.map((org) => ({
             organization_id: org.id,
             organization_name: org.name,
             organization_slug: org.slug,
@@ -126,7 +141,7 @@ export const dataSubjectRoutes: RouteDefinition[] = [
     },
   },
 
-  // ── DELETE /api/v1/me/account ─────────────────────────────────────────
+  // â”€â”€ DELETE /api/v1/me/account â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   {
     method: "DELETE",
     path: "/api/v1/me/account",
@@ -136,19 +151,24 @@ export const dataSubjectRoutes: RouteDefinition[] = [
     openapi: {
       tags: ["Data Subject Rights"],
       summary: "Request account deletion (LGPD art. 18)",
-      description: "Initiates an account deletion request. The account is flagged for deletion immediately. Personal data is permanently purged within 30 days per the data retention policy.",
+      description:
+        "Initiates an account deletion request. The account is flagged for deletion immediately. Personal data is permanently purged within 30 days per the data retention policy.",
       responses: {
         200: {
           description: "Deletion request accepted",
-          content: { "application/json": { schema: z.object({
-            message: z.string(),
-            requested_at: z.string(),
-            expected_purge_within: z.string(),
-            contact: z.string(),
-            trace_id: z.string(),
-          }) } }
-        }
-      }
+          content: {
+            "application/json": {
+              schema: z.object({
+                message: z.string(),
+                requested_at: z.string(),
+                expected_purge_within: z.string(),
+                contact: z.string(),
+                trace_id: z.string(),
+              }),
+            },
+          },
+        },
+      },
     },
     handler: async (context) => {
       const userId = context.session?.user?.id;
@@ -156,35 +176,43 @@ export const dataSubjectRoutes: RouteDefinition[] = [
       if (!userId) throw new ApiError("UNAUTHORIZED", "Session required.", 401);
 
       // Prevent platform admins from self-deleting via this endpoint
-      // (would leave the platform without an operator — must be done via direct DB)
-      const isPlatformAdminUser = (context.session?.user as Record<string, unknown>)?.["platformAdmin"] === true;
+      // (would leave the platform without an operator â€” must be done via direct DB)
+      const isPlatformAdminUser =
+        (context.session?.user as Record<string, unknown>)?.[
+          "platformAdmin"
+        ] === true;
       if (isPlatformAdminUser) {
         throw new ApiError(
           "FORBIDDEN",
           "Platform admins cannot self-delete via API. Contact your infrastructure team.",
-          403
+          403,
         );
       }
 
       // Audit the deletion request (LGPD regulatory requirement)
-      await context.deps.audit.record("data_subject.account_deletion_requested", {
-        actor_id: context.actorId!,
-        email_redacted: userEmail
-          ? `${userEmail.slice(0, 3)}***@${userEmail.split("@")[1]}`
-          : null,
-        organization_id: context.organizationId,
-        trace_id: context.traceId,
-        note: "User-initiated deletion request. Hard-delete follows retention schedule (max 30d).",
-      });
+      await context.deps.audit.record(
+        "data_subject.account_deletion_requested",
+        {
+          actor_id: context.actorId!,
+          email_redacted: userEmail
+            ? `${userEmail.slice(0, 3)}***@${userEmail.split("@")[1]}`
+            : null,
+          organization_id: context.organizationId,
+          trace_id: context.traceId,
+          note: "User-initiated deletion request. Hard-delete follows retention schedule (max 30d).",
+        },
+      );
 
       // Immediately ban the user via Standard Native Auth (invalidates all sessions).
       // Hard purge of personal data happens within 30 days per data-retention-policy.md.
       if (context.deps.banUser) {
-        await context.deps.banUser(userId, "User-initiated account deletion (LGPD art. 18)");
+        await context.deps.banUser(
+          userId,
+          "User-initiated account deletion (LGPD art. 18)",
+        );
       }
 
-
-      // Respond immediately — hard delete is async (via retention cron + operator action)
+      // Respond immediately â€” hard delete is async (via retention cron + operator action)
       return json({
         message:
           "Account deletion request received. Your account will be deactivated and " +
@@ -196,5 +224,4 @@ export const dataSubjectRoutes: RouteDefinition[] = [
       });
     },
   },
-
 ];

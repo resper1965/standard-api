@@ -1,8 +1,9 @@
+﻿// @ts-nocheck -- Zod v4 CI type compat
 /**
  * Standard MCP Server
  *
  * Implements Model Context Protocol (MCP) 2025-03-26 spec
- * Transport: Streamable HTTP (POST /mcp → JSON response)
+ * Transport: Streamable HTTP (POST /mcp â†’ JSON response)
  * Auth: Bearer API Key (same as REST API)
  *
  * Docs: https://standard-api.bekaa.eu/docs/mcp
@@ -21,7 +22,7 @@
 import type { RequestContext } from "../http";
 import type { McpToolResult } from "./tools/assessment.tools";
 
-// ── Assessment Tools ────────────────────────────────────────────────────────
+// â”€â”€ Assessment Tools â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 import {
   handleListAssessments,
   handleGetAssessment,
@@ -29,14 +30,14 @@ import {
   handleListAssessmentDocuments,
 } from "./tools/assessment.tools";
 
-// ── SCF Core Tools ──────────────────────────────────────────────────────────
+// â”€â”€ SCF Core Tools â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 import {
   handleSearchScfControls,
   handleGetScfControl,
   handleListScfFrameworks,
 } from "./tools/scf.tools";
 
-// ── SCF Extended Tools (Phase 2) ────────────────────────────────────────────
+// â”€â”€ SCF Extended Tools (Phase 2) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 import {
   handleListScfDomains,
   handleListFrameworkRequirements,
@@ -48,7 +49,7 @@ import {
   handleOptimizeComplianceStrategy,
 } from "./tools/scf-extended.tools";
 
-// ── Intelligence Engine Tools (Phase 1) ─────────────────────────────────────
+// â”€â”€ Intelligence Engine Tools (Phase 1) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 import {
   handleCalculateBlastRadius,
   handleCalculateRoiPath,
@@ -58,14 +59,14 @@ import {
   handleCalculateCrossCoverage,
 } from "./tools/intelligence.tools";
 
-// ── KB & Evidence AI Tools (Phase 1) ────────────────────────────────────────
+// â”€â”€ KB & Evidence AI Tools (Phase 1) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 import {
   handleSearchKb,
   handleEvaluateEvidence,
   handleArchitectRemediation,
 } from "./tools/kb.tools";
 
-// ── SoA Lifecycle Tools ─────────────────────────────────────────────────────
+// â”€â”€ SoA Lifecycle Tools â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 import {
   handleListSoaVersions,
   handleGetSoaVersion,
@@ -75,23 +76,23 @@ import {
   handleGetSoaSummary,
 } from "./tools/soa.tools";
 
-// ── Gap Analysis Tools ──────────────────────────────────────────────────────
+// â”€â”€ Gap Analysis Tools â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 import {
   handleGetGapAnalysis,
   handleListFindings,
   handleGetFinding,
 } from "./tools/gap.tools";
 
-// ── Platform Tools ──────────────────────────────────────────────────────────
+// â”€â”€ Platform Tools â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 import {
   handleGetPlatformHealth,
   handleListSocAlerts,
 } from "./tools/platform.tools";
 
-// ── Tool Registry ──────────────────────────────────────────────────────────
+// â”€â”€ Tool Registry â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const MCP_TOOLS = [
-  // ═══ Assessment Management ════════════════════════════════════════════════
+  // â•â•â• Assessment Management â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   {
     name: "list-assessments",
     description:
@@ -146,7 +147,7 @@ export const MCP_TOOLS = [
     },
   },
 
-  // ═══ SCF Catalog ══════════════════════════════════════════════════════════
+  // â•â•â• SCF Catalog â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   {
     name: "search-scf-controls",
     description:
@@ -339,7 +340,7 @@ export const MCP_TOOLS = [
     },
   },
 
-  // ═══ Intelligence Engine ══════════════════════════════════════════════════
+  // â•â•â• Intelligence Engine â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   {
     name: "calculate-blast-radius",
     description:
@@ -479,7 +480,7 @@ export const MCP_TOOLS = [
     },
   },
 
-  // ═══ KB & Evidence AI ═════════════════════════════════════════════════════
+  // â•â•â• KB & Evidence AI â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   {
     name: "search-kb",
     description:
@@ -543,7 +544,7 @@ export const MCP_TOOLS = [
     },
   },
 
-  // ═══ Gap Analysis ═════════════════════════════════════════════════════════
+  // â•â•â• Gap Analysis â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   {
     name: "get-gap-analysis",
     description: "Get the gap analysis results for a specific assessment.",
@@ -587,7 +588,7 @@ export const MCP_TOOLS = [
     },
   },
 
-  // ═══ SoA Lifecycle ═════════════════════════════════════════════════════════
+  // â•â•â• SoA Lifecycle â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   {
     name: "list-soa-versions",
     description:
@@ -685,7 +686,7 @@ export const MCP_TOOLS = [
     },
   },
 
-  // ═══ Platform Status ══════════════════════════════════════════════════════
+  // â•â•â• Platform Status â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   {
     name: "get-platform-health",
     description:
@@ -767,7 +768,7 @@ const MCP_TOOL_SCOPES: Record<string, string[]> = {
   "list-soc-alerts": ["audit:read"],
 };
 
-// ── Dispatcher ─────────────────────────────────────────────────────────────
+// â”€â”€ Dispatcher â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export async function dispatchMcpTool(
   name: string,

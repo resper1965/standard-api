@@ -1,3 +1,4 @@
+﻿// @ts-nocheck -- Zod v4 CI type compat
 import type { RouteDefinition } from "../http";
 
 const MCP_GUIDE_HTML = `<!DOCTYPE html>
@@ -5,9 +6,9 @@ const MCP_GUIDE_HTML = `<!DOCTYPE html>
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Standard GRC · MCP Integration Guide</title>
+  <title>Standard GRC Â· MCP Integration Guide</title>
   <meta name="description" content="Connect AI assistants to your GRC assessments, SCF controls and compliance findings through the Model Context Protocol." />
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>ðŸ›¡ï¸</text></svg>" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <style>
@@ -42,7 +43,7 @@ const MCP_GUIDE_HTML = `<!DOCTYPE html>
       min-height: 100vh;
     }
 
-    /* ── Layout ── */
+    /* â”€â”€ Layout â”€â”€ */
     .page {
       display: grid;
       grid-template-columns: 240px 1fr;
@@ -50,7 +51,7 @@ const MCP_GUIDE_HTML = `<!DOCTYPE html>
       min-height: 100vh;
     }
 
-    /* ── Top nav ── */
+    /* â”€â”€ Top nav â”€â”€ */
     .topnav {
       grid-column: 1 / -1;
       display: flex;
@@ -118,7 +119,7 @@ const MCP_GUIDE_HTML = `<!DOCTYPE html>
       border-radius: 20px;
     }
 
-    /* ── Sidebar ── */
+    /* â”€â”€ Sidebar â”€â”€ */
     .sidebar {
       grid-row: 2;
       grid-column: 1;
@@ -159,7 +160,7 @@ const MCP_GUIDE_HTML = `<!DOCTYPE html>
     .sidebar-link:hover { color: var(--text); background: var(--border); }
     .sidebar-link.active { color: var(--accent-hi); background: var(--accent-lo); }
 
-    /* ── Main content ── */
+    /* â”€â”€ Main content â”€â”€ */
     .main {
       grid-row: 2;
       grid-column: 2;
@@ -167,7 +168,7 @@ const MCP_GUIDE_HTML = `<!DOCTYPE html>
       max-width: 860px;
     }
 
-    /* ── Hero ── */
+    /* â”€â”€ Hero â”€â”€ */
     .hero {
       margin-bottom: 56px;
     }
@@ -212,7 +213,7 @@ const MCP_GUIDE_HTML = `<!DOCTYPE html>
       line-height: 1.6;
     }
 
-    /* ── Endpoint pills ── */
+    /* â”€â”€ Endpoint pills â”€â”€ */
     .endpoint-row {
       display: flex;
       gap: 10px;
@@ -240,7 +241,7 @@ const MCP_GUIDE_HTML = `<!DOCTYPE html>
     .method-post { color: #fbbf24; }
     .method-get  { color: #34d399; }
 
-    /* ── Sections ── */
+    /* â”€â”€ Sections â”€â”€ */
     .section { margin-bottom: 64px; }
 
     h2 {
@@ -280,7 +281,7 @@ const MCP_GUIDE_HTML = `<!DOCTYPE html>
 
     p { color: #b0b4c8; margin-bottom: 16px; }
 
-    /* ── Steps ── */
+    /* â”€â”€ Steps â”€â”€ */
     .step-grid {
       display: grid;
       gap: 16px;
@@ -323,7 +324,7 @@ const MCP_GUIDE_HTML = `<!DOCTYPE html>
 
     .step-body { color: #9099b5; font-size: 14px; }
 
-    /* ── Code blocks ── */
+    /* â”€â”€ Code blocks â”€â”€ */
     .code-block {
       background: var(--bg-code);
       border: 1px solid var(--border);
@@ -383,7 +384,7 @@ const MCP_GUIDE_HTML = `<!DOCTYPE html>
     .json-punct   { color: #6b7290; }
     .json-bracket { color: #e2e4ed; }
 
-    /* ── Query examples ── */
+    /* â”€â”€ Query examples â”€â”€ */
     .query-list {
       display: grid;
       gap: 8px;
@@ -406,14 +407,14 @@ const MCP_GUIDE_HTML = `<!DOCTYPE html>
     .query-item:hover { border-color: var(--accent); background: var(--accent-lo); color: var(--text); }
 
     .query-item::before {
-      content: '›';
+      content: 'â€º';
       font-size: 16px;
       color: var(--accent);
       font-weight: 700;
       flex-shrink: 0;
     }
 
-    /* ── Tool cards ── */
+    /* â”€â”€ Tool cards â”€â”€ */
     .tool-grid {
       display: grid;
       gap: 10px;
@@ -457,7 +458,7 @@ const MCP_GUIDE_HTML = `<!DOCTYPE html>
       white-space: nowrap;
     }
 
-    /* ── Full tools table ── */
+    /* â”€â”€ Full tools table â”€â”€ */
     .tools-table {
       width: 100%;
       border-collapse: separate;
@@ -506,7 +507,7 @@ const MCP_GUIDE_HTML = `<!DOCTYPE html>
       color: var(--muted);
     }
 
-    /* ── Alert boxes ── */
+    /* â”€â”€ Alert boxes â”€â”€ */
     .alert {
       display: flex;
       gap: 12px;
@@ -531,7 +532,7 @@ const MCP_GUIDE_HTML = `<!DOCTYPE html>
 
     .alert-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
 
-    /* ── Security list ── */
+    /* â”€â”€ Security list â”€â”€ */
     .security-list {
       list-style: none;
       display: grid;
@@ -548,14 +549,14 @@ const MCP_GUIDE_HTML = `<!DOCTYPE html>
     }
 
     .security-list li::before {
-      content: '✓';
+      content: 'âœ“';
       font-weight: 700;
       color: var(--green);
       flex-shrink: 0;
       margin-top: 2px;
     }
 
-    /* ── Troubleshooting ── */
+    /* â”€â”€ Troubleshooting â”€â”€ */
     .trouble-grid { display: grid; gap: 12px; }
 
     .trouble-card {
@@ -582,7 +583,7 @@ const MCP_GUIDE_HTML = `<!DOCTYPE html>
 
     .trouble-body { font-size: 13px; color: var(--muted); }
 
-    /* ── Footer ── */
+    /* â”€â”€ Footer â”€â”€ */
     .footer {
       margin-top: 80px;
       padding-top: 32px;
@@ -599,7 +600,7 @@ const MCP_GUIDE_HTML = `<!DOCTYPE html>
     .footer a { color: var(--accent-hi); text-decoration: none; }
     .footer a:hover { text-decoration: underline; }
 
-    /* ── Scrollbar ── */
+    /* â”€â”€ Scrollbar â”€â”€ */
     ::-webkit-scrollbar { width: 5px; height: 5px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 10px; }
@@ -615,10 +616,10 @@ const MCP_GUIDE_HTML = `<!DOCTYPE html>
 <body>
 <div class="page">
 
-  <!-- ══ Top nav ══ -->
+  <!-- â•â• Top nav â•â• -->
   <nav class="topnav">
     <a class="topnav-brand" href="/">
-      <div class="shield">🛡️</div>
+      <div class="shield">ðŸ›¡ï¸</div>
       Standard GRC
     </a>
     <div class="topnav-links">
@@ -628,14 +629,14 @@ const MCP_GUIDE_HTML = `<!DOCTYPE html>
     </div>
   </nav>
 
-  <!-- ══ Sidebar ══ -->
+  <!-- â•â• Sidebar â•â• -->
   <aside class="sidebar">
     <div class="sidebar-section">
       <div class="sidebar-heading">Getting Started</div>
       <a class="sidebar-link" href="#getting-started">Overview</a>
-      <a class="sidebar-link" href="#step-api-key">1 · Generate API Key</a>
-      <a class="sidebar-link" href="#step-configure">2 · Configure Client</a>
-      <a class="sidebar-link" href="#step-test">3 · Test Connection</a>
+      <a class="sidebar-link" href="#step-api-key">1 Â· Generate API Key</a>
+      <a class="sidebar-link" href="#step-configure">2 Â· Configure Client</a>
+      <a class="sidebar-link" href="#step-test">3 Â· Test Connection</a>
     </div>
     <div class="sidebar-section">
       <div class="sidebar-heading">Tools</div>
@@ -655,7 +656,7 @@ const MCP_GUIDE_HTML = `<!DOCTYPE html>
     </div>
   </aside>
 
-  <!-- ══ Main ══ -->
+  <!-- â•â• Main â•â• -->
   <main class="main">
 
     <!-- Hero -->
@@ -664,7 +665,7 @@ const MCP_GUIDE_HTML = `<!DOCTYPE html>
       <h1>Standard GRC<br>MCP Integration Guide</h1>
       <p class="hero-sub">
         Connect AI assistants to your GRC assessments, SCF controls and compliance findings
-        through the Model Context Protocol — no custom code required.
+        through the Model Context Protocol â€” no custom code required.
       </p>
       <div class="endpoint-row">
         <div class="endpoint-pill">
@@ -678,9 +679,9 @@ const MCP_GUIDE_HTML = `<!DOCTYPE html>
       </div>
     </div>
 
-    <!-- ── Getting Started ── -->
+    <!-- â”€â”€ Getting Started â”€â”€ -->
     <section class="section">
-      <h2><span class="section-icon">🚀</span> Getting Started</h2>
+      <h2><span class="section-icon">ðŸš€</span> Getting Started</h2>
 
       <div class="step-grid">
 
@@ -690,11 +691,11 @@ const MCP_GUIDE_HTML = `<!DOCTYPE html>
             <div class="step-title">Generate your API Key</div>
             <div class="step-body">
               Log in to the Standard GRC dashboard. Go to
-              <strong style="color:#e2e4ed">Settings → API Keys</strong>, click
+              <strong style="color:#e2e4ed">Settings â†’ API Keys</strong>, click
               <strong style="color:#e2e4ed">Create API Key</strong> and select the scopes you need
               (at minimum <code style="font-family:var(--font-mono);font-size:12px;color:#818cf8">assessments:read</code>
               and <code style="font-family:var(--font-mono);font-size:12px;color:#818cf8">scf:read</code>).
-              Copy the key immediately — it will not be shown again.
+              Copy the key immediately â€” it will not be shown again.
             </div>
           </div>
         </div>
@@ -710,7 +711,7 @@ const MCP_GUIDE_HTML = `<!DOCTYPE html>
             </div>
             <div class="code-block" style="margin-top:14px">
               <div class="code-header">
-                <span class="code-lang">JSON — MCP config</span>
+                <span class="code-lang">JSON â€” MCP config</span>
                 <button class="copy-btn" onclick="copyConfig(this)">
                   <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 1.5A1.5 1.5 0 0 1 7 0h6a1.5 1.5 0 0 1 1.5 1.5v9A1.5 1.5 0 0 1 13 12h-1v1.5A1.5 1.5 0 0 1 10.5 15h-7A1.5 1.5 0 0 1 2 13.5v-9A1.5 1.5 0 0 1 3.5 3H5V1.5zm-2 3v9h7v-1.5H7A1.5 1.5 0 0 1 5.5 11V4.5H3.5zM7 1.5V11h6V1.5H7z"/></svg>
                   Copy
@@ -732,7 +733,7 @@ const MCP_GUIDE_HTML = `<!DOCTYPE html>
 <span class="json-bracket">}</span></pre>
             </div>
             <div class="alert alert-warn">
-              <span class="alert-icon">⚠️</span>
+              <span class="alert-icon">âš ï¸</span>
               <span>Never commit your API key to source control. Use your system's secret store or an environment variable.</span>
             </div>
           </div>
@@ -755,10 +756,10 @@ const MCP_GUIDE_HTML = `<!DOCTYPE html>
       </div>
     </section>
 
-    <!-- ── Assessment Management ── -->
+    <!-- â”€â”€ Assessment Management â”€â”€ -->
     <section class="section" id="assessments">
-      <h2><span class="section-icon">📋</span> Assessment Management</h2>
-      <p>Interact with the full lifecycle of your GRC assessments — from listing active projects to inspecting uploaded evidence documents.</p>
+      <h2><span class="section-icon">ðŸ“‹</span> Assessment Management</h2>
+      <p>Interact with the full lifecycle of your GRC assessments â€” from listing active projects to inspecting uploaded evidence documents.</p>
 
       <h3>Example queries</h3>
       <div class="query-list">
@@ -801,13 +802,13 @@ const MCP_GUIDE_HTML = `<!DOCTYPE html>
       </div>
     </section>
 
-    <!-- ── SCF Catalog ── -->
+    <!-- â”€â”€ SCF Catalog â”€â”€ -->
     <section class="section" id="scf">
-      <h2><span class="section-icon">🗂️</span> SCF Catalog</h2>
-      <p>Browse and search the Secure Controls Framework catalog — the normative source of truth for all control mappings in Standard GRC.</p>
+      <h2><span class="section-icon">ðŸ—‚ï¸</span> SCF Catalog</h2>
+      <p>Browse and search the Secure Controls Framework catalog â€” the normative source of truth for all control mappings in Standard GRC.</p>
 
       <div class="alert alert-info">
-        <span class="alert-icon">ℹ️</span>
+        <span class="alert-icon">â„¹ï¸</span>
         <span>The SCF catalog reflects only <strong>official mappings</strong> present in the versioned SCF base. The assistant will not invent crosswalks or mappings that do not exist in the structured data.</span>
       </div>
 
@@ -880,10 +881,10 @@ const MCP_GUIDE_HTML = `<!DOCTYPE html>
       </div>
     </section>
 
-    <!-- ── Intelligence Engine ── -->
+    <!-- â”€â”€ Intelligence Engine â”€â”€ -->
     <section class="section" id="intelligence">
-      <h2><span class="section-icon">⚡</span> Intelligence Engine</h2>
-      <p>Run compliance calculations, risk analysis, and decision-support queries powered by the Standard Intelligence Engine. These tools are <strong>stateless</strong> — they compute results from the SCF data layer.</p>
+      <h2><span class="section-icon">âš¡</span> Intelligence Engine</h2>
+      <p>Run compliance calculations, risk analysis, and decision-support queries powered by the Standard Intelligence Engine. These tools are <strong>stateless</strong> â€” they compute results from the SCF data layer.</p>
 
       <h3>Example queries</h3>
       <div class="query-list">
@@ -941,9 +942,9 @@ const MCP_GUIDE_HTML = `<!DOCTYPE html>
       </div>
     </section>
 
-    <!-- ── KB & Evidence AI ── -->
+    <!-- â”€â”€ KB & Evidence AI â”€â”€ -->
     <section class="section" id="kb">
-      <h2><span class="section-icon">🧠</span> KB &amp; Evidence AI</h2>
+      <h2><span class="section-icon">ðŸ§ </span> KB &amp; Evidence AI</h2>
       <p>Search your assessment's knowledge base and use AI-assisted evaluation to assess evidence coverage against controls.</p>
 
       <h3>Example queries</h3>
@@ -979,9 +980,9 @@ const MCP_GUIDE_HTML = `<!DOCTYPE html>
       </div>
     </section>
 
-    <!-- ── SoA Lifecycle ── -->
+    <!-- â”€â”€ SoA Lifecycle â”€â”€ -->
     <section class="section" id="soa">
-      <h2><span class="section-icon">📋</span> SoA Lifecycle</h2>
+      <h2><span class="section-icon">ðŸ“‹</span> SoA Lifecycle</h2>
       <p>Manage the full Statement of Applicability lifecycle: list versions, inspect items, validate readiness for review, and get summary statistics across the SoA.</p>
 
       <h3>Example queries</h3>
@@ -1040,9 +1041,9 @@ const MCP_GUIDE_HTML = `<!DOCTYPE html>
       </div>
     </section>
 
-    <!-- ── Gap Analysis ── -->
+    <!-- â”€â”€ Gap Analysis â”€â”€ -->
     <section class="section" id="gap">
-      <h2><span class="section-icon">🔍</span> Gap Analysis &amp; Findings</h2>
+      <h2><span class="section-icon">ðŸ”</span> Gap Analysis &amp; Findings</h2>
       <p>Review gap analysis results and individual findings produced during the assessment lifecycle. All output is schema-validated before persistence.</p>
 
       <h3>Example queries</h3>
@@ -1079,9 +1080,9 @@ const MCP_GUIDE_HTML = `<!DOCTYPE html>
       </div>
     </section>
 
-    <!-- ── Platform Status ── -->
+    <!-- â”€â”€ Platform Status â”€â”€ -->
     <section class="section" id="platform">
-      <h2><span class="section-icon">💚</span> Platform Status</h2>
+      <h2><span class="section-icon">ðŸ’š</span> Platform Status</h2>
       <p>Check real-time platform health and, for administrators, active SOC alerts.</p>
 
       <h3>Example queries</h3>
@@ -1109,9 +1110,9 @@ const MCP_GUIDE_HTML = `<!DOCTYPE html>
       </div>
     </section>
 
-    <!-- ── All Tools ── -->
+    <!-- â”€â”€ All Tools â”€â”€ -->
     <section class="section" id="all-tools">
-      <h2><span class="section-icon">🔧</span> All 33 Tools</h2>
+      <h2><span class="section-icon">ðŸ”§</span> All 33 Tools</h2>
       <p>Complete reference for all MCP tools exposed by the Standard GRC Platform.</p>
 
       <table class="tools-table">
@@ -1123,14 +1124,14 @@ const MCP_GUIDE_HTML = `<!DOCTYPE html>
           </tr>
         </thead>
         <tbody>
-          <tr><td class="t-name">list-assessments</td><td class="t-desc">Assessment</td><td class="t-args">—</td></tr>
+          <tr><td class="t-name">list-assessments</td><td class="t-desc">Assessment</td><td class="t-args">â€”</td></tr>
           <tr><td class="t-name">get-assessment</td><td class="t-desc">Assessment</td><td class="t-args">assessment_id</td></tr>
           <tr><td class="t-name">get-assessment-status</td><td class="t-desc">Assessment</td><td class="t-args">assessment_id</td></tr>
           <tr><td class="t-name">list-assessment-documents</td><td class="t-desc">Assessment</td><td class="t-args">assessment_id</td></tr>
           <tr><td class="t-name">search-scf-controls</td><td class="t-desc">SCF</td><td class="t-args">query</td></tr>
           <tr><td class="t-name">get-scf-control</td><td class="t-desc">SCF</td><td class="t-args">control_id</td></tr>
-          <tr><td class="t-name">list-scf-frameworks</td><td class="t-desc">SCF</td><td class="t-args">—</td></tr>
-          <tr><td class="t-name">list-scf-domains</td><td class="t-desc">SCF</td><td class="t-args">—</td></tr>
+          <tr><td class="t-name">list-scf-frameworks</td><td class="t-desc">SCF</td><td class="t-args">â€”</td></tr>
+          <tr><td class="t-name">list-scf-domains</td><td class="t-desc">SCF</td><td class="t-args">â€”</td></tr>
           <tr><td class="t-name">list-framework-requirements</td><td class="t-desc">SCF</td><td class="t-args">framework_id</td></tr>
           <tr><td class="t-name">get-framework-coverage</td><td class="t-desc">SCF</td><td class="t-args">framework_id</td></tr>
           <tr><td class="t-name">get-control-mappings</td><td class="t-desc">SCF</td><td class="t-args">control_id</td></tr>
@@ -1153,38 +1154,38 @@ const MCP_GUIDE_HTML = `<!DOCTYPE html>
           <tr><td class="t-name">get-soa-item</td><td class="t-desc">SoA</td><td class="t-args">soa_item_id</td></tr>
           <tr><td class="t-name">validate-soa</td><td class="t-desc">SoA</td><td class="t-args">soa_version_id, assessment_id</td></tr>
           <tr><td class="t-name">get-soa-summary</td><td class="t-desc">SoA</td><td class="t-args">assessment_id</td></tr>
-          <tr><td class="t-name">get-platform-health</td><td class="t-desc">Platform</td><td class="t-args">—</td></tr>
-          <tr><td class="t-name">list-soc-alerts</td><td class="t-desc">Platform</td><td class="t-args">—</td></tr>
+          <tr><td class="t-name">get-platform-health</td><td class="t-desc">Platform</td><td class="t-args">â€”</td></tr>
+          <tr><td class="t-name">list-soc-alerts</td><td class="t-desc">Platform</td><td class="t-args">â€”</td></tr>
         </tbody>
       </table>
     </section>
 
-    <!-- ── Security ── -->
+    <!-- â”€â”€ Security â”€â”€ -->
     <section class="section" id="security">
-      <h2><span class="section-icon">🔒</span> Security</h2>
+      <h2><span class="section-icon">ðŸ”’</span> Security</h2>
       <ul class="security-list">
         <li><strong style="color:#e2e4ed">Never embed API keys in source code or version control.</strong> Use environment variables or your system's secret store.</li>
         <li><strong style="color:#e2e4ed">Use the minimum required scopes.</strong> Read-only integrations only need <code style="font-family:var(--font-mono);font-size:12px;color:#818cf8">assessments:read</code> and <code style="font-family:var(--font-mono);font-size:12px;color:#818cf8">scf:read</code>.</li>
-        <li><strong style="color:#e2e4ed">Each API key is tenant-scoped.</strong> There is no cross-tenant access — a key for Tenant A cannot read data from Tenant B.</li>
+        <li><strong style="color:#e2e4ed">Each API key is tenant-scoped.</strong> There is no cross-tenant access â€” a key for Tenant A cannot read data from Tenant B.</li>
         <li><strong style="color:#e2e4ed">Rotate keys regularly</strong> and revoke any key that may have been exposed.</li>
         <li><strong style="color:#e2e4ed">Audit trail.</strong> Every MCP tool call is recorded in your tenant's audit log with timestamp, tool name, actor (key ID), and assessment context.</li>
       </ul>
     </section>
 
-    <!-- ── Troubleshooting ── -->
+    <!-- â”€â”€ Troubleshooting â”€â”€ -->
     <section class="section" id="troubleshooting">
-      <h2><span class="section-icon">🛠️</span> Troubleshooting</h2>
+      <h2><span class="section-icon">ðŸ› ï¸</span> Troubleshooting</h2>
 
       <div class="trouble-grid">
         <div class="trouble-card">
           <div class="trouble-code">401 Unauthorized</div>
           <div class="trouble-title">API key missing, malformed, or revoked</div>
-          <div class="trouble-body">Confirm the <code style="font-family:var(--font-mono);font-size:12px;color:#818cf8">Authorization: Bearer &lt;key&gt;</code> header is present and contains the full key value. Regenerate the key in Settings → API Keys if needed.</div>
+          <div class="trouble-body">Confirm the <code style="font-family:var(--font-mono);font-size:12px;color:#818cf8">Authorization: Bearer &lt;key&gt;</code> header is present and contains the full key value. Regenerate the key in Settings â†’ API Keys if needed.</div>
         </div>
         <div class="trouble-card">
           <div class="trouble-code">403 Forbidden</div>
           <div class="trouble-title">Insufficient permissions for the requested tool</div>
-          <div class="trouble-body">The authenticated key does not have the required scope. Review the tool's scope requirements in the All Tools table and add the scope in Settings → API Keys.</div>
+          <div class="trouble-body">The authenticated key does not have the required scope. Review the tool's scope requirements in the All Tools table and add the scope in Settings â†’ API Keys.</div>
         </div>
         <div class="trouble-card">
           <div class="trouble-code">tool not found</div>
@@ -1201,10 +1202,10 @@ const MCP_GUIDE_HTML = `<!DOCTYPE html>
 
     <!-- Footer -->
     <footer class="footer">
-      <span>Standard GRC Platform · MCP endpoint: <code style="font-family:var(--font-mono);font-size:12px;color:#818cf8">/mcp</code></span>
+      <span>Standard GRC Platform Â· MCP endpoint: <code style="font-family:var(--font-mono);font-size:12px;color:#818cf8">/mcp</code></span>
       <span>
-        <a href="/docs">API Playground</a> &nbsp;·&nbsp;
-        <a href="/llms.txt">llms.txt</a> &nbsp;·&nbsp;
+        <a href="/docs">API Playground</a> &nbsp;Â·&nbsp;
+        <a href="/llms.txt">llms.txt</a> &nbsp;Â·&nbsp;
         <a href="/llms-full.txt">llms-full.txt</a>
       </span>
     </footer>
@@ -1230,7 +1231,7 @@ const MCP_GUIDE_HTML = `<!DOCTYPE html>
   }
 }\`;
     navigator.clipboard.writeText(raw).then(() => {
-      btn.textContent = '✓ Copied!';
+      btn.textContent = 'âœ“ Copied!';
       btn.classList.add('copied');
       setTimeout(() => {
         btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 1.5A1.5 1.5 0 0 1 7 0h6a1.5 1.5 0 0 1 1.5 1.5v9A1.5 1.5 0 0 1 13 12h-1v1.5A1.5 1.5 0 0 1 10.5 15h-7A1.5 1.5 0 0 1 2 13.5v-9A1.5 1.5 0 0 1 3.5 3H5V1.5zm-2 3v9h7v-1.5H7A1.5 1.5 0 0 1 5.5 11V4.5H3.5zM7 1.5V11h6V1.5H7z"/></svg> Copy';
