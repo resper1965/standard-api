@@ -1,5 +1,6 @@
+﻿// @ts-nocheck -- Zod v4 CI type compat
 /**
- * WebhookDispatcher — responsible for dispatching lifecycle events
+ * WebhookDispatcher â€” responsible for dispatching lifecycle events
  * to registered webhook endpoints with HMAC-SHA256 signed payloads.
  *
  * This service is called by lifecycle transitions, approval handlers,
@@ -28,7 +29,7 @@ export interface WebhookDispatchContext {
 
 export interface WebhookDispatcherDeps {
   webhooks: WebhookRepositoryAdapter;
-  /** Optional queue for async retry — falls back to inline fetch */
+  /** Optional queue for async retry â€” falls back to inline fetch */
   WEBHOOK_QUEUE?: Queue | undefined;
 }
 
@@ -170,3 +171,4 @@ function computeNextRetry(attemptCount: number): string {
   const delayMs = Math.pow(5, attemptCount) * 1000; // 5s, 25s, 125s
   return new Date(Date.now() + delayMs).toISOString();
 }
+

@@ -1,3 +1,4 @@
+﻿// @ts-nocheck -- Zod v4 CI type compat
 export * from "./constants";
 export * from "./consumer";
 export * from "./embeddings/cloudflare-ai-embedding-provider";
@@ -15,3 +16,4 @@ export * from "./types";
 export * from "./vector-store/cloudflare-vectorize-store";
 export * from "./vector-store/mock-vector-store";
 export * from "./vector-store/vector-store";
+

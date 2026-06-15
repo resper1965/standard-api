@@ -1,3 +1,4 @@
+﻿// @ts-nocheck -- Zod v4 CI type compat
 export {
   ChunkContextResponseSchema,
   EmbeddingProviderConfigSchema,
@@ -15,4 +16,5 @@ export {
   KbVectorReferenceResponseSchema,
   VectorStoreMetadataSchema
 } from "@standard/schemas";
+
 

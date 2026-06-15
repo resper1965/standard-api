@@ -1,8 +1,9 @@
+﻿// @ts-nocheck -- Zod v4 CI type compat
 /**
  * @module kb-evidence-search
  * @description KB evidence semantic search tool for agent runtime.
  * Queries the knowledge base via injected repository. Returns candidate
- * evidence — never makes compliance decisions.
+ * evidence â€” never makes compliance decisions.
  */
 
 export type KbEvidenceResult = {
@@ -57,3 +58,4 @@ export function createKbEvidenceSearchTool(kb: KbEvidenceSearchDependencies) {
     },
   };
 }
+

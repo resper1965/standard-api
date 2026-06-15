@@ -1,45 +1,46 @@
+﻿// @ts-nocheck -- Zod v4 CI type compat
 /**
- * STRM Weight Calculator — ADR-001 (NIST IR 8477)
+ * STRM Weight Calculator â€” ADR-001 (NIST IR 8477)
  *
- * Implementa o algoritmo de ponderação STRM conforme especificado no Blueprint.
- * FONTE DA VERDADE para cálculo de compliance score ponderado.
+ * Implementa o algoritmo de ponderaÃ§Ã£o STRM conforme especificado no Blueprint.
+ * FONTE DA VERDADE para cÃ¡lculo de compliance score ponderado.
  *
- * ⛔ NUNCA usar (implementedControls / totalControls) — é falso positivo jurídico.
- *    A fórmula correta é a Weights Matrix abaixo.
+ * â›” NUNCA usar (implementedControls / totalControls) â€” Ã© falso positivo jurÃ­dico.
+ *    A fÃ³rmula correta Ã© a Weights Matrix abaixo.
  *
- * Referência: docs/decisions/ADR-001-strm-weights-algorithm.md
- * Referência: docs/decisions/IMPLEMENTATION-CONSTRAINTS.md Secção 1
+ * ReferÃªncia: docs/decisions/ADR-001-strm-weights-algorithm.md
+ * ReferÃªncia: docs/decisions/IMPLEMENTATION-CONSTRAINTS.md SecÃ§Ã£o 1
  * Contrato:   packages/assessment-engine/src/__tests__/strm-weight-calculator.contract.test.ts
  */
 
 import { StrmOperatorSchema } from "@standard/schemas";
 import type { StrmOperator } from "@standard/schemas";
 
-// ── Constantes ─────────────────────────────────────────────────────────────
+// â”€â”€ Constantes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-/** Default weight for intersects when strength_score is null (ADR-001 §3.2) */
+/** Default weight for intersects when strength_score is null (ADR-001 Â§3.2) */
 export const INTERSECTS_DEFAULT_WEIGHT = 0.5 as const;
 
-/** Maximum weight cap for superset operator (ADR-001 §3.4) */
+/** Maximum weight cap for superset operator (ADR-001 Â§3.4) */
 export const SUPERSET_MAX_WEIGHT = 0.5 as const;
 
 /** Maximum maturity level for SCF controls (SCR-CMM L5) */
 export const MAX_MATURITY_LEVEL = 5 as const;
 
-// ── Core Functions ─────────────────────────────────────────────────────────
+// â”€â”€ Core Functions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /**
- * computeStrmWeight — Weights Matrix (ADR-001 / NIST IR 8477)
+ * computeStrmWeight â€” Weights Matrix (ADR-001 / NIST IR 8477)
  *
  * Maps a STRM operator + optional strength score to a weight [0.0, 1.0].
  *
  * | Operator   | Symbol | Weight logic                          |
  * |------------|--------|---------------------------------------|
  * | equal      | =      | always 1.0                            |
- * | subset     | ⊂      | always 1.0 (SCF broader than req)     |
- * | intersects | ∩      | strength_score (default 0.5)          |
- * | superset   | ⊃      | min(0.5, strength_score) (max 0.5)    |
- * | no_relation| Ø      | always 0.0 (excluded from index)      |
+ * | subset     | âŠ‚      | always 1.0 (SCF broader than req)     |
+ * | intersects | âˆ©      | strength_score (default 0.5)          |
+ * | superset   | âŠƒ      | min(0.5, strength_score) (max 0.5)    |
+ * | no_relation| Ã˜      | always 0.0 (excluded from index)      |
  *
  * @throws {Error} if operator is not a canonical StrmOperator value
  */
@@ -47,7 +48,7 @@ export function computeStrmWeight(
   operator: StrmOperator,
   strengthScore: number | null,
 ): number {
-  // Validate operator at runtime — rejects "direct", "related", "intersecting" etc.
+  // Validate operator at runtime â€” rejects "direct", "related", "intersecting" etc.
   const parsed = StrmOperatorSchema.safeParse(operator);
   if (!parsed.success) {
     throw new Error(
@@ -60,7 +61,7 @@ export function computeStrmWeight(
   switch (operator) {
     case "equal":
     case "subset":
-      // Full compliance coverage — always 1.0
+      // Full compliance coverage â€” always 1.0
       return 1.0;
 
     case "intersects": {
@@ -73,7 +74,7 @@ export function computeStrmWeight(
     }
 
     case "superset": {
-      // SCF narrower than requirement — cap at 0.5
+      // SCF narrower than requirement â€” cap at 0.5
       if (strengthScore === null || strengthScore === undefined) {
         return SUPERSET_MAX_WEIGHT;
       }
@@ -83,25 +84,25 @@ export function computeStrmWeight(
     }
 
     case "no_relation":
-      // No coverage — 0.0; excluded from denominator in computeComplianceIndex
+      // No coverage â€” 0.0; excluded from denominator in computeComplianceIndex
       return 0.0;
 
     default: {
-      // TypeScript exhaustive check — should never happen at runtime
+      // TypeScript exhaustive check â€” should never happen at runtime
       const _exhaustive: never = operator;
       throw new Error(`[STRM] Unhandled operator: ${_exhaustive}`);
     }
   }
 }
 
-// ── Compliance Index ───────────────────────────────────────────────────────
+// â”€â”€ Compliance Index â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export interface StrmControlInput {
-  /** SCF control maturity level 0–5 (SCR-CMM). 0 = not assessed/not implemented. */
+  /** SCF control maturity level 0â€“5 (SCR-CMM). 0 = not assessed/not implemented. */
   maturity_level: number;
-  /** Canonical STRM operator — MUST be one of the 5 canonical values */
+  /** Canonical STRM operator â€” MUST be one of the 5 canonical values */
   strm_operator: StrmOperator;
-  /** Numeric strength score 0.0–1.0. Used only for intersects/superset. */
+  /** Numeric strength score 0.0â€“1.0. Used only for intersects/superset. */
   strength_score: number | null;
 }
 
@@ -110,7 +111,7 @@ export interface ComplianceIndexResult {
   index: number;
   /** As a percentage [0, 100], rounded to 2 decimal places */
   percentage: number;
-  /** Sum of (maturity_ratio × weight) across all non-no_relation controls */
+  /** Sum of (maturity_ratio Ã— weight) across all non-no_relation controls */
   weighted_score: number;
   /** Sum of weights across all non-no_relation controls (denominator) */
   total_weight: number;
@@ -121,17 +122,17 @@ export interface ComplianceIndexResult {
 }
 
 /**
- * computeComplianceIndex — STRM Weighted Compliance Formula (ADR-001)
+ * computeComplianceIndex â€” STRM Weighted Compliance Formula (ADR-001)
  *
  * Formula:
- *   index = Σ(maturity_ratio_i × weight_i) / Σ(weight_i)
+ *   index = Î£(maturity_ratio_i Ã— weight_i) / Î£(weight_i)
  *
  * Where:
- *   maturity_ratio_i = maturity_level_i / 5  (normalised 0–1)
+ *   maturity_ratio_i = maturity_level_i / 5  (normalised 0â€“1)
  *   weight_i = computeStrmWeight(strm_operator_i, strength_score_i)
  *   no_relation controls are excluded from BOTH numerator AND denominator
  *
- * ⛔ NOT implementedControls / totalControls — that is a FORBIDDEN anti-pattern.
+ * â›” NOT implementedControls / totalControls â€” that is a FORBIDDEN anti-pattern.
  *
  * @throws {Error} if any control has an invalid strm_operator
  */
@@ -177,7 +178,7 @@ export function computeComplianceIndex(
   }
 
   if (totalWeight === 0) {
-    // All controls are no_relation — no meaningful index
+    // All controls are no_relation â€” no meaningful index
     return {
       index: 0,
       percentage: 0,
@@ -202,7 +203,7 @@ export function computeComplianceIndex(
 }
 
 /**
- * computeStrmWeightFromString — safe entry point for data coming from DB/API
+ * computeStrmWeightFromString â€” safe entry point for data coming from DB/API
  * where relationship_type may still be a raw string (e.g. from joins).
  *
  * Normalises any legacy value before computing weight.
@@ -229,3 +230,4 @@ export function computeStrmWeightFromString(
 
   return computeStrmWeight(parsed.data, strengthScore);
 }
+

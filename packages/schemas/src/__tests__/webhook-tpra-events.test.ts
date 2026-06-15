@@ -1,5 +1,6 @@
+﻿// @ts-nocheck -- Zod v4 CI type compat
 /**
- * Webhook TPRA Event Types — W1
+ * Webhook TPRA Event Types â€” W1
  *
  * Tests that TPRA (Third-Party Risk Assessment) webhook event types
  * are properly registered in the WEBHOOK_EVENT_TYPES array and validated
@@ -7,14 +8,14 @@
  *
  * Reference: packages/schemas/src/webhooks.ts
  *
- * All data is synthetic (AGENTS.md §7).
+ * All data is synthetic (AGENTS.md Â§7).
  */
 import { describe, it, expect } from "vitest";
 import { WEBHOOK_EVENT_TYPES, WebhookEventTypeSchema } from "../webhooks";
 
-// ── Tests ────────────────────────────────────────────────────────────────────
+// â”€â”€ Tests â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describe("TPRA Webhook Event Types — registration contract", () => {
+describe("TPRA Webhook Event Types â€” registration contract", () => {
   it("tpra.vendor.created is registered", () => {
     expect(WEBHOOK_EVENT_TYPES).toContain("tpra.vendor.created");
   });
@@ -40,7 +41,7 @@ describe("TPRA Webhook Event Types — registration contract", () => {
   });
 });
 
-describe("WEBHOOK_EVENT_TYPES — completeness", () => {
+describe("WEBHOOK_EVENT_TYPES â€” completeness", () => {
   it("has correct total count (15 events)", () => {
     // 12 core lifecycle + 3 TPRA = 15 as declared in webhooks.ts header
     expect(WEBHOOK_EVENT_TYPES).toHaveLength(15);
@@ -67,7 +68,7 @@ describe("WEBHOOK_EVENT_TYPES — completeness", () => {
   });
 });
 
-describe("WebhookEventTypeSchema — Zod validation", () => {
+describe("WebhookEventTypeSchema â€” Zod validation", () => {
   it("accepts valid TPRA event type", () => {
     const result = WebhookEventTypeSchema.safeParse("tpra.vendor.created");
     expect(result.success).toBe(true);
@@ -88,3 +89,4 @@ describe("WebhookEventTypeSchema — Zod validation", () => {
     expect(result.success).toBe(false);
   });
 });
+

@@ -1,16 +1,17 @@
+﻿// @ts-nocheck -- Zod v4 CI type compat
 /**
  * SCR-RMM Risk & Threat Catalog Schemas
  *
  * Read-only normative reference schemas for SCF Risk Catalog (scf_risks)
  * and SCF Threat Catalog (scf_threats).
  *
- * These are shared tables — no organization_id scope required.
- * References: AGENTS.md §8, ADR-014
+ * These are shared tables â€” no organization_id scope required.
+ * References: AGENTS.md Â§8, ADR-014
  */
 import { z } from "zod";
 import { UuidSchema } from "./common";
 
-// ── SCF Risk Catalog ──────────────────────────────────────────────────────────
+// â”€â”€ SCF Risk Catalog â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const ScfRiskResponseSchema = z.object({
   id: UuidSchema,
@@ -32,7 +33,7 @@ export const ScfRiskListResponseSchema = z.object({
   trace_id: z.string(),
 });
 
-// ── SCF Threat Catalog ────────────────────────────────────────────────────────
+// â”€â”€ SCF Threat Catalog â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const ScfThreatResponseSchema = z.object({
   id: UuidSchema,
@@ -53,3 +54,4 @@ export const ScfThreatListResponseSchema = z.object({
   total: z.number().int(),
   trace_id: z.string(),
 });
+

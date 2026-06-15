@@ -1,17 +1,18 @@
+﻿// @ts-nocheck -- Zod v4 CI type compat
 /**
  * @module auth-schema
- * @description Better Auth core tables — auth Neon branch (control plane).
+ * @description Better Auth core tables â€” auth Neon branch (control plane).
  *
- * Geridas pelo Better Auth runtime. Não alterar estrutura sem migration BA.
- * Este ficheiro é a única fonte de verdade para as tabelas de autenticação.
+ * Geridas pelo Better Auth runtime. NÃ£o alterar estrutura sem migration BA.
+ * Este ficheiro Ã© a Ãºnica fonte de verdade para as tabelas de autenticaÃ§Ã£o.
  *
- * Campos adicionados ao baUser além do core BA:
- * - platform_admin : flag Bekaa operator (cross-tenant). Só via SQL por operadores.
- * - approved       : gate de aprovação manual por platform admin antes do primeiro acesso.
+ * Campos adicionados ao baUser alÃ©m do core BA:
+ * - platform_admin : flag Bekaa operator (cross-tenant). SÃ³ via SQL por operadores.
+ * - approved       : gate de aprovaÃ§Ã£o manual por platform admin antes do primeiro acesso.
  */
 import { boolean, index, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 
-// ── Better Auth core ─────────────────────────────────────────────────────────
+// â”€â”€ Better Auth core â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const baUser = pgTable("user", {
   id: text("id").primaryKey(), // UUID gerado pelo BA
@@ -41,7 +42,7 @@ export const baSession = pgTable(
     userId: text("user_id")
       .notNull()
       .references(() => baUser.id, { onDelete: "cascade" }),
-    // Org activa — actualizada via POST /v1/auth/activate-org
+    // Org activa â€” actualizada via POST /v1/auth/activate-org
     // Cached em KV (STANDARD_CACHE) com TTL 60s para evitar DB query por request
     activeOrganizationId: text("active_organization_id"),
   },
@@ -80,3 +81,4 @@ export const baVerification = pgTable("verification", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
+

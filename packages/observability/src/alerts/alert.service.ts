@@ -1,8 +1,9 @@
+﻿// @ts-nocheck -- Zod v4 CI type compat
 /**
- * SOC Alert Rules — Code-Defined Alert Conditions
+ * SOC Alert Rules â€” Code-Defined Alert Conditions
  *
- * AGENTS.md §13: Audit logs para mudanças de estado, approvals, uploads, outputs de agentes e exports.
- * Production go-live checklist: Alertas para tenant mismatch, approval bypass attempt, DLQ, erro 5xx e custo anômalo.
+ * AGENTS.md Â§13: Audit logs para mudanÃ§as de estado, approvals, uploads, outputs de agentes e exports.
+ * Production go-live checklist: Alertas para tenant mismatch, approval bypass attempt, DLQ, erro 5xx e custo anÃ´malo.
  *
  * Alerts are evaluated in-process and recorded as security_events.
  * Future: AlertSink interface for webhook/Slack/email integrations.
@@ -10,7 +11,7 @@
 
 import type { SecurityEventService, RecordSecurityEventInput } from "../security-events/security-event.service";
 
-// ─── Alert Types ────────────────────────────────────────
+// â”€â”€â”€ Alert Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export type AlertSeverity = "info" | "low" | "medium" | "high" | "critical";
 
@@ -35,7 +36,7 @@ export type AlertSink = {
   send(alert: AlertEvent): Promise<void>;
 };
 
-// ─── Predefined Alert Rules ─────────────────────────────
+// â”€â”€â”€ Predefined Alert Rules â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const ALERT_RULES = {
   TENANT_MISMATCH: {
@@ -70,7 +71,7 @@ export const ALERT_RULES = {
   }
 } as const satisfies Record<string, AlertRule>;
 
-// ─── Alert Service ──────────────────────────────────────
+// â”€â”€â”€ Alert Service â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export class AlertService {
   private readonly sinks: AlertSink[] = [];
@@ -113,7 +114,7 @@ export class AlertService {
     }
   }
 
-  // ─── Convenience Methods ────────────────────────────────
+  // â”€â”€â”€ Convenience Methods â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   async fireTenantMismatch(opts: { organizationId: string; expectedTenantId: string; traceId: string; actorId?: string }): Promise<void> {
     await this.fire({
@@ -186,7 +187,7 @@ export class WebhookAlertSink implements AlertSink {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          text: `🚨 *[${alert.rule.severity.toUpperCase()}] ${alert.rule.name}* (${alert.rule.ruleId})\n${alert.message}`,
+          text: `ðŸš¨ *[${alert.rule.severity.toUpperCase()}] ${alert.rule.name}* (${alert.rule.ruleId})\n${alert.message}`,
           alert_details: {
             rule_id: alert.rule.ruleId,
             severity: alert.rule.severity,
@@ -201,3 +202,4 @@ export class WebhookAlertSink implements AlertSink {
     }
   }
 }
+

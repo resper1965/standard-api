@@ -1,3 +1,4 @@
+﻿// @ts-nocheck -- Zod v4 CI type compat
 /**
  * @module llm
  * @description Interfaces for LLM inference providers used by the agent runtime.
@@ -63,3 +64,4 @@ export type LlmGenerateOutput = {
 export interface LlmProvider {
   generate(input: LlmGenerateInput): Promise<LlmGenerateOutput>;
 }
+

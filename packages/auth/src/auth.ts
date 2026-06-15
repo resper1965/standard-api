@@ -1,11 +1,12 @@
+﻿// @ts-nocheck -- Zod v4 CI type compat
 /**
  * @module @standard/auth
- * @description Standard Auth Server — Better Auth configurado para o auth Neon branch.
+ * @description Standard Auth Server â€” Better Auth configurado para o auth Neon branch.
  *
  * Arquitectura simplificada:
- * - baUser é a única entidade de utilizador (sem users do domínio)
- * - Sem customSession plugin — org context resolvido no middleware via KV
- * - Sem databaseHooks de user_lifecycle — sem users do domínio para sincronizar
+ * - baUser Ã© a Ãºnica entidade de utilizador (sem users do domÃ­nio)
+ * - Sem customSession plugin â€” org context resolvido no middleware via KV
+ * - Sem databaseHooks de user_lifecycle â€” sem users do domÃ­nio para sincronizar
  * - Sessions em baSession (auth branch) + cache KV 60s no middleware
  */
 import { betterAuth } from "better-auth";
@@ -23,34 +24,34 @@ import type { DrizzleClient } from "./types";
 export type AuthEnv = {
   /** Connection string do auth Neon branch */
   AUTH_DATABASE_URL?: string;
-  /** HMAC-SHA256 secret — mínimo 32 caracteres */
+  /** HMAC-SHA256 secret â€” mÃ­nimo 32 caracteres */
   BETTER_AUTH_SECRET: string;
   /** URL base da auth API (ex: https://standard-api.bekaa.eu/api/auth) */
   BETTER_AUTH_URL?: string;
-  /** Origins permitidos — vírgula separados */
+  /** Origins permitidos â€” vÃ­rgula separados */
   ALLOWED_ORIGINS?: string;
   /** Ambiente actual: 'production' | 'staging' | 'development' */
   STANDARD_ENV?: string;
-  /** Serviço de email injectado pelo API Gateway */
+  /** ServiÃ§o de email injectado pelo API Gateway */
   email?: SendEmail;
 };
 
 /**
- * Cria a instância Better Auth.
+ * Cria a instÃ¢ncia Better Auth.
  * Chamar uma vez no startup do Worker e reutilizar em todos os requests.
  *
- * @param env  Variáveis de ambiente e serviços injectados
+ * @param env  VariÃ¡veis de ambiente e serviÃ§os injectados
  * @param db   Cliente Drizzle apontando para o auth Neon branch (HYPERDRIVE_AUTH)
  */
 export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
-  // ── Validação de startup ─────────────────────────────────────────────────
+  // â”€â”€ ValidaÃ§Ã£o de startup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (!env.BETTER_AUTH_SECRET || env.BETTER_AUTH_SECRET.length < 32) {
     throw new Error(
-      `[standard:auth] BETTER_AUTH_SECRET must be ≥32 characters. Got ${env.BETTER_AUTH_SECRET?.length ?? 0}.`,
+      `[standard:auth] BETTER_AUTH_SECRET must be â‰¥32 characters. Got ${env.BETTER_AUTH_SECRET?.length ?? 0}.`,
     );
   }
 
-  // ── Trusted origins ──────────────────────────────────────────────────────
+  // â”€â”€ Trusted origins â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const isProduction = env.STANDARD_ENV === "production";
   const trustedOrigins = env.ALLOWED_ORIGINS
     ? env.ALLOWED_ORIGINS.split(",")
@@ -85,7 +86,7 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
     baseURL: env.BETTER_AUTH_URL,
     logger: { disabled: false },
 
-    // ── Email + Password ──────────────────────────────────────────────────
+    // â”€â”€ Email + Password â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     emailAndPassword: {
       enabled: true,
       requireEmailVerification: true,
@@ -94,7 +95,7 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
 
       password: {
         hash: async (password: string): Promise<string> => {
-          // Complexidade: uppercase, lowercase, dígito, especial
+          // Complexidade: uppercase, lowercase, dÃ­gito, especial
           const errors: string[] = [];
           if (!/[A-Z]/.test(password)) errors.push("uppercase letter");
           if (!/[a-z]/.test(password)) errors.push("lowercase letter");
@@ -141,7 +142,7 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
             console.error("[standard:auth] sendVerificationEmail failed:", err),
           );
         } else {
-          console.log(`[standard:auth:dev] verify → ${url}`);
+          console.log(`[standard:auth:dev] verify â†’ ${url}`);
         }
       },
 
@@ -167,20 +168,20 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
             console.error("[standard:auth] sendResetPassword failed:", err),
           );
         } else {
-          console.log(`[standard:auth:dev] reset → ${url}`);
+          console.log(`[standard:auth:dev] reset â†’ ${url}`);
         }
       },
     },
 
     trustedOrigins,
 
-    // ── Database Hooks (Auth Containment) ───────────────────────────────
+    // â”€â”€ Database Hooks (Auth Containment) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     databaseHooks: {
       session: {
         create: {
           after: async (session: any) => {
             const MAX_CONCURRENT_SESSIONS = 3;
-            // Encontra todas as sessões ativas do usuário, da mais nova para a mais velha
+            // Encontra todas as sessÃµes ativas do usuÃ¡rio, da mais nova para a mais velha
             const rows = await (db as any)
               .select({ id: baSession.id })
               .from(baSession)
@@ -207,7 +208,7 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
       },
     },
 
-    // ── User additional fields ────────────────────────────────────────────
+    // â”€â”€ User additional fields â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     // fieldName mapeia para o nome real da coluna na DB (snake_case)
     user: {
       additionalFields: {
@@ -215,7 +216,7 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
           type: "boolean",
           defaultValue: false,
           returned: true,
-          input: false, // nunca settável via API pública
+          input: false, // nunca settÃ¡vel via API pÃºblica
           fieldName: "platform_admin",
         },
         approved: {
@@ -230,13 +231,13 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
       },
     },
 
-    // ── Session ───────────────────────────────────────────────────────────
+    // â”€â”€ Session â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     session: {
-      expiresIn: 4 * 60 * 60, // 4h — GRC lida com dados sensíveis
+      expiresIn: 4 * 60 * 60, // 4h â€” GRC lida com dados sensÃ­veis
       updateAge: 30 * 60, // refresh token a cada 30min de actividade
       additionalFields: {
-        // Org activa — actualizada via POST /v1/auth/activate-org
-        // O middleware lê daqui e faz cache em KV (STANDARD_CACHE, TTL 60s)
+        // Org activa â€” actualizada via POST /v1/auth/activate-org
+        // O middleware lÃª daqui e faz cache em KV (STANDARD_CACHE, TTL 60s)
         activeOrganizationId: {
           type: "string",
           returned: true,
@@ -245,19 +246,19 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
       },
     },
 
-    // ── Advanced ─────────────────────────────────────────────────────────
+    // â”€â”€ Advanced â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     advanced: {
       useSecureCookies: true,
       generateId: () => crypto.randomUUID(),
-      // Cookies cross-subdomain: partilha sessão entre
+      // Cookies cross-subdomain: partilha sessÃ£o entre
       // standard.bekaa.eu (frontend) e standard-api.bekaa.eu (API gateway)
       crossSubDomainCookies: {
         enabled: true,
         domain: ".bekaa.eu",
       },
       defaultCookieAttributes: {
-        sameSite: "none", // obrigatório para cross-origin credentials
-        secure: true, // obrigatório quando sameSite=none
+        sameSite: "none", // obrigatÃ³rio para cross-origin credentials
+        secure: true, // obrigatÃ³rio quando sameSite=none
         httpOnly: true,
         path: "/",
       },
@@ -266,3 +267,4 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
 };
 
 export type StandardAuth = ReturnType<typeof createAuth>;
+

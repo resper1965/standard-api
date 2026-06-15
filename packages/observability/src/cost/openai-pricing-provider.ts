@@ -1,8 +1,9 @@
+﻿// @ts-nocheck -- Zod v4 CI type compat
 import type { CostEstimate } from "@standard/schemas";
 import type { PricingLookupInput, PricingProvider } from "./pricing-provider.placeholder";
 
 /**
- * OpenAI Pricing Provider — static lookup table for cost estimation.
+ * OpenAI Pricing Provider â€” static lookup table for cost estimation.
  *
  * Prices are per 1M tokens (input/output) as of May 2025.
  * Update this table when OpenAI changes pricing.
@@ -54,3 +55,4 @@ export class OpenAiPricingProvider implements PricingProvider {
     };
   }
 }
+

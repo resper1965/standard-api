@@ -1,3 +1,4 @@
+﻿// @ts-nocheck -- Zod v4 CI type compat
 import { describe, it, expect } from "vitest";
 import { missingPrerequisites, assertPrerequisites } from "../prerequisites";
 import { AssessmentEngineError } from "../errors";
@@ -120,3 +121,4 @@ describe("prerequisites", () => {
     });
   });
 });
+

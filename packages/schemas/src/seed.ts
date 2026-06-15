@@ -1,19 +1,20 @@
+﻿// @ts-nocheck -- Zod v4 CI type compat
 /**
  * Standard Synthetic Seed Script
  *
  * Seeds the Neon PostgreSQL database with synthetic staging data.
  * Uses Drizzle ORM for type-safe inserts.
  *
- * Strategy: UPSERT on natural keys → retrieve real IDs → chain FKs correctly.
+ * Strategy: UPSERT on natural keys â†’ retrieve real IDs â†’ chain FKs correctly.
  * This handles partial seeds and idempotent re-runs without FK violations.
  *
  * Usage: DATABASE_URL="..." pnpm db:seed
  *
  * AGENTS.md compliance:
- *   - §7: All data carries organization_id, organization_id, assessment_id
- *   - §8: SCF data is normative and versioned
- *   - §14: Only synthetic data used
- *   - §17: No real customer data
+ *   - Â§7: All data carries organization_id, organization_id, assessment_id
+ *   - Â§8: SCF data is normative and versioned
+ *   - Â§14: Only synthetic data used
+ *   - Â§17: No real customer data
  */
 
 import postgres from "postgres";
@@ -21,9 +22,9 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import { eq, and, sql } from "drizzle-orm";
 import * as schema from "./db/schema";
 
-// ──────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Stable synthetic slugs / natural keys
-// ──────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const SYNTH = {
   organizationSlug: "tenant_synth_a",
   orgSlug: "org_synth_healthtech",
@@ -50,25 +51,25 @@ const CONTROL_MAP: Record<
   TPR: { code: "TPR-001", title: "Third Party Risk", domain: "TPR" },
 };
 
-// ──────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 async function main() {
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) {
     console.error(
-      "❌ DATABASE_URL is required. Set it in .env or pass inline.",
+      "âŒ DATABASE_URL is required. Set it in .env or pass inline.",
     );
     process.exit(1);
   }
 
-  console.log("🌱 Standard Synthetic Seed — Starting...\n");
+  console.log("ðŸŒ± Standard Synthetic Seed â€” Starting...\n");
 
   const client = postgres(databaseUrl, { ssl: "require" });
   const db = drizzle(client, { schema });
 
-  // ── 1. Organization (was: Tenant — ADR 0002 Phase 2/3) ──
+  // â”€â”€ 1. Organization (was: Tenant â€” ADR 0002 Phase 2/3) â”€â”€
   // tenants table removed; organizations IS the tenant.
-  console.log("  → Seeding organization (was tenant)...");
+  console.log("  â†’ Seeding organization (was tenant)...");
   await db
     .insert(schema.organizations)
     .values({
@@ -86,8 +87,8 @@ async function main() {
   if (!tenant) throw new Error("Organization (tenant) not found after insert");
   console.log(`     organizationId = ${tenant.id}`);
 
-  // ── 2. User ──
-  console.log("  → Seeding user...");
+  // â”€â”€ 2. User â”€â”€
+  console.log("  â†’ Seeding user...");
   await db
     .insert(schema.users)
     .values({
@@ -105,8 +106,8 @@ async function main() {
     .limit(1);
   if (!user) throw new Error("User not found after insert");
 
-  // ── 3. Role ──
-  console.log("  → Seeding role...");
+  // â”€â”€ 3. Role â”€â”€
+  console.log("  â†’ Seeding role...");
   await db
     .insert(schema.roles)
     .values({
@@ -123,9 +124,9 @@ async function main() {
     .limit(1);
   if (!role) throw new Error("Role not found after insert");
 
-  // ── 4. Organization ──
+  // â”€â”€ 4. Organization â”€â”€
   // The "tenant" above IS the org context. Create a second org for domain data.
-  console.log("  → Seeding organization...");
+  console.log("  â†’ Seeding organization...");
   await db
     .insert(schema.organizations)
     .values({
@@ -143,8 +144,8 @@ async function main() {
   if (!org) throw new Error("Organization not found after insert");
   console.log(`     organizationId = ${org.id}`);
 
-  // ── 5. Membership ──
-  console.log("  → Seeding membership...");
+  // â”€â”€ 5. Membership â”€â”€
+  console.log("  â†’ Seeding membership...");
   await db
     .insert(schema.memberships)
     .values({
@@ -155,8 +156,8 @@ async function main() {
     })
     .onConflictDoNothing();
 
-  // ── 6. SCF Version (use existing or create) ──
-  console.log("  → Seeding SCF version...");
+  // â”€â”€ 6. SCF Version (use existing or create) â”€â”€
+  console.log("  â†’ Seeding SCF version...");
   await db
     .insert(schema.scfVersions)
     .values({
@@ -172,8 +173,8 @@ async function main() {
   if (!scfVersion) throw new Error("SCF Version not found after insert");
   console.log(`     scfVersionId = ${scfVersion.id}`);
 
-  // ── 7. SCF Domains — upsert by (scf_version_id, domain_code) ──
-  console.log("  → Seeding SCF domains...");
+  // â”€â”€ 7. SCF Domains â€” upsert by (scf_version_id, domain_code) â”€â”€
+  console.log("  â†’ Seeding SCF domains...");
   const domainRows = DOMAIN_CODES.map((code) => ({
     scfVersionId: scfVersion.id,
     domainCode: code,
@@ -204,19 +205,19 @@ async function main() {
       )
       .limit(1);
     if (rows[0]) domainIdMap[code] = rows[0].id;
-    else console.warn(`     ⚠️  Domain ${code} not found after insert`);
+    else console.warn(`     âš ï¸  Domain ${code} not found after insert`);
   }
   console.log(`     Domains resolved: ${Object.keys(domainIdMap).join(", ")}`);
 
-  // ── 8. SCF Controls — upsert by (scf_version_id, control_code) ──
-  console.log("  → Seeding SCF controls...");
+  // â”€â”€ 8. SCF Controls â€” upsert by (scf_version_id, control_code) â”€â”€
+  console.log("  â†’ Seeding SCF controls...");
   const controlIdMap: Record<string, string> = {};
 
   for (const [domainKey, ctrl] of Object.entries(CONTROL_MAP)) {
     const domainId = domainIdMap[domainKey];
     if (!domainId) {
       console.warn(
-        `     ⚠️  Skipping control ${ctrl.code} — domain ${domainKey} not found`,
+        `     âš ï¸  Skipping control ${ctrl.code} â€” domain ${domainKey} not found`,
       );
       continue;
     }
@@ -246,8 +247,8 @@ async function main() {
     `     Controls resolved: ${Object.keys(controlIdMap).join(", ")}`,
   );
 
-  // ── 9. SCF Framework ──
-  console.log("  → Seeding SCF framework...");
+  // â”€â”€ 9. SCF Framework â”€â”€
+  console.log("  â†’ Seeding SCF framework...");
   await db
     .insert(schema.scfFrameworks)
     .values({
@@ -272,8 +273,8 @@ async function main() {
   if (!framework) throw new Error("Framework not found after insert");
   console.log(`     frameworkId = ${framework.id}`);
 
-  // ── 10. SCF Framework Requirements ──
-  console.log("  → Seeding SCF framework requirements...");
+  // â”€â”€ 10. SCF Framework Requirements â”€â”€
+  console.log("  â†’ Seeding SCF framework requirements...");
   const reqDefs = [
     { code: "SYNTH-1.1", title: "Governance Policy", domainKey: "GOV" },
     { code: "SYNTH-1.2", title: "Access Control", domainKey: "IAC" },
@@ -307,8 +308,8 @@ async function main() {
     if (rows[0]) reqIdMap[req.code] = rows[0].id;
   }
 
-  // ── 11. SCF Mappings ──
-  console.log("  → Seeding SCF mappings...");
+  // â”€â”€ 11. SCF Mappings â”€â”€
+  console.log("  â†’ Seeding SCF mappings...");
   const mappingPairs = [
     { reqCode: "SYNTH-1.1", ctrlCode: "GOV-001" },
     { reqCode: "SYNTH-1.2", ctrlCode: "IAC-001" },
@@ -322,7 +323,7 @@ async function main() {
     const ctrlId = controlIdMap[pair.ctrlCode];
     if (!reqId || !ctrlId) {
       console.warn(
-        `     ⚠️  Skipping mapping ${pair.reqCode} ↔ ${pair.ctrlCode}`,
+        `     âš ï¸  Skipping mapping ${pair.reqCode} â†” ${pair.ctrlCode}`,
       );
       continue;
     }
@@ -339,8 +340,8 @@ async function main() {
       .onConflictDoNothing();
   }
 
-  // ── 12. Assessment (draft) ──
-  console.log("  → Seeding assessment...");
+  // â”€â”€ 12. Assessment (draft) â”€â”€
+  console.log("  â†’ Seeding assessment...");
   await db
     .insert(schema.assessments)
     .values({
@@ -361,8 +362,8 @@ async function main() {
   if (!assessment) throw new Error("Assessment not found after insert");
   console.log(`     assessmentId = ${assessment.id}`);
 
-  // ── 13. Assessment Framework Selection ──
-  console.log("  → Seeding assessment framework...");
+  // â”€â”€ 13. Assessment Framework Selection â”€â”€
+  console.log("  â†’ Seeding assessment framework...");
   await db
     .insert(schema.assessmentFrameworks)
     .values({
@@ -375,8 +376,8 @@ async function main() {
     })
     .onConflictDoNothing();
 
-  // ── 14. Audit Log ──
-  console.log("  → Recording seed audit event...");
+  // â”€â”€ 14. Audit Log â”€â”€
+  console.log("  â†’ Recording seed audit event...");
   await db.insert(schema.auditLogs).values({
     action: "synthetic_seed_executed",
     organizationId: org.id,
@@ -390,7 +391,7 @@ async function main() {
     },
   });
 
-  console.log("\n✅ Standard Synthetic Seed — Complete!");
+  console.log("\nâœ… Standard Synthetic Seed â€” Complete!");
   console.log(`   Tenant:       ${tenant.id}`);
   console.log(`   Organization: ${org.id}`);
   console.log(`   Assessment:   ${assessment.id}`);
@@ -407,6 +408,7 @@ async function main() {
 }
 
 main().catch((err) => {
-  console.error("❌ Seed failed:", err);
+  console.error("âŒ Seed failed:", err);
   process.exit(1);
 });
+

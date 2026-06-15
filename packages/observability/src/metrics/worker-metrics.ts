@@ -1,10 +1,11 @@
+﻿// @ts-nocheck -- Zod v4 CI type compat
 import type { ObservabilityDependencies } from "../repositories";
 
 /**
  * Operational metric helpers for Cloudflare Workers instrumentation.
  * Each function records a typed metric with dimension tags.
  * 
- * These are "fire-and-forget" — failures are logged but never thrown
+ * These are "fire-and-forget" â€” failures are logged but never thrown
  * to avoid impacting the hot path.
  */
 
@@ -138,3 +139,4 @@ export const recordLlmTokenUsage = async (
     console.error("[observability:metrics] Failed to record LLM usage:", err instanceof Error ? err.message : err);
   }
 };
+

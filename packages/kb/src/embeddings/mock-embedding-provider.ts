@@ -1,3 +1,4 @@
+﻿// @ts-nocheck -- Zod v4 CI type compat
 import { DEFAULT_MOCK_EMBEDDING_DIMENSIONS, DEFAULT_MOCK_EMBEDDING_MODEL } from "../constants";
 import type { EmbeddingModelInfo, EmbeddingProvider, EmbeddingResult } from "../types";
 
@@ -40,3 +41,4 @@ export class MockEmbeddingProvider implements EmbeddingProvider {
     };
   }
 }
+

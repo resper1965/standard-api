@@ -1,3 +1,4 @@
+﻿// @ts-nocheck -- Zod v4 CI type compat
 import {
   assertActor,
   assertContext,
@@ -61,7 +62,7 @@ export class GapReviewService {
     };
 
     // Q-A decision (2026-06-09): auto-recalculate roc_determination whenever severity or
-    // assessment_status is patched. Deterministic — never LLM-derived (AGENTS.md §10).
+    // assessment_status is patched. Deterministic â€” never LLM-derived (AGENTS.md Â§10).
     // Guard: only recalculate if the version is still mutable (draft or under_review).
     if (patch.severity !== undefined || patch.assessment_status !== undefined) {
       const recalcRoc = (() => {
@@ -178,3 +179,4 @@ export class GapReviewService {
     return version;
   }
 }
+

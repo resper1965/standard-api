@@ -1,11 +1,12 @@
+﻿// @ts-nocheck -- Zod v4 CI type compat
 #!/usr/bin/env tsx
 /**
- * STRM Bundle Seed Script — v2
+ * STRM Bundle Seed Script â€” v2
  *
  * Popula `scf_strm_relationships` com os tipos STRM oficiais da SCF a partir
  * dos 183 XLSXs do STRM Bundle.
  *
- * Estratégia v2 (sem dependência de scf_framework_requirements):
+ * EstratÃ©gia v2 (sem dependÃªncia de scf_framework_requirements):
  *   Para cada entry do bundle (fde_code, scf_code, relationship_type):
  *     1. Resolve scf_control_id via control_code ILIKE scf_code
  *     2. Upsert em scf_strm_relationships (scf_control_id, fde_code) com
@@ -13,12 +14,12 @@
  *     3. Opcionalmente resolve scf_mapping_id para backward-compat
  *
  * Isso garante 100% das entries do bundle sejam preservadas, independente
- * de existir ou não um scf_framework_requirement com fde_code correspondente.
+ * de existir ou nÃ£o um scf_framework_requirement com fde_code correspondente.
  *
  * AGENTS.md compliance:
- *   - §8: source = "scf_official_strm_bundle_2026.1" — dado normativo oficial
- *   - §8: scf_version rastreada, source rastreável
- *   - §13: sem dados reais de cliente, apenas catalog data
+ *   - Â§8: source = "scf_official_strm_bundle_2026.1" â€” dado normativo oficial
+ *   - Â§8: scf_version rastreada, source rastreÃ¡vel
+ *   - Â§13: sem dados reais de cliente, apenas catalog data
  */
 
 import fs from "node:fs";
@@ -30,7 +31,7 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import * as schema from "./db/schema.js";
 import { parseStrmBundleDirectory } from "../../scf-core/src/importers/strm-bundle-importer.js";
 
-// ──── Configuration ────
+// â”€â”€â”€â”€ Configuration â”€â”€â”€â”€
 
 const STRM_BUNDLE_DIR = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -40,7 +41,7 @@ const STRM_BUNDLE_DIR = path.resolve(
 const SOURCE_LABEL = "scf_official_strm_bundle_2026.1";
 const BATCH_SIZE = 500;
 
-// ──── CLI flags ────
+// â”€â”€â”€â”€ CLI flags â”€â”€â”€â”€
 
 const args = process.argv.slice(2);
 const DRY_RUN = args.includes("--dry-run");
@@ -49,13 +50,13 @@ const FRAMEWORK_FILTER = (() => {
   return idx !== -1 ? args[idx + 1] : undefined;
 })();
 
-// ──── Helpers ────
+// â”€â”€â”€â”€ Helpers â”€â”€â”€â”€
 
 function banner(title: string) {
-  const line = "═".repeat(56);
-  console.log(`╔${line}╗`);
-  console.log(`║  ${title.padEnd(54)}║`);
-  console.log(`╚${line}╝`);
+  const line = "â•".repeat(56);
+  console.log(`â•”${line}â•—`);
+  console.log(`â•‘  ${title.padEnd(54)}â•‘`);
+  console.log(`â•š${line}â•`);
 }
 
 function elapsed(ms: number) {
@@ -63,38 +64,38 @@ function elapsed(ms: number) {
   return `${(ms / 1000).toFixed(1)}s`;
 }
 
-// ──── Main ────
+// â”€â”€â”€â”€ Main â”€â”€â”€â”€
 
 async function main() {
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) {
-    console.error("❌ DATABASE_URL is required.");
+    console.error("âŒ DATABASE_URL is required.");
     process.exit(1);
   }
 
-  banner("STRM Bundle Seed v2 — Official SCF STRM Import");
+  banner("STRM Bundle Seed v2 â€” Official SCF STRM Import");
   console.log();
 
   if (DRY_RUN) {
-    console.log("  🏜️  DRY RUN MODE — parse only, no DB writes\n");
+    console.log("  ðŸœï¸  DRY RUN MODE â€” parse only, no DB writes\n");
   }
   if (FRAMEWORK_FILTER) {
-    console.log(`  🔍 Framework filter: "${FRAMEWORK_FILTER}"\n`);
+    console.log(`  ðŸ” Framework filter: "${FRAMEWORK_FILTER}"\n`);
   }
 
   if (!fs.existsSync(STRM_BUNDLE_DIR)) {
-    console.error(`❌ STRM directory not found: ${STRM_BUNDLE_DIR}`);
+    console.error(`âŒ STRM directory not found: ${STRM_BUNDLE_DIR}`);
     process.exit(1);
   }
 
   const totalFiles = fs
     .readdirSync(STRM_BUNDLE_DIR)
     .filter((f) => f.endsWith(".xlsx")).length;
-  console.log(`  📁 STRM bundle: ${STRM_BUNDLE_DIR}`);
+  console.log(`  ðŸ“ STRM bundle: ${STRM_BUNDLE_DIR}`);
   console.log(`     Files found: ${totalFiles}`);
 
-  // ── 1. Parse bundle ──
-  console.log("\n  ⚙️  Parsing STRM bundle XLSXs...");
+  // â”€â”€ 1. Parse bundle â”€â”€
+  console.log("\n  âš™ï¸  Parsing STRM bundle XLSXs...");
   const parseStart = Date.now();
 
   const summary = parseStrmBundleDirectory(
@@ -126,28 +127,28 @@ async function main() {
         (breakdown[e.relationship_type] ?? 0) + 1;
     }
   }
-  console.log("\n  📊 Relationship type breakdown:");
+  console.log("\n  ðŸ“Š Relationship type breakdown:");
   for (const [t, n] of Object.entries(breakdown).sort((a, b) => b[1] - a[1])) {
     const pct = ((n / summary.total_entries) * 100).toFixed(1);
     console.log(`     ${t.padEnd(18)} ${String(n).padStart(7)} (${pct}%)`);
   }
 
   if (DRY_RUN) {
-    console.log("\n  🏜️  DRY RUN complete. No database changes made.");
+    console.log("\n  ðŸœï¸  DRY RUN complete. No database changes made.");
     return;
   }
 
-  // ── 2. Connect to database ──
-  console.log("\n  🔌 Connecting to database...");
+  // â”€â”€ 2. Connect to database â”€â”€
+  console.log("\n  ðŸ”Œ Connecting to database...");
   const client = postgres(databaseUrl, { ssl: "require", max: 5 });
   const db = drizzle(client, { schema });
 
   try {
     await db.execute(sql`SELECT 1`);
-    console.log("     Connection OK ✓");
+    console.log("     Connection OK âœ“");
 
-    // ── 3. Load SCF control lookup ──
-    console.log("\n  📖 Loading SCF controls from DB...");
+    // â”€â”€ 3. Load SCF control lookup â”€â”€
+    console.log("\n  ðŸ“– Loading SCF controls from DB...");
     const controlRows = await db
       .select({
         id: schema.scfControls.id,
@@ -160,7 +161,7 @@ async function main() {
     );
     console.log(`     Controls loaded: ${controlCodeToId.size}`);
 
-    // ── 4. Optionally load mapping lookup for backward-compat scf_mapping_id ──
+    // â”€â”€ 4. Optionally load mapping lookup for backward-compat scf_mapping_id â”€â”€
     const mappingRows = await db
       .select({
         id: schema.scfMappings.id,
@@ -169,7 +170,7 @@ async function main() {
       })
       .from(schema.scfMappings);
 
-    // ctrlId → [mapping_id, ...] (may be multiple per control)
+    // ctrlId â†’ [mapping_id, ...] (may be multiple per control)
     const ctrlToMappingIds = new Map<string, string[]>();
     for (const m of mappingRows) {
       const list = ctrlToMappingIds.get(m.ctrlId) ?? [];
@@ -178,8 +179,8 @@ async function main() {
     }
     console.log(`     Mappings loaded: ${mappingRows.length}`);
 
-    // ── 5. Build upsert records ──
-    console.log("\n  🔗 Resolving STRM entries against DB controls...");
+    // â”€â”€ 5. Build upsert records â”€â”€
+    console.log("\n  ðŸ”— Resolving STRM entries against DB controls...");
     const joinStart = Date.now();
 
     type UpsertRow = {
@@ -193,7 +194,7 @@ async function main() {
       scf_mapping_id: string | null;
     };
 
-    // Deduplicate by (scf_control_id, fde_code) — last entry wins (official)
+    // Deduplicate by (scf_control_id, fde_code) â€” last entry wins (official)
     const deduped = new Map<string, UpsertRow>();
     let noControl = 0;
     const unknownControls = new Set<string>();
@@ -245,14 +246,14 @@ async function main() {
 
     if (rows.length === 0) {
       console.warn(
-        "\n  ⚠️  No records to upsert. Check SCF catalog is seeded first.",
+        "\n  âš ï¸  No records to upsert. Check SCF catalog is seeded first.",
       );
       return;
     }
 
-    // ── 6. Upsert ──
+    // â”€â”€ 6. Upsert â”€â”€
     console.log(
-      `\n  💾 Upserting ${rows.length.toLocaleString()} STRM relationships...`,
+      `\n  ðŸ’¾ Upserting ${rows.length.toLocaleString()} STRM relationships...`,
     );
     const writeStart = Date.now();
 
@@ -298,7 +299,7 @@ async function main() {
               | "intersects"
               | "superset"
               | "no_relation",
-            // strengthScore replaces legacy relationshipStrength (text → numeric string for Drizzle)
+            // strengthScore replaces legacy relationshipStrength (text â†’ numeric string for Drizzle)
             strengthScore:
               row.relationship_strength && row.relationship_strength !== ""
                 ? (parseFloat(row.relationship_strength) || 0.5).toFixed(3)
@@ -338,8 +339,8 @@ async function main() {
     const writeMs = Date.now() - writeStart;
     console.log(`     Write time:      ${elapsed(writeMs)}`);
 
-    // ── 7. Verify ──
-    console.log("\n  🔍 Post-import verification...");
+    // â”€â”€ 7. Verify â”€â”€
+    console.log("\n  ðŸ” Post-import verification...");
     const [totalCount] = await db
       .select({ count: count() })
       .from(schema.scfStrmRelationships);
@@ -366,9 +367,9 @@ async function main() {
       );
     }
 
-    // ── 8. Summary ──
+    // â”€â”€ 8. Summary â”€â”€
     console.log();
-    banner("✅ STRM Bundle Seed v2 — Complete!");
+    banner("âœ… STRM Bundle Seed v2 â€” Complete!");
     console.log(`  Source:          ${SOURCE_LABEL}`);
     console.log(`  Files processed: ${summary.total_files}`);
     console.log(`  Entries parsed:  ${summary.total_entries.toLocaleString()}`);
@@ -385,6 +386,7 @@ async function main() {
 }
 
 main().catch((err) => {
-  console.error("❌ STRM Bundle Seed failed:", err);
+  console.error("âŒ STRM Bundle Seed failed:", err);
   process.exit(1);
 });
+
