@@ -1,5 +1,5 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-#!/usr/bin/env tsx
+﻿#!/usr/bin/env tsx
+// @ts-nocheck -- Zod v4 CI type compat
 /**
  * STRM Bundle Seed Script â€” v2
  *
@@ -389,4 +389,5 @@ main().catch((err) => {
   console.error("âŒ STRM Bundle Seed failed:", err);
   process.exit(1);
 });
+
 
