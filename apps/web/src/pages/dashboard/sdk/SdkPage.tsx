@@ -205,6 +205,21 @@ console.log("Signing secret:", webhook.signing_secret);`;
   }
 }`;
 
+  const mcpDevNpx = `npx @standard-api/integration-mcp`;
+
+  const mcpDevCursorConfig = `// cursor.json / .cursor/mcp.json
+{
+  "mcpServers": {
+    "standard-grc-docs": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@standard-api/integration-mcp"
+      ]
+    }
+  }
+}`;
+
   // ── AI Prompt snippets ────────────────────────────────────────
   const promptSetup = `# Standard GRC — AI Integration Context
 
@@ -452,11 +467,10 @@ Return findings in this format per control:
             <CardHeader className="pb-2">
               <CardTitle className="text-base flex items-center gap-2">
                 <Cpu className="h-4 w-4 text-primary" />
-                Model Context Protocol
+                GRC Functional MCP (Auditor / GRC User)
               </CardTitle>
               <CardDescription>
-                Let AI assistants (Cursor, Claude Code, Copilot) call Standard GRC tools
-                natively via the MCP protocol — no manual API calls needed.
+                Let AI assistants (Cursor, Claude Desktop, Windsurf) query and manage GRC assessments, upload evidence, and run gap analyses natively via the MCP protocol.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -469,8 +483,30 @@ Return findings in this format per control:
                 <CodeBlock code={mcpNpx} language="bash" label="npx" />
               </div>
               <div>
-                <Step n={3} title="Configure your IDE (Cursor / VS Code)" />
+                <Step n={3} title="Configure your IDE (Cursor / VS Code / Claude)" />
                 <CodeBlock code={mcpCursorConfig} language="json" label="cursor.json" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/60 bg-card/60 shadow-none">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Code2 className="h-4 w-4 text-primary" />
+                Developer Integration MCP (API / Docs)
+              </CardTitle>
+              <CardDescription>
+                For developers building custom integrations or API clients. Connects your IDE assistant directly to Standard's cookbooks, recipes, and OpenAPI specifications.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <Step n={1} title="Run via npx (Node.js)" />
+                <CodeBlock code={mcpDevNpx} language="bash" label="npx" />
+              </div>
+              <div>
+                <Step n={2} title="Configure your IDE (Cursor / VS Code / Claude)" />
+                <CodeBlock code={mcpDevCursorConfig} language="json" label="cursor.json" />
               </div>
             </CardContent>
           </Card>
