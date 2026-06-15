@@ -123,13 +123,24 @@ async function resolveSessionAuthContext(
     const session = rawSession.session as any;
 
     // 2a. Hard revocation check (user banned/deleted/locked)
+    let isBanned = false;
+    let isSoftRevoked = false;
+    let softRevocationReason: string | null = null;
+
     if (kv) {
-      const revoked = await kv
+      const revoked = (await kv
         .get(`revocations:user:${user.id}`)
-        .catch(() => null);
-      if (revoked) {
-        throw new ApiError("UNAUTHORIZED", "Session revoked.", 401);
+        .catch(() => null)) as string | null;
+      if (revoked === "user_banned") {
+        isBanned = true;
+      } else if (revoked) {
+        isSoftRevoked = true;
+        softRevocationReason = revoked;
       }
+    }
+
+    if (isBanned) {
+      throw new ApiError("UNAUTHORIZED", "Session revoked.", 401);
     }
 
     // 2b. Read platform_admin + approved directly from DB.
@@ -142,7 +153,7 @@ async function resolveSessionAuthContext(
     const flagsKvKey = `user-flags:${user.id}`;
     let flags: { platform_admin: boolean; approved: boolean } | null = null;
 
-    if (kv) {
+    if (kv && (!isSoftRevoked || softRevocationReason !== "approved")) {
       flags = (await kv
         .get(flagsKvKey, "json")
         .catch(() => null)) as typeof flags;
@@ -193,7 +204,12 @@ async function resolveSessionAuthContext(
     let orgId: string | null = null;
     const kvSessionKey = `session-ctx:${session.id}`;
 
-    if (kv) {
+    if (
+      kv &&
+      (!isSoftRevoked ||
+        (softRevocationReason !== "org_switch" &&
+          softRevocationReason !== "org_deactivate"))
+    ) {
       const cached = (await kv
         .get(kvSessionKey, "json")
         .catch(() => null)) as any;

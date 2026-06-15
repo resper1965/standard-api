@@ -110,69 +110,99 @@ export const userOrgsRoutes: RouteDefinition[] = [
     permissions: ["organization:create"],
     tenantRequired: false,
     handler: async (context) => {
-      const userId = context.session?.user?.id;
-      if (!userId) {
-        throw new ApiError("UNAUTHORIZED", "Session required.", 401);
-      }
+      try {
+        const userId = context.session?.user?.id;
+        if (!userId) {
+          throw new ApiError("UNAUTHORIZED", "Session required.", 401);
+        }
 
-      const organizationId = routeUuidParam(context.params, "organizationId");
-      const db = getDomainDb(context);
-      const repo = getRepo(context);
+        const organizationId = routeUuidParam(context.params, "organizationId");
+        const db = getDomainDb(context);
+        const repo = getRepo(context);
 
-      // Verify the user owns this organization (1:1 model)
-      const [org] = await db
-        .select({ id: organizations.id })
-        .from(organizations)
-        .where(eq(organizations.userId, userId))
-        .limit(1);
-
-      if (!org || org.id !== organizationId) {
-        throw new ApiError(
-          "FORBIDDEN",
-          "You are not the owner of this organization.",
-          403,
+        console.log(
+          "[standard:activate] Starting activation. User:",
+          userId,
+          "Org:",
+          organizationId,
         );
-      }
 
-      // H4 fix: Session rotation on privilege change.
-      const sessionId = context.session?.session?.id;
-      if (sessionId) {
-        await repo.setSessionOrg(sessionId, organizationId);
-        await repo.revokeSession(sessionId);
+        // Verify the user owns this organization (1:1 model)
+        const [org] = await db
+          .select({ id: organizations.id })
+          .from(organizations)
+          .where(eq(organizations.userId, userId))
+          .limit(1);
 
-        // Bust the session-ctx KV cache
+        if (!org || org.id !== organizationId) {
+          console.warn(
+            "[standard:activate] Ownership check failed. User owns org:",
+            org?.id,
+          );
+          throw new ApiError(
+            "FORBIDDEN",
+            "You are not the owner of this organization.",
+            403,
+          );
+        }
+
+        // H4 fix: Set active organization on session. We no longer revoke the session
+        // to avoid infinite login loops, since new sessions start with activeOrganizationId = null.
+        const sessionId = context.session?.session?.id;
+        if (sessionId) {
+          console.log(
+            "[standard:activate] Setting session org:",
+            sessionId,
+            "to org:",
+            organizationId,
+          );
+          await repo.setSessionOrg(sessionId, organizationId);
+
+          // Bust the session-ctx KV cache
+          if (context.env?.STANDARD_CACHE) {
+            await context.env.STANDARD_CACHE.delete(
+              `session-ctx:${sessionId}`,
+            ).catch(() => {});
+          }
+        }
+
+        // Soft revocation — clears downstream caches, does NOT cause 401
         if (context.env?.STANDARD_CACHE) {
-          await context.env.STANDARD_CACHE.delete(
-            `session-ctx:${sessionId}`,
+          await context.env.STANDARD_CACHE.put(
+            `revocations:user:${userId}`,
+            "org_switch",
+            { expirationTtl: 10 },
           ).catch(() => {});
         }
-      }
 
-      // Soft revocation — clears downstream caches, does NOT cause 401
-      if (context.env?.STANDARD_CACHE) {
-        await context.env.STANDARD_CACHE.put(
-          `revocations:user:${userId}`,
-          "org_switch",
-          { expirationTtl: 10 },
-        ).catch(() => {});
-      }
-
-      await context.deps.audit.record("user_org.activated", {
-        actor_id: userId,
-        organization_id: organizationId,
-        session_rotated: true,
-        trace_id: context.traceId,
-      });
-
-      return json(
-        {
-          ok: true,
-          active_organization_id: organizationId,
-          session_rotated: true,
+        await context.deps.audit.record("user_org.activated", {
+          actor_id: userId,
+          organization_id: organizationId,
+          session_rotated: false,
           trace_id: context.traceId,
-        },
-        { status: 200, headers: { "x-trace-id": context.traceId } },
-      );
+        });
+
+        return json(
+          {
+            ok: true,
+            active_organization_id: organizationId,
+            session_rotated: false,
+            trace_id: context.traceId,
+          },
+          { status: 200, headers: { "x-trace-id": context.traceId } },
+        );
+      } catch (err: any) {
+        console.error("[standard:activate:error]", err);
+        return json(
+          {
+            error: "ACTIVATE_FAILED",
+            message: err.message || String(err),
+            stack: err.stack,
+            trace_id: context.traceId,
+          },
+          { status: 500, headers: { "x-trace-id": context.traceId } },
+        );
+      }
     },
   },
 

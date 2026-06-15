@@ -9,7 +9,11 @@
 import { createApp } from "./app";
 import { createDrizzleRepositories, createMockRepositories } from "./adapters";
 import { createDb } from "./adapters/db";
-import { createAuth, type StandardAuth } from "@standard/auth";
+import {
+  createAuth,
+  type StandardAuth,
+  createAuthRepository,
+} from "@standard/auth";
 import type { SendEmail } from "@standard/email";
 import type { AppDependencies } from "./http";
 import type { Env } from "./types/env";
@@ -124,19 +128,22 @@ type BetterAuthAdminApi = {
   };
 };
 
-function createBanUser(): (userId: string, reason?: string) => Promise<void> {
-  return async (userId: string, reason?: string) => {
-    const auth = getCachedAuth();
-    if (!auth) return;
+function buildDrizzleDeps(env: Env): {
+  deps: AppDependencies;
+  auth: StandardAuth;
+} {
+  const db = createDb(env.DATABASE_URL!, env.HYPERDRIVE);
 
-    const adminAuth = auth as unknown as BetterAuthAdminApi;
+  let authInstance: StandardAuth | null = null;
+  const banUser = async (userId: string, reason?: string) => {
+    if (!authInstance) return;
+    const adminAuth = authInstance as unknown as BetterAuthAdminApi;
     if (typeof adminAuth.api?.banUser !== "function") {
       console.warn(
         "[standard:banUser] banUser API not available on this auth instance",
       );
       return;
     }
-
     try {
       await adminAuth.api.banUser({
         body: {
@@ -151,35 +158,19 @@ function createBanUser(): (userId: string, reason?: string) => Promise<void> {
       );
     }
   };
-}
-
-/**
- * Builds `AppDependencies` backed by a real database.
- * Extracted to reduce nesting inside the initialization block.
- */
-function buildDrizzleDeps(env: Env): {
-  deps: AppDependencies;
-  auth: StandardAuth;
-} {
-  const db = createDb(env.DATABASE_URL!, env.HYPERDRIVE);
 
   const deps: AppDependencies = {
     ...createDrizzleRepositories(db, env),
-    // Expose raw Drizzle client for routes that query auth tables directly
-    // (user-orgs, admin). Typed as `unknown` in AppDependencies to avoid coupling.
     _db: db,
-    // Cloudflare Email binding type does not overlap with SendEmail interface —
-    // double cast via unknown is required and intentional (CF Workers limitation).
     email: env.EMAIL ? (env.EMAIL as unknown as SendEmail) : undefined,
     AGENT_RUN_QUEUE: env.AGENT_RUN_QUEUE ?? undefined,
     COUNCIL_WORKFLOW: env.COUNCIL_WORKFLOW ?? undefined,
     TPRA_APPROVAL_WORKFLOW: env.TPRA_APPROVAL_WORKFLOW ?? undefined,
     SOC_TRIAGE_QUEUE: env.SOC_TRIAGE_QUEUE ?? undefined,
     USER_LIFECYCLE_QUEUE: env.USER_LIFECYCLE_QUEUE ?? undefined,
-    banUser: createBanUser(),
+    banUser,
   };
 
-  // Initialize Better Auth — auth DB (HYPERDRIVE_AUTH) takes priority over product DB
   const authDbUrl = (env as any).AUTH_DATABASE_URL || env.DATABASE_URL!;
   const authDb = (env as any).HYPERDRIVE_AUTH
     ? createDb(authDbUrl, (env as any).HYPERDRIVE_AUTH)
@@ -203,7 +194,10 @@ function buildDrizzleDeps(env: Env): {
     authDb,
   );
 
+  authInstance = auth;
+
   console.log("[standard:init] Better Auth initialized (auth branch).");
+  deps.authRepo = createAuthRepository(authDb);
   return { deps, auth };
 }
 
@@ -258,6 +252,19 @@ export function ensureAppInitialized(env: Env): ReturnType<typeof createApp> {
   return cachedApp;
 }
 
+/**
+ * Creates connections and instantiates the app on every request.
+ * Scoped to request to avoid CF Workers "Cannot perform I/O on behalf of a different request".
+ */
+export function createRequestApp(env: Env): {
+  app: ReturnType<typeof createApp>;
+  auth: StandardAuth;
+} {
+  const result = buildDrizzleDeps(env);
+  const app = createApp(result.deps, env, result.auth);
+  return { app, auth: result.auth };
+}
+
 // ── Auth route CORS helpers ─────────────────────────────────────
 
 /**
@@ -296,9 +303,10 @@ function buildAuthCorsHeaders(origin: string): Record<string, string> {
 export async function handleAuthRoute(
   request: Request,
   url: URL,
+  auth: StandardAuth | null,
   env?: Partial<Env>,
 ): Promise<Response | null> {
-  if (!cachedAuth || !url.pathname.startsWith("/api/auth")) return null;
+  if (!auth || !url.pathname.startsWith("/api/auth")) return null;
 
   const origin = request.headers.get("Origin") ?? "";
   const isAllowed = isAuthOriginAllowed(origin, env);
@@ -321,7 +329,7 @@ export async function handleAuthRoute(
 
   const response = await (async () => {
     try {
-      const res = await cachedAuth!.handler(request);
+      const res = await auth.handler(request);
       if (res.status === 500) {
         // Log the error internally but do NOT expose detail to client (H5 fix)
         const text = await res.clone().text();

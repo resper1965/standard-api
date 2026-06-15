@@ -272,6 +272,7 @@ export const createApp = (
         params,
         traceId,
         deps,
+        betterAuth: auth,
         ...(execCtx !== undefined ? { execCtx } : {}),
         ...(env !== undefined ? { env } : {}),
       };

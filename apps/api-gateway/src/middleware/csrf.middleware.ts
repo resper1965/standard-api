@@ -33,7 +33,10 @@ const CSRF_EXEMPT_PATHS = new Set([
  * Generates a CSRF token for a given session ID using HMAC-SHA256.
  * Deterministic: same session always produces the same token.
  */
-export async function generateCsrfToken(sessionId: string, secret: string): Promise<string> {
+export async function generateCsrfToken(
+  sessionId: string,
+  secret: string,
+): Promise<string> {
   const encoder = new TextEncoder();
   const key = await crypto.subtle.importKey(
     "raw",
@@ -42,7 +45,11 @@ export async function generateCsrfToken(sessionId: string, secret: string): Prom
     false,
     ["sign"],
   );
-  const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(sessionId));
+  const signature = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    encoder.encode(sessionId),
+  );
   // Convert to hex string
   return Array.from(new Uint8Array(signature))
     .map((b) => b.toString(16).padStart(2, "0"))
@@ -85,6 +92,50 @@ export function verifyCsrf(context: RequestContext): void {
 
   // Unauthenticated requests skip CSRF (they'll fail auth anyway)
   if (!context.session?.session?.id) return;
+
+  // CSRF bypass based on allowed origins:
+  // If Origin header is present and matches one of the allowed origins, bypass CSRF verification.
+  const origin = context.request.headers.get("origin");
+  if (origin) {
+    const isDevMode =
+      context.env?.STANDARD_ENV === "development" ||
+      context.env?.STANDARD_ENV === "test";
+    const envOrigins =
+      context.env?.ALLOWED_ORIGINS?.split(",")
+        .map((o: string) => o.trim())
+        .filter(Boolean) ?? [];
+    const validatedOrigins = envOrigins.filter((o: string) => {
+      if (o === "*") return false;
+      try {
+        const url = new URL(o);
+        return url.origin === o;
+      } catch {
+        return false;
+      }
+    });
+    const allowed =
+      validatedOrigins.length > 0
+        ? validatedOrigins
+        : [
+            "https://standard.bekaa.eu",
+            "https://standard-web.pages.dev",
+            "https://standard-web-production.pages.dev",
+            ...(isDevMode
+              ? ["http://localhost:5173", "http://localhost:3000"]
+              : []),
+          ];
+
+    const isAlwaysAllowed =
+      origin === "https://standard.bekaa.eu" ||
+      origin === "https://standard-web.pages.dev" ||
+      origin === "https://standard-web-production.pages.dev" ||
+      origin.endsWith(".standard-web.pages.dev") ||
+      origin.endsWith(".standard-web-production.pages.dev");
+
+    if (allowed.includes(origin) || isAlwaysAllowed) {
+      return;
+    }
+  }
 
   const cookieToken = getCookieValue(context.request, "__csrf");
   const headerToken = context.request.headers.get("x-csrf-token");
