@@ -614,7 +614,10 @@ export const tpraRoutes: RouteDefinition[] = [
         for (const question of section.questions) {
           const answer = body.answers?.[question.id];
           const answerKey = String(answer ?? "").toLowerCase();
-          const scoringMap = question.scoring as Record<string, number>;
+          const scoringMap = question.scoring as unknown as Record<
+            string,
+            number
+          >;
           const score = scoringMap[answerKey] ?? 0;
           const maxScore = Math.max(...Object.values(scoringMap));
           sectionScore += score * question.weight;
