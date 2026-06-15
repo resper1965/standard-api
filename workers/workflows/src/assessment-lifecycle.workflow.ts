@@ -327,10 +327,11 @@ export class AssessmentLifecycleOrchestrator {
     request: CancelWorkflowRequest,
   ): Promise<WorkflowRunResponse> {
     const run = await this.requireRun(workflowRunId);
+    const req = request as any;
     const cancelled = await this.markCancelled(
       run,
-      request.actor_id,
-      request.reason,
+      req.actor_id as string,
+      req.reason as string,
     );
     await this.deps.workflows.save(cancelled);
     return toResponse(cancelled);
@@ -341,8 +342,14 @@ export class AssessmentLifecycleOrchestrator {
     request: ResumeWorkflowRequest,
   ): Promise<WorkflowRunResponse> {
     const run = await this.requireRun(workflowRunId);
-    const resumed = await this.resumeRun(run, request.actor_id, request.reason);
-    if (request.from_step) resumed.state.current_step = request.from_step;
+    const req = request as any;
+    const resumed = await this.resumeRun(
+      run,
+      req.actor_id as string,
+      req.reason as string,
+    );
+    if (req.from_step)
+      (resumed.state as any).current_step = req.from_step as string;
     await this.deps.workflows.save(resumed);
     return toResponse(resumed);
   }

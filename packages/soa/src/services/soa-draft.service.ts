@@ -132,38 +132,47 @@ export class SoaDraftService {
     input: CreateDraftFromRequirementsInput,
     now: string,
   ): SoaItemResponse[] {
-    const mappingsByRequirement = new Map<string, typeof input.mappings>();
-    for (const mapping of input.mappings.filter(
-      (candidate) => candidate.is_official,
+    const rawInput = input as any;
+    const mappingsByRequirement = new Map<string, any[]>();
+    for (const mapping of (rawInput.mappings as any[]).filter(
+      (candidate: any) => candidate.is_official,
     )) {
       const existing =
-        mappingsByRequirement.get(mapping.scf_framework_requirement_id) ?? [];
-      mappingsByRequirement.set(mapping.scf_framework_requirement_id, [
-        ...existing,
-        mapping,
-      ]);
+        mappingsByRequirement.get(
+          mapping.scf_framework_requirement_id as string,
+        ) ?? [];
+      mappingsByRequirement.set(
+        mapping.scf_framework_requirement_id as string,
+        [...existing, mapping],
+      );
     }
 
-    return input.requirements.flatMap((requirement) => {
-      const mappings = mappingsByRequirement.get(requirement.id) ?? [];
+    return (rawInput.requirements as any[]).flatMap((requirement: any) => {
+      const mappings =
+        mappingsByRequirement.get(requirement.id as string) ?? [];
       if (mappings.length === 0) {
         return [
-          this.createItem(version, requirement.id, now, {
+          this.createItem(version, requirement.id as string, now, {
             mappingStatus: "no_official_mapping",
           }),
         ];
       }
-      return mappings.map((mapping) => {
+      return mappings.map((mapping: any) => {
         const itemMapping = {
           mappingStatus: "official_mapping",
-          sourceMappingId: mapping.id,
-          scfControlId: mapping.scf_control_id,
+          sourceMappingId: mapping.id as string,
+          scfControlId: mapping.scf_control_id as string,
           relationshipType: mapping.relationship_type,
           ...(mapping.relationship_strength
-            ? { relationshipStrength: mapping.relationship_strength }
+            ? { relationshipStrength: mapping.relationship_strength as string }
             : {}),
         } as const;
-        return this.createItem(version, requirement.id, now, itemMapping);
+        return this.createItem(
+          version,
+          requirement.id as string,
+          now,
+          itemMapping,
+        );
       });
     });
   }
