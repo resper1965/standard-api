@@ -1,4 +1,4 @@
-import { z } from "zod/v4/classic";
+import { z } from "zod";
 import { TraceIdSchema, UuidSchema } from "./common";
 
 export const WorkflowRunStatusSchema = z.enum([
