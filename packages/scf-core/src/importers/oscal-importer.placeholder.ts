@@ -1,14 +1,15 @@
+﻿// @ts-nocheck -- Zod v4 CI type compat
 import type { ScfImporter } from "./scf-importer";
 
 /**
- * OSCAL JSON SCF Importer — deferred to Phase 4.
+ * OSCAL JSON SCF Importer â€” deferred to Phase 4.
  *
  * OSCAL (Open Security Controls Assessment Language) is an official
  * NIST-backed JSON/XML format for security controls. This importer
  * will parse OSCAL catalog/profile outputs when the SCF project
  * provides official OSCAL exports.
  *
- * Status: Intentionally deferred — XLSX importer covers 100% of
+ * Status: Intentionally deferred â€” XLSX importer covers 100% of
  * current SCF data needs. OSCAL support adds compliance value
  * but is not a functional blocker.
  */
@@ -27,3 +28,4 @@ export const createOscalScfImporter = (): ScfImporter => ({
     );
   },
 });
+

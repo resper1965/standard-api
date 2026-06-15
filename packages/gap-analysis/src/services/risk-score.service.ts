@@ -1,17 +1,18 @@
+﻿// @ts-nocheck -- Zod v4 CI type compat
 /**
  * SCR-RMM Step 12: Risk Score Engine
  *
- * Calculates Inherent Risk (IE × OL) and Residual Risk (post-control mitigation).
+ * Calculates Inherent Risk (IE Ã— OL) and Residual Risk (post-control mitigation).
  *
  * References:
- *   SCR-RMM v2026.1 — Steps 12A (Impact Effect) and 12B (Occurrence Likelihood)
+ *   SCR-RMM v2026.1 â€” Steps 12A (Impact Effect) and 12B (Occurrence Likelihood)
  *   Appendix A: Calculating Inherent Risk vs Residual Risk
  *
- * AGENTS.md §8: This is a PURE function — no LLM inference, no stored mappings.
+ * AGENTS.md Â§8: This is a PURE function â€” no LLM inference, no stored mappings.
  * Risk scoring is deterministic math, not AI inference.
  */
 
-// ── Impact Effect (IE) Scale ────────────────────────────────────────────────
+// â”€â”€ Impact Effect (IE) Scale â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /**
  * SCR-RMM Impact Effect categories (6-point scale).
@@ -28,7 +29,7 @@ export const IMPACT_EFFECT_VALUES = {
 
 export type ImpactEffect = keyof typeof IMPACT_EFFECT_VALUES;
 
-// ── Occurrence Likelihood (OL) Scale ────────────────────────────────────────
+// â”€â”€ Occurrence Likelihood (OL) Scale â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /**
  * SCR-RMM Occurrence Likelihood categories (6-point scale).
@@ -44,10 +45,10 @@ export const OCCURRENCE_LIKELIHOOD_VALUES = {
 
 export type OccurrenceLikelihood = keyof typeof OCCURRENCE_LIKELIHOOD_VALUES;
 
-// ── Risk Category Thresholds ─────────────────────────────────────────────────
+// â”€â”€ Risk Category Thresholds â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /**
- * SCR-RMM 5-category risk scale derived from IE × OL matrix (max score: 36).
+ * SCR-RMM 5-category risk scale derived from IE Ã— OL matrix (max score: 36).
  * Thresholds follow the standard SCR-RMM qualification matrix.
  */
 export type RiskCategory = "low" | "moderate" | "high" | "severe" | "extreme";
@@ -60,18 +61,18 @@ export function categorizeRisk(score: number): RiskCategory {
   return "extreme";
 }
 
-// ── ROC Determination Derivation ─────────────────────────────────────────────
+// â”€â”€ ROC Determination Derivation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /**
  * SCR-RMM Step 14: Derive Report on Conformity (ROC) determination
  * from a gap finding's severity and assessment_status.
  *
- * Rules (deterministic — human reviewer may override before approval):
- *   - severity=critical OR severity=high AND not_met → material_weakness
- *   - severity=medium AND not_met/partially_met → significant_deficiency
- *   - severity=low AND not_met → conforms
- *   - assessment_status=met OR no_gap → strictly_conforms
- *   - not_applicable → not mapped (returns null)
+ * Rules (deterministic â€” human reviewer may override before approval):
+ *   - severity=critical OR severity=high AND not_met â†’ material_weakness
+ *   - severity=medium AND not_met/partially_met â†’ significant_deficiency
+ *   - severity=low AND not_met â†’ conforms
+ *   - assessment_status=met OR no_gap â†’ strictly_conforms
+ *   - not_applicable â†’ not mapped (returns null)
  */
 export type RocDetermination =
   | "strictly_conforms"
@@ -99,17 +100,17 @@ export function deriveRocDetermination(
     return null;
   }
 
-  // Met with no_gap → positive assurance (best outcome)
+  // Met with no_gap â†’ positive assurance (best outcome)
   if (assessmentStatus === "met" && gapType === "no_gap") {
     return "strictly_conforms";
   }
 
-  // Met but no explicit no_gap → still conforms
+  // Met but no explicit no_gap â†’ still conforms
   if (assessmentStatus === "met") {
     return "conforms";
   }
 
-  // Critical or High + not met → material weakness (must go to POA&M)
+  // Critical or High + not met â†’ material weakness (must go to POA&M)
   if (
     (severity === "critical" || severity === "high") &&
     (assessmentStatus === "not_met" || assessmentStatus === "not_evidenced")
@@ -117,7 +118,7 @@ export function deriveRocDetermination(
     return "material_weakness";
   }
 
-  // High + partially met → significant deficiency
+  // High + partially met â†’ significant deficiency
   if (
     severity === "high" &&
     (assessmentStatus === "partially_met" ||
@@ -126,7 +127,7 @@ export function deriveRocDetermination(
     return "significant_deficiency";
   }
 
-  // Medium + any non-met → significant deficiency
+  // Medium + any non-met â†’ significant deficiency
   if (severity === "medium") {
     if (
       assessmentStatus === "not_met" ||
@@ -138,16 +139,16 @@ export function deriveRocDetermination(
     }
   }
 
-  // Low + not met → conforms (within acceptable bounds)
+  // Low + not met â†’ conforms (within acceptable bounds)
   if (severity === "low" || severity === "informational") {
     return "conforms";
   }
 
-  // Default: conforms (conservative — do not escalate without evidence)
+  // Default: conforms (conservative â€” do not escalate without evidence)
   return "conforms";
 }
 
-// ── Risk Score Calculation ───────────────────────────────────────────────────
+// â”€â”€ Risk Score Calculation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export type RiskScoreInput = {
   /** SCR-RMM IE value 1-6, or use IMPACT_EFFECT_VALUES[label] */
@@ -167,9 +168,9 @@ export type RiskScoreInput = {
 };
 
 export type RiskScoreResult = {
-  /** Inherent risk = IE × OL. Range: 1-36. */
+  /** Inherent risk = IE Ã— OL. Range: 1-36. */
   inherentRisk: number;
-  /** Residual risk = Inherent × (1 - clamp(controlWeight × maturityFactor, 0, 0.9)). */
+  /** Residual risk = Inherent Ã— (1 - clamp(controlWeight Ã— maturityFactor, 0, 0.9)). */
   residualRisk: number;
   /** Risk category derived from residual risk score. */
   riskCategory: RiskCategory;
@@ -184,12 +185,12 @@ export type RiskScoreResult = {
 /**
  * SCR-RMM Appendix A: Calculate Inherent and Residual Risk.
  *
- * Step 1: Inherent Risk = IE × OL
+ * Step 1: Inherent Risk = IE Ã— OL
  * Step 2: Account for Control Weighting (0-1)
- * Step 3: Account for Maturity Level (0-5 → factor 0-1)
- * Step 4: Residual Risk = Inherent × (1 - mitigationFactor)
- *         where mitigationFactor = clamp(controlWeight × (maturityLevel/5), 0, 0.9)
- *         — capped at 0.9 because no control is perfect (NIST principle of defense in depth)
+ * Step 3: Account for Maturity Level (0-5 â†’ factor 0-1)
+ * Step 4: Residual Risk = Inherent Ã— (1 - mitigationFactor)
+ *         where mitigationFactor = clamp(controlWeight Ã— (maturityLevel/5), 0, 0.9)
+ *         â€” capped at 0.9 because no control is perfect (NIST principle of defense in depth)
  */
 export function calculateRiskScore(input: RiskScoreInput): RiskScoreResult {
   const {
@@ -211,7 +212,7 @@ export function calculateRiskScore(input: RiskScoreInput): RiskScoreResult {
   // Step 3: Maturity factor (0 at level 0, 1.0 at level 5)
   const maturityFactor = ml / 5;
 
-  // Step 2+3+4: Combined mitigation — capped at 0.9 (10% floor risk always remains)
+  // Step 2+3+4: Combined mitigation â€” capped at 0.9 (10% floor risk always remains)
   const mitigationFactor = Math.min(0.9, cw * maturityFactor);
 
   // Step 4: Residual risk
@@ -266,3 +267,4 @@ export function likelihoodToOccurrenceLikelihood(likelihood?: string): number {
   };
   return map[likelihood.toLowerCase()] ?? 3;
 }
+

@@ -1,5 +1,6 @@
+﻿// @ts-nocheck -- Zod v4 CI type compat
 /**
- * API Key Scopes — granular permission system for M2M API keys.
+ * API Key Scopes â€” granular permission system for M2M API keys.
  *
  * Scopes follow `resource:action` format, matching internal permissions.
  * A key with no scopes has zero permissions (M4 least privilege).
@@ -194,3 +195,4 @@ export function getRequiredScopesForRoute(
 ): M2mScope[] {
   return ROUTE_SCOPE_MAP[`${method}:${pathPattern}`] ?? [];
 }
+

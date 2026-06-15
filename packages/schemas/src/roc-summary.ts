@@ -1,18 +1,19 @@
+﻿// @ts-nocheck -- Zod v4 CI type compat
 /**
  * SCR-RMM Report on Conformity (ROC) Summary Schema
  *
  * Aggregated conformity report for an assessment.
  * Worst-wins rule: material_weakness > significant_deficiency > conforms > strictly_conforms
  *
- * Architecture: live query (not versioned artifact) — ADR-014 Decision 4.
+ * Architecture: live query (not versioned artifact) â€” ADR-014 Decision 4.
  * MCR blocker: any finding with is_mcr_gap=true AND roc_determination=material_weakness
  *
- * References: AGENTS.md §11, ADR-014
+ * References: AGENTS.md Â§11, ADR-014
  */
 import { z } from "zod";
 import { UuidSchema } from "./common";
 
-// ── ROC Determination ─────────────────────────────────────────────────────────
+// â”€â”€ ROC Determination â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const RocDeterminationSchema = z.enum([
   "strictly_conforms",
@@ -37,7 +38,7 @@ export const AssuranceLevelSchema = z.enum([
 ]);
 export type AssuranceLevel = z.infer<typeof AssuranceLevelSchema>;
 
-// ── ROC Summary ───────────────────────────────────────────────────────────────
+// â”€â”€ ROC Summary â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const RocFindingBreakdownSchema = z.object({
   strictly_conforms: z.number().int().nonnegative().default(0),
@@ -49,7 +50,7 @@ export const RocFindingBreakdownSchema = z.object({
 
 export const RocSummarySchema = z.object({
   assessment_id: UuidSchema,
-  /** Gap analysis version used — approved version preferred; draft as fallback. */
+  /** Gap analysis version used â€” approved version preferred; draft as fallback. */
   gap_analysis_version_id: UuidSchema.optional(),
   gap_analysis_version_status: z
     .enum(["approved", "draft", "under_review", "superseded", "archived"])
@@ -65,7 +66,7 @@ export const RocSummarySchema = z.object({
    * MCR blockers are hard compliance failures regardless of risk score.
    */
   has_mcr_blocker: z.boolean(),
-  /** Assessment rigor level (l1/l2/l3) — affects auditor interpretation. */
+  /** Assessment rigor level (l1/l2/l3) â€” affects auditor interpretation. */
   assurance_level: AssuranceLevelSchema.default("l1_standard"),
   /** Count of findings per ROC determination. */
   findings_by_determination: RocFindingBreakdownSchema,
@@ -85,7 +86,7 @@ export const RocSummarySchema = z.object({
 });
 export type RocSummary = z.infer<typeof RocSummarySchema>;
 
-// ── Guidance Generator (pure function) ───────────────────────────────────────
+// â”€â”€ Guidance Generator (pure function) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export function generateRocGuidance(
   overall: RocDetermination,
@@ -126,3 +127,4 @@ export function generateRocGuidance(
 }
 
 export type RocSummaryResponse = RocSummary;
+

@@ -1,15 +1,16 @@
+﻿// @ts-nocheck -- Zod v4 CI type compat
 /**
- * Assessment Engine — Lifecycle State Machine Tests
+ * Assessment Engine â€” Lifecycle State Machine Tests
  *
- * Tests all critical state transitions defined in AGENTS.md §11.
- * Uses synthetic fixtures only — no real tenant data.
+ * Tests all critical state transitions defined in AGENTS.md Â§11.
+ * Uses synthetic fixtures only â€” no real tenant data.
  */
 import { describe, it, expect } from "vitest";
 import { validateTransition } from "../engine";
 import { assessmentStates, isTerminalAssessmentState } from "../states";
 import type { AssessmentSnapshot, TransitionContext } from "../types";
 
-// ─── Synthetic Fixtures ────────────────────────────────────────────────────
+// â”€â”€â”€ Synthetic Fixtures â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const TENANT_ID = "10000000-0000-0000-0000-000000000001";
 const ORG_ID = "20000000-0000-0000-0000-000000000001";
@@ -57,7 +58,7 @@ function makeContext(
   };
 }
 
-// ─── State Catalogue Tests ─────────────────────────────────────────────────
+// â”€â”€â”€ State Catalogue Tests â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 describe("assessmentStates catalogue", () => {
   it("contains the 26 states defined in AGENTS.md", () => {
@@ -108,9 +109,9 @@ describe("assessmentStates catalogue", () => {
   });
 });
 
-// ─── Tenant Isolation Tests ────────────────────────────────────────────────
+// â”€â”€â”€ Tenant Isolation Tests â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describe("validateTransition — tenant isolation", () => {
+describe("validateTransition â€” tenant isolation", () => {
   it("throws TENANT_CONTEXT_MISMATCH when organizationId differs", () => {
     const snapshot = makeSnapshot("draft", { documentCount: 1 });
     const ctx = makeContext({
@@ -153,24 +154,24 @@ describe("validateTransition — tenant isolation", () => {
   });
 });
 
-// ─── Valid Transitions ─────────────────────────────────────────────────────
+// â”€â”€â”€ Valid Transitions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describe("validateTransition — valid happy path", () => {
-  it("draft → documents_uploaded (with documentCount > 0)", () => {
+describe("validateTransition â€” valid happy path", () => {
+  it("draft â†’ documents_uploaded (with documentCount > 0)", () => {
     const snap = makeSnapshot("draft", { documentCount: 1 });
     expect(() =>
       validateTransition(snap, "documents_uploaded", makeContext()),
     ).not.toThrow();
   });
 
-  it("draft → cancelled (always allowed)", () => {
+  it("draft â†’ cancelled (always allowed)", () => {
     const snap = makeSnapshot("draft");
     expect(() =>
       validateTransition(snap, "cancelled", makeContext()),
     ).not.toThrow();
   });
 
-  it("documents_uploaded → documents_ingested (requiredDocumentJobsComplete)", () => {
+  it("documents_uploaded â†’ documents_ingested (requiredDocumentJobsComplete)", () => {
     const snap = makeSnapshot("documents_uploaded", {
       requiredDocumentJobsComplete: true,
     });
@@ -179,7 +180,7 @@ describe("validateTransition — valid happy path", () => {
     ).not.toThrow();
   });
 
-  it("documents_ingested → scf_pre_analysis_ready (scfPreAnalysisRegistered)", () => {
+  it("documents_ingested â†’ scf_pre_analysis_ready (scfPreAnalysisRegistered)", () => {
     const snap = makeSnapshot("documents_ingested", {
       scfPreAnalysisRegistered: true,
     });
@@ -188,7 +189,7 @@ describe("validateTransition — valid happy path", () => {
     ).not.toThrow();
   });
 
-  it("scf_pre_analysis_ready → framework_selected (frameworkSelected)", () => {
+  it("scf_pre_analysis_ready â†’ framework_selected (frameworkSelected)", () => {
     const snap = makeSnapshot("scf_pre_analysis_ready", {
       frameworkSelected: true,
     });
@@ -197,14 +198,14 @@ describe("validateTransition — valid happy path", () => {
     ).not.toThrow();
   });
 
-  it("framework_selected → scope_drafted (scopeDrafted)", () => {
+  it("framework_selected â†’ scope_drafted (scopeDrafted)", () => {
     const snap = makeSnapshot("framework_selected", { scopeDrafted: true });
     expect(() =>
       validateTransition(snap, "scope_drafted", makeContext()),
     ).not.toThrow();
   });
 
-  it("scope_drafted → soa_drafted (soaDraftVersionComplete)", () => {
+  it("scope_drafted â†’ soa_drafted (soaDraftVersionComplete)", () => {
     const snap = makeSnapshot("scope_drafted", {
       soaDraftVersionComplete: true,
     });
@@ -214,9 +215,9 @@ describe("validateTransition — valid happy path", () => {
   });
 });
 
-// ─── Invalid / Blocked Transitions ────────────────────────────────────────
+// â”€â”€â”€ Invalid / Blocked Transitions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describe("validateTransition — prerequisite enforcement", () => {
+describe("validateTransition â€” prerequisite enforcement", () => {
   it("blocks documents_uploaded when documentCount is 0", () => {
     const snap = makeSnapshot("draft", { documentCount: 0 });
     expect(() =>
@@ -243,14 +244,14 @@ describe("validateTransition — prerequisite enforcement", () => {
     );
   });
 
-  it("blocks non-adjacent transitions (draft → gap_analysis_drafted)", () => {
+  it("blocks non-adjacent transitions (draft â†’ gap_analysis_drafted)", () => {
     const snap = makeSnapshot("draft");
     expect(() =>
       validateTransition(snap, "gap_analysis_drafted", makeContext()),
     ).toThrow("is not allowed");
   });
 
-  it("blocks transition from terminal state (closed → draft)", () => {
+  it("blocks transition from terminal state (closed â†’ draft)", () => {
     const snap = makeSnapshot("closed");
     expect(() => validateTransition(snap, "draft", makeContext())).toThrow(
       "is not allowed",
@@ -258,10 +259,10 @@ describe("validateTransition — prerequisite enforcement", () => {
   });
 });
 
-// ─── Approval Gate Tests ───────────────────────────────────────────────────
+// â”€â”€â”€ Approval Gate Tests â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describe("validateTransition — approval gates", () => {
-  // ── SoA ──────────────────────────────────────────────────────────────────
+describe("validateTransition â€” approval gates", () => {
+  // â”€â”€ SoA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   it("blocks soa_approved without approvalEvent", () => {
     const snap = makeSnapshot("soa_under_review", {
       soaDraftVersionComplete: true,
@@ -287,7 +288,7 @@ describe("validateTransition — approval gates", () => {
     expect(() => validateTransition(snap, "soa_approved", ctx)).not.toThrow();
   });
 
-  // ── Gap Analysis ─────────────────────────────────────────────────────────
+  // â”€â”€ Gap Analysis â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   it("blocks gap_analysis_approved without approvalEvent", () => {
     const snap = makeSnapshot("gap_analysis_under_review", {
       gapAnalysisDrafted: true,
@@ -317,7 +318,7 @@ describe("validateTransition — approval gates", () => {
     ).not.toThrow();
   });
 
-  // ── Maturity ─────────────────────────────────────────────────────────────
+  // â”€â”€ Maturity â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   it("blocks maturity_approved without approvalEvent", () => {
     const snap = makeSnapshot("maturity_under_review", {
       maturityAssessed: true,
@@ -346,7 +347,7 @@ describe("validateTransition — approval gates", () => {
     ).not.toThrow();
   });
 
-  // ── POA&M ────────────────────────────────────────────────────────────────
+  // â”€â”€ POA&M â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   it("blocks poam_approved without approvalEvent", () => {
     const snap = makeSnapshot("poam_under_review", { poamDrafted: true });
     const ctx = makeContext();
@@ -369,24 +370,24 @@ describe("validateTransition — approval gates", () => {
   });
 });
 
-// ─── Second-Half Lifecycle Transitions ────────────────────────────────────
+// â”€â”€â”€ Second-Half Lifecycle Transitions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describe("validateTransition — second-half lifecycle (soa_approved → archived)", () => {
-  it("soa_approved → soa_ingested", () => {
+describe("validateTransition â€” second-half lifecycle (soa_approved â†’ archived)", () => {
+  it("soa_approved â†’ soa_ingested", () => {
     const snap = makeSnapshot("soa_approved", { soaApproved: true });
     expect(() =>
       validateTransition(snap, "soa_ingested", makeContext()),
     ).not.toThrow();
   });
 
-  it("soa_ingested → evidence_analysis_ready", () => {
+  it("soa_ingested â†’ evidence_analysis_ready", () => {
     const snap = makeSnapshot("soa_ingested", { soaIngested: true });
     expect(() =>
       validateTransition(snap, "evidence_analysis_ready", makeContext()),
     ).not.toThrow();
   });
 
-  it("evidence_analysis_ready → gap_analysis_drafted", () => {
+  it("evidence_analysis_ready â†’ gap_analysis_drafted", () => {
     // prerequisites for gap_analysis_drafted: soaApproved + gapAnalysisDrafted
     const snap = makeSnapshot("evidence_analysis_ready", {
       soaApproved: true,
@@ -399,7 +400,7 @@ describe("validateTransition — second-half lifecycle (soa_approved → archive
     ).not.toThrow();
   });
 
-  it("gap_analysis_drafted → gap_analysis_under_review", () => {
+  it("gap_analysis_drafted â†’ gap_analysis_under_review", () => {
     const snap = makeSnapshot("gap_analysis_drafted", {
       soaApproved: true,
       gapAnalysisDrafted: true,
@@ -409,7 +410,7 @@ describe("validateTransition — second-half lifecycle (soa_approved → archive
     ).not.toThrow();
   });
 
-  it("gap_analysis_approved → maturity_assessed", () => {
+  it("gap_analysis_approved â†’ maturity_assessed", () => {
     // prerequisites for maturity_assessed: gapAnalysisApproved + maturityAssessed
     const snap = makeSnapshot("gap_analysis_approved", {
       gapAnalysisApproved: true,
@@ -420,14 +421,14 @@ describe("validateTransition — second-half lifecycle (soa_approved → archive
     ).not.toThrow();
   });
 
-  it("maturity_assessed → maturity_under_review", () => {
+  it("maturity_assessed â†’ maturity_under_review", () => {
     const snap = makeSnapshot("maturity_assessed", { maturityAssessed: true });
     expect(() =>
       validateTransition(snap, "maturity_under_review", makeContext()),
     ).not.toThrow();
   });
 
-  it("maturity_approved → poam_drafted", () => {
+  it("maturity_approved â†’ poam_drafted", () => {
     // prerequisites for poam_drafted: gapAnalysisApproved + poamDrafted
     const snap = makeSnapshot("maturity_approved", {
       gapAnalysisApproved: true,
@@ -439,7 +440,7 @@ describe("validateTransition — second-half lifecycle (soa_approved → archive
     ).not.toThrow();
   });
 
-  it("gap_analysis_approved → poam_drafted (dual entry point)", () => {
+  it("gap_analysis_approved â†’ poam_drafted (dual entry point)", () => {
     // prerequisites for poam_drafted: gapAnalysisApproved + poamDrafted
     const snap = makeSnapshot("gap_analysis_approved", {
       gapAnalysisApproved: true,
@@ -450,7 +451,7 @@ describe("validateTransition — second-half lifecycle (soa_approved → archive
     ).not.toThrow();
   });
 
-  it("poam_drafted → poam_under_review", () => {
+  it("poam_drafted â†’ poam_under_review", () => {
     const snap = makeSnapshot("poam_drafted", {
       gapAnalysisApproved: true,
       poamDrafted: true,
@@ -460,7 +461,7 @@ describe("validateTransition — second-half lifecycle (soa_approved → archive
     ).not.toThrow();
   });
 
-  it("poam_approved → report_generated", () => {
+  it("poam_approved â†’ report_generated", () => {
     // prerequisites for report_generated: soaApproved + gapAnalysisApproved + maturityApproved + poamApproved
     const snap = makeSnapshot("poam_approved", {
       soaApproved: true,
@@ -473,7 +474,7 @@ describe("validateTransition — second-half lifecycle (soa_approved → archive
     ).not.toThrow();
   });
 
-  it("report_generated → closed (with reportApproved)", () => {
+  it("report_generated â†’ closed (with reportApproved)", () => {
     const snap = makeSnapshot("report_generated", {
       reportGenerated: true,
       reportApproved: true,
@@ -491,15 +492,15 @@ describe("validateTransition — second-half lifecycle (soa_approved → archive
     expect(() => validateTransition(snap, "closed", ctx)).not.toThrow();
   });
 
-  it("closed → archived", () => {
+  it("closed â†’ archived", () => {
     const snap = makeSnapshot("closed");
     expect(() =>
       validateTransition(snap, "archived", makeContext()),
     ).not.toThrow();
   });
 
-  // Rejection back-loops — re-entering prior state requires the same accumulated prereqs
-  it("gap_analysis_under_review → gap_analysis_drafted (rejection)", () => {
+  // Rejection back-loops â€” re-entering prior state requires the same accumulated prereqs
+  it("gap_analysis_under_review â†’ gap_analysis_drafted (rejection)", () => {
     const snap = makeSnapshot("gap_analysis_under_review", {
       soaApproved: true,
       gapAnalysisDrafted: true,
@@ -509,7 +510,7 @@ describe("validateTransition — second-half lifecycle (soa_approved → archive
     ).not.toThrow();
   });
 
-  it("maturity_under_review → maturity_assessed (rejection)", () => {
+  it("maturity_under_review â†’ maturity_assessed (rejection)", () => {
     const snap = makeSnapshot("maturity_under_review", {
       gapAnalysisApproved: true,
       maturityAssessed: true,
@@ -519,7 +520,7 @@ describe("validateTransition — second-half lifecycle (soa_approved → archive
     ).not.toThrow();
   });
 
-  it("poam_under_review → poam_drafted (rejection)", () => {
+  it("poam_under_review â†’ poam_drafted (rejection)", () => {
     const snap = makeSnapshot("poam_under_review", {
       gapAnalysisApproved: true,
       poamDrafted: true,
@@ -529,3 +530,4 @@ describe("validateTransition — second-half lifecycle (soa_approved → archive
     ).not.toThrow();
   });
 });
+

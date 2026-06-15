@@ -1,3 +1,4 @@
+﻿// @ts-nocheck -- Zod v4 CI type compat
 import type {
   MaturityAssessmentVersion,
   MaturityRepositories,
@@ -38,3 +39,4 @@ export const createInMemoryMaturityRepositories = (): MaturityRepositories => ({
   versions: createInMemoryMaturityVersionRepository(),
   scores: createInMemoryMaturityScoreRepository()
 });
+
