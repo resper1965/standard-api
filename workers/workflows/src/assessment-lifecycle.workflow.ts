@@ -109,7 +109,7 @@ export class AssessmentLifecycleOrchestrator {
       trace_id: input.trace_id,
       started_at: timestamp,
       updated_at: timestamp,
-    };
+    } as any;
 
     const run: WorkflowRunRecord = {
       workflow_run_id: safeUuid(),
