@@ -9,6 +9,7 @@ import { TraceIdSchema } from "./common";
 export const ApiErrorCodeSchema = z.enum([
   // Generic
   "VALIDATION_ERROR",
+  "BAD_REQUEST",
   "UNAUTHORIZED",
   "FORBIDDEN",
   "NOT_FOUND",
@@ -83,8 +84,8 @@ export const ApiErrorSchema = z.object({
     code: ApiErrorCodeSchema,
     message: z.string(),
     details: z.array(z.unknown()).default([]),
-    trace_id: TraceIdSchema
-  })
+    trace_id: TraceIdSchema,
+  }),
 });
 
 export type ApiErrorCode = z.infer<typeof ApiErrorCodeSchema>;
