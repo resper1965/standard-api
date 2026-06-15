@@ -1,5 +1,12 @@
 import { executeTransition } from "@standard/assessment-engine";
-import type { AssessmentEngineAdapter, WorkflowAuditAdapter, WorkflowAuditEvent, WorkflowDependencies, WorkflowRepository, WorkflowRunRecord } from "./types";
+import type {
+  AssessmentEngineAdapter,
+  WorkflowAuditAdapter,
+  WorkflowAuditEvent,
+  WorkflowDependencies,
+  WorkflowRepository,
+  WorkflowRunRecord,
+} from "./types";
 
 const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 
@@ -8,7 +15,7 @@ export const createInMemoryWorkflowRepository = (): WorkflowRepository => {
 
   const repo: WorkflowRepository = {
     async create(input) {
-      records.set(input.workflow_run_id, clone(input));
+      records.set(input.workflow_run_id as string, clone(input));
       return clone(input);
     },
     async get(workflowRunId) {
@@ -16,33 +23,42 @@ export const createInMemoryWorkflowRepository = (): WorkflowRepository => {
       return record ? clone(record) : null;
     },
     async getActiveByAssessment(assessmentId, organizationId) {
-      const active = [...records.values()].find((record) =>
-        record.state.assessment_id === assessmentId &&
-        record.state.organization_id === organizationId &&
-        !["completed", "cancelled"].includes(record.status)
+      const active = [...records.values()].find(
+        (record) =>
+          record.state.assessment_id === assessmentId &&
+          record.state.organization_id === organizationId &&
+          !["completed", "cancelled"].includes(record.status),
       );
       return active ? clone(active) : null;
     },
     async listByAssessment(assessmentId, organizationId) {
       return [...records.values()]
-        .filter((record) => record.state.assessment_id === assessmentId && record.state.organization_id === organizationId)
+        .filter(
+          (record) =>
+            record.state.assessment_id === assessmentId &&
+            record.state.organization_id === organizationId,
+        )
         .map(clone);
     },
     async save(record) {
-      records.set(record.workflow_run_id, clone(record));
+      records.set(record.workflow_run_id as string, clone(record));
     },
     withOrganization(organizationId: string) {
       return {
         create: async (input) => repo.create(input),
         get: async (workflowRunId) => {
           const run = await repo.get(workflowRunId);
-          return run && run.state.organization_id === organizationId ? run : null;
+          return run && run.state.organization_id === organizationId
+            ? run
+            : null;
         },
-        getActiveByAssessment: async (assessmentId: string) => repo.getActiveByAssessment(assessmentId, organizationId),
-        listByAssessment: async (assessmentId: string) => repo.listByAssessment(assessmentId, organizationId),
+        getActiveByAssessment: async (assessmentId: string) =>
+          repo.getActiveByAssessment(assessmentId, organizationId),
+        listByAssessment: async (assessmentId: string) =>
+          repo.listByAssessment(assessmentId, organizationId),
         save: async (record) => repo.save(record),
       };
-    }
+    },
   };
   return repo;
 };
@@ -53,7 +69,7 @@ export const createInMemoryWorkflowAuditAdapter = () => {
     events,
     async record(event) {
       events.push(clone(event));
-    }
+    },
   };
   return adapter;
 };
@@ -64,7 +80,7 @@ export const createAssessmentEngineAdapter = (): AssessmentEngineAdapter => ({
     const result = executeTransition(assessment, nextState, context);
     this.transitions.push(nextState);
     return result;
-  }
+  },
 });
 
 export const createInMemoryWorkflowDependencies = (): WorkflowDependencies & {
@@ -73,6 +89,5 @@ export const createInMemoryWorkflowDependencies = (): WorkflowDependencies & {
 } => ({
   workflows: createInMemoryWorkflowRepository(),
   audit: createInMemoryWorkflowAuditAdapter(),
-  assessmentEngine: createAssessmentEngineAdapter()
+  assessmentEngine: createAssessmentEngineAdapter(),
 });
-
