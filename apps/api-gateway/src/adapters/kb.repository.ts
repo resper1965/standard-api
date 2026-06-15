@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @module kb.repository
  * @description Drizzle PostgreSQL repositories for KB embedding jobs,
  * vector references, and search logs.
@@ -78,7 +78,7 @@ const createDrizzleKbEmbeddingJobRepository = (
             ? String(job.error_message_safe)
             : null,
         updatedAt: new Date(),
-      })
+      } as any)
       .where(
         and(
           eq(kbEmbeddingJobs.id, String(job.job_id)),
@@ -217,7 +217,7 @@ const createDrizzleKbVectorReferenceRepository = (
           document_id: ref.document_id,
         } as Record<string, unknown>,
         updatedAt: new Date(),
-      })
+      } as any)
       .where(
         and(
           eq(vectorReferences.id, String(ref.vector_reference_id)),

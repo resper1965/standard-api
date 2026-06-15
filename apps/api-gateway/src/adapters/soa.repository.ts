@@ -42,7 +42,7 @@ const createDrizzleScopeRepository = (db: DbClient): ScopeRepository => ({
         assumptions: scope.assumptions,
         constraints: scope.constraints,
         createdBy: scope.created_by,
-      })
+      } as any)
       .onConflictDoNothing();
   },
   async update(scope: ScopeResponse) {
@@ -64,7 +64,7 @@ const createDrizzleScopeRepository = (db: DbClient): ScopeRepository => ({
         assumptions: scope.assumptions,
         constraints: scope.constraints,
         updatedAt: new Date(),
-      })
+      } as any)
       .where(eq(assessmentScope.id, scope.scope_id));
   },
   async get(scopeId, organizationId) {
@@ -104,7 +104,7 @@ const createDrizzleSoaVersionRepository = (
         createdBy: version.created_by,
         traceId: version.trace_id,
         metadata: version.metadata ?? {},
-      })
+      } as any)
       .onConflictDoNothing();
   },
   async update(version: SoaVersionResponse) {
@@ -123,7 +123,7 @@ const createDrizzleSoaVersionRepository = (
         supersededBy: version.superseded_by,
         metadata: version.metadata ?? {},
         updatedAt: new Date(),
-      })
+      } as any)
       .where(eq(soaVersions.id, version.soa_version_id));
   },
   async get(soaVersionId, organizationId) {
@@ -150,40 +150,43 @@ const createDrizzleSoaItemRepository = (db: DbClient): SoaItemRepository => ({
     await db
       .insert(soaItems)
       .values(
-        items.map((item) => ({
-          id: item.soa_item_id,
-          organizationId: item.organization_id,
-          assessmentId: item.assessment_id,
-          soaVersionId: item.soa_version_id,
-          frameworkId: item.framework_id,
-          frameworkRequirementId: item.framework_requirement_id,
-          scfVersionId: item.scf_version_id,
-          scfControlId: item.scf_control_id,
-          scfFrameworkRequirementId: item.framework_requirement_id,
-          applicability: item.applicability_status, // DB requires applicability text
-          applicabilityStatus: item.applicability_status,
-          implementationStatus: item.implementation_status,
-          applicabilityRationale: item.applicability_rationale,
-          nonApplicabilityRationale: item.non_applicability_rationale,
-          scopeRationale: item.scope_rationale,
-          evidenceSummary: item.evidence_summary,
-          evidenceCoverage: item.evidence_coverage,
-          confidenceScore: String(item.confidence_score),
-          requiresUserValidation: item.requires_user_validation,
-          validationNotes: item.validation_notes,
-          sourceMappingId: item.source_mapping_id,
-          mappingStatus: item.mapping_status,
-          responsibilityType: item.responsibility_type,
-          // ADR-001: cast to StrmOperator for Drizzle enum column
-          relationshipType: item.relationship_type as
-            | "equal"
-            | "subset"
-            | "intersects"
-            | "superset"
-            | "no_relation"
-            | undefined,
-          relationshipStrength: item.relationship_strength,
-        })),
+        items.map(
+          (item) =>
+            ({
+              id: item.soa_item_id,
+              organizationId: item.organization_id,
+              assessmentId: item.assessment_id,
+              soaVersionId: item.soa_version_id,
+              frameworkId: item.framework_id,
+              frameworkRequirementId: item.framework_requirement_id,
+              scfVersionId: item.scf_version_id,
+              scfControlId: item.scf_control_id,
+              scfFrameworkRequirementId: item.framework_requirement_id,
+              applicability: item.applicability_status, // DB requires applicability text
+              applicabilityStatus: item.applicability_status,
+              implementationStatus: item.implementation_status,
+              applicabilityRationale: item.applicability_rationale,
+              nonApplicabilityRationale: item.non_applicability_rationale,
+              scopeRationale: item.scope_rationale,
+              evidenceSummary: item.evidence_summary,
+              evidenceCoverage: item.evidence_coverage,
+              confidenceScore: String(item.confidence_score),
+              requiresUserValidation: item.requires_user_validation,
+              validationNotes: item.validation_notes,
+              sourceMappingId: item.source_mapping_id,
+              mappingStatus: item.mapping_status,
+              responsibilityType: item.responsibility_type,
+              // ADR-001: cast to StrmOperator for Drizzle enum column
+              relationshipType: item.relationship_type as
+                | "equal"
+                | "subset"
+                | "intersects"
+                | "superset"
+                | "no_relation"
+                | undefined,
+              relationshipStrength: item.relationship_strength,
+            }) as any,
+        ),
       )
       .onConflictDoNothing();
   },
@@ -203,7 +206,7 @@ const createDrizzleSoaItemRepository = (db: DbClient): SoaItemRepository => ({
         validationNotes: item.validation_notes,
         responsibilityType: item.responsibility_type,
         updatedAt: new Date(),
-      })
+      } as any)
       .where(eq(soaItems.id, item.soa_item_id));
   },
   async get(soaItemId, organizationId) {

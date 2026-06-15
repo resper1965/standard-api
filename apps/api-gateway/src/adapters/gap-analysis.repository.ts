@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @module gap-analysis.repository
  * @description Drizzle PostgreSQL repositories for Gap Analysis.
  * Uses $inferSelect types for row mappers so column names match exactly.
@@ -76,7 +76,7 @@ const createDrizzleEvidenceFindingRepository = (
           evidenceLimitations: [],
           confidenceScore: String(finding.confidence_score),
           updatedAt: new Date(),
-        })
+        } as any)
         .where(eq(evidenceFindings.id, String(finding.evidence_finding_id)));
     },
     async get(evidenceFindingId: string, _organizationId: string) {
@@ -236,7 +236,7 @@ const createDrizzleGapAnalysisVersionRepository = (
               : null,
           metadata: (version.metadata ?? {}) as Record<string, unknown>,
           updatedAt: new Date(),
-        })
+        } as any)
         .where(
           eq(gapAnalysisVersions.id, String(version.gap_analysis_version_id)),
         );
@@ -349,7 +349,7 @@ const createDrizzleGapFindingRepository = (
           confidenceScore: String(finding.confidence_score),
           requiresUserValidation: Boolean(finding.requires_user_validation),
           updatedAt: new Date(),
-        })
+        } as any)
         .where(eq(gapFindings.id, String(finding.gap_finding_id)));
     },
     async get(gapFindingId: string, _organizationId: string) {

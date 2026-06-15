@@ -539,7 +539,7 @@ const createDrizzleFieldReviewRepository = (
         reviewedAt: review.reviewed_at
           ? new Date(review.reviewed_at)
           : undefined,
-      })
+      } as any)
       .onConflictDoNothing();
   },
   async listByActivity(activityId, organizationId) {
@@ -571,7 +571,7 @@ const createDrizzleFieldReviewRepository = (
           ? new Date(review.reviewed_at)
           : new Date(),
         updatedAt: new Date(),
-      })
+      } as any)
       .where(and(eq(privacyProcessingActivityFieldReviews.id, review.id)));
   },
 });
@@ -584,25 +584,28 @@ const createDrizzleScfControlRepository = (
     await db
       .insert(privacyProcessingActivityScfControls)
       .values(
-        controls.map((c) => ({
-          id: c.id,
-          organizationId: c.organization_id,
-          activityId: c.activity_id,
-          scfVersion: c.scf_version,
-          controlId: c.control_id,
-          controlCode: c.control_code,
-          controlTitle: c.control_title,
-          scfDomain: c.scf_domain,
-          applicabilityStatus: c.applicability_status,
-          priority: c.priority,
-          justification: c.justification,
-          expectedEvidence: c.expected_evidence,
-          assessmentQuestions: c.assessment_questions,
-          gaps: c.gaps,
-          suggestedBy: c.suggested_by,
-          reviewedBy: c.reviewed_by,
-          reviewedAt: c.reviewed_at ? new Date(c.reviewed_at) : undefined,
-        })),
+        controls.map(
+          (c) =>
+            ({
+              id: c.id,
+              organizationId: c.organization_id,
+              activityId: c.activity_id,
+              scfVersion: c.scf_version,
+              controlId: c.control_id,
+              controlCode: c.control_code,
+              controlTitle: c.control_title,
+              scfDomain: c.scf_domain,
+              applicabilityStatus: c.applicability_status,
+              priority: c.priority,
+              justification: c.justification,
+              expectedEvidence: c.expected_evidence,
+              assessmentQuestions: c.assessment_questions,
+              gaps: c.gaps,
+              suggestedBy: c.suggested_by,
+              reviewedBy: c.reviewed_by,
+              reviewedAt: c.reviewed_at ? new Date(c.reviewed_at) : undefined,
+            }) as any,
+        ),
       )
       .onConflictDoNothing();
   },
