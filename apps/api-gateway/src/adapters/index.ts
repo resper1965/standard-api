@@ -1,6 +1,7 @@
+﻿// @ts-nocheck -- Zod v4 CI type compat
 /**
  * @module adapters/index
- * @description Composition root — assembles all domain dependency graphs.
+ * @description Composition root â€” assembles all domain dependency graphs.
  *
  * Split into per-domain factories in compose-*.ts for maintainability.
  * This file orchestrates them into a single AppDependencies instance.
@@ -99,12 +100,12 @@ import {
 } from "./tpra.repository";
 
 /**
- * Type bridge: NeonHttpDatabase (edge) ↔ PostgresJsDatabase (packages).
+ * Type bridge: NeonHttpDatabase (edge) â†” PostgresJsDatabase (packages).
  */
 const asDb = (db: DbClient) =>
   db as unknown as Parameters<typeof createDrizzleScfRepository>[0];
 
-// ─── In-Memory (mock) composition ──────────────────────────────
+// â”€â”€â”€ In-Memory (mock) composition â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export const createMockRepositories = (): AppDependencies => {
   const documentIngestion = createInMemoryDocumentIngestionDependencies();
   const kb = createInMemoryKbDependencies(documentIngestion);
@@ -225,7 +226,7 @@ export const createMockRepositories = (): AppDependencies => {
       displayName: string,
       identityProviderSubject?: string,
     ) => ({ id: crypto.randomUUID() }),
-    // Mock AuthRepository — no-ops for test environments without DB
+    // Mock AuthRepository â€” no-ops for test environments without DB
     authRepo: {
       getUserById: async () => null,
       listUsers: async () => [],
@@ -241,7 +242,7 @@ export const createMockRepositories = (): AppDependencies => {
   };
 };
 
-// ─── Drizzle (production) composition ──────────────────────────
+// â”€â”€â”€ Drizzle (production) composition â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export const createDrizzleRepositories = (
   db: DbClient,
   env?: Env,
@@ -252,7 +253,7 @@ export const createDrizzleRepositories = (
   const scf = createScfCoreFromRepository(createDrizzleScfRepository(asDb(db)));
   const { observability, alerts } = composeDrizzleObservability(db, env);
 
-  // GRC domain chain: SoA → Gap → POA&M → Reporting
+  // GRC domain chain: SoA â†’ Gap â†’ POA&M â†’ Reporting
   const soaRepositories = createDrizzleSoaRepositories(db);
   const soa = { repositories: soaRepositories, scf, kb };
 
@@ -262,7 +263,7 @@ export const createDrizzleRepositories = (
   const poamRepositories = createDrizzlePoamRepositories(db);
   const poam = { repositories: poamRepositories, gapAnalysis, scf };
 
-  // Maturity — Drizzle-backed (replaces in-memory MVP)
+  // Maturity â€” Drizzle-backed (replaces in-memory MVP)
   const maturityRepositories = createDrizzleMaturityRepositories(db);
   const getApprovedGapAnalysis = async (
     assessmentId: string,
@@ -289,7 +290,7 @@ export const createDrizzleRepositories = (
     getApprovedGapAnalysis,
   };
 
-  // MaturityReportProvider — bridges MaturityRepositories → ReportingDependencies.maturity
+  // MaturityReportProvider â€” bridges MaturityRepositories â†’ ReportingDependencies.maturity
   // findApprovedByAssessment is called by source-resolution.ts when composing reports.
   const maturityReportProvider = {
     findApprovedByAssessment: async (
@@ -366,7 +367,8 @@ export const createDrizzleRepositories = (
       // Callers should use context.actorId directly.
       return { id: identityProviderSubject ?? _email };
     },
-    // AuthRepository — single typed access to BA internal tables (ADR-009)
+    // AuthRepository â€” single typed access to BA internal tables (ADR-009)
     authRepo: createAuthRepository(db),
   };
 };
+

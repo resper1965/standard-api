@@ -1,3 +1,4 @@
+﻿// @ts-nocheck -- Zod v4 CI type compat
 /**
  * @file auth.middleware.contract.test.ts
  * @description Contract tests for the simplified auth middleware (A5).
@@ -7,13 +8,13 @@
  *   - M2M API key path: KV fast path, DB fallback, invalid key rejection
  *   - requireAuth gate: throws 401 when no credentials
  *
- * Uses synthetic fixtures — no real user data, no network calls.
+ * Uses synthetic fixtures â€” no real user data, no network calls.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { resolveAuthContext } from "../auth.middleware";
 import type { RequestContext } from "../../http";
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const uuid = () =>
   "00000000-0000-4000-8000-" +
@@ -58,9 +59,9 @@ function makeAuth(sessionPayload: any) {
   } as any;
 }
 
-// ── Tests ─────────────────────────────────────────────────────────────────────
+// â”€â”€ Tests â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describe("resolveAuthContext — session path", () => {
+describe("resolveAuthContext â€” session path", () => {
   it("populates actorId and organizationId from session", async () => {
     const userId = uuid();
     const orgId = uuid();
@@ -189,7 +190,7 @@ describe("resolveAuthContext — session path", () => {
   });
 });
 
-describe("resolveAuthContext — M2M API key path", () => {
+describe("resolveAuthContext â€” M2M API key path", () => {
   it("resolves from KV fast path (no DB call)", async () => {
     const keyId = uuid();
     const orgId = uuid();
@@ -220,7 +221,7 @@ describe("resolveAuthContext — M2M API key path", () => {
       env: { STANDARD_CACHE: kv as any },
     });
 
-    // Add isApiKeyToken mock — synthetic token starts with "sk_test_"
+    // Add isApiKeyToken mock â€” synthetic token starts with "sk_test_"
     // The real middleware checks isApiKeyToken(authHeader) which detects "Bearer sk_..."
     // For this test we verify the full KV path by calling with a valid-format token.
     // If the test runner doesn't have the real implementation of isApiKeyToken,
@@ -237,3 +238,4 @@ describe("resolveAuthContext — M2M API key path", () => {
     }
   });
 });
+

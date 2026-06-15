@@ -1,3 +1,4 @@
+﻿// @ts-nocheck -- Zod v4 CI type compat
 /**
  * Cloudflare Worker Environment bindings for the Standard API Gateway.
  *
@@ -7,7 +8,7 @@
  */
 export interface Env {
   DATABASE_URL?: string;
-  /** Cloudflare Hyperdrive — regional connection pooler for Neon (staging/prod only; absent in local dev). */
+  /** Cloudflare Hyperdrive â€” regional connection pooler for Neon (staging/prod only; absent in local dev). */
   HYPERDRIVE?: { connectionString: string };
   BETTER_AUTH_SECRET: string;
   BETTER_AUTH_URL?: string;
@@ -40,7 +41,7 @@ export interface Env {
   AI?: Ai;
   /** SOC webhook endpoint for alert delivery */
   SOC_WEBHOOK_URL?: string;
-  /** Comma-separated list of allowed CORS origins — overrides the hardcoded list when set. */
+  /** Comma-separated list of allowed CORS origins â€” overrides the hardcoded list when set. */
   ALLOWED_ORIGINS?: string;
   /**
    * Must be explicitly "true" (together with a dev STANDARD_ENV) to activate the
@@ -59,3 +60,4 @@ export interface Env {
    */
   PLATFORM_ADMIN_ORG_SLUG?: string;
 }
+

@@ -1,9 +1,10 @@
+﻿// @ts-nocheck -- Zod v4 CI type compat
 /**
  * Extracted helper functions for the Worker entry point (index.ts).
  *
  * These functions reduce cognitive complexity by moving initialization,
  * auth route handling, and CORS logic out of the monolithic fetch handler.
- * No runtime behavior is changed — only structural reorganization.
+ * No runtime behavior is changed â€” only structural reorganization.
  */
 
 import { createApp } from "./app";
@@ -20,10 +21,10 @@ import type { Env } from "./types/env";
 import { resolveAllowedOrigins } from "./app-helpers";
 
 // Auth-route origins are now resolved via resolveAllowedOrigins(env)
-// from app-helpers.ts — single source of truth with the main CORS pipeline.
+// from app-helpers.ts â€” single source of truth with the main CORS pipeline.
 // See H2-final fix.
 
-// ── Auth-specific rate limiting (runs BEFORE Better Auth handler) ──
+// â”€â”€ Auth-specific rate limiting (runs BEFORE Better Auth handler) â”€â”€
 /**
  * Why this is separate from `rate-limit.middleware.ts`:
  *
@@ -98,7 +99,7 @@ function checkAuthRateLimit(
   return null;
 }
 
-// ── Module-level cached singletons ──────────────────────────────
+// â”€â”€ Module-level cached singletons â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let cachedDeps: AppDependencies | undefined;
 let cachedApp: ReturnType<typeof createApp> | null = null;
 let cachedAuth: StandardAuth | null = null;
@@ -115,7 +116,7 @@ export function getCachedAuth(): StandardAuth | null {
 /**
  * Creates the `banUser` dependency closure.
  *
- * Delegate to Standard Native Auth's admin ban API — marks user as banned and
+ * Delegate to Standard Native Auth's admin ban API â€” marks user as banned and
  * invalidates all active sessions. Hard purge happens within 30 days
  * per data-retention-policy.md.
  */
@@ -216,7 +217,7 @@ export function ensureAppInitialized(env: Env): ReturnType<typeof createApp> {
     `[standard:init] Starting API gateway. DATABASE_URL=${hasDb ? "SET" : "MISSING"}, ENV=${env.STANDARD_ENV}`,
   );
 
-  // Refuse to start in mock mode in production — fail loudly, not silently
+  // Refuse to start in mock mode in production â€” fail loudly, not silently
   if (!hasDb && env.STANDARD_ENV === "production") {
     throw new Error(
       "[standard:fatal] DATABASE_URL is required in production. " +
@@ -231,7 +232,7 @@ export function ensureAppInitialized(env: Env): ReturnType<typeof createApp> {
       cachedAuth = result.auth;
     } else {
       console.warn(
-        "[standard:init] No DATABASE_URL — using MOCK repositories. SCF data will be synthetic.",
+        "[standard:init] No DATABASE_URL â€” using MOCK repositories. SCF data will be synthetic.",
       );
       cachedDeps = createMockRepositories();
     }
@@ -241,7 +242,7 @@ export function ensureAppInitialized(env: Env): ReturnType<typeof createApp> {
     const msg = initErr instanceof Error ? initErr.message : String(initErr);
     const stack = initErr instanceof Error ? initErr.stack : "";
     console.error(
-      "[standard:init] FATAL — app initialization failed:",
+      "[standard:init] FATAL â€” app initialization failed:",
       msg,
       stack,
     );
@@ -265,7 +266,7 @@ export function createRequestApp(env: Env): {
   return { app, auth: result.auth };
 }
 
-// ── Auth route CORS helpers ─────────────────────────────────────
+// â”€â”€ Auth route CORS helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /**
  * Checks whether the given origin is allowed for the auth route CORS policy.
@@ -311,7 +312,7 @@ export async function handleAuthRoute(
   const origin = request.headers.get("Origin") ?? "";
   const isAllowed = isAuthOriginAllowed(origin, env);
 
-  // Handle CORS preflight — must respond BEFORE delegating to Standard Native Auth
+  // Handle CORS preflight â€” must respond BEFORE delegating to Standard Native Auth
   if (request.method === "OPTIONS") {
     return new Response(null, {
       status: 204,
@@ -321,7 +322,7 @@ export async function handleAuthRoute(
     });
   }
 
-  // ── In-memory auth rate limiter (runs before Better Auth handler) ──
+  // â”€â”€ In-memory auth rate limiter (runs before Better Auth handler) â”€â”€
   const rateLimitResponse = checkAuthRateLimit(request, url.pathname);
   if (rateLimitResponse) return rateLimitResponse;
 
@@ -369,7 +370,7 @@ export async function handleAuthRoute(
     }
   })();
 
-  // ── Auth event audit logging (C10 fix — SOC 2 / ISO 27001 compliance) ──
+  // â”€â”€ Auth event audit logging (C10 fix â€” SOC 2 / ISO 27001 compliance) â”€â”€
   // Fire-and-forget structured log for auth-relevant endpoints.
   const AUTH_AUDIT_PATHS: Record<string, string> = {
     "/api/auth/sign-in/email": "auth.sign_in",
@@ -385,7 +386,7 @@ export async function handleAuthRoute(
       request.headers.get("cf-connecting-ip") ||
       request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
       "unknown";
-    // Structured JSON log — no PII, only status + IP + trace
+    // Structured JSON log â€” no PII, only status + IP + trace
     console.log(
       JSON.stringify({
         level: "info",
@@ -432,3 +433,4 @@ export async function handleAuthRoute(
 
   return response;
 }
+

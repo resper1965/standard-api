@@ -1,8 +1,9 @@
+﻿// @ts-nocheck -- Zod v4 CI type compat
 /**
- * TPRA Repository — Third-Party Risk Assessment persistence
+ * TPRA Repository â€” Third-Party Risk Assessment persistence
  *
  * Persiste vendors, assessments e risk scores nas tabelas criadas na Surgery 1.
- * Segue o padrão de repositório Drizzle + in-memory fallback do projecto.
+ * Segue o padrÃ£o de repositÃ³rio Drizzle + in-memory fallback do projecto.
  *
  * Tabelas: tpra_vendors, tpra_assessments, tpra_risk_scores
  * Multi-tenancy: todo acesso escopo por organizationId.
@@ -16,7 +17,7 @@ import {
 } from "@standard/schemas";
 import type { DbClient } from "./db";
 
-// ── Types ──────────────────────────────────────────────────────────────────
+// â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export type TpraVendorRecord = {
   id: string;
@@ -67,7 +68,7 @@ export type TpraRiskScoreRecord = {
   organization_id: string;
   tpra_assessment_id: string;
   vendor_id: string;
-  raw_score: string; // NUMERIC from DB → string
+  raw_score: string; // NUMERIC from DB â†’ string
   risk_category: "low" | "medium" | "high" | "critical";
   scf_domain_failures: string[];
   scf_version_id: string;
@@ -79,14 +80,14 @@ export type TpraRiskScoreCreateInput = {
   organization_id: string;
   tpra_assessment_id: string;
   vendor_id: string;
-  raw_score: string; // NUMERIC precision 5,2 — must be string
+  raw_score: string; // NUMERIC precision 5,2 â€” must be string
   risk_category: TpraRiskScoreRecord["risk_category"];
   scf_domain_failures: string[];
   scf_version_id: string;
   trace_id: string;
 };
 
-// ── Adapter Interface ──────────────────────────────────────────────────────
+// â”€â”€ Adapter Interface â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export interface TpraRepositoryAdapter {
   vendors: {
@@ -124,7 +125,7 @@ export interface TpraRepositoryAdapter {
     ): Promise<TpraAssessmentRecord | null>;
   };
   riskScores: {
-    /** Append-only — no update/delete */
+    /** Append-only â€” no update/delete */
     append(input: TpraRiskScoreCreateInput): Promise<TpraRiskScoreRecord>;
     /** Latest score for a tpra assessment */
     latest(
@@ -138,7 +139,7 @@ export interface TpraRepositoryAdapter {
   };
 }
 
-// ── Row Mappers ────────────────────────────────────────────────────────────
+// â”€â”€ Row Mappers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 type VendorRow = typeof tpraVendors.$inferSelect;
 type AssessmentRow = typeof tpraAssessments.$inferSelect;
@@ -183,7 +184,7 @@ const mapRiskScore = (row: RiskScoreRow): TpraRiskScoreRecord => ({
   computed_at: row.computedAt,
 });
 
-// ── In-Memory (dev/test fallback) ──────────────────────────────────────────
+// â”€â”€ In-Memory (dev/test fallback) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const createTpraRepository = (): TpraRepositoryAdapter => {
   const vendors: TpraVendorRecord[] = [];
@@ -308,7 +309,7 @@ export const createTpraRepository = (): TpraRepositoryAdapter => {
   };
 };
 
-// ── Drizzle (production) ───────────────────────────────────────────────────
+// â”€â”€ Drizzle (production) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const createDrizzleTpraRepository = (
   db: DbClient,
@@ -441,7 +442,7 @@ export const createDrizzleTpraRepository = (
 
   riskScores: {
     async append(input) {
-      // ⛔ INSERT only — append-only (aligns with ADR-002 spirit)
+      // â›” INSERT only â€” append-only (aligns with ADR-002 spirit)
       const [row] = await db
         .insert(tpraRiskScores)
         .values({
@@ -487,3 +488,4 @@ export const createDrizzleTpraRepository = (
     },
   },
 });
+

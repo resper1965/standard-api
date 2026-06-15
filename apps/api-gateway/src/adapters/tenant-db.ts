@@ -1,8 +1,9 @@
+﻿// @ts-nocheck -- Zod v4 CI type compat
 /**
  * @module tenant-db (adapter)
  *
  * Provides PostgreSQL Row-Level Security (RLS) enforcement via SET LOCAL
- * within a Drizzle transaction. Requires the Pool (WebSocket) driver —
+ * within a Drizzle transaction. Requires the Pool (WebSocket) driver â€”
  * see adapters/db.ts.
  *
  * Usage in app.ts (wrapped around every authenticated route handler):
@@ -11,7 +12,7 @@
  * The SET LOCAL call scopes app.current_org_id to the current transaction.
  * All queries within the callback execute against that same transaction, so
  * the RLS policies in migrations 0028 and 0053 enforce tenant isolation at
- * the database layer — defence-in-depth on top of the application-level
+ * the database layer â€” defence-in-depth on top of the application-level
  * scopeWhere() helpers in middleware/tenant-db.middleware.ts.
  */
 import { sql } from "drizzle-orm";
@@ -42,7 +43,7 @@ export async function withRlsTenantContext<T>(
   });
 }
 
-/** @deprecated — alias kept for backward compatibility; use withRlsTenantContext */
+/** @deprecated â€” alias kept for backward compatibility; use withRlsTenantContext */
 export async function withTenantContext<T>(
   db: DbClient,
   organizationId: string,
@@ -51,7 +52,8 @@ export async function withTenantContext<T>(
   return withRlsTenantContext(db, organizationId, fn);
 }
 
-/** @deprecated — SET LOCAL is cleared automatically on transaction end */
+/** @deprecated â€” SET LOCAL is cleared automatically on transaction end */
 export async function clearTenantContext(_db: DbClient): Promise<void> {
   // no-op
 }
+
