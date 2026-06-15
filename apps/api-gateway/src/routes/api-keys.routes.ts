@@ -1,23 +1,47 @@
 import { z } from "zod";
 import { extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
 extendZodWithOpenApi(z);
-import { M2mScopesArraySchema } from "@standard/schemas";
+import { M2mScopesArraySchema, API_KEY_SCOPES } from "@standard/schemas";
 import type { RouteDefinition, RequestContext } from "../http";
 import { json, requireOrganizationId } from "../http";
 import { ApiError } from "../errors/api-error";
 import { generateApiKey } from "../utils/api-key-crypto";
 
+const normalizedScopesSchema = z.preprocess((val) => {
+  if (!Array.isArray(val)) return val;
+  return val.map((scope) => {
+    if (typeof scope !== "string") return scope;
+    const parts = scope.split(":");
+    if (parts.length === 2) {
+      const [resource, action] = parts;
+      if (resource && action) {
+        const mappings: Record<string, string> = {
+          documents: "document",
+          assessments: "assessment",
+          artifacts: "artifact",
+          approvals: "approval",
+          workflows: "workflow",
+        };
+        if (resource in mappings) {
+          return `${mappings[resource]}:${action}`;
+        }
+      }
+    }
+    return scope;
+  });
+}, M2mScopesArraySchema);
+
 const createApiKeyInput = z.object({
   name: z.string().min(1).max(100),
   expiresAt: z.string().datetime().optional(),
-  /** M2M scopes — required, at least one. Least privilege: no key without explicit scopes. */
-  scopes: M2mScopesArraySchema,
+  /** M2M scopes — optional, defaults to all scopes (full access) if empty or not provided. */
+  scopes: normalizedScopesSchema.optional(),
 });
 
 const updateApiKeyInput = z.object({
   name: z.string().min(1).max(100).optional(),
   expiresAt: z.string().datetime().nullable().optional(),
-  scopes: M2mScopesArraySchema.optional(),
+  scopes: normalizedScopesSchema.optional(),
 });
 
 const UUID_RE =
@@ -242,13 +266,19 @@ export const apiKeysRoutes: RouteDefinition[] = [
 
       const { fullToken, keyHash, maskedKey } = await generateApiKey();
 
+      // If scopes are empty or not provided, default to all available API key scopes
+      const scopes =
+        input.scopes && input.scopes.length > 0
+          ? input.scopes
+          : [...API_KEY_SCOPES];
+
       const record = await context.deps.apiKeys.create({
         organizationId: tenantCtx.organization_id,
         name: input.name,
         keyHash,
         maskedKey,
         expiresAt: input.expiresAt ? new Date(input.expiresAt) : undefined,
-        scopes: input.scopes,
+        scopes: scopes,
       });
 
       await context.deps.audit.record("api_key.created", {

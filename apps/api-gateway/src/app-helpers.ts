@@ -60,11 +60,14 @@ export const buildCorsHeaders = (
   allowedOrigins: string[],
 ): Record<string, string> => {
   const origin = request.headers.get("Origin") ?? "";
-  const isPagesDevAlias =
+  const isAlwaysAllowed =
+    origin === "https://standard.bekaa.eu" ||
+    origin === "https://standard-web.pages.dev" ||
+    origin === "https://standard-web-production.pages.dev" ||
     origin.endsWith(".standard-web.pages.dev") ||
     origin.endsWith(".standard-web-production.pages.dev");
   const corsOrigin =
-    allowedOrigins.includes(origin) || isPagesDevAlias ? origin : "";
+    allowedOrigins.includes(origin) || isAlwaysAllowed ? origin : "";
   return corsOrigin
     ? {
         "Access-Control-Allow-Origin": corsOrigin,
@@ -121,11 +124,15 @@ export const applySecurityHeaders = (
   res: Response,
   securityHeaders: Record<string, string>,
 ): Response => {
-  const newRes = new Response(res.body, res);
+  const headers = new Headers(res.headers);
   for (const [k, v] of Object.entries(securityHeaders)) {
-    newRes.headers.set(k, v);
+    headers.set(k, v);
   }
-  return newRes;
+  return new Response(res.body, {
+    status: res.status,
+    statusText: res.statusText,
+    headers,
+  });
 };
 
 // ─────────────────────────────────────────────────────────────────────

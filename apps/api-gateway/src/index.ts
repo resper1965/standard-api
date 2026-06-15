@@ -4,37 +4,60 @@ if (typeof globalThis !== "undefined") {
   (globalThis as any).AsyncLocalStorage = asyncHooks.AsyncLocalStorage;
 }
 export type { Env } from "./types/env";
-import { ensureAppInitialized, handleAuthRoute } from "./index-helpers";
+import {
+  ensureAppInitialized,
+  handleAuthRoute,
+  createRequestApp,
+} from "./index-helpers";
 import type { Env as AppEnv } from "./types/env";
 import * as Sentry from "@sentry/cloudflare";
 
 export default Sentry.withSentry(
   (env: AppEnv) => ({
-    dsn: (env as any).SENTRY_DSN || "https://b7d62614acaef427ce2de36228779c08@o4509995422515200.ingest.us.sentry.io/4511521270792192",
+    dsn:
+      (env as any).SENTRY_DSN ||
+      "https://b7d62614acaef427ce2de36228779c08@o4509995422515200.ingest.us.sentry.io/4511521270792192",
     sendDefaultPii: true,
   }),
   {
-    async fetch(request: Request, env: AppEnv, ctx: ExecutionContext): Promise<Response> {
-      const app = ensureAppInitialized(env);
+    async fetch(
+      request: Request,
+      env: AppEnv,
+      ctx: ExecutionContext,
+    ): Promise<Response> {
       const url = new URL(request.url);
+
+      let app: ReturnType<typeof ensureAppInitialized>;
+      let auth: any = null;
+
+      if (env.DATABASE_URL) {
+        const reqScope = createRequestApp(env);
+        app = reqScope.app;
+        auth = reqScope.auth;
+      } else {
+        app = ensureAppInitialized(env);
+      }
 
       // Delegate /api/auth/* requests directly to Standard Native Auth.
       try {
-        const authResponse = await handleAuthRoute(request, url, env);
+        const authResponse = await handleAuthRoute(request, url, auth, env);
         if (authResponse) return authResponse;
       } catch (err: any) {
         console.error("[standard:auth] Route Error:", err);
-        return new Response(JSON.stringify({ 
-          error: "Auth 500", 
-          detail: err.message || err.toString(),
-          stack: err.stack
-        }), {
-          status: 500,
-          headers: { "Content-Type": "application/json" }
-        });
+        return new Response(
+          JSON.stringify({
+            error: "Auth 500",
+            detail: err.message || err.toString(),
+            stack: err.stack,
+          }),
+          {
+            status: 500,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
       }
 
       return app.fetch(request, ctx);
-    }
-  } satisfies ExportedHandler<AppEnv>
+    },
+  } satisfies ExportedHandler<AppEnv>,
 );

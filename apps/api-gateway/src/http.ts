@@ -28,7 +28,7 @@ import type { PrivacyDependencies } from "@standard/privacy";
 import type { WorkflowDependencies } from "@standard/workflows";
 import type { SendEmail } from "@standard/email";
 import type { WebhookRepositoryAdapter } from "@standard/schemas";
-import type { AuthRepository } from "@standard/auth";
+import type { AuthRepository, StandardAuth } from "@standard/auth";
 import { ApiError } from "./errors/api-error";
 import type { ResolvedTenantContext } from "./adapters/tenant-mapping";
 import type { LedgerServiceAdapter } from "./adapters/ledger.repository";
@@ -386,6 +386,7 @@ export type RequestContext = {
     };
   } | null;
   deps: AppDependencies;
+  betterAuth?: StandardAuth | undefined;
   /** Pre-validated request body (populated when route defines bodySchema) */
   validatedBody?: unknown;
   /** Cloudflare native execution context for background tasks */

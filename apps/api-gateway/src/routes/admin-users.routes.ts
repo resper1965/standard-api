@@ -132,8 +132,7 @@ export const adminUsersRoutes: RouteDefinition[] = [
       const body = await parseJson(context.request, CreateUserBodySchema);
 
       // User creation requires password hashing via Better Auth API
-      const { getCachedAuth } = await import("../index-helpers");
-      const auth = getCachedAuth();
+      const auth = context.betterAuth;
       if (!auth) {
         throw new ApiError(
           "INTERNAL_ERROR",
