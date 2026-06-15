@@ -16,7 +16,8 @@
     "@standard/agent-runtime": "workspace:*",
     "@standard/assessment-engine": "workspace:*",
     "@standard/schemas": "workspace:*",
-    "drizzle-orm": "^0.45.2"
+    "drizzle-orm": "^0.45.2",
+    "zod": "^4.4.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260426.1",
