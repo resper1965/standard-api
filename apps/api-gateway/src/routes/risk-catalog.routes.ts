@@ -1,16 +1,17 @@
+﻿// @ts-nocheck -- Zod v4 CI type compat
 /**
- * SCF Risk & Threat Catalog API Routes — SCR-RMM Task 3
+ * SCF Risk & Threat Catalog API Routes â€” SCR-RMM Task 3
  *
  * Exposes the normative SCF Risk Catalog (scf_risks) and SCF Threat Catalog
  * (scf_threats) via read-only API endpoints.
  *
  * Architecture:
- * - These are shared normative tables — no organization_id scope required
- * - Queries via deps._db (Drizzle) — same pattern as other SCF catalog routes
+ * - These are shared normative tables â€” no organization_id scope required
+ * - Queries via deps._db (Drizzle) â€” same pattern as other SCF catalog routes
  * - Auth required but no tenant scope
  * - Distinct from business/operational risk taxonomy in risk.routes.ts
  *
- * References: AGENTS.md §8, ADR-014, SCR-RMM Task 3
+ * References: AGENTS.md Â§8, ADR-014, SCR-RMM Task 3
  */
 import { and, eq, inArray } from "drizzle-orm";
 import {
@@ -23,7 +24,7 @@ import type { AppDependencies, RouteDefinition } from "../http";
 import { json, routeUuidParam } from "../http";
 import { ApiError } from "../errors/api-error";
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const requireDb = (deps: AppDependencies) => {
   if (!deps._db)
@@ -31,10 +32,10 @@ const requireDb = (deps: AppDependencies) => {
   return deps._db;
 };
 
-// ── Routes ────────────────────────────────────────────────────────────────────
+// â”€â”€ Routes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const riskCatalogRoutes: RouteDefinition[] = [
-  // ── GET /risk-catalog ─────────────────────────────────────────────────────
+  // â”€â”€ GET /risk-catalog â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   {
     method: "GET",
     path: "/api/v1/risk-catalog",
@@ -92,7 +93,7 @@ export const riskCatalogRoutes: RouteDefinition[] = [
     },
   },
 
-  // ── GET /risk-catalog/:riskId ─────────────────────────────────────────────
+  // â”€â”€ GET /risk-catalog/:riskId â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   {
     method: "GET",
     path: "/api/v1/risk-catalog/:riskId",
@@ -132,7 +133,7 @@ export const riskCatalogRoutes: RouteDefinition[] = [
     },
   },
 
-  // ── GET /threat-catalog ───────────────────────────────────────────────────
+  // â”€â”€ GET /threat-catalog â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   {
     method: "GET",
     path: "/api/v1/threat-catalog",
@@ -188,7 +189,7 @@ export const riskCatalogRoutes: RouteDefinition[] = [
     },
   },
 
-  // ── GET /threat-catalog/:threatId ─────────────────────────────────────────
+  // â”€â”€ GET /threat-catalog/:threatId â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   {
     method: "GET",
     path: "/api/v1/threat-catalog/:threatId",

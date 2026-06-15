@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @module compose-agent-runtime
  * @description Factory for Agent Runtime dependency graph with AI Gateway.
  *
@@ -37,11 +37,11 @@ function resolveLlmAdapter(env?: Env) {
     });
   }
 
-  // Production: fail loudly — never silently degrade to mock
+  // Production: fail loudly â€” never silently degrade to mock
   const isProduction = env?.STANDARD_ENV === "production";
   if (isProduction) {
     throw new Error(
-      "[standard:agent-runtime] FATAL — AI_GATEWAY_BASE_URL and OPENAI_API_KEY are required in production. " +
+      "[standard:agent-runtime] FATAL â€” AI_GATEWAY_BASE_URL and OPENAI_API_KEY are required in production. " +
         "All agent operations would return mock output. " +
         "Configure with: wrangler secret put AI_GATEWAY_BASE_URL && wrangler secret put OPENAI_API_KEY",
     );
@@ -49,8 +49,8 @@ function resolveLlmAdapter(env?: Env) {
 
   // Development: mock with loud warning
   console.warn(
-    "[standard:agent-runtime] ⚠️ AI_GATEWAY_BASE_URL or OPENAI_API_KEY missing. " +
-      "Using MOCK LLM — all AI responses will be empty. " +
+    "[standard:agent-runtime] âš ï¸ AI_GATEWAY_BASE_URL or OPENAI_API_KEY missing. " +
+      "Using MOCK LLM â€” all AI responses will be empty. " +
       "This is acceptable in development but would be BLOCKED in production.",
   );
   return createInMemoryAgentRuntimeDependencies().llm;

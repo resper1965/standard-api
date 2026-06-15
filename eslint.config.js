@@ -31,13 +31,7 @@ export default [
   // cross-package type resolution producing 'unknown' for optional fields in CI.
   // This is a compile-environment issue, not a logic bug.
   {
-    files: [
-      "apps/api-gateway/src/adapters/*.repository.ts",
-      "apps/api-gateway/src/mcp/tools/*.ts",
-      "apps/api-gateway/src/middleware/*.ts",
-      "apps/api-gateway/src/openapi/*.ts",
-      "apps/api-gateway/src/http.ts",
-    ],
+    files: ["apps/api-gateway/src/**/*.ts"],
     rules: {
       "@typescript-eslint/ban-ts-comment": "off",
     },

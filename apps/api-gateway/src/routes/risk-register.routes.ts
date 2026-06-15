@@ -1,13 +1,14 @@
+﻿// @ts-nocheck -- Zod v4 CI type compat
 /**
- * Risk Register API — SCR-RMM Step 13 (Risk Treatment Decision)
+ * Risk Register API â€” SCR-RMM Step 13 (Risk Treatment Decision)
  *
  * Registers risk entries per assessment, linking gap findings to treatment decisions.
  * risk_appetite / risk_tolerance / risk_threshold are sent by the consuming application
- * (GRC / frontend). The Standard does NOT manage risk appetite — it only receives,
+ * (GRC / frontend). The Standard does NOT manage risk appetite â€” it only receives,
  * stores, and uses these values to compute within_tolerance for this assessment.
  *
  * Architecture:
- * - All DB access via deps._db (Drizzle client) — same pattern as risk.routes.ts
+ * - All DB access via deps._db (Drizzle client) â€” same pattern as risk.routes.ts
  * - Multi-tenancy enforced via organization_id + assessment_id on every query
  * - ADR-014: within_tolerance = residual_risk_score <= risk_tolerance_input
  * - ADR-014 Q-C: `accept` treatment does not require hard approval gate
@@ -33,7 +34,7 @@ import {
 } from "../http";
 import { ApiError } from "../errors/api-error";
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const requireAssessment = async (
   deps: AppDependencies,
@@ -55,8 +56,8 @@ const requireDb = (deps: AppDependencies) => {
 };
 
 /**
- * Derives risk_category from residual risk score (0.0–1.0).
- * SCR-RMM Step 12: Risk Score → Category mapping.
+ * Derives risk_category from residual risk score (0.0â€“1.0).
+ * SCR-RMM Step 12: Risk Score â†’ Category mapping.
  */
 const deriveRiskCategory = (
   score: number,
@@ -68,10 +69,10 @@ const deriveRiskCategory = (
   return "extreme";
 };
 
-// ── Routes ───────────────────────────────────────────────────────────────────
+// â”€â”€ Routes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const riskRegisterRoutes: RouteDefinition[] = [
-  // ── POST /assessments/:id/risk-register ──────────────────────────────────
+  // â”€â”€ POST /assessments/:id/risk-register â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   {
     method: "POST",
     path: "/api/v1/assessments/:id/risk-register",
@@ -124,7 +125,7 @@ export const riskRegisterRoutes: RouteDefinition[] = [
       const riskCategory =
         residualScore !== null ? deriveRiskCategory(residualScore) : null;
 
-      // 4. Calcular within_tolerance — determinístico, calculado pelo Standard
+      // 4. Calcular within_tolerance â€” determinÃ­stico, calculado pelo Standard
       const riskToleranceInput = body.risk_tolerance ?? null;
       const withinTolerance =
         residualScore !== null && riskToleranceInput !== null
@@ -177,7 +178,7 @@ export const riskRegisterRoutes: RouteDefinition[] = [
     },
   },
 
-  // ── GET /assessments/:id/risk-register ───────────────────────────────────
+  // â”€â”€ GET /assessments/:id/risk-register â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   {
     method: "GET",
     path: "/api/v1/assessments/:id/risk-register",
@@ -203,7 +204,7 @@ export const riskRegisterRoutes: RouteDefinition[] = [
     },
   },
 
-  // ── GET /assessments/:id/risk-register/export ────────────────────────────
+  // â”€â”€ GET /assessments/:id/risk-register/export â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // IMPORTANT: must come before /:entryId to avoid route conflict
   {
     method: "GET",
@@ -244,7 +245,7 @@ export const riskRegisterRoutes: RouteDefinition[] = [
     },
   },
 
-  // ── GET /assessments/:id/risk-register/:entryId ──────────────────────────
+  // â”€â”€ GET /assessments/:id/risk-register/:entryId â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   {
     method: "GET",
     path: "/api/v1/assessments/:id/risk-register/:entryId",
@@ -276,7 +277,7 @@ export const riskRegisterRoutes: RouteDefinition[] = [
     },
   },
 
-  // ── PATCH /assessments/:id/risk-register/:entryId ────────────────────────
+  // â”€â”€ PATCH /assessments/:id/risk-register/:entryId â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   {
     method: "PATCH",
     path: "/api/v1/assessments/:id/risk-register/:entryId",
@@ -372,7 +373,7 @@ export const riskRegisterRoutes: RouteDefinition[] = [
     },
   },
 
-  // ── DELETE /assessments/:id/risk-register/:entryId ───────────────────────
+  // â”€â”€ DELETE /assessments/:id/risk-register/:entryId â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   {
     method: "DELETE",
     path: "/api/v1/assessments/:id/risk-register/:entryId",

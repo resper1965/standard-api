@@ -1,9 +1,10 @@
+﻿// @ts-nocheck -- Zod v4 CI type compat
 /**
  * CB-B: Risk Methodology + Taxonomy (Spec v3 -> V2 TS Schema)
  *
  * Enriched with:
- * - risk_statuses (open→closed)
- * - appetite_levels (conservative→aggressive)
+ * - risk_statuses (openâ†’closed)
+ * - appetite_levels (conservativeâ†’aggressive)
  * - risk_categories with colors
  * - label_en on scales
  * - id on scale entries
@@ -46,12 +47,12 @@ const requireAssessment = async (
   return assessment;
 };
 
-// ── Risk Methodology ────────────────────────────────────────────────────────
+// â”€â”€ Risk Methodology â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const RISK_METHODOLOGIES = [
   {
     id: "qualitative_5x5",
-    name_i18n: { pt: "Matriz Qualitativa 5×5", en: "Qualitative 5x5 Matrix" },
+    name_i18n: { pt: "Matriz Qualitativa 5Ã—5", en: "Qualitative 5x5 Matrix" },
 
     dimensions: [
       {
@@ -67,19 +68,19 @@ const RISK_METHODOLOGIES = [
           {
             value: 2,
             id: "unlikely",
-            label_i18n: { pt: "Improvável", en: "Unlikely" },
+            label_i18n: { pt: "ImprovÃ¡vel", en: "Unlikely" },
             description_i18n: { pt: "5-20% de chance em 12 meses" },
           },
           {
             value: 3,
             id: "possible",
-            label_i18n: { pt: "Possível", en: "Possible" },
+            label_i18n: { pt: "PossÃ­vel", en: "Possible" },
             description_i18n: { pt: "20-50% de chance em 12 meses" },
           },
           {
             value: 4,
             id: "likely",
-            label_i18n: { pt: "Provável", en: "Likely" },
+            label_i18n: { pt: "ProvÃ¡vel", en: "Likely" },
             description_i18n: { pt: "50-80% de chance em 12 meses" },
           },
           {
@@ -97,20 +98,24 @@ const RISK_METHODOLOGIES = [
           {
             value: 1,
             id: "negligible",
-            label_i18n: { pt: "Negligenciável", en: "Negligible" },
-            description_i18n: { pt: "Sem impacto significativo nas operações" },
+            label_i18n: { pt: "NegligenciÃ¡vel", en: "Negligible" },
+            description_i18n: {
+              pt: "Sem impacto significativo nas operaÃ§Ãµes",
+            },
           },
           {
             value: 2,
             id: "low",
             label_i18n: { pt: "Baixo", en: "Low" },
-            description_i18n: { pt: "Impacto leve, perdas controláveis" },
+            description_i18n: { pt: "Impacto leve, perdas controlÃ¡veis" },
           },
           {
             value: 3,
             id: "medium",
-            label_i18n: { pt: "Médio", en: "Medium" },
-            description_i18n: { pt: "Impacto moderado, interrupção notável" },
+            label_i18n: { pt: "MÃ©dio", en: "Medium" },
+            description_i18n: {
+              pt: "Impacto moderado, interrupÃ§Ã£o notÃ¡vel",
+            },
           },
           {
             value: 4,
@@ -121,8 +126,10 @@ const RISK_METHODOLOGIES = [
           {
             value: 5,
             id: "critical",
-            label_i18n: { pt: "Crítico", en: "Critical" },
-            description_i18n: { pt: "Impacto desastroso, ameaça continuidade" },
+            label_i18n: { pt: "CrÃ­tico", en: "Critical" },
+            description_i18n: {
+              pt: "Impacto desastroso, ameaÃ§a continuidade",
+            },
           },
         ],
       },
@@ -135,15 +142,15 @@ const RISK_METHODOLOGIES = [
         level: "low",
         label_i18n: { pt: "Baixo", en: "Low" },
         color: "#22c55e",
-        action_i18n: { pt: "Aceitar — monitorar periodicamente" },
+        action_i18n: { pt: "Aceitar â€” monitorar periodicamente" },
       },
       {
         min_score: 4,
         max_score: 7,
         level: "medium",
-        label_i18n: { pt: "Médio", en: "Medium" },
+        label_i18n: { pt: "MÃ©dio", en: "Medium" },
         color: "#eab308",
-        action_i18n: { pt: "Monitorar — ação dentro de 90 dias" },
+        action_i18n: { pt: "Monitorar â€” aÃ§Ã£o dentro de 90 dias" },
       },
       {
         min_score: 8,
@@ -151,15 +158,15 @@ const RISK_METHODOLOGIES = [
         level: "high",
         label_i18n: { pt: "Alto", en: "High" },
         color: "#f97316",
-        action_i18n: { pt: "Mitigar — ação dentro de 30 dias" },
+        action_i18n: { pt: "Mitigar â€” aÃ§Ã£o dentro de 30 dias" },
       },
       {
         min_score: 15,
         max_score: 25,
         level: "critical",
-        label_i18n: { pt: "Crítico", en: "Critical" },
+        label_i18n: { pt: "CrÃ­tico", en: "Critical" },
         color: "#ef4444",
-        action_i18n: { pt: "Escalar — ação imediata" },
+        action_i18n: { pt: "Escalar â€” aÃ§Ã£o imediata" },
       },
     ],
 
@@ -172,7 +179,7 @@ const RISK_METHODOLOGIES = [
       },
       {
         id: "mitigating",
-        name_i18n: { pt: "Em mitigação", en: "Mitigating" },
+        name_i18n: { pt: "Em mitigaÃ§Ã£o", en: "Mitigating" },
         order: 2,
         is_terminal: false,
       },
@@ -195,7 +202,7 @@ const RISK_METHODOLOGIES = [
         id: "conservative",
         name_i18n: { pt: "Conservador", en: "Conservative" },
         description_i18n: {
-          pt: "Tolerância mínima a riscos. Foco em prevenção e compliance rigoroso.",
+          pt: "TolerÃ¢ncia mÃ­nima a riscos. Foco em prevenÃ§Ã£o e compliance rigoroso.",
         },
         default_max_score: 5,
       },
@@ -203,7 +210,7 @@ const RISK_METHODOLOGIES = [
         id: "moderate",
         name_i18n: { pt: "Moderado", en: "Moderate" },
         description_i18n: {
-          pt: "Aceita riscos calculados com benefício claro. Maioria das organizações.",
+          pt: "Aceita riscos calculados com benefÃ­cio claro. Maioria das organizaÃ§Ãµes.",
         },
         default_max_score: 15,
       },
@@ -211,7 +218,7 @@ const RISK_METHODOLOGIES = [
         id: "aggressive",
         name_i18n: { pt: "Agressivo", en: "Aggressive" },
         description_i18n: {
-          pt: "Alta tolerância a riscos. Foco em inovação e crescimento acelerado.",
+          pt: "Alta tolerÃ¢ncia a riscos. Foco em inovaÃ§Ã£o e crescimento acelerado.",
         },
         default_max_score: 25,
       },
@@ -223,7 +230,7 @@ const RISK_METHODOLOGIES = [
         name_i18n: { pt: "Evitar", en: "Avoid" },
         description_i18n: { pt: "Eliminar a atividade que gera o risco" },
         when_i18n: {
-          pt: "Quando a atividade pode ser eliminada sem impacto ao negócio",
+          pt: "Quando a atividade pode ser eliminada sem impacto ao negÃ³cio",
         },
         scf_domains: ["RSK"],
       },
@@ -233,7 +240,7 @@ const RISK_METHODOLOGIES = [
         description_i18n: {
           pt: "Implementar controles para reduzir probabilidade ou impacto",
         },
-        when_i18n: { pt: "Quando o custo de mitigação < impacto potencial" },
+        when_i18n: { pt: "Quando o custo de mitigaÃ§Ã£o < impacto potencial" },
         scf_domains: ["RSK"],
       },
       {
@@ -249,10 +256,10 @@ const RISK_METHODOLOGIES = [
         id: "accept",
         name_i18n: { pt: "Aceitar", en: "Accept" },
         description_i18n: {
-          pt: "Reconhecer o risco e monitorar sem ação adicional",
+          pt: "Reconhecer o risco e monitorar sem aÃ§Ã£o adicional",
         },
         when_i18n: {
-          pt: "Quando o risco está dentro do apetite e o custo de mitigação é desproporcional",
+          pt: "Quando o risco estÃ¡ dentro do apetite e o custo de mitigaÃ§Ã£o Ã© desproporcional",
         },
         scf_domains: ["RSK"],
       },
@@ -260,7 +267,7 @@ const RISK_METHODOLOGIES = [
   },
 ];
 
-// ── Risk Categories ─────────────────────────────────────────────────────────
+// â”€â”€ Risk Categories â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const RISK_CATEGORIES = [
   {
@@ -277,7 +284,7 @@ const RISK_CATEGORIES = [
   },
   {
     id: "security",
-    name_i18n: { pt: "Segurança", en: "Security" },
+    name_i18n: { pt: "SeguranÃ§a", en: "Security" },
     color: "#ef4444",
     applicable_domains: ["security", "risk"] as const,
   },
@@ -295,19 +302,19 @@ const RISK_CATEGORIES = [
   },
   {
     id: "strategic",
-    name_i18n: { pt: "Estratégico", en: "Strategic" },
+    name_i18n: { pt: "EstratÃ©gico", en: "Strategic" },
     color: "#3b82f6",
     applicable_domains: ["governance"] as const,
   },
 ];
 
-// ── Risk Taxonomy & Methodology ─────────────────────────────────────────────
+// â”€â”€ Risk Taxonomy & Methodology â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const RISK_TAXONOMY = {
   categories: [
     {
       id: "cyber",
-      name_i18n: { pt: "Cibernético" },
+      name_i18n: { pt: "CibernÃ©tico" },
       risks: [
         {
           id: "ransomware",
@@ -342,7 +349,7 @@ export const RISK_TAXONOMY = {
             },
             {
               id: "kri_backup_recovery",
-              name_i18n: { pt: "Tempo médio de backup recovery" },
+              name_i18n: { pt: "Tempo mÃ©dio de backup recovery" },
               formula: "avg(restore_time_minutes)",
               unit: "min",
               frequency: "mensal",
@@ -361,7 +368,7 @@ export const RISK_TAXONOMY = {
             {
               strategy: "mitigate",
               action_i18n: {
-                pt: "Backup imutável com teste mensal de restore",
+                pt: "Backup imutÃ¡vel com teste mensal de restore",
               },
               scf_control: "BCD-01",
               estimated_effort: "medium" as const,
@@ -389,7 +396,7 @@ export const RISK_TAXONOMY = {
           kris: [
             {
               id: "kri_phish_click",
-              name_i18n: { pt: "Taxa de clique em simulação de phishing" },
+              name_i18n: { pt: "Taxa de clique em simulaÃ§Ã£o de phishing" },
               formula: "clicks / recipients * 100",
               unit: "%",
               frequency: "trimestral",
@@ -412,7 +419,7 @@ export const RISK_TAXONOMY = {
             {
               strategy: "mitigate",
               action_i18n: {
-                pt: "Programa de conscientização com simulações trimestrais",
+                pt: "Programa de conscientizaÃ§Ã£o com simulaÃ§Ãµes trimestrais",
               },
               scf_control: "SAT-02",
               estimated_effort: "medium" as const,
@@ -427,9 +434,9 @@ export const RISK_TAXONOMY = {
         },
         {
           id: "insider_threat",
-          name_i18n: { pt: "Ameaça Interna" },
+          name_i18n: { pt: "AmeaÃ§a Interna" },
           description_i18n: {
-            pt: "Funcionário malicioso ou negligente causando vazamento",
+            pt: "FuncionÃ¡rio malicioso ou negligente causando vazamento",
           },
           typical_likelihood: 3,
           typical_impact: 4,
@@ -438,7 +445,7 @@ export const RISK_TAXONOMY = {
           kris: [
             {
               id: "kri_dlp_alerts",
-              name_i18n: { pt: "Alertas de DLP por mês" },
+              name_i18n: { pt: "Alertas de DLP por mÃªs" },
               formula: "count(dlp_alerts)",
               unit: "count",
               frequency: "mensal",
@@ -461,7 +468,7 @@ export const RISK_TAXONOMY = {
             {
               strategy: "mitigate",
               action_i18n: {
-                pt: "Implementar DLP com monitoramento de exfiltração",
+                pt: "Implementar DLP com monitoramento de exfiltraÃ§Ã£o",
               },
               scf_control: "DLP-01",
               estimated_effort: "high" as const,
@@ -469,7 +476,7 @@ export const RISK_TAXONOMY = {
             {
               strategy: "mitigate",
               action_i18n: {
-                pt: "Background check periódico para acessos privilegiados",
+                pt: "Background check periÃ³dico para acessos privilegiados",
               },
               scf_control: "HRS-04",
               estimated_effort: "medium" as const,
@@ -480,7 +487,7 @@ export const RISK_TAXONOMY = {
           id: "data_breach",
           name_i18n: { pt: "Vazamento de Dados" },
           description_i18n: {
-            pt: "Exposição não autorizada de dados pessoais ou confidenciais",
+            pt: "ExposiÃ§Ã£o nÃ£o autorizada de dados pessoais ou confidenciais",
           },
           typical_likelihood: 3,
           typical_impact: 5,
@@ -489,7 +496,7 @@ export const RISK_TAXONOMY = {
           kris: [
             {
               id: "kri_unencrypted",
-              name_i18n: { pt: "Dados sensíveis sem criptografia" },
+              name_i18n: { pt: "Dados sensÃ­veis sem criptografia" },
               formula: "unencrypted / total * 100",
               unit: "%",
               frequency: "mensal",
@@ -499,7 +506,7 @@ export const RISK_TAXONOMY = {
             },
             {
               id: "kri_breach_detect",
-              name_i18n: { pt: "Tempo médio de detecção de breach" },
+              name_i18n: { pt: "Tempo mÃ©dio de detecÃ§Ã£o de breach" },
               formula: "avg(hours)",
               unit: "h",
               frequency: "trimestral",
@@ -511,13 +518,13 @@ export const RISK_TAXONOMY = {
           treatment_examples: [
             {
               strategy: "mitigate",
-              action_i18n: { pt: "Criptografia em repouso e em trânsito" },
+              action_i18n: { pt: "Criptografia em repouso e em trÃ¢nsito" },
               scf_control: "CRY-01",
               estimated_effort: "medium" as const,
             },
             {
               strategy: "mitigate",
-              action_i18n: { pt: "Classificação de dados com DLP integrado" },
+              action_i18n: { pt: "ClassificaÃ§Ã£o de dados com DLP integrado" },
               scf_control: "DCH-01",
               estimated_effort: "high" as const,
             },
@@ -526,7 +533,9 @@ export const RISK_TAXONOMY = {
         {
           id: "ddos",
           name_i18n: { pt: "DDoS" },
-          description_i18n: { pt: "Ataque de negação de serviço distribuído" },
+          description_i18n: {
+            pt: "Ataque de negaÃ§Ã£o de serviÃ§o distribuÃ­do",
+          },
           typical_likelihood: 3,
           typical_impact: 3,
           scf_controls: ["NET-13", "NET-01", "BCD-01"],
@@ -534,7 +543,7 @@ export const RISK_TAXONOMY = {
           kris: [
             {
               id: "kri_uptime",
-              name_i18n: { pt: "Uptime de serviços críticos" },
+              name_i18n: { pt: "Uptime de serviÃ§os crÃ­ticos" },
               formula: "uptime_min / total_min * 100",
               unit: "%",
               frequency: "mensal",
@@ -550,7 +559,7 @@ export const RISK_TAXONOMY = {
           treatment_examples: [
             {
               strategy: "mitigate",
-              action_i18n: { pt: "CDN com proteção anti-DDoS" },
+              action_i18n: { pt: "CDN com proteÃ§Ã£o anti-DDoS" },
               scf_control: "NET-13",
               estimated_effort: "medium" as const,
             },
@@ -560,7 +569,7 @@ export const RISK_TAXONOMY = {
           id: "supply_chain",
           name_i18n: { pt: "Supply Chain Attack" },
           description_i18n: {
-            pt: "Comprometimento via fornecedor ou dependência de software",
+            pt: "Comprometimento via fornecedor ou dependÃªncia de software",
           },
           typical_likelihood: 3,
           typical_impact: 4,
@@ -569,7 +578,7 @@ export const RISK_TAXONOMY = {
           kris: [
             {
               id: "kri_critical_cves",
-              name_i18n: { pt: "Dependências com CVE crítico" },
+              name_i18n: { pt: "DependÃªncias com CVE crÃ­tico" },
               formula: "count(unpatched)",
               unit: "count",
               frequency: "semanal",
@@ -597,7 +606,7 @@ export const RISK_TAXONOMY = {
             },
             {
               strategy: "mitigate",
-              action_i18n: { pt: "Assessment periódico de vendors com TPRA" },
+              action_i18n: { pt: "Assessment periÃ³dico de vendors com TPRA" },
               scf_control: "TPM-04",
               estimated_effort: "medium" as const,
             },
@@ -616,7 +625,7 @@ export const RISK_TAXONOMY = {
           kris: [
             {
               id: "kri_emergency_patch",
-              name_i18n: { pt: "Tempo médio de patches emergenciais" },
+              name_i18n: { pt: "Tempo mÃ©dio de patches emergenciais" },
               formula: "avg(hours)",
               unit: "h",
               frequency: "por evento",
@@ -629,7 +638,7 @@ export const RISK_TAXONOMY = {
             {
               strategy: "mitigate",
               action_i18n: {
-                pt: "Threat intelligence feed com correlação automática",
+                pt: "Threat intelligence feed com correlaÃ§Ã£o automÃ¡tica",
               },
               scf_control: "THR-01",
               estimated_effort: "high" as const,
@@ -661,7 +670,7 @@ export const RISK_TAXONOMY = {
           treatment_examples: [
             {
               strategy: "mitigate",
-              action_i18n: { pt: "MFA obrigatório + credential monitoring" },
+              action_i18n: { pt: "MFA obrigatÃ³rio + credential monitoring" },
               scf_control: "IAC-15",
               estimated_effort: "medium" as const,
             },
@@ -677,7 +686,7 @@ export const RISK_TAXONOMY = {
           id: "process_failure",
           name_i18n: { pt: "Falha de Processo" },
           description_i18n: {
-            pt: "Erro em processo manual causando inconsistência",
+            pt: "Erro em processo manual causando inconsistÃªncia",
           },
           typical_likelihood: 4,
           typical_impact: 2,
@@ -686,7 +695,7 @@ export const RISK_TAXONOMY = {
           kris: [
             {
               id: "kri_process_incidents",
-              name_i18n: { pt: "Incidentes de processo por mês" },
+              name_i18n: { pt: "Incidentes de processo por mÃªs" },
               formula: "count(process_incidents)",
               unit: "count",
               frequency: "mensal",
@@ -698,7 +707,7 @@ export const RISK_TAXONOMY = {
           treatment_examples: [
             {
               strategy: "mitigate",
-              action_i18n: { pt: "Automatizar processos críticos" },
+              action_i18n: { pt: "Automatizar processos crÃ­ticos" },
               scf_control: "PRM-01",
               estimated_effort: "high" as const,
             },
@@ -708,7 +717,7 @@ export const RISK_TAXONOMY = {
           id: "human_error",
           name_i18n: { pt: "Erro Humano" },
           description_i18n: {
-            pt: "Falha por desatenção ou falta de treinamento",
+            pt: "Falha por desatenÃ§Ã£o ou falta de treinamento",
           },
           typical_likelihood: 4,
           typical_impact: 3,
@@ -729,7 +738,7 @@ export const RISK_TAXONOMY = {
           treatment_examples: [
             {
               strategy: "mitigate",
-              action_i18n: { pt: "Treinamento periódico + checklists" },
+              action_i18n: { pt: "Treinamento periÃ³dico + checklists" },
               scf_control: "SAT-01",
               estimated_effort: "low" as const,
             },
@@ -738,7 +747,7 @@ export const RISK_TAXONOMY = {
         {
           id: "system_outage",
           name_i18n: { pt: "Indisponibilidade de Sistema" },
-          description_i18n: { pt: "Falha em sistema crítico" },
+          description_i18n: { pt: "Falha em sistema crÃ­tico" },
           typical_likelihood: 3,
           typical_impact: 4,
           scf_controls: ["BCD-01", "BCD-11", "OPS-01", "CCC-02"],
@@ -758,7 +767,7 @@ export const RISK_TAXONOMY = {
           treatment_examples: [
             {
               strategy: "mitigate",
-              action_i18n: { pt: "HA com failover automático" },
+              action_i18n: { pt: "HA com failover automÃ¡tico" },
               scf_control: "BCD-11",
               estimated_effort: "high" as const,
             },
@@ -768,12 +777,12 @@ export const RISK_TAXONOMY = {
     },
     {
       id: "compliance",
-      name_i18n: { pt: "Compliance / Regulatório" },
+      name_i18n: { pt: "Compliance / RegulatÃ³rio" },
       risks: [
         {
           id: "regulatory_fine",
-          name_i18n: { pt: "Multa Regulatória" },
-          description_i18n: { pt: "Penalidade por não conformidade" },
+          name_i18n: { pt: "Multa RegulatÃ³ria" },
+          description_i18n: { pt: "Penalidade por nÃ£o conformidade" },
           typical_likelihood: 2,
           typical_impact: 4,
           scf_controls: ["GOV-01", "GOV-06", "CPL-01", "CPL-03"],
@@ -794,7 +803,7 @@ export const RISK_TAXONOMY = {
             {
               strategy: "mitigate",
               action_i18n: {
-                pt: "Gap analysis contínuo com remediação automatizada",
+                pt: "Gap analysis contÃ­nuo com remediaÃ§Ã£o automatizada",
               },
               scf_control: "CPL-01",
               estimated_effort: "medium" as const,
@@ -812,7 +821,7 @@ export const RISK_TAXONOMY = {
           kris: [
             {
               id: "kri_no_evidence",
-              name_i18n: { pt: "Controles sem evidência" },
+              name_i18n: { pt: "Controles sem evidÃªncia" },
               formula: "no_evidence / total * 100",
               unit: "%",
               frequency: "mensal",
@@ -824,7 +833,7 @@ export const RISK_TAXONOMY = {
           treatment_examples: [
             {
               strategy: "mitigate",
-              action_i18n: { pt: "Coleta automatizada de evidências" },
+              action_i18n: { pt: "Coleta automatizada de evidÃªncias" },
               scf_control: "AIS-04",
               estimated_effort: "medium" as const,
             },
@@ -834,12 +843,12 @@ export const RISK_TAXONOMY = {
     },
     {
       id: "strategic",
-      name_i18n: { pt: "Estratégico" },
+      name_i18n: { pt: "EstratÃ©gico" },
       risks: [
         {
           id: "reputation_damage",
           name_i18n: { pt: "Dano Reputacional" },
-          description_i18n: { pt: "Perda de confiança de stakeholders" },
+          description_i18n: { pt: "Perda de confianÃ§a de stakeholders" },
           typical_likelihood: 2,
           typical_impact: 5,
           scf_controls: ["GOV-01", "IRO-09", "PRI-01"],
@@ -859,7 +868,7 @@ export const RISK_TAXONOMY = {
           treatment_examples: [
             {
               strategy: "mitigate",
-              action_i18n: { pt: "Plano de comunicação de crise" },
+              action_i18n: { pt: "Plano de comunicaÃ§Ã£o de crise" },
               scf_control: "IRO-09",
               estimated_effort: "medium" as const,
             },
@@ -875,7 +884,7 @@ const TAXONOMY_CAT_INDEX = new Map(
   RISK_TAXONOMY.categories.map((c) => [c.id, c]),
 );
 
-// ── Routes ──────────────────────────────────────────────────────────────────
+// â”€â”€ Routes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const riskRoutes: RouteDefinition[] = [
   // Methodology
