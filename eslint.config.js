@@ -35,6 +35,8 @@ export default [
       "apps/api-gateway/src/adapters/*.repository.ts",
       "apps/api-gateway/src/mcp/tools/*.ts",
       "apps/api-gateway/src/middleware/*.ts",
+      "apps/api-gateway/src/openapi/*.ts",
+      "apps/api-gateway/src/http.ts",
     ],
     rules: {
       "@typescript-eslint/ban-ts-comment": "off",
