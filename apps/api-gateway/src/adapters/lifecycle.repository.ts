@@ -1,10 +1,10 @@
-import { eq, and } from "drizzle-orm";
+﻿import { eq, and } from "drizzle-orm";
 import { assessmentEvents } from "@standard/schemas";
 import type { AssessmentLifecycleEvent } from "@standard/assessment-engine";
 import type { LifecycleEventRepositoryAdapter } from "../http";
 import type { DbClient } from "./db";
 
-// ─── Row Mapper ─────────────────────────────────────────────────────
+// â”€â”€â”€ Row Mapper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 type EventRow = typeof assessmentEvents.$inferSelect;
 
@@ -21,30 +21,38 @@ const mapRowToEvent = (row: EventRow): AssessmentLifecycleEvent => ({
   reason: "",
 });
 
-// ─── In-Memory (dev/test fallback) ─────────────────────────────────
+// â”€â”€â”€ In-Memory (dev/test fallback) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-export const createLifecycleEventRepository = (): LifecycleEventRepositoryAdapter => {
-  const records: AssessmentLifecycleEvent[] = [];
+export const createLifecycleEventRepository =
+  (): LifecycleEventRepositoryAdapter => {
+    const records: AssessmentLifecycleEvent[] = [];
 
-  return {
-    async record(event) {
-      records.push(event);
-    },
-    async listByAssessment(assessmentId, organizationId) {
-      return records.filter((record) => record.assessmentId === assessmentId && record.organizationId === organizationId);
-    },
-    withOrganization(organizationId: string) {
-      return {
-        record: async (event) => this.record(event),
-        listByAssessment: async (assessmentId: string) => this.listByAssessment(assessmentId, organizationId)
-      };
-    }
+    return {
+      async record(event) {
+        records.push(event);
+      },
+      async listByAssessment(assessmentId, organizationId) {
+        return records.filter(
+          (record) =>
+            record.assessmentId === assessmentId &&
+            record.organizationId === organizationId,
+        );
+      },
+      withOrganization(organizationId: string) {
+        return {
+          record: async (event) => this.record(event),
+          listByAssessment: async (assessmentId: string) =>
+            this.listByAssessment(assessmentId, organizationId),
+        };
+      },
+    };
   };
-};
 
-// ─── Drizzle (production) ──────────────────────────────────────────
+// â”€â”€â”€ Drizzle (production) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-export const createDrizzleLifecycleEventRepository = (db: DbClient): LifecycleEventRepositoryAdapter => {
+export const createDrizzleLifecycleEventRepository = (
+  db: DbClient,
+): LifecycleEventRepositoryAdapter => {
   return {
     async record(event) {
       await db.insert(assessmentEvents).values({
@@ -60,19 +68,18 @@ export const createDrizzleLifecycleEventRepository = (db: DbClient): LifecycleEv
       });
     },
     async listByAssessment(assessmentId, organizationId) {
-      const results = await db.select().from(assessmentEvents)
-        .where(
-          and(
-            eq(assessmentEvents.assessmentId, assessmentId),
-            )
-        );
+      const results = await db
+        .select()
+        .from(assessmentEvents)
+        .where(and(eq(assessmentEvents.assessmentId, assessmentId)));
       return results.map(mapRowToEvent);
     },
     withOrganization(organizationId: string) {
       return {
         record: async (event) => this.record(event),
-        listByAssessment: async (assessmentId: string) => this.listByAssessment(assessmentId, organizationId)
+        listByAssessment: async (assessmentId: string) =>
+          this.listByAssessment(assessmentId, organizationId),
       };
-    }
+    },
   };
 };

@@ -1,15 +1,15 @@
-/**
- * LedgerService — Assessment Control Events (ADR-002)
+﻿/**
+ * LedgerService â€” Assessment Control Events (ADR-002)
  *
- * ⛔ APPEND-ONLY: NUNCA fazer UPDATE ou DELETE nesta tabela.
- * ⛔ Estado actual = reducer sobre todos os eventos para (assessment_id, scf_control_id).
+ * â›” APPEND-ONLY: NUNCA fazer UPDATE ou DELETE nesta tabela.
+ * â›” Estado actual = reducer sobre todos os eventos para (assessment_id, scf_control_id).
  *
  * Tipos de eventos suportados:
- *   status_changed    — mudança de implementation_status no SoA
- *   evidence_added    — evidência associada a um controlo
- *   finding_created   — achado de gap analysis associado
- *   approval_gate     — gate de aprovação humana registado
- *   mutation_blocked  — tentativa de escrita directa bloqueada
+ *   status_changed    â€” mudanÃ§a de implementation_status no SoA
+ *   evidence_added    â€” evidÃªncia associada a um controlo
+ *   finding_created   â€” achado de gap analysis associado
+ *   approval_gate     â€” gate de aprovaÃ§Ã£o humana registado
+ *   mutation_blocked  â€” tentativa de escrita directa bloqueada
  *
  * Ref: docs/decisions/ADR-002-ledger-append-only.md
  */
@@ -18,7 +18,7 @@ import { eq, and, desc } from "drizzle-orm";
 import { assessmentControlEvents } from "@standard/schemas";
 import type { DbClient } from "./db";
 
-// ── Types ──────────────────────────────────────────────────────────────────
+// â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export type LedgerEventType =
   | "status_changed"
@@ -46,7 +46,7 @@ export interface LedgerEventRecord extends LedgerEventInput {
 }
 
 export interface LedgerServiceAdapter {
-  /** Append a new event — only allowed operation on this table */
+  /** Append a new event â€” only allowed operation on this table */
   append(event: LedgerEventInput): Promise<LedgerEventRecord>;
   /** Retrieve full event history for a control within an assessment */
   listByControl(
@@ -61,7 +61,7 @@ export interface LedgerServiceAdapter {
   ): Promise<LedgerEventRecord[]>;
 }
 
-// ── Row Mapper ─────────────────────────────────────────────────────────────
+// â”€â”€ Row Mapper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 type LedgerRow = typeof assessmentControlEvents.$inferSelect;
 
@@ -80,7 +80,7 @@ const mapRowToRecord = (row: LedgerRow): LedgerEventRecord => ({
   occurredAt: row.occurredAt,
 });
 
-// ── In-Memory (dev/test fallback) ──────────────────────────────────────────
+// â”€â”€ In-Memory (dev/test fallback) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const createLedgerService = (): LedgerServiceAdapter => {
   const records: LedgerEventRecord[] = [];
@@ -113,13 +113,13 @@ export const createLedgerService = (): LedgerServiceAdapter => {
   };
 };
 
-// ── Drizzle (production) ───────────────────────────────────────────────────
+// â”€â”€ Drizzle (production) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const createDrizzleLedgerService = (
   db: DbClient,
 ): LedgerServiceAdapter => ({
   async append(event) {
-    // ⛔ ONLY INSERT — never update/delete (ADR-002)
+    // â›” ONLY INSERT â€” never update/delete (ADR-002)
     const [row] = await db
       .insert(assessmentControlEvents)
       .values({
@@ -139,7 +139,7 @@ export const createDrizzleLedgerService = (
 
     if (!row)
       throw new Error(
-        "[Ledger] INSERT returned no row — constraint violation.",
+        "[Ledger] INSERT returned no row â€” constraint violation.",
       );
     return mapRowToRecord(row);
   },

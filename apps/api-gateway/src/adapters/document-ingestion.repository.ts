@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @module document-ingestion.repository
  * @description Drizzle PostgreSQL repositories for Document Ingestion pipeline.
  * Implements: DocumentRecordRepository, DocumentJobRepository, DocumentChunkRepository,
@@ -102,7 +102,7 @@ const createDrizzleDocumentRepository = (
           mimeType: String(doc.mime_type),
           fileSize: Number(doc.file_size),
           updatedAt: new Date(),
-        })
+        } as any)
         .where(eq(documents.id, String(doc.document_id)));
     },
 
@@ -236,7 +236,7 @@ const createDrizzleDocumentJobRepository = (
           startedAt: job.started_at ? new Date(job.started_at) : null,
           completedAt: job.completed_at ? new Date(job.completed_at) : null,
           updatedAt: new Date(),
-        })
+        } as any)
         .where(eq(documentExtractionJobs.id, String(job.job_id)));
     },
 
@@ -384,7 +384,7 @@ const createDrizzleIngestionVectorRefRepository = (
               id: String(ref.vector_reference_id),
               organizationId: String(ref.organization_id),
               assessmentId: String(ref.assessment_id),
-              kbEntryId: String(ref.chunk_id), // Maps chunk → kbEntry relationship
+              kbEntryId: String(ref.chunk_id), // Maps chunk â†’ kbEntry relationship
               vectorProvider: String(ref.vector_provider),
               vectorIndexName: String(ref.vector_index_name),
               vectorId:

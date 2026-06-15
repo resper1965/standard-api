@@ -1,10 +1,10 @@
-import { eq, and } from "drizzle-orm";
+﻿import { eq, and } from "drizzle-orm";
 import { approvalEvents } from "@standard/schemas";
 import type { ApprovalEvent, ApprovalGate } from "@standard/assessment-engine";
 import type { ApprovalRecord, ApprovalRepositoryAdapter } from "../http";
 import type { DbClient } from "./db";
 
-// ─── Row Mapper ─────────────────────────────────────────────────────
+// â”€â”€â”€ Row Mapper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Single point of translation between Drizzle row types and domain types.
 // The pgEnum column types align with domain enums at runtime, but TS
 // sees them as different nominal types. This mapper handles the cast once.
@@ -34,7 +34,7 @@ const mapRowToEvent = (row: ApprovalRow): ApprovalEvent => ({
   traceId: row.traceId,
 });
 
-// ─── In-Memory (dev/test fallback) ─────────────────────────────────
+// â”€â”€â”€ In-Memory (dev/test fallback) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const createApprovalRepository = (): ApprovalRepositoryAdapter => {
   const records = new Map<string, ApprovalRecord>();
@@ -108,7 +108,7 @@ export const createApprovalRepository = (): ApprovalRepositoryAdapter => {
   };
 };
 
-// ─── Drizzle (production) ──────────────────────────────────────────
+// â”€â”€â”€ Drizzle (production) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const createDrizzleApprovalRepository = (
   db: DbClient,
@@ -181,7 +181,7 @@ export const createDrizzleApprovalRepository = (
 
       const results = await db.select().from(approvalEvents).where(conditions);
 
-      // Filter server-side for null decision (pending) — avoids isNull import complexity
+      // Filter server-side for null decision (pending) â€” avoids isNull import complexity
       return results.filter((r) => r.decision === null).map(mapRowToRecord);
     },
     withOrganization(organizationId: string) {
