@@ -50,6 +50,7 @@ Este arquivo é o índice central de decisões arquiteturais e operacionais do S
 | ADR-002 | [`ADR-002-ledger-append-only.md`](docs/decisions/ADR-002-ledger-append-only.md) | Ledger append-only — **NÃO fazer UPDATE** | ✅ Critical |
 | ADR-003 | [`ADR-003-mcp-async-pattern.md`](docs/decisions/ADR-003-mcp-async-pattern.md) | MCP dispatch assíncrono — **NÃO despachar síncrono** | ✅ Critical |
 | ADR-014 | [`ADR-014-scr-rmm-roc-summary.md`](docs/decisions/ADR-014-scr-rmm-roc-summary.md) | SCR-RMM/ROC compliance summary model | ✅ Accepted |
+| ADR-016 | [`ADR-016-llamaparse-ingestion-fallback.md`](docs/decisions/ADR-016-llamaparse-ingestion-fallback.md) | Ingestão com LlamaParse e Fallback Híbrido | ✅ Accepted |
 
 ### Operacional
 
