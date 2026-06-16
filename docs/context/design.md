@@ -10,6 +10,7 @@ Este documento rege todo o ecossistema visual e a interface front-end da **Stand
 * **Name:** Enterprise Gateway
 * **Conversão Frontal:** Carrosséis robustos de Logos (Validação Institucional).
 * **Posicionamento de CTAs:** `Contact Sales` (Primário - High contrast) / `Login` (Secundário/Ghost).
+* **Alinhamento de Altura dos Headers:** O header da página (Topbar) e o header do menu lateral (Sidebar Logo) possuem obrigatoriamente a mesma altura fixa (definida por `var(--topbar-height)` ou `52px`).
 * **Jornada Vertical Típica (Landing):**
   1. Header e Hero Mission-focused (C/ Video ou Metric central)
   2. Soluções segmentadas por Indústria
@@ -20,52 +21,54 @@ Este documento rege todo o ecossistema visual e a interface front-end da **Stand
 ---
 
 ## 👔 2. Estilo e Semântica (Style)
-* **Design Name:** Trust & Authority
-* **Keywords e Moduladores:** Certificados em exibição (Badges), credenciais expostas, métricas quantificáveis sólidas, selos de segurança, estética corporativa conservadora e estável.
-* **Fit Tecnológico/Setor:** Softwares B2B SaaS, Área Médica (Healthcare), Startups Financeiras, Ferramentas Legais / Compliance.
+* **Design Name:** Nordic Tech (Dark Mode Only)
+* **Keywords e Moduladores:** Estética corporativa escura de alta precisão, minimalismo funcional, superfícies de grafite com acentos discretos e vibrantes em verde sálvia, foco na legibilidade absoluta e conformidade técnica.
+* **Fit Tecnológico/Setor:** Softwares B2B SaaS, Área Médica (Healthcare), Startups Financeiras, Ferramentas Legais / Compliance / GRC.
 * **Limites de Qualidade:** ⚡ Excelente Performance (zero reflows/shifts layoutísticos) | ✓ **WCAG AAA** Strict.
 
 ---
 
 ## 🎨 3. Sistema de Cores (Color Strategy)
-Estratégia corporativa central baseada em Azul Marinho Sereno, Cinzas limpos e Verdes Hospitalares, visando comunicar *integridade e discrição*.
+Estratégia corporativa baseada em Grafite Antracite, tons de cinza limpos e acentos em Verde Sálvia, visando comunicar *integridade, discrição e sofisticação*.
 
-| Variável (Uso Padrão do Tailwind) | Nome da Cor (Ext) | Propósito Prático |
+| Variável (Tailwind) | Nome da Cor (Ext) | Propósito Prático |
 | :--- | :--- | :--- |
-| `primary` (**#0891B2**) | Calm/Authority Blue | Cor predominante de destaque e identidade da marca, badgets principais e headers ativos. |
-| `secondary` (**#22D3EE**) | Accent Cyan/Tech Blue | Usado em bordas suaves ativos, hover states do primary e efeitos decorativos finos. |
-| `cta` (**#059669**) | Health/Trust Green | Botão estrito de Ação/Conversões e validações de sucesso normativo. |
-| `text-brand-900` (**#164E63**) | Deep Text | Contrastante principal para a Legibilidade textual absoluta sobre fundos claros. Recomendado em parágrafos e Data Tables. |
-| `bg-brand` (**#ECFEFF**) | Light Medical Cyan | Recomendado como `bg` principal de telas claras e contêineres de cartões de informação técnica. |
+| `primary` / `accent` (**#8fa89b**) | Sage Green | Verde Sálvia digital, cor predominante de destaque, botões primários e marcações de sucesso. |
+| `background` (**#1a1d20**) | Graphite Anthracite | Fundo principal da aplicação para reduzir a fadiga visual. |
+| `card` / `surface` (**#212529**) | Medium Graphite | Superfície padrão de cartões, tabelas e contêineres secundários. |
+| `popover` (**#2b3035**) | Light Graphite | Usado para menus suspensos, popovers e tooltips. |
+| `foreground` (**#e9ecef**) | Off-white Gelo | Cor contrastante primária para legibilidade textual absoluta sobre fundos escuros. |
+| `muted-foreground` (**#adb5bd**) | Slate Gray | Usado em parágrafos de apoio e descrições secundárias. |
 
 ---
 
 ## 📝 4. Tipografia de Alta Legibilidade
-Divisão dupla focada intrinsecamente na familiaridade legal/documental, porém sem aspecto engessado de sistemas de justiça antigos.
+Divisão tripla focada em legibilidade técnica, documental e precisão de dados tabulares.
 
-* **Headings e Titles:** `Lexend`
-* **Textos Corporais e Componentes (Forms):** `Source Sans 3`
-* **Arquitetura Psicológica:** Corporativo, Crível, Acessível, Clean.
-* **Import CDN Universal:**
-  ```css
-  @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&family=Source+Sans+3:wght@300;400;500;600;700&display=swap');
-  ```
+* **Textos Corporais e Formulários (Geral):** `'Inter'`, com suavização de subpixel ativa (`letter-spacing: -0.01em`).
+* **Headings e Titles:** `'Plus Jakarta Sans'`, com espaçamento condensado (`letter-spacing: -0.03em`).
+* **Dados e Tabelas de Métricas:** `'Outfit'`, com suporte a números tabulares (`font-variant-numeric: tabular-nums`).
+* **Código e Elementos Técnicos:** `'JetBrains Mono'`, `'Fira Code'`, `'SF Mono'`, `monospace`.
 
 ---
 
-## 🕹️ 5. Interaction Patterns & Efeitos Chave
-O sistema interativo repudia mudanças bruscas de contexto (shift) ou surpresas (como o uso das animações exageradas do modo DevTool).
+## 🕹️ 5. Interaction Patterns & Efeitos Chave ("Spells")
+O sistema interativo repudia mudanças bruscas de contexto (shift) ou surpresas (como o uso de animações exageradas). Todas as animações principais são suavizadas por micro-interações de alta fidelidade:
 
-* **Micro-animações autorizadas:** Efeitos de Hover sutis focados unicamente em badge activation e pulse sutil para alertar mudanças (score metrics updating). Revelação em fade-in moderado (Smooth stat reveals). Card border glow em focus.
-* **Interação e Cursores:** A classe `cursor-pointer` é **mínimo requisito** para TODOS e eventuais componentes em que a intenção seja clicável.
-* **Transições Universais:** `transition-colors duration-200` ao longo de toda a aplicação (nada que ultrapasse 500ms).
+* **Brand Dot (`.brand-dot`):** Respiração sutil e contínua no logotipo (oscilação suave de opacidade, 4s).
+* **Notification Bell (`.bell-spell`):** Inclinação rápida e orgânica de `8deg` no hover, sem bounce exagerado.
+* **Avatar Glow (`.avatar-glow`):** Halo sutil de verde sálvia de 2px em hover.
+* **Magnetic Nav (`.nav-magnetic`):** Deslocamento horizontal do ícone de navegação lateral por `1px` no hover.
+* **Active Nav Indicator (`.nav-active-pill`):** Barra vertical sutil de Verde Sálvia no item lateral ativo.
+* **Card Entrance Stagger (`.card-spell` / `.animate-stagger`):** Revelação escalonada em fade-in e translação Y (0ms a 250ms de delay).
+* **Transições Universais:** `transition-colors duration-150` ao longo de toda a aplicação.
 
 ---
 
 ## 🛑 6. Anti-Patterns Globais (Avoid Actions)
 Nunca implemente o seguinte:
-* **UI Emojis:** JAMAIS use `🔒` ou `📈` de forma explícita na UI. Substitua SEMPRE por SVGs confiáveis (ex: padrões **Heroicons / Lucide** ou os Oficiais das empresas em Simple Icons).
-* **IA Candy Gradients:** Evite absolutamente fundos com gradientes roxos/rosas neo-inteligentes. Mantenha os acentos em azul sólido.
+* **UI Emojis:** JAMAIS use emojis de forma explícita na UI. Substitua SEMPRE por SVGs confiáveis (ex: padrões **Heroicons / Lucide** ou os Oficiais das empresas em Simple Icons).
+* **IA Candy Gradients:** Evite absolutamente fundos com gradientes roxos/rosas neo-inteligentes. Mantenha os acentos em azul ou verde sálvia sólido.
 * **Hidden Badges:** Ocultação de credenciais legais sob tooltips genéricos. Certificados têm de ser óbvios.
 
 ---
@@ -82,12 +85,13 @@ Qualquer alteração via código, criação de novas rotas ou UI features só de
 ### Qualidade Funcional da Navegação (Interaction)
 - [ ] Presença de tag `cursor-pointer` em todo form, button ou card clicável.
 - [ ] Hover State em transições suaves, nunca modificando tamanho escalar (`scale()` ou margin shifter) que distorça grids vizinhos.
-- [ ] Elementos têm Focus States acessíveis visíveis para Keyboard Navigation (TAB focus).
+- [ ] Elementos têm Focus States acessíveis visíveis para Keyboard Navigation (TAB focus com anel verde sálvia `.focus-ring`).
 
-### Legibilidade e Constantes (Light Protocol)
-- [ ] **Modo Claro (Glassmorphism):** Se usar modais vítreos, obrigatoriamente usar `#FFFFFF` ou `bg-white/80` super translúcido, refutando transparências fracas de *10%* (`bg-white/10`).
-- [ ] Contraste tipográfico testado para um mínimo WCAG de `4.5:1` (Sombra nos textos em darkmode se necessário; Dark grays profundos para textos menores, nunca `#94A3B8`).
+### Legibilidade e Constantes (Dark Protocol)
+- [ ] **Modo Escuro (Glassmorphism):** Se usar modais vítreos, usar fundos translúcidos como `bg-card/80` ou `bg-black/40` com desfoque de fundo avançado, refutando transparências fracas de *10%*.
+- [ ] Contraste tipográfico testado para um mínimo WCAG de `4.5:1` (Dark grays profundos para textos menores, nunca `#94A3B8`).
 
-### Responsividade (Edge)
+### Responsividade e Layout (Edge)
 - [ ] Componente renderizado corretamente para celular (`375px`), iPad/Tablet (`768px`), Tela 1080P (`1440px`) e Tela Padrão de Notebooks Empresariais (`1024px`) sem barragens horizontais (`overflow-x`).
-- [ ] `prefers-reduced-motion` engatado no CSS para clientes que desabilitam animações sistêmicas do Windows/MacOS.
+- [ ] O header da página (Topbar) e o header do menu lateral (Sidebar Logo) possuem exatamente a mesma altura.
+- [ ] `prefers-reduced-motion` engatado no CSS para desativar imediatamente transições e keyframes para usuários que desabilitam animações no sistema operacional.
