@@ -17,6 +17,7 @@
 | 04 | Fluxo de Dados | [04-fluxo-de-dados.md](./04-fluxo-de-dados.md) | Pipeline RAG, lifecycle workflow, orquestração Council |
 | 05 | Dependências Runtime | [05-dependencias-runtime.md](./05-dependencias-runtime.md) | ENV vars, CORS, CSP, security headers, bindings de infra |
 | 06 | Diagnóstico de Saúde | [06-diagnostico-saude.md](./06-diagnostico-saude.md) | Dívida técnica, riscos de tenancy, roadmap de evolução |
+| 07 | Design System | [07-design.md](./07-design.md) | Tokens de design system (Nordic Tech), cores, tipografia e micro-interações |
 
 ---
 

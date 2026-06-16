@@ -51,6 +51,7 @@
     "_reversa_sdd/03-arquitetura-c4.md",
     "_reversa_sdd/04-fluxo-de-dados.md",
     "_reversa_sdd/05-dependencias-runtime.md",
-    "_reversa_sdd/06-diagnostico-saude.md"
+    "_reversa_sdd/06-diagnostico-saude.md",
+    "_reversa_sdd/07-design.md"
   ]
 }
