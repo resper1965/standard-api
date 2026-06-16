@@ -1,175 +1,264 @@
-# Standard B2B Integration Guide
+# Standard B2B Developer Portal & Integration Guide
 
-This guide details how external applications (such as independent Privacy Systems, ERPs, and specialized SaaS) can connect to the Standard API to consume the GRC Agentic Engine programmatically.
+Welcome to the **Standard API Developer Portal**. This guide provides the complete blueprint for integrating external applications (Privacy Management Systems, ERPs, GRC platforms, and automated agents) with the Standard GRC Engine.
 
-> [!IMPORTANT]
-> **Boundary Limits (What we do vs What you do):** Before writing any code, you and your development team must read our [Shared Responsibility Model](file:///docs/architecture/SHARED_RESPONSIBILITY_MODEL.md). Standard is a headless analytical engine. We do not provide UI dashboards, we do not calculate custom risk matrices (Probability x Impact), and we do not trigger email notifications. Your application must handle the Human-in-the-Loop workflows, UI rendering, and business-specific automations.
+---
 
-## Autonomous LLM Documentation (New!)
+## 🔄 Integration Workflow (Async Pattern)
 
-To rapidly onboard your internal AI agents (like Claude Code, Cursor, or Aider), simply point them to our raw markdown definitions.
-* Provide your agent with the URL to our full LLM spec: `GET /docs/api/llms-full.txt` (or if you have the repo, point to `docs/api/llms-full.txt`).
-* This file contains the complete OpenAPI schemas, endpoints, and data limits, preventing AI hallucinations regarding new fields like `observation_start_date` and `risk_acceptance_expires_at`.
+Since evaluating compliance policies and evidence requires deep LLM analysis, Standard handles heavy operations asynchronously using a **Queue-and-Poll** or **Webhook** pattern to guarantee edge-worker execution limits are never breached.
 
-## Authentication (Machine-to-Machine)
+```mermaid
+sequenceDiagram
+    autonumber
+    participant App as External App (Your SaaS)
+    participant GW as Standard API Gateway
+    participant Queue as Agent Run Queue
+    participant Agent as Agent Runtime (Council)
+    participant DB as Neon Database
 
-The Standard API assumes secure external B2B integration using **API Keys**. It is strictly a Machine-to-Machine (M2M) flow, meaning there are no interactive login prompts or redirect flows required.
+    App->>GW: POST /api/v1/integrations/assessments/:id/analyze-text (with API Key)
+    Note over GW: Validate Key (KV Cache Hit: < 15ms)
+    GW->>Queue: Push Job details (UUID)
+    GW-->>App: HTTP 202 Accepted { job_id, status: "queued" }
+    
+    Queue->>Agent: Process Job (async model invocation)
+    Note over Agent: Retrieve SCF core mappings & evaluate evidence
+    Agent->>DB: Write validated events to Ledger (assessment_control_events)
+    Note over Agent: Mark job as "completed"
+    
+    alt Webhook Pattern (Recommended)
+        Agent->>App: POST [Your Webhook URL] Event: mcp.tool.completed (HMAC SHA-256)
+    else Polling Pattern
+        loop Every 5s
+            App->>GW: GET /api/v1/agent-runs/:agentRunId
+            GW-->>App: HTTP 200 OK { status: "completed" | "processing" }
+        end
+    end
+```
 
-1.  **Obtain a Key:** Generates an API key via the Developer Console (`Settings > Developers > API Keys`) or using the core `/api/v1/api-keys` route with a valid interactive Administrator token.
-2.  **Pass the Token:** External systems must pass the token precisely in the `Authorization` header as a Bearer token.
-    *   *Example prefix:* `Bearer standard_live_...`
+---
+
+## 🔑 Authentication (Machine-to-Machine)
+
+Standard utilizes secure, low-latency API Keys for B2B system-level access. Requests are stateless and bypass interactive login flows.
+
+### Authorization Header
+Attach the API key as a Bearer token in the `Authorization` header of all HTTP requests:
+```http
+Authorization: Bearer standard_live_your_api_key_hash_here
+```
+
+### Try it with cURL
+```bash
+curl -X GET "https://api.standard.bekaa.eu/api/v1/assessments" \
+  -H "Authorization: Bearer standard_live_demo_key_example" \
+  -H "Content-Type: application/json"
+```
 
 > [!WARNING]
-> Requests authenticated via this method resolve the actor natively as `m2m-agent` and inherit the Organization context directly from the Key issuing authority. Because of this security restriction, M2M agents **cannot** modify or generate other API keys.
+> M2M keys are bound to the issuing Organization's context. They inherit least-privilege scopes and **cannot** create, modify, or revoke other API keys.
 
-## Raw Text Analysis (ROPA & Privacy Data Integration)
+---
 
-A core feature for consuming platforms is analyzing unstructured raw text (such as privacy workflows or Records of Processing Activities) rapidly via AI mapped against official frameworks context.
+## 📡 API Endpoint Reference
 
-### POST `/api/v1/integrations/assessments/:assessmentId/analyze-text`
+### 1. Raw Text Analysis
+Analyze unstructured privacy statements, ROPAs, or vendor responses without uploading large PDF blobs.
 
-This endpoint accepts a direct payload of unstructured text, bypassing the lengthy blob document chunking phase, and pipes it straight into the Agent Runtime models. 
+* **Endpoint:** `POST /api/v1/integrations/assessments/:assessmentId/analyze-text`
+* **Content-Type:** `application/json`
 
-**Payload (JSON)**
+#### Request Body Schema
 ```json
 {
-  "raw_text": "This application collects lead emails directly via a landing page form which is protected by TLS 1.3... (Full text from Privacy System here)",
+  "raw_text": "Customer emails are collected via landing pages. Databases are encrypted with AES-256. Access is restricted via OAuth 2.0 with MFA enabled.",
   "mode": "consultative",
-  "context_focus": ["GDPR", "Data Subject Constraints"]
+  "context_focus": ["GDPR", "Data Protection"]
 }
 ```
 
-**Parameters Explained:**
-*   `raw_text`: The stringified raw context to be semantically verified.
-*   `mode`: **Critical architectural flag**.
-    *   If `"strict"`: The output behaves as an unforgiving auditor. If security factors are not explicitly stated, the result is marked as an `"evidence_gap"`.
-    *   If `"consultative"`: The agent uses inference to hypothesize the most likely security implementations mapping to standard controls, outputting high-probability fields directly meant for your Privacy System to prompt the end-user (E.g. "Do you have an active DPA?").
-*   `context_focus`: Allows your external app to force the LLM evaluation to steer towards specific domains.
+| Parameter | Type | Required | Default | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `raw_text` | `string` | **Yes** | — | Unstructured evidence or security control descriptions. |
+| `mode` | `string` | No | `"consultative"` | `"strict"` (audits strictly, flags omissions as gaps) or `"consultative"` (infers matching controls and suggests fixes). |
+| `context_focus`| `array` | No | `[]` | List of frameworks or keywords to steer LLM focus (e.g. `["GDPR", "ISO 27001"]`). |
 
-**Response (202 Accepted)**
-Because parsing extensive privacy processes relies on high-tier LLM tokenization, the route operates via queue polling to prevent HTTP timeouts.
-
+#### Response (`202 Accepted`)
 ```json
 {
   "message": "Analysis run started asynchronously.",
   "job": {
-    "agent_run_id": "run_01j72q...",
+    "agent_run_id": "run_982a39d4-c9f1-48bd-a5b6-c3d710127b57",
     "mode": "consultative",
     "status": "queued"
   },
-  "trace_id": "req_88f91..."
+  "trace_id": "trace_88f912c4-8263-4527-9d76-72e7ee11e0ee"
 }
 ```
-
-## Polling for Run Results
-
-Once the `analyze-text` response is received, external systems shall retrieve the validated mappings asynchronously using the returned `agent_run_id`.
-
-### GET `/api/v1/agent-runs/:agentRunId`
-
-Your external systems invoke this using the M2M Key to fetch the final Output JSON containing `not_met` gaps or fully mapped findings ready for consumption in your native UI.
-
-> [!TIP]
-> **Token Cost Tracking**: Standard records metric limits (`integration_text_analysis_requests`) based on API Key volume. LLM tokens expended through M2M integrations are charged globally per Organization via the native Cloudflare AI Gateway telemetry logs. Keep polling intervals logical (e.g., every 5 seconds) until `status` equals `completed`. 
-
-## SaaS Management API: Tenants & Organizations
-
-For platforms that white-label Standard or need to provision SaaS isolation dynamically without human intervention, Standard provides a master core API. 
-*(Note: These routes require a root Administrator or Service Account with provisioning permission).*
-
-### 1. Provisioning a Subscription (Tenant)
-A **Tenant** (represented by `organization_id`) is the root billing and administrative unit.
-```http
-POST /api/v1/tenants
-Content-Type: application/json
-
-{
-  "name": "Customer Corp LLC",
-  "slug": "customer-corp"
-}
-```
-
-### 2. Issuing an Organization (Sub-Organization)
-Organizations group assessments beneath a Tenant. Assessments are bound to specific Organizations.
-```http
-POST /api/v1/organizations
-Content-Type: application/json
-
-{
-  "organization_id": "00000000-0000-0000-0000-000000000000",
-  "slug": "hq",
-  "name": "Headquarters",
-  "user_id": "user_12345"
-}
-```
-
-### 3. Key Governance
-Administrators can programmatically list, issue, and revoke keys mapped to their Root Organization. M2M endpoints themselves are forbidden from creating new keys to prevent privilege escalation.
-```http
-GET    /api/v1/api-keys
-POST   /api/v1/api-keys
-DELETE /api/v1/api-keys/:keyId
-```
-
-## RBAC Levels & Security Borders
-
-Standard enforces strict Role-Based Access Control out-of-the-box. There are two primary domains of administrative visibility:
-
-1. **Global Superadmin (`resper@bekaa.eu`)**: Operates on the absolute Top-Level. Capable of executing Cross-Organization queries, registering new Tenants (subscriptions), injecting Official SCF Catalogs, and overseeing the entire Master Infrastructure.
-2. **Organization Admin**: This is the owner of a specific customer instance (e.g., the CISO of *Customer Corp LLC*). This administrator focuses solely on their isolated domain. They have access to:
-   * View Subscription status and expiration.
-   * Provision Organization-specific **M2M API Keys**.
-   * Retrieve Integration Documentation.
-   * Manage users mapped to their specific `organizationId`.
 
 ---
 
-## 🤖 AI Vibe-Coding Prompt (Integration Fast-Track)
+### 2. Poll Job Status
+Check the status of an asynchronous analysis run.
 
-If a **Organization Admin** wishes to integrate their internal system (e.g., an internal Privacy App or GRC tool) with Standard using an AI Coding Assistant (Cursor, Claude Code, GitHub Copilot), they can simply copy and paste the universal prompt below into their AI dev tool to instantly generate the correct boilerplate.
+* **Endpoint:** `GET /api/v1/agent-runs/:agentRunId`
 
-<details>
-<summary><b>Click to copy the AI Prompt Template</b></summary>
-
-```markdown
-@system You are tasked with refactoring and integrating our internal system with the Standard Corporate GRC Engine (API-First). 
-We need to pipe raw unstructured text (like a ROPA or policy document) into their automated analyzer, handle asynchronous results, and map new GRC temporal fields.
-
-### 1. Context Acquisition
-Before writing any code, fetch and read their absolute OpenAPI and System definitions to avoid hallucinations. You can retrieve their absolute context at:
-- `https://[STANDARD_API_DOMAIN]/docs/api/llms-full.txt`
-Read that file completely to understand the available endpoints, the `AssessmentRecord` schemas, and the `PoamItem` schemas.
-
-### 2. Authentication Pattern
-They use pure Machine-to-Machine API Keys. You must attach this header to all outgoing requests to their API:
-`Authorization: Bearer standard_live_[YOUR_KEY_HERE]`
-DO NOT try to implement OAuth flows, it is purely Bearer API Key based.
-
-### 3. Target Endpoint (Fire-and-Forget Text Analysis)
-URL: `POST https://[STANDARD_API_DOMAIN]/api/v1/integrations/assessments/[YOUR_ASSESSMENT_ID]/analyze-text`
-
-Payload Schema (JSON):
+#### Response (`200 OK` - Processing)
 ```json
 {
-  "raw_text": "YOUR EXTRACTED TEXT OR ROPA CONTENT",
-  "mode": "consultative", // Use 'consultative' for inferences, 'strict' for pure auditing
-  "context_focus": ["GDPR", "Data Privacy"]
+  "agent_run_id": "run_982a39d4-c9f1-48bd-a5b6-c3d710127b57",
+  "status": "processing",
+  "completed_at": null,
+  "output": null
 }
 ```
 
-### 4. New GRC Fields (Action Required)
-Their API has recently introduced two critical fields that we must handle on our side. Update our database and API mappers to respect them:
-1. `observation_start_date` and `observation_end_date` inside the Assessment endpoints.
-2. `risk_acceptance_expires_at` inside the POA&M item endpoints.
-Make sure you parse these dates correctly and expose them in our UI for the final auditor.
-
-### 5. Action Items for you:
-1. Fetch and digest `llms-full.txt`.
-2. Refactor `StandardIntegrationService` to accommodate the new GRC fields (`observation_start_date`, `risk_acceptance_expires_at`).
-3. Handle a `202 Accepted` response from the text analysis endpoint. Extract the `job.agent_run_id`.
-4. Implement a polling mechanism pointing to `GET /api/v1/agent-runs/[agent_run_id]` every 5 seconds until `status` is `completed`.
-5. Return the resulting mapped gaps and use them to power our own UX. Maintain strict error handling for 403 Forbidden (API Key invalid).
+#### Response (`200 OK` - Completed)
+```json
+{
+  "agent_run_id": "run_982a39d4-c9f1-48bd-a5b6-c3d710127b57",
+  "status": "completed",
+  "completed_at": "2026-06-16T22:48:10Z",
+  "output": {
+    "compliance_index": 0.85,
+    "findings_detected": [
+      {
+        "control_code": "GOV-01.1",
+        "status": "not_met",
+        "gap_rationale": "Evidence fails to specify standard MFA criteria for database administrators."
+      }
+    ]
+  }
+}
 ```
-</details>
 
+---
 
+## 🛠️ Multi-Language SDK Snippets
+
+Copy these code snippets to quickly bootstrap your integration:
+
+````carousel
+```typescript
+// Node.js (TypeScript) Integration Example
+import { StandardClient } from "@standard/sdk";
+
+const client = new StandardClient({
+  apiKey: "standard_live_your_key_here",
+  organizationId: "your-org-uuid"
+});
+
+async function runAnalysis(assessmentId: string, text: string) {
+  const { data: job } = await client.integrations.analyzeText(assessmentId, {
+    raw_text: text,
+    mode: "consultative"
+  });
+  
+  console.log(`Job queued: ${job.agent_run_id}`);
+  
+  // Polling helper
+  const interval = setInterval(async () => {
+    const { data: run } = await client.agentRuns.get(job.agent_run_id);
+    if (run.status === "completed") {
+      clearInterval(interval);
+      console.log("Analysis Completed:", run.output);
+    }
+  }, 5000);
+}
+```
+<!-- slide -->
+```python
+# Python Integration Example
+import time
+import requests
+
+API_URL = "https://api.standard.bekaa.eu/v1"
+HEADERS = {
+    "Authorization": "Bearer standard_live_your_key_here",
+    "Content-Type": "application/json"
+}
+
+def analyze_evidence(assessment_id, raw_text):
+    payload = {"raw_text": raw_text, "mode": "consultative"}
+    res = requests.post(f"{API_URL}/integrations/assessments/{assessment_id}/analyze-text", json=payload, headers=HEADERS)
+    res.raise_for_status()
+    job_id = res.json()["job"]["agent_run_id"]
+    
+    while True:
+        status_res = requests.get(f"{API_URL}/agent-runs/{job_id}", headers=HEADERS)
+        status_data = status_res.json()
+        if status_data["status"] == "completed":
+            return status_data["output"]
+        time.sleep(5)
+```
+<!-- slide -->
+```go
+// Go Native Integration Example
+package main
+
+import (
+	"bytes"
+	"encoding/json"
+	"net/http"
+)
+
+type AnalyzeRequest struct {
+	RawText string   `json:"raw_text"`
+	Mode    string   `json:"mode"`
+}
+
+func TriggerAnalysis(assessmentID string, text string) (*http.Response, error) {
+	reqBody, _ := json.Marshal(AnalyzeRequest{RawText: text, Mode: "consultative"})
+	req, _ := http.NewRequest("POST", "https://api.standard.bekaa.eu/v1/integrations/assessments/"+assessmentID+"/analyze-text", bytes.NewBuffer(reqBody))
+	
+	req.Header.Set("Authorization", "Bearer standard_live_your_key_here")
+	req.Header.Set("Content-Type", "application/json")
+	
+	client := &http.Client{}
+	return client.Do(req)
+}
+```
+````
+
+---
+
+## 📅 Temporal GRC Metadata Fields
+
+Your client database schemas must incorporate the following metadata fields introduced in the Standard GRC Engine to avoid mapping errors:
+
+| Field Name | Type | Context | Description | Example |
+| :--- | :--- | :--- | :--- | :--- |
+| `observation_start_date` | `ISO 8601 Date` | Assessment | The start date of the period evaluated during audit. | `"2026-01-01"` |
+| `observation_end_date` | `ISO 8601 Date` | Assessment | The end date of the period evaluated during audit. | `"2026-06-30"` |
+| `risk_acceptance_expires_at`| `ISO 8601 DateTime`| POA&M Item | Expiration timestamp for temporary risk acceptances. | `"2026-12-31T23:59:59Z"` |
+
+---
+
+## 🤖 AI Vibe-Coding Prompt
+
+Copy this template into your AI Development tool (e.g. Cursor, Claude Code, GitHub Copilot) to generate your integration code automatically:
+
+```markdown
+@system You are tasked with integrating our application with the Standard GRC Engine (API-First).
+We must submit raw unstructured text for compliance analysis, parse the async status, and store GRC temporal metadata fields.
+
+### Integration Parameters:
+1. API Domain: `api.standard.bekaa.eu`
+2. Authentication: `Authorization: Bearer standard_live_[YOUR_M2M_KEY]`
+3. Endpoint: `POST /api/v1/integrations/assessments/[ASSESSMENT_ID]/analyze-text`
+4. Polling Endpoint: `GET /api/v1/agent-runs/[AGENT_RUN_ID]`
+
+### Data Contract Requirements:
+Ensure our database models and serialization logic map the following new fields:
+- `observation_start_date` (Date)
+- `observation_end_date` (Date)
+- `risk_acceptance_expires_at` (DateTime)
+
+### Task:
+Generate a service class in our project language that:
+- Triggers the async raw text analysis.
+- Handles the HTTP 202 status and grabs the `agent_run_id`.
+- Implements a retry-loop or polling mechanism (checking every 5 seconds).
+- Persists the final output JSON containing detected compliance gaps into our database.
+```
