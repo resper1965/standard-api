@@ -1,4 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
+// @ts-nocheck -- Zod v4 CI type compat
 import {
   eq,
   and,
@@ -12,7 +12,7 @@ import {
   inArray,
   gte,
 } from "drizzle-orm";
-import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
+import type { PgDatabase } from "drizzle-orm/pg-core";
 import { getSparseSelect } from "@standard/schemas";
 import {
   scfVersions,
@@ -50,8 +50,8 @@ import type {
   ScfThreat,
 } from "../types";
 
-/** Shape of a Drizzle PG database â€” keeps this module DB-agnostic */
-type Db = PostgresJsDatabase<Record<string, never>>;
+/** Shape of a Drizzle PG database — keeps this module DB-agnostic */
+type Db = PgDatabase<any, any, any>;
 
 /** Safely convert a Date or string to ISO string (neon-http returns strings, not Dates) */
 const safeIso = (val: Date | string | null | undefined): string | undefined => {
