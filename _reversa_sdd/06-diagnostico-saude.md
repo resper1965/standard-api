@@ -22,7 +22,7 @@
 
 ### Acoplamento e Mocks
 - **Dependência de Mocks:** Muitos adaptadores ainda dependem de `createInMemory*` por padrão em modo development.
-- **Drizzle Bridge:** Existe um "hack" de tipagem (`asDb`) para converter o cliente Neon (edge) para o cliente PostgresJs usado nos pacotes core. Isso pode gerar inconsistências em transações complexas.
+- **Drizzle Bridge (Resolvido):** O repositório do core em `@standard/scf-core` foi refatorado para utilizar o tipo `PgDatabase` agnóstico de driver da Drizzle ORM, permitindo o acoplamento limpo do cliente Neon (edge) sem casting inadequado.
 
 ### Infraestrutura
 - **Workflows Workers:** A classe `AssessmentLifecycleWorkflow` ainda não está totalmente exposta/exequível no ambiente de dev local sem o worker de processos carregado separadamente.
@@ -42,7 +42,7 @@
 ### Recomendação de Evolução
 1. **Migrar para Durable Objects:** Para orquestração de Council em tempo real (colaborativo) e controle de estado stateful dos assessments.
 2. **Workers AI Optimization:** Substituir as chamadas de orquestração `orchestrator` (pseudo-agent) por modelos menores e mais rápidos rodando localmente no `Cloudflare Workers AI` para reduzir custo/latência.
-3. **Consolidar Drizzle Adapters:** Unificar os drivers do Drizzle para evitar o casting manual `as unknown as DbClient`.
+3. **Consolidar Drizzle Adapters (Resolvido):** Unificar os drivers do Drizzle utilizando tipos agnósticos como `PgDatabase` para evitar casting manual.
 
 ---
 
