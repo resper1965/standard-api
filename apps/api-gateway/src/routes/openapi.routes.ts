@@ -8,11 +8,11 @@ const htmlString = `
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>Standard GRC Platform â€” API Reference</title>
+    <title>Standard GRC API Reference</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="API-first agentic GRC platform for compliance assessments powered by the Secure Controls Framework (SCF)." />
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>ðŸ›¡ï¸</text></svg>" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
     <style>
@@ -20,16 +20,14 @@ const htmlString = `
     </style>
   </head>
   <body>
-    <div id="api-reference"></div>
-    <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
-    <script>
-      Scalar.createApiReference(document.getElementById('api-reference'), {
-        url: '/docs/openapi.json',
-        theme: 'deepSpace',
-        hideModels: false,
-        hideDownloadButton: false
-      });
+    <script 
+      id="api-reference" 
+      data-url="/docs/openapi.json"
+      data-theme="deepSpace"
+      data-hide-models="false"
+      data-hide-download-button="false">
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
   </body>
 </html>
 `;
