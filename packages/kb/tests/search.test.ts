@@ -4,6 +4,13 @@ import { expect, test } from "./test-kit";
 
 test("Search limita top_k, retorna candidate evidence e registra hash", async () => {
   const deps = await createKbFixture();
+  // Injeta um mock do Reranker para o teste
+  deps.rerankerProvider = {
+    rerank: async (query, documents) => {
+      // Mock simples: inverte a ordem dos documentos
+      return documents.map((_, i) => ({ index: documents.length - 1 - i, score: 0.9 })).sort((a, b) => b.score - a.score);
+    }
+  };
   const indexing = new KbIndexingService(deps);
   const indexResult = await indexing.indexAssessment({
     organizationId: ids.organizationId,
@@ -44,6 +51,9 @@ test("Search limita top_k, retorna candidate evidence e registra hash", async ()
   expect(result.candidate_evidence).toBe(true);
   expect(result.data.length).toBe(1);
   expect(result.data[0]!.chunk_id).toBe(ids.chunkId);
+  // Garante que o provider setou a flag
+  expect(result.data[0]!.reranked).toBe(true);
+
   expect(logs.length).toBe(1);
   expect(Boolean(logs[0]!.query_hash)).toBe(true);
   expect(JSON.stringify(logs[0]).includes("access control")).toBe(false);

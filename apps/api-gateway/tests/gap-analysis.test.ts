@@ -84,6 +84,10 @@ test("Gap Analysis API cria draft, pagina findings e exige approval_event humano
   });
   expect(findings.body.pagination.limit).toBe(1);
   expect(findings.body.data[0].assessment_status).toBe("not_evidenced");
+  // Opcional, mas se vier não pode quebrar a tipagem E2E
+  if (findings.body.data[0].source_chunks !== undefined) {
+    expect(Array.isArray(findings.body.data[0].source_chunks)).toBe(true);
+  }
 
   const submitted = await client.send(`/api/v1/gap-analysis/${draft.body.gap_analysis_version_id}/submit-review`, "POST", {}, {
     "x-standard-tenant-id": created.organizationId,
