@@ -10,6 +10,13 @@ This file provides the single source of truth for architecture and technical sta
 
 ---
 
+### 0. Módulos de Capacidade (Verdade Arquitetural)
+
+- **Regra de Ouro para LLMs:** Antes de sugerir novas bibliotecas, refatorações de banco ou questionar a existência de processamento assíncrono, cache ou mapeamento normativo, você DEVE ler o **Índice Mestre de Capacidades** em `docs/architecture/PLATFORM_CAPABILITIES.md` e o módulo atômico correspondente dentro da pasta `docs/architecture/capabilities/`.
+- A plataforma já resolve nativamente processamento longo (HTTP 202), isolamento de locatário, cache global edge, e inferência de privacidade (RoPA/DPMP). Não invente soluções paralelas.
+
+---
+
 ### 1. Tenancy Model
 
 - **Concept:** Multi-Organization. Platform Admin creates the organization and grants access to that organization's administrator. Only the administrator accesses the application to create their API keys.

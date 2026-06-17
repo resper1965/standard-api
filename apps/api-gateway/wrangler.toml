@@ -183,6 +183,8 @@ LOG_LEVEL = "warn"
 AI_GATEWAY_NAME = "standard-prod"
 AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/0a6c490dd5fe9051422c15c9e133138e/standard-prod"
 BETTER_AUTH_URL = "https://standard-api.bekaa.eu/api/auth"
+DATABASE_URL = "postgresql://neondb_owner:npg_T8MHv6EoDIGh@ep-blue-breeze-anyfua57.c-6.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+AUTH_DATABASE_URL = "postgresql://neondb_owner:npg_T8MHv6EoDIGh@ep-muddy-frog-an8w71x9-pooler.c-6.us-east-1.aws.neon.tech/neondb?channel_binding=require&sslmode=require"
 
 [[env.production.r2_buckets]]
 binding = "STANDARD_DOCUMENTS_BUCKET"
@@ -232,16 +234,15 @@ id = "23e073ec707d4803a8957e13a4046810"
 binding = "STANDARD_CACHE"
 id = "55f97abbf9794b0196bdf51e8c1dedec"
 
-# Hyperdrive — product branch (production)
-[[env.production.hyperdrive]]
-binding = "HYPERDRIVE"
-id = "aa6fb63a67f24cbd82d28bf5a43f08e5"
+# Hyperdrive is incompatible with @neondatabase/serverless poolQueryViaFetch=true mode
+# because Hyperdrive proxies TCP, but neon-serverless tries to use HTTP over the hyperdrive hostname.
+# [[env.production.hyperdrive]]
+# binding = "HYPERDRIVE"
+# id = "aa6fb63a67f24cbd82d28bf5a43f08e5"
 
-# Auth branch (production) — create with:
-# npx wrangler hyperdrive create standard-neon-auth-prod --connection-string="<AUTH_PROD_URL>"
-[[env.production.hyperdrive]]
-binding = "HYPERDRIVE_AUTH"
-id = "REPLACE_WITH_AUTH_PROD_HYPERDRIVE_ID"
+# [[env.production.hyperdrive]]
+# binding = "HYPERDRIVE_AUTH"
+# id = "0c46c5955a0c42f0aea3c24facb5bf39"
 
 [[env.production.durable_objects.bindings]]
 name = "ASSESSMENT_SESSION_DO"

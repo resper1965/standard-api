@@ -1,9 +1,20 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none">
-  <rect width="32" height="32" rx="6" fill="#0c1220"/>
-  <path d="M8 7.5C8 6.67 8.67 6 9.5 6H14c1.1 0 2 .9 2 2v16c-.83-.83-2-1-3-1H9.5c-.83 0-1.5-.67-1.5-1.5V7.5z" fill="#00ADE8" opacity="0.8"/>
-  <path d="M24 7.5C24 6.67 23.33 6 22.5 6H18c-1.1 0-2 .9-2 2v16c.83-.83 2-1 3-1h3.5c.83 0 1.5-.67 1.5-1.5V7.5z" fill="#00ADE8"/>
-  <line x1="11" y1="10" x2="14" y2="10" stroke="#0c1220" stroke-width="1" stroke-linecap="round"/>
-  <line x1="11" y1="13" x2="13" y2="13" stroke="#0c1220" stroke-width="1" stroke-linecap="round"/>
-  <line x1="18" y1="10" x2="21" y2="10" stroke="#0c1220" stroke-width="1" stroke-linecap="round"/>
-  <line x1="18" y1="13" x2="20" y2="13" stroke="#0c1220" stroke-width="1" stroke-linecap="round"/>
+  <defs>
+    <linearGradient id="shieldGrad" x1="16" y1="2" x2="16" y2="30" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#3b82f6" />
+      <stop offset="100%" stop-color="#8b5cf6" />
+    </linearGradient>
+    <linearGradient id="innerGrad" x1="16" y1="8" x2="16" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#60a5fa" />
+      <stop offset="100%" stop-color="#a78bfa" />
+    </linearGradient>
+  </defs>
+  
+  <rect width="32" height="32" rx="8" fill="#09090b" />
+  
+  <path d="M16 4L6 8v7.5C6 21.3 10.3 26.6 16 29c5.7-2.4 10-7.7 10-13.5V8L16 4z" fill="url(#shieldGrad)" />
+  
+  <path d="M16 8L10 10.4V15c0 3.5 2.6 6.7 6 8 3.4-1.3 6-4.5 6-8v-4.6L16 8z" fill="url(#innerGrad)" />
+  
+  <path d="M16 12L12.5 13.5V16c0 1.9 1.4 3.6 3.5 4.3 2.1-.7 3.5-2.4 3.5-4.3v-2.5L16 12z" fill="#ffffff" />
 </svg>
