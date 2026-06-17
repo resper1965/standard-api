@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import { ScfImportSourceSchema } from "@standard/schemas";
+﻿import { ScfImportSourceSchema } from "@standard/schemas";
 import type { ScfImportParsedDataset, ScfImportSource, ScfImportValidationResult } from "../types";
 
 export type ScfImporter = {

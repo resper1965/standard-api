@@ -1,4 +1,3 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
 /**
  * @module compose-agent-runtime
  * @description Factory for Agent Runtime dependency graph with AI Gateway.
@@ -9,9 +8,9 @@
  * where production agents return "Mock LLM output" (Issue #72).
  */
 import {
-  createDrizzleAgentRuntimeDependencies,
   createInMemoryAgentRuntimeDependencies,
 } from "@standard/agent-runtime";
+import { createDrizzleAgentRuntimeDependencies } from "./agent-runtime.repository";
 import type { AgentRuntimeDependencies } from "@standard/agent-runtime";
 import { CloudflareAiGatewayAdapter } from "./ai-gateway.adapter";
 import type { Env } from "../types/env";

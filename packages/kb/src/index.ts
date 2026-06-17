@@ -1,7 +1,7 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
 export * from "./constants";
 export * from "./consumer";
 export * from "./embeddings/cloudflare-ai-embedding-provider";
+export * from "./embeddings/cloudflare-ai-reranker-provider";
 export * from "./embeddings/embedding-provider";
 export * from "./embeddings/mock-embedding-provider";
 export * from "./factory";

@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import type { DocumentChunk } from "@standard/document-ingestion";
+﻿import type { DocumentChunk } from "@standard/document-ingestion";
 import type { DocumentResponse } from "@standard/schemas";
 import type { KbIndexRequest, KbIndexResponse, KbRequestContext, KbServiceDependencies } from "../types";
 import { KbReferenceService } from "./kb-reference.service";

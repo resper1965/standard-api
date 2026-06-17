@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * @module auth.middleware
  * @description Resolve contexto de autenticaÃ§Ã£o a partir de cookie (browser) ou API Key (M2M).
  *

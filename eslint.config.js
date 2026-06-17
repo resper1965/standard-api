@@ -27,13 +27,5 @@ export default [
       "no-console": "off",
     },
   },
-  // Drizzle adapter and MCP tool files require @ts-nocheck due to Zod v4
-  // cross-package type resolution producing 'unknown' for optional fields in CI.
-  // This is a compile-environment issue, not a logic bug.
-  {
-    files: ["apps/api-gateway/src/**/*.ts"],
-    rules: {
-      "@typescript-eslint/ban-ts-comment": "off",
-    },
-  },
+
 ];

@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * Assessment Engine â€” Lifecycle State Machine Tests
  *
  * Tests all critical state transitions defined in AGENTS.md Â§11.

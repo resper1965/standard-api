@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import { BoardTranslatorUseCase } from "@standard/agent-runtime";
+﻿import { BoardTranslatorUseCase } from "@standard/agent-runtime";
 import { z } from "zod";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";

@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import type { ExportJobResponse, ReportArtifactResponse, ReportVersionResponse } from "../types";
+﻿import type { ExportJobResponse, ReportArtifactResponse, ReportVersionResponse } from "../types";
 
 export class InMemoryReportVersionRepository {
   private readonly versions = new Map<string, ReportVersionResponse>();

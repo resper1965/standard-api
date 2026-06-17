@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * SCR-RMM Risk & Threat Catalog Schemas
  *
  * Read-only normative reference schemas for SCF Risk Catalog (scf_risks)

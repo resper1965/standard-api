@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import type { ArtifactVersion } from "@standard/assessment-engine";
+﻿import type { ArtifactVersion } from "@standard/assessment-engine";
 import type { ArtifactRepositoryAdapter } from "../http";
 
 export const createArtifactRepository = (): ArtifactRepositoryAdapter => {

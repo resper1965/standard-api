@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import { z } from "zod";
+﻿import { z } from "zod";
 import { extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
 extendZodWithOpenApi(z);
 import { M2mScopesArraySchema, API_KEY_SCOPES } from "@standard/schemas";

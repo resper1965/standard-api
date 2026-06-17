@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import type { AssessmentLifecycleEventType } from "./events";
+﻿import type { AssessmentLifecycleEventType } from "./events";
 import type { AssessmentState } from "./states";
 
 export type ArtifactType = "scope" | "soa" | "gap_analysis" | "maturity_assessment" | "poam" | "report";

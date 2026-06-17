@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * QA Suite â€” RBAC Middleware Unit Tests
  * Tests permission resolution for session, M2M scopes, and missing auth contexts.
  */

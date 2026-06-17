@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * @file auth.middleware.contract.test.ts
  * @description Contract tests for the simplified auth middleware (A5).
  *

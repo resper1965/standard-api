@@ -1,7 +1,6 @@
 ﻿/**
  * Standard MCP Server â€” Gap Analysis Tools
  */
-// @ts-nocheck -- Zod v4 unknown type workaround
 import type { RequestContext } from "../../http";
 import type { McpToolResult } from "./assessment.tools";
 

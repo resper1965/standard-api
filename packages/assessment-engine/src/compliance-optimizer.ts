@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import { and, eq, inArray } from "drizzle-orm";
+﻿import { and, eq, inArray } from "drizzle-orm";
 import {
   scfMappings,
   scfFrameworkRequirements,

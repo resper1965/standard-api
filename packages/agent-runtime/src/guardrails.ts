@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import type { AgentOutput, AgentRuntimeContext } from "@standard/schemas";
+﻿import type { AgentOutput, AgentRuntimeContext } from "@standard/schemas";
 import { AgentRuntimeError } from "./errors";
 
 export class AgentGuardrailService {

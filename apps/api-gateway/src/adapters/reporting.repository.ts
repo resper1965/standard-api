@@ -3,7 +3,6 @@
  * @description Drizzle PostgreSQL repositories for Reporting.
  * Uses $inferSelect for type-safe row mapping.
  */
-// @ts-nocheck -- Zod v4 cross-package type resolution CI workaround
 import { eq, and } from "drizzle-orm";
 import { reportVersions, reportArtifacts, exportJobs } from "@standard/schemas";
 import type {

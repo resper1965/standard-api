@@ -1,9 +1,8 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
 import { RISK_TAXONOMY } from "../routes/risk.routes";
 import { REGULATIONS } from "../routes/regulations.routes";
 import { DATA_CATEGORIES, VOLUME_SCALE, RETENTION_RULES } from "../routes/reference-data.routes";
 import type { AppDependencies } from "../http";
-import { AgentRuntimeService, createDrizzleAgentRuntimeDependencies } from "@standard/agent-runtime";
+import { AgentRuntimeService } from "@standard/agent-runtime";
 
 export class IntelligenceService {
   constructor(private readonly deps?: AppDependencies) {}

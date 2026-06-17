@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import type { LlmProvider } from "../llm";
+﻿import type { LlmProvider } from "../llm";
 import { generateStructuredOutput } from "../structured-output";
 
 export const AGENT_VERSION_VENDOR = "1.0.0";

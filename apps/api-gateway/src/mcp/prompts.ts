@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * @module mcp/prompts
  * @description MCP Prompts â€” templates de sistema para agentes Standard.
  *

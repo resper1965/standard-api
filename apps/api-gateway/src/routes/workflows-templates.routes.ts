@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * CB-D: Workflow Templates â€” Process Automation
  *
  * Replaces the legacy flow-templates.routes.ts.

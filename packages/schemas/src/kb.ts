@@ -1,4 +1,3 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
 import { z } from "zod";
 import { TraceIdSchema, UuidSchema } from "./common";
 
@@ -114,6 +113,7 @@ export const KbSearchResultSchema = z.object({
   document_title: z.string(),
   retrieval_method: KbRetrievalMethodSchema,
   candidate_evidence: z.literal(true),
+  reranked: z.boolean().optional(),
   trace_id: TraceIdSchema
 });
 

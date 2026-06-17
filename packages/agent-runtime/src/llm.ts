@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * @module llm
  * @description Interfaces for LLM inference providers used by the agent runtime.
  */

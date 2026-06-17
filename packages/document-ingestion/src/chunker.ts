@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import type { ChunkingConfig, ExtractedDocument } from "@standard/schemas";
+﻿import type { ChunkingConfig, ExtractedDocument } from "@standard/schemas";
 import { sha256Hex } from "./hash";
 import type { DocumentChunk } from "./types";
 

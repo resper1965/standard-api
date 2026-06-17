@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * @module @standard/auth
  * @description Standard Auth Server â€” Better Auth configurado para o auth Neon branch.
  *

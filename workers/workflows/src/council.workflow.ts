@@ -10,9 +10,9 @@ import {
   AgentExecutor,
   AgentRuntimeService,
   CouncilOrchestrator,
-  createDrizzleAgentRuntimeDependencies,
-  type AgentRuntimeDependencies,
+  AgentRuntimeDependencies,
 } from "@standard/agent-runtime";
+import { createDrizzleAgentRuntimeDependencies } from "./adapters/agent-runtime.repository";
 
 export interface Env {
   DATABASE_URL: string;

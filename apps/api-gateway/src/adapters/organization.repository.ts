@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import { eq } from "drizzle-orm";
+﻿import { eq } from "drizzle-orm";
 import { organizations } from "@standard/schemas";
 import type {
   OrganizationRecord,

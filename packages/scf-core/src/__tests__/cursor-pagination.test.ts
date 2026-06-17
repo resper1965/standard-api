@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * Cursor-based (keyset) pagination â€” G03
  *
  * Tests the cursor encode/decode format used by searchControls in the

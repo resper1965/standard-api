@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * XLSX Tab Parser Helpers
  *
  * Detects tab types in the official SCF XLSX workbook and normalizes

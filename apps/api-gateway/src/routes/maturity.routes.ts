@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * Maturity Assessment Routes â€” Standard Assessment Lifecycle
  *
  * Implements the maturity assessment CRUD lifecycle with mandatory approval gate.

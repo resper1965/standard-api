@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * TPRA Repository â€” Third-Party Risk Assessment persistence
  *
  * Persiste vendors, assessments e risk scores nas tabelas criadas na Surgery 1.

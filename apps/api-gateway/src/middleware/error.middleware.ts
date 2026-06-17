@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import { AssessmentEngineError } from "@standard/assessment-engine";
+﻿import { AssessmentEngineError } from "@standard/assessment-engine";
 import { sanitizeErrorDetails } from "@standard/security";
 import { ZodError } from "zod";
 import { ApiError } from "../errors/api-error";

@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * AuthRepository Unit Tests
  *
  * Testa o comportamento do repositÃ³rio com mock de DbClient.

@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * Drizzle-backed Membership Repository
  *
  * Replaces the in-memory Map in members.routes.ts.

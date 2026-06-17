@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import type { ObservabilityDependencies } from "../repositories";
+﻿import type { ObservabilityDependencies } from "../repositories";
 
 /**
  * Operational metric helpers for Cloudflare Workers instrumentation.

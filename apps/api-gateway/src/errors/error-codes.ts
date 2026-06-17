@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * API error codes â€” canonical list lives in @standard/schemas.
  * This file re-exports for backwards compatibility within the gateway.
  *

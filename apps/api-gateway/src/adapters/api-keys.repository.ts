@@ -1,4 +1,3 @@
-// @ts-nocheck -- Zod v4 CI type compat
 import { apiKeys, organizations } from "@standard/schemas";
 import { eq, and } from "drizzle-orm";
 import type { DbClient } from "./db";

@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * WebhookDispatcher â€” HMAC-SHA256 signed webhook delivery
  *
  * Delivers webhook events to registered endpoints with:

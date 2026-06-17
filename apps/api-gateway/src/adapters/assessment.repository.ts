@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import { eq, and } from "drizzle-orm";
+﻿import { eq, and } from "drizzle-orm";
 import { assessments } from "@standard/schemas";
 import type { AssessmentRecord, AssessmentRepositoryAdapter } from "../http";
 import type { DbClient } from "./db";

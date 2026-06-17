@@ -5,11 +5,18 @@
  * Consumes from standard-document-ingestion queue.
  */
 import {
-  createDrizzleDocumentIngestionDependencies,
+  createInMemoryDocumentIngestionDependencies,
   processDocumentIngestionJob,
   type StorageAdapter,
-  type StoredObject
+  type StoredObject,
+  type AuditSink
 } from "@standard/document-ingestion";
+import { 
+  DrizzleDocumentRepository, 
+  DrizzleDocumentJobRepository, 
+  DrizzleDocumentChunkRepository, 
+  DrizzleVectorReferenceRepository 
+} from "./adapters/document.repository";
 import { DocumentIngestionJobMessageSchema, type DocumentIngestionJobMessage } from "@standard/schemas";
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
@@ -67,15 +74,22 @@ export default {
     const sql = neon(env.DATABASE_URL);
     const db = drizzle(sql, { schema: schema as any });
 
-    const deps = await createDrizzleDocumentIngestionDependencies(db, {
+    const deps = createInMemoryDocumentIngestionDependencies({
       storage: new R2StorageAdapter(env.STANDARD_DOCUMENTS_BUCKET),
       storageProvider: "cloudflare_r2",
       bucketName: "STANDARD_DOCUMENTS_BUCKET",
+      repositories: {
+        documents: new DrizzleDocumentRepository(db),
+        jobs: new DrizzleDocumentJobRepository(db),
+        chunks: new DrizzleDocumentChunkRepository(db),
+        vectorReferences: new DrizzleVectorReferenceRepository(db),
+        audit: { record: async () => {} } as unknown as AuditSink
+      },
       queue: {
-        enqueue: async (message) => {
+        enqueue: async (message: any) => {
           console.warn("Enqueueing back to DocumentIngestion is not supported");
         },
-        enqueueKbEmbeddingJob: async (message) => {
+        enqueueKbEmbeddingJob: async (message: any) => {
           await env.STANDARD_KB_EMBEDDING_QUEUE.send(message);
         }
       }

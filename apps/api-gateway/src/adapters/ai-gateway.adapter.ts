@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * @module ai-gateway.adapter
  * @description Cloudflare AI Gateway LLM adapter.
  * Proxies OpenAI-compatible requests through Cloudflare's AI Gateway

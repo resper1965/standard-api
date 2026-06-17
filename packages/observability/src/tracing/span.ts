@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-export type Span = {
+﻿export type Span = {
   span_id: string;
   name: string;
   started_at: string;

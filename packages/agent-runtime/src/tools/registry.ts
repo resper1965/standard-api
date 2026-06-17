@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * @module registry
  * @description Central ToolRegistry factory that wires all 8 agent tools.
  * Injects domain dependencies into each tool, producing a ToolRegistry

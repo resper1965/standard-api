@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import { describe, it, expect, vi } from "vitest";
+﻿import { describe, it, expect, vi } from "vitest";
 import { checkMcpQuota, type QuotaKV } from "../mcp-quota.middleware";
 
 describe("checkMcpQuota â€” per-org KV sliding window", () => {

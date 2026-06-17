@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-export * from "./adapters";
+﻿export * from "./adapters";
 export * from "./r2-adapter";
 export * from "./chunker";
 export * from "./consumer";

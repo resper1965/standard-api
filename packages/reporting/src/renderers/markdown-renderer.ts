@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import type { ReportSectionResponse, SupportedLocale } from "@standard/schemas";
+﻿import type { ReportSectionResponse, SupportedLocale } from "@standard/schemas";
 import type { RenderedReportArtifact } from "../types";
 
 const LABELS: Record<SupportedLocale, {

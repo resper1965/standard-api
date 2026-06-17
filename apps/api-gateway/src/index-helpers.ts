@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * Extracted helper functions for the Worker entry point (index.ts).
  *
  * These functions reduce cognitive complexity by moving initialization,

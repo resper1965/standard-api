@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import { z } from "zod";
+﻿import { z } from "zod";
 import { lifecycleEvents } from "./events";
 import { assessmentStates } from "./states";
 

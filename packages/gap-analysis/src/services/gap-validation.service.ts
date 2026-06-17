@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import { GapAnalysisWorkflowError } from "../errors";
+﻿import { GapAnalysisWorkflowError } from "../errors";
 import type { GapAnalysisContext, GapAnalysisDependencies, GapAnalysisValidationResponse, GapFindingResponse } from "../types";
 
 // â”€â”€â”€ Validation Rule Pattern â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€

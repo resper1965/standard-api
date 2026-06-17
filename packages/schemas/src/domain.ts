@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import { z } from "zod";
+﻿import { z } from "zod";
 
 export const uuidSchema = z.string().uuid();
 export const traceIdSchema = z.string().min(8);

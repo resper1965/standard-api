@@ -4,9 +4,9 @@ import * as schema from "@standard/schemas";
 import {
   AgentExecutor,
   AgentRuntimeService,
-  createDrizzleAgentRuntimeDependencies,
-  type AgentRuntimeDependencies,
+  AgentRuntimeDependencies,
 } from "@standard/agent-runtime";
+import { createDrizzleAgentRuntimeDependencies } from "./adapters/agent-runtime.repository";
 import { z } from "zod";
 import type { Env } from "./index";
 

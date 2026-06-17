@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * @module pagination
  * @description Dual-mode pagination utility (offset + cursor-based).
  *

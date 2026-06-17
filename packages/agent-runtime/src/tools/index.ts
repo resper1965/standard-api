@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-export * from "./scf-control-lookup.tool";
+﻿export * from "./scf-control-lookup.tool";
 export * from "./scf-mapping-lookup.tool";
 export * from "./kb-evidence-search.tool";
 export * from "./assessment-state-read.tool";

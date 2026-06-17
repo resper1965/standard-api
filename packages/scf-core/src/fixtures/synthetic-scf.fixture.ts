@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import {
+﻿import {
   SYNTHETIC_FRAMEWORK_ID,
   SYNTHETIC_GOV_001_CONTROL_ID,
   SYNTHETIC_GOV_002_CONTROL_ID,

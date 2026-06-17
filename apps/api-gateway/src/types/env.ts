@@ -1,4 +1,3 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
 /**
  * Cloudflare Worker Environment bindings for the Standard API Gateway.
  *
@@ -20,6 +19,7 @@ export interface Env {
   OPENAI_API_KEY?: string;
   AI_GATEWAY_BASE_URL?: string;
   AI_GATEWAY_TOKEN?: string;
+  ASSESSMENT_SESSION_DO?: DurableObjectNamespace;
   ASSESSMENT_WORKFLOW?: Workflow;
   COUNCIL_WORKFLOW?: Workflow;
   TPRA_APPROVAL_WORKFLOW?: Workflow;

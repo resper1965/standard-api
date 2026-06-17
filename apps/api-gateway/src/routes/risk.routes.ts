@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * CB-B: Risk Methodology + Taxonomy (Spec v3 -> V2 TS Schema)
  *
  * Enriched with:

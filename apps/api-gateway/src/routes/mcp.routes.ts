@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * Standard MCP Server Routes
  *
  * POST /mcp  â€” MCP Streamable HTTP endpoint

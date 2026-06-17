@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * @module tenant-db.middleware
  * @description Application-level tenant scoping for database queries.
  *

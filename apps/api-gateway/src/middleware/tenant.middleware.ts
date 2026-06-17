@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import { SecurityEventService } from "@standard/observability";
+﻿import { SecurityEventService } from "@standard/observability";
 import { TenantResolver } from "@standard/security";
 import { ApiError } from "../errors/api-error";
 import type { RequestContext } from "../http";

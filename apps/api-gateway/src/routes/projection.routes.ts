@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * Framework Projection Endpoint
  *
  * Implements the "controls as truth, frameworks as masks" model.

@@ -1,4 +1,3 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
 import type { DocumentChunk, DocumentIngestionServiceDependencies } from "@standard/document-ingestion";
 import type {
   KbEmbeddingJobMessage,
@@ -46,6 +45,16 @@ export type EmbeddingProvider = {
   embedBatch(texts: string[], options?: Record<string, unknown>): Promise<EmbeddingResult[]>;
   getModelInfo(): EmbeddingModelInfo;
 };
+
+export type RerankResult = {
+  index: number;
+  score: number;
+};
+
+export type RerankerProvider = {
+  rerank(query: string, documents: string[], options?: Record<string, unknown>): Promise<RerankResult[]>;
+};
+
 
 export type VectorRecord = {
   id: string;
@@ -129,6 +138,7 @@ export type KbServiceDependencies = {
   documentIngestion: DocumentIngestionServiceDependencies;
   repositories: KbRepositories;
   embeddingProvider: EmbeddingProvider;
+  rerankerProvider?: RerankerProvider;
   vectorStore: VectorStore;
   queue: KbQueueAdapter;
   vectorIndexName: string;

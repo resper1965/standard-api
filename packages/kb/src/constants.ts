@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-export const DEFAULT_VECTOR_INDEX_NAME = "standard-kb-dev";
+﻿export const DEFAULT_VECTOR_INDEX_NAME = "standard-kb-dev";
 export const DEFAULT_VECTOR_PROVIDER = "cloudflare_vectorize";
 export const DEFAULT_MOCK_EMBEDDING_MODEL = "mock-standard-embedding-v1";
 export const DEFAULT_MOCK_EMBEDDING_DIMENSIONS = 16;

@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * Internal i18n utility to traverse arbitrary objects and flatten `_i18n` suffixes.
  * E.g., `name_i18n: { pt: "CÃ£o", en: "Dog" }` becomes `name: "CÃ£o"` if locale="pt".
  */

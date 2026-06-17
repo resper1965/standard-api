@@ -1,4 +1,3 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
 import type { DocumentChunk } from "@standard/document-ingestion";
 import type { DocumentResponse } from "@standard/schemas";
 import { CANDIDATE_EVIDENCE_WARNING, DEFAULT_SNIPPET_LENGTH, MAX_TOP_K } from "../constants";
@@ -36,7 +35,36 @@ export class KbSearchService {
     );
 
     const results = await this.hydrateResults(vectorResults, context, request.search_type);
-    const filtered = results.filter((result) => this.matchesRequestFilters(result, request));
+    let filtered = results.filter((result) => this.matchesRequestFilters(result, request));
+
+    if (this.deps.rerankerProvider && filtered.length > 0) {
+      const documentsText = filtered.map(r => r.snippet);
+      try {
+        const reranked = await this.deps.rerankerProvider.rerank(request.query, documentsText);
+        // O reranked devolve [{index, score}], onde index é a posição no array 'documentsText' original
+        // Vamos reconstruir o array 'filtered' ordenado por score do rerank e atualizar as notas (scores)
+        filtered = reranked
+          .map(r => {
+            const originalResult = filtered[r.index];
+            if (originalResult) {
+              originalResult.score = Number(r.score.toFixed(6));
+              // Adicionamos flag para a UI saber que foi reranked
+              (originalResult as any).reranked = true; 
+            }
+            return originalResult;
+          })
+          .filter(Boolean) as KbSearchResult[];
+        
+        // Cortar o excesso caso o rerank tenha reordenado, vamos devolver apenas o topK real para o LLM
+        filtered = filtered.slice(0, topK);
+      } catch (error) {
+        console.error("[KbSearchService] Erro no reranking, caindo para busca vetorial padrão", error);
+        filtered = filtered.slice(0, topK);
+      }
+    } else {
+      // Se não houver rerank, apenas garantimos o corte de topK (caso o hydrate tenha trazido muitos e o banco tenha devolvido > topK)
+      filtered = filtered.slice(0, topK);
+    }
 
     await this.deps.repositories.searchLogs.record({
       id: crypto.randomUUID(),

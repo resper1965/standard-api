@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import { z } from "zod";
+﻿import { z } from "zod";
 import { sql, ilike, or, desc } from "drizzle-orm";
 import { organizations } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";

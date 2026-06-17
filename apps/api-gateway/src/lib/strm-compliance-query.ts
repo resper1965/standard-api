@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * @module strm-compliance-query
  * @description ConstrÃ³i StrmControlInput[] a partir de dados reais de scf_mappings.
  *

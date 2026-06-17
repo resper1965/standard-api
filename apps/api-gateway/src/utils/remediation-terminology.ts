@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-export type RemediationTerminology = {
+﻿export type RemediationTerminology = {
   artifactName: string;
   artifactAbbreviation: string;
   itemTerm: string;

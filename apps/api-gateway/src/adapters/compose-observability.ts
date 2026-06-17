@@ -1,14 +1,13 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
 /**
  * @module compose-observability
  * @description Factory for Observability + Alert dependency graphs.
  */
 import {
-  createDrizzleObservabilityDependencies,
   AlertService,
   SecurityEventService,
   WebhookAlertSink,
 } from "@standard/observability";
+import { createDrizzleObservabilityDependencies } from "./observability.repository";
 import type { ObservabilityDependencies } from "@standard/observability";
 import type { Env } from "../types/env";
 import type { DbClient } from "./db";

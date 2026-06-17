@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-const extensionPattern = /\.([a-z0-9]+)$/i;
+﻿const extensionPattern = /\.([a-z0-9]+)$/i;
 
 export const sanitizeFilename = (filename: string): string =>
   filename

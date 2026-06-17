@@ -1,4 +1,3 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
 /**
  * @module adapters/index
  * @description Composition root â€” assembles all domain dependency graphs.
@@ -17,12 +16,12 @@ import {
 import { createInMemoryPoamDependencies } from "@standard/poam";
 import { createInMemoryReportingDependencies } from "@standard/reporting";
 import { createInMemoryMaturityDependencies } from "@standard/maturity";
-import { createDrizzleMaturityRepositories } from "@standard/maturity";
+import { createDrizzleMaturityRepositories } from "./maturity.repository";
 import {
   createInMemoryScfCore,
   createScfCoreFromRepository,
-  createDrizzleScfRepository,
 } from "@standard/scf-core";
+import { createDrizzleScfRepository } from "./scf.repository";
 import { createInMemorySoaDependencies } from "@standard/soa";
 import { createInMemoryPrivacyDependencies } from "@standard/privacy";
 import { createInMemoryWorkflowDependencies } from "@standard/workflows";
@@ -301,7 +300,7 @@ export const createDrizzleRepositories = (
         assessmentId,
         organizationId,
       );
-      const approved = versions.find((v) => v.status === "approved");
+      const approved = versions.find((v: any) => v.status === "approved");
       if (!approved) return null;
       return {
         maturity_assessment_version_id: approved.id,

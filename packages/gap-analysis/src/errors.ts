@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-export class GapAnalysisWorkflowError extends Error {
+﻿export class GapAnalysisWorkflowError extends Error {
   constructor(
     readonly code: string,
     message: string,

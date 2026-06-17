@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * Evidence Classification Prompt
  *
  * LLM-based evidence classification for the Gap Analysis pipeline.

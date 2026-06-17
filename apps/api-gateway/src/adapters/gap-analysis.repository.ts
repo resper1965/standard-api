@@ -3,7 +3,6 @@
  * @description Drizzle PostgreSQL repositories for Gap Analysis.
  * Uses $inferSelect types for row mappers so column names match exactly.
  */
-// @ts-nocheck -- Zod v4 cross-package type resolution CI workaround
 import { eq } from "drizzle-orm";
 
 import {

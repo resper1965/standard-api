@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * Admin User Management Routes â€” PLATFORM ADMIN ONLY.
  *
  * Queries Better Auth tables via AuthRepository (ADR-009).

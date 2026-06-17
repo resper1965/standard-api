@@ -1,9 +1,8 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
 export * from "./constants";
 export * from "./factory";
 export * from "./fixtures/synthetic-scf.fixture";
 export * from "./repositories/scf.repository";
-export { createDrizzleScfRepository } from "./repositories/drizzle-scf.repository";
+
 export { createXlsxScfImporter } from "./importers/xlsx-importer";
 export * from "./schemas";
 export * from "./services/scf-control.service";

@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import { ApiError } from "./api-error";
+﻿import { ApiError } from "./api-error";
 
 /**
  * Thrown when a background worker detects that the payload's Tenant ID

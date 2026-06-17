@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-export const SENSITIVE_FIELD_NAMES = [
+﻿export const SENSITIVE_FIELD_NAMES = [
   "password",
   "token",
   "api_key",

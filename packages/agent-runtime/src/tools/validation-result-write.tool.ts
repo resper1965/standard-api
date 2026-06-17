@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * @module validation-result-write
  * @description Write schema validation results for draft artifacts.
  * Records whether a draft passes validation without constituting approval.

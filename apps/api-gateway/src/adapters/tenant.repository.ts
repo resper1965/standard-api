@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * @module tenant.repository
  * @description ADR 0002 Phase 2/3 â€” tenants table removed.
  * This stub proxies TenantRepositoryAdapter calls to the organizations table

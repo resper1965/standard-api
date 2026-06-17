@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import { z } from "zod";
+﻿import { z } from "zod";
 import { UuidSchema } from "./common";
 
 export const MadTransactionTypeSchema = z.enum([

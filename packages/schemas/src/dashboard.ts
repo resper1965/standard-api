@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * Dashboard & Summary Schemas
  *
  * Server-computed aggregations exposed via API so frontends

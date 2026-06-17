@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import type { GapAnalysisDependencies, GapFindingResponse } from "@standard/gap-analysis";
+﻿import type { GapAnalysisDependencies, GapFindingResponse } from "@standard/gap-analysis";
 import type { ScfControl, ScfCoreServices } from "@standard/scf-core";
 import type {
   CreatePoamMilestoneRequest,

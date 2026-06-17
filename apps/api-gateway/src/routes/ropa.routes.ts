@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * CB-E: ROPA Reference Data
  *
  * Dados de referÃªncia para inventÃ¡rio de dados pessoais (ROPA).

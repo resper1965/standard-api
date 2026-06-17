@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import type { ScfRepository, ScfControlCrossMapping } from "../repositories/scf.repository";
+﻿import type { ScfRepository, ScfControlCrossMapping } from "../repositories/scf.repository";
 import type { ScfControl, ScfControlSearchQuery } from "../types";
 
 export class ScfControlService {

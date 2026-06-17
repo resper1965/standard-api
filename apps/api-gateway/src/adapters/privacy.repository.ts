@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 cross-package type resolution CI workaround
-import { eq, and, isNull, desc } from "drizzle-orm";
+﻿import { eq, and, isNull, desc } from "drizzle-orm";
 import {
   privacyProcessingActivities,
   privacyProcessingActivityDataSubjects,

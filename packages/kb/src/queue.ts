@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import type { KbEmbeddingJobMessage, KbQueueAdapter } from "./types";
+﻿import type { KbEmbeddingJobMessage, KbQueueAdapter } from "./types";
 
 export class InMemoryKbQueueAdapter implements KbQueueAdapter {
   readonly messages: KbEmbeddingJobMessage[] = [];

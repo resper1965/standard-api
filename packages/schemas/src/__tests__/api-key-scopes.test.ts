@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * API Key Scopes â€” Schema Tests
  *
  * Validates the scope catalogue follows resource:action format,

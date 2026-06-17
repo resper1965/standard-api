@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * @module organization-schema
  * @description Organization e API Keys â€” auth Neon branch (control plane).
  *

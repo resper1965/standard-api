@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * @module @standard/auth/types
  * @description Extended types for Standard Native Auth session fields added by plugins.
  *

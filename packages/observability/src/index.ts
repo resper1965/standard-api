@@ -1,4 +1,3 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
 export * from "./audit/audit-event.service";
 export * from "./constants";
 export * from "./cost/cost-tracking.service";
@@ -9,7 +8,7 @@ export * from "./logger/structured-logger";
 export * from "./metrics/metrics.service";
 export * from "./metrics/worker-metrics";
 export * from "./repositories";
-export * from "./drizzle.repository";
+
 export * from "./security-events/security-event.service";
 export * from "./tracing/span";
 export * from "./tracing/trace-context";

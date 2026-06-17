@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import { describe, it, expect, vi } from "vitest";
+﻿import { describe, it, expect, vi } from "vitest";
 import { resolveApiKeyWithCache, type ApiKeyCacheKV } from "../api-key-cache";
 
 // Simula a estrutura mÃ­nima de uma API Key resolvida

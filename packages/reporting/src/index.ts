@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-export * from "./constants";
+﻿export * from "./constants";
 export * from "./errors";
 export * from "./factory";
 export * from "./repositories/report.repositories";

@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * SCF Risk & Threat Catalog API Routes â€” SCR-RMM Task 3
  *
  * Exposes the normative SCF Risk Catalog (scf_risks) and SCF Threat Catalog

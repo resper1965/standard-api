@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-export const POAM_EVENTS = {
+﻿export const POAM_EVENTS = {
   draftCreated: "poam_draft_created",
   itemCreated: "poam_item_created",
   itemUpdated: "poam_item_updated",

@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import type { ReportSectionResponse, ReportVersionResponse } from "@standard/schemas";
+﻿import type { ReportSectionResponse, ReportVersionResponse } from "@standard/schemas";
 import { assertContext, ReportingWorkflowError } from "../errors";
 import type { ReportingContext, ReportingDependencies } from "../types";
 

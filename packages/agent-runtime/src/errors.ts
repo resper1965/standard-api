@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-export class AgentRuntimeError extends Error {
+﻿export class AgentRuntimeError extends Error {
   constructor(
     readonly code: string,
     message: string,

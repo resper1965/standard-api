@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * Standard MCP Server â€” KB & Evidence Tools
  *
  * Phase 1: Expose knowledge base search and AI evidence evaluation via MCP.

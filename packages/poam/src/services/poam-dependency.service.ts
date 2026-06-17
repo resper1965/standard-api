@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * @module poam-dependency.service
  * @description Detect dependencies between POA&M items based on structural relationships.
  *

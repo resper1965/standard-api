@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import type { PoamDependencyResponse, PoamEffortEstimate, PoamItemResponse, PoamMilestoneResponse, PoamPriority } from "../types";
+﻿import type { PoamDependencyResponse, PoamEffortEstimate, PoamItemResponse, PoamMilestoneResponse, PoamPriority } from "../types";
 
 const addDays = (days: number): string => {
   const date = new Date();

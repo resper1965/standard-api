@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * Standard Lifecycle Proof â€” E2E Validation Script
  *
  * Simulates the "happy path" of document upload â†’ state transition â†’ audit:

@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import type { MaturityClassificationInput, MaturityLevel } from "../types";
+﻿import type { MaturityClassificationInput, MaturityLevel } from "../types";
 
 type ClassificationResult = {
   score: MaturityLevel;

@@ -1,4 +1,3 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
 import { z } from "zod";
 import { TraceIdSchema, UuidSchema } from "./common";
 import { ResponsibilityTypeSchema } from "./soa";
@@ -177,6 +176,7 @@ export const GapFindingResponseSchema = z.object({
   inherent_risk_score: z.string().optional(),
   /** SCR-RMM Step 12: Residual risk after control weight and maturity factor. */
   residual_risk_score: z.string().optional(),
+  source_chunks: z.array(z.string()).optional(),
   created_at: z.string(),
   updated_at: z.string(),
 });
@@ -197,6 +197,7 @@ export const UpdateGapFindingRequestSchema = z.strictObject({
   confidence_score: z.number().min(0).max(1).optional(),
   requires_user_validation: z.boolean().optional(),
   responsibility_type: ResponsibilityTypeSchema.optional(),
+  source_chunks: z.array(z.string()).optional(),
 });
 
 export const GapAnalysisValidationResponseSchema = z.object({

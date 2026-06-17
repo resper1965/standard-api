@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * Dashboard Routes â€” Server-Computed KPIs
  *
  * These endpoints aggregate data so frontends never need to

@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import { zipSync, strToU8 } from "fflate";
+﻿import { zipSync, strToU8 } from "fflate";
 import type { ReportSectionResponse } from "@standard/schemas";
 import type { RenderedReportArtifact } from "../types";
 

@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import { SecurityEventRecordSchema, type AuditOutcome, type SecurityEventRecord, type SecurityEventType, type SecuritySeverity } from "@standard/schemas";
+﻿import { SecurityEventRecordSchema, type AuditOutcome, type SecurityEventRecord, type SecurityEventType, type SecuritySeverity } from "@standard/schemas";
 import { assertMetadataSafe } from "../logger/redaction";
 import type { ObservabilityDependencies } from "../repositories";
 

@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * AI Token Quota Middleware â€” M2
  *
  * Tests the checkAiTokenQuota pure function from ai-token-quota.middleware.ts.

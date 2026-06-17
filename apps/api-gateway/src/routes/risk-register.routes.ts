@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * Risk Register API â€” SCR-RMM Step 13 (Risk Treatment Decision)
  *
  * Registers risk entries per assessment, linking gap findings to treatment decisions.

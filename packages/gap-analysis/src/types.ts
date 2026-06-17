@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import type { KbSearchResult, KbServiceDependencies } from "@standard/kb";
+﻿import type { KbSearchResult, KbServiceDependencies } from "@standard/kb";
 import type { ScfCoreServices } from "@standard/scf-core";
 import type {
   AssessmentStatus,

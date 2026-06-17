@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import { z } from "zod";
+﻿import { z } from "zod";
 import { TraceIdSchema, UuidSchema } from "./common";
 import { StrmOperatorSchema } from "./scf";
 

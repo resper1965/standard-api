@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * STRM Weight Algorithm â€” Contract Tests
  *
  * LEITURA OBRIGATÃ“RIA: docs/decisions/IMPLEMENTATION-CONSTRAINTS.md SecÃ§Ã£o 1

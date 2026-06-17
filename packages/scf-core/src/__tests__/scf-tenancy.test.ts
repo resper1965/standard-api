@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * SCF Version Tenancy â€” A2
  *
  * Tests the organization-scoped filtering logic in the InMemoryScfRepository

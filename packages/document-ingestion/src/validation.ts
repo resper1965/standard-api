@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import { getExtension, sanitizeFilename } from "./filename";
+﻿import { getExtension, sanitizeFilename } from "./filename";
 import { sha256Hex } from "./hash";
 import type { FileDescriptor, ValidatedUpload } from "./types";
 

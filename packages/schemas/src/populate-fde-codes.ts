@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * populate-fde-codes.ts
  *
  * LÃª o SCF XLSX principal (assets/Secure Controls Framework (SCF) - 2026.1.1.xlsx),

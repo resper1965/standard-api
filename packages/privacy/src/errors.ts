@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-export class PrivacyError extends Error {
+﻿export class PrivacyError extends Error {
   constructor(
     readonly code: string,
     message: string,

@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 .openapi() type augmentation CI workaround
-import {
+﻿import {
   OpenAPIRegistry,
   extendZodWithOpenApi,
 } from "@asteasolutions/zod-to-openapi";

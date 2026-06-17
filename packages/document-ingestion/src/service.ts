@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import type { ChunkingConfig, DocumentIngestionJobMessage, DocumentResponse } from "@standard/schemas";
+﻿import type { ChunkingConfig, DocumentIngestionJobMessage, DocumentResponse } from "@standard/schemas";
 import { buildStorageKey } from "./filename";
 import { validateFile } from "./validation";
 import type { DocumentIngestionServiceDependencies, FileDescriptor, UploadContext } from "./types";

@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import type { EvidenceClassificationResult, GapAnalysisContext, KbSearchResult, SoaItemResponse } from "../types";
+﻿import type { EvidenceClassificationResult, GapAnalysisContext, KbSearchResult, SoaItemResponse } from "../types";
 
 const hasConflictSignal = (results: KbSearchResult[]): boolean =>
   results.some((result) => /conflict|conflicting|exception|not implemented|nÃ£o implementad/i.test(result.snippet));

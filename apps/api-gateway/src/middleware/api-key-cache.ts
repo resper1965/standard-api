@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * @module api-key-cache
  * @description KV fast-path para resoluÃ§Ã£o de API Keys M2M.
  *

@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * @module artifact-version-read
  * @description Read versioned assessment artifacts (SoA, Gap Analysis, Maturity, POA&M).
  * Returns either a specific version or lists all versions for an assessment.

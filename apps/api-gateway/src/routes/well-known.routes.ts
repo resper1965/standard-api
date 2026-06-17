@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import type { RouteDefinition } from "../http";
+﻿import type { RouteDefinition } from "../http";
 
 const SECURITY_TXT = `Contact: mailto:security@bekaa.eu
 Expires: 2027-12-31T23:59:00.000Z

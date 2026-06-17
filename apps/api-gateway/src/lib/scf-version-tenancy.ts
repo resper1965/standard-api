@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * @module scf-version-tenancy
  * @description Tenancy guard helpers for scf_versions queries.
  *

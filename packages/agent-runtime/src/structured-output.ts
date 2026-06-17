@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import type { LlmProvider, LlmMessage, LlmGenerateOutput } from "./llm";
+﻿import type { LlmProvider, LlmMessage, LlmGenerateOutput } from "./llm";
 import type { LlmResponseCache } from "./llm-cache";
 
 export type StructuredOutputOptions<T> = {
