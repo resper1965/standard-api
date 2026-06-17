@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import type { ScfImporter } from "../importers/scf-importer";
+﻿import type { ScfImporter } from "../importers/scf-importer";
 import { safeImportError, sha256Hex } from "../importers/scf-importer";
 import type { ScfRepository } from "../repositories/scf.repository";
 import type { ScfDataset, ScfImportResult, ScfImportSource, ScfImportValidationResult } from "../types";

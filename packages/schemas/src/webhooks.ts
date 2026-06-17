@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * Webhook types and delivery system for Standard Platform.
  *
  * Supports 15 lifecycle events as defined in public-api-guidelines.md.

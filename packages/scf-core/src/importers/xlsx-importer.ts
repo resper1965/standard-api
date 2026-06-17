@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * SCF XLSX Importer
  *
  * Parses the official SCF Excel workbook (multi-tab) into the Standard

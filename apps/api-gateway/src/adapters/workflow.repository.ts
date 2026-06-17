@@ -3,7 +3,6 @@
  * @description Drizzle PostgreSQL repositories for Workflow Runs and Audit Events.
  * Replaces in-memory workflow persistence with real PostgreSQL storage.
  */
-// @ts-nocheck -- Zod v4 cross-package type resolution CI workaround
 import { eq, and, notInArray } from "drizzle-orm";
 import { workflowRuns, workflowAuditEvents } from "@standard/schemas";
 import type { AssessmentLifecycleWorkflowState } from "@standard/schemas";

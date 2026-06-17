@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import type { AgentUsageRecord, AuditEvent, OperationalMetric, SecurityEventRecord, UsageRecord } from "@standard/schemas";
+﻿import type { AgentUsageRecord, AuditEvent, OperationalMetric, SecurityEventRecord, UsageRecord } from "@standard/schemas";
 
 export type ObservabilityRepository<T extends { id: string; created_at?: string | undefined; trace_id: string }> = {
   create(record: T): Promise<T>;

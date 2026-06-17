@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import type { ScfRepository } from "../repositories/scf.repository";
+﻿import type { ScfRepository } from "../repositories/scf.repository";
 import type { ScfFramework, ScfFrameworkRequirement } from "../types";
 
 export class ScfFrameworkService {

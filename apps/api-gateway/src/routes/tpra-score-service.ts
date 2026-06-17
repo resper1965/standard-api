@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * @module tpra-score-service
  * @description LÃ³gica pura de scoring TPRA + interface de persistÃªncia.
  *

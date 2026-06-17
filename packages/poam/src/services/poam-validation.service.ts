@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import { assertContext, PoamWorkflowError } from "../errors";
+﻿import { assertContext, PoamWorkflowError } from "../errors";
 import type { PoamContext, PoamDependencies, PoamItemResponse, PoamValidationResponse } from "../types";
 
 // --- Pure validation rules ---

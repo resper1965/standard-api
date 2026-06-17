@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * @module ai-token-quota.middleware
  * @description Per-organization monthly AI token budget enforcement.
  *

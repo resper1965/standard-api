@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import type { ApprovalGate } from "@standard/assessment-engine";
+﻿import type { ApprovalGate } from "@standard/assessment-engine";
 import { AuditEventService, MetricsService } from "@standard/observability";
 import {
   AssessmentLifecycleOrchestrator,

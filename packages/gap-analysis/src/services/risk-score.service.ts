@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * SCR-RMM Step 12: Risk Score Engine
  *
  * Calculates Inherent Risk (IE Ã— OL) and Residual Risk (post-control mitigation).

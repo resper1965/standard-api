@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * Email routes â€” administrative endpoint for testing email delivery.
  *
  * POST /api/v1/email/test â€” Send a test email (admin only)

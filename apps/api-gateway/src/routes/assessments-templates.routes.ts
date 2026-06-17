@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * CB-C: Assessment Templates (TPRA, DPIA, Gap)
  *
  * Replaces the legacy tpra.routes.ts.

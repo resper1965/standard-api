@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import { AgentRuntimeService } from "@standard/agent-runtime";
+﻿import { AgentRuntimeService } from "@standard/agent-runtime";
 import { AuditEventService, MetricsService } from "@standard/observability";
 import { AnalyzeRawTextRequestSchema } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";

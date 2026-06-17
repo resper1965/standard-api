@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import type { RequestContext } from "../http";
+﻿import type { RequestContext } from "../http";
 
 /**
  * Record a structured audit event for every API request.

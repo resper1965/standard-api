@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-export const LLMS_TXT = `# Standard GRC Platform
+﻿export const LLMS_TXT = `# Standard GRC Platform
 
 > API-first agentic GRC platform for compliance assessments powered by the Secure Controls Framework (SCF). 7 specialized AI agents, 1,468 controls, 231 frameworks.
 

@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * QA Suite â€” Auth Middleware Session-First Org Resolution Tests
  * Tests the 3-tier org resolution priority: session > platform admin > no org.
  */

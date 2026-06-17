@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * SOC Alert Rules â€” Code-Defined Alert Conditions
  *
  * AGENTS.md Â§13: Audit logs para mudanÃ§as de estado, approvals, uploads, outputs de agentes e exports.

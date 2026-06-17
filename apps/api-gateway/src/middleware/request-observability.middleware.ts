@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 unknown type workaround
-import { MetricsService, StructuredLogger } from "@standard/observability";
+﻿import { MetricsService, StructuredLogger } from "@standard/observability";
 import type { RequestContext } from "../http";
 
 const logger = new StructuredLogger();

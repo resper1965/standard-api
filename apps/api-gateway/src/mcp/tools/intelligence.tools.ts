@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * Standard MCP Server â€” Intelligence Tools
  *
  * Phase 1: Expose the stateless Intelligence Engine via MCP.

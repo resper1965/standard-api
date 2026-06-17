@@ -1,4 +1,3 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
 import {
   CreateAssessmentRequestSchema,
   UpdateAssessmentRequestSchema,
@@ -474,6 +473,28 @@ export const assessmentsRoutes: RouteDefinition[] = [
         },
         { status: 201 },
       );
+    },
+  },
+  {
+    method: "GET",
+    path: "/api/v1/assessments/:assessmentId/live",
+    protected: true,
+    permissions: ["assessment:read"],
+    handler: async ({ request, env, params }) => {
+      if (!env?.ASSESSMENT_SESSION_DO) {
+        throw new ApiError(
+          "INTERNAL_ERROR",
+          "Live assessments are not configured.",
+          500,
+        );
+      }
+
+      const id = env.ASSESSMENT_SESSION_DO.idFromName(
+        routeUuidParam(params, "assessmentId"),
+      );
+      const stub = env.ASSESSMENT_SESSION_DO.get(id);
+
+      return stub.fetch(request);
     },
   },
 ];

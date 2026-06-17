@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import { z } from "zod";
+﻿import { z } from "zod";
 import type { RouteDefinition } from "../http";
 import { json, parseJson, requireOrganizationId } from "../http";
 import { ApiError } from "../errors/api-error";

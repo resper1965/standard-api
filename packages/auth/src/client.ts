@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * @module @standard/auth/client
  * @description Auth client for the Standard web frontend (React).
  *

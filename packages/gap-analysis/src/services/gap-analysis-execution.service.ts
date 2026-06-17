@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * Gap Analysis Execution Service (LLM-integrated)
  *
  * Orchestrates the full gap analysis pipeline:

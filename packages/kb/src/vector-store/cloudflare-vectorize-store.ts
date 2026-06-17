@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import type { VectorIndexInfo, VectorQueryOptions, VectorRecord, VectorSearchResult, VectorStore, VectorStoreMetadata, VectorUpsertResult } from "../types";
+﻿import type { VectorIndexInfo, VectorQueryOptions, VectorRecord, VectorSearchResult, VectorStore, VectorStoreMetadata, VectorUpsertResult } from "../types";
 
 type VectorizeLikeIndex = {
   upsert(records: Array<{ id: string; values: number[]; metadata: Record<string, any> }>): Promise<unknown>;

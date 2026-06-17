@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 cross-package type resolution CI workaround
-import { auditLogs, AUDIT_METADATA_ALLOWLIST } from "@standard/schemas";
+﻿import { auditLogs, AUDIT_METADATA_ALLOWLIST } from "@standard/schemas";
 import type { AuditRepositoryAdapter } from "../http";
 import type { DbClient } from "./db";
 

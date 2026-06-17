@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * CB-A: Privacy Regulations Catalog (Spec v3)
  *
  * Full regulation objects with all sub-schemas per spec:

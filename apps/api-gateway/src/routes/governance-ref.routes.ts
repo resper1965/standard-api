@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * CB-F: Governance Reference Data
  *
  * Dados de referÃªncia para governanÃ§a corporativa:

@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import type { AgentRunResponse, AgentRuntimeContext, FunctionalAgentId } from "@standard/schemas";
+﻿import type { AgentRunResponse, AgentRuntimeContext, FunctionalAgentId } from "@standard/schemas";
 import { AgentExecutor } from "./executor";
 import { AgentRuntimeError } from "./errors";
 import type { AgentRuntimeService } from "./runtime";

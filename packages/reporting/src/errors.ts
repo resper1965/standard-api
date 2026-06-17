@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-export class ReportingWorkflowError extends Error {
+﻿export class ReportingWorkflowError extends Error {
   constructor(public readonly code: string, message: string, public readonly details: Record<string, unknown> = {}) {
     super(`${code}: ${message}`);
   }

@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import { getTableColumns } from "drizzle-orm";
+﻿import { getTableColumns } from "drizzle-orm";
 import type { AnyPgTable } from "drizzle-orm/pg-core";
 
 /**

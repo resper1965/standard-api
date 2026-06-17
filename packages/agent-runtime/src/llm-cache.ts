@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * @module llm-cache
  * @description Semantic response cache for LLM calls.
  *

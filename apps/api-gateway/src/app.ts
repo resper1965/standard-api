@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import { createMockRepositories } from "./adapters";
+﻿import { createMockRepositories } from "./adapters";
 import { runWithTenantContext } from "@standard/security";
 import type { StandardAuth } from "@standard/auth";
 import type { Env } from "./types/env";

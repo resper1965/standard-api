@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * @module auth-schema
  * @description Better Auth core tables â€” auth Neon branch (control plane).
  *

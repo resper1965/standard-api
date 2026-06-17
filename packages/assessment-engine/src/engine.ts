@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import { requireApprovalEvent } from "./approvals";
+﻿import { requireApprovalEvent } from "./approvals";
 import { AssessmentEngineError } from "./errors";
 import { getTransition } from "./transitions";
 import { assertPrerequisites } from "./prerequisites";

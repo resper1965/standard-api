@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import type { ReportSectionResponse } from "@standard/schemas";
+﻿import type { ReportSectionResponse } from "@standard/schemas";
 import type { RenderedReportArtifact } from "../types";
 
 export const renderJsonArtifact = (reportVersionId: string, sections: ReportSectionResponse[]): RenderedReportArtifact => ({

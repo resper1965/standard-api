@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import { AssessmentEngineError } from "./errors";
+﻿import { AssessmentEngineError } from "./errors";
 
 export interface TpraInheritanceContext {
   organizationId: string;

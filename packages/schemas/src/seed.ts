@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * Standard Synthetic Seed Script
  *
  * Seeds the Neon PostgreSQL database with synthetic staging data.

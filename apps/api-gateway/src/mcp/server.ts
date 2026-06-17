@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * Standard MCP Server
  *
  * Implements Model Context Protocol (MCP) 2025-03-26 spec

@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import type { ScfImporter } from "./scf-importer";
+﻿import type { ScfImporter } from "./scf-importer";
 
 /**
  * OSCAL JSON SCF Importer â€” deferred to Phase 4.

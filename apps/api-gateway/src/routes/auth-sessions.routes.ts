@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import { ApiError } from "../errors/api-error";
+﻿import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";
 import { json } from "../http";
 

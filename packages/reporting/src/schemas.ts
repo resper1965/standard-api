@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-export {
+﻿export {
   ApproveReportRequestSchema,
   CreateReportDraftRequestSchema,
   EvidenceIndexResponseSchema,

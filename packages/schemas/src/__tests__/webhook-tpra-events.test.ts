@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * Webhook TPRA Event Types â€” W1
  *
  * Tests that TPRA (Third-Party Risk Assessment) webhook event types

@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import type {
+﻿import type {
   AgentOutput,
   AgentRunResponse,
   AgentRuntimeContext,

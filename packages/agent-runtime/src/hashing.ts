@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-const normalize = (value: unknown): unknown => {
+﻿const normalize = (value: unknown): unknown => {
   if (Array.isArray(value)) return value.map(normalize);
   if (value && typeof value === "object") {
     return Object.fromEntries(

@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import { z } from "zod";
+﻿import { z } from "zod";
 
 /** Tratamentos de risco disponÃ­veis (espelho do enum DB riskTreatmentEnum). */
 export const RiskTreatmentSchema = z.enum([

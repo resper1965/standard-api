@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import type { ExtractedDocument } from "@standard/schemas";
+﻿import type { ExtractedDocument } from "@standard/schemas";
 import type { DocumentTextExtractor } from "./types";
 
 const decodeText = (bytes: Uint8Array): string =>

@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * @module workers-ai.provider
  * @description Real Cloudflare Workers AI provider for agent runtime.
  * Uses the Vercel AI SDK workers-ai-provider package.

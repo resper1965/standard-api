@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * @module tenant-mapping
  * @description Bridge between Standard Native Auth identity (text IDs) and Standard domain (UUID IDs).
  *

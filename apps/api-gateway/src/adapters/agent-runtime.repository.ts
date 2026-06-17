@@ -1,8 +1,7 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
 import type { AgentRunResponse, AgentToolInvocationResponse } from "@standard/schemas";
 import { agentRuns, agentToolCalls } from "@standard/schemas";
 import { sql } from "drizzle-orm";
-import type { AgentRunRepository, AgentToolCallRepository, AgentRuntimeDependencies } from "./types";
+import type { AgentRunRepository, AgentToolCallRepository, AgentRuntimeDependencies } from "@standard/agent-runtime";
 
 type AnyDrizzleClient = any;
 

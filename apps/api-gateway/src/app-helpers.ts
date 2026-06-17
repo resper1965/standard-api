@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import { MockAuthProvider } from "@standard/security";
+﻿import { MockAuthProvider } from "@standard/security";
 import type { StandardAuth } from "@standard/auth";
 import type { Env } from "./types/env";
 import { ApiError } from "./errors/api-error";

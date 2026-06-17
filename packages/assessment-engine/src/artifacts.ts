@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import { AssessmentEngineError } from "./errors";
+﻿import { AssessmentEngineError } from "./errors";
 import type { ApprovalEvent, ArtifactType, ArtifactVersion, CreateArtifactVersionInput, RejectionEvent, TransitionContext } from "./types";
 
 export const artifactApprovalGateByType: Record<ArtifactType, ApprovalEvent["gate"]> = {

@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * Standard MCP Server â€” SCF Catalog Tools
  */
 import type { RequestContext } from "../../http";

@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import type { DocumentChunk } from "@standard/document-ingestion";
+﻿import type { DocumentChunk } from "@standard/document-ingestion";
 import type { KbEmbeddingJobMessage, KbServiceDependencies } from "./types";
 
 const safeError = (error: unknown): string => {

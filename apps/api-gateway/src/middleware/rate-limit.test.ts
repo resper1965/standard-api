@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * QA Suite â€” Rate Limiter Unit Tests
  * Tests the buildKey isolation and in-memory counter behavior.
  */

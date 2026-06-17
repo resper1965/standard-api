@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 unknown type workaround
-import { SecurityEventService } from "@standard/observability";
+﻿import { SecurityEventService } from "@standard/observability";
 
 import type { Permission } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";

@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import type { KbEmbeddingJobRepository, KbEmbeddingJobResponse, KbSearchLogRepository, KbVectorReferenceRepository, KbVectorReferenceResponse } from "../types";
+﻿import type { KbEmbeddingJobRepository, KbEmbeddingJobResponse, KbSearchLogRepository, KbVectorReferenceRepository, KbVectorReferenceResponse } from "../types";
 
 export class InMemoryKbEmbeddingJobRepository implements KbEmbeddingJobRepository {
   private readonly records = new Map<string, KbEmbeddingJobResponse>();

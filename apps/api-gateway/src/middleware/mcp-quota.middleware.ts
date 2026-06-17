@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * @module mcp-quota.middleware
  * @description Per-organization rate limiting for MCP tool endpoints.
  *

@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * Inline Cloudflare Workers type stubs.
  */
 interface QueueMessage<T = unknown> {

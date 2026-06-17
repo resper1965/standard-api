@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * @module artifact.drizzle.repository
  * @description Drizzle PostgreSQL artifact version repository.
  * Creates/reads artifact versions across SoA, gap analysis, maturity, POA&M, and reports.

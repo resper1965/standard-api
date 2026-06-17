@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * @module tenant-db (adapter)
  *
  * Provides PostgreSQL Row-Level Security (RLS) enforcement via SET LOCAL

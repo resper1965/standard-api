@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * SCR-RMM Report on Conformity (ROC) Summary Schema
  *
  * Aggregated conformity report for an assessment.

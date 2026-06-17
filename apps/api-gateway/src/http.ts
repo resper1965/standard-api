@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 ZodType args CI workaround
-import type { z } from "zod";
+﻿import type { z } from "zod";
 import type { Env } from "./types/env";
 import type { RouteConfig } from "@asteasolutions/zod-to-openapi";
 import type { AgentRuntimeDependencies } from "@standard/agent-runtime";

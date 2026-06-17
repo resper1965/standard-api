@@ -1,4 +1,3 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
 /**
  * @module compose-document-ingestion
  * @description Factory for Document Ingestion + KB dependency graphs.
@@ -11,6 +10,7 @@ import type { DocumentIngestionServiceDependencies } from "@standard/document-in
 import {
   CloudflareVectorizeStore,
   CloudflareAiEmbeddingProvider,
+  CloudflareAiRerankerProvider,
   MockEmbeddingProvider,
   MockVectorStore,
   DEFAULT_VECTOR_INDEX_NAME,
@@ -61,6 +61,9 @@ export const composeDrizzleKb = (
   const embeddingProvider = env?.AI
     ? new CloudflareAiEmbeddingProvider(env.AI)
     : new MockEmbeddingProvider();
+  const rerankerProvider = env?.AI
+    ? new CloudflareAiRerankerProvider(env.AI)
+    : undefined;
   const vectorStore = env?.STANDARD_KB_INDEX
     ? new CloudflareVectorizeStore(
         env.STANDARD_KB_INDEX,
@@ -72,6 +75,7 @@ export const composeDrizzleKb = (
     documentIngestion,
     repositories: kbRepositories,
     embeddingProvider,
+    rerankerProvider,
     vectorStore,
     queue: { enqueue: async () => {} },
     vectorIndexName: DEFAULT_VECTOR_INDEX_NAME,

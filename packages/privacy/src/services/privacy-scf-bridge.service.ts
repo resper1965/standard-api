@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import type { ScfRepository } from "@standard/scf-core";
+﻿import type { ScfRepository } from "@standard/scf-core";
 import type { ScfFramework, ScfControl, ScfMapping, PrivacyRegime } from "@standard/schemas";
 
 // â”€â”€â”€ Regime â†’ SCF Framework Code Mapping â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€

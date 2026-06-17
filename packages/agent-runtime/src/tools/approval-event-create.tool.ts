@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * @module approval-event-create
  * @description Reserved human approval tool.
  * Functional agents CANNOT use this tool directly â€” it always rejects agent calls.

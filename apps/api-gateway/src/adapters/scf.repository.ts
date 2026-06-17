@@ -1,4 +1,3 @@
-// @ts-nocheck -- Zod v4 CI type compat
 import {
   eq,
   and,
@@ -32,7 +31,7 @@ import {
   scfRiskControlMappings,
   scfThreatControlMappings,
 } from "@standard/schemas";
-import type { ScfRepository } from "./scf.repository";
+import type { ScfRepository } from "@standard/scf-core";
 import type {
   ScfDataset,
   ScfVersion,
@@ -48,7 +47,7 @@ import type {
   ScfMaturityCriteria,
   ScfRisk,
   ScfThreat,
-} from "../types";
+} from "@standard/scf-core";
 
 /** Shape of a Drizzle PG database — keeps this module DB-agnostic */
 type Db = PgDatabase<any, any, any>;

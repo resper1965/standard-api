@@ -1,5 +1,4 @@
-﻿#!/usr/bin/env tsx
-// @ts-nocheck -- Zod v4 CI type compat
+#!/usr/bin/env tsx
 /**
  * SCF Catalog Seed Script
  *
@@ -32,9 +31,9 @@ import { eq, sql, count } from "drizzle-orm";
 import * as schema from "./db/schema";
 import {
   createXlsxScfImporter,
-  createDrizzleScfRepository,
   ScfImportService,
 } from "@standard/scf-core";
+import { createDrizzleScfRepository } from "./db/scf.repository";
 
 // â”€â”€â”€â”€ Configuration â”€â”€â”€â”€
 

@@ -1,4 +1,3 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
 export * from "./errors";
 export * from "./factory";
 export * from "./repositories/gap-analysis.repositories";
@@ -10,6 +9,6 @@ export * from "./services/gap-draft.service";
 export * from "./services/gap-review.service";
 export * from "./services/gap-analysis-execution.service";
 export * from "./services/gap-validation.service";
-export * from "./repositories/drizzle-gap-analysis.repository";
+
 export * from "./types";
 

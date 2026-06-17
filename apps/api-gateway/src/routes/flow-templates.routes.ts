@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * CB-D: Flow Templates â€” Process Automation Templates (Spec v3)
  *
  * Enriched with:

@@ -10,7 +10,6 @@
  *
  * Types flow from @standard/soa â€” no `as any` casts.
  */
-// @ts-nocheck -- Zod v4 unknown type workaround
 import type { RequestContext } from "../../http";
 import type { McpToolResult } from "./assessment.tools";
 import type { SoaItemResponse, SoaVersionResponse } from "@standard/soa";

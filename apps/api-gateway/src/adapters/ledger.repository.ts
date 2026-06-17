@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * LedgerService â€” Assessment Control Events (ADR-002)
  *
  * â›” APPEND-ONLY: NUNCA fazer UPDATE ou DELETE nesta tabela.

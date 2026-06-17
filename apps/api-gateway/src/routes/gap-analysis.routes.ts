@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import {
+﻿import {
   executeTransition,
   getAllowedNextStates,
 } from "@standard/assessment-engine";

@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import { createInMemoryKbDependencies } from "@standard/kb";
+﻿import { createInMemoryKbDependencies } from "@standard/kb";
 import { createInMemorySoaDependencies } from "@standard/soa";
 import { createInMemoryGapAnalysisRepositories } from "./repositories/gap-analysis.repositories";
 import type { GapAnalysisDependencies } from "./types";

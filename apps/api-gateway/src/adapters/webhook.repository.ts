@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * Webhook repository adapter â€” Drizzle + In-Memory implementations.
  *
  * Implements WebhookRepositoryAdapter from @standard/schemas/webhooks.

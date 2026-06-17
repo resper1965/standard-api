@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * @module strm-normaliser
  * @description ConversÃ£o de valores legados STRM para os 5 operadores canÃ³nicos NIST IR 8477.
  *

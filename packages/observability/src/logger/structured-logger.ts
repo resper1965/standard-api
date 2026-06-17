@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import { StructuredLogEntrySchema, type LogLevel, type StructuredLogEntry } from "@standard/schemas";
+﻿import { StructuredLogEntrySchema, type LogLevel, type StructuredLogEntry } from "@standard/schemas";
 import { redactValue } from "./redaction";
 
 export type LogInput = {

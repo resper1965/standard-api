@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * Gap Identification Prompt
  *
  * LLM-based gap identification for the Gap Analysis pipeline.

@@ -1,4 +1,3 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
 import { eq, and, desc } from "drizzle-orm";
 import {
   auditLogs,
@@ -14,7 +13,7 @@ import type {
   UsageRecord,
   AgentUsageRecord
 } from "@standard/schemas";
-import type { ObservabilityDependencies, ObservabilityRepository } from "./repositories";
+import type { ObservabilityDependencies, ObservabilityRepository } from "@standard/observability";
 
 type DrizzleDb = {
   insert(table: any): any;

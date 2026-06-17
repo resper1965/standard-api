@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import { OpenApiGeneratorV3 } from "@asteasolutions/zod-to-openapi";
+﻿import { OpenApiGeneratorV3 } from "@asteasolutions/zod-to-openapi";
 import { registry } from "./registry";
 import type { RouteDefinition } from "../http";
 

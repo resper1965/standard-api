@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * PDF Renderer for Standard GRC Reports
  *
  * Generates a structured HTML document optimized for PDF printing.

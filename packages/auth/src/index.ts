@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * @module @standard/auth
  * @description Public API for the Standard auth package.
  */

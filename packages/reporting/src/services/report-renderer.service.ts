@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import type { RenderReportResponse, SupportedLocale } from "@standard/schemas";
+﻿import type { RenderReportResponse, SupportedLocale } from "@standard/schemas";
 import { assertActor, assertContext, ReportingWorkflowError } from "../errors";
 import { renderDocxArtifact } from "../renderers/docx-renderer";
 import { renderJsonArtifact } from "../renderers/json-renderer";

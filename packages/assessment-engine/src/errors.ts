@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-export type AssessmentEngineErrorCode =
+﻿export type AssessmentEngineErrorCode =
   | "TENANT_CONTEXT_MISMATCH"
   | "TRANSITION_NOT_ALLOWED"
   | "MISSING_PREREQUISITE"

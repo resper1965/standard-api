@@ -1,4 +1,3 @@
-// @ts-nocheck -- Zod v4 CI type compat
 import type { RouteDefinition } from "../http";
 import { json } from "../http";
 import { generateOpenApiSpec } from "../openapi/generator";

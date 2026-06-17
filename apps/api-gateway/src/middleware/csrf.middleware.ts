@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * CSRF Middleware â€” Double-Submit Cookie Pattern (stateless).
  *
  * How it works:

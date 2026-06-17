@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import { z } from "zod";
+﻿import { z } from "zod";
 import { TraceIdSchema, UuidSchema } from "./common";
 
 export const ReportVersionStatusSchema = z.enum(["draft", "under_review", "approved", "superseded", "archived"]);

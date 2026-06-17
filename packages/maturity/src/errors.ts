@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-export class MaturityError extends Error {
+﻿export class MaturityError extends Error {
   readonly code: MaturityErrorCode;
   readonly details: Record<string, unknown>;
 

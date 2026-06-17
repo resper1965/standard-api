@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * @module api-key-crypto
  * @description Centralized API key token generation and hashing.
  * Single source of truth for key format, prefix, and hash algorithm.

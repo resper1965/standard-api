@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import { MaturityError } from "../errors";
+﻿import { MaturityError } from "../errors";
 import type { MaturityAssessmentVersion, MaturityContext, MaturityDependencies } from "../types";
 import { validateMaturityVersion } from "./maturity-validation.service";
 

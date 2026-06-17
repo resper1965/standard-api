@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import type { RouteDefinition } from "../http";
+﻿import type { RouteDefinition } from "../http";
 import { json } from "../http";
 
 export const agentToolsRoutes: RouteDefinition[] = [

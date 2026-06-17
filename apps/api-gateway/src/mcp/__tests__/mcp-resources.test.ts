@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import { describe, it, expect, vi } from "vitest";
+﻿import { describe, it, expect, vi } from "vitest";
 import { MCP_RESOURCES, readMcpResource } from "../resources";
 import { MCP_PROMPTS, getMcpPrompt } from "../prompts";
 

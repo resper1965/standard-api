@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * @module mcp/resources
  * @description MCP Resources â€” catÃ¡logo de recursos normativos Standard.
  *

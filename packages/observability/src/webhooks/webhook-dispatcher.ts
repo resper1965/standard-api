@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * WebhookDispatcher â€” responsible for dispatching lifecycle events
  * to registered webhook endpoints with HMAC-SHA256 signed payloads.
  *

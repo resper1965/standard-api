@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * User Organization Routes â€” User-Scoped (no tenant context)
  *
  * Simplified auth model: 1 user = 1 org (organizations.userId === baUser.id).

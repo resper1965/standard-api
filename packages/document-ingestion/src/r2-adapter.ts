@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import type { StorageAdapter, StoredObject } from "./types";
+﻿import type { StorageAdapter, StoredObject } from "./types";
 
 /**
  * Minimal interface matching what we use from Cloudflare R2Bucket.

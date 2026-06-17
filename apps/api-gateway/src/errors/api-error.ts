@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import type { ApiErrorCode } from "./error-codes";
+﻿import type { ApiErrorCode } from "./error-codes";
 
 export class ApiError extends Error {
   readonly code: ApiErrorCode;

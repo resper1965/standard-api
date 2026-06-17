@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import type { CostEstimate } from "@standard/schemas";
+﻿import type { CostEstimate } from "@standard/schemas";
 
 export type PricingLookupInput = {
   service_name: string;

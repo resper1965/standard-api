@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import { CreateApprovalRequestSchema } from "@standard/schemas";
+﻿import { CreateApprovalRequestSchema } from "@standard/schemas";
 import { z } from "zod";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";

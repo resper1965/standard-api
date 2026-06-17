@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-export const assessmentStates = [
+﻿export const assessmentStates = [
   "draft",
   "documents_uploaded",
   "documents_ingested",

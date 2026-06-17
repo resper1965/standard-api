@@ -12,7 +12,6 @@
  *   mappings.getMappingsForControl(controlId, scfVersionId)
  *   mappings.getCoverageSummary(frameworkId, scfVersionId)
  */
-// @ts-nocheck -- Zod v4 unknown type workaround
 import type { RequestContext } from "../../http";
 import type { McpToolResult } from "./assessment.tools";
 import { ComplianceOptimizerService } from "@standard/assessment-engine";

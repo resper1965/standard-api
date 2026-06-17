@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import type { PrivacyDependencies, PrivacyContext } from "../types";
+﻿import type { PrivacyDependencies, PrivacyContext } from "../types";
 import { PrivacyError } from "../errors";
 import { PrivacyCompletenessService } from "./privacy-completeness.service";
 

@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import type { PrivacyScreeningResponse, PrivacyScreeningType, PrivacyScreeningResult, PrivacyRegime } from "@standard/schemas";
+﻿import type { PrivacyScreeningResponse, PrivacyScreeningType, PrivacyScreeningResult, PrivacyRegime } from "@standard/schemas";
 import type { PrivacyDependencies, PrivacyContext, PrivacyActivityResponse } from "../types";
 import { PrivacyError } from "../errors";
 

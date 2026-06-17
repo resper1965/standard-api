@@ -1,4 +1,3 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
 import type { DocumentIngestionServiceDependencies } from "@standard/document-ingestion";
 import { createInMemoryDocumentIngestionDependencies } from "@standard/document-ingestion";
 import { DEFAULT_VECTOR_INDEX_NAME, DEFAULT_VECTOR_PROVIDER } from "./constants";
@@ -22,30 +21,6 @@ export const createInMemoryKbDependencies = (
   ...overrides
 });
 
-export const createDrizzleKbDependencies = async (
-  db: any,
-  documentIngestion: DocumentIngestionServiceDependencies,
-  vectorStore: VectorStore,
-  embeddingProvider: EmbeddingProvider,
-  queue: KbQueueAdapter,
-  overrides: Partial<KbServiceDependencies> = {}
-): Promise<KbServiceDependencies> => {
-  const { DrizzleKbEmbeddingJobRepository, DrizzleKbVectorReferenceRepository, DrizzleKbSearchLogRepository } = await import("./drizzle-adapters");
-  
-  return {
-    documentIngestion,
-    repositories: {
-      embeddingJobs: new DrizzleKbEmbeddingJobRepository(db),
-      vectorReferences: new DrizzleKbVectorReferenceRepository(db),
-      searchLogs: new DrizzleKbSearchLogRepository(db)
-    },
-    embeddingProvider,
-    vectorStore,
-    queue,
-    vectorIndexName: overrides.vectorIndexName ?? DEFAULT_VECTOR_INDEX_NAME,
-    vectorProvider: overrides.vectorProvider ?? DEFAULT_VECTOR_PROVIDER,
-    ...overrides
-  };
-};
+
 
 

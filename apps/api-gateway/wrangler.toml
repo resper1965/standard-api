@@ -77,6 +77,14 @@ script_name = "standard-workflows"
 binding = "HYPERDRIVE_AUTH"
 id = "0cdc4cfbf47a472fb1fda01d5987499c"
 
+[[durable_objects.bindings]]
+name = "ASSESSMENT_SESSION_DO"
+class_name = "AssessmentSessionDO"
+
+[[migrations]]
+tag = "v1"
+new_classes = ["AssessmentSessionDO"]
+
 [env.staging]
 name = "standard-api-gateway-staging"
 
@@ -145,6 +153,10 @@ id = "69f8233cfd0f4614a9249e4a8867d148"
 [[env.staging.hyperdrive]]
 binding = "HYPERDRIVE_AUTH"
 id = "REPLACE_WITH_AUTH_STAGING_HYPERDRIVE_ID"
+
+[[env.staging.durable_objects.bindings]]
+name = "ASSESSMENT_SESSION_DO"
+class_name = "AssessmentSessionDO"
 
 [[env.staging.workflows]]
 binding = "ASSESSMENT_WORKFLOW"
@@ -230,6 +242,10 @@ id = "aa6fb63a67f24cbd82d28bf5a43f08e5"
 [[env.production.hyperdrive]]
 binding = "HYPERDRIVE_AUTH"
 id = "REPLACE_WITH_AUTH_PROD_HYPERDRIVE_ID"
+
+[[env.production.durable_objects.bindings]]
+name = "ASSESSMENT_SESSION_DO"
+class_name = "AssessmentSessionDO"
 
 [[env.production.workflows]]
 binding = "ASSESSMENT_WORKFLOW"

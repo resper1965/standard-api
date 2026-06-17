@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * Idempotency middleware using Cloudflare KV as the replay store.
  *
  * How it works:

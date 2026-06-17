@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * AuditPackageService â€” One-Click Audit Package Generator
  *
  * Orchestrates the creation of a comprehensive audit-ready package containing:

@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * MCP Integration Tests â€” resources/list, resources/read, prompts/list, prompts/get
  *
  * Testa o dispatcher JSON-RPC do mcp.routes.ts via chamadas directas aos handlers.

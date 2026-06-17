@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * @module AuthRepository
  * @description Ãšnico ponto de acesso tipado Ã s tabelas internas do Better Auth.
  *

@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * @module artifact-draft-create
  * @description Create draft artifacts that require schema validation and human review.
  * Agents can propose drafts (SoA, Gap Analysis, Maturity, POA&M) but cannot finalize.

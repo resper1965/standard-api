@@ -1,5 +1,4 @@
 ﻿#!/usr/bin/env tsx
-// @ts-nocheck -- Zod v4 CI type compat
 /**
  * STRM Bundle Seed Script â€” v2
  *

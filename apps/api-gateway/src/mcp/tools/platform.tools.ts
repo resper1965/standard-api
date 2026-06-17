@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * Standard MCP Server â€” Platform Status Tools
  */
 import type { RequestContext } from "../../http";

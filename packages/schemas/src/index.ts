@@ -1,4 +1,8 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
+import { extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
+import { z } from "zod";
+
+extendZodWithOpenApi(z);
+
 export * from "./domain";
 export * from "./db/schema";
 export * from "./db/utils";

@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import type { ExportJobResponse, ReportFormat } from "@standard/schemas";
+﻿import type { ExportJobResponse, ReportFormat } from "@standard/schemas";
 import { assertActor, assertContext, ReportingWorkflowError } from "../errors";
 import type { ReportType, ReportingContext, ReportingDependencies } from "../types";
 import { ReportDraftService } from "./report-draft.service";

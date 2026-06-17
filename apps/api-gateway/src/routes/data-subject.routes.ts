@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * Data Subject Rights Routes â€” LGPD / GDPR Compliance
  *
  * Implements the minimum required endpoints for data subject rights:

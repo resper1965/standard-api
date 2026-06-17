@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import { createSyntheticScfFixture } from "./fixtures/synthetic-scf.fixture";
+﻿import { createSyntheticScfFixture } from "./fixtures/synthetic-scf.fixture";
 import { createCsvScfImporter } from "./importers/csv-importer";
 import { createOscalScfImporter } from "./importers/oscal-importer.placeholder";
 import { createXlsxScfImporter } from "./importers/xlsx-importer";

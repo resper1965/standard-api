@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * STRM Weight Calculator â€” ADR-001 (NIST IR 8477)
  *
  * Implementa o algoritmo de ponderaÃ§Ã£o STRM conforme especificado no Blueprint.

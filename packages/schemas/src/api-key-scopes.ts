@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * API Key Scopes â€” granular permission system for M2M API keys.
  *
  * Scopes follow `resource:action` format, matching internal permissions.

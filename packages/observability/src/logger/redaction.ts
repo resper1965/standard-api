@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import { DEFAULT_REDACTION_REPLACEMENT, SENSITIVE_FIELD_NAMES } from "../constants";
+﻿import { DEFAULT_REDACTION_REPLACEMENT, SENSITIVE_FIELD_NAMES } from "../constants";
 
 const sensitiveFields = new Set<string>(SENSITIVE_FIELD_NAMES);
 

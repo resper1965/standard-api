@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * @module kb-evidence-search
  * @description KB evidence semantic search tool for agent runtime.
  * Queries the knowledge base via injected repository. Returns candidate

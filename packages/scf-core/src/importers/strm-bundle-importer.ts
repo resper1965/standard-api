@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-/**
+﻿/**
  * SCF STRM Bundle Importer
  *
  * Parseia os 183 XLSXs do STRM Bundle oficial da SCF (comprado em securecontrolsframework.com).

@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import { ObservabilityTraceContextSchema, type ObservabilityTraceContext } from "@standard/schemas";
+﻿import { ObservabilityTraceContextSchema, type ObservabilityTraceContext } from "@standard/schemas";
 import { createTraceId } from "./trace-id";
 
 export type TraceContextInput = Partial<Omit<ObservabilityTraceContext, "trace_id" | "started_at">> & {

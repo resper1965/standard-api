@@ -1,5 +1,4 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
-import { eq, and } from "drizzle-orm";
+﻿import { eq, and } from "drizzle-orm";
 import { assessmentEvents } from "@standard/schemas";
 import type { AssessmentLifecycleEvent } from "@standard/assessment-engine";
 import type { LifecycleEventRepositoryAdapter } from "../http";
