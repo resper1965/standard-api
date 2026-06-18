@@ -32,7 +32,7 @@ async function seedOnsFramework() {
     throw new Error("No active SCF version found to map against.");
   }
 
-  const scfVersionId = activeScfVersions[0].id;
+  const scfVersionId = activeScfVersions[0]!.id;
   console.log(`\u2714 Found Active SCF Version: ${scfVersionId}`);
 
   // 2. Create the ONS Framework (Global)
@@ -96,7 +96,7 @@ async function seedOnsFramework() {
     {
       scfVersionId,
       scfFrameworkRequirementId: req1Id,
-      scfControlId: randomControls[0].id,
+      scfControlId: randomControls[0]!.id,
       relationshipType: "intersects",
       strengthScore: "0.8",
       mappingSource: "consultative", // NOT official_scf
@@ -108,7 +108,7 @@ async function seedOnsFramework() {
     {
       scfVersionId,
       scfFrameworkRequirementId: req2Id,
-      scfControlId: randomControls[1].id,
+      scfControlId: randomControls[1]!.id,
       relationshipType: "equal",
       mappingSource: "consultative",
       isOfficial: false,
