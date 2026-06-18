@@ -183,8 +183,6 @@ LOG_LEVEL = "warn"
 AI_GATEWAY_NAME = "standard-prod"
 AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/0a6c490dd5fe9051422c15c9e133138e/standard-prod"
 BETTER_AUTH_URL = "https://standard-api.bekaa.eu/api/auth"
-DATABASE_URL = "postgresql://neondb_owner:npg_T8MHv6EoDIGh@ep-blue-breeze-anyfua57.c-6.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
-AUTH_DATABASE_URL = "postgresql://neondb_owner:npg_T8MHv6EoDIGh@ep-muddy-frog-an8w71x9-pooler.c-6.us-east-1.aws.neon.tech/neondb?channel_binding=require&sslmode=require"
 
 [[env.production.r2_buckets]]
 binding = "STANDARD_DOCUMENTS_BUCKET"
