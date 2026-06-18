@@ -47,7 +47,7 @@ describe("Custom Framework Repository", () => {
     const mappings = await repo.getMappingsForFramework("framework-123");
     
     expect(mappings).toHaveLength(1);
-    expect(mappings[0].customCode).toBe("ONS-RO-1");
-    expect(mappings[0].relationshipType).toBe("intersects");
+    expect(mappings[0]!.customCode).toBe("ONS-RO-1");
+    expect(mappings[0]!.relationshipType).toBe("intersects");
   });
 });
