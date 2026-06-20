@@ -38,6 +38,7 @@ Este arquivo é o índice central de decisões arquiteturais e operacionais do S
 | ADR-012 | [`ADR-012-xlsx-security-risk.md`](docs/decisions/ADR-012-xlsx-security-risk.md) | Risco de segurança do XLSX (prototype pollution) | ✅ Accepted |
 | ADR-013 | [`ADR-013-wrangler-cve-dev-tool.md`](docs/decisions/ADR-013-wrangler-cve-dev-tool.md) | Wrangler CVE (dev-only, accepted risk) | ✅ Accepted |
 | ADR-015 | [`ADR-015-better-auth-containment.md`](docs/decisions/ADR-015-better-auth-containment.md) | Contenção do better-auth via AuthRepository | ✅ Accepted |
+| ADR-017 | [`ADR-017-auth-hardening-and-tenancy-link.md`](docs/decisions/ADR-017-auth-hardening-and-tenancy-link.md) | Hardening de Autenticação e Vinculação de Tenancy no SaaS 1:1 | ✅ Accepted |
 | — | [`adr-auth-accepted-risks.md`](docs/decisions/adr-auth-accepted-risks.md) | Riscos aceites da autenticação Standard | ✅ Accepted |
 | — | [`adr-auth-standard-native-auth-behaviors.md`](docs/decisions/adr-auth-standard-native-auth-behaviors.md) | Comportamentos nativos do Standard Auth | ✅ Accepted |
 | — | [`adr-typescript-6.md`](docs/decisions/adr-typescript-6.md) | Adopção do TypeScript 6 | ✅ Accepted |
