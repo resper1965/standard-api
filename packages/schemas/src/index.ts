@@ -50,3 +50,4 @@ export * from "./risk-catalog";
 export * from "./roc-summary";
 
 export * from "./db/custom-framework.repository";
+export * from "./tpra";

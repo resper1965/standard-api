@@ -67,10 +67,15 @@ export function convertZodToOpenApi(schema: any): any {
         result.items = convertZodToOpenApi(def.element || def.type);
         break;
 
-      case "nullable":
-        result = convertZodToOpenApi(def.innerType);
-        result.nullable = true;
+      case "nullable": {
+        const inner = convertZodToOpenApi(def.innerType);
+        result = { ...inner };
+        // In OpenAPI 3.0, nullable MUST be used with type. If there's no type (e.g. z.any()), it already allows null.
+        if (result.type) {
+          result.nullable = true;
+        }
         break;
+      }
 
       case "number":
         result.type = "number";
@@ -100,6 +105,36 @@ export function convertZodToOpenApi(schema: any): any {
       case "union":
         result.oneOf = (def.options || []).map(convertZodToOpenApi);
         break;
+
+      case "intersection":
+        result.allOf = [
+          convertZodToOpenApi(def.left),
+          convertZodToOpenApi(def.right),
+        ];
+        break;
+
+      case "effects":
+        return convertZodToOpenApi(def.schema);
+
+      case "lazy":
+        return convertZodToOpenApi(def.getter());
+
+      case "literal": {
+        const litVal =
+          def.value !== undefined
+            ? def.value
+            : def.values && def.values.length > 0
+              ? def.values[0]
+              : null;
+        if (litVal === null) {
+          result.nullable = true;
+          // Do not emit type="string" and enum=[null] as that violates OAS 3.0 type constraints
+        } else {
+          result.type = typeof litVal;
+          result.enum = [litVal];
+        }
+        break;
+      }
 
       case "boolean":
         result.type = "boolean";
@@ -132,5 +167,10 @@ export function convertZodToOpenApi(schema: any): any {
   for (const [key, value] of Object.entries(schema)) {
     result[key] = convertZodToOpenApi(value);
   }
+
+  if (result.nullable === true && !result.type) {
+    delete result.nullable;
+  }
+
   return result;
 }

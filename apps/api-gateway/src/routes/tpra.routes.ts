@@ -1,4 +1,4 @@
-﻿/**
+/**
  * TPRA Routes â€” Third-Party Risk Assessment
  *
  * Static catalogue:
@@ -20,9 +20,22 @@
  *   GET  /api/v1/tpra/vendors/:vendorId/risk-scores       â€” risk score history
  */
 import type { RouteDefinition } from "../http";
-import { json, newId, routeUuidParam, requireOrganizationId } from "../http";
+import {
+  json,
+  newId,
+  routeUuidParam,
+  requireOrganizationId,
+  parseJson,
+} from "../http";
 import { ApiError } from "../errors/api-error";
 import { flattenI18n } from "../utils/i18n";
+import {
+  TpraScoreRequestSchema,
+  CreateTpraVendorRequestSchema,
+  CreateTpraAssessmentRequestSchema,
+  SubmitTpraAssessmentRequestSchema,
+  CreateTpraRiskScoreRequestSchema,
+} from "@standard/schemas";
 import { categoriseRisk } from "./tpra-score-service";
 
 // â”€â”€ TPRA Questionnaire Data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -597,10 +610,7 @@ export const tpraRoutes: RouteDefinition[] = [
     authRequired: true,
     tenantRequired: false,
     handler: async ({ request, traceId }) => {
-      const body = (await request.json()) as {
-        questionnaire_id: string;
-        answers: Record<string, string | number>;
-      };
+      const body = await parseJson(request, TpraScoreRequestSchema);
       const q = TPRA_INDEX.get(body.questionnaire_id ?? "standard_v1");
       if (!q) throw new ApiError("NOT_FOUND", "Questionnaire not found.", 404);
 
@@ -700,14 +710,7 @@ export const tpraRoutes: RouteDefinition[] = [
     permissions: ["assessment:create"],
     handler: async ({ request, deps, organizationId, traceId }) => {
       const orgId = requireOrganizationId({ organizationId });
-      const body = (await request.json()) as {
-        vendor_name: string;
-        vendor_type?: string;
-        contact_email?: string;
-        metadata?: Record<string, unknown>;
-      };
-      if (!body.vendor_name)
-        throw new ApiError("VALIDATION_ERROR", "vendor_name is required.", 400);
+      const body = await parseJson(request, CreateTpraVendorRequestSchema);
       const vendor = await deps.tpra.vendors.create({
         organization_id: orgId,
         vendor_name: body.vendor_name,
@@ -787,16 +790,7 @@ export const tpraRoutes: RouteDefinition[] = [
       const vendorId = routeUuidParam(params, "vendorId");
       const vendor = await deps.tpra.vendors.get(vendorId, orgId);
       if (!vendor) throw new ApiError("NOT_FOUND", "Vendor not found.", 404);
-      const body = (await request.json()) as {
-        assessment_id?: string;
-        scf_version_id: string;
-      };
-      if (!body.scf_version_id)
-        throw new ApiError(
-          "VALIDATION_ERROR",
-          "scf_version_id is required.",
-          400,
-        );
+      const body = await parseJson(request, CreateTpraAssessmentRequestSchema);
       const assessment = await deps.tpra.assessments.create({
         organization_id: orgId,
         vendor_id: vendorId,
@@ -832,11 +826,7 @@ export const tpraRoutes: RouteDefinition[] = [
     permissions: ["assessment:create"],
     handler: async ({ request, params, deps, organizationId, traceId }) => {
       const orgId = requireOrganizationId({ organizationId });
-      const body = (await request.json()) as {
-        responses: Record<string, unknown>;
-      };
-      if (!body.responses)
-        throw new ApiError("VALIDATION_ERROR", "responses is required.", 400);
+      const body = await parseJson(request, SubmitTpraAssessmentRequestSchema);
       const updated = await deps.tpra.assessments.submit(
         routeUuidParam(params, "id"),
         orgId,
@@ -893,17 +883,7 @@ export const tpraRoutes: RouteDefinition[] = [
       );
       if (!assessment)
         throw new ApiError("NOT_FOUND", "TPRA assessment not found.", 404);
-      const body = (await request.json()) as {
-        raw_score: number;
-        risk_category: string;
-        scf_domain_failures?: string[];
-      };
-      if (body.raw_score == null || !body.risk_category)
-        throw new ApiError(
-          "VALIDATION_ERROR",
-          "raw_score and risk_category are required.",
-          400,
-        );
+      const body = await parseJson(request, CreateTpraRiskScoreRequestSchema);
       const validCategories = ["low", "medium", "high", "critical"];
       if (!validCategories.includes(body.risk_category))
         throw new ApiError(

@@ -1,4 +1,4 @@
-﻿import {
+import {
   ScfImportRunSchema,
   ScfStrmCoverageResponseSchema,
   ScfStrmRelationshipResponseSchema,
@@ -24,6 +24,7 @@
   scfThreats,
   scfRiskControlMappings,
   scfThreatControlMappings,
+  ComplianceStrategyRequestSchema,
 } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition, AppDependencies } from "../http";
@@ -1601,27 +1602,10 @@ export const scfRoutes: RouteDefinition[] = [
     authRequired: true,
     tenantRequired: false,
     handler: async ({ request, deps, traceId }) => {
-      let body: any;
-      try {
-        body = await request.json();
-      } catch {
-        throw new ApiError("VALIDATION_ERROR", "Invalid JSON body.", 400);
-      }
+      const body = await parseJson(request, ComplianceStrategyRequestSchema);
 
-      const frameworkIds = body?.framework_ids;
-      let scfVersionId = body?.scf_version_id;
-
-      if (
-        !frameworkIds ||
-        !Array.isArray(frameworkIds) ||
-        frameworkIds.length === 0
-      ) {
-        throw new ApiError(
-          "VALIDATION_ERROR",
-          "Property 'framework_ids' is required and must be a non-empty array.",
-          400,
-        );
-      }
+      const frameworkIds = body.framework_ids;
+      let scfVersionId = body.scf_version_id;
 
       if (!scfVersionId) {
         scfVersionId = await resolveVersionId(deps, "latest");
