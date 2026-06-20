@@ -1,4 +1,4 @@
-import {
+﻿import {
   executeTransition,
   getAllowedNextStates,
 } from "@standard/assessment-engine";
@@ -708,21 +708,6 @@ export const gapAnalysisRoutes: RouteDefinition[] = [
     path: "/api/v1/gap/evaluate-evidence",
     authRequired: true,
     tenantRequired: true,
-    openapi: {
-      summary: "Evaluate Evidence",
-      description: "Checks evidence against a control requirement.",
-      tags: ["Gap Analysis"],
-      request: {
-        body: {
-          content: {
-            "application/json": { schema: EvaluateEvidenceRequestSchema },
-          },
-        },
-      },
-      responses: {
-        200: { description: "Evaluation result" },
-      },
-    },
     bodySchema: EvaluateEvidenceRequestSchema,
     handler: async (ctx) => {
       try {
@@ -770,21 +755,6 @@ export const gapAnalysisRoutes: RouteDefinition[] = [
     path: "/api/v1/gap/evaluate-evidence/batch",
     authRequired: true,
     tenantRequired: true,
-    openapi: {
-      summary: "Evaluate Evidence (Batch)",
-      description: "Checks multiple evidences in batch.",
-      tags: ["Gap Analysis"],
-      request: {
-        body: {
-          content: {
-            "application/json": { schema: EvaluateEvidenceBatchRequestSchema },
-          },
-        },
-      },
-      responses: {
-        202: { description: "Batch evaluation queued" },
-      },
-    },
     bodySchema: EvaluateEvidenceBatchRequestSchema,
     handler: async (ctx) => {
       const body = ctx.validatedBody as z.infer<
@@ -834,21 +804,6 @@ export const gapAnalysisRoutes: RouteDefinition[] = [
     path: "/api/v1/poam/architect-remediation",
     authRequired: true,
     tenantRequired: true,
-    openapi: {
-      summary: "Architect Remediation",
-      description: "Generates PoAM architecture remediation plan.",
-      tags: ["PoAM"],
-      request: {
-        body: {
-          content: {
-            "application/json": { schema: ArchitectRemediationRequestSchema },
-          },
-        },
-      },
-      responses: {
-        200: { description: "Remediation plan" },
-      },
-    },
     bodySchema: ArchitectRemediationRequestSchema,
     handler: async (ctx) => {
       try {
