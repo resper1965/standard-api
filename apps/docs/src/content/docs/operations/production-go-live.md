@@ -1,4 +1,4 @@
-﻿---
+---
 title: "Production Go-Live Operational Guide"
 ---
 
@@ -17,12 +17,12 @@ Configure as seguintes entradas de DNS no painel da Cloudflare:
 - **API Gateway**:
   - Tipo: `CNAME`
   - Nome: `api` (resolvendo para `api.standard.bekaa.eu`)
-  - Destino: Apontar para o endpoint de distribuição do provedor Cloud (AWS ALB, Vercel ou Cloudflare Workers)
+  - Destino: Apontar para o endpoint de distribuição do provedor Cloud (AWS ALB ou Cloudflare Workers)
   - Proxy Status: **Proxied (Orange Cloud)**
 - **Console Web (Frontend)**:
   - Tipo: `CNAME`
   - Nome: `@` (domínio raiz) ou `app` (ex: `app.standard.bekaa.eu`)
-  - Destino: Apontar para o endpoint do frontend (ex: URL do deploy Vercel)
+  - Destino: Apontar para o endpoint do frontend (ex: URL do deploy Cloudflare Pages)
   - Proxy Status: **Proxied (Orange Cloud)**
 
 ### 1.2 Regras de SSL/TLS e Edge Certificates
@@ -41,7 +41,7 @@ Configure as seguintes entradas de DNS no painel da Cloudflare:
 
 ## 2. Variáveis de Ambiente Secretas
 
-Todos os secrets devem ser injetados via gerenciador de segredos do ambiente produtivo (ex: AWS Secrets Manager, Vercel Env, ou Cloudflare Wrangler Secrets). **Nunca** armazene segredos em arquivos `.env` commitados ou em repositórios Git.
+Todos os secrets devem ser injetados via gerenciador de segredos do ambiente produtivo (ex: AWS Secrets Manager, Cloudflare Wrangler Secrets). **Nunca** armazene segredos em arquivos `.env` commitados ou em repositórios Git.
 
 ### 2.1 Lista de Secrets Necessários
 
