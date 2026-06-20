@@ -1,4 +1,4 @@
-﻿import { Pool, neonConfig } from "@neondatabase/serverless";
+import { Pool, neonConfig } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-serverless";
 import * as schema from "@standard/schemas";
 
@@ -24,7 +24,7 @@ if (typeof WebSocket !== "undefined") {
 //
 // Transactions still work correctly via this mode on @neondatabase/serverless.
 // See: https://neon.tech/docs/serverless/serverless-driver#pool-and-client
-neonConfig.poolQueryViaFetch = true;
+neonConfig.poolQueryViaFetch = false;
 
 /** Cloudflare Hyperdrive binding shape â€” only present in Workers runtime */
 interface HyperdriveBinding {
@@ -54,4 +54,3 @@ export const createDb = (
 };
 
 export type DbClient = ReturnType<typeof createDb>;
-

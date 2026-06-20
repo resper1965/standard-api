@@ -15,11 +15,11 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "better-auth": "1.6.13",
-    "@neondatabase/serverless": "^0.9.3",
-    "drizzle-orm": "^0.45.2",
+    "@neondatabase/serverless": "^1.1.0",
+    "@standard/email": "workspace:*",
     "@standard/schemas": "workspace:*",
-    "@standard/email": "workspace:*"
+    "better-auth": "1.6.13",
+    "drizzle-orm": "^0.45.2"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260430.1",
