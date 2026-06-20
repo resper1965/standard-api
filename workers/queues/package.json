@@ -9,7 +9,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@neondatabase/serverless": "^0.9.3",
+    "@neondatabase/serverless": "^1.1.0",
     "@sentry/cloudflare": "^10.56.0",
     "@standard/document-ingestion": "workspace:*",
     "@standard/kb": "workspace:*",

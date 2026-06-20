@@ -14,7 +14,7 @@
   "dependencies": {
     "@standard/schemas": "workspace:*",
 
-    "xlsx": "https://cdn.sheetjs.com/xlsx-0.19.3/xlsx-0.19.3.tgz"
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/node": "^25.7.0",

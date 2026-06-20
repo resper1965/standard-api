@@ -12,7 +12,7 @@
     "test": "tsx tests/run-tests.ts"
   },
   "dependencies": {
-    "@neondatabase/serverless": "^0.9.3",
+    "@neondatabase/serverless": "^1.1.0",
     "@standard/agent-runtime": "workspace:*",
     "@standard/assessment-engine": "workspace:*",
     "@standard/schemas": "workspace:*",
