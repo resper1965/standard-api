@@ -26,6 +26,7 @@ import {
 } from "@standard/maturity";
 import {
   ApproveMaturityRequestSchema,
+  SubmitMaturityReviewRequestSchema,
   UpdateMaturityTargetsRequestSchema,
 } from "@standard/schemas";
 import type { AppDependencies, RouteDefinition } from "../http";
@@ -305,7 +306,10 @@ export const maturityRoutes: RouteDefinition[] = [
 
       let exceptionRationale: string | undefined;
       try {
-        const body = await parseJson(request, ApproveMaturityRequestSchema);
+        const body = await parseJson(
+          request,
+          SubmitMaturityReviewRequestSchema,
+        );
         exceptionRationale = body.exception_rationale;
       } catch {
         // Body is optional

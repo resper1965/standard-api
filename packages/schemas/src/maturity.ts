@@ -1,4 +1,4 @@
-﻿import { z } from "zod";
+import { z } from "zod";
 import { TraceIdSchema, UuidSchema } from "./common";
 
 // â”€â”€â”€ Maturity Assessment Version â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -71,6 +71,7 @@ export const SubmitMaturityReviewRequestSchema = z.strictObject({
 
 export const ApproveMaturityRequestSchema = z.strictObject({
   approval_event_id: UuidSchema,
+  exception_rationale: z.string().optional(),
 });
 
 // â”€â”€â”€ Validation Response â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€

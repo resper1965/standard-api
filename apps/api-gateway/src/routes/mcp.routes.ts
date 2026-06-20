@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Standard MCP Server Routes
  *
  * POST /mcp  â€” MCP Streamable HTTP endpoint
@@ -28,15 +28,16 @@ const MCP_VERSION = "2025-03-26";
 const SERVER_NAME = "standard-grc";
 const SERVER_VERSION = "1.0.0";
 
-// â”€â”€ ADR-003: Async Tools Allowlist â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// —— ADR-003: Async Tools Allowlist —————————————————————————————————————————
 // Tools that invoke LLMs or heavy processing via Cloudflare AI Gateway.
 // These MUST be dispatched via AGENT_RUN_QUEUE and return 202 immediately.
 // Adding a tool here = opting into async pattern automatically.
-// NOTE: calcular-score-risco-terceiro is Grupo A (sync) â€” pure math, no LLM
+// NOTE: calcular-score-risco-terceiro is Grupo B (async) as per Blueprint
 const ASYNC_TOOLS = new Set<string>([
   "evaluate-evidence",
   "architect-remediation",
-  "validar-evidencia-privacidade",
+  "validar_evidencia_privacidade",
+  "calcular_score_risco_terceiro",
 ]);
 
 // Server capabilities response (returned on initialize)

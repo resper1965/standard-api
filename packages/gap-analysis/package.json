@@ -13,6 +13,7 @@
     "@standard/agent-runtime": "workspace:*",
     "@standard/assessment-engine": "workspace:*",
     "@standard/kb": "workspace:*",
+    "@standard/observability": "workspace:^",
     "@standard/scf-core": "workspace:*",
     "@standard/schemas": "workspace:*",
     "@standard/soa": "workspace:*"
@@ -22,4 +23,3 @@
     "typescript": "latest"
   }
 }
-
