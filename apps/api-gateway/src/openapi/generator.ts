@@ -1,6 +1,7 @@
 import { OpenApiGeneratorV3 } from "@asteasolutions/zod-to-openapi";
 import { registry } from "./registry";
 import type { RouteDefinition } from "../http";
+import { convertZodToOpenApi } from "./zod-converter";
 
 let cachedSpec: any = null;
 
@@ -90,6 +91,18 @@ All Webhooks dispatched by Standard GRC include an \`x-standard-signature\` head
     ],
     security: [{ BearerApiKey: [] }],
   });
+
+  // Convert raw Zod objects to proper OpenAPI formats
+  if (cachedSpec.components && cachedSpec.components.schemas) {
+    cachedSpec.components.schemas = convertZodToOpenApi(
+      cachedSpec.components.schemas,
+    );
+  }
+
+  // Convert responses and requestBodies as well to be safe
+  if (cachedSpec.paths) {
+    cachedSpec.paths = convertZodToOpenApi(cachedSpec.paths);
+  }
 
   return cachedSpec;
 }
