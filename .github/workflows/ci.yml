@@ -44,6 +44,9 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
+      - name: Validate OpenAPI Spec (blocking)
+        run: pnpm dlx tsx scripts/validate-openapi.ts
+
   test-fast:
     name: Unit & Contract Tests
     runs-on: ubuntu-latest
