@@ -1,3 +1,4 @@
+import type { paths } from "./api-types.js";
 /**
  * StandardClient — Main SDK entry point
  *
@@ -127,6 +128,13 @@ export class StandardClient {
   readonly organizations: OrganizationsResource;
   readonly jobs: JobsResource;
   readonly compliance: ComplianceResource;
+  readonly tenants: TenantsResource;
+  readonly scopes: ScopesResource;
+  readonly intelligence: IntelligenceResource;
+  readonly evidenceFindings: EvidenceFindingsResource;
+  readonly privacy: PrivacyResource;
+  readonly me: MeResource;
+  readonly soc: SocResource;
 
   /** True when the client is using a test/sandbox API key (prefix: standard_test_) */
   get isSandbox(): boolean {
@@ -161,6 +169,13 @@ export class StandardClient {
     this.organizations = new OrganizationsResource(this);
     this.jobs = new JobsResource(this);
     this.compliance = new ComplianceResource(this);
+    this.tenants = new TenantsResource(this);
+    this.scopes = new ScopesResource(this);
+    this.intelligence = new IntelligenceResource(this);
+    this.evidenceFindings = new EvidenceFindingsResource(this);
+    this.privacy = new PrivacyResource(this);
+    this.me = new MeResource(this);
+    this.soc = new SocResource(this);
   }
 
   // ── Internal HTTP Methods ──────────────────────────────
@@ -294,6 +309,10 @@ export class StandardClient {
   /** @internal */
   _patch<T>(path: string, body?: unknown, opts?: RequestOptions) {
     return this._request<T>("PATCH", path, body, opts);
+  }
+  /** @internal */
+  _put<T>(path: string, body?: unknown, opts?: RequestOptions) {
+    return this._request<T>("PUT", path, body, opts);
   }
   /** @internal */
   _delete<T>(path: string, opts?: RequestOptions) {
@@ -1587,4 +1606,134 @@ function qs(query?: ListQuery): string {
   if (query.cursor) params.set("cursor", query.cursor);
   const str = params.toString();
   return str ? `?${str}` : "";
+}
+
+// ── Missing Resources Generated ──────────────────────────────────────────────
+
+export type TenantsResourcePostResponse =
+  paths["/api/v1/tenants"]["post"]["responses"]["201"]["content"]["application/json"];
+export type TenantsResourceGetResponse =
+  paths["/api/v1/tenants/{organizationId}"]["get"]["responses"]["200"]["content"]["application/json"];
+
+class TenantsResource {
+  constructor(private client: StandardClient) {}
+
+  get(id: string, opts?: RequestOptions) {
+    return this.client._get<TenantsResourceGetResponse>(`/tenants/${id}`, opts);
+  }
+  create(data: any, opts?: RequestOptions) {
+    return this.client._post<TenantsResourcePostResponse>(
+      "/tenants",
+      data,
+      opts,
+    );
+  }
+  update(id: string, data: any, opts?: RequestOptions) {
+    return this.client._patch<any>(`/tenants/${id}`, data, opts);
+  }
+  organizations(id: string, opts?: RequestOptions) {
+    return this.client._get<any>(`/tenants/${id}/organizations`, opts);
+  }
+}
+
+class ScopesResource {
+  constructor(private client: StandardClient) {}
+
+  get(id: string, opts?: RequestOptions) {
+    return this.client._get<any>(`/scopes/${id}`, opts);
+  }
+  update(id: string, data: any, opts?: RequestOptions) {
+    return this.client._patch<any>(`/scopes/${id}`, data, opts);
+  }
+  submitReview(id: string, opts?: RequestOptions) {
+    return this.client._post<any>(
+      `/scopes/${id}/submit-review`,
+      undefined,
+      opts,
+    );
+  }
+  approve(id: string, opts?: RequestOptions) {
+    return this.client._post<any>(`/scopes/${id}/approve`, undefined, opts);
+  }
+}
+
+class IntelligenceResource {
+  constructor(private client: StandardClient) {}
+
+  blastRadius(data: any, opts?: RequestOptions) {
+    return this.client._post<any>("/intelligence/blast-radius", data, opts);
+  }
+  gapAnalysis(data: any, opts?: RequestOptions) {
+    return this.client._post<any>("/intelligence/gap-analysis", data, opts);
+  }
+  dpiaScore(data: any, opts?: RequestOptions) {
+    return this.client._post<any>("/intelligence/dpia-score", data, opts);
+  }
+  complianceScore(data: any, opts?: RequestOptions) {
+    return this.client._post<any>("/intelligence/compliance-score", data, opts);
+  }
+  retentionCheck(data: any, opts?: RequestOptions) {
+    return this.client._post<any>("/intelligence/retention-check", data, opts);
+  }
+  breachSla(data: any, opts?: RequestOptions) {
+    return this.client._post<any>("/intelligence/breach-sla", data, opts);
+  }
+  crossCoverage(data: any, opts?: RequestOptions) {
+    return this.client._post<any>("/intelligence/cross-coverage", data, opts);
+  }
+  roiPath(data: any, opts?: RequestOptions) {
+    return this.client._post<any>("/intelligence/roi-path", data, opts);
+  }
+}
+
+class EvidenceFindingsResource {
+  constructor(private client: StandardClient) {}
+
+  get(id: string, opts?: RequestOptions) {
+    return this.client._get<any>(`/evidence-findings/${id}`, opts);
+  }
+  sources(id: string, opts?: RequestOptions) {
+    return this.client._get<any>(`/evidence-findings/${id}/sources`, opts);
+  }
+  refresh(id: string, opts?: RequestOptions) {
+    return this.client._post<any>(
+      `/evidence-findings/${id}/refresh`,
+      undefined,
+      opts,
+    );
+  }
+}
+
+class PrivacyResource {
+  constructor(private client: StandardClient) {}
+
+  scanVendorContract(data: any, opts?: RequestOptions) {
+    return this.client._post<any>("/privacy/scan-vendor-contract", data, opts);
+  }
+  scanVendorContractBatch(data: any, opts?: RequestOptions) {
+    return this.client._post<any>(
+      "/privacy/scan-vendor-contract/batch",
+      data,
+      opts,
+    );
+  }
+}
+
+class MeResource {
+  constructor(private client: StandardClient) {}
+
+  account(opts?: RequestOptions) {
+    return this.client._get<any>("/me/account", opts);
+  }
+  dataExport(opts?: RequestOptions) {
+    return this.client._get<any>("/me/data-export", opts);
+  }
+}
+
+class SocResource {
+  constructor(private client: StandardClient) {}
+
+  status(opts?: RequestOptions) {
+    return this.client._get<any>("/soc/status", opts);
+  }
 }

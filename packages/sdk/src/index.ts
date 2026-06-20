@@ -39,3 +39,4 @@ export type {
   UsageRecord,
 } from "./client.js";
 export type * from "./models.js";
+export type * from "./api-types.js";
