@@ -1,4 +1,4 @@
-﻿import type { KbSearchResult, KbServiceDependencies } from "@standard/kb";
+import type { KbSearchResult, KbServiceDependencies } from "@standard/kb";
 import type { ScfCoreServices } from "@standard/scf-core";
 import type {
   AssessmentStatus,
@@ -16,6 +16,7 @@ import type {
   UpdateGapFindingRequest,
 } from "@standard/schemas";
 import type { SoaDependencies } from "@standard/soa";
+import type { LedgerService } from "@standard/observability";
 
 export type {
   AssessmentStatus,
@@ -141,6 +142,7 @@ export type GapAnalysisDependencies = {
   soa: SoaDependencies;
   kb?: KbServiceDependencies;
   scf?: ScfCoreServices;
+  ledger?: LedgerService;
 };
 
 export type EvidenceClassificationResult = {
@@ -163,4 +165,3 @@ export type GapFindingFilters = {
   /** Filter by ROC determination value â€” for ROC-scoped queries */
   roc_determination?: string;
 };
-

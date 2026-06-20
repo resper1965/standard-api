@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Standard MCP Server
  *
  * Implements Model Context Protocol (MCP) 2025-03-26 spec
@@ -684,6 +684,59 @@ export const MCP_TOOLS = [
       required: ["assessment_id"],
     },
   },
+  {
+    name: "validar_evidencia_privacidade",
+    description:
+      "Submete evidências textuais para validação contra controlos GDPR/LGPD via SCF",
+    inputSchema: {
+      type: "object",
+      properties: {
+        assessment_id: { type: "string", description: "Assessment UUID" },
+        control_id: { type: "string", description: "Control UUID" },
+        evidence_text: {
+          type: "string",
+          description: "Evidence text to validate",
+        },
+        target_scf_version: {
+          type: "string",
+          description: "Target SCF version (e.g., 2026.1.1)",
+        },
+      },
+      required: [
+        "assessment_id",
+        "control_id",
+        "evidence_text",
+        "target_scf_version",
+      ],
+    },
+  },
+  {
+    name: "calcular_score_risco_terceiro",
+    description:
+      "Processa respostas de vendor e injeta resultados na base Neon DB",
+    inputSchema: {
+      type: "object",
+      properties: {
+        vendor_id: { type: "string", description: "Vendor UUID" },
+        assessment_id: { type: "string", description: "Assessment UUID" },
+        responses_matrix: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              control_id: { type: "string", description: "Control UUID" },
+              compliance_value: {
+                type: "number",
+                description: "Compliance value 0-1",
+              },
+            },
+            required: ["control_id", "compliance_value"],
+          },
+        },
+      },
+      required: ["vendor_id", "assessment_id", "responses_matrix"],
+    },
+  },
 
   // â•â•â• Platform Status â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   {
@@ -748,6 +801,8 @@ const MCP_TOOL_SCOPES: Record<string, string[]> = {
   "search-kb": ["kb:search"],
   "evaluate-evidence": ["agent:run"],
   "architect-remediation": ["agent:run"],
+  validar_evidencia_privacidade: ["agent:run"],
+  calcular_score_risco_terceiro: ["agent:run"],
 
   // SoA Lifecycle
   "list-soa-versions": ["soa:read"],
@@ -925,6 +980,17 @@ export async function dispatchMcpTool(
       return handleEvaluateEvidence(args, ctx);
     case "architect-remediation":
       return handleArchitectRemediation(args, ctx);
+    case "validar_evidencia_privacidade":
+    case "calcular_score_risco_terceiro":
+      return {
+        content: [
+          {
+            type: "text",
+            text: "This tool requires async execution via AGENT_RUN_QUEUE and cannot be run synchronously.",
+          },
+        ],
+        isError: true,
+      };
 
     // SoA Lifecycle
     case "list-soa-versions":

@@ -3755,6 +3755,35 @@
           "no_data"
         ]
       },
+      "ComplianceStrategyRequest": {
+        "type": "object",
+        "properties": {
+          "framework_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "scf_version_id": {
+            "oneOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "string",
+                "enum": [
+                  "latest"
+                ]
+              }
+            ]
+          }
+        },
+        "required": [
+          "framework_ids"
+        ]
+      },
       "ConsentRules": {
         "type": "object",
         "properties": {
@@ -4977,6 +5006,69 @@
         "required": [
           "slug",
           "name"
+        ]
+      },
+      "CreateTpraAssessmentRequest": {
+        "type": "object",
+        "properties": {
+          "assessment_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "scf_version_id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "scf_version_id"
+        ]
+      },
+      "CreateTpraRiskScoreRequest": {
+        "type": "object",
+        "properties": {
+          "raw_score": {
+            "type": "number"
+          },
+          "risk_category": {
+            "type": "string"
+          },
+          "scf_domain_failures": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "raw_score",
+          "risk_category"
+        ]
+      },
+      "CreateTpraVendorRequest": {
+        "type": "object",
+        "properties": {
+          "vendor_name": {
+            "type": "string"
+          },
+          "vendor_type": {
+            "type": "string",
+            "nullable": true
+          },
+          "contact_email": {
+            "type": "string",
+            "format": "email",
+            "nullable": true
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": {}
+          }
+        },
+        "required": [
+          "vendor_name",
+          "vendor_type",
+          "contact_email"
         ]
       },
       "CreateWebhookEndpoint": {
@@ -18915,6 +19007,18 @@
           }
         }
       },
+      "SubmitTpraAssessmentRequest": {
+        "type": "object",
+        "properties": {
+          "responses": {
+            "type": "object",
+            "additionalProperties": {}
+          }
+        },
+        "required": [
+          "responses"
+        ]
+      },
       "SupersedeArtifactRequest": {
         "type": "object",
         "properties": {
@@ -19025,6 +19129,31 @@
         "required": [
           "agent_id",
           "allowed_tools"
+        ]
+      },
+      "TpraScoreRequest": {
+        "type": "object",
+        "properties": {
+          "questionnaire_id": {
+            "type": "string"
+          },
+          "answers": {
+            "type": "object",
+            "additionalProperties": {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                }
+              ]
+            }
+          }
+        },
+        "required": [
+          "questionnaire_id",
+          "answers"
         ]
       },
       "TraceContext": {
@@ -19623,6 +19752,14 @@
           "confidence_score": {
             "type": "number"
           }
+        }
+      },
+      "UpdateMaturityTargetsRequest": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "number",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
         }
       },
       "UpdateMemberRoleRequest": {
