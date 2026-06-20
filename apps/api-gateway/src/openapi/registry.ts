@@ -1,5 +1,6 @@
 import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import { z } from "@standard/schemas";
+import * as schemas from "@standard/schemas";
 
 export const registry = new OpenAPIRegistry();
 
@@ -22,24 +23,43 @@ registry.registerComponent("securitySchemes", "CookieSession", {
 });
 
 // ==========================================
+// Dynamic Registration of all Standard Schemas
+// ==========================================
+// Iterate over all exports from @standard/schemas. If it's a ZodObject, register it.
+for (const [key, value] of Object.entries(schemas)) {
+  if (value && value instanceof z.ZodType) {
+    // Only register if it looks like a named schema (usually ends with Schema, or starts with capital letter)
+    if (key.endsWith("Schema") || /^[A-Z]/.test(key)) {
+      const openapiName = key.endsWith("Schema")
+        ? key.replace(/Schema$/, "")
+        : key;
+      // Many schemas already have .openapi("Name") called, so we use that or the extracted name.
+      registry.registerComponent("schemas", openapiName, value as any);
+    }
+  }
+}
+
+// ==========================================
 // Shared API Schemas
 // ==========================================
 
-const ApiErrorSchema = z
-  .object({
+export const ApiErrorSchema = registry.register(
+  "ApiError",
+  z.object({
     error: z.object({
       code: z.string().openapi({ example: "NOT_FOUND" }),
       message: z.string().openapi({ example: "Resource not found." }),
       details: z.array(z.unknown()).optional(),
       trace_id: z.string().openapi({ example: "abc-123-def" }),
     }),
-  })
-  .openapi("ApiError");
+  }),
+);
 
-const PaginatedMeta = z
-  .object({
+export const PaginatedMeta = registry.register(
+  "PaginatedMeta",
+  z.object({
     page: z.number(),
     per_page: z.number(),
     total: z.number(),
-  })
-  .openapi("PaginatedMeta");
+  }),
+);

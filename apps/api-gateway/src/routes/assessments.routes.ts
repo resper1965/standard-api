@@ -20,7 +20,6 @@ import {
 } from "../http";
 import { assessmentResponse, lifecycleEventResponse } from "../presenters";
 
-
 /**
  * Asserts that the fetched resource belongs to the request's resolved tenant.
  * Prevents IDOR attacks across tenant boundaries.
@@ -32,7 +31,7 @@ import { assessmentResponse, lifecycleEventResponse } from "../presenters";
  *
  * AGENTS.md Â§13: Tenant isolation must be enforced at every resource access.
  */
-function assertTenantOwnership(
+export function assertTenantOwnership(
   resourceTenantId: string | undefined | null,
   resolvedTenantId: string,
   resourceType = "Assessment",
@@ -156,17 +155,24 @@ export const assessmentsRoutes: RouteDefinition[] = [
   {
     method: "GET",
     path: "/api/v1/organizations/:organizationId/assessments",
-      openapi: {
-        tags: ["Assessments"],
-        summary: "List Assessments by Organization",
-        description: "Lists all assessments for a specific organization.",
-        responses: {
-          200: {
-            description: "List of Assessments",
-            content: { "application/json": { schema: z.object({ data: z.array(AssessmentResponseSchema), trace_id: z.string() }) } }
-          }
-        }
+    openapi: {
+      tags: ["Assessments"],
+      summary: "List Assessments by Organization",
+      description: "Lists all assessments for a specific organization.",
+      responses: {
+        200: {
+          description: "List of Assessments",
+          content: {
+            "application/json": {
+              schema: z.object({
+                data: z.array(AssessmentResponseSchema),
+                trace_id: z.string(),
+              }),
+            },
+          },
+        },
       },
+    },
     protected: true,
     permissions: ["assessment:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
@@ -221,17 +227,25 @@ export const assessmentsRoutes: RouteDefinition[] = [
   {
     method: "GET",
     path: "/api/v1/assessments/:assessmentId/status",
-      openapi: {
-        tags: ["Assessments"],
-        summary: "Get Assessment Status",
-        description: "Retrieves the current lifecycle status and phase of an assessment.",
-        responses: {
-          200: {
-            description: "Assessment Status",
-            content: { "application/json": { schema: z.intersection(AssessmentStatusResponseSchema, z.object({ trace_id: z.string() })) } }
-          }
-        }
+    openapi: {
+      tags: ["Assessments"],
+      summary: "Get Assessment Status",
+      description:
+        "Retrieves the current lifecycle status and phase of an assessment.",
+      responses: {
+        200: {
+          description: "Assessment Status",
+          content: {
+            "application/json": {
+              schema: z.intersection(
+                AssessmentStatusResponseSchema,
+                z.object({ trace_id: z.string() }),
+              ),
+            },
+          },
+        },
       },
+    },
     protected: true,
     permissions: ["assessment:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
@@ -254,17 +268,25 @@ export const assessmentsRoutes: RouteDefinition[] = [
   {
     method: "GET",
     path: "/api/v1/assessments/:assessmentId/timeline",
-      openapi: {
-        tags: ["Assessments"],
-        summary: "Get Assessment Timeline",
-        description: "Retrieves the chronological timeline of events for an assessment.",
-        responses: {
-          200: {
-            description: "Assessment Timeline",
-            content: { "application/json": { schema: z.intersection(AssessmentTimelineResponseSchema, z.object({ trace_id: z.string() })) } }
-          }
-        }
+    openapi: {
+      tags: ["Assessments"],
+      summary: "Get Assessment Timeline",
+      description:
+        "Retrieves the chronological timeline of events for an assessment.",
+      responses: {
+        200: {
+          description: "Assessment Timeline",
+          content: {
+            "application/json": {
+              schema: z.intersection(
+                AssessmentTimelineResponseSchema,
+                z.object({ trace_id: z.string() }),
+              ),
+            },
+          },
+        },
       },
+    },
     protected: true,
     permissions: ["assessment:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
@@ -290,17 +312,18 @@ export const assessmentsRoutes: RouteDefinition[] = [
   {
     method: "GET",
     path: "/api/v1/assessments/:assessmentId/compliance-gate",
-      openapi: {
-        tags: ["Assessments"],
-        summary: "Evaluate Compliance Gate",
-        description: "Evaluates if the assessment meets all requirements to pass its current gate.",
-        responses: {
-          200: {
-            description: "Compliance Gate Status",
-            content: { "application/json": { schema: z.any() } }
-          }
-        }
+    openapi: {
+      tags: ["Assessments"],
+      summary: "Evaluate Compliance Gate",
+      description:
+        "Evaluates if the assessment meets all requirements to pass its current gate.",
+      responses: {
+        200: {
+          description: "Compliance Gate Status",
+          content: { "application/json": { schema: z.any() } },
+        },
       },
+    },
     protected: true,
     permissions: ["assessment:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
@@ -402,17 +425,24 @@ export const assessmentsRoutes: RouteDefinition[] = [
   {
     method: "PUT",
     path: "/api/v1/assessments/:assessmentId/automation-rules",
-      openapi: {
-        tags: ["Assessments"],
-        summary: "Update Automation Rules",
-        description: "Updates the automation execution rules for an assessment.",
-        responses: {
-          200: {
-            description: "Updated Assessment",
-            content: { "application/json": { schema: z.intersection(AssessmentResponseSchema, z.object({ trace_id: z.string() })) } }
-          }
-        }
+    openapi: {
+      tags: ["Assessments"],
+      summary: "Update Automation Rules",
+      description: "Updates the automation execution rules for an assessment.",
+      responses: {
+        200: {
+          description: "Updated Assessment",
+          content: {
+            "application/json": {
+              schema: z.intersection(
+                AssessmentResponseSchema,
+                z.object({ trace_id: z.string() }),
+              ),
+            },
+          },
+        },
       },
+    },
     protected: true,
     requireActor: true,
     permissions: ["assessment:update"],
@@ -467,17 +497,24 @@ export const assessmentsRoutes: RouteDefinition[] = [
   {
     method: "POST",
     path: "/api/v1/assessments/:assessmentId/new-cycle",
-      openapi: {
-        tags: ["Assessments"],
-        summary: "Start New Assessment Cycle",
-        description: "Clones an existing assessment into a new assessment cycle.",
-        responses: {
-          201: {
-            description: "New Assessment Cycle",
-            content: { "application/json": { schema: z.intersection(AssessmentResponseSchema, z.object({ trace_id: z.string() })) } }
-          }
-        }
+    openapi: {
+      tags: ["Assessments"],
+      summary: "Start New Assessment Cycle",
+      description: "Clones an existing assessment into a new assessment cycle.",
+      responses: {
+        201: {
+          description: "New Assessment Cycle",
+          content: {
+            "application/json": {
+              schema: z.intersection(
+                AssessmentResponseSchema,
+                z.object({ trace_id: z.string() }),
+              ),
+            },
+          },
+        },
       },
+    },
     protected: true,
     requireActor: true,
     permissions: ["assessment:create"],
@@ -548,16 +585,17 @@ export const assessmentsRoutes: RouteDefinition[] = [
   {
     method: "GET",
     path: "/api/v1/assessments/:assessmentId/live",
-      openapi: {
-        tags: ["Assessments"],
-        summary: "Live Collaboration Channel",
-        description: "WebSocket connection for live collaboration on an assessment.",
-        responses: {
-          101: {
-            description: "Switching Protocols (WebSocket)"
-          }
-        }
+    openapi: {
+      tags: ["Assessments"],
+      summary: "Live Collaboration Channel",
+      description:
+        "WebSocket connection for live collaboration on an assessment.",
+      responses: {
+        101: {
+          description: "Switching Protocols (WebSocket)",
+        },
       },
+    },
     protected: true,
     permissions: ["assessment:read"],
     handler: async ({ request, env, params }) => {

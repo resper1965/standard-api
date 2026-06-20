@@ -1,4 +1,4 @@
-﻿export const LLMS_TXT = `# Standard GRC Platform
+export const LLMS_TXT = `# Standard GRC Platform
 
 > API-first agentic GRC platform for compliance assessments powered by the Secure Controls Framework (SCF). 7 specialized AI agents, 1,468 controls, 231 frameworks.
 
@@ -23,15 +23,15 @@ Tenant: \`x-standard-tenant-id\` header (required)
 - [Scope & SoA](#scope--soa): Scope definition, Statement of Applicability
 - [Gap Analysis](#gap-analysis): Findings, approval
 - [POA&M](#poam): Remediation planning
-- [Reports](#reports): Generate, download, audit package
+- [Reports](#reports): Generate, download, audit package (Coming Soon)
 - [Dashboard KPIs](#dashboard-kpis): Server-computed compliance metrics
 - [Audit Trail](#audit-trail): Tenant/org-wide audit event log
 - [Members](#members): Organization membership RBAC (invite, role, remove)
 - [AI Agents](#ai-agents): 7 specialized agents
-- [Intelligence Council](#intelligence-council): Async multi-agent workflow dispatch
+- [Intelligence Council](#intelligence-council): Async multi-agent workflow dispatch (Coming Soon)
 - [Jobs](#jobs): Job polling for async jobs
-- [Agent Runtime](#agent-runtime): Execution monitoring
-- [Approvals](#approvals): Human-in-the-loop gates
+- [Agent Runtime](#agent-runtime): Execution monitoring (Coming Soon)
+- [Approvals](#approvals): Human-in-the-loop gates (Coming Soon)
 - [Webhooks](#webhooks): Event-driven integrations
 - [API Keys](#api-keys): M2M authentication
 
@@ -50,7 +50,7 @@ export const LLMS_FULL_HEADER = (
 > 1,468 controls Â· 231 frameworks Â· 33 domains Â· 13 AI-powered endpoints
 > Auto-generated from OpenAPI \${spec.openapi} spec
 
-Base URL: \\\`\${baseUrl}\\\`
+Base URL: \\\`${baseUrl}\\\`
 
 ## Authentication
 
@@ -119,7 +119,7 @@ export const getLlmsFullCookbook = (baseUrl: string) => `
 **Use when**: You have a security control and need to verify if your evidence satisfies it.
 
 \\\`\\\`\\\`bash
-curl -X POST \${baseUrl}/api/v1/gap/evaluate-evidence \\\\
+curl -X POST ${baseUrl}/api/v1/gap/evaluate-evidence \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID" \\\\
   -H "Content-Type: application/json" \\\\
@@ -152,7 +152,7 @@ curl -X POST \${baseUrl}/api/v1/gap/evaluate-evidence \\\\
 **Use when**: Your SIEM fires an alert and you need automated triage before escalation.
 
 \\\`\\\`\\\`bash
-curl -X POST \${baseUrl}/api/v1/soc/triage-incident \\\\
+curl -X POST ${baseUrl}/api/v1/soc/triage-incident \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID" \\\\
   -H "Content-Type: application/json" \\\\
@@ -187,7 +187,7 @@ curl -X POST \${baseUrl}/api/v1/soc/triage-incident \\\\
 **Use when**: CISO needs to present a technical vulnerability to the board in business terms.
 
 \\\`\\\`\\\`bash
-curl -X POST \${baseUrl}/api/v1/executive/translate-risk \\\\
+curl -X POST ${baseUrl}/api/v1/executive/translate-risk \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID" \\\\
   -H "Content-Type: application/json" \\\\
@@ -222,7 +222,7 @@ curl -X POST \${baseUrl}/api/v1/executive/translate-risk \\\\
 **Use when**: Legal team needs to evaluate a vendor's data processing agreement.
 
 \\\`\\\`\\\`bash
-curl -X POST \${baseUrl}/api/v1/privacy/scan-vendor-contract \\\\
+curl -X POST ${baseUrl}/api/v1/privacy/scan-vendor-contract \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID" \\\\
   -H "Content-Type: application/json" \\\\
@@ -261,7 +261,7 @@ curl -X POST \${baseUrl}/api/v1/privacy/scan-vendor-contract \\\\
 **Note**: Pure computation â€” no LLM call, instant response.
 
 \\\`\\\`\\\`bash
-curl -X POST \${baseUrl}/api/v1/intelligence/compliance-score \\\\
+curl -X POST ${baseUrl}/api/v1/intelligence/compliance-score \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID" \\\\
   -H "Content-Type: application/json" \\\\
@@ -296,7 +296,7 @@ curl -X POST \${baseUrl}/api/v1/intelligence/compliance-score \\\\
 **Use when**: Planning multi-framework compliance â€” see overlap before investing.
 
 \\\`\\\`\\\`bash
-curl -X POST \${baseUrl}/api/v1/intelligence/cross-coverage \\\\
+curl -X POST ${baseUrl}/api/v1/intelligence/cross-coverage \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID" \\\\
   -H "Content-Type: application/json" \\\\
@@ -333,7 +333,7 @@ curl -X POST \${baseUrl}/api/v1/intelligence/cross-coverage \\\\
 **Use when**: Limited budget â€” need to prioritize controls by cross-framework impact.
 
 \\\`\\\`\\\`bash
-curl -X POST \${baseUrl}/api/v1/intelligence/roi-path \\\\
+curl -X POST ${baseUrl}/api/v1/intelligence/roi-path \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID" \\\\
   -H "Content-Type: application/json" \\\\
@@ -372,7 +372,7 @@ curl -X POST \${baseUrl}/api/v1/intelligence/roi-path \\\\
 **Use when**: Risk assessment â€” understand the downstream impact of a control failure.
 
 \\\`\\\`\\\`bash
-curl -X POST \${baseUrl}/api/v1/intelligence/blast-radius \\\\
+curl -X POST ${baseUrl}/api/v1/intelligence/blast-radius \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID" \\\\
   -H "Content-Type: application/json" \\\\
@@ -404,7 +404,7 @@ curl -X POST \${baseUrl}/api/v1/intelligence/blast-radius \\\\
 **Step 1: RoPA Analysis**
 
 \\\`\\\`\\\`bash
-curl -X POST \${baseUrl}/api/v1/privacy/analyze-ropa \\\\
+curl -X POST ${baseUrl}/api/v1/privacy/analyze-ropa \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID" \\\\
   -H "Content-Type: application/json" \\\\
@@ -414,7 +414,7 @@ curl -X POST \${baseUrl}/api/v1/privacy/analyze-ropa \\\\
 **Step 2: DPIA Assessment**
 
 \\\`\\\`\\\`bash
-curl -X POST \${baseUrl}/api/v1/privacy/assess-dpia \\\\
+curl -X POST ${baseUrl}/api/v1/privacy/assess-dpia \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID" \\\\
   -H "Content-Type: application/json" \\\\
@@ -440,7 +440,7 @@ curl -X POST \${baseUrl}/api/v1/privacy/assess-dpia \\\\
 
 **Step 1: Create activity from text**
 \\\`\\\`\\\`bash
-curl -X POST \${baseUrl}/api/v1/privacy/processing-activities/from-text \\\\
+curl -X POST ${baseUrl}/api/v1/privacy/processing-activities/from-text \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID" \\\\
   -H "Content-Type: application/json" \\\\
@@ -449,14 +449,14 @@ curl -X POST \${baseUrl}/api/v1/privacy/processing-activities/from-text \\\\
 
 **Step 2: Run screening**
 \\\`\\\`\\\`bash
-curl -X POST \${baseUrl}/api/v1/privacy/processing-activities/ACTIVITY_ID/screen \\\\
+curl -X POST ${baseUrl}/api/v1/privacy/processing-activities/ACTIVITY_ID/screen \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID"
 \\\`\\\`\\\`
 
 **Step 3: Generate report**
 \\\`\\\`\\\`bash
-curl -X GET "\${baseUrl}/api/v1/privacy/processing-activities/ACTIVITY_ID/report?format=markdown" \\\\
+curl -X GET "${baseUrl}/api/v1/privacy/processing-activities/ACTIVITY_ID/report?format=markdown" \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID"
 \\\`\\\`\\\`
@@ -477,7 +477,7 @@ export const getLlmsFullCookbookOps = (baseUrl: string) => `
 **Step 1: Create assessment**
 
 \\\`\\\`\\\`bash
-curl -X POST \${baseUrl}/api/v1/assessments \\\\
+curl -X POST ${baseUrl}/api/v1/assessments \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID" \\\\
   -H "Content-Type: application/json" \\\\
@@ -487,7 +487,7 @@ curl -X POST \${baseUrl}/api/v1/assessments \\\\
 **Step 2: Define scope**
 
 \\\`\\\`\\\`bash
-curl -X POST \${baseUrl}/api/v1/assessments/ASSESSMENT_ID/scope \\\\
+curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/scope \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID" \\\\
   -H "Content-Type: application/json" \\\\
@@ -497,7 +497,7 @@ curl -X POST \${baseUrl}/api/v1/assessments/ASSESSMENT_ID/scope \\\\
 **Step 3: Generate Statement of Applicability (SoA)**
 
 \\\`\\\`\\\`bash
-curl -X POST \${baseUrl}/api/v1/assessments/ASSESSMENT_ID/soa/draft \\\\
+curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/soa/draft \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID"
 \\\`\\\`\\\`
@@ -505,7 +505,7 @@ curl -X POST \${baseUrl}/api/v1/assessments/ASSESSMENT_ID/soa/draft \\\\
 **Step 4: Upload evidence documents**
 
 \\\`\\\`\\\`bash
-curl -X POST \${baseUrl}/api/v1/assessments/ASSESSMENT_ID/documents \\\\
+curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/documents \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID" \\\\
   -F "file=@security-policy.pdf" \\\\
@@ -515,7 +515,7 @@ curl -X POST \${baseUrl}/api/v1/assessments/ASSESSMENT_ID/documents \\\\
 **Step 5: Run AI evidence analysis**
 
 \\\`\\\`\\\`bash
-curl -X POST \${baseUrl}/api/v1/assessments/ASSESSMENT_ID/evidence-analysis/run \\\\
+curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/evidence-analysis/run \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID"
 \\\`\\\`\\\`
@@ -523,7 +523,7 @@ curl -X POST \${baseUrl}/api/v1/assessments/ASSESSMENT_ID/evidence-analysis/run 
 **Step 6: Generate Gap Analysis**
 
 \\\`\\\`\\\`bash
-curl -X POST \${baseUrl}/api/v1/assessments/ASSESSMENT_ID/gap-analysis/draft \\\\
+curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/gap-analysis/draft \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID"
 \\\`\\\`\\\`
@@ -531,7 +531,7 @@ curl -X POST \${baseUrl}/api/v1/assessments/ASSESSMENT_ID/gap-analysis/draft \\\
 **Step 7: Generate POA&M (Plan of Action & Milestones)**
 
 \\\`\\\`\\\`bash
-curl -X POST \${baseUrl}/api/v1/assessments/ASSESSMENT_ID/poam/draft \\\\
+curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/poam/draft \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID"
 \\\`\\\`\\\`
@@ -539,7 +539,7 @@ curl -X POST \${baseUrl}/api/v1/assessments/ASSESSMENT_ID/poam/draft \\\\
 **Step 8: Generate Report**
 
 \\\`\\\`\\\`bash
-curl -X POST \${baseUrl}/api/v1/assessments/ASSESSMENT_ID/reports/draft \\\\
+curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/reports/draft \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID"
 \\\`\\\`\\\`
@@ -547,7 +547,7 @@ curl -X POST \${baseUrl}/api/v1/assessments/ASSESSMENT_ID/reports/draft \\\\
 **Step 9: Check Compliance Gate (Go/No-Go)**
 
 \\\`\\\`\\\`bash
-curl -X GET \${baseUrl}/api/v1/assessments/ASSESSMENT_ID/compliance-gate \\\\
+curl -X GET ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/compliance-gate \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID"
 \\\`\\\`\\\`
@@ -565,13 +565,13 @@ curl -X GET \${baseUrl}/api/v1/assessments/ASSESSMENT_ID/compliance-gate \\\\
 
 **Get latest SCF version:**
 \\\`\\\`\\\`bash
-curl -X GET \${baseUrl}/api/v1/scf/versions/latest \\\\
+curl -X GET ${baseUrl}/api/v1/scf/versions/latest \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY"
 \\\`\\\`\\\`
 
 **List controls (paginated, filterable by domain):**
 \\\`\\\`\\\`bash
-curl -X GET "\${baseUrl}/api/v1/scf/versions/SCF_VERSION_ID/controls?domain=PRI&page=1&per_page=50" \\\\
+curl -X GET "${baseUrl}/api/v1/scf/versions/SCF_VERSION_ID/controls?domain=PRI&page=1&per_page=50" \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY"
 \\\`\\\`\\\`
 
@@ -585,22 +585,22 @@ curl -X GET "\${baseUrl}/api/v1/scf/versions/SCF_VERSION_ID/controls?domain=PRI&
 
 \\\`\\\`\\\`bash
 # 1. Run AI evidence analysis
-curl -X POST \${baseUrl}/api/v1/assessments/ASSESSMENT_ID/evidence-analysis/run \\\\
+curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/evidence-analysis/run \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID"
 
 # 2. List evidence findings
-curl -X GET \${baseUrl}/api/v1/assessments/ASSESSMENT_ID/evidence-findings \\\\
+curl -X GET ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/evidence-findings \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID"
 
 # 3. Generate gap analysis from findings
-curl -X POST \${baseUrl}/api/v1/assessments/ASSESSMENT_ID/gap-analysis/draft \\\\
+curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/gap-analysis/draft \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID"
 
 # 4. Review gap findings
-curl -X GET \${baseUrl}/api/v1/gap-analysis/GAP_VERSION_ID/findings \\\\
+curl -X GET ${baseUrl}/api/v1/gap-analysis/GAP_VERSION_ID/findings \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID"
 \\\`\\\`\\\`
@@ -608,7 +608,7 @@ curl -X GET \${baseUrl}/api/v1/gap-analysis/GAP_VERSION_ID/findings \\\\
 **Mode C â€” Gap to PoAM chain:**
 
 \\\`\\\`\\\`bash
-curl -X POST \${baseUrl}/api/v1/poam/architect-remediation \\\\
+curl -X POST ${baseUrl}/api/v1/poam/architect-remediation \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID" \\\\
   -H "Content-Type: application/json" \\\\
@@ -623,7 +623,7 @@ curl -X POST \${baseUrl}/api/v1/poam/architect-remediation \\\\
 
 **Organization-level dashboard:**
 \\\`\\\`\\\`bash
-curl -X GET \${baseUrl}/api/v1/organizations/YOUR_ORG_ID/dashboard \\\\
+curl -X GET ${baseUrl}/api/v1/organizations/YOUR_ORG_ID/dashboard \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID"
 \\\`\\\`\\\`
@@ -642,7 +642,7 @@ curl -X GET \${baseUrl}/api/v1/organizations/YOUR_ORG_ID/dashboard \\\\
 
 **Upload documents:**
 \\\`\\\`\\\`bash
-curl -X POST \${baseUrl}/api/v1/assessments/ASSESSMENT_ID/documents \\\\
+curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/documents \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID" \\\\
   -F "file=@policy-document.pdf"
@@ -650,14 +650,14 @@ curl -X POST \${baseUrl}/api/v1/assessments/ASSESSMENT_ID/documents \\\\
 
 **Submit for embedding (RAG index):**
 \\\`\\\`\\\`bash
-curl -X POST \${baseUrl}/api/v1/documents/DOC_ID/submit-for-embedding \\\\
+curl -X POST ${baseUrl}/api/v1/documents/DOC_ID/submit-for-embedding \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID"
 \\\`\\\`\\\`
 
 **Semantic search in knowledge base:**
 \\\`\\\`\\\`bash
-curl -X POST \${baseUrl}/api/v1/assessments/ASSESSMENT_ID/kb/search \\\\
+curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/kb/search \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID" \\\\
   -H "Content-Type: application/json" \\\\
@@ -672,7 +672,7 @@ curl -X POST \${baseUrl}/api/v1/assessments/ASSESSMENT_ID/kb/search \\\\
 
 **By tenant:**
 \\\`\\\`\\\`bash
-curl -X GET "\${baseUrl}/api/v1/tenants/TENANT_ID/audit-logs?limit=50" \\\\
+curl -X GET "${baseUrl}/api/v1/tenants/TENANT_ID/audit-logs?limit=50" \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID"
 \\\`\\\`\\\`
@@ -737,4 +737,3 @@ export const getLlmsFullQuickRef = () => `## Quick Reference
 |----------|-------------|------|
 | \\\`POST /api/v1/intelligence/council\\\` | Orchestrate multi-agent GRC council | Yes |
 `;
-
