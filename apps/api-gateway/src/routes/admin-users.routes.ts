@@ -330,22 +330,36 @@ export const adminUsersRoutes: RouteDefinition[] = [
       const userId = routeParam(context.params, "userId");
       const body = await parseJson(context.request, ApproveUserBodySchema);
 
-      // Verify user exists and is not already approved
+      // Verify user exists
       const existing = await repo.getUserById(userId);
       if (!existing) {
         throw new ApiError("NOT_FOUND", "User not found.", 404);
       }
-      if (existing.approved) {
-        return json({
-          data: { message: "User is already approved." },
-          trace_id: context.traceId,
-        });
+
+      const db = getDomainDb(context);
+
+      // Link the user to the target organization (1:1 owner model)
+      const [updatedOrg] = await db
+        .update(organizations)
+        .set({ userId: userId })
+        .where(eq(organizations.id, body.organization_id))
+        .returning();
+
+      if (!updatedOrg) {
+        throw new ApiError(
+          "NOT_FOUND",
+          `Organization with ID ${body.organization_id} not found. Cannot assign user.`,
+          404,
+        );
       }
 
-      // approveUser() atomically: marks approved=true + invalidates pre-approval session
-      await repo.approveUser(userId);
+      // If user is not yet approved, approve them now
+      if (!existing.approved) {
+        // approveUser() atomically: marks approved=true + invalidates pre-approval session
+        await repo.approveUser(userId);
+      }
 
-      // Link the session org â€” baUser.id IS the domain identity in 1:1 model
+      // Link the session org — baUser.id IS the domain identity in 1:1 model
       // The user must activate an org via POST /v1/auth/activate-org after approval
       await context.deps.audit.record("admin.user.approved", {
         actor_id: context.actorId,
@@ -359,7 +373,7 @@ export const adminUsersRoutes: RouteDefinition[] = [
         await context.env.STANDARD_CACHE.put(
           `revocations:user:${userId}`,
           "approved",
-          { expirationTtl: 10 }, // 10s â€” bust caches on next request
+          { expirationTtl: 10 }, // 10s — bust caches on next request
         ).catch(() => {});
       }
 

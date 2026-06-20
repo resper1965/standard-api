@@ -283,7 +283,19 @@ export const getTestDb = async () => {
     }
   }
 
-  const db = drizzle(client, { schema });
+  // Defensive hardening: filter out any null/undefined, non-object or null-prototype values from schema
+  // (such as Zod instances re-exported as 'z') to prevent Drizzle's relational config extractor from crashing.
+  const filteredSchema = Object.fromEntries(
+    Object.entries(schema).filter(
+      ([key, value]) =>
+        value !== null &&
+        value !== undefined &&
+        typeof value === "object" &&
+        Object.getPrototypeOf(value) !== null &&
+        key !== "z",
+    ),
+  );
+  const db = drizzle(client, { schema: filteredSchema });
 
   // Seed basic requirement: default organization and scf version so foreign key constraints pass
   await db
@@ -310,7 +322,7 @@ export const getTestDb = async () => {
 
 export const createDrizzleTestClient = async () => {
   const client = await getTestDb();
-  
+
   // Filter out Zod schemas and other non-Drizzle objects that might cause
   // Drizzle's relational schema extractor to crash (e.g. objects with null prototypes).
   const dbSchema = Object.fromEntries(
@@ -321,7 +333,7 @@ export const createDrizzleTestClient = async () => {
       // Skip known non-drizzle exports like z
       if (key === "z") return false;
       return true;
-    })
+    }),
   );
 
   const db = drizzle(client, { schema: dbSchema });

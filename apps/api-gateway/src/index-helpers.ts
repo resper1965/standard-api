@@ -331,14 +331,19 @@ export async function handleAuthRoute(
 
   const response = await (async () => {
     try {
-      if (request.method === "POST" && url.pathname.endsWith("/sign-up/email")) {
+      const normalizedPath = url.pathname.replace(/\/+$/, "").toLowerCase();
+      if (
+        request.method === "POST" &&
+        normalizedPath.startsWith("/api/auth/sign-up")
+      ) {
         return Response.json(
           {
             error: "FORBIDDEN",
-            message: "Self-registration is disabled. Please contact your platform administrator.",
+            message:
+              "Self-registration is disabled. Please contact your platform administrator.",
             trace_id: traceId,
           },
-          { status: 403, headers: { "Content-Type": "application/json" } }
+          { status: 403, headers: { "Content-Type": "application/json" } },
         );
       }
       const res = await auth.handler(request);
@@ -444,4 +449,3 @@ export async function handleAuthRoute(
 
   return response;
 }
-
