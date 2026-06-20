@@ -5,7 +5,7 @@
  */
 import { useState, useEffect, useRef } from "react"
 import { useNavigate, Navigate } from "react-router-dom"
-import { signIn, signUp, useSession, authClient } from "@/lib/auth-client"
+import { signIn, useSession, authClient } from "@/lib/auth-client"
 import "./LoginPage.css"
 
 /* ─── Icon Set — Inline SVG, zero-dep ─────────────────────── */
@@ -241,10 +241,8 @@ export function LoginPage() {
   const { data: session, isPending } = useSession()
   const navigate = useNavigate()
 
-  const [mode, setMode] = useState<"login" | "signup">("login")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [name, setName] = useState("")
   const [showPw, setShowPw] = useState(false)
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
@@ -276,21 +274,15 @@ export function LoginPage() {
     setError("")
     setLoading(true)
     try {
-      if (mode === "login") {
-        const result = await signIn.email({ email, password })
-        if (result.error) {
-          const msg = result.error.message || "Invalid email or password"
-          if (msg.toLowerCase().includes("pending approval") || result.error.code === "ACCOUNT_PENDING_APPROVAL") {
-            setPendingApproval(true)
-          } else {
-            setError(msg)
-          }
-        } else navigate("/dashboard")
-      } else {
-        const result = await signUp.email({ email, password, name })
-        if (result.error) setError(result.error.message || "Sign up failed")
-        else setPendingApproval(true)
-      }
+      const result = await signIn.email({ email, password })
+      if (result.error) {
+        const msg = result.error.message || "Invalid email or password"
+        if (msg.toLowerCase().includes("pending approval") || result.error.code === "ACCOUNT_PENDING_APPROVAL") {
+          setPendingApproval(true)
+        } else {
+          setError(msg)
+        }
+      } else navigate("/dashboard")
     } catch (err: unknown) {
       const msg =
         err instanceof Error ? err.message :
@@ -306,17 +298,7 @@ export function LoginPage() {
     }
   }
 
-  const switchMode = (m: "login" | "signup") => {
-    setError("")
-    setForgotSent(false)
-    setPendingApproval(false)
-    setMode(m)
-    setName("")
-    setEmail("")
-    setPassword("")
-  }
 
-  const isLogin = mode === "login"
 
   return (
     <div className="lp-root" role="main">
@@ -403,7 +385,6 @@ export function LoginPage() {
         {/* ══ RIGHT — Auth form ══ */}
         <section
           className={`lp-right${formMounted ? " lp-right--in" : ""}`}
-          aria-label={isLogin ? "Sign in form" : "Create account form"}
         >
           {/* Mobile logo */}
           <div className="lp-mobile-logo" aria-hidden="true">
@@ -417,52 +398,24 @@ export function LoginPage() {
             </div>
           </div>
 
-          {/* Mode tabs */}
-          <div className="lp-tabs" role="tablist" aria-label="Authentication mode">
-            <button
-              className={`lp-tab${isLogin ? " lp-tab--active" : ""}`}
-              role="tab"
-              aria-selected={isLogin}
-              aria-controls="lp-form-panel"
-              id="tab-login"
-              onClick={() => switchMode("login")}
-              type="button"
-            >
-              Sign In
-            </button>
-            <button
-              className={`lp-tab${!isLogin ? " lp-tab--active" : ""}`}
-              role="tab"
-              aria-selected={!isLogin}
-              aria-controls="lp-form-panel"
-              id="tab-signup"
-              onClick={() => switchMode("signup")}
-              type="button"
-            >
-              Create Account
-            </button>
-          </div>
-
           {/* Form card */}
-          <div className="lp-card" id="lp-form-panel" role="tabpanel" aria-labelledby={isLogin ? "tab-login" : "tab-signup"}>
+          <div className="lp-card" id="lp-form-panel" role="tabpanel" aria-labelledby="tab-login">
             {pendingApproval ? (
               <div className="lp-pending">
                 <div className="lp-pending-icon">
                   <IconClock />
                 </div>
                 <h2 className="lp-card-title">
-                  {isLogin ? "Account Pending Review" : "Account Created"}
+                  Account Pending Review
                 </h2>
                 <p className="lp-card-sub">
-                  {isLogin
-                    ? "Your account is awaiting approval by a platform administrator. You will receive access once approved."
-                    : "Your account was created successfully. A platform administrator will review and approve your access shortly."}
+                  Your account is awaiting approval by a platform administrator. You will receive access once approved.
                 </p>
                 <button
                   type="button"
                   className="lp-submit"
                   style={{ marginTop: "1.5rem" }}
-                  onClick={() => { setPendingApproval(false); switchMode("login") }}
+                  onClick={() => { setPendingApproval(false) }}
                 >
                   <span className="lp-submit-content">
                     Back to Sign In
@@ -475,31 +428,15 @@ export function LoginPage() {
               <>
                 <div className="lp-card-header">
                   <h2 className="lp-card-title">
-                    {isLogin ? "Welcome back" : "Get started"}
+                    Welcome back
                   </h2>
                   <p className="lp-card-sub">
-                    {isLogin
-                      ? "Sign in to the Platform Console"
-                      : "Create your platform account"}
+                    Sign in to the Platform Console
                   </p>
                 </div>
 
                 <form className="lp-form" onSubmit={handleSubmit} noValidate>
-                  {!isLogin && (
-                    <div className="lp-field-enter">
-                      <InputField
-                        id="lp-name"
-                        label="Full Name"
-                        type="text"
-                        value={name}
-                        onChange={setName}
-                        placeholder="Jane Doe"
-                        icon={<IconUser />}
-                        autoComplete="name"
-                        required
-                      />
-                    </div>
-                  )}
+
 
                   <InputField
                     id="lp-email"
@@ -519,11 +456,10 @@ export function LoginPage() {
                     type={showPw ? "text" : "password"}
                     value={password}
                     onChange={setPassword}
-                    placeholder={isLogin ? "••••••••" : "Min. 12 characters"}
+                    placeholder="••••••••"
                     icon={<IconLock />}
-                    autoComplete={isLogin ? "current-password" : "new-password"}
+                    autoComplete="current-password"
                     required
-                    minLength={isLogin ? undefined : 12}
                     suffix={
                       <button
                         type="button"
@@ -543,7 +479,6 @@ export function LoginPage() {
                     </div>
                   )}
 
-                  {isLogin && (
                     <div className="lp-forgot-wrap">
                       {forgotSent ? (
                         <p className="lp-forgot-sent" role="status">
@@ -581,7 +516,6 @@ export function LoginPage() {
                         </button>
                       )}
                     </div>
-                  )}
 
                   <button
                     id="lp-submit"
@@ -591,7 +525,7 @@ export function LoginPage() {
                     aria-busy={loading}
                   >
                     <span className={`lp-submit-content${loading ? " lp-submit-content--hidden" : ""}`}>
-                      {isLogin ? "Sign In" : "Create Account"}
+                      Sign In
                       <span className="lp-submit-arrow"><IconArrow /></span>
                     </span>
                     {loading && <span className="lp-spinner" aria-hidden="true" />}
@@ -602,16 +536,7 @@ export function LoginPage() {
             )}
           </div>
 
-          <p className="lp-form-footer">
-            {isLogin ? "New to b.standard?" : "Already have an account?"}{" "}
-            <button
-              className="lp-link"
-              type="button"
-              onClick={() => switchMode(isLogin ? "signup" : "login")}
-            >
-              {isLogin ? "Create an account" : "Sign in"}
-            </button>
-          </p>
+
 
           <div className="lp-bottom-brand" aria-hidden="true">
             <span className="lp-bottom-dot" />

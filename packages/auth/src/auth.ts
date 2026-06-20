@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @module @standard/auth
  * @description Standard Auth Server â€” Better Auth configurado para o auth Neon branch.
  *
@@ -10,6 +10,7 @@
  */
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { admin } from "better-auth/plugins";
 import {
   baUser,
   baSession,
@@ -43,7 +44,7 @@ export type AuthEnv = {
  * @param db   Cliente Drizzle apontando para o auth Neon branch (HYPERDRIVE_AUTH)
  */
 export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
-  // â”€â”€ ValidaÃ§Ã£o de startup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â”€â”€ ValidaÃ§Ã£o de startup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (!env.BETTER_AUTH_SECRET || env.BETTER_AUTH_SECRET.length < 32) {
     throw new Error(
       `[standard:auth] BETTER_AUTH_SECRET must be â‰¥32 characters. Got ${env.BETTER_AUTH_SECRET?.length ?? 0}.`,
@@ -84,6 +85,7 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
     secret: env.BETTER_AUTH_SECRET,
     baseURL: env.BETTER_AUTH_URL,
     logger: { disabled: false },
+    plugins: [admin()],
 
     // â”€â”€ Email + Password â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     emailAndPassword: {

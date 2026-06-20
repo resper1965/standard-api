@@ -1,6 +1,8 @@
-﻿import {
+import {
+  z,
   CreateTenantRequestSchema,
   UpdateTenantRequestSchema,
+  TenantResponseSchema,
 } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";
@@ -21,6 +23,17 @@ export const tenantsRoutes: RouteDefinition[] = [
   {
     method: "POST",
     path: "/api/v1/tenants",
+      openapi: {
+        tags: ["Tenants"],
+        summary: "Create Tenant",
+        description: "PLATFORM ADMIN ONLY. Creates a new tenant (organization) in the system.",
+        responses: {
+          201: {
+            description: "Tenant Created",
+            content: { "application/json": { schema: z.intersection(TenantResponseSchema, z.object({ trace_id: z.string() })) } }
+          }
+        }
+      },
     protected: true, // was: requireActor: false â€” SECURITY FIX: must be authenticated
     permissions: ["admin:write"],
     requireActor: true,
@@ -41,6 +54,17 @@ export const tenantsRoutes: RouteDefinition[] = [
   {
     method: "GET",
     path: "/api/v1/tenants/:organizationId",
+      openapi: {
+        tags: ["Tenants"],
+        summary: "Get Tenant",
+        description: "PLATFORM ADMIN ONLY. Retrieves the details of a specific tenant.",
+        responses: {
+          200: {
+            description: "Tenant Details",
+            content: { "application/json": { schema: z.intersection(TenantResponseSchema, z.object({ trace_id: z.string() })) } }
+          }
+        }
+      },
     protected: true,
     permissions: ["admin:read"],
     requireActor: true,
@@ -58,6 +82,17 @@ export const tenantsRoutes: RouteDefinition[] = [
   {
     method: "PATCH",
     path: "/api/v1/tenants/:organizationId",
+      openapi: {
+        tags: ["Tenants"],
+        summary: "Update Tenant",
+        description: "PLATFORM ADMIN ONLY. Updates the status or details of a tenant.",
+        responses: {
+          200: {
+            description: "Updated Tenant",
+            content: { "application/json": { schema: z.intersection(TenantResponseSchema, z.object({ trace_id: z.string() })) } }
+          }
+        }
+      },
     protected: true,
     permissions: ["admin:write"],
     requireActor: true,

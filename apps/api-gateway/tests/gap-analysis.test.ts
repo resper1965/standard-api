@@ -75,6 +75,7 @@ test("Gap Analysis API cria draft, pagina findings e exige approval_event humano
     "x-standard-tenant-id": created.organizationId,
     "x-standard-actor-id": ids.actorId
   });
+  if (draft.response.status !== 201) console.error(JSON.stringify(draft.body, null, 2));
   expect(draft.response.status).toBe(201);
   expect(draft.body.status).toBe("draft");
 

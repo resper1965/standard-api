@@ -3,7 +3,12 @@
   maxUploadSizeBytes,
   processDocumentIngestionJob,
 } from "@standard/document-ingestion";
-import { ReprocessDocumentRequestSchema } from "@standard/schemas";
+import {
+  DocumentJobResponseSchema,
+  DocumentChunkResponseSchema,
+  DocumentListResponseSchema,
+  CreateDocumentResponseSchema,
+  z, ReprocessDocumentRequestSchema } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";
 import {
@@ -226,6 +231,17 @@ export const documentsRoutes: RouteDefinition[] = [
   {
     method: "GET",
     path: "/api/v1/documents/:documentId/chunks",
+      openapi: {
+        tags: ["Documents"],
+        summary: "Get Document Chunks",
+        description: "Retrieves the parsed text chunks for a processed document.",
+        responses: {
+          200: {
+            description: "List of Chunks",
+            content: { "application/json": { schema: z.object({ data: z.array(DocumentChunkResponseSchema), pagination: z.any(), trace_id: z.string() }) } }
+          }
+        }
+      },
     protected: true,
     permissions: ["document:read"],
     handler: async ({ request, deps, params, organizationId, traceId }) => {
@@ -250,6 +266,17 @@ export const documentsRoutes: RouteDefinition[] = [
   {
     method: "GET",
     path: "/api/v1/documents/:documentId/jobs",
+      openapi: {
+        tags: ["Documents"],
+        summary: "List Document Jobs",
+        description: "Lists all background processing jobs associated with a document.",
+        responses: {
+          200: {
+            description: "List of processing jobs",
+            content: { "application/json": { schema: z.object({ data: z.array(DocumentJobResponseSchema), pagination: z.any(), trace_id: z.string() }) } }
+          }
+        }
+      },
     protected: true,
     permissions: ["document:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
@@ -267,6 +294,17 @@ export const documentsRoutes: RouteDefinition[] = [
     method: "POST",
     idempotencyRequired: true,
     path: "/api/v1/documents/:documentId/reprocess",
+      openapi: {
+        tags: ["Documents"],
+        summary: "Reprocess Document",
+        description: "Forces a document to be reprocessed by the ingestion pipeline.",
+        responses: {
+          200: {
+            description: "Reprocess Triggered",
+            content: { "application/json": { schema: z.object({ trace_id: z.string(), message: z.string() }) } }
+          }
+        }
+      },
     protected: true,
     requireActor: true,
     permissions: ["document:reprocess"],
@@ -349,6 +387,17 @@ export const documentsRoutes: RouteDefinition[] = [
   {
     method: "GET",
     path: "/api/v1/assessments/:assessmentId/ingestion-jobs",
+      openapi: {
+        tags: ["Documents"],
+        summary: "List Assessment Ingestion Jobs",
+        description: "Lists all document ingestion jobs for a given assessment.",
+        responses: {
+          200: {
+            description: "List of ingestion jobs",
+            content: { "application/json": { schema: z.object({ data: z.array(DocumentJobResponseSchema), pagination: z.any(), trace_id: z.string() }) } }
+          }
+        }
+      },
     protected: true,
     permissions: ["document:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
@@ -365,6 +414,17 @@ export const documentsRoutes: RouteDefinition[] = [
   {
     method: "GET",
     path: "/api/v1/ingestion-jobs/:jobId",
+      openapi: {
+        tags: ["Documents"],
+        summary: "Get Ingestion Job",
+        description: "Retrieves details of a specific ingestion job.",
+        responses: {
+          200: {
+            description: "Job Details",
+            content: { "application/json": { schema: z.intersection(DocumentJobResponseSchema, z.object({ trace_id: z.string() })) } }
+          }
+        }
+      },
     protected: true,
     permissions: ["document:read"],
     handler: async ({ deps, params, organizationId }) => {
@@ -382,6 +442,17 @@ export const documentsRoutes: RouteDefinition[] = [
     method: "POST",
     idempotencyRequired: true,
     path: "/api/v1/documents/:documentId/submit-for-embedding",
+      openapi: {
+        tags: ["Documents"],
+        summary: "Submit Document for Embedding",
+        description: "Forces a document to be embedded and added to the Knowledge Base.",
+        responses: {
+          200: {
+            description: "Submission successful",
+            content: { "application/json": { schema: z.object({ trace_id: z.string(), message: z.string() }) } }
+          }
+        }
+      },
     protected: true,
     requireActor: true,
     permissions: ["document:write"],
@@ -408,6 +479,17 @@ export const documentsRoutes: RouteDefinition[] = [
     method: "POST",
     idempotencyRequired: true,
     path: "/api/v1/ingestion-jobs/:jobId/process",
+      openapi: {
+        tags: ["Documents"],
+        summary: "Trigger Job Processing",
+        description: "Manually triggers the processing queue for a specific job.",
+        responses: {
+          200: {
+            description: "Processing Triggered",
+            content: { "application/json": { schema: z.object({ trace_id: z.string(), message: z.string() }) } }
+          }
+        }
+      },
     protected: true,
     requireActor: true,
     permissions: ["document:write"],

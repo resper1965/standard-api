@@ -1,4 +1,4 @@
-﻿/**
+/**
  * QA Suite â€” RBAC Middleware Unit Tests
  * Tests permission resolution for session, M2M scopes, and missing auth contexts.
  */
@@ -35,6 +35,7 @@ function baseContext(overrides: Record<string, unknown> = {}) {
 type Permission = string;
 
 const STANDARD_ROLE_PERMISSIONS: Record<string, Record<string, string[]>> = {
+  organization_admin: { assessment: ["read","write","delete","approve"], document: ["read","write","delete","upload","reprocess"], approval: ["read","create"], organization: ["read","update"] },
   owner:  { assessment: ["read","write","delete","approve"], document: ["read","write","delete","upload","reprocess"], approval: ["read","create"], organization: ["read","update"] },
   admin:  { assessment: ["read","write","approve"],          document: ["read","write","upload","reprocess"],         approval: ["read","create"], organization: ["read","update"] },
   member: { assessment: ["read","write"],                    document: ["read","write","upload"],                    approval: ["read"],          organization: ["read"] },
@@ -62,7 +63,7 @@ function checkRbac(ctx: any, permissions: Permission[]): { allowed: boolean; rea
 
   if (ctx.session) {
     const rawRole = ctx.session.user?.role ?? "viewer";
-    const role = rawRole === "user" ? "member" : rawRole;
+    const role = rawRole === "user" ? "organization_admin" : rawRole;
     for (const perm of permissions) {
       const [resource = "", action = ""] = perm.split(":");
       if (!roleHasPermission(role, resource, action)) {
@@ -129,7 +130,7 @@ describe("RBAC â€” session-based roles", () => {
     expect(checkRbac(ctx, ["document:write"]).allowed).toBe(false);
   });
 
-  it("maps 'user' role to 'member' (Better Auth default)", () => {
+  it("maps 'user' role to 'organization_admin' (Better Auth default)", () => {
     const ctx = baseContext({ session: { user: { role: "user", platformAdmin: false } } });
     expect(checkRbac(ctx, ["assessment:read"]).allowed).toBe(true);
   });

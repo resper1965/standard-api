@@ -16,6 +16,8 @@ import {
   requireOrganizationId,
 } from "../http";
 import {
+  WebhookEndpointResponseSchema,
+  z,
   CreateWebhookEndpointSchema,
   UpdateWebhookEndpointSchema,
 } from "@standard/schemas";

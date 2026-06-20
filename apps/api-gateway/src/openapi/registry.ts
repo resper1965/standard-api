@@ -1,11 +1,5 @@
-﻿import {
-  OpenAPIRegistry,
-  extendZodWithOpenApi,
-} from "@asteasolutions/zod-to-openapi";
-import { z } from "zod";
-
-// Initialize extensions on zod globally
-extendZodWithOpenApi(z);
+import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
+import { z } from "@standard/schemas";
 
 export const registry = new OpenAPIRegistry();
 

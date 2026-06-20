@@ -1,10 +1,10 @@
 # Standard GRC Platform — Complete API Reference
 
 > Agentic GRC intelligence engine. Send text, get structured compliance analysis.
-> 1,468 controls · 231 frameworks · 33 domains · 10 AI-powered endpoints
-> Auto-generated from OpenAPI ${spec.openapi} spec
+> 1,468 controls · 231 frameworks · 33 domains · 12 Intelligence endpoints
+> Auto-generated from OpenAPI 3.0.0 spec
 
-Base URL: \`${baseUrl}\`
+Base URL: \`https://standard-api.bekaa.eu\`
 
 ## Authentication
 
@@ -71,7 +71,7 @@ Rate limits: 100 req/10s (general) · 5/min (sign-in) · 3/min (sign-up)
 **Use when**: You have a security control and need to verify if your evidence satisfies it.
 
 \`\`\`bash
-curl -X POST ${baseUrl}/api/v1/gap/evaluate-evidence \\
+curl -X POST https://standard-api.bekaa.eu/api/v1/gap/evaluate-evidence \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
  \
   -H "Content-Type: application/json" \\
@@ -104,7 +104,7 @@ curl -X POST ${baseUrl}/api/v1/gap/evaluate-evidence \\
 **Use when**: Your SIEM fires an alert and you need automated triage before escalation.
 
 \`\`\`bash
-curl -X POST ${baseUrl}/api/v1/soc/triage-incident \\
+curl -X POST https://standard-api.bekaa.eu/api/v1/soc/triage-incident \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
  \
   -H "Content-Type: application/json" \\
@@ -139,7 +139,7 @@ curl -X POST ${baseUrl}/api/v1/soc/triage-incident \\
 **Use when**: CISO needs to present a technical vulnerability to the board in business terms.
 
 \`\`\`bash
-curl -X POST ${baseUrl}/api/v1/executive/translate-risk \\
+curl -X POST https://standard-api.bekaa.eu/api/v1/executive/translate-risk \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
  \
   -H "Content-Type: application/json" \\
@@ -174,7 +174,7 @@ curl -X POST ${baseUrl}/api/v1/executive/translate-risk \\
 **Use when**: Legal team needs to evaluate a vendor's data processing agreement.
 
 \`\`\`bash
-curl -X POST ${baseUrl}/api/v1/privacy/scan-vendor-contract \\
+curl -X POST https://standard-api.bekaa.eu/api/v1/privacy/scan-vendor-contract \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
  \
   -H "Content-Type: application/json" \\
@@ -213,7 +213,7 @@ curl -X POST ${baseUrl}/api/v1/privacy/scan-vendor-contract \\
 **Note**: Pure computation — no LLM call, instant response.
 
 \`\`\`bash
-curl -X POST ${baseUrl}/api/v1/intelligence/compliance-score \\
+curl -X POST https://standard-api.bekaa.eu/api/v1/intelligence/compliance-score \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
  \
   -H "Content-Type: application/json" \\
@@ -248,7 +248,7 @@ curl -X POST ${baseUrl}/api/v1/intelligence/compliance-score \\
 **Use when**: Planning multi-framework compliance — see overlap before investing.
 
 \`\`\`bash
-curl -X POST ${baseUrl}/api/v1/intelligence/cross-coverage \\
+curl -X POST https://standard-api.bekaa.eu/api/v1/intelligence/cross-coverage \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
  \
   -H "Content-Type: application/json" \\
@@ -285,7 +285,7 @@ curl -X POST ${baseUrl}/api/v1/intelligence/cross-coverage \\
 **Use when**: Limited budget — need to prioritize controls by cross-framework impact.
 
 \`\`\`bash
-curl -X POST ${baseUrl}/api/v1/intelligence/roi-path \\
+curl -X POST https://standard-api.bekaa.eu/api/v1/intelligence/roi-path \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
  \
   -H "Content-Type: application/json" \\
@@ -324,7 +324,7 @@ curl -X POST ${baseUrl}/api/v1/intelligence/roi-path \\
 **Use when**: Risk assessment — understand the downstream impact of a control failure.
 
 \`\`\`bash
-curl -X POST ${baseUrl}/api/v1/intelligence/blast-radius \\
+curl -X POST https://standard-api.bekaa.eu/api/v1/intelligence/blast-radius \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
  \
   -H "Content-Type: application/json" \\
@@ -356,23 +356,24 @@ curl -X POST ${baseUrl}/api/v1/intelligence/blast-radius \\
 **Step 1: RoPA Analysis**
 
 \`\`\`bash
-curl -X POST ${baseUrl}/api/v1/privacy/analyze-ropa \\
+curl -X POST https://standard-api.bekaa.eu/api/v1/privacy/analyze-ropa \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
  \
   -H "Content-Type: application/json" \\
-  -d '{"text": "We digitize medical records from patients at the reception desk and store them in a cloud database for 10 years."}'
+  -d '{"description": "We digitize medical records from patients at the reception desk and store them in a cloud database for 10 years.", "org_id": "org_123"}'
 \`\`\`
 
 **Step 2: DPIA Assessment**
 
 \`\`\`bash
-curl -X POST ${baseUrl}/api/v1/privacy/assess-dpia \\
+curl -X POST https://standard-api.bekaa.eu/api/v1/privacy/assess-dpia \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
  \
   -H "Content-Type: application/json" \\
   -d '{
     "projectDescription": "Digitization of medical records at reception desk",
-    "ropaContext": {
+    "org_id": "org_123",
+    "ropa_record": {
       "suggested_risk_level": "high",
       "required_controls": [
         {"control_id": "PRI-01", "name": "Privacy Program"}
@@ -391,7 +392,7 @@ curl -X POST ${baseUrl}/api/v1/privacy/assess-dpia \\
 
 **Step 1: Create activity from text**
 \`\`\`bash
-curl -X POST ${baseUrl}/api/v1/privacy/processing-activities/from-text \\
+curl -X POST https://standard-api.bekaa.eu/api/v1/privacy/processing-activities/from-text \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
  \
   -H "Content-Type: application/json" \\
@@ -400,14 +401,14 @@ curl -X POST ${baseUrl}/api/v1/privacy/processing-activities/from-text \\
 
 **Step 2: Run screening**
 \`\`\`bash
-curl -X POST ${baseUrl}/api/v1/privacy/processing-activities/ACTIVITY_ID/screen \\
+curl -X POST https://standard-api.bekaa.eu/api/v1/privacy/processing-activities/ACTIVITY_ID/screen \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
  
 \`\`\`
 
 **Step 3: Generate report**
 \`\`\`bash
-curl -X GET "${baseUrl}/api/v1/privacy/processing-activities/ACTIVITY_ID/report?format=markdown" \\
+curl -X GET "https://standard-api.bekaa.eu/api/v1/privacy/processing-activities/ACTIVITY_ID/report?format=markdown" \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
  
 \`\`\`
@@ -427,7 +428,7 @@ curl -X GET "${baseUrl}/api/v1/privacy/processing-activities/ACTIVITY_ID/report?
 **Step 1: Create assessment**
 
 \`\`\`bash
-curl -X POST ${baseUrl}/api/v1/assessments \\
+curl -X POST https://standard-api.bekaa.eu/api/v1/assessments \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
  \
   -H "Content-Type: application/json" \\
@@ -437,7 +438,7 @@ curl -X POST ${baseUrl}/api/v1/assessments \\
 **Step 2: Define scope**
 
 \`\`\`bash
-curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/scope \\
+curl -X POST https://standard-api.bekaa.eu/api/v1/assessments/ASSESSMENT_ID/scope \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
  \
   -H "Content-Type: application/json" \\
@@ -447,7 +448,7 @@ curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/scope \\
 **Step 3: Generate Statement of Applicability (SoA)**
 
 \`\`\`bash
-curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/soa/draft \\
+curl -X POST https://standard-api.bekaa.eu/api/v1/assessments/ASSESSMENT_ID/soa/draft \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
  
 \`\`\`
@@ -455,17 +456,17 @@ curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/soa/draft \\
 **Step 4: Upload evidence documents**
 
 \`\`\`bash
-curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/documents \\
+curl -X POST https://standard-api.bekaa.eu/api/v1/assessments/ASSESSMENT_ID/documents \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
  \
   -F "file=@security-policy.pdf" \\
-  -F "file=@access-control-matrix.xlsx"
+  -F "file=@access-control-matrix.csv"
 \`\`\`
 
 **Step 5: Run AI evidence analysis**
 
 \`\`\`bash
-curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/evidence-analysis/run \\
+curl -X POST https://standard-api.bekaa.eu/api/v1/assessments/ASSESSMENT_ID/evidence-analysis/run \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
  
 \`\`\`
@@ -473,7 +474,7 @@ curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/evidence-analysis/run \
 **Step 6: Generate Gap Analysis**
 
 \`\`\`bash
-curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/gap-analysis/draft \\
+curl -X POST https://standard-api.bekaa.eu/api/v1/assessments/ASSESSMENT_ID/gap-analysis/draft \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
  
 \`\`\`
@@ -481,7 +482,7 @@ curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/gap-analysis/draft \\
 **Step 7: Generate POA&M (Plan of Action & Milestones)**
 
 \`\`\`bash
-curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/poam/draft \\
+curl -X POST https://standard-api.bekaa.eu/api/v1/assessments/ASSESSMENT_ID/poam/draft \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
  
 \`\`\`
@@ -489,7 +490,7 @@ curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/poam/draft \\
 **Step 8: Generate Report**
 
 \`\`\`bash
-curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/reports/draft \\
+curl -X POST https://standard-api.bekaa.eu/api/v1/assessments/ASSESSMENT_ID/reports/draft \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
  
 \`\`\`
@@ -497,7 +498,7 @@ curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/reports/draft \\
 **Step 9: Check Compliance Gate (Go/No-Go)**
 
 \`\`\`bash
-curl -X GET ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/compliance-gate \\
+curl -X GET https://standard-api.bekaa.eu/api/v1/assessments/ASSESSMENT_ID/compliance-gate \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
  
 \`\`\`
@@ -515,13 +516,13 @@ curl -X GET ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/compliance-gate \\
 
 **Get latest SCF version:**
 \`\`\`bash
-curl -X GET ${baseUrl}/api/v1/scf/versions/latest \\
+curl -X GET https://standard-api.bekaa.eu/api/v1/scf/versions/latest \\
   -H "Authorization: Bearer standard_live_YOUR_KEY"
 \`\`\`
 
 **List controls (paginated, filterable by domain):**
 \`\`\`bash
-curl -X GET "${baseUrl}/api/v1/scf/versions/SCF_VERSION_ID/controls?domain=PRI&page=1&per_page=50" \\
+curl -X GET "https://standard-api.bekaa.eu/api/v1/scf/versions/SCF_VERSION_ID/controls?domain=PRI&page=1&per_page=50" \\
   -H "Authorization: Bearer standard_live_YOUR_KEY"
 \`\`\`
 
@@ -533,24 +534,34 @@ curl -X GET "${baseUrl}/api/v1/scf/versions/SCF_VERSION_ID/controls?domain=PRI&p
 
 **Mode A — Automated (run against uploaded documents):**
 
+**Mode B — Manual/Hybrid (upload specific evidence files manually for an analysis context):**
+```bash
+curl -X POST https://standard-api.bekaa.eu/api/v1/assessments/YOUR_ASSESSMENT_ID/evidence-analysis \
+  -H "Authorization: Bearer standard_live_YOUR_KEY" \
+  -H "x-standard-tenant-id: YOUR_ORG_ID" \
+  -F "file=@manual-evidence.pdf"
+```
+
+**Mode A — Automated (run against uploaded documents):**
+
 \`\`\`bash
 # 1. Run AI evidence analysis
-curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/evidence-analysis/run \\
+curl -X POST https://standard-api.bekaa.eu/api/v1/assessments/ASSESSMENT_ID/evidence-analysis/run \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
  
 
 # 2. List evidence findings
-curl -X GET ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/evidence-findings \\
+curl -X GET https://standard-api.bekaa.eu/api/v1/assessments/ASSESSMENT_ID/evidence-findings \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
  
 
 # 3. Generate gap analysis from findings
-curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/gap-analysis/draft \\
+curl -X POST https://standard-api.bekaa.eu/api/v1/assessments/ASSESSMENT_ID/gap-analysis/draft \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
  
 
 # 4. Review gap findings
-curl -X GET ${baseUrl}/api/v1/gap-analysis/GAP_VERSION_ID/findings \\
+curl -X GET https://standard-api.bekaa.eu/api/v1/gap-analysis/GAP_VERSION_ID/findings \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
  
 \`\`\`
@@ -558,7 +569,7 @@ curl -X GET ${baseUrl}/api/v1/gap-analysis/GAP_VERSION_ID/findings \\
 **Mode C — Gap to PoAM chain:**
 
 \`\`\`bash
-curl -X POST ${baseUrl}/api/v1/poam/architect-remediation \\
+curl -X POST https://standard-api.bekaa.eu/api/v1/poam/architect-remediation \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
  \
   -H "Content-Type: application/json" \\
@@ -573,7 +584,7 @@ curl -X POST ${baseUrl}/api/v1/poam/architect-remediation \\
 
 **Organization-level dashboard:**
 \`\`\`bash
-curl -X GET ${baseUrl}/api/v1/organizations/YOUR_ORG_ID/dashboard \\
+curl -X GET https://standard-api.bekaa.eu/api/v1/organizations/YOUR_ORG_ID/dashboard \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
  
 \`\`\`
@@ -592,7 +603,7 @@ curl -X GET ${baseUrl}/api/v1/organizations/YOUR_ORG_ID/dashboard \\
 
 **Upload documents:**
 \`\`\`bash
-curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/documents \\
+curl -X POST https://standard-api.bekaa.eu/api/v1/assessments/ASSESSMENT_ID/documents \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
  \
   -F "file=@policy-document.pdf"
@@ -600,14 +611,14 @@ curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/documents \\
 
 **Submit for embedding (RAG index):**
 \`\`\`bash
-curl -X POST ${baseUrl}/api/v1/documents/DOC_ID/submit-for-embedding \\
+curl -X POST https://standard-api.bekaa.eu/api/v1/documents/DOC_ID/submit-for-embedding \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
  
 \`\`\`
 
 **Semantic search in knowledge base:**
 \`\`\`bash
-curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/kb/search \\
+curl -X POST https://standard-api.bekaa.eu/api/v1/assessments/ASSESSMENT_ID/kb/search \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
  \
   -H "Content-Type: application/json" \\
@@ -622,155 +633,15 @@ curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/kb/search \\
 
 **By organization:**
 \`\`\`bash
-curl -X GET "${baseUrl}/api/v1/organizations/YOUR_ORG_ID/audit-logs?limit=50" \\
+curl -X GET "https://standard-api.bekaa.eu/api/v1/organizations/YOUR_ORG_ID/audit-logs?limit=50" \\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\
  
 \`\`\`
 
 ## Endpoint Reference
 
-> Auto-generated from OpenAPI spec. For full schemas, see /docs/openapi.json
-
-### POST `/api/v1/organizations`
-
-**Create Organization**
-
-Creates a new organization under the authenticated user's account.
-
-**Request Body:**
-```json
-{
-  "organization_id": "string",
-  "slug": "string",
-  "name": "string"
-}
-```
-
-**201**: Organization created
-
----
-
-### GET `/api/v1/organizations`
-
-**List Organizations**
-
-Returns all organizations accessible to the authenticated user.
-
-**200**: Organization list
-
----
-
-### GET `/api/v1/organizations/{organizationId}/api-keys`
-
-**List API Keys**
-
-Returns all API keys for the authenticated organization (masked). Use ?active=true to exclude revoked keys.
-
-**200**: API key list
-
----
-
-### POST `/api/v1/organizations/{organizationId}/api-keys`
-
-**Create API Key**
-
-Creates a new M2M API key. The raw key is returned only once — store it securely.
-
-**Request Body:**
-```json
-{
-  "name": "string",
-  "expiresAt": "string",
-  "scopes": [
-    "string"
-  ]
-}
-```
-
-**201**: API key created
-
----
-
-### PATCH `/api/v1/organizations/{organizationId}/api-keys/{keyId}`
-
-**Update API Key**
-
-Update name, expiration date, and/or scopes of an existing API key.
-
-**Request Body:**
-```json
-{
-  "name": "string",
-  "expiresAt": "string",
-  "scopes": [
-    "string"
-  ]
-}
-```
-
-**200**: API key updated
-
----
-
-### POST `/api/v1/privacy/scan-vendor-contract/batch`
-
-**Scan Vendor Contracts in Bulk (Async)**
-
-Dispatches long-running analysis across up to 500 contract snippets simultaneously. Returns a jobId for polling.
-
-**Request Body:**
-```json
-"<see #/components/schemas/VendorScannerBatchInput>"
-```
-
-**202**: Batch job dispatched successfully
-
----
-
-### POST `/api/v1/privacy/scan-vendor-contract`
-
-**B2B Legal Analyzer (Vendor Risk Scanner)**
-
-Transforms raw contract text into executive intelligence about sub-processors and LGPD/GDPR privacy compliance.
-
-**Request Body:**
-```json
-"<see #/components/schemas/VendorScannerInput>"
-```
-
-**200**: Vendor risks and compliance gaps
-
----
-
-### GET `/api/v1/me/data-export`
-
-**Export personal data (LGPD art. 18)**
-
-Returns a portable JSON export of all personal data stored for the authenticated user. Compliant with LGPD art. 18 (right of access and portability). The response includes a Content-Disposition header for download.
-
-**200**: Personal data export
-
----
-
-### DELETE `/api/v1/me/account`
-
-**Request account deletion (LGPD art. 18)**
-
-Initiates an account deletion request. The account is flagged for deletion immediately. Personal data is permanently purged within 30 days per the data retention policy.
-
-**200**: Deletion request accepted
-
----
-
-### GET `/api/v1/soc/status`
-
-**SOC pipeline health status**
-
-Returns SOC monitoring pipeline status: queue binding health, alert service configuration, and pipeline readiness. A arquitetura é Multi-Organization. O Platform Admin cria a organização e cede acesso ao administrador.
-
-**200**: SOC pipeline status
-
----
+> The complete CRUD functionality (Assessments, Documents, SCF Controls, SCF Frameworks, Risk Management, Regulations, SOA, TPRA, Webhooks, Workflows, Reporting, etc.) is fully documented in the OpenAPI specification. 
+> Please refer to the machine-readable `/docs/openapi.json` or the interactive documentation at `/docs` for schemas and paths.
 
 ## Quick Reference
 
@@ -830,3 +701,79 @@ Returns SOC monitoring pipeline status: queue binding health, alert service conf
 | Endpoint | What it does | LLM? |
 |----------|-------------|------|
 | \`POST /api/v1/intelligence/council\` | Orchestrate multi-agent GRC council | Yes |
+
+---
+
+### Cookbook: Stateless Intelligence Capabilities
+
+> 4 distinct intelligence engines that operate statelessly, meaning no previous assessment is required to process them.
+
+**1. Gap Analysis Engine (Stateless)**
+```bash
+curl -X POST https://standard-api.bekaa.eu/api/v1/intelligence/gap-analysis \
+  -H "Authorization: Bearer standard_live_YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "framework_id": "soc2",
+    "implemented_controls": ["CC1.1", "CC1.2"]
+  }'
+```
+
+**2. Breach Notification SLA Rules**
+```bash
+curl -X POST https://standard-api.bekaa.eu/api/v1/intelligence/breach-sla \
+  -H "Authorization: Bearer standard_live_YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "regulation_id": "gdpr",
+    "incident_type": "data_leak"
+  }'
+```
+
+**3. Data Retention Rules Lookup**
+```bash
+curl -X POST https://standard-api.bekaa.eu/api/v1/intelligence/retention-check \
+  -H "Authorization: Bearer standard_live_YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "data_category": "personal_data",
+    "context": "employee_records"
+  }'
+```
+
+**4. DPIA Score Trigger**
+```bash
+curl -X POST https://standard-api.bekaa.eu/api/v1/intelligence/dpia-score \
+  -H "Authorization: Bearer standard_live_YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "processing_activity": "Using AI to analyze employee sentiment from emails.",
+    "data_subjects": "employees",
+    "technology_used": "LLM"
+  }'
+```
+
+---
+
+## Assessment Lifecycle & State Machine
+
+The Assessment Entity follows a strict state machine with human-in-the-loop approval gates.
+
+**Valid States:**
+1. `draft`: Initial creation. Scope and configuration can be modified.
+2. `documents_uploaded`: Evidence collection phase.
+3. `documents_ingested`: Pipeline processing (OCR, Embedding) complete.
+4. `scf_pre_analysis_ready`: Ready for framework mapping.
+5. `framework_selected`: Frameworks bound.
+6. `scope_drafted` -> `soa_drafted` -> `soa_under_review` -> `soa_approved` -> `soa_ingested`
+7. `evidence_analysis_ready`: AI evaluation runs here.
+8. `gap_analysis_drafted` -> `gap_analysis_under_review` -> `gap_analysis_approved`
+9. `maturity_assessed` -> `maturity_under_review` -> `maturity_approved`
+10. `poam_drafted` -> `poam_under_review` -> `poam_approved`
+11. `report_generated`
+12. `closed` / `archived`
+
+**Transitions & Gates:**
+- Workflows must transition through the review gates (`submit-review`, `approve`, `reject`).
+- A phase cannot be finalized without explicit human approval (e.g., `gap_analysis_approved`).
+- Returning to a previous state (e.g., via `regenerate`) drops the phase back to its `draft` status, revoking approvals.

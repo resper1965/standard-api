@@ -1,4 +1,5 @@
-﻿import {
+import { z, ScopeResponseSchema, SoaVersionResponseSchema, SoaItemResponseSchema, SoaValidationResponseSchema } from "@standard/schemas";
+import {
   executeTransition,
   getAllowedNextStates,
 } from "@standard/assessment-engine";
@@ -101,6 +102,17 @@ export const soaRoutes: RouteDefinition[] = [
   {
     method: "POST",
     path: "/api/v1/assessments/:assessmentId/scope",
+      openapi: {
+        tags: ["SoA & Scope"],
+        summary: "Create Scope",
+        description: "Creates the initial scope definition for an assessment.",
+        responses: {
+          201: {
+            description: "Scope created successfully",
+            content: { "application/json": { schema: z.intersection(ScopeResponseSchema, z.object({ trace_id: z.string() })) } }
+          }
+        }
+      },
     protected: true,
     requireActor: true,
     permissions: ["soa:create"],
@@ -143,6 +155,17 @@ export const soaRoutes: RouteDefinition[] = [
   {
     method: "GET",
     path: "/api/v1/assessments/:assessmentId/scope",
+      openapi: {
+        tags: ["SoA & Scope"],
+        summary: "Get Assessment Scope",
+        description: "Retrieves the scope definition for a given assessment.",
+        responses: {
+          200: {
+            description: "Scope Details",
+            content: { "application/json": { schema: z.intersection(ScopeResponseSchema, z.object({ trace_id: z.string() })) } }
+          }
+        }
+      },
     protected: true,
     permissions: ["soa:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
@@ -161,6 +184,17 @@ export const soaRoutes: RouteDefinition[] = [
   {
     method: "GET",
     path: "/api/v1/scopes/:scopeId",
+      openapi: {
+        tags: ["SoA & Scope"],
+        summary: "Get Scope by ID",
+        description: "Retrieves a specific scope by its ID.",
+        responses: {
+          200: {
+            description: "Scope Details",
+            content: { "application/json": { schema: z.intersection(ScopeResponseSchema, z.object({ trace_id: z.string() })) } }
+          }
+        }
+      },
     protected: true,
     permissions: ["soa:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
@@ -180,6 +214,17 @@ export const soaRoutes: RouteDefinition[] = [
   {
     method: "PATCH",
     path: "/api/v1/scopes/:scopeId",
+      openapi: {
+        tags: ["SoA & Scope"],
+        summary: "Update Scope",
+        description: "Updates properties of an existing scope.",
+        responses: {
+          200: {
+            description: "Updated Scope",
+            content: { "application/json": { schema: z.intersection(ScopeResponseSchema, z.object({ trace_id: z.string() })) } }
+          }
+        }
+      },
     protected: true,
     requireActor: true,
     permissions: ["soa:update"],
@@ -218,6 +263,17 @@ export const soaRoutes: RouteDefinition[] = [
   {
     method: "POST",
     path: "/api/v1/scopes/:scopeId/submit-review",
+      openapi: {
+        tags: ["SoA & Scope"],
+        summary: "Submit Scope for Review",
+        description: "Submits a drafted scope for review.",
+        responses: {
+          200: {
+            description: "Scope submitted successfully",
+            content: { "application/json": { schema: z.intersection(ScopeResponseSchema, z.object({ trace_id: z.string() })) } }
+          }
+        }
+      },
     protected: true,
     requireActor: true,
     permissions: ["soa:update"],
@@ -247,6 +303,17 @@ export const soaRoutes: RouteDefinition[] = [
   {
     method: "POST",
     path: "/api/v1/scopes/:scopeId/approve",
+      openapi: {
+        tags: ["SoA & Scope"],
+        summary: "Approve Scope",
+        description: "Approves a scope that is under review.",
+        responses: {
+          200: {
+            description: "Scope approved successfully",
+            content: { "application/json": { schema: z.intersection(ScopeResponseSchema, z.object({ trace_id: z.string() })) } }
+          }
+        }
+      },
     protected: true,
     requireActor: true,
     permissions: ["soa:approve"],
@@ -285,6 +352,17 @@ export const soaRoutes: RouteDefinition[] = [
   {
     method: "POST",
     path: "/api/v1/assessments/:assessmentId/soa/draft",
+      openapi: {
+        tags: ["SoA & Scope"],
+        summary: "Create SoA Draft",
+        description: "Generates a new Statement of Applicability draft for an assessment.",
+        responses: {
+          201: {
+            description: "SoA Draft Version",
+            content: { "application/json": { schema: z.intersection(SoaVersionResponseSchema, z.object({ trace_id: z.string() })) } }
+          }
+        }
+      },
     protected: true,
     requireActor: true,
     permissions: ["soa:create"],
@@ -331,6 +409,17 @@ export const soaRoutes: RouteDefinition[] = [
   {
     method: "GET",
     path: "/api/v1/assessments/:assessmentId/soa",
+      openapi: {
+        tags: ["SoA & Scope"],
+        summary: "List Assessment SoA Versions",
+        description: "Lists all Statement of Applicability versions for an assessment.",
+        responses: {
+          200: {
+            description: "List of SoA Versions",
+            content: { "application/json": { schema: z.object({ data: z.array(SoaVersionResponseSchema), trace_id: z.string() }) } }
+          }
+        }
+      },
     protected: true,
     permissions: ["soa:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
@@ -349,6 +438,17 @@ export const soaRoutes: RouteDefinition[] = [
   {
     method: "GET",
     path: "/api/v1/soa/:soaVersionId",
+      openapi: {
+        tags: ["SoA & Scope"],
+        summary: "Get SoA Version",
+        description: "Retrieves a specific SoA version by its ID.",
+        responses: {
+          200: {
+            description: "SoA Version",
+            content: { "application/json": { schema: z.intersection(SoaVersionResponseSchema, z.object({ trace_id: z.string() })) } }
+          }
+        }
+      },
     protected: true,
     permissions: ["soa:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
@@ -364,6 +464,17 @@ export const soaRoutes: RouteDefinition[] = [
   {
     method: "GET",
     path: "/api/v1/soa/:soaVersionId/items",
+      openapi: {
+        tags: ["SoA & Scope"],
+        summary: "List SoA Items",
+        description: "Lists all items (controls) in a specific SoA version.",
+        responses: {
+          200: {
+            description: "List of SoA Items",
+            content: { "application/json": { schema: z.object({ data: z.array(SoaItemResponseSchema), pagination: z.any(), trace_id: z.string() }) } }
+          }
+        }
+      },
     protected: true,
     permissions: ["soa:read"],
     handler: async ({ request, deps, params, organizationId, traceId }) => {
@@ -395,6 +506,17 @@ export const soaRoutes: RouteDefinition[] = [
   {
     method: "PATCH",
     path: "/api/v1/soa/items/:soaItemId",
+      openapi: {
+        tags: ["SoA & Scope"],
+        summary: "Update SoA Item",
+        description: "Updates an individual item in the Statement of Applicability.",
+        responses: {
+          200: {
+            description: "Updated SoA Item",
+            content: { "application/json": { schema: z.intersection(SoaItemResponseSchema, z.object({ trace_id: z.string() })) } }
+          }
+        }
+      },
     protected: true,
     requireActor: true,
     permissions: ["soa:update"],
@@ -445,6 +567,17 @@ export const soaRoutes: RouteDefinition[] = [
   {
     method: "POST",
     path: "/api/v1/soa/:soaVersionId/evidence/refresh",
+      openapi: {
+        tags: ["SoA & Scope"],
+        summary: "Refresh SoA Evidence",
+        description: "Forces a refresh of evidence mapping for the SoA.",
+        responses: {
+          200: {
+            description: "Refresh successful",
+            content: { "application/json": { schema: z.object({ trace_id: z.string(), message: z.string() }) } }
+          }
+        }
+      },
     protected: true,
     requireActor: true,
     permissions: ["soa:update"],
@@ -481,6 +614,17 @@ export const soaRoutes: RouteDefinition[] = [
   {
     method: "POST",
     path: "/api/v1/soa/:soaVersionId/submit-review",
+      openapi: {
+        tags: ["SoA & Scope"],
+        summary: "Submit SoA for Review",
+        description: "Submits a drafted SoA for review.",
+        responses: {
+          200: {
+            description: "SoA submitted successfully",
+            content: { "application/json": { schema: z.intersection(SoaVersionResponseSchema, z.object({ trace_id: z.string() })) } }
+          }
+        }
+      },
     protected: true,
     requireActor: true,
     permissions: ["soa:update"],
@@ -532,6 +676,17 @@ export const soaRoutes: RouteDefinition[] = [
   {
     method: "POST",
     path: "/api/v1/soa/:soaVersionId/approve",
+      openapi: {
+        tags: ["SoA & Scope"],
+        summary: "Approve SoA Version",
+        description: "Approves an SoA that is under review.",
+        responses: {
+          200: {
+            description: "SoA approved successfully",
+            content: { "application/json": { schema: z.intersection(SoaVersionResponseSchema, z.object({ trace_id: z.string() })) } }
+          }
+        }
+      },
     protected: true,
     requireActor: true,
     permissions: ["soa:approve"],
@@ -591,6 +746,17 @@ export const soaRoutes: RouteDefinition[] = [
   {
     method: "POST",
     path: "/api/v1/soa/:soaVersionId/mark-ingested",
+      openapi: {
+        tags: ["SoA & Scope"],
+        summary: "Mark SoA as Ingested",
+        description: "Marks an approved SoA as fully ingested into the assessment.",
+        responses: {
+          200: {
+            description: "SoA marked as ingested",
+            content: { "application/json": { schema: z.intersection(SoaVersionResponseSchema, z.object({ trace_id: z.string() })) } }
+          }
+        }
+      },
     protected: true,
     requireActor: true,
     permissions: ["soa:update"],
@@ -627,6 +793,17 @@ export const soaRoutes: RouteDefinition[] = [
   {
     method: "POST",
     path: "/api/v1/soa/:soaVersionId/mark-ingestion-required",
+      openapi: {
+        tags: ["SoA & Scope"],
+        summary: "Mark Ingestion Required",
+        description: "Flags the SoA as needing re-ingestion.",
+        responses: {
+          200: {
+            description: "Flagged successfully",
+            content: { "application/json": { schema: z.intersection(SoaVersionResponseSchema, z.object({ trace_id: z.string() })) } }
+          }
+        }
+      },
     protected: true,
     requireActor: true,
     permissions: ["soa:update"],
@@ -653,6 +830,17 @@ export const soaRoutes: RouteDefinition[] = [
   {
     method: "POST",
     path: "/api/v1/soa/:soaVersionId/regenerate",
+      openapi: {
+        tags: ["SoA & Scope"],
+        summary: "Regenerate SoA",
+        description: "Regenerates an SoA based on updated frameworks or scopes.",
+        responses: {
+          201: {
+            description: "New Draft SoA Version",
+            content: { "application/json": { schema: z.intersection(SoaVersionResponseSchema, z.object({ trace_id: z.string() })) } }
+          }
+        }
+      },
     protected: true,
     permissions: ["soa:update"],
     requireActor: true,
@@ -684,6 +872,17 @@ export const soaRoutes: RouteDefinition[] = [
   {
     method: "GET",
     path: "/api/v1/soa/:soaVersionId/validation",
+      openapi: {
+        tags: ["SoA & Scope"],
+        summary: "Validate SoA",
+        description: "Runs validation checks against the SoA.",
+        responses: {
+          200: {
+            description: "Validation Report",
+            content: { "application/json": { schema: z.intersection(SoaValidationResponseSchema, z.object({ trace_id: z.string() })) } }
+          }
+        }
+      },
     protected: true,
     permissions: ["soa:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {

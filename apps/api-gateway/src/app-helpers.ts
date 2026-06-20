@@ -1,4 +1,4 @@
-﻿import { MockAuthProvider } from "@standard/security";
+import { MockAuthProvider } from "@standard/security";
 import type { StandardAuth } from "@standard/auth";
 import type { Env } from "./types/env";
 import { ApiError } from "./errors/api-error";
@@ -94,9 +94,9 @@ export const buildSecurityHeaders = (
 ): Record<string, string> => {
   // Relax CSP for docs/llms routes so Scalar UI, fonts, and scripts load correctly
   const isDocsRoute =
-    pathname.startsWith("/docs") || pathname.startsWith("/llms");
+    pathname === "/" || pathname.startsWith("/docs") || pathname.startsWith("/llms");
   const cspValue = isDocsRoute
-    ? "default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src fonts.gstatic.com; img-src 'self' data:; connect-src 'self';"
+    ? "default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data: blob:; frame-ancestors 'none';"
     : "default-src 'none'; frame-ancestors 'none';";
 
   return {

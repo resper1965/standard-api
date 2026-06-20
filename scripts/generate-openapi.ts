@@ -1,3 +1,4 @@
+import "../apps/api-gateway/src/app";
 import { generateOpenApiSpec } from "../apps/api-gateway/src/openapi/generator";
 import { writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join } from "node:path";

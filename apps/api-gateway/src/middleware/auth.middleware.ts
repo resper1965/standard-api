@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @module auth.middleware
  * @description Resolve contexto de autenticaÃ§Ã£o a partir de cookie (browser) ou API Key (M2M).
  *
@@ -238,6 +238,7 @@ async function resolveSessionAuthContext(
         name: user.name ?? "",
         platformAdmin: isPlatformAdmin,
         approved: isApproved,
+        role: (user.role && user.role !== "user" && user.role !== "member") ? user.role : "organization_admin",
       },
       session: {
         id: session.id,

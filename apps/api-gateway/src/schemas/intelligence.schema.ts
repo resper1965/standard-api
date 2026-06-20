@@ -1,6 +1,4 @@
-﻿import { z } from "zod";
-import { extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
-extendZodWithOpenApi(z);
+import { z } from "@standard/schemas";
 
 // ==========================================
 // Intelligence Engine Schemas
@@ -40,7 +38,7 @@ export const BlastRadiusRequestSchema = z.object({
   control_id: z.string().max(100),
 }).openapi("BlastRadiusRequest");
 
-const BlastRadiusOutputSchema = z.object({
+export const BlastRadiusOutputSchema = z.object({
   control_id: z.string(),
   linked_entities: z.object({
     risks: z.array(z.object({ category: z.string(), risk: z.string() })),
@@ -50,24 +48,24 @@ const BlastRadiusOutputSchema = z.object({
   })
 }).openapi("BlastRadiusOutput");
 
-const GapAnalysisOutputSchema = z.object({
+export const GapAnalysisOutputSchema = z.object({
   missing_controls: z.array(z.string())
 }).openapi("GapAnalysisOutput");
 
-const ComplianceScoreOutputSchema = z.object({
+export const ComplianceScoreOutputSchema = z.object({
   total_required: z.number(),
   implemented: z.number(),
   missing: z.number(),
   score: z.number()
 }).openapi("ComplianceScoreOutput");
 
-const DpiaScoreOutputSchema = z.object({
+export const DpiaScoreOutputSchema = z.object({
   dpia_trigger_count: z.number(),
   is_dpia_required: z.boolean(),
   triggering_controls: z.array(z.string())
 }).openapi("DpiaScoreOutput");
 
-const CrossCoverageOutputSchema = z.object({
+export const CrossCoverageOutputSchema = z.object({
   source_framework: z.string(),
   target_framework: z.string(),
   total_target_controls: z.number(),
@@ -82,12 +80,26 @@ export const RetentionCheckRequestSchema = z.object({
   jurisdiction: z.string().max(50),
 }).openapi("RetentionCheckRequest");
 
+export const RetentionCheckOutputSchema = z.object({
+  matched_rules: z.array(z.object({
+    rule_id: z.string(),
+    retention_period: z.string(),
+    description: z.string()
+  }))
+}).openapi("RetentionCheckOutput");
+
 export const BreachSlaRequestSchema = z.object({
   regulation_id: z.string().max(50),
   severity: z.enum(["critical", "high", "medium", "low"]),
 }).openapi("BreachSlaRequest");
 
-const RoiPathOutputSchema = z.object({
+export const BreachSlaOutputSchema = z.object({
+  sla_hours: z.number(),
+  notification_required: z.boolean(),
+  reporting_authority: z.string().optional()
+}).openapi("BreachSlaOutput");
+
+export const RoiPathOutputSchema = z.object({
   recommended_controls: z.array(z.object({
     control_id: z.string(),
     roi_score: z.number(),

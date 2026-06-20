@@ -1,4 +1,4 @@
-﻿import { z } from "zod";
+import { z } from "@standard/schemas";
 import type { RouteDefinition } from "../http";
 import { json, parseJson, requireOrganizationId } from "../http";
 import { ApiError } from "../errors/api-error";
@@ -20,6 +20,14 @@ import {
   BlastRadiusRequestSchema,
   RetentionCheckRequestSchema,
   BreachSlaRequestSchema,
+  BlastRadiusOutputSchema,
+  GapAnalysisOutputSchema,
+  ComplianceScoreOutputSchema,
+  DpiaScoreOutputSchema,
+  CrossCoverageOutputSchema,
+  RetentionCheckOutputSchema,
+  BreachSlaOutputSchema,
+  RoiPathOutputSchema,
 } from "../schemas/intelligence.schema";
 
 export const intelligenceRoutes: RouteDefinition[] = [
@@ -29,6 +37,17 @@ export const intelligenceRoutes: RouteDefinition[] = [
     authRequired: true,
     tenantRequired: false,
     bodySchema: BlastRadiusRequestSchema,
+    openapi: {
+      tags: ["Intelligence"],
+      summary: "Calculate Control Blast Radius",
+      description: "Determines the impact radius of a control across risks, regulations, and data categories.",
+      responses: {
+        200: {
+          description: "Blast Radius Results",
+          content: { "application/json": { schema: z.object({ data: BlastRadiusOutputSchema, trace_id: z.string() }) } }
+        }
+      }
+    },
     handler: async ({ validatedBody, traceId }) => {
       const body = validatedBody as z.infer<typeof BlastRadiusRequestSchema>;
       const result = IntelligenceService.calculateBlastRadius(body.control_id);
@@ -41,6 +60,17 @@ export const intelligenceRoutes: RouteDefinition[] = [
     authRequired: true,
     tenantRequired: false, // Core rules engine is tenant agnostic
     bodySchema: GapAnalysisRequestSchema,
+    openapi: {
+      tags: ["Intelligence"],
+      summary: "Perform Gap Analysis",
+      description: "Analyzes implemented controls against a target framework to identify gaps.",
+      responses: {
+        200: {
+          description: "Gap Analysis Results",
+          content: { "application/json": { schema: z.object({ data: GapAnalysisOutputSchema, trace_id: z.string() }) } }
+        }
+      }
+    },
     handler: async ({ request, validatedBody, traceId, deps }) => {
       const locale = new URL(request.url).searchParams.get("locale") || "pt";
       const body = validatedBody as z.infer<typeof GapAnalysisRequestSchema>;
@@ -76,6 +106,17 @@ export const intelligenceRoutes: RouteDefinition[] = [
     authRequired: true,
     tenantRequired: false,
     bodySchema: DpiaScoreRequestSchema,
+    openapi: {
+      tags: ["Intelligence"],
+      summary: "Calculate DPIA Score",
+      description: "Calculates the DPIA risk score based on data categories and implemented controls.",
+      responses: {
+        200: {
+          description: "DPIA Score Results",
+          content: { "application/json": { schema: z.object({ data: DpiaScoreOutputSchema, trace_id: z.string() }) } }
+        }
+      }
+    },
     handler: async ({ request, validatedBody, traceId }) => {
       const locale = new URL(request.url).searchParams.get("locale") || "pt";
       const body = validatedBody as z.infer<typeof DpiaScoreRequestSchema>;
@@ -150,6 +191,17 @@ export const intelligenceRoutes: RouteDefinition[] = [
     authRequired: true,
     tenantRequired: false,
     bodySchema: ComplianceScoreRequestSchema,
+    openapi: {
+      tags: ["Intelligence"],
+      summary: "Calculate Compliance Score",
+      description: "Calculates compliance score against a specific regulation based on implemented controls.",
+      responses: {
+        200: {
+          description: "Compliance Score Results",
+          content: { "application/json": { schema: z.object({ data: ComplianceScoreOutputSchema, trace_id: z.string() }) } }
+        }
+      }
+    },
     handler: async ({ request, validatedBody, traceId, deps }) => {
       const locale = new URL(request.url).searchParams.get("locale") || "pt";
       const body = validatedBody as z.infer<
@@ -205,6 +257,17 @@ export const intelligenceRoutes: RouteDefinition[] = [
     authRequired: true,
     tenantRequired: false,
     bodySchema: RetentionCheckRequestSchema,
+    openapi: {
+      tags: ["Intelligence"],
+      summary: "Check Data Retention Rules",
+      description: "Checks data retention rules based on category, purpose, and jurisdiction.",
+      responses: {
+        200: {
+          description: "Retention Rules Results",
+          content: { "application/json": { schema: z.object({ data: RetentionCheckOutputSchema, trace_id: z.string() }) } }
+        }
+      }
+    },
     handler: async ({ request, validatedBody, traceId }) => {
       const locale = new URL(request.url).searchParams.get("locale") || "pt";
       const body = validatedBody as z.infer<typeof RetentionCheckRequestSchema>;
@@ -247,6 +310,17 @@ export const intelligenceRoutes: RouteDefinition[] = [
     authRequired: true,
     tenantRequired: false,
     bodySchema: BreachSlaRequestSchema,
+    openapi: {
+      tags: ["Intelligence"],
+      summary: "Check Breach Notification SLA",
+      description: "Determines breach notification SLA based on regulation and severity.",
+      responses: {
+        200: {
+          description: "Breach SLA Results",
+          content: { "application/json": { schema: z.object({ data: BreachSlaOutputSchema, trace_id: z.string() }) } }
+        }
+      }
+    },
     handler: async ({ request, validatedBody, traceId }) => {
       const locale = new URL(request.url).searchParams.get("locale") || "pt";
       const body = validatedBody as z.infer<typeof BreachSlaRequestSchema>;
@@ -286,6 +360,17 @@ export const intelligenceRoutes: RouteDefinition[] = [
     authRequired: true,
     tenantRequired: false,
     bodySchema: CrossCoverageRequestSchema,
+    openapi: {
+      tags: ["Intelligence"],
+      summary: "Calculate Cross-Framework Coverage",
+      description: "Calculates coverage mapping between a source framework and a target framework.",
+      responses: {
+        200: {
+          description: "Cross Coverage Results",
+          content: { "application/json": { schema: z.object({ data: CrossCoverageOutputSchema, trace_id: z.string() }) } }
+        }
+      }
+    },
     handler: async ({ request, validatedBody, traceId, deps }) => {
       const locale = new URL(request.url).searchParams.get("locale") || "pt";
       const body = validatedBody as z.infer<typeof CrossCoverageRequestSchema>;
@@ -337,6 +422,17 @@ export const intelligenceRoutes: RouteDefinition[] = [
     authRequired: true,
     tenantRequired: false,
     bodySchema: RoiPathRequestSchema,
+    openapi: {
+      tags: ["Intelligence"],
+      summary: "Calculate ROI Path for Controls",
+      description: "Recommends the most impactful controls to implement based on ROI.",
+      responses: {
+        200: {
+          description: "ROI Path Results",
+          content: { "application/json": { schema: z.object({ data: RoiPathOutputSchema, trace_id: z.string() }) } }
+        }
+      }
+    },
     handler: async ({ request, validatedBody, traceId, deps }) => {
       const locale = new URL(request.url).searchParams.get("locale") || "pt";
       const body = validatedBody as z.infer<typeof RoiPathRequestSchema>;

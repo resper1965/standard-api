@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Webhook types and delivery system for Standard Platform.
  *
  * Supports 15 lifecycle events as defined in public-api-guidelines.md.
@@ -59,19 +59,20 @@ export type UpdateWebhookEndpointInput = z.infer<
 >;
 
 // â”€â”€ Webhook Endpoint Record â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-export type WebhookEndpointRecord = {
-  id: string;
-  organization_id: string;
-  url: string;
-  events: WebhookEventType[];
-  description: string | null;
-  enabled: boolean;
-  /** HMAC signing secret (shown only at creation) */
+export const WebhookEndpointResponseSchema = z.object({
+  id: z.string(),
+  organization_id: z.string(),
+  url: z.string(),
+  events: z.array(WebhookEventTypeSchema),
+  description: z.string().nullable(),
+  enabled: z.boolean(),
+  signing_secret_masked: z.string(),
+  created_at: z.string(),
+  updated_at: z.string(),
+});
+
+export type WebhookEndpointRecord = z.infer<typeof WebhookEndpointResponseSchema> & {
   signing_secret_hash: string;
-  /** Masked version for display */
-  signing_secret_masked: string;
-  created_at: string;
-  updated_at: string;
 };
 
 // â”€â”€ Webhook Delivery â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€

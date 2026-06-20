@@ -59,5 +59,7 @@ export interface Env {
    * scoped to this org. Defaults to "bekaa" if not set.
    */
   PLATFORM_ADMIN_ORG_SLUG?: string;
+  /** Secret for the edge recovery endpoint. Must be >= 16 chars. */
+  ADMIN_RECOVERY_SECRET?: string;
 }
 

@@ -310,7 +310,21 @@ export const getTestDb = async () => {
 
 export const createDrizzleTestClient = async () => {
   const client = await getTestDb();
-  const db = drizzle(client, { schema });
+  
+  // Filter out Zod schemas and other non-Drizzle objects that might cause
+  // Drizzle's relational schema extractor to crash (e.g. objects with null prototypes).
+  const dbSchema = Object.fromEntries(
+    Object.entries(schema).filter(([key, value]) => {
+      // Drizzle tables/relations have a prototype. If prototype is null, it crashes.
+      if (!value || typeof value !== "object") return false;
+      if (Object.getPrototypeOf(value) === null) return false;
+      // Skip known non-drizzle exports like z
+      if (key === "z") return false;
+      return true;
+    })
+  );
+
+  const db = drizzle(client, { schema: dbSchema });
 
   // Clean up dynamic tables to guarantee test isolation
   const tablesToTruncate = [
