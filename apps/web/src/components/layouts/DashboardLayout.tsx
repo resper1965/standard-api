@@ -249,8 +249,13 @@ export function DashboardLayout() {
 
   if (!session?.user) return null
 
+  const getRoleDisplayName = (role?: string) => {
+    if (!role) return "Organization Admin"
+    return role.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+  }
+
   const userInitial = session.user.name?.charAt(0).toUpperCase() ?? "?"
-  const userRole = isPlatformAdmin ? "Platform Admin" : "Member"
+  const userRole = isPlatformAdmin ? "Platform Admin" : getRoleDisplayName(session.user.role)
 
   const sidebarContent = (
     <>

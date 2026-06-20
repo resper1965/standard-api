@@ -27,7 +27,15 @@ Organization: Automatically resolved from API Key or Session. No custom headers 
 - [Dashboard KPIs](#dashboard-kpis): Server-computed compliance metrics
 - [Audit Trail](#audit-trail): Organization-wide audit event log
 - [Organizations](#organizations): A arquitetura é Multi-Organization. O Platform Admin cria a organização e cede acesso ao administrador. Não existem members.
-- [AI Agents](#ai-agents): 7 specialized agents
+
+- [AI Agents](#ai-agents): 7 specialized agents:
+  1. **Evidence Evaluator** (Gap Analysis)
+  2. **SOC Triage Analyst** (Incident Response)
+  3. **Executive Risk Translator** (Risk Management)
+  4. **Vendor Risk Scanner** (B2B Privacy)
+  5. **Privacy Data Steward** (RoPA & DPIA Analysis)
+  6. **POA&M Architect** (Remediation Planning)
+  7. **Intelligence Council** (Async Multi-Agent Workflows)
 - [Intelligence Council](#intelligence-council): Async multi-agent workflow dispatch
 - [Jobs](#jobs): Job polling for async jobs
 - [Agent Runtime](#agent-runtime): Execution monitoring
@@ -37,5 +45,3 @@ Organization: Automatically resolved from API Key or Session. No custom headers 
 
 ## Optional
 
-- [B2B Integration Guide](https://standard-api.bekaa.eu/docs/api/B2B_INTEGRATION_GUIDE.md): Organization provisioning, SSO, white-label
-- [Privacy SDK Guide](https://standard-api.bekaa.eu/docs/api/privacy-ropa-sdk.md): RoPA, DPIA, vendor scanning

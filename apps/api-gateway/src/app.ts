@@ -1,4 +1,4 @@
-﻿import { createMockRepositories } from "./adapters";
+import { createMockRepositories } from "./adapters";
 import { runWithTenantContext } from "@standard/security";
 import type { StandardAuth } from "@standard/auth";
 import type { Env } from "./types/env";
@@ -55,6 +55,7 @@ import { emailRoutes } from "./routes/email.routes";
 import { tenantsRoutes } from "./routes/tenants.routes";
 import { workflowRoutes } from "./routes/workflow.routes";
 import { integrationRoutes } from "./routes/integration.routes";
+import { recoveryRoutes } from "./routes/recovery.routes";
 import { webhookRoutes } from "./routes/webhook.routes";
 import { privacyRoutes } from "./routes/privacy.routes";
 import { socRoutes } from "./routes/soc.routes";
@@ -103,6 +104,7 @@ const TENANT_EXEMPT_PREFIXES = [
   "/api/v1/admin/security",
   "/api/v1/admin/metrics",
   "/api/v1/admin/usage",
+  "/api/v1/admin/recovery",
   "/api/v1/users/me",
 ] as const;
 
@@ -138,6 +140,7 @@ export const routes: RouteDefinition[] = [
   ...emailRoutes,
   ...agentToolsRoutes,
   ...integrationRoutes,
+  ...recoveryRoutes,
   ...webhookRoutes,
   ...privacyRoutes,
   ...dataSubjectRoutes, // LGPD/GDPR data subject rights: /me/data-export, /me/account

@@ -3,6 +3,8 @@ import { z } from "zod";
 
 extendZodWithOpenApi(z);
 
+export { z };
+
 export * from "./domain";
 export * from "./db/schema";
 export * from "./db/utils";

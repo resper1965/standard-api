@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @module auth-schema
  * @description Better Auth core tables â€” auth Neon branch (control plane).
  *
@@ -22,6 +22,7 @@ export const baUser = pgTable("user", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   // Standard-specific
+  role: text("role").default("organization_admin"),
   platformAdmin: boolean("platform_admin").notNull().default(false), // Bekaa operator
   approved: boolean("approved").notNull().default(false), // approval gate
   jobTitle: text("job_title"),

@@ -65,3 +65,7 @@ We support responsible disclosure. If you follow this policy:
 ### Recognition
 
 We maintain a [Security Hall of Fame](https://github.com/resper1965/standard-api/blob/main/docs/security/hall-of-fame.md) for researchers who help us improve our security posture.
+
+## Compliance Posture
+
+Para uma análise detalhada da nossa matriz de defesa e postura em relação à **ISO 27001** e **SOC 2**, consulte o nosso [Documento de Compliance e Defesa Arquitetural](docs/compliance/soc2-iso27001-posture.md).

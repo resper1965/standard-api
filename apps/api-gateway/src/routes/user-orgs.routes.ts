@@ -1,4 +1,4 @@
-﻿/**
+/**
  * User Organization Routes â€” User-Scoped (no tenant context)
  *
  * Simplified auth model: 1 user = 1 org (organizations.userId === baUser.id).
@@ -59,6 +59,7 @@ export const userOrgsRoutes: RouteDefinition[] = [
           id: user.id,
           email: user.email,
           name: user.name,
+          role: (user as any).role, // Included from auth middleware
           platformAdmin: user.platformAdmin,
           approved: user.approved,
         },

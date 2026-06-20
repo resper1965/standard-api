@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Admin User Management Routes â€” PLATFORM ADMIN ONLY.
  *
  * Queries Better Auth tables via AuthRepository (ADR-009).
@@ -63,15 +63,15 @@ const BanUserBodySchema = z.object({
   banExpires: z.coerce.date().optional(),
 });
 
-/** Zod schema for the approve body â€” organization assignment is mandatory. */
+/** Zod schema for the approve body — organization assignment is mandatory. */
 const ApproveUserBodySchema = z.object({
   organization_id: z
     .string()
     .min(1, "organization_id is required to assign the user."),
-  role: z.string().min(1).max(50).default("member"),
+  role: z.string().min(1).max(50).default("organization_admin"),
 });
 
-// â”€â”€ Route definitions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ————————————————————————————————————————————————————————————————————————————————
 
 export const adminUsersRoutes: RouteDefinition[] = [
   // â”€â”€ GET /api/v1/admin/users â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Drizzle-backed Membership Repository
  *
  * Replaces the in-memory Map in members.routes.ts.
@@ -162,7 +162,7 @@ function mapRow(row: Record<string, unknown>): MembershipRecord {
     user_id: row['user_id'] ? String(row['user_id']) : null,
     email: row['email'] ? String(row['email']) : null,
     display_name: row['display_name'] ? String(row['display_name']) : null,
-    role: String(row['role'] ?? 'member'),
+    role: String(row['role'] && row['role'] !== 'member' && row['role'] !== 'user' ? row['role'] : 'organization_admin'),
     status: String(row['status'] ?? 'invited'),
     invited_at: row['invited_at'] ? String(row['invited_at']) : null,
     accepted_at: row['accepted_at'] ? String(row['accepted_at']) : null,

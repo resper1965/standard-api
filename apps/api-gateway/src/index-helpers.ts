@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Extracted helper functions for the Worker entry point (index.ts).
  *
  * These functions reduce cognitive complexity by moving initialization,
@@ -132,7 +132,8 @@ function buildDrizzleDeps(env: Env): {
   deps: AppDependencies;
   auth: StandardAuth;
 } {
-  const db = createDb(env.DATABASE_URL!, env.HYPERDRIVE);
+  const dbUrl = env.DATABASE_URL!.replace(/^\uFEFF/, "").trim();
+  const db = createDb(dbUrl, env.HYPERDRIVE);
 
   let authInstance: StandardAuth | null = null;
   const banUser = async (userId: string, reason?: string) => {
@@ -171,7 +172,8 @@ function buildDrizzleDeps(env: Env): {
     banUser,
   };
 
-  const authDbUrl = (env as any).AUTH_DATABASE_URL || env.DATABASE_URL!;
+  const rawAuthDbUrl = (env as any).AUTH_DATABASE_URL || env.DATABASE_URL!;
+  const authDbUrl = rawAuthDbUrl.replace(/^\uFEFF/, "").trim();
   const authDb = (env as any).HYPERDRIVE_AUTH
     ? createDb(authDbUrl, (env as any).HYPERDRIVE_AUTH)
     : createDb(authDbUrl, undefined);
@@ -329,6 +331,16 @@ export async function handleAuthRoute(
 
   const response = await (async () => {
     try {
+      if (request.method === "POST" && url.pathname.endsWith("/sign-up/email")) {
+        return Response.json(
+          {
+            error: "FORBIDDEN",
+            message: "Self-registration is disabled. Please contact your platform administrator.",
+            trace_id: traceId,
+          },
+          { status: 403, headers: { "Content-Type": "application/json" } }
+        );
+      }
       const res = await auth.handler(request);
       if (res.status === 500) {
         // Log the error internally but do NOT expose detail to client (H5 fix)

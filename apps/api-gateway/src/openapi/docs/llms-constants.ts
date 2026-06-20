@@ -37,8 +37,8 @@ Tenant: \`x-standard-tenant-id\` header (required)
 
 ## Optional
 
-- [B2B Integration Guide](https://standard-api.bekaa.eu/docs/api/B2B_INTEGRATION_GUIDE.md): Tenant provisioning, SSO, white-label
-- [Privacy SDK Guide](https://standard-api.bekaa.eu/docs/api/privacy-ropa-sdk.md): RoPA, DPIA, vendor scanning
+- [B2B Integration Guide](/docs/B2B_INTEGRATION_GUIDE.md): Tenant provisioning, SSO, white-label
+- [Privacy SDK Guide](/docs/privacy-ropa-sdk.md): RoPA, DPIA, vendor scanning
 `;
 
 export const LLMS_FULL_HEADER = (
@@ -47,7 +47,7 @@ export const LLMS_FULL_HEADER = (
 ) => `# Standard GRC Platform â€” Complete API Reference
 
 > Agentic GRC intelligence engine. Send text, get structured compliance analysis.
-> 1,468 controls Â· 231 frameworks Â· 33 domains Â· 10 AI-powered endpoints
+> 1,468 controls Â· 231 frameworks Â· 33 domains Â· 13 AI-powered endpoints
 > Auto-generated from OpenAPI \${spec.openapi} spec
 
 Base URL: \\\`\${baseUrl}\\\`
@@ -104,7 +104,7 @@ export const getLlmsFullCookbook = (baseUrl: string) => `
 
 > [!NOTE] **SUPPORTED EVIDENCE FORMATS**
 > The Standard API supports direct ingestion and automatic parsing of documents and images.
-> Supported formats: **PDF, DOCX, PNG, JPG, JPEG, WEBP, TXT, MD, CSV, JSON**.
+> Supported formats: **PDF, DOCX, XLSX, PNG, JPG, JPEG, WEBP, TXT, MD, CSV, JSON**.
 > Binary documents and images are automatically processed using integrated OCR/Document Intelligence services prior to semantic indexing.
 
 > Each recipe is self-contained. Copy the curl command, replace the auth headers, and execute.
@@ -408,7 +408,7 @@ curl -X POST \${baseUrl}/api/v1/privacy/analyze-ropa \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID" \\\\
   -H "Content-Type: application/json" \\\\
-  -d '{"text": "We digitize medical records from patients at the reception desk and store them in a cloud database for 10 years."}'
+  -d '{"description": "We digitize medical records from patients at the reception desk and store them in a cloud database for 10 years.", "org_id": "org_123"}'
 \\\`\\\`\\\`
 
 **Step 2: DPIA Assessment**
@@ -420,7 +420,8 @@ curl -X POST \${baseUrl}/api/v1/privacy/assess-dpia \\\\
   -H "Content-Type: application/json" \\\\
   -d '{
     "projectDescription": "Digitization of medical records at reception desk",
-    "ropaContext": {
+    "org_id": "org_123",
+    "ropa_record": {
       "suggested_risk_level": "high",
       "required_controls": [
         {"control_id": "PRI-01", "name": "Privacy Program"}
