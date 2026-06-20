@@ -248,6 +248,7 @@ standard-api-standard/
 - **Não despachar tools MCP de IA de forma síncrona** — usar `AGENT_RUN_QUEUE` + 202 (ADR-003).
 - **Não fazer UPDATE em tabelas de ledger** — `assessment_control_events` é append-only (ADR-002).
 - **Não cachear API Keys no DB a cada request** — usar `STANDARD_CACHE` KV com TTL (Secção 5 de IMPLEMENTATION-CONSTRAINTS.md).
+- **Não introduzir nem manter configurações ou referências a plataformas concorrentes/legadas (ex: Vercel, Netlify, Heroku, AWS Amplify).** O frontend é estritamente hospedado no Cloudflare Pages e o backend no Cloudflare Workers. Remova imediatamente qualquer arquivo órfão como `vercel.json` se detectado.
 
 ## 18. Contamination Control — Leitura Obrigatória
 

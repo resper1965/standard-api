@@ -39,6 +39,7 @@ This file provides the single source of truth for architecture and technical sta
 - **Rule:** It is **NOT** a GRC Dashboard for end-users. Assessment features are consumed via the API.
 - **Stack:** React 18 + Vite 5 + React Router + TanStack Query v5 + better-auth v1.6.11
 - **API client:** `src/lib/api.ts` — typed fetch wrapper, injects `x-standard-tenant-id`, handles 401→/login, 15s timeout
+- **Hospedagem:** Hospedado estritamente no Cloudflare Pages. Uso de Vercel ou qualquer arquivo legado como `vercel.json` é terminantemente proibido.
 - **Production URL:** resolved from `VITE_API_URL=https://standard-api.bekaa.eu`
 
 ---
