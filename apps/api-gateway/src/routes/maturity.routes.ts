@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Maturity Assessment Routes â€” Standard Assessment Lifecycle
  *
  * Implements the maturity assessment CRUD lifecycle with mandatory approval gate.
@@ -24,6 +24,10 @@ import {
   approveMaturityVersion,
   MATURITY_LEVELS,
 } from "@standard/maturity";
+import {
+  ApproveMaturityRequestSchema,
+  UpdateMaturityTargetsRequestSchema,
+} from "@standard/schemas";
 import type { AppDependencies, RouteDefinition } from "../http";
 import {
   json,
@@ -39,7 +43,9 @@ import {
   MaturitySummaryResponseSchema,
   MaturityScoreResponseSchema,
   MaturityAssessmentVersionResponseSchema,
-  z, assessments } from "@standard/schemas";
+  z,
+  assessments,
+} from "@standard/schemas";
 
 // â”€â”€ Helper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -299,8 +305,8 @@ export const maturityRoutes: RouteDefinition[] = [
 
       let exceptionRationale: string | undefined;
       try {
-        const body = (await request.json()) as { exception_rationale?: string };
-        exceptionRationale = body?.exception_rationale;
+        const body = await parseJson(request, ApproveMaturityRequestSchema);
+        exceptionRationale = body.exception_rationale;
       } catch {
         // Body is optional
       }
@@ -482,30 +488,10 @@ export const maturityRoutes: RouteDefinition[] = [
       if (!deps._db)
         throw new ApiError("INTERNAL_ERROR", "DB client not available.", 500);
 
-      const body = (await request.json()) as Record<string, unknown>;
-
-      // Validate: keys are strings, values are integers 0â€“5
-      for (const [key, val] of Object.entries(body)) {
-        if (typeof key !== "string" || key.length === 0)
-          throw new ApiError(
-            "VALIDATION_ERROR",
-            `Invalid domain key: ${key}`,
-            400,
-          );
-        if (
-          typeof val !== "number" ||
-          !Number.isInteger(val) ||
-          val < 0 ||
-          val > 5
-        )
-          throw new ApiError(
-            "VALIDATION_ERROR",
-            `Target for domain ${key} must be integer 0â€“5, got: ${val}`,
-            400,
-          );
-      }
-
-      const targets = body as Record<string, number>;
+      const targets = await parseJson(
+        request,
+        UpdateMaturityTargetsRequestSchema,
+      );
 
       await deps._db
         .update(assessments)

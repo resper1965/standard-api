@@ -3,6 +3,8 @@ import { registry } from "./registry";
 import type { RouteDefinition } from "../http";
 import { convertZodToOpenApi } from "./zod-converter";
 
+import * as schemas from "@standard/schemas";
+
 let cachedSpec: any = null;
 
 /**
@@ -12,6 +14,30 @@ let cachedSpec: any = null;
 export function registerRoutesForOpenApi(routes: RouteDefinition[]) {
   routes.forEach((route) => {
     if (route.openapi) {
+      // Auto-inject missing requestBody by statically analyzing the handler code
+      if (route.method !== "GET" && route.method !== "DELETE") {
+        if (
+          !route.openapi.request?.body &&
+          !(route.openapi as any).requestBody
+        ) {
+          const handlerStr = route.handler.toString();
+          // Match: parseJson)(context.request, import_schemas.CreateTenantRequestSchema) OR parseJson(context.request,CreateTenantRequestSchema)
+          const match = handlerStr.match(
+            /parseJson\)?\(?(?:[^,]+,){1,2}\s*(?:[a-zA-Z0-9_.]+\.)?([A-Za-z0-9_]+Schema)/,
+          );
+          if (match && match[1] && (schemas as any)[match[1]]) {
+            route.openapi.request = route.openapi.request || {};
+            route.openapi.request.body = {
+              content: {
+                "application/json": {
+                  schema: (schemas as any)[match[1]],
+                },
+              },
+            };
+          }
+        }
+      }
+
       const openapiPath = route.path.replace(/:([a-zA-Z0-9_]+)/g, "{$1}");
       registry.registerPath({
         method: route.method.toLowerCase() as any,
@@ -102,6 +128,88 @@ All Webhooks dispatched by Standard GRC include an \`x-standard-signature\` head
   // Convert responses and requestBodies as well to be safe
   if (cachedSpec.paths) {
     cachedSpec.paths = convertZodToOpenApi(cachedSpec.paths);
+
+    // Automatically inject missing path parameters
+    for (const [pathStr, pathItem] of Object.entries<any>(cachedSpec.paths)) {
+      const pathParamsMatch = pathStr.match(/\{([^}]+)\}/g);
+      if (pathParamsMatch) {
+        const paramNames = pathParamsMatch.map((p) => p.replace(/[{}]/g, ""));
+        for (const method of [
+          "get",
+          "post",
+          "put",
+          "patch",
+          "delete",
+          "options",
+          "head",
+        ]) {
+          if (pathItem[method]) {
+            const operation = pathItem[method];
+            operation.parameters = operation.parameters || [];
+
+            for (const paramName of paramNames) {
+              const exists = operation.parameters.some(
+                (p: any) => p.name === paramName && p.in === "path",
+              );
+              if (!exists) {
+                operation.parameters.push({
+                  name: paramName,
+                  in: "path",
+                  required: true,
+                  schema: { type: "string" },
+                });
+              }
+            }
+          }
+        }
+      }
+
+      // Also inject operationId and 4XX responses for all methods in this path
+      for (const method of [
+        "get",
+        "post",
+        "put",
+        "patch",
+        "delete",
+        "options",
+        "head",
+      ]) {
+        if (pathItem[method]) {
+          const operation = pathItem[method];
+
+          if (!operation.operationId) {
+            const segments = pathStr.replace(/\/api\/v1\//, "").split("/");
+            const cleanSegments = segments.map((s: string) => {
+              if (s.startsWith("{")) {
+                const param = s.replace(/[{}]/g, "");
+                return "By" + param.charAt(0).toUpperCase() + param.slice(1);
+              }
+              // kebab-case to camelCase
+              return s
+                .split("-")
+                .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
+                .join("");
+            });
+            operation.operationId = method + cleanSegments.join("");
+          }
+
+          const has4xx = Object.keys(operation.responses || {}).some((k) =>
+            k.startsWith("4"),
+          );
+          if (!has4xx) {
+            operation.responses = operation.responses || {};
+            operation.responses["400"] = {
+              description: "Bad Request / Validation Error",
+              content: {
+                "application/json": {
+                  schema: { $ref: "#/components/schemas/ApiError" },
+                },
+              },
+            };
+          }
+        }
+      }
+    }
   }
 
   return cachedSpec;

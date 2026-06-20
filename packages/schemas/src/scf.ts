@@ -1,4 +1,4 @@
-﻿import { z } from "zod";
+import { z } from "zod";
 import { UuidSchema } from "./common";
 
 export const ScfImportStatusSchema = z.enum([
@@ -468,3 +468,10 @@ export type ScfMaturityCriteria = z.infer<typeof ScfMaturityCriteriaSchema>;
 export type ScfRisk = z.infer<typeof ScfRiskSchema>;
 export type ScfThreat = z.infer<typeof ScfThreatSchema>;
 
+export const ComplianceStrategyRequestSchema = z.strictObject({
+  framework_ids: z.array(UuidSchema).min(1),
+  scf_version_id: z.union([UuidSchema, z.literal("latest")]).optional(),
+});
+export type ComplianceStrategyRequest = z.infer<
+  typeof ComplianceStrategyRequestSchema
+>;

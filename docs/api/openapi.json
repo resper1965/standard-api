@@ -646,7 +646,10 @@
                 "format": "uuid"
               },
               {
-                "type": "literal"
+                "type": "string",
+                "enum": [
+                  "latest"
+                ]
               }
             ]
           },
@@ -936,9 +939,7 @@
               },
               "details": {
                 "type": "array",
-                "items": {
-                  "nullable": true
-                }
+                "items": {}
               },
               "trace_id": {
                 "type": "string",
@@ -3389,7 +3390,10 @@
             "format": "uuid"
           },
           "candidate_evidence": {
-            "type": "literal"
+            "type": "boolean",
+            "enum": [
+              true
+            ]
           },
           "trace_id": {
             "type": "string"
@@ -4167,7 +4171,84 @@
             ]
           },
           "job": {
-            "type": "lazy"
+            "type": "object",
+            "properties": {
+              "job_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "organization_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "assessment_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "document_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "job_type": {
+                "type": "string",
+                "enum": [
+                  "extract_and_chunk",
+                  "reprocess",
+                  "prepare_embedding"
+                ]
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "queued",
+                  "running",
+                  "succeeded",
+                  "failed",
+                  "skipped",
+                  "cancelled",
+                  "retrying"
+                ]
+              },
+              "attempt_count": {
+                "type": "number",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "error_code": {
+                "type": "string"
+              },
+              "error_message_safe": {
+                "type": "string"
+              },
+              "queued_at": {
+                "type": "string"
+              },
+              "started_at": {
+                "type": "string"
+              },
+              "completed_at": {
+                "type": "string"
+              },
+              "trace_id": {
+                "type": "string"
+              },
+              "metadata": {
+                "type": "object",
+                "additionalProperties": {},
+                "default": {}
+              }
+            },
+            "required": [
+              "job_id",
+              "organization_id",
+              "assessment_id",
+              "document_id",
+              "job_type",
+              "status",
+              "attempt_count",
+              "queued_at",
+              "trace_id"
+            ]
           },
           "trace_id": {
             "type": "string"
@@ -6433,7 +6514,10 @@
           "status": {
             "oneOf": [
               {
-                "type": "literal"
+                "type": "string",
+                "enum": [
+                  "not_evidenced"
+                ]
               },
               {
                 "type": "string"
@@ -7911,7 +7995,10 @@
             ]
           },
           "candidate_evidence": {
-            "type": "literal"
+            "type": "boolean",
+            "enum": [
+              true
+            ]
           },
           "warning": {
             "type": "string"
@@ -7967,7 +8054,10 @@
                   ]
                 },
                 "candidate_evidence": {
-                  "type": "literal"
+                  "type": "boolean",
+                  "enum": [
+                    true
+                  ]
                 },
                 "reranked": {
                   "type": "boolean"
@@ -8053,7 +8143,10 @@
             ]
           },
           "candidate_evidence": {
-            "type": "literal"
+            "type": "boolean",
+            "enum": [
+              true
+            ]
           },
           "reranked": {
             "type": "boolean"
@@ -18050,7 +18143,10 @@
             "format": "uuid"
           },
           "candidate_evidence": {
-            "type": "literal"
+            "type": "boolean",
+            "enum": [
+              true
+            ]
           },
           "evidence_summary": {
             "type": "string"
@@ -18470,7 +18566,10 @@
                 "format": "uuid"
               },
               {
-                "type": "literal"
+                "type": "string",
+                "enum": [
+                  "latest"
+                ]
               }
             ]
           },
@@ -20389,7 +20488,10 @@
             "format": "uuid"
           },
           "vectorProvider": {
-            "type": "literal"
+            "type": "string",
+            "enum": [
+              "cloudflare_vectorize"
+            ]
           },
           "vectorIndexName": {
             "type": "string"
@@ -21731,6 +21833,30 @@
         ],
         "summary": "Create Tenant",
         "description": "PLATFORM ADMIN ONLY. Creates a new tenant (organization) in the system.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "slug": {
+                    "type": "string",
+                    "minLength": 2
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "slug",
+                  "name"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
         "responses": {
           "201": {
             "description": "Tenant Created",
@@ -21777,8 +21903,19 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "operationId": "postTenants"
       }
     },
     "/api/v1/tenants/{organizationId}": {
@@ -21834,8 +21971,29 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "getTenantsByOrganizationId"
       },
       "patch": {
         "tags": [
@@ -21843,6 +22001,26 @@
         ],
         "summary": "Update Tenant",
         "description": "PLATFORM ADMIN ONLY. Updates the status or details of a tenant.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "status": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Updated Tenant",
@@ -21889,8 +22067,29 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "patchTenantsByOrganizationId"
       }
     },
     "/api/v1/organizations": {
@@ -21964,8 +22163,19 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "operationId": "postOrganizations"
       }
     },
     "/api/v1/tenants/{organizationId}/organizations": {
@@ -22027,8 +22237,19 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "operationId": "getTenantsByOrganizationIdOrganizations"
       }
     },
     "/api/v1/organizations/{id}": {
@@ -22102,8 +22323,19 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "operationId": "patchOrganizationsById"
       },
       "delete": {
         "summary": "Delete Organization",
@@ -22145,8 +22377,19 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "operationId": "deleteOrganizationsById"
       }
     },
     "/api/v1/organizations/{organizationId}/api-keys": {
@@ -22251,8 +22494,19 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "operationId": "getOrganizationsByOrganizationIdApiKeys"
       },
       "post": {
         "summary": "Create API Key",
@@ -22388,8 +22642,19 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "operationId": "postOrganizationsByOrganizationIdApiKeys"
       }
     },
     "/api/v1/organizations/{organizationId}/api-keys/{keyId}": {
@@ -22481,8 +22746,19 @@
         "responses": {
           "200": {
             "description": "API key updated"
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "operationId": "patchOrganizationsByOrganizationIdApiKeysByKeyId"
       }
     },
     "/api/v1/organizations/{organizationId}/api-keys/{keyId}/rotate": {
@@ -22603,8 +22879,19 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "operationId": "postOrganizationsByOrganizationIdApiKeysByKeyIdRotate"
       }
     },
     "/api/v1/organizations/{organizationId}/assessments": {
@@ -22721,8 +23008,29 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "getOrganizationsByOrganizationIdAssessments"
       }
     },
     "/api/v1/assessments/{assessmentId}/status": {
@@ -22807,8 +23115,29 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "assessmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "getAssessmentsByAssessmentIdStatus"
       }
     },
     "/api/v1/assessments/{assessmentId}/timeline": {
@@ -22838,9 +23167,7 @@
                         },
                         "events": {
                           "type": "array",
-                          "items": {
-                            "nullable": true
-                          }
+                          "items": {}
                         },
                         "trace_id": {
                           "type": "string"
@@ -22868,8 +23195,29 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "assessmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "getAssessmentsByAssessmentIdTimeline"
       }
     },
     "/api/v1/assessments/{assessmentId}/compliance-gate": {
@@ -22884,13 +23232,32 @@
             "description": "Compliance Gate Status",
             "content": {
               "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
                 "schema": {
-                  "nullable": true
+                  "$ref": "#/components/schemas/ApiError"
                 }
               }
             }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "assessmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "getAssessmentsByAssessmentIdComplianceGate"
       }
     },
     "/api/v1/assessments/{assessmentId}/automation-rules": {
@@ -23007,8 +23374,29 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "assessmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "putAssessmentsByAssessmentIdAutomationRules"
       }
     },
     "/api/v1/assessments/{assessmentId}/new-cycle": {
@@ -23125,8 +23513,29 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "assessmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "postAssessmentsByAssessmentIdNewCycle"
       }
     },
     "/api/v1/assessments/{assessmentId}/live": {
@@ -23139,8 +23548,29 @@
         "responses": {
           "101": {
             "description": "Switching Protocols (WebSocket)"
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "assessmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "getAssessmentsByAssessmentIdLive"
       }
     },
     "/api/v1/documents/{documentId}/chunks": {
@@ -23204,9 +23634,7 @@
                           },
                           "location_metadata": {
                             "type": "object",
-                            "additionalProperties": {
-                              "nullable": true
-                            },
+                            "additionalProperties": {},
                             "default": {}
                           },
                           "created_at": {
@@ -23226,9 +23654,7 @@
                         ]
                       }
                     },
-                    "pagination": {
-                      "nullable": true
-                    },
+                    "pagination": {},
                     "trace_id": {
                       "type": "string"
                     }
@@ -23240,8 +23666,29 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "documentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "getDocumentsByDocumentIdChunks"
       }
     },
     "/api/v1/documents/{documentId}/jobs": {
@@ -23324,9 +23771,7 @@
                           },
                           "metadata": {
                             "type": "object",
-                            "additionalProperties": {
-                              "nullable": true
-                            },
+                            "additionalProperties": {},
                             "default": {}
                           }
                         },
@@ -23343,9 +23788,7 @@
                         ]
                       }
                     },
-                    "pagination": {
-                      "nullable": true
-                    },
+                    "pagination": {},
                     "trace_id": {
                       "type": "string"
                     }
@@ -23357,8 +23800,29 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "documentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "getDocumentsByDocumentIdJobs"
       }
     },
     "/api/v1/documents/{documentId}/reprocess": {
@@ -23368,6 +23832,33 @@
         ],
         "summary": "Reprocess Document",
         "description": "Forces a document to be reprocessed by the ingestion pipeline.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "strategy": {
+                    "type": "string",
+                    "enum": [
+                      "append_new_chunks",
+                      "replace_previous_chunks"
+                    ],
+                    "default": "append_new_chunks"
+                  }
+                },
+                "required": [
+                  "reason"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Reprocess Triggered",
@@ -23390,8 +23881,29 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "documentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "postDocumentsByDocumentIdReprocess"
       }
     },
     "/api/v1/assessments/{assessmentId}/ingestion-jobs": {
@@ -23474,9 +23986,7 @@
                           },
                           "metadata": {
                             "type": "object",
-                            "additionalProperties": {
-                              "nullable": true
-                            },
+                            "additionalProperties": {},
                             "default": {}
                           }
                         },
@@ -23493,9 +24003,7 @@
                         ]
                       }
                     },
-                    "pagination": {
-                      "nullable": true
-                    },
+                    "pagination": {},
                     "trace_id": {
                       "type": "string"
                     }
@@ -23507,8 +24015,29 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "assessmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "getAssessmentsByAssessmentIdIngestionJobs"
       }
     },
     "/api/v1/ingestion-jobs/{jobId}": {
@@ -23588,9 +24117,7 @@
                         },
                         "metadata": {
                           "type": "object",
-                          "additionalProperties": {
-                            "nullable": true
-                          },
+                          "additionalProperties": {},
                           "default": {}
                         }
                       },
@@ -23621,8 +24148,29 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "getIngestionJobsByJobId"
       }
     },
     "/api/v1/documents/{documentId}/submit-for-embedding": {
@@ -23654,8 +24202,29 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "documentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "postDocumentsByDocumentIdSubmitForEmbedding"
       }
     },
     "/api/v1/ingestion-jobs/{jobId}/process": {
@@ -23687,8 +24256,29 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "postIngestionJobsByJobIdProcess"
       }
     },
     "/api/v1/assessments/{assessmentId}/scope": {
@@ -23698,6 +24288,100 @@
         ],
         "summary": "Create Scope",
         "description": "Creates the initial scope definition for an assessment.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "description": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "business_units": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": []
+                  },
+                  "processes": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": []
+                  },
+                  "systems": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": []
+                  },
+                  "locations": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": []
+                  },
+                  "legal_entities": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": []
+                  },
+                  "data_types": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": []
+                  },
+                  "third_parties": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": []
+                  },
+                  "exclusions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": []
+                  },
+                  "assumptions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": []
+                  },
+                  "constraints": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": []
+                  }
+                },
+                "required": [
+                  "title",
+                  "description"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
         "responses": {
           "201": {
             "description": "Scope created successfully",
@@ -23862,8 +24546,29 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "assessmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "postAssessmentsByAssessmentIdScope"
       },
       "get": {
         "tags": [
@@ -24035,8 +24740,29 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "assessmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "getAssessmentsByAssessmentIdScope"
       }
     },
     "/api/v1/scopes/{scopeId}": {
@@ -24210,8 +24936,29 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "scopeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "getScopesByScopeId"
       },
       "patch": {
         "tags": [
@@ -24219,6 +24966,96 @@
         ],
         "summary": "Update Scope",
         "description": "Updates properties of an existing scope.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "description": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "business_units": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": []
+                  },
+                  "processes": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": []
+                  },
+                  "systems": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": []
+                  },
+                  "locations": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": []
+                  },
+                  "legal_entities": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": []
+                  },
+                  "data_types": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": []
+                  },
+                  "third_parties": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": []
+                  },
+                  "exclusions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": []
+                  },
+                  "assumptions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": []
+                  },
+                  "constraints": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": []
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Updated Scope",
@@ -24383,8 +25220,29 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "scopeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "patchScopesByScopeId"
       }
     },
     "/api/v1/scopes/{scopeId}/submit-review": {
@@ -24558,8 +25416,29 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "scopeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "postScopesByScopeIdSubmitReview"
       }
     },
     "/api/v1/scopes/{scopeId}/approve": {
@@ -24569,6 +25448,25 @@
         ],
         "summary": "Approve Scope",
         "description": "Approves a scope that is under review.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "approval_event_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                "required": [
+                  "approval_event_id"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Scope approved successfully",
@@ -24733,8 +25631,29 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "scopeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "postScopesByScopeIdApprove"
       }
     },
     "/api/v1/assessments/{assessmentId}/soa/draft": {
@@ -24744,6 +25663,34 @@
         ],
         "summary": "Create SoA Draft",
         "description": "Generates a new Statement of Applicability draft for an assessment.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "framework_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "scf_version_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "source_scope_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                "required": [
+                  "framework_id",
+                  "scf_version_id"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
         "responses": {
           "201": {
             "description": "SoA Draft Version",
@@ -24828,9 +25775,7 @@
                         },
                         "metadata": {
                           "type": "object",
-                          "additionalProperties": {
-                            "nullable": true
-                          },
+                          "additionalProperties": {},
                           "default": {}
                         }
                       },
@@ -24862,8 +25807,29 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "assessmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "postAssessmentsByAssessmentIdSoaDraft"
       }
     },
     "/api/v1/assessments/{assessmentId}/soa": {
@@ -24960,9 +25926,7 @@
                           },
                           "metadata": {
                             "type": "object",
-                            "additionalProperties": {
-                              "nullable": true
-                            },
+                            "additionalProperties": {},
                             "default": {}
                           }
                         },
@@ -24991,8 +25955,29 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "assessmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "getAssessmentsByAssessmentIdSoa"
       }
     },
     "/api/v1/soa/{soaVersionId}": {
@@ -25086,9 +26071,7 @@
                         },
                         "metadata": {
                           "type": "object",
-                          "additionalProperties": {
-                            "nullable": true
-                          },
+                          "additionalProperties": {},
                           "default": {}
                         }
                       },
@@ -25120,8 +26103,29 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "soaVersionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "getSoaBySoaVersionId"
       }
     },
     "/api/v1/soa/{soaVersionId}/items": {
@@ -25292,9 +26296,7 @@
                         ]
                       }
                     },
-                    "pagination": {
-                      "nullable": true
-                    },
+                    "pagination": {},
                     "trace_id": {
                       "type": "string"
                     }
@@ -25306,8 +26308,29 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "soaVersionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "getSoaBySoaVersionIdItems"
       }
     },
     "/api/v1/soa/items/{soaItemId}": {
@@ -25317,6 +26340,83 @@
         ],
         "summary": "Update SoA Item",
         "description": "Updates an individual item in the Statement of Applicability.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "applicability_status": {
+                    "type": "string",
+                    "enum": [
+                      "applicable",
+                      "partially_applicable",
+                      "not_applicable",
+                      "to_be_defined",
+                      "requires_validation",
+                      "out_of_scope"
+                    ]
+                  },
+                  "implementation_status": {
+                    "type": "string",
+                    "enum": [
+                      "implemented",
+                      "partially_implemented",
+                      "not_implemented",
+                      "not_evidenced",
+                      "not_assessed",
+                      "not_applicable"
+                    ]
+                  },
+                  "applicability_rationale": {
+                    "type": "string"
+                  },
+                  "non_applicability_rationale": {
+                    "type": "string"
+                  },
+                  "scope_rationale": {
+                    "type": "string"
+                  },
+                  "evidence_summary": {
+                    "type": "string"
+                  },
+                  "evidence_coverage": {
+                    "type": "string",
+                    "enum": [
+                      "strong",
+                      "partial",
+                      "weak",
+                      "absent",
+                      "conflicting",
+                      "not_checked"
+                    ]
+                  },
+                  "confidence_score": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "requires_user_validation": {
+                    "type": "boolean"
+                  },
+                  "validation_notes": {
+                    "type": "string"
+                  },
+                  "responsibility_type": {
+                    "type": "string",
+                    "enum": [
+                      "internal",
+                      "customer",
+                      "third_party_provider",
+                      "shared"
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Updated SoA Item",
@@ -25489,8 +26589,29 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "soaItemId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "patchSoaItemsBySoaItemId"
       }
     },
     "/api/v1/soa/{soaVersionId}/evidence/refresh": {
@@ -25500,6 +26621,24 @@
         ],
         "summary": "Refresh SoA Evidence",
         "description": "Forces a refresh of evidence mapping for the SoA.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "top_k": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 10,
+                    "default": 3
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Refresh successful",
@@ -25522,8 +26661,29 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "soaVersionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "postSoaBySoaVersionIdEvidenceRefresh"
       }
     },
     "/api/v1/soa/{soaVersionId}/submit-review": {
@@ -25533,6 +26693,21 @@
         ],
         "summary": "Submit SoA for Review",
         "description": "Submits a drafted SoA for review.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "exception_rationale": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "SoA submitted successfully",
@@ -25617,9 +26792,7 @@
                         },
                         "metadata": {
                           "type": "object",
-                          "additionalProperties": {
-                            "nullable": true
-                          },
+                          "additionalProperties": {},
                           "default": {}
                         }
                       },
@@ -25651,8 +26824,29 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "soaVersionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "postSoaBySoaVersionIdSubmitReview"
       }
     },
     "/api/v1/soa/{soaVersionId}/approve": {
@@ -25662,6 +26856,25 @@
         ],
         "summary": "Approve SoA Version",
         "description": "Approves an SoA that is under review.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "approval_event_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                "required": [
+                  "approval_event_id"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "SoA approved successfully",
@@ -25746,9 +26959,7 @@
                         },
                         "metadata": {
                           "type": "object",
-                          "additionalProperties": {
-                            "nullable": true
-                          },
+                          "additionalProperties": {},
                           "default": {}
                         }
                       },
@@ -25780,8 +26991,29 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "soaVersionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "postSoaBySoaVersionIdApprove"
       }
     },
     "/api/v1/soa/{soaVersionId}/mark-ingested": {
@@ -25875,9 +27107,7 @@
                         },
                         "metadata": {
                           "type": "object",
-                          "additionalProperties": {
-                            "nullable": true
-                          },
+                          "additionalProperties": {},
                           "default": {}
                         }
                       },
@@ -25909,8 +27139,29 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "soaVersionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "postSoaBySoaVersionIdMarkIngested"
       }
     },
     "/api/v1/soa/{soaVersionId}/mark-ingestion-required": {
@@ -26004,9 +27255,7 @@
                         },
                         "metadata": {
                           "type": "object",
-                          "additionalProperties": {
-                            "nullable": true
-                          },
+                          "additionalProperties": {},
                           "default": {}
                         }
                       },
@@ -26038,8 +27287,29 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "soaVersionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "postSoaBySoaVersionIdMarkIngestionRequired"
       }
     },
     "/api/v1/soa/{soaVersionId}/regenerate": {
@@ -26133,9 +27403,7 @@
                         },
                         "metadata": {
                           "type": "object",
-                          "additionalProperties": {
-                            "nullable": true
-                          },
+                          "additionalProperties": {},
                           "default": {}
                         }
                       },
@@ -26167,8 +27435,29 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "soaVersionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "postSoaBySoaVersionIdRegenerate"
       }
     },
     "/api/v1/soa/{soaVersionId}/validation": {
@@ -26230,8 +27519,29 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "soaVersionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "getSoaBySoaVersionIdValidation"
       }
     },
     "/api/v1/privacy/scan-vendor-contract/batch": {
@@ -26269,8 +27579,19 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "operationId": "postPrivacyScanVendorContractBatch"
       }
     },
     "/api/v1/privacy/scan-vendor-contract": {
@@ -26296,8 +27617,19 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "operationId": "postPrivacyScanVendorContract"
       }
     },
     "/api/v1/me/data-export": {
@@ -26367,9 +27699,7 @@
                       "type": "array",
                       "items": {
                         "type": "object",
-                        "additionalProperties": {
-                          "nullable": true
-                        }
+                        "additionalProperties": {}
                       }
                     },
                     "notices": {
@@ -26390,8 +27720,19 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "operationId": "getMeDataExport"
       }
     },
     "/api/v1/me/account": {
@@ -26435,8 +27776,19 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "operationId": "deleteMeAccount"
       }
     },
     "/api/v1/soc/status": {
@@ -26504,8 +27856,19 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "operationId": "getSocStatus"
       }
     },
     "/api/v1/intelligence/blast-radius": {
@@ -26537,8 +27900,19 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "operationId": "postIntelligenceBlastRadius"
       }
     },
     "/api/v1/intelligence/gap-analysis": {
@@ -26570,8 +27944,19 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "operationId": "postIntelligenceGapAnalysis"
       }
     },
     "/api/v1/intelligence/dpia-score": {
@@ -26603,8 +27988,19 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "operationId": "postIntelligenceDpiaScore"
       }
     },
     "/api/v1/intelligence/compliance-score": {
@@ -26636,8 +28032,19 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "operationId": "postIntelligenceComplianceScore"
       }
     },
     "/api/v1/intelligence/retention-check": {
@@ -26669,8 +28076,19 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "operationId": "postIntelligenceRetentionCheck"
       }
     },
     "/api/v1/intelligence/breach-sla": {
@@ -26702,8 +28120,19 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "operationId": "postIntelligenceBreachSla"
       }
     },
     "/api/v1/intelligence/cross-coverage": {
@@ -26735,8 +28164,19 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "operationId": "postIntelligenceCrossCoverage"
       }
     },
     "/api/v1/intelligence/roi-path": {
@@ -26768,8 +28208,19 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request / Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
-        }
+        },
+        "operationId": "postIntelligenceRoiPath"
       }
     }
   }
