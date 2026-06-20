@@ -22,7 +22,7 @@
     "db:lifecycle-proof": "tsx --env-file=../../.env src/lifecycle-proof.ts"
   },
   "dependencies": {
-    "@asteasolutions/zod-to-openapi": "^7.0.0",
+    "@asteasolutions/zod-to-openapi": "^8.5.0",
     "drizzle-orm": "^0.45.2",
     "postgres": "^3.4.9",
     "zod": "^4.4.0"

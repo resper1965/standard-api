@@ -1,6 +1,11 @@
-import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
+import {
+  OpenAPIRegistry,
+  extendZodWithOpenApi,
+} from "@asteasolutions/zod-to-openapi";
 import { z } from "@standard/schemas";
 import * as schemas from "@standard/schemas";
+
+extendZodWithOpenApi(z);
 
 export const registry = new OpenAPIRegistry();
 
