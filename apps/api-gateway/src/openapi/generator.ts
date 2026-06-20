@@ -55,14 +55,7 @@ export function generateOpenApiSpec() {
     },
     servers: [
       { url: "/", description: "Current environment" },
-      {
-        url: "https://standard-api.bekaa.eu",
-        description: "Standard API (Production)",
-      },
-      {
-        url: "https://standard.bekaa.eu",
-        description: "Standard Core (Production)",
-      },
+      { url: "https://standard-api.bekaa.eu", description: "Production" },
     ],
     security: [{ BearerApiKey: [] }],
   });

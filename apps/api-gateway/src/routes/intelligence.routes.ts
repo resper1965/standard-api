@@ -1,4 +1,4 @@
-import { z } from "zod";
+﻿import { z } from "zod";
 import type { RouteDefinition } from "../http";
 import { json, parseJson, requireOrganizationId } from "../http";
 import { ApiError } from "../errors/api-error";
@@ -28,19 +28,6 @@ export const intelligenceRoutes: RouteDefinition[] = [
     path: "/api/v1/intelligence/blast-radius",
     authRequired: true,
     tenantRequired: false,
-    openapi: {
-      summary: "Calculate Blast Radius",
-      description: "Computes the blast radius of a compromised control.",
-      tags: ["Intelligence"],
-      request: {
-        body: {
-          content: { "application/json": { schema: BlastRadiusRequestSchema } },
-        },
-      },
-      responses: {
-        200: { description: "Blast radius calculation result" },
-      },
-    },
     bodySchema: BlastRadiusRequestSchema,
     handler: async ({ validatedBody, traceId }) => {
       const body = validatedBody as z.infer<typeof BlastRadiusRequestSchema>;
@@ -53,20 +40,6 @@ export const intelligenceRoutes: RouteDefinition[] = [
     path: "/api/v1/intelligence/gap-analysis",
     authRequired: true,
     tenantRequired: false, // Core rules engine is tenant agnostic
-    openapi: {
-      summary: "Gap Analysis Engine",
-      description:
-        "Stateless calculation of missing controls against a framework.",
-      tags: ["Intelligence"],
-      request: {
-        body: {
-          content: { "application/json": { schema: GapAnalysisRequestSchema } },
-        },
-      },
-      responses: {
-        200: { description: "Gap analysis metrics" },
-      },
-    },
     bodySchema: GapAnalysisRequestSchema,
     handler: async ({ request, validatedBody, traceId, deps }) => {
       const locale = new URL(request.url).searchParams.get("locale") || "pt";
@@ -102,20 +75,6 @@ export const intelligenceRoutes: RouteDefinition[] = [
     path: "/api/v1/intelligence/dpia-score",
     authRequired: true,
     tenantRequired: false,
-    openapi: {
-      summary: "Calculate DPIA Score",
-      description:
-        "Computes the Data Protection Impact Assessment (DPIA) trigger score.",
-      tags: ["Intelligence"],
-      request: {
-        body: {
-          content: { "application/json": { schema: DpiaScoreRequestSchema } },
-        },
-      },
-      responses: {
-        200: { description: "DPIA score calculation result" },
-      },
-    },
     bodySchema: DpiaScoreRequestSchema,
     handler: async ({ request, validatedBody, traceId }) => {
       const locale = new URL(request.url).searchParams.get("locale") || "pt";
@@ -190,22 +149,6 @@ export const intelligenceRoutes: RouteDefinition[] = [
     path: "/api/v1/intelligence/compliance-score",
     authRequired: true,
     tenantRequired: false,
-    openapi: {
-      summary: "Calculate Compliance Score",
-      description:
-        "Calculates compliance percentage against a specific regulation.",
-      tags: ["Intelligence"],
-      request: {
-        body: {
-          content: {
-            "application/json": { schema: ComplianceScoreRequestSchema },
-          },
-        },
-      },
-      responses: {
-        200: { description: "Compliance score result" },
-      },
-    },
     bodySchema: ComplianceScoreRequestSchema,
     handler: async ({ request, validatedBody, traceId, deps }) => {
       const locale = new URL(request.url).searchParams.get("locale") || "pt";
@@ -261,22 +204,6 @@ export const intelligenceRoutes: RouteDefinition[] = [
     path: "/api/v1/intelligence/retention-check",
     authRequired: true,
     tenantRequired: false,
-    openapi: {
-      summary: "Data Retention Rules Lookup",
-      description:
-        "Checks data retention rules for a specific category and context.",
-      tags: ["Intelligence"],
-      request: {
-        body: {
-          content: {
-            "application/json": { schema: RetentionCheckRequestSchema },
-          },
-        },
-      },
-      responses: {
-        200: { description: "Retention check rules" },
-      },
-    },
     bodySchema: RetentionCheckRequestSchema,
     handler: async ({ request, validatedBody, traceId }) => {
       const locale = new URL(request.url).searchParams.get("locale") || "pt";
@@ -319,20 +246,6 @@ export const intelligenceRoutes: RouteDefinition[] = [
     path: "/api/v1/intelligence/breach-sla",
     authRequired: true,
     tenantRequired: false,
-    openapi: {
-      summary: "Breach Notification SLA",
-      description:
-        "Calculates SLA for breach notification based on severity and regulation.",
-      tags: ["Intelligence"],
-      request: {
-        body: {
-          content: { "application/json": { schema: BreachSlaRequestSchema } },
-        },
-      },
-      responses: {
-        200: { description: "Breach SLA result" },
-      },
-    },
     bodySchema: BreachSlaRequestSchema,
     handler: async ({ request, validatedBody, traceId }) => {
       const locale = new URL(request.url).searchParams.get("locale") || "pt";
@@ -372,21 +285,6 @@ export const intelligenceRoutes: RouteDefinition[] = [
     path: "/api/v1/intelligence/cross-coverage",
     authRequired: true,
     tenantRequired: false,
-    openapi: {
-      summary: "Cross Framework Coverage",
-      description: "Calculates the overlap percentage between frameworks.",
-      tags: ["Intelligence"],
-      request: {
-        body: {
-          content: {
-            "application/json": { schema: CrossCoverageRequestSchema },
-          },
-        },
-      },
-      responses: {
-        200: { description: "Cross coverage analysis result" },
-      },
-    },
     bodySchema: CrossCoverageRequestSchema,
     handler: async ({ request, validatedBody, traceId, deps }) => {
       const locale = new URL(request.url).searchParams.get("locale") || "pt";
@@ -438,20 +336,6 @@ export const intelligenceRoutes: RouteDefinition[] = [
     path: "/api/v1/intelligence/roi-path",
     authRequired: true,
     tenantRequired: false,
-    openapi: {
-      summary: "Control Priority by ROI",
-      description:
-        "Prioritizes missing controls based on their ROI score and risk mitigation.",
-      tags: ["Intelligence"],
-      request: {
-        body: {
-          content: { "application/json": { schema: RoiPathRequestSchema } },
-        },
-      },
-      responses: {
-        200: { description: "ROI path recommendation" },
-      },
-    },
     bodySchema: RoiPathRequestSchema,
     handler: async ({ request, validatedBody, traceId, deps }) => {
       const locale = new URL(request.url).searchParams.get("locale") || "pt";
@@ -564,29 +448,6 @@ export const intelligenceRoutes: RouteDefinition[] = [
     path: "/api/v1/intelligence/council",
     authRequired: true,
     tenantRequired: true,
-    openapi: {
-      summary: "Orchestrate GRC Council",
-      description:
-        "Dispatches a multi-agent GRC council to analyze controls or evidence.",
-      tags: ["Intelligence"],
-      request: {
-        body: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                assessment_id: z.string().uuid(),
-                target_framework_id: z.string().uuid(),
-                agents: z.array(z.string()).min(1),
-                input: z.record(z.string(), z.unknown()).default({}),
-              }),
-            },
-          },
-        },
-      },
-      responses: {
-        202: { description: "Council analysis dispatched successfully" },
-      },
-    },
     bodySchema: z.object({
       assessment_id: z.string().uuid(),
       target_framework_id: z.string().uuid(),
