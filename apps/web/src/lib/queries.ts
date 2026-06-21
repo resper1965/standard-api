@@ -37,6 +37,12 @@ export const qk = {
     ["scf", "frameworks", frameworkId, "coverage", versionId] as const,
   pendingUserCount: () => ["admin", "users", "pending-count"] as const,
   userMe: () => ["user", "me"] as const,
+  // TPRA
+  tpraVendors: () => ["tpra", "vendors"] as const,
+  tpraVendorAssessments: (vendorId: string) =>
+    ["tpra", "vendors", vendorId, "assessments"] as const,
+  tpraVendorRiskScores: (vendorId: string) =>
+    ["tpra", "vendors", vendorId, "risk-scores"] as const,
 } as const;
 
 // ─── Auth / Orgs ──────────────────────────────────────────────────────────────
@@ -54,7 +60,15 @@ export function useUserMe() {
   return useQuery({
     queryKey: qk.userMe(),
     queryFn: () =>
-      api<{ data: { id: string; email: string; name: string; platformAdmin: boolean; approved: boolean } }>("/api/v1/users/me"),
+      api<{
+        data: {
+          id: string;
+          email: string;
+          name: string;
+          platformAdmin: boolean;
+          approved: boolean;
+        };
+      }>("/api/v1/users/me"),
     staleTime: 5 * 60 * 1000, // 5 min — matches server KV TTL
   });
 }
@@ -414,6 +428,69 @@ export function useScfFrameworkCoverage(
 
 // ─── Shared Types (local to this module) ──────────────────────────────────────
 
+// ─── TPRA (Third-Party Risk Assessment) ───────────────────────────────────────
+
+export function useTpraVendors() {
+  return useQuery({
+    queryKey: qk.tpraVendors(),
+    queryFn: () => api<{ data: TpraVendor[] }>("/api/v1/tpra/vendors"),
+  });
+}
+
+export function useCreateTpraVendor() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: {
+      name: string;
+      domain?: string;
+      contact_email?: string;
+    }) =>
+      api<{ data: TpraVendor }>("/api/v1/tpra/vendors", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: qk.tpraVendors() }),
+  });
+}
+
+export function useTpraVendorAssessments(vendorId: string | undefined) {
+  return useQuery({
+    queryKey: qk.tpraVendorAssessments(vendorId ?? ""),
+    queryFn: () =>
+      api<{ data: TpraAssessment[] }>(
+        `/api/v1/tpra/vendors/${vendorId}/assessments`,
+      ),
+    enabled: !!vendorId,
+  });
+}
+
+export function useCreateTpraAssessment(vendorId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: { scf_version_id: string; assessment_id?: string }) =>
+      api<{ data: TpraAssessment; trace_id: string }>(
+        `/api/v1/tpra/vendors/${vendorId}/assessments`,
+        {
+          method: "POST",
+          body: JSON.stringify(body),
+        },
+      ),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: qk.tpraVendorAssessments(vendorId) }),
+  });
+}
+
+export function useTpraVendorRiskScores(vendorId: string | undefined) {
+  return useQuery({
+    queryKey: qk.tpraVendorRiskScores(vendorId ?? ""),
+    queryFn: () =>
+      api<{ data: TpraRiskScore[] }>(
+        `/api/v1/tpra/vendors/${vendorId}/risk-scores`,
+      ),
+    enabled: !!vendorId,
+  });
+}
+
 type ScfVersionInfo = {
   scf_version_id: string;
   version_label: string;
@@ -569,4 +646,30 @@ type AdminOrg = {
   slug: string;
   createdAt: Date;
   metadata?: Record<string, unknown>;
+};
+
+export type TpraVendor = {
+  vendor_id: string;
+  name: string;
+  domain?: string;
+  contact_email?: string;
+  status: string;
+  created_at: string;
+};
+
+export type TpraAssessment = {
+  assessment_id: string;
+  vendor_id: string;
+  status: string;
+  created_at: string;
+  external_reference?: string;
+};
+
+export type TpraRiskScore = {
+  score_id: string;
+  vendor_id: string;
+  assessment_id: string;
+  calculated_score: number;
+  risk_tier: string;
+  calculated_at: string;
 };
