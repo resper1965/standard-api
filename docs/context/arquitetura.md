@@ -21,7 +21,7 @@ O Standard é API-first, SaaS-ready, multi-organization e Cloudflare-oriented. O
 
 ## MCP Server
 
-A plataforma expõe um servidor MCP remoto em `POST /mcp` (Streamable HTTP, JSON-RPC 2.0). AI assistants conectam via API Key Bearer e têm acesso a 32 tools cobrindo assessments, SCF, gap analysis, inteligência regulatória e status da plataforma. Ver [`docs/context/mcp.md`](mcp.md).
+A plataforma expõe um servidor MCP remoto em `POST /mcp` (Streamable HTTP, JSON-RPC 2.0). AI assistants conectam via API Key Bearer e têm acesso a 33 tools cobrindo assessments, SCF, gap analysis, inteligência regulatória e status da plataforma. Tools de IA (Grupo B) usam dispatch assíncrono via `AGENT_RUN_QUEUE` + 202 (ADR-003). Ver [`docs/context/mcp.md`](mcp.md).
 
 ## Referências
 

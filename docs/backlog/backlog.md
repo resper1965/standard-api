@@ -147,3 +147,10 @@
 | P0: Data retention cron job implementado | 1 | 2026-05-25 |
 | P0: Legal docs criados (privacy-policy, terms-of-service, dpa-template) | 4 | 2026-05-25 |
 | P0: Seed platform_admin (resper@bekaa.eu) | 0 | 2026-05-25 |
+| **Technical Debt Purge — Sessão 2026-06-21** | | |
+| fix(security): xlsx → exceljs migration (2 high CVEs eliminados) | 2 | 2026-06-21 |
+| fix(data): STRM types normalizados (81k registos: direct→equal, related→intersects) | 2 | 2026-06-21 |
+| fix(mcp): tool names normalizado underscore→hyphens + calcular-score adicionado ao consumer | 2 | 2026-06-21 |
+| docs: API Key cache KV confirmado implementado (cache-aside TTL 5min) | 2 | 2026-06-21 |
+| docs: 5/5 anti-padrões marcados como resolvidos em AGENTS.md e IMPLEMENTATION-CONSTRAINTS.md | 0 | 2026-06-21 |
+| docs: contexto actualizado (STANDARD_API.md, mcp.md, arquitetura.md) | 0 | 2026-06-21 |
