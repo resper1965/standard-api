@@ -259,13 +259,13 @@ standard-api-standard/
 
 ### Áreas de risco de contaminação (anti-padrões ativos no código):
 
-| Área | Anti-Padrão Existente | Localização |
+| Área | Anti-Padrão | Status |
 |---|---|---|
-| Compliance score | Fórmula binária `implementedControls/totalControls` | `dashboard.routes.ts:67` |
-| STRM types | Valores `"direct"/"related"` no Neon DB | `scf_mappings` (81k registos) |
-| STRM types | `"intersecting"` em vez de `"intersects"` | `xlsx-importer.ts`, `scf.ts` |
-| MCP dispatch | `await dispatchMcpTool()` síncrono para IA | `mcp.routes.ts:108` |
-| API Keys | Query Neon DB em toda request M2M | `auth.middleware.ts:~84` |
+| Compliance score | ~~Fórmula binária `implementedControls/totalControls`~~ | ✅ Dashboard usa STRM-weighted. Intelligence: TODO(ADR-001) |
+| STRM types | ~~Valores `"direct"/"related"` no Neon DB~~ | ✅ Migration 0051 + 0055 normalizada |
+| STRM types | ~~`"intersecting"` em vez de `"intersects"`~~ | ✅ Schema + enum corrigidos |
+| MCP dispatch | ~~`await dispatchMcpTool()` síncrono para IA~~ | ✅ ASYNC_TOOLS + AGENT_RUN_QUEUE + 202 |
+| API Keys | ~~Query Neon DB em toda request M2M~~ | ✅ KV cache-aside com TTL 5min |
 
 ### ADRs de Decisão Arquitectural
 
