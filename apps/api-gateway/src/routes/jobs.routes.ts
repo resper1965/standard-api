@@ -1,4 +1,4 @@
-﻿import type { RouteDefinition } from "../http";
+import type { RouteDefinition } from "../http";
 import { json, requireOrganizationId } from "../http";
 import { IntelligenceService } from "../services/intelligence.service";
 import { ApiError } from "../errors/api-error";
@@ -45,7 +45,6 @@ export const jobsRoutes: RouteDefinition[] = [
           "INTERNAL_ERROR",
           "Failed to fetch job status",
           500,
-          [{ details: err instanceof Error ? err.message : String(err) }],
         );
       }
     },
