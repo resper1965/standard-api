@@ -1,7 +1,0 @@
-[check] User: [{"id":"0VBTG2M7yHxhVRcInxq8FEmD8bak8fg7","name":"Resper","email":"resper@bekaa.eu","role":"admin","created_at":"2026-05-07 16:02:18.211"}]
-[ok] User already has admin role.
-[schema] user columns: id, name, email, email_verified, image, created_at, updated_at, role, banned, ban_reason, ban_expires, metadata, job_title, phone
-[scf] tables: scf_control_metadata, scf_controls, scf_domains, scf_framework_requirements, scf_frameworks, scf_import_runs, scf_mappings, scf_strm_relationships, scf_versions
-[scf] versions: 1
-[scf] controls: 1468
-[scf] frameworks: 231

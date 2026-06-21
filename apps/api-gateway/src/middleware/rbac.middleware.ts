@@ -1,4 +1,4 @@
-﻿import { SecurityEventService } from "@standard/observability";
+import { SecurityEventService } from "@standard/observability";
 
 import type { Permission } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
@@ -85,10 +85,10 @@ async function gatherActorPermissions(
         ];
       if (rolePerms) actorPermissions.push(...rolePerms);
     } else {
-      // Regular tenant owner/admin gets tenant_admin permissions to manage their org
+      // Default to assessor (least privilege) — explicit role assignment required for higher access
       const rolePerms =
         DEFAULT_ROLE_PERMISSIONS[
-          "tenant_admin" as keyof typeof DEFAULT_ROLE_PERMISSIONS
+          "assessor" as keyof typeof DEFAULT_ROLE_PERMISSIONS
         ];
       if (rolePerms) actorPermissions.push(...rolePerms);
     }
