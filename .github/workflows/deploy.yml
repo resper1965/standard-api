@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: CI Pipeline
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
       - main
 
 jobs:
-  test-and-deploy:
+  test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -50,47 +50,3 @@ jobs:
 
       - name: Run Tests
         run: pnpm test
-
-      - name: Deploy API Gateway to Cloudflare
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        # cloudflare/wrangler-action@v3 — pinned to commit hash (supply chain security)
-        uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: deploy -c infra/cloudflare/wrangler.api-gateway.toml -e production
-
-      - name: Deploy Workflows to Cloudflare
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: deploy -c infra/cloudflare/wrangler.workflows.toml -e production
-
-      - name: Deploy Queues Consumer to Cloudflare
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: deploy -c infra/cloudflare/wrangler.queues-worker.toml -e production
-
-      - name: Deploy Ingestion Worker to Cloudflare
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: deploy -c infra/cloudflare/wrangler.ingestion-worker.toml -e production
-
-      - name: Build Frontend
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: pnpm --filter @standard/web build
-
-      - name: Deploy Frontend to Cloudflare Pages
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: pnpm exec wrangler pages deploy apps/web/dist --project-name=standard-web-production
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

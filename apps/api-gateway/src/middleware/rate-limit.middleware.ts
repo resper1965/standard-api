@@ -1,4 +1,4 @@
-﻿import type { RequestContext } from "../http";
+import type { RequestContext } from "../http";
 import { ApiError } from "../errors/api-error";
 
 /**
@@ -28,6 +28,8 @@ const ROUTE_LIMITS: Record<string, RateLimitConfig> = {
   "/auth/sign-up": { maxRequests: 10, windowSeconds: 60 },
   "/auth/sign-in": { maxRequests: 20, windowSeconds: 60 },
   "/auth/forgot-password": { maxRequests: 5, windowSeconds: 60 },
+  // Recovery endpoint — unauthenticated, strict limit to prevent brute-force
+  "/admin/recovery": { maxRequests: 3, windowSeconds: 60 },
 };
 
 const DEFAULT_LIMIT: RateLimitConfig = { maxRequests: 120, windowSeconds: 60 };
