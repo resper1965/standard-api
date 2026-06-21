@@ -45,11 +45,12 @@ export interface McpToolEnv {
 }
 
 /** Known async tools — must match ASYNC_TOOLS set in mcp.routes.ts */
-// NOTE: calcular-score-risco-terceiro is Grupo A (sync) — pure math, no LLM
+// ADR-003: All four Grupo B tools require async dispatch via AGENT_RUN_QUEUE
 const KNOWN_ASYNC_TOOLS = new Set([
   "evaluate-evidence",
   "architect-remediation",
   "validar-evidencia-privacidade",
+  "calcular-score-risco-terceiro",
 ]);
 
 /** In-memory dedup cache for idempotency (survives within a single batch). */

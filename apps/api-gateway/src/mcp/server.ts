@@ -685,7 +685,7 @@ export const MCP_TOOLS = [
     },
   },
   {
-    name: "validar_evidencia_privacidade",
+    name: "validar-evidencia-privacidade",
     description:
       "Submete evidências textuais para validação contra controlos GDPR/LGPD via SCF",
     inputSchema: {
@@ -711,7 +711,7 @@ export const MCP_TOOLS = [
     },
   },
   {
-    name: "calcular_score_risco_terceiro",
+    name: "calcular-score-risco-terceiro",
     description:
       "Processa respostas de vendor e injeta resultados na base Neon DB",
     inputSchema: {
@@ -801,8 +801,8 @@ const MCP_TOOL_SCOPES: Record<string, string[]> = {
   "search-kb": ["kb:search"],
   "evaluate-evidence": ["agent:run"],
   "architect-remediation": ["agent:run"],
-  validar_evidencia_privacidade: ["agent:run"],
-  calcular_score_risco_terceiro: ["agent:run"],
+  "validar-evidencia-privacidade": ["agent:run"],
+  "calcular-score-risco-terceiro": ["agent:run"],
 
   // SoA Lifecycle
   "list-soa-versions": ["soa:read"],
@@ -980,8 +980,8 @@ export async function dispatchMcpTool(
       return handleEvaluateEvidence(args, ctx);
     case "architect-remediation":
       return handleArchitectRemediation(args, ctx);
-    case "validar_evidencia_privacidade":
-    case "calcular_score_risco_terceiro":
+    case "validar-evidencia-privacidade":
+    case "calcular-score-risco-terceiro":
       return {
         content: [
           {
