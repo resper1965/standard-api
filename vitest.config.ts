@@ -1,19 +1,32 @@
 import { defineConfig } from "vitest/config";
 import { resolve } from "path";
 
+const pkg = (name: string) =>
+  resolve(__dirname, `packages/${name}/src/index.ts`);
+
 export default defineConfig({
   resolve: {
     alias: {
-      "@standard/assessment-engine": resolve(
-        __dirname,
-        "packages/assessment-engine/src/index.ts",
-      ),
-      "@standard/schemas": resolve(__dirname, "packages/schemas/src/index.ts"),
-      "@standard/scf-core": resolve(
-        __dirname,
-        "packages/scf-core/src/index.ts",
-      ),
-      "@standard/domain": resolve(__dirname, "packages/domain/src/index.ts"),
+      "@standard/assessment-engine": pkg("assessment-engine"),
+      "@standard/schemas": pkg("schemas"),
+      "@standard/scf-core": pkg("scf-core"),
+      "@standard/domain": pkg("domain"),
+      "@standard/agent-runtime": pkg("agent-runtime"),
+      "@standard/auth": pkg("auth"),
+      "@standard/contracts": pkg("contracts"),
+      "@standard/document-ingestion": pkg("document-ingestion"),
+      "@standard/email": pkg("email"),
+      "@standard/gap-analysis": pkg("gap-analysis"),
+      "@standard/kb": pkg("kb"),
+      "@standard/maturity": pkg("maturity"),
+      "@standard/observability": pkg("observability"),
+      "@standard/poam": pkg("poam"),
+      "@standard/privacy": pkg("privacy"),
+      "@standard/reporting": pkg("reporting"),
+      "@standard/scf-data": pkg("scf-data"),
+      "@standard/sdk": pkg("sdk"),
+      "@standard/security": pkg("security"),
+      "@standard/soa": pkg("soa"),
     },
   },
   test: {
@@ -31,6 +44,12 @@ export default defineConfig({
       reporter: ["text", "json-summary"],
       include: ["packages/*/src/**/*.ts", "apps/*/src/**/*.ts"],
       exclude: ["**/*.test.ts", "**/*.d.ts", "**/node_modules/**"],
+      thresholds: {
+        lines: 30,
+        functions: 30,
+        branches: 30,
+        statements: 30,
+      },
     },
   },
 });

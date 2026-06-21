@@ -34,7 +34,7 @@ Se você precisa dar contexto a um agente de IA ou entender domínios específic
 Nós utilizamos um monorepo gerenciado via `pnpm` com PostgreSQL rodando via Docker. O gateway emula a Cloudflare localmente usando o Wrangler.
 
 ```bash
-# 1. Instale as dependências (Node 20.x requerido)
+# 1. Instale as dependências (Node >= 22 requerido)
 pnpm install
 
 # 2. Suba a infraestrutura do Neon PostgreSQL local
