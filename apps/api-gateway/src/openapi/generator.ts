@@ -60,7 +60,7 @@ export function generateOpenApiSpec() {
   const generator = new OpenApiGeneratorV3(registry.definitions);
 
   const baseDescription =
-    "API-first agentic GRC platform for compliance assessments powered by the Secure Controls Framework (SCF). Features 7 specialized AI agents, assessment lifecycle management, document ingestion, knowledge base search, and multi-tenant authorization.";
+    "API-first agentic GRC platform for compliance assessments powered by the Secure Controls Framework (SCF). Features 10 specialized AI agents, assessment lifecycle management, document ingestion, knowledge base search, and multi-tenant authorization.";
 
   const aiFirstNotice = `
 > **🤖 AI-Dev First**: Se você é um Agente Autônomo ou está configurando uma integração LLM, consuma nossa documentação contextual nativa em [\`/llms-full.txt\`](/llms-full.txt).

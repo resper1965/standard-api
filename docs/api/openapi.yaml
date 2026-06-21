@@ -4,7 +4,7 @@ info:
   version: 1.0.0
   description: >-
     API-first agentic GRC platform for compliance assessments powered by the
-    Secure Controls Framework (SCF). Features 7 specialized AI agents,
+    Secure Controls Framework (SCF). Features 10 specialized AI agents,
     assessment lifecycle management, document ingestion, knowledge base search,
     and multi-tenant authorization.
 

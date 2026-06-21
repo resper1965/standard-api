@@ -1,6 +1,6 @@
 export const LLMS_TXT = `# Standard GRC Platform
 
-> API-first agentic GRC platform for compliance assessments powered by the Secure Controls Framework (SCF). 7 specialized AI agents, 1,468 controls, 231 frameworks.
+> API-first agentic GRC platform for compliance assessments powered by the Secure Controls Framework (SCF). 10 specialized AI agents, 1,468 controls, 231 frameworks.
 
 ## Docs
 
@@ -27,18 +27,18 @@ Tenant: \`x-standard-tenant-id\` header (required)
 - [Dashboard KPIs](#dashboard-kpis): Server-computed compliance metrics
 - [Audit Trail](#audit-trail): Tenant/org-wide audit event log
 - [Members](#members): Organization membership RBAC (invite, role, remove)
-- [AI Agents](#ai-agents): 7 specialized agents
-- [Intelligence Council](#intelligence-council): Async multi-agent workflow dispatch (Coming Soon)
+- [AI Agents](#ai-agents): 10 specialized agents (Knowledge Steward, SCF Analyst, Framework Mapper, Scope & SoA Architect, Evidence Analyst, Gap Analyst, Maturity Assessor, POA&M Planner, Report Writer, Council Orchestrator)
+- [Intelligence Council](#intelligence-council): Async multi-agent workflow dispatch
 - [Jobs](#jobs): Job polling for async jobs
-- [Agent Runtime](#agent-runtime): Execution monitoring (Coming Soon)
-- [Approvals](#approvals): Human-in-the-loop gates (Coming Soon)
+- [Agent Runtime](#agent-runtime): Execution monitoring
+- [Approvals](#approvals): Human-in-the-loop gates
 - [Webhooks](#webhooks): Event-driven integrations
 - [API Keys](#api-keys): M2M authentication
 
 ## Optional
 
-- [B2B Integration Guide](/docs/B2B_INTEGRATION_GUIDE.md): Tenant provisioning, SSO, white-label
-- [Privacy SDK Guide](/docs/privacy-ropa-sdk.md): RoPA, DPIA, vendor scanning
+- [B2B Integration Guide](https://standard-api.bekaa.eu/llms-full.txt): Tenant provisioning, SSO, white-label (see docs/api/B2B_INTEGRATION_GUIDE.md)
+- [Privacy SDK Guide](https://standard-api.bekaa.eu/llms-full.txt): RoPA, DPIA, vendor scanning (see docs/api/privacy-ropa-sdk.md)
 `;
 
 export const LLMS_FULL_HEADER = (
@@ -48,7 +48,7 @@ export const LLMS_FULL_HEADER = (
 
 > Agentic GRC intelligence engine. Send text, get structured compliance analysis.
 > 1,468 controls Â· 231 frameworks Â· 33 domains Â· 13 AI-powered endpoints
-> Auto-generated from OpenAPI \${spec.openapi} spec
+> Auto-generated from OpenAPI ${spec.openapi} spec
 
 Base URL: \\\`${baseUrl}\\\`
 
