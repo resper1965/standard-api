@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Standard MCP Server â€” Intelligence Tools
  *
  * Phase 1: Expose the stateless Intelligence Engine via MCP.
@@ -191,6 +191,11 @@ export async function handleCalculateComplianceScore(
       }
     }
 
+    // TODO(ADR-001): migrate to STRM-weighted compliance (computeComplianceIndex).
+    // This MCP tool has `ctx.deps` but only receives scf_controls_implemented as a flat
+    // string[] — no SoA items, maturity_level, or STRM mapping data available.
+    // Needs tool input change to accept assessment_id + SoA context, then use
+    // computeRealStrmCompliance() pattern from dashboard.routes.ts.
     const score =
       totalControls === 0
         ? 100

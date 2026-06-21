@@ -1,4 +1,4 @@
-﻿import type {
+import type {
   GapFindingResponse,
   GapAnalysisVersionResponse,
 } from "@standard/schemas";
@@ -85,6 +85,7 @@ export type MaturitySummary = {
   medianScore: number;
   minScore: number;
   maxScore: number;
+  /** @deprecated Use STRM-weighted compliance index (ADR-001) instead of binary control counts */
   totalControls: number;
   scoredControls: number;
   levelDistribution: Record<MaturityLevel, number>;
@@ -158,9 +159,7 @@ export type MaturityDependencies = {
     version: GapAnalysisVersionResponse;
     findings: GapFindingResponse[];
   } | null>;
-  getMaturityCriteriaForControl?: (
-    controlId: string,
-  ) => Promise<
+  getMaturityCriteriaForControl?: (controlId: string) => Promise<
     {
       level: number;
       criteriaText: string;
@@ -168,4 +167,3 @@ export type MaturityDependencies = {
     }[]
   >;
 };
-
