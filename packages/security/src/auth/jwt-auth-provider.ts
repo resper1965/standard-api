@@ -96,6 +96,8 @@ export class JwtAuthProvider implements AuthProvider {
 export const buildJwtConfig = (env: {
   JWT_JWKS_URL?: string;
   JWT_SECRET?: string;
+  NODE_ENV?: string;
+  STANDARD_ENV?: string;
 }): JwtAuthConfig => {
   if (env.JWT_JWKS_URL) {
     return { mode: "jwks", jwksUrl: env.JWT_JWKS_URL };
@@ -103,6 +105,18 @@ export const buildJwtConfig = (env: {
   if (env.JWT_SECRET) {
     return { mode: "secret", secret: env.JWT_SECRET };
   }
+  const isProduction =
+    env.NODE_ENV === "production" || env.STANDARD_ENV === "production";
+  if (isProduction) {
+    throw new Error(
+      "[SECURITY] JWT_JWKS_URL or JWT_SECRET must be set in production. " +
+        "decode-only mode is forbidden in production environments.",
+    );
+  }
+  console.warn(
+    "[SECURITY] JwtAuthProvider running in decode-only mode (NO signature verification). " +
+      "This is UNSAFE and only allowed in development/test.",
+  );
   return { mode: "decode-only" };
 };
 

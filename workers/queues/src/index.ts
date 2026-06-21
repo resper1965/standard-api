@@ -25,6 +25,8 @@ import {
   type McpToolEnv,
 } from "./mcp-tool.consumer";
 import { processAgentUsageQueueMessage } from "./agent-usage.consumer";
+import { processReportExportMessage, ReportExportMessageSchema } from "./report-export.consumer";
+import { processSocTriageMessage, SocTriageMessageSchema } from "./soc-triage.consumer";
 
 export interface Env {
   STANDARD_DOCUMENTS_BUCKET: R2Bucket;
@@ -54,9 +56,7 @@ import * as Sentry from "@sentry/cloudflare";
 
 export default Sentry.withSentry(
   (env: Env) => ({
-    dsn:
-      env.SENTRY_DSN ||
-      "https://REDACTED_SENTRY_DSN",
+    dsn: env.SENTRY_DSN || "",
     sendDefaultPii: true,
   }),
   {
@@ -97,28 +97,25 @@ export default Sentry.withSentry(
               );
               break;
 
-            case "report_export":
-              // Phase 5: Will render report to R2
-              console.log(
-                `[queues] report_export job received:`,
-                JSON.stringify(body).slice(0, 200),
-              );
+            case "report_export": {
+              const parsed = ReportExportMessageSchema.safeParse(body);
+              if (!parsed.success) {
+                console.warn(`[queues] report_export invalid schema:`, parsed.error.issues.slice(0, 3));
+                break;
+              }
+              await processReportExportMessage(parsed.data, env as any);
               break;
+            }
 
-            case "document_ingestion":
-              // Handled by dedicated ingestion worker via separate queue consumer
-              console.log(
-                `[queues] document_ingestion job routed to ingestion worker`,
-              );
+            case "soc_triage": {
+              const triageParsed = SocTriageMessageSchema.safeParse(body);
+              if (!triageParsed.success) {
+                console.warn(`[queues] soc_triage invalid schema:`, triageParsed.error.issues.slice(0, 3));
+                break;
+              }
+              await processSocTriageMessage(triageParsed.data, env as any);
               break;
-
-            case "soc_triage":
-              console.log(
-                `[queues] soc_triage job received:`,
-                JSON.stringify(body).slice(0, 200),
-              );
-              // Phase: SOC triage AI processing will be implemented here
-              break;
+            }
 
             case "data_retention_purge": {
               // Triggered by scheduled cron (every Sunday 02:00 UTC) or manually by operator.

@@ -14,9 +14,7 @@ import * as Sentry from "@sentry/cloudflare";
 
 export default Sentry.withSentry(
   (env: AppEnv) => ({
-    dsn:
-      (env as any).SENTRY_DSN ||
-      "https://REDACTED_SENTRY_DSN",
+    dsn: (env as any).SENTRY_DSN || "",
     sendDefaultPii: true,
   }),
   {
@@ -42,13 +40,12 @@ export default Sentry.withSentry(
       try {
         const authResponse = await handleAuthRoute(request, url, auth, env);
         if (authResponse) return authResponse;
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("[standard:auth] Route Error:", err);
         return new Response(
           JSON.stringify({
-            error: "Auth 500",
-            detail: err.message || err.toString(),
-            stack: err.stack,
+            error: "internal_server_error",
+            message: "An internal authentication error occurred.",
           }),
           {
             status: 500,

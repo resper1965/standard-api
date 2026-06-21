@@ -1,4 +1,4 @@
-﻿/**
+/**
  * CSRF Middleware â€” Double-Submit Cookie Pattern (stateless).
  *
  * How it works:
@@ -128,9 +128,9 @@ export function verifyCsrf(context: RequestContext): void {
     const isAlwaysAllowed =
       origin === "https://standard.bekaa.eu" ||
       origin === "https://standard-web.pages.dev" ||
-      origin === "https://standard-web-production.pages.dev" ||
-      origin.endsWith(".standard-web.pages.dev") ||
-      origin.endsWith(".standard-web-production.pages.dev");
+      origin === "https://standard-web-production.pages.dev";
+    // Preview deployments (*.pages.dev) no longer bypass CSRF.
+    // Add specific preview URLs to ALLOWED_ORIGINS env var if needed.
 
     if (allowed.includes(origin) || isAlwaysAllowed) {
       return;
