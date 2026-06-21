@@ -30,12 +30,6 @@ max_batch_timeout = 60
 max_retries = 5
 dead_letter_queue = "standard-dead-letter-dev"
 
-[[queues.consumers]]
-queue = "standard-document-ingestion-dev"
-max_batch_size = 10
-max_batch_timeout = 30
-max_retries = 3
-dead_letter_queue = "standard-dead-letter-dev"
 
 [[queues.consumers]]
 queue = "standard-soc-triage-dev"
@@ -122,12 +116,6 @@ max_batch_timeout = 60
 max_retries = 5
 dead_letter_queue = "standard-dead-letter-staging"
 
-[[env.staging.queues.consumers]]
-queue = "standard-document-ingestion-staging"
-max_batch_size = 10
-max_batch_timeout = 30
-max_retries = 3
-dead_letter_queue = "standard-dead-letter-staging"
 
 [[env.staging.queues.consumers]]
 queue = "standard-soc-triage-staging"
@@ -217,12 +205,6 @@ max_batch_timeout = 60
 max_retries = 5
 dead_letter_queue = "standard-dead-letter-prod"
 
-[[env.production.queues.consumers]]
-queue = "standard-document-ingestion-prod"
-max_batch_size = 10
-max_batch_timeout = 30
-max_retries = 3
-dead_letter_queue = "standard-dead-letter-prod"
 
 [[env.production.queues.consumers]]
 queue = "standard-soc-triage-prod"

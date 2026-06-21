@@ -23,7 +23,7 @@ Tenant: \`x-standard-tenant-id\` header (required)
 - [Scope & SoA](#scope--soa): Scope definition, Statement of Applicability
 - [Gap Analysis](#gap-analysis): Findings, approval
 - [POA&M](#poam): Remediation planning
-- [Reports](#reports): Generate, download, audit package (Coming Soon)
+- [Reports](#reports): Generate, download, audit package
 - [Dashboard KPIs](#dashboard-kpis): Server-computed compliance metrics
 - [Audit Trail](#audit-trail): Tenant/org-wide audit event log
 - [Members](#members): Organization membership RBAC (invite, role, remove)

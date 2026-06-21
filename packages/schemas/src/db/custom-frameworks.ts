@@ -1,5 +1,5 @@
 import { pgTable, text, timestamp, uuid, index, uniqueIndex, boolean, integer } from "drizzle-orm/pg-core";
-import { organizations, scfFrameworkRequirements } from "./schema";
+import { organizations, scfFrameworkRequirements, strmOperatorEnum } from "./schema";
 
 export const customFrameworks = pgTable(
   "custom_frameworks",
@@ -56,7 +56,7 @@ export const customStrmMappings = pgTable(
     scfFrameworkRequirementId: uuid("scf_framework_requirement_id")
       .notNull()
       .references(() => scfFrameworkRequirements.id, { onDelete: "cascade" }),
-    relationshipType: text("relationship_type").notNull(), // 'intersects', 'equal', 'subset', 'superset', 'no_relation'
+    relationshipType: strmOperatorEnum("relationship_type").notNull(),
     confidenceScore: integer("confidence_score"), // 0-100 for AI suggestions
     isApproved: boolean("is_approved").default(false).notNull(), // Approval Gate
     createdBy: uuid("created_by"), // ID of user or AI agent
