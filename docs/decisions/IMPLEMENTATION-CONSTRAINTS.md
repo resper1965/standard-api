@@ -312,38 +312,30 @@ CREATE TABLE tpra_risk_scores (
 
 ## SECÇÃO 5 — API Key Cache KV (G01)
 
-### 5.1 Estado Atual (o que NÃO copiar)
+### 5.1 Estado Atual — ✅ RESOLVIDO
+
+> O anti-padrão (query DB em toda request M2M) foi **eliminado**.
+> `auth.middleware.ts` implementa cache-aside com `STANDARD_CACHE` KV:
+> - Cache hit → resposta imediata, zero DB round-trips
+> - Cache miss → query DB + warm KV com TTL 5min
+> - Revogação/rotação → invalidação imediata do cache
+> - Shape cacheado: `{ keyId, organizationId, scopes }` (mínimo necessário)
 
 ```ts
-// ❌ ANTI-PADRÃO ATIVO em auth.middleware.ts (~linha 84):
-const apiKey = await deps.apiKeys.verifyKey(keyHash);
-// ^^ Consulta Neon DB em TODA request M2M com Bearer token.
-// Em workloads de agentes IA (muitas requests), multiplica custo e latência.
+// ✅ IMPLEMENTADO em auth.middleware.ts (resolveM2MAuthContext):
+const kvKey = `apikey:${hash}`;
+const cached = await kv.get(kvKey, "json");
+if (cached?.organizationId) return; // FAST PATH: no DB
+
+const record = await deps.apiKeys.verifyKey(hash); // CACHE MISS: fallback
+if (record) {
+  kv.put(kvKey, JSON.stringify({ keyId, organizationId, scopes }), 
+    { expirationTtl: 300 }); // 5 min TTL
+}
 ```
 
-### 5.2 Contrato Correto
-
-```ts
-// ✅ CORRETO: cache KV com TTL
-const cacheKey = `apikey:${keyHash}`;
-const cached = await env.STANDARD_CACHE.get(cacheKey, "json");
-
-if (cached) {
-  // Cache hit — sem query ao Neon
-  return cached as ResolvedApiKey;
-}
-
-// Cache miss — consultar Neon e cachear
-const apiKey = await deps.apiKeys.verifyKey(keyHash);
-if (apiKey && !apiKey.revoked_at) {
-  await env.STANDARD_CACHE.put(cacheKey, JSON.stringify(apiKey), {
-    expirationTtl: 300  // 5 minutos
-  });
-}
-
-// Na revogação de chave: SEMPRE invalidar cache:
-await env.STANDARD_CACHE.delete(`apikey:${revokedKeyHash}`);
-```
+> **Cache invalidation**: `api-keys.routes.ts` L469 (revoke) e L593 (rotate)
+> chamam `kv.delete(\`apikey:\${keyHash}\`)` antes de retornar.
 
 ---
 
