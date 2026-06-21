@@ -2,7 +2,7 @@
 
 > **Produto:** Standard
 > **Repositório:** `standard-api-standard`
-> **Última atualização:** 2026-06-05
+> **Última atualização:** 2026-06-21
 > **Status:** Documento normativo de arquitetura atual
 
 ---
@@ -28,10 +28,10 @@ Todo comportamento de valor está na API. O frontend é apenas um consumidor. In
 | Filas | Cloudflare Queues (processamento assíncrono, ingestão, fan-out) |
 | Workflows | Cloudflare Workflows (orquestração durável, retries, approval gates) |
 | Vetores | Cloudflare Vectorize (KB semântica, recuperação de evidências) |
-| SCF Core | `packages/scf-core` + `packages/scf-catalog` — 1.468 controles, fonte normativa |
+| SCF Core | `packages/scf-core` + `packages/scf-catalog` — 1.468 controles, fonte normativa; importers usam `exceljs` |
 | Observability | `packages/observability` — `StructuredLogger`, `MetricsService` (janela 1h) |
 | Schemas compartilhados | `packages/schemas` — contratos TypeScript estrito para toda a API |
-| Assessment Engine | `packages/assessment-engine` — regras do lifecycle isoladas de UI; prerequisite lookup table declarativo |
+| Assessment Engine | `packages/assessment-engine` — regras do lifecycle isoladas de UI; prerequisite lookup table declarativo; compliance index via STRM-weighted algorithm (ADR-001) |
 
 ---
 

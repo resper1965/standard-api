@@ -1,6 +1,6 @@
 # Standard MCP Server — Contexto
 
-> **Última atualização:** 2026-06-11
+> **Última atualização:** 2026-06-21
 
 ## O que é
 
@@ -34,7 +34,7 @@ Além de `tools/list` e `tools/call`, o servidor implementa:
 | `prompts/list` | Lista prompts pré-configurados para workflows comuns |
 | `prompts/get` | Obtém um prompt específico com argumentos preenchidos |
 
-## Tools (38)
+## Tools (33)
 
 ### Assessment Management (4)
 - `list-assessments` — lista assessments do organization (filtro por status)
@@ -88,9 +88,12 @@ Além de `tools/list` e `tools/call`, o servidor implementa:
 - `list-soc-alerts` — alertas SOC e incidentes de segurança recentes (requer platform admin)
 
 ### Async Dispatch (via ADR-003)
-- Tools de IA (KB search, evidence evaluation, remediation) são despachadas assincronamente
-- Resposta inicial: `202 Accepted` com `agent_run_id`
+- Tools de IA (Grupo B) são despachadas via `AGENT_RUN_QUEUE` e retornam 202
+- Grupo B tools: `evaluate-evidence`, `architect-remediation`, `validar-evidencia-privacidade`, `calcular-score-risco-terceiro`
+- Tool names normalizados para hyphens (convenção MCP)
+- Resposta inicial: `202 Accepted` com `job_id` + `trace_id`
 - Polling: resultado recuperado via KV com TTL
+- Consumer: `workers/queues/src/mcp-tool.consumer.ts` — processa via AI Gateway
 - Rationale: evitar timeout de Workers (30s) em operações de LLM
 
 ## Configuração (AI clients)
