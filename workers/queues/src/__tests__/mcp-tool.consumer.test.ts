@@ -267,12 +267,16 @@ describe("processMcpToolMessage — contratos por tool LLM", () => {
     });
   }
 
-  it("calcular-score-risco-terceiro NÃO deve ser processado pelo consumer (é Grupo A sync)", async () => {
+  it("calcular-score-risco-terceiro DEVE ser processado pelo consumer (Grupo B async per ADR-003)", async () => {
     vi.resetModules();
     const fetchCalls: string[] = [];
     vi.stubGlobal("fetch", async (url: string) => {
       fetchCalls.push(url);
-      return new Response("{}", { status: 200 });
+      // Simulate AI Gateway response
+      return new Response(JSON.stringify({ response: "score result" }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
     });
 
     const { processMcpToolMessage } = await import("../mcp-tool.consumer");
@@ -287,12 +291,11 @@ describe("processMcpToolMessage — contratos por tool LLM", () => {
         idempotency_key: `idem-calc-${Date.now()}`,
         timestamp: new Date().toISOString(),
       },
-      { AI_GATEWAY_URL: "stub", AI_GATEWAY_TOKEN: "tok" } as any,
+      { AI_GATEWAY_URL: "https://ai-gw.test", AI_GATEWAY_TOKEN: "tok" } as any,
     );
 
-    // Após Task 2: KNOWN_ASYNC_TOOLS não contém mais esta tool
-    // Consumer deve logar mcp_tool_unknown e não chamar fetch ao AI Gateway
-    // O teste passa se não lança — a verificação de fetch=0 é documentação de intenção
-    expect(fetchCalls.length).toBe(0); // será validado após Task 2
+    // ADR-003: calcular-score-risco-terceiro is Grupo B (async) — consumer should
+    // recognize it and attempt to call the AI Gateway
+    expect(fetchCalls.length).toBeGreaterThanOrEqual(1);
   });
 });

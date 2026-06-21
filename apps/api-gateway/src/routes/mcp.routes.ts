@@ -36,8 +36,8 @@ const SERVER_VERSION = "1.0.0";
 const ASYNC_TOOLS = new Set<string>([
   "evaluate-evidence",
   "architect-remediation",
-  "validar_evidencia_privacidade",
-  "calcular_score_risco_terceiro",
+  "validar-evidencia-privacidade",
+  "calcular-score-risco-terceiro",
 ]);
 
 // Server capabilities response (returned on initialize)

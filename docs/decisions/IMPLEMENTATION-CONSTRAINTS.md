@@ -90,33 +90,27 @@ ALTER TABLE scf_strm_relationships ADD COLUMN strength_score NUMERIC(4,3);
 
 ## SECÇÃO 2 — MCP Tools: Assincronismo Obrigatório
 
-### 2.1 Estado Atual (o que NÃO copiar)
+### 2.1 Estado Atual — ✅ RESOLVIDO
+
+> O anti-padrão síncrono foi **eliminado**. `mcp.routes.ts` agora implementa bifurcação
+> ADR-003 com `ASYNC_TOOLS` set + `AGENT_RUN_QUEUE` para tools de IA.
+> Consumer em `workers/queues/src/mcp-tool.consumer.ts` processa e despacha para AI Gateway.
+> Tool names normalizados para hyphens (convenção MCP).
 
 ```ts
-// ❌ ANTI-PADRÃO ATIVO em mcp.routes.ts linha 108:
-const result = await dispatchMcpTool(toolName, toolArgs, ctx);
-return json({ jsonrpc: "2.0", id, result });
-// ^^ Bloqueante. Qualquer tool de IA com LLM vai causar timeout em Workers.
-```
+// ✅ IMPLEMENTADO em mcp.routes.ts:
+const ASYNC_TOOLS = new Set(["evaluate-evidence", "architect-remediation",
+                             "validar-evidencia-privacidade", "calcular-score-risco-terceiro"]);
 
-### 2.2 Contrato Correto para Tools de IA
-
-```ts
-// ✅ CORRETO para tools que invocam LLM:
-const AI_TOOLS = ["validar_evidencia_privacidade", "calcular_score_risco_terceiro",
-                  "evaluate-evidence", "architect-remediation"];
-
-if (AI_TOOLS.includes(toolName)) {
+if (ASYNC_TOOLS.has(toolName)) {
   const jobId = crypto.randomUUID();
-  await ctx.deps.queues.agentRunQueue.send({ jobId, toolName, toolArgs, tenantCtx });
-  return json({ jsonrpc: "2.0", id, result: { status: "queued", job_id: jobId } },
-              { status: 202 });
+  await ctx.deps.AGENT_RUN_QUEUE.send({ job_id: jobId, tool_name: toolName, ... });
+  return json({ status: "queued", job_id: jobId }, { status: 202 });
 }
 // Tools síncronas (SCF queries, etc.) continuam normais.
 ```
 
-> **Referência**: O padrão correto já existe em `gap-analysis.routes.ts` linhas 793–797
-> (`waitUntil` para batch evaluate-evidence). Reutilizar esse padrão.
+> **Referência**: ADR-003, `gap-analysis.routes.ts` L793–797 (padrão waitUntil original).
 
 ### 2.3 Duas Tools Obrigatórias do Blueprint (G11)
 
