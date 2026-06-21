@@ -63,9 +63,7 @@ export const buildCorsHeaders = (
   const isAlwaysAllowed =
     origin === "https://standard.bekaa.eu" ||
     origin === "https://standard-web.pages.dev" ||
-    origin === "https://standard-web-production.pages.dev" ||
-    origin.endsWith(".standard-web.pages.dev") ||
-    origin.endsWith(".standard-web-production.pages.dev");
+    origin === "https://standard-web-production.pages.dev";
   const corsOrigin =
     allowedOrigins.includes(origin) || isAlwaysAllowed ? origin : "";
   return corsOrigin
@@ -74,7 +72,7 @@ export const buildCorsHeaders = (
         "Access-Control-Allow-Methods":
           "GET, POST, PUT, PATCH, DELETE, OPTIONS",
         "Access-Control-Allow-Headers":
-          "Content-Type, Authorization, X-Trace-Id, X-Tenant-Id, x-standard-tenant-id",
+          "Content-Type, Authorization, X-Trace-Id, X-Tenant-Id, x-standard-tenant-id, X-CSRF-Token",
         "Access-Control-Allow-Credentials": "true",
         "Access-Control-Max-Age": "86400",
       }

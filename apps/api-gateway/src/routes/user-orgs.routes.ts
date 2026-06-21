@@ -192,13 +192,12 @@ export const userOrgsRoutes: RouteDefinition[] = [
           },
           { status: 200, headers: { "x-trace-id": context.traceId } },
         );
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("[standard:activate:error]", err);
         return json(
           {
             error: "ACTIVATE_FAILED",
-            message: err.message || String(err),
-            stack: err.stack,
+            message: "An unexpected error occurred during organization activation.",
             trace_id: context.traceId,
           },
           { status: 500, headers: { "x-trace-id": context.traceId } },

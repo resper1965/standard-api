@@ -3,6 +3,7 @@ import { json, parseJson } from "../http";
 import type { RouteDefinition } from "../http";
 import { ApiError } from "../errors/api-error";
 import { hashPassword } from "@better-auth/utils/password";
+
 import { sql } from "drizzle-orm";
 import { createDb } from "../adapters/db";
 
@@ -26,7 +27,17 @@ export const recoveryRoutes: RouteDefinition[] = [
         throw new ApiError("NOT_IMPLEMENTED", "Recovery not configured on this environment", 501);
       }
       
-      if (body.recoverySecret.trim() !== validSecret) {
+      const secretBuffer = new TextEncoder().encode(body.recoverySecret.trim());
+      const validBuffer = new TextEncoder().encode(validSecret);
+      if (secretBuffer.byteLength !== validBuffer.byteLength) {
+        throw new ApiError("FORBIDDEN", "Invalid recovery secret", 403);
+      }
+      // Constant-time XOR comparison to prevent timing attacks
+      let diff = 0;
+      for (let i = 0; i < secretBuffer.byteLength; i++) {
+        diff |= secretBuffer[i]! ^ validBuffer[i]!;
+      }
+      if (diff !== 0) {
         throw new ApiError("FORBIDDEN", "Invalid recovery secret", 403);
       }
 
@@ -64,9 +75,9 @@ export const recoveryRoutes: RouteDefinition[] = [
         );
 
         return json({ success: true, message: `Password reset for ${body.email}` });
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("[recovery] Reset failed:", err);
-        throw new ApiError("INTERNAL_ERROR", "Error: " + String(err.stack || err.message || err), 500);
+        throw new ApiError("INTERNAL_ERROR", "Password reset failed.", 500);
       }
     },
   },

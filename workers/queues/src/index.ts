@@ -57,7 +57,7 @@ import * as Sentry from "@sentry/cloudflare";
 export default Sentry.withSentry(
   (env: Env) => ({
     dsn: env.SENTRY_DSN || "",
-    sendDefaultPii: true,
+    sendDefaultPii: false,
   }),
   {
     async queue(batch: MessageBatch<unknown>, env: Env): Promise<void> {

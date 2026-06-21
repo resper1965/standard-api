@@ -15,7 +15,7 @@ import * as Sentry from "@sentry/cloudflare";
 export default Sentry.withSentry(
   (env: AppEnv) => ({
     dsn: (env as any).SENTRY_DSN || "",
-    sendDefaultPii: true,
+    sendDefaultPii: false,
   }),
   {
     async fetch(

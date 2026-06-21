@@ -167,10 +167,10 @@ export const adminUsersRoutes: RouteDefinition[] = [
         });
 
         return json({ data: user, trace_id: context.traceId }, { status: 201 });
-      } catch (err: any) {
+      } catch (err: unknown) {
         throw new ApiError(
           "VALIDATION_ERROR",
-          err.message || "Failed to create user",
+          "Failed to create user",
           400,
         );
       }
