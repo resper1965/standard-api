@@ -6,7 +6,7 @@
   "type": "module",
   "packageManager": "pnpm@9.15.9",
   "engines": {
-    "node": "20.x"
+    "node": ">=22"
   },
   "workspaces": [
     "apps/*",
@@ -14,7 +14,6 @@
     "packages/*"
   ],
   "scripts": {
-    "DESTRUIR-FANTASMAS": "node force.mjs",
     "generate:openapi": "tsx scripts/generate-openapi.ts",
     "prepare": "node -e \"if(process.env.NODE_ENV==='production'){process.exit(0)}process.exit(1)\" || husky",
     "dev": "pnpm dev:api",

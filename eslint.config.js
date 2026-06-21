@@ -12,6 +12,7 @@ export default [
       "workers/smoke-tester/**",
       "scratch/**",
       "evals/**",
+      "scripts/_archive/**",
     ],
   },
   js.configs.recommended,
@@ -19,13 +20,12 @@ export default [
   {
     files: ["**/*.{ts,js}"],
     rules: {
-      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/no-unused-vars": [
         "warn",
         { argsIgnorePattern: "^_" },
       ],
-      "no-console": "off",
+      "no-console": ["warn", { allow: ["warn", "error"] }],
     },
   },
-
 ];

@@ -87,7 +87,16 @@ test-auth.ts
 sentry_*.json
 scratch/
 workers/smoke-tester/
-tests/unit/
 
 # Temporary directories (test scaffolding, local experiments)
 tmp/
+
+# Debug query/scratch scripts (should live in scratch/ if needed)
+query-*.ts
+scratch-*.ts
+fix-role.ts
+
+# Tool output files
+lint-output.txt
+lint-results.txt
+redocly-results.json
