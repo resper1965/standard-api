@@ -1,6 +1,10 @@
 import { RISK_TAXONOMY } from "../routes/risk.routes";
 import { REGULATIONS } from "../routes/regulations.routes";
-import { DATA_CATEGORIES, VOLUME_SCALE, RETENTION_RULES } from "../routes/reference-data.routes";
+import {
+  DATA_CATEGORIES,
+  VOLUME_SCALE,
+  RETENTION_RULES,
+} from "../routes/reference-data.routes";
 import type { AppDependencies } from "../http";
 import { AgentRuntimeService } from "@standard/agent-runtime";
 
@@ -9,7 +13,7 @@ export class IntelligenceService {
 
   async getJobStatus(jobId: string, organizationId: string) {
     if (!this.deps || !this.deps.agentRuntime) {
-       throw new Error("Agent Runtime dependency required to fetch job status.");
+      throw new Error("Agent Runtime dependency required to fetch job status.");
     }
     const run = await this.deps.agentRuntime.runs.get(jobId);
     if (run && run.organization_id !== organizationId) return null;
@@ -37,11 +41,21 @@ export class IntelligenceService {
         for (const trigger of reg.dpia_triggers) {
           trigger.scf_controls.forEach((c: string) => reqControls.add(c));
         }
-        reg.consent_rules.scf_controls.forEach((c: string) => reqControls.add(c));
-        reg.breach_rules.scf_controls.forEach((c: string) => reqControls.add(c));
-        reg.legal_bases.forEach((lb: any) => lb.scf_controls.forEach((c: string) => reqControls.add(c)));
-        reg.sensitive_legal_bases.forEach((lb: any) => lb.scf_controls.forEach((c: string) => reqControls.add(c)));
-        reg.data_subject_rights.forEach((r: any) => r.scf_controls.forEach((c: string) => reqControls.add(c)));
+        reg.consent_rules.scf_controls.forEach((c: string) =>
+          reqControls.add(c),
+        );
+        reg.breach_rules.scf_controls.forEach((c: string) =>
+          reqControls.add(c),
+        );
+        reg.legal_bases.forEach((lb: any) =>
+          lb.scf_controls.forEach((c: string) => reqControls.add(c)),
+        );
+        reg.sensitive_legal_bases.forEach((lb: any) =>
+          lb.scf_controls.forEach((c: string) => reqControls.add(c)),
+        );
+        reg.data_subject_rights.forEach((r: any) =>
+          r.scf_controls.forEach((c: string) => reqControls.add(c)),
+        );
       }
     }
 
@@ -71,12 +85,32 @@ export class IntelligenceService {
 
     for (const reg of REGULATIONS) {
       let hit = false;
-      if (reg.dpia_triggers.some((t: any) => t.scf_controls.includes(rawControlId))) hit = true;
+      if (
+        reg.dpia_triggers.some((t: any) =>
+          t.scf_controls.includes(rawControlId),
+        )
+      )
+        hit = true;
       if (reg.consent_rules.scf_controls.includes(rawControlId)) hit = true;
       if (reg.breach_rules.scf_controls.includes(rawControlId)) hit = true;
-      if (reg.legal_bases.some((lb: any) => lb.scf_controls.includes(rawControlId))) hit = true;
-      if (reg.sensitive_legal_bases.some((lb: any) => lb.scf_controls.includes(rawControlId))) hit = true;
-      if (reg.data_subject_rights.some((r: any) => r.scf_controls.includes(rawControlId))) hit = true;
+      if (
+        reg.legal_bases.some((lb: any) =>
+          lb.scf_controls.includes(rawControlId),
+        )
+      )
+        hit = true;
+      if (
+        reg.sensitive_legal_bases.some((lb: any) =>
+          lb.scf_controls.includes(rawControlId),
+        )
+      )
+        hit = true;
+      if (
+        reg.data_subject_rights.some((r: any) =>
+          r.scf_controls.includes(rawControlId),
+        )
+      )
+        hit = true;
       if (hit) linkedRegulations.push({ id: reg.id, name: reg.name_i18n });
     }
 
@@ -88,7 +122,10 @@ export class IntelligenceService {
 
     for (const rr of RETENTION_RULES) {
       if ((rr as any).scf_controls?.includes(rawControlId)) {
-        linkedRetentionRules.push({ category: rr.data_category_id, context: rr.context_id });
+        linkedRetentionRules.push({
+          category: rr.data_category_id,
+          context: rr.context_id,
+        });
       }
     }
 
@@ -98,8 +135,8 @@ export class IntelligenceService {
         risks: linkedRisks,
         regulations: linkedRegulations,
         data_categories: linkedDataCategories,
-        retention_rules: linkedRetentionRules
-      }
+        retention_rules: linkedRetentionRules,
+      },
     };
   }
 
@@ -109,23 +146,23 @@ export class IntelligenceService {
    * ISO 27001 uses ISO 27002:2022 as its control catalog (framework_id: '27-2022').
    */
   private static readonly FRAMEWORK_ID_MAP: Record<string, string[]> = {
-    'iso27001':      ['27-2022'],                         // ISO 27002:2022 (controls for ISO 27001)
-    'iso27002':      ['27-2022'],
-    'iso27017':      ['27-2015'],                         // ISO 27017:2015
-    'iso27701':      ['27-2025'],                         // ISO 27701:2025
-    'nist800-53':    ['80-R5'],                           // NIST 800-53 R5
-    'nist-csf':      ['CS-2.0'],                          // NIST CSF 2.0
-    'fedramp':       ['FE-HIGH', 'FE-MODERATE', 'FE-LOW'],// FedRAMP
-    'soc2':          ['SO-2'],                            // SOC 2
-    'pci-dss':       ['4.-SAQ-D-SERVICE-PROVIDER'],       // PCI-DSS
-    'lgpd':          ['BR-LGPD'],                         // Brazil LGPD
-    'gdpr':          ['EU-GDPR'],                         // EU GDPR
-    'cmmc':          ['CM-LEVEL-2'],                      // CMMC Level 2
-    'tx-ramp':       ['TX-LEVEL-1', 'TX-LEVEL-2'],        // TX-RAMP Level 1+2
-    'tx-ramp-1':     ['TX-LEVEL-1'],                       // TX-RAMP Level 1
-    'tx-ramp-2':     ['TX-LEVEL-2'],                       // TX-RAMP Level 2
-    'tx-level-1':    ['TX-LEVEL-1'],                       // TX-RAMP Level 1 (by ID)
-    'tx-level-2':    ['TX-LEVEL-2'],                       // TX-RAMP Level 2 (by ID)
+    iso27001: ["27-2022"], // ISO 27002:2022 (controls for ISO 27001)
+    iso27002: ["27-2022"],
+    iso27017: ["27-2015"], // ISO 27017:2015
+    iso27701: ["27-2025"], // ISO 27701:2025
+    "nist800-53": ["80-R5"], // NIST 800-53 R5
+    "nist-csf": ["CS-2.0"], // NIST CSF 2.0
+    fedramp: ["FE-HIGH", "FE-MODERATE", "FE-LOW"], // FedRAMP
+    soc2: ["SO-2"], // SOC 2
+    "pci-dss": ["4.-SAQ-D-SERVICE-PROVIDER"], // PCI-DSS
+    lgpd: ["BR-LGPD"], // Brazil LGPD
+    gdpr: ["EU-GDPR"], // EU GDPR
+    cmmc: ["CM-LEVEL-2"], // CMMC Level 2
+    "tx-ramp": ["TX-LEVEL-1", "TX-LEVEL-2"], // TX-RAMP Level 1+2
+    "tx-ramp-1": ["TX-LEVEL-1"], // TX-RAMP Level 1
+    "tx-ramp-2": ["TX-LEVEL-2"], // TX-RAMP Level 2
+    "tx-level-1": ["TX-LEVEL-1"], // TX-RAMP Level 1 (by ID)
+    "tx-level-2": ["TX-LEVEL-2"], // TX-RAMP Level 2 (by ID)
   };
 
   /**
@@ -139,10 +176,10 @@ export class IntelligenceService {
     }
 
     // Determine which framework_codes to look for
-    const frameworkIds = IntelligenceService.FRAMEWORK_ID_MAP[mask.toLowerCase()];
-    const codesToResolve = frameworkIds && frameworkIds.length > 0
-      ? frameworkIds
-      : [mask]; // Try raw mask as framework_code (e.g. 'TX-LEVEL-2')
+    const frameworkIds =
+      IntelligenceService.FRAMEWORK_ID_MAP[mask.toLowerCase()];
+    const codesToResolve =
+      frameworkIds && frameworkIds.length > 0 ? frameworkIds : [mask]; // Try raw mask as framework_code (e.g. 'TX-LEVEL-2')
 
     try {
       const controlSet = new Set<string>();
@@ -151,17 +188,21 @@ export class IntelligenceService {
 
       for (const frameworkCode of codesToResolve) {
         // Find all framework records matching this code (may span multiple versions)
-        const matchingFws = allFrameworks.filter(f => 
-          f.framework_code.toLowerCase() === frameworkCode.toLowerCase()
+        const matchingFws = allFrameworks.filter(
+          (f) => f.framework_code.toLowerCase() === frameworkCode.toLowerCase(),
         );
         if (matchingFws.length === 0) continue;
 
         // Try each version to find mappings (framework is linked to a version)
         for (const fw of matchingFws) {
           for (const version of allVersions) {
-            const mappings = await this.deps.scf.mappings.mapFrameworkToScf(fw.id, version.id);
+            const mappings = await this.deps.scf.mappings.mapFrameworkToScf(
+              fw.id,
+              version.id,
+            );
             if (mappings.length > 0) {
-              const enriched = await this.deps.scf.mappings.enrichMappings(mappings);
+              const enriched =
+                await this.deps.scf.mappings.enrichMappings(mappings);
               for (const m of enriched) {
                 if (m.control_code) controlSet.add(m.control_code);
               }
@@ -175,7 +216,10 @@ export class IntelligenceService {
         return controlSet;
       }
     } catch (err) {
-      console.warn('[IntelligenceService] SCF DB lookup failed, falling back to static:', err);
+      console.warn(
+        "[IntelligenceService] SCF DB lookup failed, falling back to static:",
+        err,
+      );
     }
 
     // Fallback: static extraction (regulations-based)
@@ -185,7 +229,10 @@ export class IntelligenceService {
   /**
    * Async version of calculateGapAnalysis â€” uses DB-backed framework controls when available.
    */
-  async calculateGapAnalysisAsync(frameworkMask: string, implementedControls: string[]) {
+  async calculateGapAnalysisAsync(
+    frameworkMask: string,
+    implementedControls: string[],
+  ) {
     const implementedSet = new Set(implementedControls);
     const requiredControls = await this.getControlsForFramework(frameworkMask);
 
@@ -201,12 +248,28 @@ export class IntelligenceService {
       }
     }
 
-    const compliancePercentage = totalControls === 0 ? 100 : Math.round((implementedCount / totalControls) * 100);
+    // TODO(ADR-001): migrate to STRM-weighted compliance (computeComplianceIndex).
+    // Requires SoA items with maturity_level + STRM mapping data from scf_mappings.
+    // This method only receives flat implementedControls: string[] — no maturity or
+    // relationship_type available. See computeRealStrmCompliance() in dashboard.routes.ts
+    // for the reference pattern. Needs request-shape change to accept SoA + assessment context.
+    const compliancePercentage =
+      totalControls === 0
+        ? 100
+        : Math.round((implementedCount / totalControls) * 100);
 
-    return { totalControls, implementedCount, missingControls, compliancePercentage };
+    return {
+      totalControls,
+      implementedCount,
+      missingControls,
+      compliancePercentage,
+    };
   }
 
-  static calculateGapAnalysis(frameworkMask: string, implementedControls: string[]) {
+  static calculateGapAnalysis(
+    frameworkMask: string,
+    implementedControls: string[],
+  ) {
     const implementedSet = new Set(implementedControls);
     const requiredControls = this.extractFrameworkControls(frameworkMask);
 
@@ -222,14 +285,21 @@ export class IntelligenceService {
       }
     }
 
-    const compliancePercentage = totalControls === 0 ? 100 : Math.round((implementedCount / totalControls) * 100);
+    // TODO(ADR-001): migrate to STRM-weighted compliance (computeComplianceIndex).
+    // Static method — no deps, no SoA items, no maturity_level, no STRM mapping data.
+    // Binary formula is the only option until this method is converted to an instance
+    // method with access to deps.scf.repository and receives SoA + assessment context.
+    // See computeRealStrmCompliance() in dashboard.routes.ts for the reference pattern.
+    const compliancePercentage =
+      totalControls === 0
+        ? 100
+        : Math.round((implementedCount / totalControls) * 100);
 
     return {
       totalControls,
       implementedCount,
       missingControls,
-      compliancePercentage
+      compliancePercentage,
     };
   }
 }
-
