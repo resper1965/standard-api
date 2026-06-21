@@ -1,4 +1,4 @@
-﻿import {
+import {
   executeTransition,
   getAllowedNextStates,
 } from "@standard/assessment-engine";
@@ -34,6 +34,7 @@ import {
 } from "../http";
 import { parsePagination, applyPagination } from "../utils/pagination";
 import { getRemediationTerminology } from "../utils/remediation-terminology";
+import { dispatchWebhookEvent } from "../services/webhook-event-helper";
 
 const toApiError = (error: unknown): never => {
   if (error instanceof PoamWorkflowError) {
@@ -664,6 +665,11 @@ export const poamRoutes: RouteDefinition[] = [
           actorId!,
           approvalEvent,
         );
+        await dispatchWebhookEvent(deps.webhooks, {
+          organizationId: requireOrganizationId({ organizationId }),
+          eventType: "poam.approved",
+          eventId: version.poam_version_id,
+        });
         return json(approved);
       } catch (error) {
         return toApiError(error);

@@ -38,6 +38,7 @@ import {
 } from "../http";
 import { ApiError } from "../errors/api-error";
 import type { AssessmentRecord } from "../http";
+import { dispatchWebhookEvent } from "../services/webhook-event-helper";
 
 import { eq } from "drizzle-orm";
 import {
@@ -584,6 +585,12 @@ export const maturityRoutes: RouteDefinition[] = [
         ctx,
         maturityDeps,
       );
+
+      await dispatchWebhookEvent(deps.webhooks, {
+        organizationId: orgId,
+        eventType: "maturity.approved",
+        eventId: versionId,
+      });
 
       return json({
         data: approved,

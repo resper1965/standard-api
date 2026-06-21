@@ -1356,14 +1356,20 @@ class OrganizationsResource {
       opts,
     );
   }
-  /** List members of an organization */
+  /**
+   * List members of an organization.
+   * @deprecated Backend uses 1:1 admin/org model — no /members routes exist. Will return 404. Planned for Phase 2.
+   */
   listMembers(orgId: string, opts?: RequestOptions) {
     return this.client._get<PaginatedResponse<Membership>>(
       `/organizations/${orgId}/members`,
       opts,
     );
   }
-  /** Invite a new member to an organization */
+  /**
+   * Invite a new member to an organization.
+   * @deprecated Backend uses 1:1 admin/org model — no /members routes exist. Will return 404. Planned for Phase 2.
+   */
   inviteMember(
     orgId: string,
     data: { email: string; role: string; display_name?: string },
@@ -1375,7 +1381,10 @@ class OrganizationsResource {
       opts,
     );
   }
-  /** Update a member's role */
+  /**
+   * Update a member's role.
+   * @deprecated Backend uses 1:1 admin/org model — no /members routes exist. Will return 404. Planned for Phase 2.
+   */
   updateMemberRole(
     memberId: string,
     data: { role: string },
@@ -1387,7 +1396,10 @@ class OrganizationsResource {
       opts,
     );
   }
-  /** Remove a member */
+  /**
+   * Remove a member.
+   * @deprecated Backend uses 1:1 admin/org model — no /members routes exist. Will return 404. Planned for Phase 2.
+   */
   removeMember(memberId: string, opts?: RequestOptions) {
     return this.client._delete<{ ok: boolean }>(`/members/${memberId}`, opts);
   }
