@@ -38,7 +38,7 @@ async function main() {
 
   // ── Parse bundle ──
   console.log("\nParsing bundle (first 5 files only for speed)...");
-  const summary = parseStrmBundleDirectory(STRM_DIR, {
+  const summary = await parseStrmBundleDirectory(STRM_DIR, {
     fileFilter: (_: string, idx: number) => idx < 5,
   } as any);
 

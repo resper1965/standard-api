@@ -1,4 +1,4 @@
-﻿/**
+/**
  * SCF STRM Bundle Importer
  *
  * Parseia os 183 XLSXs do STRM Bundle oficial da SCF (comprado em securecontrolsframework.com).
@@ -28,7 +28,7 @@
  */
 
 /// <reference types="node" />
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import * as path from "node:path";
 import * as fs from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -154,11 +154,11 @@ function normalizeStrength(raw: number | string): StrmRelationshipStrength {
  * Pula rows com SCF # = "N/A" ou vazio.
  * Pula rows com relationship_type = "no_relation" (sem controle SCF aplicÃ¡vel).
  */
-export function parseStrmBundleFile(
+export async function parseStrmBundleFile(
   filePath: string,
   filename: string,
   options: { includeNoRelationship?: boolean } = {},
-): StrmBundleFileResult {
+): Promise<StrmBundleFileResult> {
   const resolvedPath = path.resolve(filePath);
   const relativePath = path.relative(projectRoot, resolvedPath);
   if (relativePath.startsWith("..") || path.isAbsolute(relativePath)) {
@@ -168,11 +168,14 @@ export function parseStrmBundleFile(
   const warnings: string[] = [];
   let skipped = 0;
 
-  // Read via buffer (avoid SheetJS Unicode path bug on Windows)
+  // Read via buffer (avoid ExcelJS Unicode path bug on Windows)
   const buf = fs.readFileSync(resolvedPath);
-  const wb = XLSX.read(buf, { cellDates: true });
+  const wb = new ExcelJS.Workbook();
+  await wb.xlsx.load(
+    buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength),
+  );
 
-  const sheetName = wb.SheetNames[0];
+  const sheetName = wb.worksheets[0]?.name;
   if (!sheetName) {
     return {
       filename,
@@ -185,7 +188,7 @@ export function parseStrmBundleFile(
     };
   }
 
-  const ws = wb.Sheets[sheetName];
+  const ws = wb.getWorksheet(sheetName);
   if (!ws) {
     return {
       filename,
@@ -198,12 +201,13 @@ export function parseStrmBundleFile(
     };
   }
 
-  // Parse all rows as arrays (raw)
-  const allRows = XLSX.utils.sheet_to_json(ws, {
-    header: 1,
-    defval: "",
-    blankrows: false,
-  }) as (string | number)[][];
+  // Collect all rows as arrays of cell values (matching SheetJS header:1 format)
+  const allRows: (string | number)[][] = [];
+  ws.eachRow({ includeEmpty: false }, (row) => {
+    const values = row.values as (string | number | undefined)[];
+    // ExcelJS row.values is 1-indexed (index 0 is undefined), so slice from 1
+    allRows.push(values.slice(1).map((v) => v ?? ""));
+  });
 
   // Rows 0-2: metadata
   // Row 0: ["NIST IR 8477...", "", ..., "Focal Document: ", "<framework name>"]
@@ -299,13 +303,13 @@ export function parseStrmBundleFile(
  * Parseia todos os arquivos XLSX de um diretÃ³rio STRM bundle.
  * Retorna sumÃ¡rio completo com todas as entries.
  */
-export function parseStrmBundleDirectory(
+export async function parseStrmBundleDirectory(
   dirPath: string,
   options: {
     includeNoRelationship?: boolean;
     fileFilter?: (filename: string) => boolean;
   } = {},
-): StrmBundleImportSummary {
+): Promise<StrmBundleImportSummary> {
   const resolvedDir = path.resolve(dirPath);
   const relativeDir = path.relative(projectRoot, resolvedDir);
   if (relativeDir.startsWith("..") || path.isAbsolute(relativeDir)) {
@@ -322,7 +326,7 @@ export function parseStrmBundleDirectory(
 
   for (const filename of files) {
     const filePath = path.join(dirPath, filename);
-    const result = parseStrmBundleFile(
+    const result = await parseStrmBundleFile(
       filePath,
       filename,
       options.includeNoRelationship !== undefined
@@ -340,4 +344,3 @@ export function parseStrmBundleDirectory(
     files: results,
   };
 }
-

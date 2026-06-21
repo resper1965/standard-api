@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env tsx
+#!/usr/bin/env tsx
 /**
  * STRM Bundle Seed Script â€” v2
  *
@@ -97,7 +97,7 @@ async function main() {
   console.log("\n  âš™ï¸  Parsing STRM bundle XLSXs...");
   const parseStart = Date.now();
 
-  const summary = parseStrmBundleDirectory(
+  const summary = await parseStrmBundleDirectory(
     STRM_BUNDLE_DIR,
     FRAMEWORK_FILTER
       ? {
@@ -388,5 +388,3 @@ main().catch((err) => {
   console.error("âŒ STRM Bundle Seed failed:", err);
   process.exit(1);
 });
-
-

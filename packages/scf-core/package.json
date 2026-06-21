@@ -13,8 +13,7 @@
   },
   "dependencies": {
     "@standard/schemas": "workspace:*",
-
-    "xlsx": "^0.18.5"
+    "exceljs": "^4.4.0"
   },
   "devDependencies": {
     "@types/node": "^25.7.0",

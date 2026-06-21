@@ -1,4 +1,4 @@
-﻿/**
+/**
  * XLSX Tab Parser Helpers
  *
  * Detects tab types in the official SCF XLSX workbook and normalizes
@@ -9,7 +9,7 @@
  * - All other tabs: Crosswalk mappings to specific frameworks/laws
  */
 
-import * as XLSX from "xlsx";
+import type { Worksheet } from "exceljs";
 
 // â”€â”€â”€â”€ Types â”€â”€â”€â”€
 
@@ -45,20 +45,27 @@ export const normalizeHeader = (raw: string): string =>
 /**
  * Parse a sheet into rows with normalized headers.
  */
-export const parseSheetToRows = (sheet: XLSX.WorkSheet): ParsedRow[] => {
-  const rawRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, {
-    defval: "",
-    raw: false,
+export const parseSheetToRows = (sheet: Worksheet): ParsedRow[] => {
+  const headers: string[] = [];
+  const headerRow = sheet.getRow(1);
+  headerRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+    headers[colNumber] = normalizeHeader(String(cell.value ?? ""));
   });
 
-  return rawRows.map((raw) => {
+  const rows: ParsedRow[] = [];
+  sheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
+    if (rowNumber === 1) return; // skip header row
     const normalized: ParsedRow = {};
-    for (const [key, value] of Object.entries(raw)) {
-      const nKey = normalizeHeader(key);
-      normalized[nKey] = String(value ?? "").trim();
-    }
-    return normalized;
+    row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+      const key = headers[colNumber];
+      if (key) {
+        normalized[key] = String(cell.value ?? "").trim();
+      }
+    });
+    rows.push(normalized);
   });
+
+  return rows;
 };
 
 // â”€â”€â”€â”€ Tab Classification â”€â”€â”€â”€
@@ -238,8 +245,11 @@ export const classifyTab = (
 
   // MA&D / MADSS tab detection (before generic crosswalk fallback)
   if (
-    nameLower === "ma&d" || nameLower === "mad" || nameLower === "madss" ||
-    nameLower.startsWith("mergers") || nameLower.startsWith("m&a")
+    nameLower === "ma&d" ||
+    nameLower === "mad" ||
+    nameLower === "madss" ||
+    nameLower.startsWith("mergers") ||
+    nameLower.startsWith("m&a")
   ) {
     return { type: "mad" as const, sheetName };
   }
@@ -251,13 +261,12 @@ export const classifyTab = (
 /**
  * Get raw headers from a sheet by reading the first row.
  */
-export const getSheetHeaders = (sheet: XLSX.WorkSheet): string[] => {
-  const range = XLSX.utils.decode_range(sheet["!ref"] ?? "A1");
+export const getSheetHeaders = (sheet: Worksheet): string[] => {
   const headers: string[] = [];
-  for (let col = range.s.c; col <= range.e.c; col++) {
-    const cell = sheet[XLSX.utils.encode_cell({ r: range.s.r, c: col })];
-    headers.push(cell?.v != null ? String(cell.v).trim() : "");
-  }
+  const headerRow = sheet.getRow(1);
+  headerRow.eachCell({ includeEmpty: true }, (cell) => {
+    headers.push(cell.value != null ? String(cell.value).trim() : "");
+  });
   return headers;
 };
 
@@ -430,4 +439,3 @@ const findCrosswalkReferenceColumn = (
   // The first non-SCF column with data is typically the reference column
   return nonScfColumns[0] ?? null;
 };
-

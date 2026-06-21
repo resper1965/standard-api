@@ -1,4 +1,4 @@
-﻿/**
+/**
  * SCF XLSX Importer
  *
  * Parses the official SCF Excel workbook (multi-tab) into the Standard
@@ -7,11 +7,11 @@
  * - Crosswalk tabs â†’ ScfFramework[] + ScfFrameworkRequirement[] + ScfMapping[]
  * - Version metadata from filename / first row
  *
- * Uses SheetJS (xlsx) for parsing â€” isomÃ³rfico, sem deps nativas.
+ * Uses ExcelJS for parsing â€” async-native, sem deps nativas.
  * Designed for admin ingestion, not runtime hot-path.
  */
 
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import type {
   ScfControl,
   ScfDomain,
@@ -1118,9 +1118,16 @@ export const createXlsxScfImporter = (): ScfImporter => ({
       const data = Uint8Array.from(atob(source.content), (c) =>
         c.charCodeAt(0),
       );
-      const workbook = XLSX.read(data, { type: "array" });
+      const wb = new ExcelJS.Workbook();
+      await wb.xlsx.load(
+        data.buffer.slice(
+          data.byteOffset,
+          data.byteOffset + data.byteLength,
+        ) as ArrayBuffer,
+      );
+      const sheetNames = wb.worksheets.map((ws) => ws.name);
 
-      if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
+      if (!sheetNames || sheetNames.length === 0) {
         return {
           valid: false,
           errors: ["XLSX workbook contains no sheets."],
@@ -1131,8 +1138,8 @@ export const createXlsxScfImporter = (): ScfImporter => ({
       // Check if at least one tab is classified as controls
       let hasControlsTab = false;
       const allWarnings: string[] = [];
-      for (const name of workbook.SheetNames) {
-        const sheet = workbook.Sheets[name];
+      for (const name of sheetNames) {
+        const sheet = wb.getWorksheet(name);
         if (!sheet) continue;
         const headers = getSheetHeaders(sheet);
         const classification = classifyTab(name, headers);
@@ -1182,7 +1189,14 @@ export const createXlsxScfImporter = (): ScfImporter => ({
       source.source_hash ??
       `sha256:${await sha256Hex(source.content.slice(0, 1024))}`;
     const data = Uint8Array.from(atob(source.content), (c) => c.charCodeAt(0));
-    const workbook = XLSX.read(data, { type: "array" });
+    const wb = new ExcelJS.Workbook();
+    await wb.xlsx.load(
+      data.buffer.slice(
+        data.byteOffset,
+        data.byteOffset + data.byteLength,
+      ) as ArrayBuffer,
+    );
+    const sheetNames = wb.worksheets.map((ws) => ws.name);
 
     const versionId = newId();
     const versionLabel =
@@ -1197,7 +1211,7 @@ export const createXlsxScfImporter = (): ScfImporter => ({
       import_status: "succeeded",
       imported_at: new Date().toISOString(),
       imported_by: "xlsx-importer",
-      notes: `Imported from XLSX workbook with ${workbook.SheetNames.length} tabs.`,
+      notes: `Imported from XLSX workbook with ${sheetNames.length} tabs.`,
       is_synthetic: false,
     };
 
@@ -1212,8 +1226,8 @@ export const createXlsxScfImporter = (): ScfImporter => ({
     const rawThreatMappings: { controlCode: string; threatCode: string }[] = [];
 
     // Phase 1: Parse controls tab(s) first â€” we need control IDs for crosswalk mapping
-    for (const name of workbook.SheetNames) {
-      const sheet = workbook.Sheets[name];
+    for (const name of sheetNames) {
+      const sheet = wb.getWorksheet(name);
       if (!sheet) continue;
 
       const headers = getSheetHeaders(sheet);
@@ -1267,8 +1281,8 @@ export const createXlsxScfImporter = (): ScfImporter => ({
     }
 
     // Phase 2: Parse crosswalk tabs
-    for (const name of workbook.SheetNames) {
-      const sheet = workbook.Sheets[name];
+    for (const name of sheetNames) {
+      const sheet = wb.getWorksheet(name);
       if (!sheet) continue;
 
       const headers = getSheetHeaders(sheet);
@@ -1316,8 +1330,8 @@ export const createXlsxScfImporter = (): ScfImporter => ({
     const threatByCode = new Map<string, string>();
 
     // Extract maturity criteria from controls sheet
-    for (const name of workbook.SheetNames) {
-      const sheet = workbook.Sheets[name];
+    for (const name of sheetNames) {
+      const sheet = wb.getWorksheet(name);
       if (!sheet) continue;
       const headers = getSheetHeaders(sheet);
       const classification = classifyTab(name, headers);
@@ -1333,8 +1347,8 @@ export const createXlsxScfImporter = (): ScfImporter => ({
     }
 
     // Process specific catalog sheets
-    for (const name of workbook.SheetNames) {
-      const sheet = workbook.Sheets[name];
+    for (const name of sheetNames) {
+      const sheet = wb.getWorksheet(name);
       if (!sheet) continue;
 
       const headers = getSheetHeaders(sheet);
@@ -1367,24 +1381,16 @@ export const createXlsxScfImporter = (): ScfImporter => ({
         );
         allEvidenceRequests.push(...requests);
       } else if (classification.type === "risk_catalog") {
-        // Shift range to row 5 (0-indexed) to skip headers and definition rows
-        const range = XLSX.utils.decode_range(sheet["!ref"] ?? "A1");
-        range.s.r = 5;
-        sheet["!ref"] = XLSX.utils.encode_range(range);
-
-        const rows = parseSheetToRows(sheet);
+        // Skip first 5 rows (headers and definition rows)
+        const rows = parseSheetToRows(sheet).slice(5);
         const risks = parseRisksTab(rows, versionId);
         allRisks.push(...risks);
         for (const r of risks) {
           riskByCode.set(r.risk_code.toUpperCase(), r.id);
         }
       } else if (classification.type === "threat_catalog") {
-        // Shift range to row 5 (0-indexed) to skip headers and definition rows
-        const range = XLSX.utils.decode_range(sheet["!ref"] ?? "A1");
-        range.s.r = 5;
-        sheet["!ref"] = XLSX.utils.encode_range(range);
-
-        const rows = parseSheetToRows(sheet);
+        // Skip first 5 rows (headers and definition rows)
+        const rows = parseSheetToRows(sheet).slice(5);
         const threats = parseThreatsTab(rows, versionId);
         allThreats.push(...threats);
         for (const t of threats) {
@@ -1535,4 +1541,3 @@ export const createXlsxScfImporter = (): ScfImporter => ({
     };
   },
 });
-
