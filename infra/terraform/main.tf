@@ -28,12 +28,42 @@ resource "cloudflare_workers_kv_namespace" "cache" {
 # ------------------------------------------------------------------------------
 resource "cloudflare_queue" "ingestion" {
   account_id = var.cloudflare_account_id
-  name       = "document-ingestion-queue-${var.environment}"
+  name       = "standard-document-ingestion-${var.environment}"
 }
 
 resource "cloudflare_queue" "agent_run" {
   account_id = var.cloudflare_account_id
-  name       = "agent-run-queue-${var.environment}"
+  name       = "standard-agent-run-${var.environment}"
+}
+
+resource "cloudflare_queue" "kb_embedding" {
+  account_id = var.cloudflare_account_id
+  name       = "standard-kb-embedding-${var.environment}"
+}
+
+resource "cloudflare_queue" "report_export" {
+  account_id = var.cloudflare_account_id
+  name       = "standard-report-export-${var.environment}"
+}
+
+resource "cloudflare_queue" "user_lifecycle" {
+  account_id = var.cloudflare_account_id
+  name       = "standard-user-lifecycle-${var.environment}"
+}
+
+resource "cloudflare_queue" "agent_usage" {
+  account_id = var.cloudflare_account_id
+  name       = "standard-agent-usage-${var.environment}"
+}
+
+resource "cloudflare_queue" "soc_triage" {
+  account_id = var.cloudflare_account_id
+  name       = "standard-soc-triage-${var.environment}"
+}
+
+resource "cloudflare_queue" "dead_letter" {
+  account_id = var.cloudflare_account_id
+  name       = "standard-dead-letter-${var.environment}"
 }
 
 # 4. VECTORIZE INDEXES (RAG)

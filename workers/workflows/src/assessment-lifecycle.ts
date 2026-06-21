@@ -1,5 +1,9 @@
-import { AssessmentLifecycleWorkflowInputSchema, type AssessmentLifecycleWorkflowState } from "@standard/schemas";
+import { type AssessmentLifecycleWorkflowState } from "@standard/schemas";
 import { WorkflowEntrypoint, WorkflowEvent, WorkflowStep } from "cloudflare:workers";
+import { validateWorkflowParams, createWorkflowOrchestratorDeps } from "./assessment-lifecycle.helpers";
+
+// Re-export for any consumers that import from this module
+export { validateWorkflowParams, createWorkflowOrchestratorDeps };
 
 export type WorkflowCheckpoint = {
   assessment_id: string;
@@ -8,7 +12,7 @@ export type WorkflowCheckpoint = {
 
 export class AssessmentLifecycleWorkflow extends WorkflowEntrypoint<Env, unknown> {
   async run(event: WorkflowEvent<unknown>, step: WorkflowStep): Promise<WorkflowCheckpoint> {
-    const input = AssessmentLifecycleWorkflowInputSchema.parse(event.payload);
+    const input = validateWorkflowParams(event.payload);
 
     const checkpoint = await step.do("validate-assessment-lifecycle-input", async () => {
       const timestamp = new Date().toISOString();

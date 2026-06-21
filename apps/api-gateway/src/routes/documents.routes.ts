@@ -1,4 +1,4 @@
-﻿import {
+import {
   DocumentIngestionService,
   maxUploadSizeBytes,
   processDocumentIngestionJob,
@@ -135,7 +135,7 @@ export const documentsRoutes: RouteDefinition[] = [
         fileBytes,
         file.name,
         env?.CLAMAV_API_URL,
-        env?.STANDARD_ENV === "production",
+        env?.STANDARD_ENV === "production" || env?.STANDARD_ENV === "staging",
       );
       if (!scanResult.clean) {
         throw new ApiError(
