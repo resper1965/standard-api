@@ -1,4 +1,4 @@
-﻿import {
+import {
   executeTransition,
   getAllowedNextStates,
 } from "@standard/assessment-engine";
@@ -35,6 +35,7 @@ import {
   routeUuidParam,
   requireOrganizationId,
 } from "../http";
+import { dispatchWebhookEvent } from "../services/webhook-event-helper";
 
 const toApiError = (error: unknown): never => {
   if (error instanceof ReportingWorkflowError) {
@@ -415,13 +416,19 @@ export const reportingRoutes: RouteDefinition[] = [
           409,
         );
       try {
-        return json(
-          await new ReportApprovalService(deps.reporting).approveReport(
-            report.report_version_id,
-            body,
-            contextFor(assessment, traceId, actorId!),
-          ),
+        const approved = await new ReportApprovalService(
+          deps.reporting,
+        ).approveReport(
+          report.report_version_id,
+          body,
+          contextFor(assessment, traceId, actorId!),
         );
+        await dispatchWebhookEvent(deps.webhooks, {
+          organizationId: requireOrganizationId({ organizationId }),
+          eventType: "report.approved",
+          eventId: report.report_version_id,
+        });
+        return json(approved);
       } catch (error) {
         return toApiError(error);
       }

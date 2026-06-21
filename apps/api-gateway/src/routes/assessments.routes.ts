@@ -19,6 +19,7 @@ import {
   requireOrganizationId,
 } from "../http";
 import { assessmentResponse, lifecycleEventResponse } from "../presenters";
+import { dispatchWebhookEvent } from "../services/webhook-event-helper";
 
 /**
  * Asserts that the fetched resource belongs to the request's resolved tenant.
@@ -390,34 +391,11 @@ export const assessmentsRoutes: RouteDefinition[] = [
         trace_id: traceId,
       };
 
-      // Best-effort webhook dispatch for CI/CD subscribers
-      if (deps.webhooks) {
-        try {
-          const subscribers = await deps.webhooks.findSubscribers(
-            assessment.organization_id,
-            "compliance.gate.evaluated",
-          );
-          for (const endpoint of subscribers) {
-            if (!endpoint.enabled) continue;
-            await deps.webhooks.logDelivery({
-              delivery_id: newId(),
-              endpoint_id: endpoint.id,
-              event_id: gate.gate_id,
-              event_type: "compliance.gate.evaluated",
-              status: "pending",
-              http_status: null,
-              attempt_count: 0,
-              max_attempts: 3,
-              last_attempted_at: null,
-              next_retry_at: new Date().toISOString(),
-              response_body: null,
-              created_at: new Date().toISOString(),
-            });
-          }
-        } catch {
-          // Non-blocking â€” webhook delivery is best-effort
-        }
-      }
+      await dispatchWebhookEvent(deps.webhooks, {
+        organizationId: assessment.organization_id,
+        eventType: "compliance.gate.evaluated",
+        eventId: gate.gate_id,
+      });
 
       return json(gate);
     },

@@ -1,4 +1,4 @@
-﻿import {
+import {
   executeTransition,
   getAllowedNextStates,
 } from "@standard/assessment-engine";
@@ -36,6 +36,7 @@ import {
   requireOrganizationId,
 } from "../http";
 import { parsePagination, applyPagination } from "../utils/pagination";
+import { dispatchWebhookEvent } from "../services/webhook-event-helper";
 
 /** Schema for POST /api/v1/gap/evaluate-evidence */
 const EvaluateEvidenceRequestSchema = z.object({
@@ -617,6 +618,11 @@ export const gapAnalysisRoutes: RouteDefinition[] = [
           actorId!,
           approvalEvent,
         );
+        await dispatchWebhookEvent(deps.webhooks, {
+          organizationId: requireOrganizationId({ organizationId }),
+          eventType: "gap.approved",
+          eventId: version.gap_analysis_version_id,
+        });
         return json(approved);
       } catch (error) {
         return toApiError(error);
