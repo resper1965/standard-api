@@ -46,6 +46,7 @@ const navItems: NavItem[] = [
   { name: "API Keys",   path: "/dashboard/api-keys", icon: Key },
   { name: "Webhooks",   path: "/dashboard/webhooks", icon: Webhook },
   { name: "SCF Explorer", path: "/dashboard/scf",    icon: Library },
+  { name: "TPRA",       path: "/dashboard/tpra",     icon: Building2 },
   { name: "SDK & Docs", path: "/dashboard/sdk",      icon: Puzzle },
 ]
 
@@ -65,6 +66,7 @@ const routeTitles: Record<string, string> = {
   "/dashboard/api-keys":         "API Keys",
   "/dashboard/webhooks":         "Webhooks",
   "/dashboard/scf":              "SCF Explorer",
+  "/dashboard/tpra":             "Third-Party Risk (TPRA)",
   "/dashboard/users":            "Users",
   "/dashboard/audit-logs":       "Audit Logs",
   "/dashboard/system-health":    "System Health",
