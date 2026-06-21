@@ -7,6 +7,7 @@
 import {
   createInMemoryDocumentIngestionDependencies,
   processDocumentIngestionJob,
+  HeuristicMalwareScannerAdapter,
   type StorageAdapter,
   type StoredObject,
   type AuditSink
@@ -78,6 +79,7 @@ export default {
       storage: new R2StorageAdapter(env.STANDARD_DOCUMENTS_BUCKET),
       storageProvider: "cloudflare_r2",
       bucketName: "STANDARD_DOCUMENTS_BUCKET",
+      malwareScanner: new HeuristicMalwareScannerAdapter(),
       repositories: {
         documents: new DrizzleDocumentRepository(db),
         jobs: new DrizzleDocumentJobRepository(db),
