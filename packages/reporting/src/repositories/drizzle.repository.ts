@@ -1,9 +1,11 @@
-﻿/**
- * @module reporting.repository
+/**
+ * @module reporting/repositories/drizzle.repository
  * @description Drizzle PostgreSQL repositories for Reporting.
  * Uses $inferSelect for type-safe row mapping.
+ *
+ * Accepts any Drizzle-compatible db client via structural typing.
  */
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { reportVersions, reportArtifacts, exportJobs } from "@standard/schemas";
 import type {
   ReportVersionResponse,
@@ -15,195 +17,23 @@ import type {
   ReportArtifactRepository,
   ExportJobRepository,
   ReportRepositories,
-} from "@standard/reporting";
-import type { DbClient } from "./db";
+} from "../types";
 
-const createDrizzleReportVersionRepository = (
-  db: DbClient,
-): ReportVersionRepository => ({
-  async save(version: ReportVersionResponse) {
-    await db
-      .insert(reportVersions)
-      .values({
-        id: version.report_version_id,
-        organizationId: version.organization_id,
-        assessmentId: version.assessment_id,
-        versionNumber: version.version_number,
-        reportType: version.report_type,
-        title: version.title,
-        status: version.status,
-        sourceScopeId: version.source_scope_id,
-        sourceSoaVersionId: version.source_soa_version_id,
-        sourceGapAnalysisVersionId: version.source_gap_analysis_version_id,
-        sourceMaturityAssessmentVersionId:
-          version.source_maturity_assessment_version_id,
-        sourcePoamVersionId: version.source_poam_version_id,
-        frameworkId: version.framework_id,
-        scfVersionId: version.scf_version_id,
-        generatedByAgentRunId: version.generated_by_agent_run_id,
-        createdBy: version.created_by,
-        traceId: version.trace_id,
-        metadata: version.metadata,
-      } as any)
-      .onConflictDoNothing();
-  },
-  async update(version: ReportVersionResponse) {
-    await db
-      .update(reportVersions)
-      .set({
-        status: version.status,
-        title: version.title,
-        submittedForReviewAt: version.submitted_for_review_at
-          ? new Date(version.submitted_for_review_at)
-          : undefined,
-        approvedBy: version.approved_by,
-        approvedAt: version.approved_at
-          ? new Date(version.approved_at)
-          : undefined,
-        approvalEventId: version.approval_event_id,
-        supersededBy: version.superseded_by,
-        metadata: version.metadata,
-        updatedAt: new Date(),
-      } as any)
-      .where(eq(reportVersions.id, version.report_version_id));
-  },
-  async get(reportVersionId, organizationId) {
-    const [row] = await db
-      .select()
-      .from(reportVersions)
-      .where(eq(reportVersions.id, reportVersionId))
-      .limit(1);
-    return row ? mapReportVersionRow(row) : null;
-  },
-  async listByAssessment(assessmentId, organizationId) {
-    const rows = await db
-      .select()
-      .from(reportVersions)
-      .where(eq(reportVersions.assessmentId, assessmentId));
-    return rows.map(mapReportVersionRow);
-  },
-});
+// Structural type — compatible with NeonServerlessDatabase and PostgresJsDatabase
+export type DrizzleDbClient = {
+  select(): any;
+  insert(table: any): any;
+  update(table: any): any;
+  delete(table: any): any;
+};
 
-const createDrizzleReportArtifactRepository = (
-  db: DbClient,
-): ReportArtifactRepository => ({
-  async save(artifact: ReportArtifactResponse) {
-    await db
-      .insert(reportArtifacts)
-      .values({
-        id: artifact.report_artifact_id,
-        organizationId: artifact.organization_id,
-        assessmentId: artifact.assessment_id,
-        reportVersionId: artifact.report_version_id,
-        artifactType: artifact.artifact_type as
-          | "report"
-          | "export"
-          | "evidence_index"
-          | "audit_package"
-          | "appendix"
-          | "summary",
-        format: artifact.format as
-          | "json"
-          | "markdown"
-          | "html"
-          | "docx"
-          | "pdf"
-          | "csv"
-          | "xlsx"
-          | "zip",
-        storageProvider: artifact.storage_provider as
-          | "r2"
-          | "external"
-          | "r2_compatible_mock",
-        storageBucket: artifact.storage_bucket,
-        storageKey: artifact.storage_key,
-        contentHash: artifact.content_hash,
-        mimeType: artifact.mime_type,
-        fileSize: artifact.file_size,
-        metadata: artifact.metadata ?? {},
-      } as any)
-      .onConflictDoNothing();
-  },
-  async get(artifactId, organizationId) {
-    const [row] = await db
-      .select()
-      .from(reportArtifacts)
-      .where(eq(reportArtifacts.id, artifactId))
-      .limit(1);
-    return row ? mapReportArtifactRow(row) : null;
-  },
-  async listByReport(reportVersionId, organizationId) {
-    const rows = await db
-      .select()
-      .from(reportArtifacts)
-      .where(eq(reportArtifacts.reportVersionId, reportVersionId));
-    return rows.map(mapReportArtifactRow);
-  },
-});
-
-const createDrizzleExportJobRepository = (
-  db: DbClient,
-): ExportJobRepository => ({
-  async save(job: ExportJobResponse) {
-    await db
-      .insert(exportJobs)
-      .values({
-        id: job.export_job_id,
-        organizationId: job.organization_id,
-        assessmentId: job.assessment_id,
-        reportVersionId: job.report_version_id,
-        jobType: job.job_type,
-        status: job.status,
-        requestedFormat: job.requested_format,
-        requestedBy: job.requested_by,
-        traceId: job.trace_id,
-        metadata: job.metadata ?? {},
-      } as any)
-      .onConflictDoNothing();
-  },
-  async update(job: ExportJobResponse) {
-    await db
-      .update(exportJobs)
-      .set({
-        status: job.status,
-        startedAt: job.started_at ? new Date(job.started_at) : undefined,
-        completedAt: job.completed_at ? new Date(job.completed_at) : undefined,
-        errorCode: job.error_code,
-        errorMessageSafe: job.error_message_safe,
-        metadata: job.metadata ?? {},
-      } as any)
-      .where(eq(exportJobs.id, job.export_job_id));
-  },
-  async get(exportJobId, organizationId) {
-    const [row] = await db
-      .select()
-      .from(exportJobs)
-      .where(eq(exportJobs.id, exportJobId))
-      .limit(1);
-    return row ? mapExportJobRow(row) : null;
-  },
-  async listByAssessment(assessmentId, organizationId) {
-    const rows = await db
-      .select()
-      .from(exportJobs)
-      .where(eq(exportJobs.assessmentId, assessmentId));
-    return rows.map(mapExportJobRow);
-  },
-});
-
-export const createDrizzleReportRepositories = (
-  db: DbClient,
-): ReportRepositories => ({
-  versions: createDrizzleReportVersionRepository(db),
-  artifacts: createDrizzleReportArtifactRepository(db),
-  exportJobs: createDrizzleExportJobRepository(db),
-});
-
-// --- Row mappers ---
+// --- Row types ---
 
 type ReportVersionRow = typeof reportVersions.$inferSelect;
 type ReportArtifactRow = typeof reportArtifacts.$inferSelect;
 type ExportJobRow = typeof exportJobs.$inferSelect;
+
+// --- Row mappers ---
 
 const mapReportVersionRow = (row: ReportVersionRow): ReportVersionResponse => ({
   report_version_id: row.id,
@@ -281,4 +111,191 @@ const mapExportJobRow = (row: ExportJobRow): ExportJobResponse => ({
   error_message_safe: row.errorMessageSafe ?? undefined,
   trace_id: row.traceId,
   metadata: row.metadata ?? {},
+});
+
+// --- Repository factories ---
+
+const createDrizzleReportVersionRepository = (
+  db: DrizzleDbClient,
+): ReportVersionRepository => ({
+  async save(version: ReportVersionResponse) {
+    await db
+      .insert(reportVersions)
+      .values({
+        id: version.report_version_id,
+        organizationId: version.organization_id,
+        assessmentId: version.assessment_id,
+        versionNumber: version.version_number,
+        reportType: version.report_type,
+        title: version.title,
+        status: version.status,
+        sourceScopeId: version.source_scope_id,
+        sourceSoaVersionId: version.source_soa_version_id,
+        sourceGapAnalysisVersionId: version.source_gap_analysis_version_id,
+        sourceMaturityAssessmentVersionId:
+          version.source_maturity_assessment_version_id,
+        sourcePoamVersionId: version.source_poam_version_id,
+        frameworkId: version.framework_id,
+        scfVersionId: version.scf_version_id,
+        generatedByAgentRunId: version.generated_by_agent_run_id,
+        createdBy: version.created_by,
+        traceId: version.trace_id,
+        metadata: version.metadata,
+      } as any)
+      .onConflictDoNothing();
+  },
+  async update(version: ReportVersionResponse) {
+    await db
+      .update(reportVersions)
+      .set({
+        status: version.status,
+        title: version.title,
+        submittedForReviewAt: version.submitted_for_review_at
+          ? new Date(version.submitted_for_review_at)
+          : undefined,
+        approvedBy: version.approved_by,
+        approvedAt: version.approved_at
+          ? new Date(version.approved_at)
+          : undefined,
+        approvalEventId: version.approval_event_id,
+        supersededBy: version.superseded_by,
+        metadata: version.metadata,
+        updatedAt: new Date(),
+      } as any)
+      .where(eq(reportVersions.id, version.report_version_id));
+  },
+  async get(reportVersionId, _organizationId) {
+    const [row] = await db
+      .select()
+      .from(reportVersions)
+      .where(eq(reportVersions.id, reportVersionId))
+      .limit(1);
+    return row ? mapReportVersionRow(row) : null;
+  },
+  async listByAssessment(assessmentId, _organizationId) {
+    const rows = await db
+      .select()
+      .from(reportVersions)
+      .where(eq(reportVersions.assessmentId, assessmentId));
+    return rows.map(mapReportVersionRow);
+  },
+});
+
+const createDrizzleReportArtifactRepository = (
+  db: DrizzleDbClient,
+): ReportArtifactRepository => ({
+  async save(artifact: ReportArtifactResponse) {
+    await db
+      .insert(reportArtifacts)
+      .values({
+        id: artifact.report_artifact_id,
+        organizationId: artifact.organization_id,
+        assessmentId: artifact.assessment_id,
+        reportVersionId: artifact.report_version_id,
+        artifactType: artifact.artifact_type as
+          | "report"
+          | "export"
+          | "evidence_index"
+          | "audit_package"
+          | "appendix"
+          | "summary",
+        format: artifact.format as
+          | "json"
+          | "markdown"
+          | "html"
+          | "docx"
+          | "pdf"
+          | "csv"
+          | "xlsx"
+          | "zip",
+        storageProvider: artifact.storage_provider as
+          | "r2"
+          | "external"
+          | "r2_compatible_mock",
+        storageBucket: artifact.storage_bucket,
+        storageKey: artifact.storage_key,
+        contentHash: artifact.content_hash,
+        mimeType: artifact.mime_type,
+        fileSize: artifact.file_size,
+        metadata: artifact.metadata ?? {},
+      } as any)
+      .onConflictDoNothing();
+  },
+  async get(artifactId, _organizationId) {
+    const [row] = await db
+      .select()
+      .from(reportArtifacts)
+      .where(eq(reportArtifacts.id, artifactId))
+      .limit(1);
+    return row ? mapReportArtifactRow(row) : null;
+  },
+  async listByReport(reportVersionId, _organizationId) {
+    const rows = await db
+      .select()
+      .from(reportArtifacts)
+      .where(eq(reportArtifacts.reportVersionId, reportVersionId));
+    return rows.map(mapReportArtifactRow);
+  },
+});
+
+const createDrizzleExportJobRepository = (
+  db: DrizzleDbClient,
+): ExportJobRepository => ({
+  async save(job: ExportJobResponse) {
+    await db
+      .insert(exportJobs)
+      .values({
+        id: job.export_job_id,
+        organizationId: job.organization_id,
+        assessmentId: job.assessment_id,
+        reportVersionId: job.report_version_id,
+        jobType: job.job_type,
+        status: job.status,
+        requestedFormat: job.requested_format,
+        requestedBy: job.requested_by,
+        traceId: job.trace_id,
+        metadata: job.metadata ?? {},
+      } as any)
+      .onConflictDoNothing();
+  },
+  async update(job: ExportJobResponse) {
+    await db
+      .update(exportJobs)
+      .set({
+        status: job.status,
+        startedAt: job.started_at ? new Date(job.started_at) : undefined,
+        completedAt: job.completed_at ? new Date(job.completed_at) : undefined,
+        errorCode: job.error_code,
+        errorMessageSafe: job.error_message_safe,
+        metadata: job.metadata ?? {},
+      } as any)
+      .where(eq(exportJobs.id, job.export_job_id));
+  },
+  async get(exportJobId, _organizationId) {
+    const [row] = await db
+      .select()
+      .from(exportJobs)
+      .where(eq(exportJobs.id, exportJobId))
+      .limit(1);
+    return row ? mapExportJobRow(row) : null;
+  },
+  async listByAssessment(assessmentId, _organizationId) {
+    const rows = await db
+      .select()
+      .from(exportJobs)
+      .where(eq(exportJobs.assessmentId, assessmentId));
+    return rows.map(mapExportJobRow);
+  },
+});
+
+/**
+ * Factory: creates all Drizzle-backed Reporting repositories.
+ * Pass the DbClient from the api-gateway composition root.
+ */
+export const createDrizzleReportRepositories = (
+  db: DrizzleDbClient,
+): ReportRepositories => ({
+  versions: createDrizzleReportVersionRepository(db),
+  artifacts: createDrizzleReportArtifactRepository(db),
+  exportJobs: createDrizzleExportJobRepository(db),
 });

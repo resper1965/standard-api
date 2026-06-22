@@ -1,4 +1,4 @@
-﻿export * from "./constants";
+export * from "./constants";
 export * from "./errors";
 export * from "./factory";
 export * from "./repositories/poam.repositories";
@@ -12,4 +12,5 @@ export * from "./services/poam-review.service";
 export * from "./services/poam-scheduling.service";
 export * from "./services/poam-validation.service";
 export * from "./types";
-
+export { createDrizzlePoamRepositories } from "./repositories/drizzle.repository";
+export type { DrizzleDbClient as PoamDrizzleDbClient } from "./repositories/drizzle.repository";

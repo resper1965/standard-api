@@ -1,4 +1,4 @@
-﻿export * from "./constants";
+export * from "./constants";
 export * from "./errors";
 export * from "./factory";
 export * from "./repositories/report.repositories";
@@ -13,4 +13,5 @@ export * from "./services/report-review.service";
 export * from "./services/report-storage.service";
 export * from "./services/report-validation.service";
 export * from "./types";
-
+export { createDrizzleReportRepositories } from "./repositories/drizzle.repository";
+export type { DrizzleDbClient as ReportingDrizzleDbClient } from "./repositories/drizzle.repository";

@@ -16,7 +16,7 @@ import {
 import { createInMemoryPoamDependencies } from "@standard/poam";
 import { createInMemoryReportingDependencies } from "@standard/reporting";
 import { createInMemoryMaturityDependencies } from "@standard/maturity";
-import { createDrizzleMaturityRepositories } from "./maturity.repository";
+import { createDrizzleMaturityRepositories } from "@standard/maturity";
 import {
   createInMemoryScfCore,
   createScfCoreFromRepository,
@@ -69,8 +69,8 @@ import {
 } from "./tenant.repository";
 import { createDrizzleSoaRepositories } from "@standard/soa";
 import { createDrizzleGapAnalysisRepositories } from "@standard/gap-analysis";
-import { createDrizzlePoamRepositories } from "./poam.repository";
-import { createDrizzleReportRepositories } from "./reporting.repository";
+import { createDrizzlePoamRepositories } from "@standard/poam";
+import { createDrizzleReportRepositories } from "@standard/reporting";
 import {
   createMockApiKeysRepository,
   createDrizzleApiKeysRepository,

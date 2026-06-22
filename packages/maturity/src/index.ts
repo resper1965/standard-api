@@ -8,4 +8,5 @@ export * from "./services/maturity-draft.service";
 export * from "./services/maturity-review.service";
 export * from "./services/maturity-validation.service";
 export * from "./types";
-
+export { createDrizzleMaturityRepositories } from "./repositories/drizzle.repository";
+export type { DrizzleDbClient as MaturityDrizzleDbClient } from "./repositories/drizzle.repository";

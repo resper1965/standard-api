@@ -1,16 +1,12 @@
-﻿// @ts-nocheck -- Zod v4 CI type compat
 /**
- * @module drizzle-maturity.repository
+ * @module maturity/repositories/drizzle.repository
  * @description Drizzle PostgreSQL repositories for Maturity Assessment.
  *
  * Implements MaturityVersionRepository and MaturityScoreRepository
  * backed by `maturity_assessment_versions` and `maturity_scores` tables.
  *
- * Follows the same withOrganization() tenant-scoped adapter pattern as
- * gap-analysis.repository.ts and soa.repository.ts.
- *
- * AGENTS.md Â§7: Multi-organization by design â€” all queries scoped by organizationId.
- * AGENTS.md Â§11: Approval gates obrigatÃ³rios â€” approve route persists here.
+ * AGENTS.md §7: Multi-organization by design — all queries scoped by organizationId.
+ * AGENTS.md §11: Approval gates obrigatórios — approve route persists here.
  */
 import { eq, and } from "drizzle-orm";
 import { maturityAssessmentVersions, maturityScores } from "@standard/schemas";
@@ -22,12 +18,20 @@ import type {
   MaturityRepositories,
 } from "../types";
 
-type AnyDrizzleClient = any;
+// Structural type — compatible with NeonServerlessDatabase and PostgresJsDatabase
+export type DrizzleDbClient = {
+  select(): any;
+  insert(table: any): any;
+  update(table: any): any;
+  delete(table: any): any;
+};
 
-// â”€â”€ Row mappers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Row types ---
 
 type MaturityVersionRow = typeof maturityAssessmentVersions.$inferSelect;
 type MaturityScoreRow = typeof maturityScores.$inferSelect;
+
+// --- Row mappers ---
 
 const mapVersionRow = (row: MaturityVersionRow): MaturityAssessmentVersion => ({
   id: row.id,
@@ -53,10 +57,10 @@ const mapScoreRow = (row: MaturityScoreRow): MaturityScore => ({
   evidenceCoverage: Number(row.evidenceCoverage),
 });
 
-// â”€â”€ MaturityVersionRepository â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- MaturityVersionRepository ---
 
 const createDrizzleMaturityVersionRepository = (
-  db: AnyDrizzleClient,
+  db: DrizzleDbClient,
 ): MaturityVersionRepository => ({
   async save(version: MaturityAssessmentVersion): Promise<void> {
     await db
@@ -118,10 +122,10 @@ const createDrizzleMaturityVersionRepository = (
   },
 });
 
-// â”€â”€ MaturityScoreRepository â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- MaturityScoreRepository ---
 
 const createDrizzleMaturityScoreRepository = (
-  db: AnyDrizzleClient,
+  db: DrizzleDbClient,
 ): MaturityScoreRepository => ({
   async saveMany(scores: MaturityScore[]): Promise<void> {
     if (scores.length === 0) return;
@@ -193,19 +197,13 @@ const createDrizzleMaturityScoreRepository = (
   },
 });
 
-// â”€â”€ Public factory â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
 /**
- * Creates Drizzle-backed maturity repositories (production path).
- *
- * Usage in adapters/index.ts:
- *   const maturityRepositories = createDrizzleMaturityRepositories(db);
- *   const maturity = { repositories: maturityRepositories, getApprovedGapAnalysis };
+ * Factory: creates Drizzle-backed maturity repositories.
+ * Pass the DbClient from the api-gateway composition root.
  */
 export const createDrizzleMaturityRepositories = (
-  db: AnyDrizzleClient,
+  db: DrizzleDbClient,
 ): MaturityRepositories => ({
   versions: createDrizzleMaturityVersionRepository(db),
   scores: createDrizzleMaturityScoreRepository(db),
 });
-
