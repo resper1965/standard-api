@@ -23,4 +23,5 @@ export * from "./usecases/board-translator";
 export * from "./prompts/evidence-classification";
 export * from "./prompts/gap-identification";
 export * from "./sandbox";
-
+export { createDrizzleAgentRuntimeDependencies } from "./repositories/drizzle.repository";
+export type { DrizzleDbClient as AgentRuntimeDrizzleDbClient } from "./repositories/drizzle.repository";

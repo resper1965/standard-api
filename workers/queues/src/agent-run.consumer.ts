@@ -6,7 +6,7 @@ import {
   AgentRuntimeService,
   AgentRuntimeDependencies,
 } from "@standard/agent-runtime";
-import { createDrizzleAgentRuntimeDependencies } from "./adapters/agent-runtime.repository";
+import { createDrizzleAgentRuntimeDependencies } from "@standard/agent-runtime";
 import { z } from "zod";
 import type { Env } from "./index";
 

@@ -8,16 +8,10 @@ import {
   createInMemoryDocumentIngestionDependencies,
   processDocumentIngestionJob,
   HeuristicMalwareScannerAdapter,
+  createDrizzleIngestionRepositories,
   type StorageAdapter,
   type StoredObject,
-  type AuditSink,
 } from "@standard/document-ingestion";
-import {
-  DrizzleDocumentRepository,
-  DrizzleDocumentJobRepository,
-  DrizzleDocumentChunkRepository,
-  DrizzleVectorReferenceRepository,
-} from "./adapters/document.repository";
 import {
   DocumentIngestionJobMessageSchema,
   type DocumentIngestionJobMessage,
@@ -62,40 +56,6 @@ class R2StorageAdapter implements StorageAdapter {
   }
 }
 
-class DrizzleAuditSink implements AuditSink {
-  constructor(private readonly db: any) {}
-
-  async record(
-    event: string,
-    metadata: Record<string, unknown>,
-  ): Promise<void> {
-    try {
-      const organizationId =
-        typeof metadata.organization_id === "string"
-          ? metadata.organization_id
-          : null;
-      const resourceId =
-        typeof metadata.document_id === "string" ? metadata.document_id : null;
-      const traceId =
-        typeof metadata.trace_id === "string" ? metadata.trace_id : null;
-      const actorId =
-        typeof metadata.actor_id === "string" ? metadata.actor_id : null;
-
-      await this.db.insert(schema.auditLogs).values({
-        organizationId,
-        action: event,
-        resourceType: "document",
-        resourceId,
-        traceId,
-        actorId,
-        metadata: metadata,
-      });
-    } catch (err) {
-      console.warn("[DrizzleAuditSink] Failed to write audit log:", err);
-    }
-  }
-}
-
 export default {
   async fetch(): Promise<Response> {
     return Response.json({
@@ -122,15 +82,9 @@ export default {
         storageProvider: "cloudflare_r2",
         bucketName: "STANDARD_DOCUMENTS_BUCKET",
         malwareScanner: new HeuristicMalwareScannerAdapter(),
-        repositories: {
-          documents: new DrizzleDocumentRepository(db),
-          jobs: new DrizzleDocumentJobRepository(db),
-          chunks: new DrizzleDocumentChunkRepository(db),
-          vectorReferences: new DrizzleVectorReferenceRepository(db),
-          audit: new DrizzleAuditSink(db),
-        },
+        repositories: createDrizzleIngestionRepositories(db),
         queue: {
-          enqueue: async (message: any) => {
+          enqueue: async (_message: any) => {
             console.warn(
               "Enqueueing back to DocumentIngestion is not supported",
             );
