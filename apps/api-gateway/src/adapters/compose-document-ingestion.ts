@@ -18,7 +18,7 @@ import {
 } from "@standard/kb";
 import type { KbServiceDependencies } from "@standard/kb";
 import { createDrizzleIngestionRepositories } from "./document-ingestion.repository";
-import { createDrizzleKbRepositories } from "./kb.repository";
+import { createDrizzleKbRepositories } from "@standard/kb";
 import type { Env } from "../types/env";
 import type { DbClient } from "./db";
 
@@ -82,4 +82,3 @@ export const composeDrizzleKb = (
     vectorProvider: DEFAULT_VECTOR_PROVIDER,
   };
 };
-

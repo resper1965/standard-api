@@ -1,9 +1,11 @@
-﻿/**
- * @module kb.repository
+/**
+ * @module kb/repositories/drizzle.repository
  * @description Drizzle PostgreSQL repositories for KB embedding jobs,
  * vector references, and search logs.
+ *
+ * Accepts any Drizzle-compatible db client via structural typing.
  */
-import { eq, and, inArray, sql } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 import {
   kbEmbeddingJobs,
   vectorReferences,
@@ -19,13 +21,75 @@ import type {
   KbVectorReferenceRepository,
   KbSearchLogRepository,
   KbRepositories,
-} from "@standard/kb";
-import type { DbClient } from "./db";
+} from "../types";
 
-// ---------- Embedding Jobs ----------
+// Structural type — compatible with NeonServerlessDatabase and PostgresJsDatabase
+export type DrizzleDbClient = {
+  select(): any;
+  insert(table: any): any;
+  update(table: any): any;
+  delete(table: any): any;
+};
+
+// --- Row types ---
+
+type EmbeddingJobRow = typeof kbEmbeddingJobs.$inferSelect;
+type VectorRefRow = typeof vectorReferences.$inferSelect;
+
+// --- Row mappers ---
+
+const mapEmbeddingJobRow = (row: EmbeddingJobRow): KbEmbeddingJobResponse => ({
+  job_id: row.id,
+  organization_id: row.organizationId,
+  assessment_id: row.assessmentId,
+  document_id: row.documentId,
+  chunk_id: row.chunkId ?? undefined,
+  vector_reference_id: undefined, // Not stored in embedding job table
+  job_type: row.jobType as KbEmbeddingJobResponse["job_type"],
+  status: row.status as KbEmbeddingJobResponse["status"],
+  attempt_count: row.attemptCount,
+  queued_at: row.queuedAt.toISOString(),
+  started_at: row.startedAt?.toISOString(),
+  completed_at: row.completedAt?.toISOString(),
+  error_code: row.errorCode ?? undefined,
+  error_message_safe: row.errorMessageSafe ?? undefined,
+  trace_id: row.traceId,
+  embedding_model:
+    ((row.metadata as Record<string, unknown>)?.embedding_model as string) ??
+    "",
+  vector_index_name:
+    ((row.metadata as Record<string, unknown>)?.vector_index_name as string) ??
+    "",
+  metadata: (row.metadata ?? {}) as Record<string, unknown>,
+});
+
+const mapVectorRefRow = (row: VectorRefRow): KbVectorReferenceResponse => {
+  const meta = (row.metadata ?? {}) as Record<string, unknown>;
+  return {
+    vector_reference_id: row.id,
+    organization_id: row.organizationId,
+    assessment_id: row.assessmentId,
+    document_id: (meta.document_id as string) ?? "",
+    chunk_id: row.kbEntryId,
+    vector_provider: row.vectorProvider,
+    vector_index_name: row.vectorIndexName,
+    vector_id: row.vectorId,
+    embedding_model: (meta.embedding_model as string) ?? null,
+    embedding_dimensions: (meta.embedding_dimensions as number) ?? null,
+    embedding_status:
+      (meta.embedding_status as KbVectorReferenceResponse["embedding_status"]) ??
+      "pending",
+    embedded_at: (meta.embedded_at as string) ?? undefined,
+    last_error_safe: (meta.last_error_safe as string) ?? undefined,
+    created_at: row.createdAt.toISOString(),
+    updated_at: row.updatedAt.toISOString(),
+  };
+};
+
+// --- Embedding Jobs ---
 
 const createDrizzleKbEmbeddingJobRepository = (
-  db: DbClient,
+  db: DrizzleDbClient,
 ): KbEmbeddingJobRepository => ({
   async saveJob(job: KbEmbeddingJobResponse) {
     await db
@@ -143,36 +207,10 @@ const createDrizzleKbEmbeddingJobRepository = (
   },
 });
 
-type EmbeddingJobRow = typeof kbEmbeddingJobs.$inferSelect;
-const mapEmbeddingJobRow = (row: EmbeddingJobRow): KbEmbeddingJobResponse => ({
-  job_id: row.id,
-  organization_id: row.organizationId,
-  assessment_id: row.assessmentId,
-  document_id: row.documentId,
-  chunk_id: row.chunkId ?? undefined,
-  vector_reference_id: undefined, // Not stored in embedding job table
-  job_type: row.jobType as KbEmbeddingJobResponse["job_type"],
-  status: row.status as KbEmbeddingJobResponse["status"],
-  attempt_count: row.attemptCount,
-  queued_at: row.queuedAt.toISOString(),
-  started_at: row.startedAt?.toISOString(),
-  completed_at: row.completedAt?.toISOString(),
-  error_code: row.errorCode ?? undefined,
-  error_message_safe: row.errorMessageSafe ?? undefined,
-  trace_id: row.traceId,
-  embedding_model:
-    ((row.metadata as Record<string, unknown>)?.embedding_model as string) ??
-    "",
-  vector_index_name:
-    ((row.metadata as Record<string, unknown>)?.vector_index_name as string) ??
-    "",
-  metadata: (row.metadata ?? {}) as Record<string, unknown>,
-});
-
-// ---------- KB Vector References ----------
+// --- KB Vector References ---
 
 const createDrizzleKbVectorReferenceRepository = (
-  db: DbClient,
+  db: DrizzleDbClient,
 ): KbVectorReferenceRepository => ({
   async save(ref: KbVectorReferenceResponse) {
     await db
@@ -181,7 +219,7 @@ const createDrizzleKbVectorReferenceRepository = (
         id: String(ref.vector_reference_id) as any,
         organizationId: String(ref.organization_id),
         assessmentId: String(ref.assessment_id),
-        kbEntryId: String(ref.chunk_id), // Maps to kbEntries via chunk-based lookup
+        kbEntryId: String(ref.chunk_id),
         vectorProvider: String(ref.vector_provider),
         vectorIndexName: String(ref.vector_index_name),
         vectorId:
@@ -281,34 +319,10 @@ const createDrizzleKbVectorReferenceRepository = (
   },
 });
 
-type VectorRefRow = typeof vectorReferences.$inferSelect;
-const mapVectorRefRow = (row: VectorRefRow): KbVectorReferenceResponse => {
-  const meta = (row.metadata ?? {}) as Record<string, unknown>;
-  return {
-    vector_reference_id: row.id,
-    organization_id: row.organizationId,
-    assessment_id: row.assessmentId,
-    document_id: (meta.document_id as string) ?? "",
-    chunk_id: row.kbEntryId,
-    vector_provider: row.vectorProvider,
-    vector_index_name: row.vectorIndexName,
-    vector_id: row.vectorId,
-    embedding_model: (meta.embedding_model as string) ?? null,
-    embedding_dimensions: (meta.embedding_dimensions as number) ?? null,
-    embedding_status:
-      (meta.embedding_status as KbVectorReferenceResponse["embedding_status"]) ??
-      "pending",
-    embedded_at: (meta.embedded_at as string) ?? undefined,
-    last_error_safe: (meta.last_error_safe as string) ?? undefined,
-    created_at: row.createdAt.toISOString(),
-    updated_at: row.updatedAt.toISOString(),
-  };
-};
-
-// ---------- Search Logs ----------
+// --- Search Logs ---
 
 const createDrizzleKbSearchLogRepository = (
-  db: DbClient,
+  db: DrizzleDbClient,
 ): KbSearchLogRepository => ({
   async record(log) {
     await db.insert(kbSearchLogs).values({
@@ -329,8 +343,9 @@ const createDrizzleKbSearchLogRepository = (
   },
 
   async list() {
+    type SearchLogRow = typeof kbSearchLogs.$inferSelect;
     const rows = await db.select().from(kbSearchLogs).limit(100);
-    return rows.map((row) => ({
+    return rows.map((row: SearchLogRow) => ({
       id: row.id,
       organization_id: row.organizationId,
       query_hash: row.queryHash,
@@ -342,11 +357,16 @@ const createDrizzleKbSearchLogRepository = (
   },
 });
 
-// ---------- Factory ----------
+// --- Factory ---
 
-export const createDrizzleKbRepositories = (db: DbClient): KbRepositories => ({
+/**
+ * Factory: creates all Drizzle-backed KB repositories.
+ * Pass the DbClient from the api-gateway composition root.
+ */
+export const createDrizzleKbRepositories = (
+  db: DrizzleDbClient,
+): KbRepositories => ({
   embeddingJobs: createDrizzleKbEmbeddingJobRepository(db),
   vectorReferences: createDrizzleKbVectorReferenceRepository(db),
   searchLogs: createDrizzleKbSearchLogRepository(db),
 });
-

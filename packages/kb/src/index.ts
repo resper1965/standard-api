@@ -16,4 +16,5 @@ export * from "./types";
 export * from "./vector-store/cloudflare-vectorize-store";
 export * from "./vector-store/mock-vector-store";
 export * from "./vector-store/vector-store";
-
+export { createDrizzleKbRepositories } from "./repositories/drizzle.repository";
+export type { DrizzleDbClient as KbDrizzleDbClient } from "./repositories/drizzle.repository";
