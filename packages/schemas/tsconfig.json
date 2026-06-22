@@ -1,5 +1,5 @@
 {
   "extends": "../../tsconfig.base.json",
   "include": ["src/**/*.ts"],
-  "exclude": ["src/seed.ts", "src/lifecycle-proof.ts"]
+  "exclude": ["src/seed.ts", "src/lifecycle-proof.ts", "src/populate-fde-codes.ts"]
 }
