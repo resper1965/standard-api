@@ -1,4 +1,4 @@
-﻿import {
+import {
   assertActor,
   assertContext,
   GapAnalysisWorkflowError,
@@ -100,6 +100,28 @@ export class GapReviewService {
 
     this.validatePatch(candidate);
     await this.deps.repositories.gapFindings.update(candidate);
+
+    if (this.deps.ledger && candidate.scf_control_id) {
+      try {
+        await this.deps.ledger.appendEvent({
+          organizationId: candidate.organization_id,
+          assessmentId: candidate.assessment_id,
+          scfControlId: candidate.scf_control_id,
+          scfVersionId: candidate.scf_version_id,
+          eventType: "finding_updated",
+          previousValue: finding as unknown as Record<string, unknown>,
+          newValue: candidate as unknown as Record<string, unknown>,
+          actorId: context.actorId,
+          traceId: context.traceId,
+        });
+      } catch (err) {
+        console.warn(
+          "[GapReviewService] Failed to append finding update to ledger:",
+          err,
+        );
+      }
+    }
+
     return candidate;
   }
 
@@ -178,4 +200,3 @@ export class GapReviewService {
     return version;
   }
 }
-

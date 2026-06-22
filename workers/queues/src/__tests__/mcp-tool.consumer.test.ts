@@ -231,6 +231,7 @@ describe("processMcpToolMessage — contratos por tool LLM", () => {
     "evaluate-evidence",
     "architect-remediation",
     "validar-evidencia-privacidade",
+    "calcular-score-risco-terceiro",
   ];
 
   for (const toolName of llmTools) {
@@ -266,7 +267,4 @@ describe("processMcpToolMessage — contratos por tool LLM", () => {
       ).resolves.toBeUndefined();
     });
   }
-
-  // TODO: Implement calcular-score-risco-terceiro in dispatchTool(), then re-enable this test
-  it.todo("calcular-score-risco-terceiro DEVE ser processado pelo consumer (Grupo B async per ADR-003) — awaiting dispatchTool implementation");
 });

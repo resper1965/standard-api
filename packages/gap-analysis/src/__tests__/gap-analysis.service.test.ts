@@ -20,7 +20,11 @@ import { GapReviewService } from "../services/gap-review.service";
 import { GapApprovalService } from "../services/gap-approval.service";
 import { GapValidationService } from "../services/gap-validation.service";
 import { EvidenceClassificationService } from "../services/evidence-classification.service";
-import { GapAnalysisWorkflowError, assertContext, assertActor } from "../errors";
+import {
+  GapAnalysisWorkflowError,
+  assertContext,
+  assertActor,
+} from "../errors";
 import {
   deriveRocDetermination,
   calculateRiskScore,
@@ -55,7 +59,9 @@ const SYNTHETIC_APPROVAL_ID = "a0000000-0000-4000-8000-00000000000a";
 
 // ─── Synthetic Factories ──────────────────────────────────────────────────────
 
-const makeContext = (overrides: Partial<GapAnalysisContext> = {}): GapAnalysisContext => ({
+const makeContext = (
+  overrides: Partial<GapAnalysisContext> = {},
+): GapAnalysisContext => ({
   organizationId: SYNTHETIC_ORG_ID,
   assessmentId: SYNTHETIC_ASSESSMENT_ID,
   actorId: SYNTHETIC_ACTOR_ID,
@@ -63,7 +69,9 @@ const makeContext = (overrides: Partial<GapAnalysisContext> = {}): GapAnalysisCo
   ...overrides,
 });
 
-const makeSoaVersion = (overrides: Partial<SoaVersionResponse> = {}): SoaVersionResponse => ({
+const makeSoaVersion = (
+  overrides: Partial<SoaVersionResponse> = {},
+): SoaVersionResponse => ({
   soa_version_id: SYNTHETIC_SOA_VERSION_ID,
   organization_id: SYNTHETIC_ORG_ID,
   assessment_id: SYNTHETIC_ASSESSMENT_ID,
@@ -78,7 +86,9 @@ const makeSoaVersion = (overrides: Partial<SoaVersionResponse> = {}): SoaVersion
   ...overrides,
 });
 
-const makeSoaItem = (overrides: Partial<SoaItemResponse> = {}): SoaItemResponse => ({
+const makeSoaItem = (
+  overrides: Partial<SoaItemResponse> = {},
+): SoaItemResponse => ({
   soa_item_id: SYNTHETIC_SOA_ITEM_ID,
   organization_id: SYNTHETIC_ORG_ID,
   assessment_id: SYNTHETIC_ASSESSMENT_ID,
@@ -99,7 +109,9 @@ const makeSoaItem = (overrides: Partial<SoaItemResponse> = {}): SoaItemResponse 
   ...overrides,
 });
 
-const makeEvidenceFinding = (overrides: Partial<EvidenceFindingResponse> = {}): EvidenceFindingResponse => ({
+const makeEvidenceFinding = (
+  overrides: Partial<EvidenceFindingResponse> = {},
+): EvidenceFindingResponse => ({
   evidence_finding_id: crypto.randomUUID(),
   organization_id: SYNTHETIC_ORG_ID,
   assessment_id: SYNTHETIC_ASSESSMENT_ID,
@@ -111,7 +123,9 @@ const makeEvidenceFinding = (overrides: Partial<EvidenceFindingResponse> = {}): 
   evidence_strength: "absent",
   evidence_status: "not_evidenced",
   evidence_summary: "Synthetic: no evidence found.",
-  evidence_limitations: ["Absence of evidence is not evidence of non-implementation."],
+  evidence_limitations: [
+    "Absence of evidence is not evidence of non-implementation.",
+  ],
   confidence_score: 0,
   trace_id: SYNTHETIC_TRACE_ID,
   created_at: "2026-01-01T00:00:00Z",
@@ -119,22 +133,28 @@ const makeEvidenceFinding = (overrides: Partial<EvidenceFindingResponse> = {}): 
   ...overrides,
 });
 
-const makeKbResult = (overrides: Partial<KbSearchResult> = {}): KbSearchResult => ({
-  document_id: crypto.randomUUID(),
-  chunk_id: crypto.randomUUID(),
-  snippet: "Synthetic evidence snippet for testing purposes.",
-  score: 0.9,
-  document_type: "policy",
-  retrieval_method: "semantic",
-  ...overrides,
-} as KbSearchResult);
+const makeKbResult = (
+  overrides: Partial<KbSearchResult> = {},
+): KbSearchResult =>
+  ({
+    document_id: crypto.randomUUID(),
+    chunk_id: crypto.randomUUID(),
+    snippet: "Synthetic evidence snippet for testing purposes.",
+    score: 0.9,
+    document_type: "policy",
+    retrieval_method: "semantic",
+    ...overrides,
+  }) as KbSearchResult;
 
 /**
  * Creates a minimal GapAnalysisDependencies with in-memory repositories
  * and mock SoA dependencies. No real services or DBs.
  */
-const makeDeps = (overrides: Partial<GapAnalysisDependencies> = {}): GapAnalysisDependencies => {
-  const repositories = overrides.repositories ?? createInMemoryGapAnalysisRepositories();
+const makeDeps = (
+  overrides: Partial<GapAnalysisDependencies> = {},
+): GapAnalysisDependencies => {
+  const repositories =
+    overrides.repositories ?? createInMemoryGapAnalysisRepositories();
 
   // Minimal mock for soa dependencies
   const soaVersions = new Map<string, SoaVersionResponse>();
@@ -143,9 +163,15 @@ const makeDeps = (overrides: Partial<GapAnalysisDependencies> = {}): GapAnalysis
   const soa = {
     repositories: {
       versions: {
-        save: vi.fn(async (v: SoaVersionResponse) => { soaVersions.set(v.soa_version_id, v); }),
-        update: vi.fn(async (v: SoaVersionResponse) => { soaVersions.set(v.soa_version_id, v); }),
-        get: vi.fn(async (id: string, _orgId: string) => soaVersions.get(id) ?? null),
+        save: vi.fn(async (v: SoaVersionResponse) => {
+          soaVersions.set(v.soa_version_id, v);
+        }),
+        update: vi.fn(async (v: SoaVersionResponse) => {
+          soaVersions.set(v.soa_version_id, v);
+        }),
+        get: vi.fn(
+          async (id: string, _orgId: string) => soaVersions.get(id) ?? null,
+        ),
         listByAssessment: vi.fn(async () => [...soaVersions.values()]),
         withOrganization: vi.fn(),
       },
@@ -159,10 +185,19 @@ const makeDeps = (overrides: Partial<GapAnalysisDependencies> = {}): GapAnalysis
           }
           return null;
         }),
-        listByVersion: vi.fn(async (versionId: string, _orgId: string) => soaItems.get(versionId) ?? []),
+        listByVersion: vi.fn(
+          async (versionId: string, _orgId: string) =>
+            soaItems.get(versionId) ?? [],
+        ),
         withOrganization: vi.fn(),
       },
-      scopes: { save: vi.fn(), get: vi.fn(), update: vi.fn(), listByAssessment: vi.fn(), withOrganization: vi.fn() },
+      scopes: {
+        save: vi.fn(),
+        get: vi.fn(),
+        update: vi.fn(),
+        listByAssessment: vi.fn(),
+        withOrganization: vi.fn(),
+      },
     },
     _soaVersions: soaVersions,
     _soaItems: soaItems,
@@ -202,19 +237,28 @@ describe("Error Guards", () => {
   describe("assertContext", () => {
     it("throws TENANT_CONTEXT_REQUIRED when organizationId is missing", () => {
       expect(() =>
-        assertContext({ assessmentId: SYNTHETIC_ASSESSMENT_ID, traceId: SYNTHETIC_TRACE_ID }),
+        assertContext({
+          assessmentId: SYNTHETIC_ASSESSMENT_ID,
+          traceId: SYNTHETIC_TRACE_ID,
+        }),
       ).toThrow("TENANT_CONTEXT_REQUIRED");
     });
 
     it("throws TENANT_CONTEXT_REQUIRED when assessmentId is missing", () => {
       expect(() =>
-        assertContext({ organizationId: SYNTHETIC_ORG_ID, traceId: SYNTHETIC_TRACE_ID }),
+        assertContext({
+          organizationId: SYNTHETIC_ORG_ID,
+          traceId: SYNTHETIC_TRACE_ID,
+        }),
       ).toThrow("TENANT_CONTEXT_REQUIRED");
     });
 
     it("throws TENANT_CONTEXT_REQUIRED when traceId is missing", () => {
       expect(() =>
-        assertContext({ organizationId: SYNTHETIC_ORG_ID, assessmentId: SYNTHETIC_ASSESSMENT_ID }),
+        assertContext({
+          organizationId: SYNTHETIC_ORG_ID,
+          assessmentId: SYNTHETIC_ASSESSMENT_ID,
+        }),
       ).toThrow("TENANT_CONTEXT_REQUIRED");
     });
 
@@ -312,7 +356,11 @@ describe("GapDraftService", () => {
 
       expect(findings).toHaveLength(3);
       // Each finding has sequential GAP codes
-      expect(findings.map((f) => f.gap_code).sort()).toEqual(["GAP-001", "GAP-002", "GAP-003"]);
+      expect(findings.map((f) => f.gap_code).sort()).toEqual([
+        "GAP-001",
+        "GAP-002",
+        "GAP-003",
+      ]);
     });
 
     it("increments version_number for subsequent drafts", async () => {
@@ -390,7 +438,9 @@ describe("GapDraftService", () => {
       });
 
       const finding = await service.generateGapFindingForSoaItem(
-        item, undefined, context,
+        item,
+        undefined,
+        context,
       );
 
       expect(finding.assessment_status).toBe("not_applicable_justified");
@@ -406,7 +456,9 @@ describe("GapDraftService", () => {
       });
 
       const finding = await service.generateGapFindingForSoaItem(
-        item, undefined, context,
+        item,
+        undefined,
+        context,
       );
 
       expect(finding.assessment_status).toBe("not_applicable_not_justified");
@@ -417,7 +469,9 @@ describe("GapDraftService", () => {
       const item = makeSoaItem();
 
       const finding = await service.generateGapFindingForSoaItem(
-        item, undefined, context,
+        item,
+        undefined,
+        context,
       );
 
       expect(finding.assessment_status).toBe("not_evidenced");
@@ -434,7 +488,9 @@ describe("GapDraftService", () => {
       });
 
       const finding = await service.generateGapFindingForSoaItem(
-        item, evidence, context,
+        item,
+        evidence,
+        context,
       );
 
       expect(finding.assessment_status).toBe("not_evidenced");
@@ -448,7 +504,9 @@ describe("GapDraftService", () => {
       });
 
       const finding = await service.generateGapFindingForSoaItem(
-        item, evidence, context,
+        item,
+        evidence,
+        context,
       );
 
       expect(finding.assessment_status).toBe("requires_validation");
@@ -465,7 +523,9 @@ describe("GapDraftService", () => {
       });
 
       const finding = await service.generateGapFindingForSoaItem(
-        item, evidence, context,
+        item,
+        evidence,
+        context,
       );
 
       expect(finding.assessment_status).toBe("partially_met");
@@ -482,7 +542,9 @@ describe("GapDraftService", () => {
       });
 
       const finding = await service.generateGapFindingForSoaItem(
-        item, evidence, context,
+        item,
+        evidence,
+        context,
       );
 
       expect(finding.assessment_status).toBe("met");
@@ -500,7 +562,9 @@ describe("GapDraftService", () => {
       });
 
       const finding = await service.generateGapFindingForSoaItem(
-        item, evidence, context,
+        item,
+        evidence,
+        context,
       );
 
       expect(finding.assessment_status).toBe("requires_validation");
@@ -517,7 +581,9 @@ describe("GapDraftService", () => {
       });
 
       const finding = await service.generateGapFindingForSoaItem(
-        item, evidence, context,
+        item,
+        evidence,
+        context,
       );
 
       expect(finding.evidence_finding_id).toBe(evidenceId);
@@ -527,7 +593,9 @@ describe("GapDraftService", () => {
       const item = makeSoaItem();
 
       const finding = await service.generateGapFindingForSoaItem(
-        item, undefined, context,
+        item,
+        undefined,
+        context,
       );
 
       expect(finding.organization_id).toBe(SYNTHETIC_ORG_ID);
@@ -542,7 +610,9 @@ describe("GapDraftService", () => {
       const item = makeSoaItem({ scf_control_id: undefined });
 
       const finding = await service.generateGapFindingForSoaItem(
-        item, undefined, context,
+        item,
+        undefined,
+        context,
       );
 
       expect(finding.scf_control_id).toBeUndefined();
@@ -624,7 +694,9 @@ describe("MCR Flag Validation", () => {
     const item = makeSoaItem();
 
     const finding = await service.generateGapFindingForSoaItem(
-      item, undefined, context,
+      item,
+      undefined,
+      context,
     );
 
     expect(finding.is_mcr_gap).toBe(true);
@@ -644,7 +716,9 @@ describe("MCR Flag Validation", () => {
     const item = makeSoaItem();
 
     const finding = await service.generateGapFindingForSoaItem(
-      item, undefined, context,
+      item,
+      undefined,
+      context,
     );
 
     expect(finding.is_mcr_gap).toBe(false);
@@ -664,7 +738,9 @@ describe("MCR Flag Validation", () => {
     const item = makeSoaItem();
 
     const finding = await service.generateGapFindingForSoaItem(
-      item, undefined, context,
+      item,
+      undefined,
+      context,
     );
 
     expect(finding.is_mcr_gap).toBe(false);
@@ -676,7 +752,9 @@ describe("MCR Flag Validation", () => {
     const item = makeSoaItem();
 
     const finding = await service.generateGapFindingForSoaItem(
-      item, undefined, context,
+      item,
+      undefined,
+      context,
     );
 
     expect(finding.is_mcr_gap).toBe(false);
@@ -696,7 +774,9 @@ describe("MCR Flag Validation", () => {
     const item = makeSoaItem({ framework_id: undefined as unknown as string });
 
     const finding = await service.generateGapFindingForSoaItem(
-      item, undefined, context,
+      item,
+      undefined,
+      context,
     );
 
     expect(finding.is_mcr_gap).toBe(false);
@@ -715,7 +795,9 @@ describe("EvidenceClassificationService", () => {
   describe("classifyCandidateEvidence", () => {
     it("returns absent when no KB results", async () => {
       const result = await classificationService.classifyCandidateEvidence(
-        item, [], context,
+        item,
+        [],
+        context,
       );
 
       expect(result.evidence_strength).toBe("absent");
@@ -727,10 +809,14 @@ describe("EvidenceClassificationService", () => {
     });
 
     it("returns conflicting when conflict signal is detected", async () => {
-      const results = [makeKbResult({ snippet: "This control is NOT implemented." })];
+      const results = [
+        makeKbResult({ snippet: "This control is NOT implemented." }),
+      ];
 
       const result = await classificationService.classifyCandidateEvidence(
-        item, results, context,
+        item,
+        results,
+        context,
       );
 
       expect(result.evidence_strength).toBe("conflicting");
@@ -740,12 +826,14 @@ describe("EvidenceClassificationService", () => {
 
     it("returns strong when best score >= 0.85 and >=2 results", async () => {
       const results = [
-        makeKbResult({ score: 0.90 }),
+        makeKbResult({ score: 0.9 }),
         makeKbResult({ score: 0.87 }),
       ];
 
       const result = await classificationService.classifyCandidateEvidence(
-        item, results, context,
+        item,
+        results,
+        context,
       );
 
       expect(result.evidence_strength).toBe("strong");
@@ -754,10 +842,12 @@ describe("EvidenceClassificationService", () => {
     });
 
     it("returns partial when best score >= 0.55 but not strong", async () => {
-      const results = [makeKbResult({ score: 0.70 })];
+      const results = [makeKbResult({ score: 0.7 })];
 
       const result = await classificationService.classifyCandidateEvidence(
-        item, results, context,
+        item,
+        results,
+        context,
       );
 
       expect(result.evidence_strength).toBe("partial");
@@ -766,10 +856,12 @@ describe("EvidenceClassificationService", () => {
     });
 
     it("returns weak when best score < 0.55", async () => {
-      const results = [makeKbResult({ score: 0.30 })];
+      const results = [makeKbResult({ score: 0.3 })];
 
       const result = await classificationService.classifyCandidateEvidence(
-        item, results, context,
+        item,
+        results,
+        context,
       );
 
       expect(result.evidence_strength).toBe("weak");
@@ -781,7 +873,9 @@ describe("EvidenceClassificationService", () => {
       const results = [makeKbResult({ score: 0.95 })];
 
       const result = await classificationService.classifyCandidateEvidence(
-        item, results, context,
+        item,
+        results,
+        context,
       );
 
       // Only 1 result, so even with score >= 0.85, it's partial not strong
@@ -791,12 +885,16 @@ describe("EvidenceClassificationService", () => {
 
   describe("determineEvidenceStrength", () => {
     it("returns absent for empty results", () => {
-      expect(classificationService.determineEvidenceStrength([])).toBe("absent");
+      expect(classificationService.determineEvidenceStrength([])).toBe(
+        "absent",
+      );
     });
 
     it("detects conflicting signals", () => {
       const results = [makeKbResult({ snippet: "Conflicting data found." })];
-      expect(classificationService.determineEvidenceStrength(results)).toBe("conflicting");
+      expect(classificationService.determineEvidenceStrength(results)).toBe(
+        "conflicting",
+      );
     });
   });
 
@@ -999,7 +1097,9 @@ describe("GapValidationService", () => {
     );
 
     expect(result.valid).toBe(false);
-    expect(result.blocking_errors.some((e) => e.includes("evidence_gap"))).toBe(true);
+    expect(result.blocking_errors.some((e) => e.includes("evidence_gap"))).toBe(
+      true,
+    );
   });
 
   it("passes validation for a well-formed met finding", async () => {
@@ -1244,6 +1344,30 @@ describe("GapReviewService", () => {
       expect(updated.severity).toBe("high");
       expect(updated.gap_rationale).toBe("Synthetic: confirmed not met");
       expect(updated.updated_at).not.toBe(finding.updated_at);
+    });
+
+    it("logs finding updates to ledger when ledger is available", async () => {
+      const appendEvent = vi.fn(async () => {});
+      const deps = makeDeps({
+        ledger: { appendEvent } as unknown as GapAnalysisDependencies["ledger"],
+      });
+      const { finding } = await seedDraftGapVersion(deps);
+      const service = new GapReviewService(deps);
+
+      await service.updateGapFinding(
+        finding.gap_finding_id,
+        { severity: "high", gap_rationale: "Synthetic: confirmed not met" },
+        context,
+      );
+
+      expect(appendEvent).toHaveBeenCalled();
+      const call = (
+        appendEvent.mock.calls as unknown as Array<[Record<string, unknown>]>
+      )[0]![0] as Record<string, unknown>;
+      expect(call.eventType).toBe("finding_updated");
+      expect(call.organizationId).toBe(SYNTHETIC_ORG_ID);
+      expect(call.assessmentId).toBe(SYNTHETIC_ASSESSMENT_ID);
+      expect(call.scfControlId).toBe(SYNTHETIC_SCF_CONTROL_ID);
     });
 
     it("blocks updating not_met without gap_rationale", async () => {
@@ -1600,7 +1724,9 @@ describe("GapApprovalService", () => {
     );
 
     expect(appendEvent).toHaveBeenCalled();
-    const call = (appendEvent.mock.calls as unknown as Array<[Record<string, unknown>]>)[0]![0] as Record<string, unknown>;
+    const call = (
+      appendEvent.mock.calls as unknown as Array<[Record<string, unknown>]>
+    )[0]![0] as Record<string, unknown>;
     expect(call.eventType).toBe("finding_updated");
     expect(call.organizationId).toBe(SYNTHETIC_ORG_ID);
     expect(call.assessmentId).toBe(SYNTHETIC_ASSESSMENT_ID);
@@ -1642,32 +1768,48 @@ describe("Risk Score Engine", () => {
 
   describe("deriveRocDetermination", () => {
     it("returns null for not_applicable statuses", () => {
-      expect(deriveRocDetermination("high", "not_applicable_justified")).toBeNull();
-      expect(deriveRocDetermination("high", "not_applicable_not_justified")).toBeNull();
+      expect(
+        deriveRocDetermination("high", "not_applicable_justified"),
+      ).toBeNull();
+      expect(
+        deriveRocDetermination("high", "not_applicable_not_justified"),
+      ).toBeNull();
     });
 
     it("returns strictly_conforms for met + no_gap", () => {
-      expect(deriveRocDetermination("informational", "met", "no_gap")).toBe("strictly_conforms");
+      expect(deriveRocDetermination("informational", "met", "no_gap")).toBe(
+        "strictly_conforms",
+      );
     });
 
     it("returns conforms for met without no_gap", () => {
-      expect(deriveRocDetermination("informational", "met", "documentation_gap")).toBe("conforms");
+      expect(
+        deriveRocDetermination("informational", "met", "documentation_gap"),
+      ).toBe("conforms");
     });
 
     it("returns material_weakness for critical + not_met", () => {
-      expect(deriveRocDetermination("critical", "not_met")).toBe("material_weakness");
+      expect(deriveRocDetermination("critical", "not_met")).toBe(
+        "material_weakness",
+      );
     });
 
     it("returns material_weakness for high + not_evidenced", () => {
-      expect(deriveRocDetermination("high", "not_evidenced")).toBe("material_weakness");
+      expect(deriveRocDetermination("high", "not_evidenced")).toBe(
+        "material_weakness",
+      );
     });
 
     it("returns significant_deficiency for high + partially_met", () => {
-      expect(deriveRocDetermination("high", "partially_met")).toBe("significant_deficiency");
+      expect(deriveRocDetermination("high", "partially_met")).toBe(
+        "significant_deficiency",
+      );
     });
 
     it("returns significant_deficiency for medium + not_met", () => {
-      expect(deriveRocDetermination("medium", "not_met")).toBe("significant_deficiency");
+      expect(deriveRocDetermination("medium", "not_met")).toBe(
+        "significant_deficiency",
+      );
     });
 
     it("returns conforms for low + not_met", () => {
@@ -1717,7 +1859,10 @@ describe("Risk Score Engine", () => {
     });
 
     it("clamps input values to valid ranges", () => {
-      const result = calculateRiskScore({ impactValue: 0, likelihoodValue: 10 });
+      const result = calculateRiskScore({
+        impactValue: 0,
+        likelihoodValue: 10,
+      });
       // Clamped: IE=1, OL=6
       expect(result.inherentRisk).toBe(6);
       expect(result.impactValue).toBe(1);
@@ -1772,7 +1917,9 @@ describe("ROC determination on gap finding creation", () => {
 
     // not_evidenced + medium → significant_deficiency
     const finding = await service.generateGapFindingForSoaItem(
-      item, undefined, context,
+      item,
+      undefined,
+      context,
     );
 
     expect(finding.roc_determination).toBe("significant_deficiency");
@@ -1784,7 +1931,9 @@ describe("ROC determination on gap finding creation", () => {
     const item = makeSoaItem();
 
     const finding = await service.generateGapFindingForSoaItem(
-      item, undefined, context,
+      item,
+      undefined,
+      context,
     );
 
     expect(finding.inherent_risk_score).toBeDefined();

@@ -12,6 +12,7 @@
  */
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
+import { eq, desc } from "drizzle-orm";
 import * as schema from "@standard/schemas";
 
 export interface McpToolQueueMessage {
@@ -528,6 +529,8 @@ async function dispatchTool(
       return architectRemediationTool(args, env, traceId);
     case "validar-evidencia-privacidade":
       return validarEvidenciaPrivacidadeTool(args, env, traceId);
+    case "calcular-score-risco-terceiro":
+      return calcularScoreRiscoTerceiroTool(args, env, traceId);
     default:
       throw new Error(`[MCP] Unhandled tool: ${toolName}`);
   }
@@ -732,4 +735,121 @@ async function deliverWebhookResult({
     },
     body,
   });
+}
+
+/** Standard Third-Party Risk Assessor — processes vendor answers and calculates TPRA risk score */
+async function calcularScoreRiscoTerceiroTool(
+  args: Record<string, unknown>,
+  env: McpToolEnv,
+  traceId: string,
+): Promise<ToolDispatchResult> {
+  const vendorId = String(args["vendor_id"] ?? "");
+  const assessmentId = String(args["assessment_id"] ?? "");
+  const responsesMatrix = Array.isArray(args["responses_matrix"])
+    ? args["responses_matrix"]
+    : [];
+  const MODEL = "@cf/meta/llama-3.1-8b-instruct";
+  const PROMPT_VERSION = "v1.0.0";
+
+  const systemPrompt = [
+    "You are the Standard Third-Party Risk Assessor (TPRA).",
+    "Analyse the vendor control compliance responses matrix and calculate the third-party risk score.",
+    "Return ONLY valid JSON with fields: raw_score (number 0-100), risk_category (low|medium|high|critical), scf_domain_failures (string[]).",
+    `vendor_id=${vendorId} assessment_id=${assessmentId} trace_id=${traceId}`,
+  ].join("\n");
+
+  const userPrompt = `Calculate TPRA score for vendor ${vendorId} in assessment ${assessmentId}. Responses matrix:\n${JSON.stringify(responsesMatrix)}`;
+
+  const { text: raw, usage } = await callAiGateway(
+    env,
+    MODEL,
+    systemPrompt,
+    userPrompt,
+  );
+  let parsed: Record<string, unknown>;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    parsed = {};
+  }
+
+  const rawCategory = String(parsed["risk_category"] ?? "medium").toLowerCase();
+  let riskCategory: "low" | "medium" | "high" | "critical" = "medium";
+  if (["low", "medium", "high", "critical"].includes(rawCategory)) {
+    riskCategory = rawCategory as any;
+  }
+
+  // Persist result to tpra_risk_scores table in Neon DB (best-effort)
+  if (env.DATABASE_URL && vendorId && assessmentId) {
+    try {
+      const sql = neon(env.DATABASE_URL);
+      const db = drizzle(sql, { schema });
+
+      let scfVersionId: string | null = null;
+      // Get scfVersionId from tpra_assessments
+      const [assessment] = await db
+        .select({ scfVersionId: schema.tpraAssessments.scfVersionId })
+        .from(schema.tpraAssessments)
+        .where(eq(schema.tpraAssessments.id, assessmentId));
+
+      if (assessment) {
+        scfVersionId = assessment.scfVersionId;
+      }
+
+      if (!scfVersionId) {
+        const [latestVersion] = await db
+          .select({ id: schema.scfVersions.id })
+          .from(schema.scfVersions)
+          .orderBy(desc(schema.scfVersions.createdAt))
+          .limit(1);
+        if (latestVersion) {
+          scfVersionId = latestVersion.id;
+        }
+      }
+
+      if (scfVersionId) {
+        // Query vendor organization context if missing
+        const [vendor] = await db
+          .select({ organizationId: schema.tpraVendors.organizationId })
+          .from(schema.tpraVendors)
+          .where(eq(schema.tpraVendors.id, vendorId));
+
+        const organizationId =
+          vendor?.organizationId ?? "00000000-0000-0000-0000-000000000000";
+
+        await db.insert(schema.tpraRiskScores).values({
+          organizationId,
+          tpraAssessmentId: assessmentId,
+          vendorId,
+          rawScore: String(parsed["raw_score"] ?? "50"),
+          riskCategory,
+          scfDomainFailures: Array.isArray(parsed["scf_domain_failures"])
+            ? parsed["scf_domain_failures"]
+            : [],
+          scfVersionId,
+          traceId,
+        });
+      }
+    } catch (err) {
+      console.warn(
+        "[calcularScoreRiscoTerceiroTool] Failed to persist risk score to DB:",
+        err,
+      );
+    }
+  }
+
+  return {
+    result: {
+      raw_score:
+        typeof parsed["raw_score"] === "number" ? parsed["raw_score"] : 0,
+      risk_category: riskCategory,
+      scf_domain_failures: Array.isArray(parsed["scf_domain_failures"])
+        ? parsed["scf_domain_failures"]
+        : [],
+      agent_run_id: traceId,
+      model: MODEL,
+      prompt_version: PROMPT_VERSION,
+    },
+    tokensUsed: usage.total_tokens,
+  };
 }
