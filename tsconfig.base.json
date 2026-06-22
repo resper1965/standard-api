@@ -1,4 +1,4 @@
-﻿{
+{
   "compilerOptions": {
     "ignoreDeprecations": "6.0",
     "target": "ES2022",
@@ -12,7 +12,8 @@
     "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
     "paths": {
-                        "@standard/workflows": ["workers/workflows/src/orchestrator-entry.ts"],
+      "zod": ["node_modules/zod"],
+      "@standard/workflows": ["workers/workflows/src/orchestrator-entry.ts"],
       "@standard/workflows/*": ["workers/workflows/src/*"],
       "@standard/*": ["packages/*/src/index.ts"]
     }
