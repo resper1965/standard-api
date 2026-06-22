@@ -25,6 +25,9 @@ export const WEBHOOK_EVENT_TYPES = [
   "tpra.assessment.submitted",
   "tpra.risk_score.created",
   "tpra.vendor.created",
+  "tpra.assessment.completed",
+  "vendor.risk_score.updated",
+  "ledger.audit.alert",
 ] as const;
 
 export type WebhookEventType = (typeof WEBHOOK_EVENT_TYPES)[number];
@@ -71,7 +74,9 @@ export const WebhookEndpointResponseSchema = z.object({
   updated_at: z.string(),
 });
 
-export type WebhookEndpointRecord = z.infer<typeof WebhookEndpointResponseSchema> & {
+export type WebhookEndpointRecord = z.infer<
+  typeof WebhookEndpointResponseSchema
+> & {
   signing_secret_hash: string;
 };
 
@@ -184,4 +189,3 @@ export type WebhookRepositoryAdapter = {
     newSecretMasked: string,
   ): Promise<WebhookEndpointRecord | null>;
 };
-
