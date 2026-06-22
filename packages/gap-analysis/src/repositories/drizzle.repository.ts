@@ -1,7 +1,10 @@
-﻿/**
- * @module gap-analysis.repository
+/**
+ * @module gap-analysis/repositories/drizzle.repository
  * @description Drizzle PostgreSQL repositories for Gap Analysis.
  * Uses $inferSelect types for row mappers so column names match exactly.
+ *
+ * Accepts any Drizzle-compatible db client (NeonServerless, PostgresJs, etc.)
+ * via structural typing — no driver-specific import required.
  */
 import { eq } from "drizzle-orm";
 
@@ -23,11 +26,123 @@ import type {
   GapAnalysisVersionRepository,
   GapFindingRepository,
   GapAnalysisRepositories,
-} from "@standard/gap-analysis";
-import type { DbClient } from "./db";
+} from "../types";
+
+// Structural type — compatible with NeonServerlessDatabase and PostgresJsDatabase
+// The api-gateway passes its DbClient; packages must not import from apps/.
+export type DrizzleDbClient = {
+  select(): any;
+  insert(table: any): any;
+  update(table: any): any;
+  delete(table: any): any;
+};
+
+// --- Row types (inferred from schema) ---
+
+type EvidenceFindingRow = typeof evidenceFindings.$inferSelect;
+type EvidenceSourceRow = typeof evidenceSources.$inferSelect;
+type GapVersionRow = typeof gapAnalysisVersions.$inferSelect;
+type GapFindingRow = typeof gapFindings.$inferSelect;
+
+// --- Row mappers ---
+
+const mapEvidenceFindingRow = (
+  row: EvidenceFindingRow,
+): EvidenceFindingResponse => ({
+  evidence_finding_id: row.id,
+  organization_id: row.organizationId,
+  assessment_id: row.assessmentId,
+  soa_version_id: row.soaVersionId,
+  soa_item_id: row.soaItemId,
+  framework_id: row.frameworkId,
+  framework_requirement_id: row.frameworkRequirementId,
+  scf_version_id: row.scfVersionId,
+  scf_control_id: row.scfControlId ?? undefined,
+  evidence_strength: row.evidenceStrength,
+  evidence_status: row.evidenceStatus,
+  evidence_summary: row.evidenceSummary,
+  evidence_limitations: row.evidenceLimitations,
+  confidence_score: Number(row.confidenceScore ?? 0),
+  generated_by_agent_run_id: row.generatedByAgentRunId ?? undefined,
+  trace_id: row.traceId,
+  created_at: row.createdAt.toISOString(),
+  updated_at: row.updatedAt.toISOString(),
+});
+
+const mapEvidenceSourceRow = (
+  row: EvidenceSourceRow,
+): EvidenceSourceResponse => ({
+  evidence_source_id: row.id,
+  organization_id: row.organizationId,
+  assessment_id: row.assessmentId,
+  evidence_finding_id: row.evidenceFindingId,
+  document_id: row.documentId,
+  chunk_id: row.chunkId,
+  vector_reference_id: row.vectorReferenceId ?? undefined,
+  source_type: row.sourceType,
+  source_title: row.sourceTitle ?? undefined,
+  source_location: row.sourceLocation ?? undefined,
+  snippet: row.snippet,
+  retrieval_score: Number(row.retrievalScore),
+  retrieval_method: row.retrievalMethod,
+  candidate_evidence: row.candidateEvidence,
+  created_at: row.createdAt.toISOString(),
+});
+
+const mapGapVersionRow = (row: GapVersionRow): GapAnalysisVersionResponse => ({
+  gap_analysis_version_id: row.id,
+  organization_id: row.organizationId,
+  assessment_id: row.assessmentId,
+  version_number: row.versionNumber,
+  status: row.status as GapAnalysisVersionResponse["status"],
+  source_soa_version_id: row.sourceSoaVersionId,
+  framework_id: row.frameworkId,
+  scf_version_id: row.scfVersionId,
+  generated_by_agent_run_id: row.generatedByAgentRunId ?? undefined,
+  created_by: row.createdBy ?? "system",
+  created_at: row.createdAt.toISOString(),
+  submitted_for_review_at: row.submittedForReviewAt?.toISOString(),
+  approved_by: row.approvedBy ?? undefined,
+  approved_at: row.approvedAt?.toISOString(),
+  approval_event_id: row.approvalEventId ?? undefined,
+  superseded_by: row.supersededBy ?? undefined,
+  trace_id: row.traceId ?? "trace-not-set",
+  metadata: row.metadata,
+});
+
+const mapGapFindingRow = (row: GapFindingRow): GapFindingResponse => ({
+  gap_finding_id: row.id,
+  organization_id: row.organizationId,
+  assessment_id: row.assessmentId,
+  gap_analysis_version_id: row.gapAnalysisVersionId,
+  soa_version_id: row.soaVersionId,
+  soa_item_id: row.soaItemId,
+  framework_id: row.frameworkId,
+  framework_requirement_id: row.frameworkRequirementId,
+  scf_version_id: row.scfVersionId,
+  scf_control_id: row.scfControlId ?? undefined,
+  evidence_finding_id: row.evidenceFindingId ?? undefined,
+  gap_code: row.gapCode,
+  assessment_status: row.assessmentStatus,
+  gap_type: row.gapType,
+  severity: row.severity,
+  is_mcr_gap: row.isMcrGap ?? false,
+  impact: row.impact ?? undefined,
+  likelihood: row.likelihood ?? undefined,
+  gap_summary: row.gapSummary,
+  gap_rationale: row.gapRationale ?? undefined,
+  recommendation_summary: row.recommendationSummary ?? undefined,
+  responsibility_type: row.responsibilityType ?? "internal",
+  confidence_score: Number(row.confidenceScore ?? 0),
+  requires_user_validation: row.requiresUserValidation,
+  created_at: row.createdAt.toISOString(),
+  updated_at: row.updatedAt.toISOString(),
+});
+
+// --- Repository factories ---
 
 const createDrizzleEvidenceFindingRepository = (
-  db: DbClient,
+  db: DrizzleDbClient,
 ): EvidenceFindingRepository => {
   const repo = {
     async save(finding: EvidenceFindingResponse) {
@@ -50,9 +165,7 @@ const createDrizzleEvidenceFindingRepository = (
             finding.scf_control_id != null
               ? String(finding.scf_control_id)
               : null,
-
           evidenceStrength: String(finding.evidence_strength) as any,
-
           evidenceStatus: String(finding.evidence_status) as any,
           evidenceSummary: String(finding.evidence_summary),
           evidenceLimitations: [],
@@ -70,7 +183,6 @@ const createDrizzleEvidenceFindingRepository = (
         .update(evidenceFindings)
         .set({
           evidenceStrength: String(finding.evidence_strength) as any,
-
           evidenceStatus: String(finding.evidence_status) as any,
           evidenceSummary: String(finding.evidence_summary),
           evidenceLimitations: [],
@@ -119,7 +231,7 @@ const createDrizzleEvidenceFindingRepository = (
 };
 
 const createDrizzleEvidenceSourceRepository = (
-  db: DbClient,
+  db: DrizzleDbClient,
 ): EvidenceSourceRepository => {
   const repo = {
     async saveMany(sources: EvidenceSourceResponse[]) {
@@ -177,7 +289,7 @@ const createDrizzleEvidenceSourceRepository = (
 };
 
 const createDrizzleGapAnalysisVersionRepository = (
-  db: DbClient,
+  db: DrizzleDbClient,
 ): GapAnalysisVersionRepository => {
   const repo = {
     async save(version: GapAnalysisVersionResponse) {
@@ -271,7 +383,7 @@ const createDrizzleGapAnalysisVersionRepository = (
 };
 
 const createDrizzleGapFindingRepository = (
-  db: DbClient,
+  db: DrizzleDbClient,
 ): GapFindingRepository => {
   const repo = {
     async saveMany(findings: GapFindingResponse[]) {
@@ -296,11 +408,8 @@ const createDrizzleGapFindingRepository = (
                 ? String(f.evidence_finding_id)
                 : null,
             gapCode: String(f.gap_code),
-
             assessmentStatus: String(f.assessment_status) as any,
-
             gapType: String(f.gap_type) as any,
-
             severity: String(f.severity) as any,
             impact: f.impact != null ? String(f.impact) : null,
             likelihood: f.likelihood != null ? String(f.likelihood) : null,
@@ -311,7 +420,6 @@ const createDrizzleGapFindingRepository = (
               f.recommendation_summary != null
                 ? String(f.recommendation_summary)
                 : null,
-
             responsibilityType: (f.responsibility_type != null
               ? String(f.responsibility_type)
               : "internal") as any,
@@ -326,9 +434,7 @@ const createDrizzleGapFindingRepository = (
         .update(gapFindings)
         .set({
           assessmentStatus: String(finding.assessment_status) as any,
-
           gapType: String(finding.gap_type) as any,
-
           severity: String(finding.severity) as any,
           impact: finding.impact != null ? String(finding.impact) : null,
           likelihood:
@@ -342,7 +448,6 @@ const createDrizzleGapFindingRepository = (
             finding.recommendation_summary != null
               ? String(finding.recommendation_summary)
               : null,
-
           responsibilityType: (finding.responsibility_type != null
             ? String(finding.responsibility_type)
             : "internal") as any,
@@ -380,111 +485,15 @@ const createDrizzleGapFindingRepository = (
   return repo;
 };
 
+/**
+ * Factory: creates all Drizzle-backed Gap Analysis repositories.
+ * Pass the DbClient from the api-gateway composition root.
+ */
 export const createDrizzleGapAnalysisRepositories = (
-  db: DbClient,
+  db: DrizzleDbClient,
 ): GapAnalysisRepositories => ({
   evidenceFindings: createDrizzleEvidenceFindingRepository(db),
   evidenceSources: createDrizzleEvidenceSourceRepository(db),
   gapVersions: createDrizzleGapAnalysisVersionRepository(db),
   gapFindings: createDrizzleGapFindingRepository(db),
-});
-
-// --- Row mappers ---
-
-type EvidenceFindingRow = typeof evidenceFindings.$inferSelect;
-type EvidenceSourceRow = typeof evidenceSources.$inferSelect;
-type GapVersionRow = typeof gapAnalysisVersions.$inferSelect;
-type GapFindingRow = typeof gapFindings.$inferSelect;
-
-const mapEvidenceFindingRow = (
-  row: EvidenceFindingRow,
-): EvidenceFindingResponse => ({
-  evidence_finding_id: row.id,
-  organization_id: row.organizationId,
-  assessment_id: row.assessmentId,
-  soa_version_id: row.soaVersionId,
-  soa_item_id: row.soaItemId,
-  framework_id: row.frameworkId,
-  framework_requirement_id: row.frameworkRequirementId,
-  scf_version_id: row.scfVersionId,
-  scf_control_id: row.scfControlId ?? undefined,
-  evidence_strength: row.evidenceStrength,
-  evidence_status: row.evidenceStatus,
-  evidence_summary: row.evidenceSummary,
-  evidence_limitations: row.evidenceLimitations,
-  confidence_score: Number(row.confidenceScore ?? 0),
-  generated_by_agent_run_id: row.generatedByAgentRunId ?? undefined,
-  trace_id: row.traceId,
-  created_at: row.createdAt.toISOString(),
-  updated_at: row.updatedAt.toISOString(),
-});
-
-const mapEvidenceSourceRow = (
-  row: EvidenceSourceRow,
-): EvidenceSourceResponse => ({
-  evidence_source_id: row.id,
-  organization_id: row.organizationId,
-  assessment_id: row.assessmentId,
-  evidence_finding_id: row.evidenceFindingId,
-  document_id: row.documentId,
-  chunk_id: row.chunkId,
-  vector_reference_id: row.vectorReferenceId ?? undefined,
-  source_type: row.sourceType,
-  source_title: row.sourceTitle ?? undefined,
-  source_location: row.sourceLocation ?? undefined,
-  snippet: row.snippet,
-  retrieval_score: Number(row.retrievalScore),
-  retrieval_method: row.retrievalMethod,
-  candidate_evidence: row.candidateEvidence,
-  created_at: row.createdAt.toISOString(),
-});
-
-const mapGapVersionRow = (row: GapVersionRow): GapAnalysisVersionResponse => ({
-  gap_analysis_version_id: row.id,
-  organization_id: row.organizationId,
-  assessment_id: row.assessmentId,
-  version_number: row.versionNumber,
-  status: row.status as GapAnalysisVersionResponse["status"],
-  source_soa_version_id: row.sourceSoaVersionId,
-  framework_id: row.frameworkId,
-  scf_version_id: row.scfVersionId,
-  generated_by_agent_run_id: row.generatedByAgentRunId ?? undefined,
-  created_by: row.createdBy ?? "system",
-  created_at: row.createdAt.toISOString(),
-  submitted_for_review_at: row.submittedForReviewAt?.toISOString(),
-  approved_by: row.approvedBy ?? undefined,
-  approved_at: row.approvedAt?.toISOString(),
-  approval_event_id: row.approvalEventId ?? undefined,
-  superseded_by: row.supersededBy ?? undefined,
-  trace_id: row.traceId ?? "trace-not-set",
-  metadata: row.metadata,
-});
-
-const mapGapFindingRow = (row: GapFindingRow): GapFindingResponse => ({
-  gap_finding_id: row.id,
-  organization_id: row.organizationId,
-  assessment_id: row.assessmentId,
-  gap_analysis_version_id: row.gapAnalysisVersionId,
-  soa_version_id: row.soaVersionId,
-  soa_item_id: row.soaItemId,
-  framework_id: row.frameworkId,
-  framework_requirement_id: row.frameworkRequirementId,
-  scf_version_id: row.scfVersionId,
-  scf_control_id: row.scfControlId ?? undefined,
-  evidence_finding_id: row.evidenceFindingId ?? undefined,
-  gap_code: row.gapCode,
-  assessment_status: row.assessmentStatus,
-  gap_type: row.gapType,
-  severity: row.severity,
-  is_mcr_gap: row.isMcrGap ?? false,
-  impact: row.impact ?? undefined,
-  likelihood: row.likelihood ?? undefined,
-  gap_summary: row.gapSummary,
-  gap_rationale: row.gapRationale ?? undefined,
-  recommendation_summary: row.recommendationSummary ?? undefined,
-  responsibility_type: row.responsibilityType ?? "internal",
-  confidence_score: Number(row.confidenceScore ?? 0),
-  requires_user_validation: row.requiresUserValidation,
-  created_at: row.createdAt.toISOString(),
-  updated_at: row.updatedAt.toISOString(),
 });

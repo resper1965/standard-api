@@ -11,4 +11,5 @@ export * from "./services/gap-analysis-execution.service";
 export * from "./services/gap-validation.service";
 
 export * from "./types";
-
+export { createDrizzleGapAnalysisRepositories } from "./repositories/drizzle.repository";
+export type { DrizzleDbClient } from "./repositories/drizzle.repository";

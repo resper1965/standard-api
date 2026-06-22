@@ -68,7 +68,7 @@ import {
   createDrizzleTenantRepository,
 } from "./tenant.repository";
 import { createDrizzleSoaRepositories } from "./soa.repository";
-import { createDrizzleGapAnalysisRepositories } from "./gap-analysis.repository";
+import { createDrizzleGapAnalysisRepositories } from "@standard/gap-analysis";
 import { createDrizzlePoamRepositories } from "./poam.repository";
 import { createDrizzleReportRepositories } from "./reporting.repository";
 import {
@@ -370,4 +370,3 @@ export const createDrizzleRepositories = (
     authRepo: createAuthRepository(db),
   };
 };
-
