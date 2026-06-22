@@ -82,7 +82,7 @@ test("ApiKeyAuthProvider autentica key válida com SHA-256", async () => {
   expect(result.organization_id).toBe("t-001");
   expect(result.auth_method).toBe("api_key");
   expect(result.actor_type).toBe("service_account");
-  expect(result.roles).toContain("integration_service");
+  expect(result.roles).toContain("organization_admin");
 });
 
 test("ApiKeyAuthProvider rejeita key expirada", async () => {
@@ -173,7 +173,7 @@ test("ApiKeyAuthProvider extrai key de ApiKey header", async () => {
   expect(result.actor_id).toBe("apikey:key-005");
 });
 
-test("ApiKeyAuthProvider: scopes vazio = full integration_service permissions", async () => {
+test("ApiKeyAuthProvider: scopes vazio = full organization_admin permissions", async () => {
   const rawKey = "mock_full_access";
   const hash = await sha256(rawKey);
 
@@ -190,10 +190,11 @@ test("ApiKeyAuthProvider: scopes vazio = full integration_service permissions", 
   const result = await provider.authenticate({ apiKey: rawKey, traceId: "t8" });
 
   if (!result) throw new Error("Expected auth context");
-  // integration_service has: assessment:read, document:upload, document:read, kb:index, kb:search, report:read
   expect(result.permissions).toContain("assessment:read");
+  expect(result.permissions).toContain("assessment:create");
   expect(result.permissions).toContain("document:upload");
   expect(result.permissions).toContain("kb:search");
+  expect(result.permissions).toContain("webhook:create");
 });
 
 // ═══════════════════════════════════════════════════════════════

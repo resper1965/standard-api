@@ -85,11 +85,7 @@ async function gatherActorPermissions(
         ];
       if (rolePerms) actorPermissions.push(...rolePerms);
     } else {
-      // Default to assessor (least privilege) — explicit role assignment required for higher access
-      const rolePerms =
-        DEFAULT_ROLE_PERMISSIONS[
-          "assessor" as keyof typeof DEFAULT_ROLE_PERMISSIONS
-        ];
+      const rolePerms = DEFAULT_ROLE_PERMISSIONS["organization_admin"];
       if (rolePerms) actorPermissions.push(...rolePerms);
     }
   }

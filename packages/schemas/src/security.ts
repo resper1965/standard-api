@@ -16,19 +16,7 @@ export const AuthMethodSchema = z.enum([
   "mock_dev",
 ]);
 
-export const RoleSchema = z.enum([
-  "platform_admin",
-  "tenant_admin",
-  "organization_admin",
-  "assessment_owner",
-  "assessor",
-  "reviewer",
-  "approver",
-  "auditor_readonly",
-  "integration_service",
-  "support_readonly",
-  "system",
-]);
+export const RoleSchema = z.enum(["platform_admin", "organization_admin"]);
 
 export const PermissionSchema = z.enum([
   "tenant:read",
@@ -263,4 +251,3 @@ export type PromptContentTrustLevel = z.infer<
   typeof PromptContentTrustLevelSchema
 >;
 export type ToolUsePolicy = z.infer<typeof ToolUsePolicySchema>;
-

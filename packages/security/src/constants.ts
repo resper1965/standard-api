@@ -90,136 +90,112 @@ export const ALL_PERMISSIONS = [
 
 export const DEFAULT_ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   platform_admin: [...ALL_PERMISSIONS],
-  tenant_admin: [
-    "tenant:read",
-    "tenant:update",
-    "organization:create",
+  organization_admin: [
+    // Organization (own org only — no cross-tenant, no org:create)
     "organization:read",
     "organization:update",
     "membership:manage",
+    // Assessment — full lifecycle
     "assessment:create",
     "assessment:read",
     "assessment:update",
-    "audit:read"
-  ],
-  organization_admin: [
-    "organization:read",
-    "organization:update",
-    "assessment:create",
-    "assessment:read",
-    "assessment:update",
-    "document:upload",
-    "document:read",
-    "kb:index",
-    "kb:search",
-    "soa:read",
-    "gap:read",
-    "poam:read",
-    "report:read"
-  ],
-  assessment_owner: [
-    "assessment:read",
-    "assessment:update",
+    "assessment:delete",
     "assessment:run_workflow",
+    "assessment:close",
     "assessment:cancel",
+    // Documents
     "document:upload",
     "document:read",
+    "document:delete",
     "document:reprocess",
+    "document:write",
+    // KB
     "kb:index",
     "kb:search",
+    "kb:read",
+    "kb:write",
+    // SCF (read + import; scf:admin is platform-only)
+    "scf:read",
+    "scf:import",
+    "scf:create",
+    // Scope
     "scope:create",
     "scope:update",
+    "scope:approve",
+    // SOA
     "soa:create",
     "soa:update",
     "soa:submit_review",
+    "soa:approve",
     "soa:read",
+    // Evidence
     "evidence:run",
     "evidence:read",
+    // Gap
     "gap:create",
     "gap:update",
     "gap:submit_review",
+    "gap:approve",
     "gap:read",
+    // Maturity
     "maturity:create",
     "maturity:update",
     "maturity:submit_review",
+    "maturity:approve",
     "maturity:read",
+    // POAM
     "poam:create",
     "poam:update",
     "poam:submit_review",
+    "poam:approve",
     "poam:read",
+    // Reports
     "report:create",
     "report:render",
+    "report:approve",
     "report:read",
     "report:download",
+    "report:update",
+    // Agents
     "agent:run",
-    "agent:read_runs"
+    "agent:dry_run",
+    "agent:read_runs",
+    "agent:read",
+    "agent:create",
+    // Approvals & artifacts
+    "approval:create",
+    "approval:read",
+    "artifact:create",
+    "artifact:read",
+    "artifact:update",
+    "artifact:approve",
+    // Webhooks
+    "webhook:create",
+    "webhook:read",
+    "webhook:update",
+    "webhook:delete",
+    // Privacy / ROPA
+    "privacy:create",
+    "privacy:read",
+    "privacy:update",
+    "privacy:delete",
+    // Intelligence
+    "intelligence:read",
+    "intelligence:create",
+    // Audit (scoped to own org by the audit repository)
+    "audit:read",
   ],
-  assessor: [
-    "assessment:read",
-    "document:upload",
-    "document:read",
-    "document:reprocess",
-    "kb:index",
-    "kb:search",
-    "scope:create",
-    "scope:update",
-    "soa:create",
-    "soa:update",
-    "soa:submit_review",
-    "soa:read",
-    "evidence:run",
-    "evidence:read",
-    "gap:create",
-    "gap:update",
-    "gap:submit_review",
-    "gap:read",
-    "poam:create",
-    "poam:update",
-    "poam:submit_review",
-    "poam:read",
-    "report:create",
-    "report:render",
-    "report:read",
-    "agent:run",
-    "agent:read_runs"
-  ],
-  reviewer: ["assessment:read", "document:read", "kb:search", "soa:read", "gap:read", "maturity:read", "poam:read", "report:read"],
-  approver: [
-    "assessment:read",
-    "document:read",
-    "kb:search",
-    "soa:read",
-    "soa:approve",
-    "gap:read",
-    "gap:approve",
-    "maturity:read",
-    "maturity:approve",
-    "poam:read",
-    "poam:approve",
-    "report:read",
-    "report:approve",
-    "report:download"
-  ],
-  auditor_readonly: ["assessment:read", "soa:read", "gap:read", "maturity:read", "poam:read", "report:read", "report:download", "audit:read"],
-  integration_service: ["assessment:read", "document:upload", "document:read", "kb:index", "kb:search", "report:read"],
-  support_readonly: ["tenant:read", "organization:read", "assessment:read", "audit:read"],
-  system: ["assessment:read", "assessment:update", "assessment:run_workflow", "kb:index", "agent:run", "agent:read_runs", "report:render"]
 };
 
 /**
  * Maps Better Auth organization roles (from memberships table) to Standard GRC roles.
- *
- * Better Auth's organization plugin uses simple roles (owner, admin, member).
- * Standard's GRC RBAC uses domain-specific roles (organization_admin, assessment_owner, etc.).
- * This mapping bridges the two systems so session users get appropriate permissions.
- *
- * Future: Per-assessment role assignments will allow finer-grained roles
- * (approver, reviewer, auditor_readonly) without changing this base mapping.
+ * All org members share the organization_admin role — permission scoping is handled
+ * at the API key scope level for M2M, and by tenant isolation for browser sessions.
  */
 export const ORG_ROLE_TO_GRC_ROLE: Record<string, Role> = {
   owner: "organization_admin",
-  admin: "assessment_owner",
-  member: "assessor",
+  admin: "organization_admin",
+  member: "organization_admin",
 };
 
 /**
@@ -241,10 +217,9 @@ export const DEFAULT_FILE_SECURITY_POLICY: FileSecurityPolicy = {
     "text/csv",
     "application/csv",
     "application/json",
-    "text/json"
+    "text/json",
   ],
   require_content_hash: true,
   require_malware_scan: false,
-  quarantine_on_rejection: true
+  quarantine_on_rejection: true,
 };
-

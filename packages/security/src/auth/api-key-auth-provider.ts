@@ -50,7 +50,7 @@ type ApiKeysDbClient = {
 export class ApiKeyAuthProvider implements AuthProvider {
   constructor(
     private readonly db: ApiKeysDbClient,
-    private readonly apiKeysTable: ApiKeysTableRef
+    private readonly apiKeysTable: ApiKeysTableRef,
   ) {}
 
   async authenticate(input: AuthenticateInput): Promise<AuthContext | null> {
@@ -90,7 +90,7 @@ export class ApiKeyAuthProvider implements AuthProvider {
       actor_type: "service_account",
       organization_id: record.organizationId,
       organization_ids: [record.organizationId],
-      roles: ["integration_service"],
+      roles: ["organization_admin"],
       permissions: this.resolvePermissions(record.scopes ?? []),
       auth_method: "api_key",
       issued_at: new Date().toISOString(),
@@ -135,18 +135,18 @@ export class ApiKeyAuthProvider implements AuthProvider {
    * Map scopes to permissions.
    * Empty scopes = wildcard (backward compatible with existing keys).
    */
-  private resolvePermissions(
-    scopes: string[]
-  ): Permission[] {
+  private resolvePermissions(scopes: string[]): Permission[] {
+    const allPerms = DEFAULT_ROLE_PERMISSIONS.organization_admin;
     if (scopes.length === 0) {
-      // Default: integration_service permissions
-      return [...DEFAULT_ROLE_PERMISSIONS.integration_service];
+      return [...allPerms];
     }
-    const allPerms = DEFAULT_ROLE_PERMISSIONS.integration_service;
     const result: Permission[] = [];
     for (const perm of allPerms) {
       const [resource] = perm.split(":");
-      if (resource && scopes.some((s) => perm.startsWith(s) || s === resource)) {
+      if (
+        resource &&
+        scopes.some((s) => perm.startsWith(s) || s === resource)
+      ) {
         result.push(perm);
       }
     }
