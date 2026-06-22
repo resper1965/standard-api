@@ -7,6 +7,9 @@ import {
 } from "../routes/reference-data.routes";
 import type { AppDependencies } from "../http";
 import { AgentRuntimeService } from "@standard/agent-runtime";
+import { computeComplianceIndex } from "@standard/assessment-engine";
+import type { StrmControlInput } from "@standard/assessment-engine";
+import type { StrmOperator } from "@standard/schemas";
 
 export class IntelligenceService {
   constructor(private readonly deps?: AppDependencies) {}
@@ -226,8 +229,47 @@ export class IntelligenceService {
     return IntelligenceService.extractFrameworkControls(mask);
   }
 
+  private async getFrameworkMappings(mask: string): Promise<any[]> {
+    if (!this.deps?.scf) return [];
+
+    const frameworkIds =
+      IntelligenceService.FRAMEWORK_ID_MAP[mask.toLowerCase()];
+    const codesToResolve =
+      frameworkIds && frameworkIds.length > 0 ? frameworkIds : [mask];
+
+    try {
+      const allFrameworks = await this.deps.scf.frameworks.listFrameworks();
+      const allVersions = await this.deps.scf.versions.listVersions();
+
+      for (const frameworkCode of codesToResolve) {
+        const matchingFws = allFrameworks.filter(
+          (f) => f.framework_code.toLowerCase() === frameworkCode.toLowerCase(),
+        );
+        if (matchingFws.length === 0) continue;
+
+        for (const fw of matchingFws) {
+          for (const version of allVersions) {
+            const mappings = await this.deps.scf.mappings.mapFrameworkToScf(
+              fw.id,
+              version.id,
+            );
+            if (mappings.length > 0) {
+              return await this.deps.scf.mappings.enrichMappings(mappings);
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.warn(
+        "[IntelligenceService] Failed to retrieve framework mappings from DB:",
+        err,
+      );
+    }
+    return [];
+  }
+
   /**
-   * Async version of calculateGapAnalysis â€” uses DB-backed framework controls when available.
+   * Async version of calculateGapAnalysis — uses DB-backed framework controls and STRM weights (ADR-001) when available.
    */
   async calculateGapAnalysisAsync(
     frameworkMask: string,
@@ -248,15 +290,54 @@ export class IntelligenceService {
       }
     }
 
-    // TODO(ADR-001): migrate to STRM-weighted compliance (computeComplianceIndex).
-    // Requires SoA items with maturity_level + STRM mapping data from scf_mappings.
-    // This method only receives flat implementedControls: string[] — no maturity or
-    // relationship_type available. See computeRealStrmCompliance() in dashboard.routes.ts
-    // for the reference pattern. Needs request-shape change to accept SoA + assessment context.
+    // Try to get actual database mappings for the framework
+    const enrichedMappings = await this.getFrameworkMappings(frameworkMask);
+    const controlInputs: StrmControlInput[] = [];
+
+    if (enrichedMappings.length > 0) {
+      const mappingMap = new Map<string, any>();
+      for (const m of enrichedMappings) {
+        if (m.control_code) {
+          mappingMap.set(m.control_code, m);
+        }
+      }
+
+      for (const code of requiredControls) {
+        const isImplemented = implementedSet.has(code);
+        const mapping = mappingMap.get(code);
+        if (mapping) {
+          controlInputs.push({
+            maturity_level: isImplemented ? 5 : 0,
+            strm_operator: sanitizeStrmOperator(mapping.relationship_type),
+            strength_score: mapping.relationship_strength
+              ? parseFloat(mapping.relationship_strength)
+              : null,
+          });
+        } else {
+          // Fallback if this control code isn't in mapping metadata
+          controlInputs.push({
+            maturity_level: isImplemented ? 5 : 0,
+            strm_operator: "intersects" as const,
+            strength_score: 0.5,
+          });
+        }
+      }
+    } else {
+      // Fallback: conservative STRM proxy
+      for (const code of requiredControls) {
+        const isImplemented = implementedSet.has(code);
+        controlInputs.push({
+          maturity_level: isImplemented ? 5 : 0,
+          strm_operator: "intersects" as const,
+          strength_score: 0.5,
+        });
+      }
+    }
+
     const compliancePercentage =
       totalControls === 0
         ? 100
-        : Math.round((implementedCount / totalControls) * 100);
+        : Math.round(computeComplianceIndex(controlInputs).percentage);
 
     return {
       totalControls,
@@ -285,15 +366,22 @@ export class IntelligenceService {
       }
     }
 
-    // TODO(ADR-001): migrate to STRM-weighted compliance (computeComplianceIndex).
-    // Static method — no deps, no SoA items, no maturity_level, no STRM mapping data.
-    // Binary formula is the only option until this method is converted to an instance
-    // method with access to deps.scf.repository and receives SoA + assessment context.
-    // See computeRealStrmCompliance() in dashboard.routes.ts for the reference pattern.
+    // Static fallback: conservative STRM proxy
+    const controlInputs: StrmControlInput[] = Array.from(requiredControls).map(
+      (code) => {
+        const isImplemented = implementedSet.has(code);
+        return {
+          maturity_level: isImplemented ? 5 : 0,
+          strm_operator: "intersects" as const,
+          strength_score: 0.5,
+        };
+      },
+    );
+
     const compliancePercentage =
       totalControls === 0
         ? 100
-        : Math.round((implementedCount / totalControls) * 100);
+        : Math.round(computeComplianceIndex(controlInputs).percentage);
 
     return {
       totalControls,
@@ -302,4 +390,16 @@ export class IntelligenceService {
       compliancePercentage,
     };
   }
+}
+
+function sanitizeStrmOperator(op: string | null | undefined): StrmOperator {
+  if (!op) return "intersects";
+  const lower = op.toLowerCase();
+  if (lower === "equal") return "equal";
+  if (lower === "subset") return "subset";
+  if (lower === "intersects" || lower === "intersecting") return "intersects";
+  if (lower === "superset") return "superset";
+  if (lower === "no_relation" || lower === "no_relationship")
+    return "no_relation";
+  return "intersects"; // Safe fallback
 }

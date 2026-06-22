@@ -244,34 +244,16 @@ export const intelligenceRoutes: RouteDefinition[] = [
       if (!regulation)
         throw new ApiError("NOT_FOUND", "Regulation not found.", 404);
 
-      const implementedSet = new Set(body.scf_controls_implemented);
-      // Use DB-backed instance method instead of static (which only knows LGPD/GDPR)
       const service = new IntelligenceService(deps);
-      const requiredControls = await service.getControlsForFramework(
+      const metrics = await service.calculateGapAnalysisAsync(
         body.regulation_id,
+        body.scf_controls_implemented,
       );
 
-      const missingControls: string[] = [];
-      let implementedCount = 0;
-      const totalControls = requiredControls.size;
-
-      for (const reqControl of requiredControls) {
-        if (implementedSet.has(reqControl)) {
-          implementedCount++;
-        } else {
-          missingControls.push(reqControl);
-        }
-      }
-
-      // TODO(ADR-001): migrate to STRM-weighted compliance (computeComplianceIndex).
-      // This handler has `deps` but the request body only provides scf_controls_implemented
-      // as a flat string[] — no SoA items, maturity_level, or STRM mapping data available.
-      // Needs request-shape change to accept assessment_id + SoA context, then use
-      // computeRealStrmCompliance() pattern from dashboard.routes.ts.
-      const score =
-        totalControls === 0
-          ? 100
-          : Math.round((implementedCount / totalControls) * 100);
+      const score = metrics.compliancePercentage;
+      const implementedCount = metrics.implementedCount;
+      const totalControls = metrics.totalControls;
+      const missingControls = metrics.missingControls;
 
       const result = {
         regulation_id: body.regulation_id,
