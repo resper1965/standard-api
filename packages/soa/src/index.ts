@@ -8,3 +8,5 @@ export * from "./services/soa-draft.service";
 export * from "./services/soa-evidence.service";
 export * from "./services/soa-review.service";
 export * from "./types";
+export { createDrizzleSoaRepositories } from "./repositories/drizzle.repository";
+export type { DrizzleDbClient as SoaDrizzleDbClient } from "./repositories/drizzle.repository";

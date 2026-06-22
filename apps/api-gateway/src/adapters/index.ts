@@ -67,7 +67,7 @@ import {
   createTenantRepository,
   createDrizzleTenantRepository,
 } from "./tenant.repository";
-import { createDrizzleSoaRepositories } from "./soa.repository";
+import { createDrizzleSoaRepositories } from "@standard/soa";
 import { createDrizzleGapAnalysisRepositories } from "@standard/gap-analysis";
 import { createDrizzlePoamRepositories } from "./poam.repository";
 import { createDrizzleReportRepositories } from "./reporting.repository";

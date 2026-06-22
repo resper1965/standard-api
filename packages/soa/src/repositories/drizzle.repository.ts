@@ -1,9 +1,11 @@
-﻿/**
- * @module soa.repository
+/**
+ * @module soa/repositories/drizzle.repository
  * @description Drizzle PostgreSQL repositories for SoA (Statement of Applicability).
  * Uses type-cast inserts since Zod response schemas differ from Drizzle column names.
+ *
+ * Accepts any Drizzle-compatible db client via structural typing.
  */
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { assessmentScope, soaVersions, soaItems } from "@standard/schemas";
 import type {
   ScopeResponse,
@@ -15,231 +17,23 @@ import type {
   SoaVersionRepository,
   SoaItemRepository,
   SoaRepositories,
-} from "@standard/soa";
-import type { DbClient } from "./db";
+} from "../types";
 
-const createDrizzleScopeRepository = (db: DbClient): ScopeRepository => ({
-  async save(scope: ScopeResponse) {
-    await db
-      .insert(assessmentScope)
-      .values({
-        id: scope.scope_id,
-        organizationId: scope.organization_id,
-        assessmentId: scope.assessment_id,
-        title: scope.title,
-        description: scope.description,
-        scopeVersion: scope.scope_version,
-        status: scope.status,
-        scopeSummary: scope.description, // scope_summary maps to description
-        businessUnits: scope.business_units,
-        processes: scope.processes,
-        systems: scope.systems,
-        locations: scope.locations,
-        legalEntities: scope.legal_entities,
-        dataTypes: scope.data_types,
-        thirdParties: scope.third_parties,
-        exclusions: scope.exclusions,
-        assumptions: scope.assumptions,
-        constraints: scope.constraints,
-        createdBy: scope.created_by,
-      } as any)
-      .onConflictDoNothing();
-  },
-  async update(scope: ScopeResponse) {
-    await db
-      .update(assessmentScope)
-      .set({
-        title: scope.title,
-        description: scope.description,
-        status: scope.status,
-        scopeSummary: scope.description,
-        businessUnits: scope.business_units,
-        processes: scope.processes,
-        systems: scope.systems,
-        locations: scope.locations,
-        legalEntities: scope.legal_entities,
-        dataTypes: scope.data_types,
-        thirdParties: scope.third_parties,
-        exclusions: scope.exclusions,
-        assumptions: scope.assumptions,
-        constraints: scope.constraints,
-        updatedAt: new Date(),
-      } as any)
-      .where(eq(assessmentScope.id, scope.scope_id));
-  },
-  async get(scopeId, organizationId) {
-    const [row] = await db
-      .select()
-      .from(assessmentScope)
-      .where(eq(assessmentScope.id, scopeId))
-      .limit(1);
-    if (!row) return null;
-    return mapScopeRow(row);
-  },
-  async listByAssessment(assessmentId, organizationId) {
-    const rows = await db
-      .select()
-      .from(assessmentScope)
-      .where(eq(assessmentScope.assessmentId, assessmentId));
-    return rows.map(mapScopeRow);
-  },
-});
+// Structural type — compatible with NeonServerlessDatabase and PostgresJsDatabase
+export type DrizzleDbClient = {
+  select(): any;
+  insert(table: any): any;
+  update(table: any): any;
+  delete(table: any): any;
+};
 
-const createDrizzleSoaVersionRepository = (
-  db: DbClient,
-): SoaVersionRepository => ({
-  async save(version: SoaVersionResponse) {
-    await db
-      .insert(soaVersions)
-      .values({
-        id: version.soa_version_id,
-        organizationId: version.organization_id,
-        assessmentId: version.assessment_id,
-        versionNumber: version.version_number,
-        status: version.status,
-        sourceFrameworkId: version.source_framework_id,
-        scfVersionId: version.scf_version_id,
-        sourceScopeId: version.source_scope_id,
-        createdByAgentRunId: version.generated_by_agent_run_id, // DB uses createdByAgentRunId
-        createdBy: version.created_by,
-        traceId: version.trace_id,
-        metadata: version.metadata ?? {},
-      } as any)
-      .onConflictDoNothing();
-  },
-  async update(version: SoaVersionResponse) {
-    await db
-      .update(soaVersions)
-      .set({
-        status: version.status,
-        submittedForReviewAt: version.submitted_for_review_at
-          ? new Date(version.submitted_for_review_at)
-          : undefined,
-        approvedBy: version.approved_by,
-        approvedAt: version.approved_at
-          ? new Date(version.approved_at)
-          : undefined,
-        approvalEventId: version.approval_event_id,
-        supersededBy: version.superseded_by,
-        metadata: version.metadata ?? {},
-        updatedAt: new Date(),
-      } as any)
-      .where(eq(soaVersions.id, version.soa_version_id));
-  },
-  async get(soaVersionId, organizationId) {
-    const [row] = await db
-      .select()
-      .from(soaVersions)
-      .where(eq(soaVersions.id, soaVersionId))
-      .limit(1);
-    if (!row) return null;
-    return mapSoaVersionRow(row);
-  },
-  async listByAssessment(assessmentId, organizationId) {
-    const rows = await db
-      .select()
-      .from(soaVersions)
-      .where(eq(soaVersions.assessmentId, assessmentId));
-    return rows.map(mapSoaVersionRow);
-  },
-});
-
-const createDrizzleSoaItemRepository = (db: DbClient): SoaItemRepository => ({
-  async saveMany(items: SoaItemResponse[]) {
-    if (items.length === 0) return;
-    await db
-      .insert(soaItems)
-      .values(
-        items.map(
-          (item) =>
-            ({
-              id: item.soa_item_id,
-              organizationId: item.organization_id,
-              assessmentId: item.assessment_id,
-              soaVersionId: item.soa_version_id,
-              frameworkId: item.framework_id,
-              frameworkRequirementId: item.framework_requirement_id,
-              scfVersionId: item.scf_version_id,
-              scfControlId: item.scf_control_id,
-              scfFrameworkRequirementId: item.framework_requirement_id,
-              applicability: item.applicability_status, // DB requires applicability text
-              applicabilityStatus: item.applicability_status,
-              implementationStatus: item.implementation_status,
-              applicabilityRationale: item.applicability_rationale,
-              nonApplicabilityRationale: item.non_applicability_rationale,
-              scopeRationale: item.scope_rationale,
-              evidenceSummary: item.evidence_summary,
-              evidenceCoverage: item.evidence_coverage,
-              confidenceScore: String(item.confidence_score),
-              requiresUserValidation: item.requires_user_validation,
-              validationNotes: item.validation_notes,
-              sourceMappingId: item.source_mapping_id,
-              mappingStatus: item.mapping_status,
-              responsibilityType: item.responsibility_type,
-              // ADR-001: cast to StrmOperator for Drizzle enum column
-              relationshipType: item.relationship_type as
-                | "equal"
-                | "subset"
-                | "intersects"
-                | "superset"
-                | "no_relation"
-                | undefined,
-              relationshipStrength: item.relationship_strength,
-            }) as any,
-        ),
-      )
-      .onConflictDoNothing();
-  },
-  async update(item: SoaItemResponse) {
-    await db
-      .update(soaItems)
-      .set({
-        applicabilityStatus: item.applicability_status,
-        implementationStatus: item.implementation_status,
-        applicabilityRationale: item.applicability_rationale,
-        nonApplicabilityRationale: item.non_applicability_rationale,
-        scopeRationale: item.scope_rationale,
-        evidenceSummary: item.evidence_summary,
-        evidenceCoverage: item.evidence_coverage,
-        confidenceScore: String(item.confidence_score),
-        requiresUserValidation: item.requires_user_validation,
-        validationNotes: item.validation_notes,
-        responsibilityType: item.responsibility_type,
-        updatedAt: new Date(),
-      } as any)
-      .where(eq(soaItems.id, item.soa_item_id));
-  },
-  async get(soaItemId, organizationId) {
-    const [row] = await db
-      .select()
-      .from(soaItems)
-      .where(eq(soaItems.id, soaItemId))
-      .limit(1);
-    if (!row) return null;
-    return mapSoaItemRow(row);
-  },
-  async listByVersion(soaVersionId, organizationId) {
-    const rows = await db
-      .select()
-      .from(soaItems)
-      .where(eq(soaItems.soaVersionId, soaVersionId));
-    return rows.map(mapSoaItemRow);
-  },
-});
-
-export const createDrizzleSoaRepositories = (
-  db: DbClient,
-): SoaRepositories => ({
-  scopes: createDrizzleScopeRepository(db),
-  versions: createDrizzleSoaVersionRepository(db),
-  items: createDrizzleSoaItemRepository(db),
-});
-
-// --- Row mappers (using typeof table.$inferSelect for type safety) ---
+// --- Row types ---
 
 type ScopeRow = typeof assessmentScope.$inferSelect;
 type SoaVersionRow = typeof soaVersions.$inferSelect;
 type SoaItemRow = typeof soaItems.$inferSelect;
+
+// --- Row mappers ---
 
 const mapScopeRow = (row: ScopeRow): ScopeResponse => ({
   scope_id: row.id,
@@ -316,4 +110,231 @@ const mapSoaItemRow = (row: SoaItemRow): SoaItemResponse => ({
   relationship_strength: row.relationshipStrength ?? undefined,
   created_at: row.createdAt.toISOString(),
   updated_at: row.updatedAt.toISOString(),
+});
+
+// --- Repository factories ---
+
+const createDrizzleScopeRepository = (
+  db: DrizzleDbClient,
+): ScopeRepository => ({
+  async save(scope: ScopeResponse) {
+    await db
+      .insert(assessmentScope)
+      .values({
+        id: scope.scope_id,
+        organizationId: scope.organization_id,
+        assessmentId: scope.assessment_id,
+        title: scope.title,
+        description: scope.description,
+        scopeVersion: scope.scope_version,
+        status: scope.status,
+        scopeSummary: scope.description,
+        businessUnits: scope.business_units,
+        processes: scope.processes,
+        systems: scope.systems,
+        locations: scope.locations,
+        legalEntities: scope.legal_entities,
+        dataTypes: scope.data_types,
+        thirdParties: scope.third_parties,
+        exclusions: scope.exclusions,
+        assumptions: scope.assumptions,
+        constraints: scope.constraints,
+        createdBy: scope.created_by,
+      } as any)
+      .onConflictDoNothing();
+  },
+  async update(scope: ScopeResponse) {
+    await db
+      .update(assessmentScope)
+      .set({
+        title: scope.title,
+        description: scope.description,
+        status: scope.status,
+        scopeSummary: scope.description,
+        businessUnits: scope.business_units,
+        processes: scope.processes,
+        systems: scope.systems,
+        locations: scope.locations,
+        legalEntities: scope.legal_entities,
+        dataTypes: scope.data_types,
+        thirdParties: scope.third_parties,
+        exclusions: scope.exclusions,
+        assumptions: scope.assumptions,
+        constraints: scope.constraints,
+        updatedAt: new Date(),
+      } as any)
+      .where(eq(assessmentScope.id, scope.scope_id));
+  },
+  async get(scopeId, _organizationId) {
+    const [row] = await db
+      .select()
+      .from(assessmentScope)
+      .where(eq(assessmentScope.id, scopeId))
+      .limit(1);
+    if (!row) return null;
+    return mapScopeRow(row);
+  },
+  async listByAssessment(assessmentId, _organizationId) {
+    const rows = await db
+      .select()
+      .from(assessmentScope)
+      .where(eq(assessmentScope.assessmentId, assessmentId));
+    return rows.map(mapScopeRow);
+  },
+});
+
+const createDrizzleSoaVersionRepository = (
+  db: DrizzleDbClient,
+): SoaVersionRepository => ({
+  async save(version: SoaVersionResponse) {
+    await db
+      .insert(soaVersions)
+      .values({
+        id: version.soa_version_id,
+        organizationId: version.organization_id,
+        assessmentId: version.assessment_id,
+        versionNumber: version.version_number,
+        status: version.status,
+        sourceFrameworkId: version.source_framework_id,
+        scfVersionId: version.scf_version_id,
+        sourceScopeId: version.source_scope_id,
+        createdByAgentRunId: version.generated_by_agent_run_id,
+        createdBy: version.created_by,
+        traceId: version.trace_id,
+        metadata: version.metadata ?? {},
+      } as any)
+      .onConflictDoNothing();
+  },
+  async update(version: SoaVersionResponse) {
+    await db
+      .update(soaVersions)
+      .set({
+        status: version.status,
+        submittedForReviewAt: version.submitted_for_review_at
+          ? new Date(version.submitted_for_review_at)
+          : undefined,
+        approvedBy: version.approved_by,
+        approvedAt: version.approved_at
+          ? new Date(version.approved_at)
+          : undefined,
+        approvalEventId: version.approval_event_id,
+        supersededBy: version.superseded_by,
+        metadata: version.metadata ?? {},
+        updatedAt: new Date(),
+      } as any)
+      .where(eq(soaVersions.id, version.soa_version_id));
+  },
+  async get(soaVersionId, _organizationId) {
+    const [row] = await db
+      .select()
+      .from(soaVersions)
+      .where(eq(soaVersions.id, soaVersionId))
+      .limit(1);
+    if (!row) return null;
+    return mapSoaVersionRow(row);
+  },
+  async listByAssessment(assessmentId, _organizationId) {
+    const rows = await db
+      .select()
+      .from(soaVersions)
+      .where(eq(soaVersions.assessmentId, assessmentId));
+    return rows.map(mapSoaVersionRow);
+  },
+});
+
+const createDrizzleSoaItemRepository = (
+  db: DrizzleDbClient,
+): SoaItemRepository => ({
+  async saveMany(items: SoaItemResponse[]) {
+    if (items.length === 0) return;
+    await db
+      .insert(soaItems)
+      .values(
+        items.map(
+          (item) =>
+            ({
+              id: item.soa_item_id,
+              organizationId: item.organization_id,
+              assessmentId: item.assessment_id,
+              soaVersionId: item.soa_version_id,
+              frameworkId: item.framework_id,
+              frameworkRequirementId: item.framework_requirement_id,
+              scfVersionId: item.scf_version_id,
+              scfControlId: item.scf_control_id,
+              scfFrameworkRequirementId: item.framework_requirement_id,
+              applicability: item.applicability_status,
+              applicabilityStatus: item.applicability_status,
+              implementationStatus: item.implementation_status,
+              applicabilityRationale: item.applicability_rationale,
+              nonApplicabilityRationale: item.non_applicability_rationale,
+              scopeRationale: item.scope_rationale,
+              evidenceSummary: item.evidence_summary,
+              evidenceCoverage: item.evidence_coverage,
+              confidenceScore: String(item.confidence_score),
+              requiresUserValidation: item.requires_user_validation,
+              validationNotes: item.validation_notes,
+              sourceMappingId: item.source_mapping_id,
+              mappingStatus: item.mapping_status,
+              responsibilityType: item.responsibility_type,
+              // ADR-001: canonical STRM values: equal | subset | intersects | superset | no_relation
+              relationshipType: item.relationship_type as
+                | "equal"
+                | "subset"
+                | "intersects"
+                | "superset"
+                | "no_relation"
+                | undefined,
+              relationshipStrength: item.relationship_strength,
+            }) as any,
+        ),
+      )
+      .onConflictDoNothing();
+  },
+  async update(item: SoaItemResponse) {
+    await db
+      .update(soaItems)
+      .set({
+        applicabilityStatus: item.applicability_status,
+        implementationStatus: item.implementation_status,
+        applicabilityRationale: item.applicability_rationale,
+        nonApplicabilityRationale: item.non_applicability_rationale,
+        scopeRationale: item.scope_rationale,
+        evidenceSummary: item.evidence_summary,
+        evidenceCoverage: item.evidence_coverage,
+        confidenceScore: String(item.confidence_score),
+        requiresUserValidation: item.requires_user_validation,
+        validationNotes: item.validation_notes,
+        responsibilityType: item.responsibility_type,
+        updatedAt: new Date(),
+      } as any)
+      .where(eq(soaItems.id, item.soa_item_id));
+  },
+  async get(soaItemId, _organizationId) {
+    const [row] = await db
+      .select()
+      .from(soaItems)
+      .where(eq(soaItems.id, soaItemId))
+      .limit(1);
+    if (!row) return null;
+    return mapSoaItemRow(row);
+  },
+  async listByVersion(soaVersionId, _organizationId) {
+    const rows = await db
+      .select()
+      .from(soaItems)
+      .where(eq(soaItems.soaVersionId, soaVersionId));
+    return rows.map(mapSoaItemRow);
+  },
+});
+
+/**
+ * Factory: creates all Drizzle-backed SoA repositories.
+ * Pass the DbClient from the api-gateway composition root.
+ */
+export const createDrizzleSoaRepositories = (
+  db: DrizzleDbClient,
+): SoaRepositories => ({
+  scopes: createDrizzleScopeRepository(db),
+  versions: createDrizzleSoaVersionRepository(db),
+  items: createDrizzleSoaItemRepository(db),
 });
