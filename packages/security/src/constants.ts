@@ -220,6 +220,6 @@ export const DEFAULT_FILE_SECURITY_POLICY: FileSecurityPolicy = {
     "text/json",
   ],
   require_content_hash: true,
-  require_malware_scan: false,
+  require_malware_scan: true,
   quarantine_on_rejection: true,
 };

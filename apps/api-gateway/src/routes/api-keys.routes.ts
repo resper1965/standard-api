@@ -464,11 +464,16 @@ export const apiKeysRoutes: RouteDefinition[] = [
       );
       if (!revoked) throw new ApiError("NOT_FOUND", "API key not found.", 404);
 
-      // Invalidar KV cache â€” evita que a chave revogada continue a ser aceite
-      // atÃ© ao TTL de 5 minutos expirar naturalmente
+      // Invalidate KV cache so the revoked key is rejected immediately.
+      // Also set a sentinel (TTL = API key TTL) as belt-and-suspenders:
+      // if the delete() fails (fire-and-forget), the sentinel ensures the
+      // cache hit path still rejects the key.
       const kv = context.env?.STANDARD_CACHE as any;
       if (kv && existing.keyHash) {
         kv.delete(`apikey:${existing.keyHash}`).catch(() => {});
+        kv.put(`revocations:apikey:${keyId}`, "revoked", {
+          expirationTtl: 300,
+        }).catch(() => {});
       }
 
       await context.deps.audit.record("api_key.revoked", {

@@ -193,7 +193,7 @@ export const assertRbac = async (
 const requireOrganizationContext = async (
   context: RequestContext,
 ): Promise<void> => {
-  if (context.organizationId && context.organizationId) return;
+  if (context.organizationId) return;
 
   await new SecurityEventService(context.deps.observability).record({
     organization_id: context.organizationId,

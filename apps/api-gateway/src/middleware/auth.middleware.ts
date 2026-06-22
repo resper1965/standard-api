@@ -65,6 +65,14 @@ async function resolveM2MAuthContext(
   if (kv) {
     const cached = (await kv.get(kvKey, "json").catch(() => null)) as any;
     if (cached?.organizationId) {
+      // Belt-and-suspenders revocation sentinel: set by revokeKey route when
+      // the primary kv.delete(apikey:{hash}) fails (fire-and-forget).
+      const sentinel = (await kv
+        .get(`revocations:apikey:${cached.keyId}`)
+        .catch(() => null)) as string | null;
+      if (sentinel) {
+        throw new ApiError("UNAUTHORIZED", "API key has been revoked.", 401);
+      }
       context.actorId = `m2m:${cached.keyId}`;
       context.organizationId = cached.organizationId;
       context.m2mScopes = cached.scopes ?? [];
@@ -81,7 +89,7 @@ async function resolveM2MAuthContext(
     context.organizationId = record.organizationId;
     context.m2mScopes = record.scopes ?? [];
 
-    // Warm KV para prÃ³ximos requests
+    // Warm KV para próximos requests
     if (kv) {
       kv.put(
         kvKey,
@@ -238,7 +246,10 @@ async function resolveSessionAuthContext(
         name: user.name ?? "",
         platformAdmin: isPlatformAdmin,
         approved: isApproved,
-        role: (user.role && user.role !== "user" && user.role !== "member") ? user.role : "organization_admin",
+        role:
+          user.role && user.role !== "user" && user.role !== "member"
+            ? user.role
+            : "organization_admin",
       },
       session: {
         id: session.id,
@@ -277,4 +288,3 @@ export const resolveAuthContext = async (
     throw new ApiError("UNAUTHORIZED", "Authentication required.", 401);
   }
 };
-

@@ -233,13 +233,14 @@ describe("validateTransition â€” prerequisite enforcement", () => {
     ).toThrow("required_document_jobs_complete");
   });
 
-  it("blocks closed when report not generated or approved", () => {
+  it("blocks closed when report not approved", () => {
     const snap = makeSnapshot("report_generated", {
       reportGenerated: true,
       reportApproved: false,
     });
+    // reportGenerated passes — error only mentions the failing prerequisite
     expect(() => validateTransition(snap, "closed", makeContext())).toThrow(
-      "report_generated",
+      "report_approved_or_accepted",
     );
   });
 
@@ -529,4 +530,3 @@ describe("validateTransition â€” second-half lifecycle (soa_approved â†�
     ).not.toThrow();
   });
 });
-
