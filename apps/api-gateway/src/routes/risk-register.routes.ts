@@ -1,25 +1,18 @@
-﻿/**
- * Risk Register API â€” SCR-RMM Step 13 (Risk Treatment Decision)
+/**
+ * Risk Register API — SCR-RMM Step 13 (Risk Treatment Decision)
  *
  * Registers risk entries per assessment, linking gap findings to treatment decisions.
  * risk_appetite / risk_tolerance / risk_threshold are sent by the consuming application
- * (GRC / frontend). The Standard does NOT manage risk appetite â€” it only receives,
+ * (GRC / frontend). The Standard does NOT manage risk appetite — it only receives,
  * stores, and uses these values to compute within_tolerance for this assessment.
  *
  * Architecture:
- * - All DB access via deps._db (Drizzle client) â€” same pattern as risk.routes.ts
+ * - All DB access via createDrizzleRiskRegisterRepository (AGENTS.md §5: no inline Drizzle)
  * - Multi-tenancy enforced via organization_id + assessment_id on every query
  * - ADR-014: within_tolerance = residual_risk_score <= risk_tolerance_input
  * - ADR-014 Q-C: `accept` treatment does not require hard approval gate
  * - ADR-014 Q-D: scf_version_id is mandatory (NOT NULL)
  */
-import { randomUUID } from "crypto";
-import { and, eq } from "drizzle-orm";
-import { assessmentRiskRegister, gapFindings } from "@standard/schemas";
-import {
-  CreateRiskRegisterEntrySchema,
-  UpdateRiskRegisterEntrySchema,
-} from "@standard/schemas";
 import type {
   AppDependencies,
   AssessmentRecord,
@@ -32,8 +25,16 @@ import {
   routeUuidParam,
 } from "../http";
 import { ApiError } from "../errors/api-error";
+import {
+  createDrizzleRiskRegisterRepository,
+  deriveRiskCategory,
+} from "../adapters/risk-register.repository";
+import {
+  CreateRiskRegisterEntrySchema,
+  UpdateRiskRegisterEntrySchema,
+} from "@standard/schemas";
 
-// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- Helpers ------------------------------------------------------------------
 
 const requireAssessment = async (
   deps: AppDependencies,
@@ -48,30 +49,16 @@ const requireAssessment = async (
   return assessment;
 };
 
-const requireDb = (deps: AppDependencies) => {
+const requireRepo = (deps: AppDependencies) => {
   if (!deps._db)
     throw new ApiError("INTERNAL_ERROR", "DB client not available.", 500);
-  return deps._db;
+  return createDrizzleRiskRegisterRepository(deps._db);
 };
 
-/**
- * Derives risk_category from residual risk score (0.0â€“1.0).
- * SCR-RMM Step 12: Risk Score â†’ Category mapping.
- */
-const deriveRiskCategory = (
-  score: number,
-): "low" | "moderate" | "high" | "severe" | "extreme" => {
-  if (score < 0.2) return "low";
-  if (score < 0.4) return "moderate";
-  if (score < 0.6) return "high";
-  if (score < 0.8) return "severe";
-  return "extreme";
-};
-
-// â”€â”€ Routes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- Routes -------------------------------------------------------------------
 
 export const riskRegisterRoutes: RouteDefinition[] = [
-  // â”€â”€ POST /assessments/:id/risk-register â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // -- POST /assessments/:id/risk-register ------------------------------------
   {
     method: "POST",
     path: "/api/v1/assessments/:id/risk-register",
@@ -88,22 +75,12 @@ export const riskRegisterRoutes: RouteDefinition[] = [
       const orgId = requireOrganizationId({ organizationId });
       const assessmentId = routeUuidParam(params, "id");
       await requireAssessment(deps, assessmentId, orgId);
-      const db = requireDb(deps);
+      const repo = requireRepo(deps);
 
       const body = await parseJson(request, CreateRiskRegisterEntrySchema);
 
-      // 1. Validar que o gap finding pertence ao assessment (multi-tenancy)
-      const [finding] = await db
-        .select()
-        .from(gapFindings)
-        .where(
-          and(
-            eq(gapFindings.id, body.gap_finding_id),
-            eq(gapFindings.organizationId, orgId),
-          ),
-        )
-        .limit(1);
-
+      // Validate gap finding belongs to this assessment (multi-tenancy)
+      const finding = await repo.findGapFinding(body.gap_finding_id, orgId);
       if (!finding || finding.assessmentId !== assessmentId) {
         throw new ApiError(
           "NOT_FOUND",
@@ -112,72 +89,51 @@ export const riskRegisterRoutes: RouteDefinition[] = [
         );
       }
 
-      // 2. Herdar scores do gap finding (calculados pelo risk-score.service na etapa de Gap)
+      // Inherit scores from gap finding (calculated by risk-score.service during Gap phase)
       const inherentScore = finding.inherentRiskScore
         ? Number(finding.inherentRiskScore)
         : null;
       const residualScore = finding.residualRiskScore
         ? Number(finding.residualRiskScore)
         : null;
-
-      // 3. Derivar risk_category
       const riskCategory =
         residualScore !== null ? deriveRiskCategory(residualScore) : null;
-
-      // 4. Calcular within_tolerance â€” determinÃ­stico, calculado pelo Standard
       const riskToleranceInput = body.risk_tolerance ?? null;
       const withinTolerance =
         residualScore !== null && riskToleranceInput !== null
           ? residualScore <= riskToleranceInput
           : null;
 
-      const entryId = randomUUID();
-      const now = new Date();
-
-      await db.insert(assessmentRiskRegister).values({
-        id: entryId,
-        organizationId: orgId,
-        assessmentId,
-        scfVersionId: body.scf_version_id,
-        gapFindingId: body.gap_finding_id,
-        scfRiskId: body.scf_risk_id ?? null,
-        riskTitle: body.risk_title,
-        riskDescription: body.risk_description ?? null,
-        inherentRiskScore:
-          inherentScore !== null ? String(inherentScore) : null,
-        residualRiskScore:
-          residualScore !== null ? String(residualScore) : null,
-        riskCategory,
+      // We pass pre-computed values via a thin overrides object
+      // The adapter handles ID generation and DB insert
+      const entry = await repo.createWithScores({
+        organization_id: orgId,
+        assessment_id: assessmentId,
+        scf_version_id: body.scf_version_id,
+        gap_finding_id: body.gap_finding_id,
+        scf_risk_id: body.scf_risk_id ?? null,
+        risk_title: body.risk_title,
+        risk_description: body.risk_description ?? null,
         treatment: body.treatment,
-        treatmentRationale: body.treatment_rationale ?? null,
-        ownerId: body.owner_id ?? null,
-        reviewDate: body.review_date ?? null,
-        rocDetermination: finding.rocDetermination ?? null,
-        riskAppetiteInput:
-          body.risk_appetite !== undefined ? String(body.risk_appetite) : null,
-        riskToleranceInput:
-          riskToleranceInput !== null ? String(riskToleranceInput) : null,
-        riskThresholdInput:
-          body.risk_threshold !== undefined
-            ? String(body.risk_threshold)
-            : null,
-        withinTolerance,
-        traceId,
-        createdAt: now,
-        updatedAt: now,
+        treatment_rationale: body.treatment_rationale ?? null,
+        owner_id: body.owner_id ?? null,
+        review_date: body.review_date ?? null,
+        risk_appetite: body.risk_appetite,
+        risk_tolerance: body.risk_tolerance,
+        risk_threshold: body.risk_threshold,
+        inherent_risk_score: inherentScore,
+        residual_risk_score: residualScore,
+        risk_category: riskCategory,
+        roc_determination: finding.rocDetermination ?? null,
+        within_tolerance: withinTolerance,
+        trace_id: traceId,
       });
-
-      const [entry] = await db
-        .select()
-        .from(assessmentRiskRegister)
-        .where(eq(assessmentRiskRegister.id, entryId))
-        .limit(1);
 
       return json({ data: entry, trace_id: traceId }, { status: 201 });
     },
   },
 
-  // â”€â”€ GET /assessments/:id/risk-register â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // -- GET /assessments/:id/risk-register ------------------------------------
   {
     method: "GET",
     path: "/api/v1/assessments/:id/risk-register",
@@ -187,23 +143,14 @@ export const riskRegisterRoutes: RouteDefinition[] = [
       const orgId = requireOrganizationId({ organizationId });
       const assessmentId = routeUuidParam(params, "id");
       await requireAssessment(deps, assessmentId, orgId);
-      const db = requireDb(deps);
+      const repo = requireRepo(deps);
 
-      const entries = await db
-        .select()
-        .from(assessmentRiskRegister)
-        .where(
-          and(
-            eq(assessmentRiskRegister.organizationId, orgId),
-            eq(assessmentRiskRegister.assessmentId, assessmentId),
-          ),
-        );
-
+      const entries = await repo.list(assessmentId, orgId);
       return json({ data: entries, total: entries.length, trace_id: traceId });
     },
   },
 
-  // â”€â”€ GET /assessments/:id/risk-register/export â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // -- GET /assessments/:id/risk-register/export -----------------------------
   // IMPORTANT: must come before /:entryId to avoid route conflict
   {
     method: "GET",
@@ -214,18 +161,9 @@ export const riskRegisterRoutes: RouteDefinition[] = [
       const orgId = requireOrganizationId({ organizationId });
       const assessmentId = routeUuidParam(params, "id");
       await requireAssessment(deps, assessmentId, orgId);
-      const db = requireDb(deps);
+      const repo = requireRepo(deps);
 
-      const entries = await db
-        .select()
-        .from(assessmentRiskRegister)
-        .where(
-          and(
-            eq(assessmentRiskRegister.organizationId, orgId),
-            eq(assessmentRiskRegister.assessmentId, assessmentId),
-          ),
-        );
-
+      const entries = await repo.list(assessmentId, orgId);
       const exportedAt = new Date().toISOString();
       const exportEntries = entries.map((e) => ({
         ...e,
@@ -244,7 +182,7 @@ export const riskRegisterRoutes: RouteDefinition[] = [
     },
   },
 
-  // â”€â”€ GET /assessments/:id/risk-register/:entryId â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // -- GET /assessments/:id/risk-register/:entryId ---------------------------
   {
     method: "GET",
     path: "/api/v1/assessments/:id/risk-register/:entryId",
@@ -255,20 +193,9 @@ export const riskRegisterRoutes: RouteDefinition[] = [
       const assessmentId = routeUuidParam(params, "id");
       const entryId = routeUuidParam(params, "entryId");
       await requireAssessment(deps, assessmentId, orgId);
-      const db = requireDb(deps);
+      const repo = requireRepo(deps);
 
-      const [entry] = await db
-        .select()
-        .from(assessmentRiskRegister)
-        .where(
-          and(
-            eq(assessmentRiskRegister.id, entryId),
-            eq(assessmentRiskRegister.organizationId, orgId),
-            eq(assessmentRiskRegister.assessmentId, assessmentId),
-          ),
-        )
-        .limit(1);
-
+      const entry = await repo.get(entryId, assessmentId, orgId);
       if (!entry)
         throw new ApiError("NOT_FOUND", "Risk register entry not found.", 404);
 
@@ -276,7 +203,7 @@ export const riskRegisterRoutes: RouteDefinition[] = [
     },
   },
 
-  // â”€â”€ PATCH /assessments/:id/risk-register/:entryId â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // -- PATCH /assessments/:id/risk-register/:entryId -------------------------
   {
     method: "PATCH",
     path: "/api/v1/assessments/:id/risk-register/:entryId",
@@ -287,92 +214,18 @@ export const riskRegisterRoutes: RouteDefinition[] = [
       const assessmentId = routeUuidParam(params, "id");
       const entryId = routeUuidParam(params, "entryId");
       await requireAssessment(deps, assessmentId, orgId);
-      const db = requireDb(deps);
+      const repo = requireRepo(deps);
 
       const patch = await parseJson(request, UpdateRiskRegisterEntrySchema);
-
-      // Fetch existing to compute within_tolerance with updated tolerance
-      const [existing] = await db
-        .select()
-        .from(assessmentRiskRegister)
-        .where(
-          and(
-            eq(assessmentRiskRegister.id, entryId),
-            eq(assessmentRiskRegister.organizationId, orgId),
-          ),
-        )
-        .limit(1);
-
-      if (!existing)
+      const updated = await repo.update(entryId, orgId, patch);
+      if (!updated)
         throw new ApiError("NOT_FOUND", "Risk register entry not found.", 404);
-
-      const residualScore = existing.residualRiskScore
-        ? Number(existing.residualRiskScore)
-        : null;
-
-      // Resolve risk_tolerance: use patched value first, then existing, then null
-      const newTolerance =
-        patch.risk_tolerance !== undefined
-          ? patch.risk_tolerance
-          : existing.riskToleranceInput !== null
-            ? Number(existing.riskToleranceInput)
-            : null;
-
-      const withinTolerance =
-        residualScore !== null && newTolerance !== null
-          ? residualScore <= newTolerance
-          : existing.withinTolerance;
-
-      const updates: Record<string, unknown> = {
-        updatedAt: new Date(),
-        withinTolerance,
-        ...(patch.risk_title !== undefined && { riskTitle: patch.risk_title }),
-        ...(patch.risk_description !== undefined && {
-          riskDescription: patch.risk_description,
-        }),
-        ...(patch.treatment !== undefined && { treatment: patch.treatment }),
-        ...(patch.treatment_rationale !== undefined && {
-          treatmentRationale: patch.treatment_rationale,
-        }),
-        ...(patch.owner_id !== undefined && { ownerId: patch.owner_id }),
-        ...(patch.review_date !== undefined && {
-          reviewDate: patch.review_date,
-        }),
-        ...(patch.scf_risk_id !== undefined && {
-          scfRiskId: patch.scf_risk_id,
-        }),
-        ...(patch.risk_appetite !== undefined && {
-          riskAppetiteInput: String(patch.risk_appetite),
-        }),
-        ...(patch.risk_tolerance !== undefined && {
-          riskToleranceInput: String(patch.risk_tolerance),
-        }),
-        ...(patch.risk_threshold !== undefined && {
-          riskThresholdInput: String(patch.risk_threshold),
-        }),
-      };
-
-      await db
-        .update(assessmentRiskRegister)
-        .set(updates)
-        .where(
-          and(
-            eq(assessmentRiskRegister.id, entryId),
-            eq(assessmentRiskRegister.organizationId, orgId),
-          ),
-        );
-
-      const [updated] = await db
-        .select()
-        .from(assessmentRiskRegister)
-        .where(eq(assessmentRiskRegister.id, entryId))
-        .limit(1);
 
       return json({ data: updated, trace_id: traceId });
     },
   },
 
-  // â”€â”€ DELETE /assessments/:id/risk-register/:entryId â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // -- DELETE /assessments/:id/risk-register/:entryId ------------------------
   {
     method: "DELETE",
     path: "/api/v1/assessments/:id/risk-register/:entryId",
@@ -383,31 +236,11 @@ export const riskRegisterRoutes: RouteDefinition[] = [
       const assessmentId = routeUuidParam(params, "id");
       const entryId = routeUuidParam(params, "entryId");
       await requireAssessment(deps, assessmentId, orgId);
-      const db = requireDb(deps);
+      const repo = requireRepo(deps);
 
-      const [existing] = await db
-        .select({ id: assessmentRiskRegister.id })
-        .from(assessmentRiskRegister)
-        .where(
-          and(
-            eq(assessmentRiskRegister.id, entryId),
-            eq(assessmentRiskRegister.organizationId, orgId),
-            eq(assessmentRiskRegister.assessmentId, assessmentId),
-          ),
-        )
-        .limit(1);
-
-      if (!existing)
+      const deleted = await repo.delete(entryId, assessmentId, orgId);
+      if (!deleted)
         throw new ApiError("NOT_FOUND", "Risk register entry not found.", 404);
-
-      await db
-        .delete(assessmentRiskRegister)
-        .where(
-          and(
-            eq(assessmentRiskRegister.id, entryId),
-            eq(assessmentRiskRegister.organizationId, orgId),
-          ),
-        );
 
       return json({ success: true, trace_id: traceId });
     },
