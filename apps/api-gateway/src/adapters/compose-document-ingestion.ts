@@ -17,7 +17,7 @@ import {
   DEFAULT_VECTOR_PROVIDER,
 } from "@standard/kb";
 import type { KbServiceDependencies } from "@standard/kb";
-import { createDrizzleIngestionRepositories } from "./document-ingestion.repository";
+import { createDrizzleIngestionRepositories } from "@standard/document-ingestion";
 import { createDrizzleKbRepositories } from "@standard/kb";
 import type { Env } from "../types/env";
 import type { DbClient } from "./db";

@@ -1,4 +1,4 @@
-﻿export * from "./adapters";
+export * from "./adapters";
 export * from "./r2-adapter";
 export * from "./chunker";
 export * from "./consumer";
@@ -10,4 +10,5 @@ export * from "./service";
 export * from "./types";
 export * from "./validation";
 export * from "./malware-scanner";
-
+export { createDrizzleIngestionRepositories } from "./repositories/drizzle.repository";
+export type { DrizzleDbClient as IngestionDrizzleDbClient } from "./repositories/drizzle.repository";

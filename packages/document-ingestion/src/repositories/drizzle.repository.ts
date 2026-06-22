@@ -1,10 +1,15 @@
-﻿/**
- * @module document-ingestion.repository
+/**
+ * @module document-ingestion/repositories/drizzle.repository
  * @description Drizzle PostgreSQL repositories for Document Ingestion pipeline.
  * Implements: DocumentRecordRepository, DocumentJobRepository, DocumentChunkRepository,
  * VectorReferenceRepository, AuditSink.
+ *
+ * This is the single canonical Drizzle adapter — used by api-gateway,
+ * workers/queues, and workers/ingestion (no more copies).
+ *
+ * Accepts any Drizzle-compatible db client via structural typing.
  */
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import {
   documents,
   documentChunks,
@@ -26,19 +31,105 @@ import type {
   AuditSink,
   DocumentChunk,
   IngestionRepositories,
-} from "@standard/document-ingestion";
-import type { DbClient } from "./db";
+} from "../types";
 
-// ---------- Documents ----------
+// Structural type — compatible with NeonServerlessDatabase and PostgresJsDatabase
+export type DrizzleDbClient = {
+  select(): any;
+  insert(table: any): any;
+  update(table: any): any;
+  delete(table: any): any;
+};
+
+// --- Row types ---
+
+type DocumentRow = typeof documents.$inferSelect;
+type JobRow = typeof documentExtractionJobs.$inferSelect;
+type ChunkRow = typeof documentChunks.$inferSelect;
+
+// --- Row mappers ---
+
+const mapDocumentRow = (row: DocumentRow): DocumentResponse => ({
+  document_id: row.id,
+  organization_id: row.organizationId,
+  assessment_id: row.assessmentId ?? "",
+  original_filename: row.originalFilename,
+  normalized_filename: row.originalFilename
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]/g, "_"),
+  storage_provider: row.storageProvider,
+  storage_bucket: "STANDARD_DOCUMENTS_BUCKET",
+  storage_key: row.storageKey,
+  content_hash: row.contentHash,
+  mime_type: row.mimeType,
+  file_size: row.fileSize,
+  uploaded_by: row.uploadedBy ?? "",
+  uploaded_at: row.uploadedAt.toISOString(),
+  classification: row.classification,
+  document_type: row.documentType,
+  language: row.language,
+  version_label: row.versionLabel ?? undefined,
+  effective_date: row.effectiveDate ?? undefined,
+  status: "uploaded",
+  scan_status: row.scanStatus ?? "pending",
+  malware_signature: null,
+  scanned_at: null,
+  trace_id: "",
+});
+
+const mapJobRow = (row: JobRow): DocumentJobResponse => ({
+  job_id: row.id,
+  organization_id: row.organizationId,
+  assessment_id: row.assessmentId ?? "",
+  document_id: row.documentId,
+  job_type: "extract_and_chunk",
+  status:
+    row.status === "processing"
+      ? "running"
+      : row.status === "completed"
+        ? "succeeded"
+        : (row.status as
+            | "queued"
+            | "running"
+            | "succeeded"
+            | "failed"
+            | "cancelled"),
+  attempt_count: 0,
+  error_code: row.errorCode ?? undefined,
+  error_message_safe: row.errorMessage ?? undefined,
+  queued_at: row.createdAt.toISOString(),
+  started_at: row.startedAt?.toISOString(),
+  completed_at: row.completedAt?.toISOString(),
+  trace_id: row.traceId,
+  metadata: {},
+});
+
+const mapChunkRow = (row: ChunkRow): DocumentChunk => ({
+  chunk_id: row.id,
+  organization_id: row.organizationId,
+  assessment_id: row.assessmentId ?? "",
+  document_id: row.documentId,
+  ...(row.documentVersionId
+    ? { document_version_id: row.documentVersionId }
+    : {}),
+  chunk_index: row.chunkIndex,
+  chunk_text: "", // DB does not store raw text (stored in R2 / reconstructed from index)
+  text_hash: row.textHash,
+  token_count_estimate: row.approximateTokenCount ?? 0,
+  ...(row.pageNumber != null ? { page_number: row.pageNumber } : {}),
+  location_metadata: (row.locationMetadata ?? {}) as Record<string, unknown>,
+  created_at: row.createdAt.toISOString(),
+});
+
+// --- Repository factories ---
 
 const createDrizzleDocumentRepository = (
-  db: DbClient,
+  db: DrizzleDbClient,
 ): DocumentRecordRepository => {
   const repo = {
     async saveDocument(doc: DocumentResponse) {
       await db
         .insert(documents)
-
         .values({
           id: String(doc.document_id),
           organizationId: String(doc.organization_id),
@@ -120,45 +211,13 @@ const createDrizzleDocumentRepository = (
   return repo;
 };
 
-type DocumentRow = typeof documents.$inferSelect;
-const mapDocumentRow = (row: DocumentRow): DocumentResponse => ({
-  document_id: row.id,
-  organization_id: row.organizationId,
-  assessment_id: row.assessmentId ?? "",
-  original_filename: row.originalFilename,
-  normalized_filename: row.originalFilename
-    .toLowerCase()
-    .replace(/[^a-z0-9._-]/g, "_"),
-  storage_provider: row.storageProvider,
-  storage_bucket: "STANDARD_DOCUMENTS_BUCKET",
-  storage_key: row.storageKey,
-  content_hash: row.contentHash,
-  mime_type: row.mimeType,
-  file_size: row.fileSize,
-  uploaded_by: row.uploadedBy ?? "",
-  uploaded_at: row.uploadedAt.toISOString(),
-  classification: row.classification,
-  document_type: row.documentType,
-  language: row.language,
-  version_label: row.versionLabel ?? undefined,
-  effective_date: row.effectiveDate ?? undefined,
-  status: "uploaded",
-  scan_status: row.scanStatus ?? "pending",
-  malware_signature: null,
-  scanned_at: null,
-  trace_id: "",
-});
-
-// ---------- Extraction Jobs ----------
-
 const createDrizzleDocumentJobRepository = (
-  db: DbClient,
+  db: DrizzleDbClient,
 ): DocumentJobRepository => {
   const repo = {
     async saveJob(job: DocumentJobResponse) {
       await db
         .insert(documentExtractionJobs)
-
         .values({
           id: String(job.job_id),
           organizationId: String(job.organization_id),
@@ -255,38 +314,8 @@ const createDrizzleDocumentJobRepository = (
   return repo;
 };
 
-type JobRow = typeof documentExtractionJobs.$inferSelect;
-const mapJobRow = (row: JobRow): DocumentJobResponse => ({
-  job_id: row.id,
-  organization_id: row.organizationId,
-  assessment_id: row.assessmentId ?? "",
-  document_id: row.documentId,
-  job_type: "extract_and_chunk",
-  status:
-    row.status === "processing"
-      ? "running"
-      : row.status === "completed"
-        ? "succeeded"
-        : (row.status as
-            | "queued"
-            | "running"
-            | "succeeded"
-            | "failed"
-            | "cancelled"),
-  attempt_count: 0,
-  error_code: row.errorCode ?? undefined,
-  error_message_safe: row.errorMessage ?? undefined,
-  queued_at: row.createdAt.toISOString(),
-  started_at: row.startedAt?.toISOString(),
-  completed_at: row.completedAt?.toISOString(),
-  trace_id: row.traceId,
-  metadata: {},
-});
-
-// ---------- Document Chunks ----------
-
 const createDrizzleDocumentChunkRepository = (
-  db: DbClient,
+  db: DrizzleDbClient,
 ): DocumentChunkRepository => {
   const repo = {
     async saveChunks(chunks: DocumentChunk[]) {
@@ -350,28 +379,8 @@ const createDrizzleDocumentChunkRepository = (
   return repo;
 };
 
-type ChunkRow = typeof documentChunks.$inferSelect;
-const mapChunkRow = (row: ChunkRow): DocumentChunk => ({
-  chunk_id: row.id,
-  organization_id: row.organizationId,
-  assessment_id: row.assessmentId ?? "",
-  document_id: row.documentId,
-  ...(row.documentVersionId
-    ? { document_version_id: row.documentVersionId }
-    : {}),
-  chunk_index: row.chunkIndex,
-  chunk_text: "", // DB does not store raw text (stored in R2 / reconstructed from index)
-  text_hash: row.textHash,
-  token_count_estimate: row.approximateTokenCount ?? 0,
-  ...(row.pageNumber != null ? { page_number: row.pageNumber } : {}),
-  location_metadata: (row.locationMetadata ?? {}) as Record<string, unknown>,
-  created_at: row.createdAt.toISOString(),
-});
-
-// ---------- Vector References ----------
-
 const createDrizzleIngestionVectorRefRepository = (
-  db: DbClient,
+  db: DrizzleDbClient,
 ): VectorReferenceRepository => ({
   async saveVectorReferences(refs: VectorReferenceResponse[]) {
     if (refs.length === 0) return;
@@ -384,7 +393,7 @@ const createDrizzleIngestionVectorRefRepository = (
               id: String(ref.vector_reference_id),
               organizationId: String(ref.organization_id),
               assessmentId: String(ref.assessment_id),
-              kbEntryId: String(ref.chunk_id), // Maps chunk â†’ kbEntry relationship
+              kbEntryId: String(ref.chunk_id), // Maps chunk → kbEntry relationship
               vectorProvider: String(ref.vector_provider),
               vectorIndexName: String(ref.vector_index_name),
               vectorId:
@@ -398,9 +407,7 @@ const createDrizzleIngestionVectorRefRepository = (
   },
 });
 
-// ---------- Audit Sink ----------
-
-const createDrizzleIngestionAuditSink = (db: DbClient): AuditSink => {
+const createDrizzleIngestionAuditSink = (db: DrizzleDbClient): AuditSink => {
   const isUuid = (val: string): boolean => {
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
       val,
@@ -423,7 +430,7 @@ const createDrizzleIngestionAuditSink = (db: DbClient): AuditSink => {
           ? metadata.document_id
           : null;
 
-      // Sanitize metadata: only copy allowlisted keys, then delete columns
+      // Sanitize metadata: only copy allowlisted keys, then delete column-mapped fields
       const safeMeta: Record<string, unknown> = {};
       for (const key of Object.keys(metadata)) {
         if (AUDIT_METADATA_ALLOWLIST.includes(key as never)) {
@@ -448,10 +455,15 @@ const createDrizzleIngestionAuditSink = (db: DbClient): AuditSink => {
   };
 };
 
-// ---------- Factory ----------
-
+/**
+ * Factory: creates all Drizzle-backed Document Ingestion repositories.
+ * Pass the DbClient from the api-gateway or workers composition root.
+ *
+ * This is the canonical implementation — workers/queues and workers/ingestion
+ * should import from @standard/document-ingestion instead of duplicating.
+ */
 export const createDrizzleIngestionRepositories = (
-  db: DbClient,
+  db: DrizzleDbClient,
 ): IngestionRepositories => ({
   documents: createDrizzleDocumentRepository(db),
   jobs: createDrizzleDocumentJobRepository(db),
@@ -459,4 +471,3 @@ export const createDrizzleIngestionRepositories = (
   vectorReferences: createDrizzleIngestionVectorRefRepository(db),
   audit: createDrizzleIngestionAuditSink(db),
 });
-
