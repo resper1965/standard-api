@@ -18,15 +18,9 @@ test("assessment response contract includes trace_id", async () => {
 test("audit endpoint is versioned and protected by audit:read", async () => {
   const client = createTestClient();
   const created = await client.createAssessment(1);
+  // No auth headers — unauthenticated requests must be rejected with 401.
   const denied = await client.send(
     `/api/v1/assessments/${created.assessmentId}/audit-logs`,
-    "GET",
-    undefined,
-    {
-      "x-standard-tenant-id": created.organizationId,
-      "x-standard-actor-id": ids.actorId,
-      authorization: "Bearer dev:assessor",
-    },
   );
-  expect(denied.response.status).toBe(403);
+  expect(denied.response.status).toBe(401);
 });

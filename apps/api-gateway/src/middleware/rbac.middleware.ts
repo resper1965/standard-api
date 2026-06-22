@@ -73,8 +73,10 @@ async function gatherActorPermissions(
     actorPermissions.push(...context.auth.permissions);
   }
 
-  // Session-based role resolution.
-  if (actorPermissions.length === 0 && context.session) {
+  // Session-based role resolution — only when no explicit auth context was provided.
+  // If context.auth is set (even with empty permissions), the actor was authenticated
+  // with a specific grant; do not silently escalate to session role.
+  if (actorPermissions.length === 0 && context.session && !context.auth) {
     const { DEFAULT_ROLE_PERMISSIONS } = await import("@standard/security");
 
     // platformAdmin gets full admin permissions

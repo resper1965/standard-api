@@ -80,7 +80,7 @@ export async function constructEvent(
     const err = new Error(
       "constructEvent requires rawBody, signature, and secret",
     );
-    (err as NodeJS.ErrnoException).code = "WEBHOOK_SIGNATURE_INVALID";
+    (err as Error & { code: string }).code = "WEBHOOK_SIGNATURE_INVALID";
     throw err;
   }
 
@@ -90,7 +90,7 @@ export async function constructEvent(
     const err = new Error(
       "Webhook signature verification failed. Ensure you are passing the raw request body (not parsed JSON) and the correct signing secret.",
     );
-    (err as NodeJS.ErrnoException).code = "WEBHOOK_SIGNATURE_INVALID";
+    (err as Error & { code: string }).code = "WEBHOOK_SIGNATURE_INVALID";
     throw err;
   }
 
@@ -98,7 +98,7 @@ export async function constructEvent(
     return JSON.parse(rawBody) as WebhookEvent;
   } catch {
     const err = new Error("Webhook body is not valid JSON");
-    (err as NodeJS.ErrnoException).code = "WEBHOOK_SIGNATURE_INVALID";
+    (err as Error & { code: string }).code = "WEBHOOK_SIGNATURE_INVALID";
     throw err;
   }
 }
