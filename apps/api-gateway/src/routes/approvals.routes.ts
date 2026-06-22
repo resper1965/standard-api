@@ -6,7 +6,6 @@ import {
   json,
   newId,
   parseJson,
-  routeParam,
   routeUuidParam,
   requireOrganizationId,
 } from "../http";
@@ -27,7 +26,6 @@ export const approvalsRoutes: RouteDefinition[] = [
       organizationId,
       actorId,
       traceId,
-      session,
     }) => {
       const body = await parseJson(request, CreateApprovalRequestSchema);
       const assessmentId = routeUuidParam(params, "assessmentId");
@@ -40,33 +38,6 @@ export const approvalsRoutes: RouteDefinition[] = [
           "VALIDATION_ERROR",
           "Assessment state approvals must target the assessment id.",
           400,
-        );
-      }
-
-      const permissionByGate = {
-        soa: "soa:approve",
-        gap_analysis: "gap:approve",
-        maturity_assessment: "maturity:approve",
-        poam: "poam:approve",
-        report: "report:approve",
-      } as const;
-      const requiredPermission = permissionByGate[body.gate];
-      const sessionRole =
-        (session?.user?.role as string | undefined) ?? "viewer";
-      const gateRoleMap: Record<string, string[]> = {
-        "soa:approve": ["owner", "admin", "platform_admin"],
-        "gap:approve": ["owner", "admin", "platform_admin"],
-        "maturity:approve": ["owner", "admin", "platform_admin"],
-        "poam:approve": ["owner", "admin", "platform_admin"],
-        "report:approve": ["owner", "admin", "platform_admin"],
-      };
-      const allowedRoles = gateRoleMap[requiredPermission] ?? [];
-      if (!allowedRoles.includes(sessionRole)) {
-        throw new ApiError(
-          "FORBIDDEN",
-          "Approval requires explicit approve permission for this gate.",
-          403,
-          [{ required_permission: requiredPermission, your_role: sessionRole }],
         );
       }
 
