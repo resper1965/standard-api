@@ -1,4 +1,4 @@
-/**
+﻿/**
  * TPRA Routes â€” Third-Party Risk Assessment
  *
  * Static catalogue:
@@ -37,6 +37,7 @@ import {
   CreateTpraRiskScoreRequestSchema,
 } from "@standard/schemas";
 import { categoriseRisk } from "./tpra-score-service";
+import { dispatchWebhookEvent } from "../services/webhook-event-helper";
 
 // â”€â”€ TPRA Questionnaire Data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -719,34 +720,12 @@ export const tpraRoutes: RouteDefinition[] = [
         metadata: body.metadata ?? {},
         trace_id: traceId,
       });
-      // Best-effort webhook dispatch for TPRA vendor creation
-      if (deps.webhooks) {
-        try {
-          const subscribers = await deps.webhooks.findSubscribers(
-            orgId,
-            "tpra.vendor.created",
-          );
-          for (const endpoint of subscribers) {
-            if (!endpoint.enabled) continue;
-            await deps.webhooks.logDelivery({
-              delivery_id: newId(),
-              endpoint_id: endpoint.id,
-              event_id: newId(),
-              event_type: "tpra.vendor.created",
-              status: "pending",
-              http_status: null,
-              attempt_count: 0,
-              max_attempts: 3,
-              last_attempted_at: null,
-              next_retry_at: new Date().toISOString(),
-              response_body: null,
-              created_at: new Date().toISOString(),
-            });
-          }
-        } catch {
-          // Non-blocking â€” webhook delivery is best-effort
-        }
-      }
+      // Best-effort webhook dispatch
+      await dispatchWebhookEvent(deps.webhooks, {
+        organizationId: orgId,
+        eventType: "tpra.vendor.created",
+        eventId: newId(),
+      });
 
       return json({ data: vendor, trace_id: traceId }, { status: 201 });
     },
@@ -835,34 +814,18 @@ export const tpraRoutes: RouteDefinition[] = [
       if (!updated)
         throw new ApiError("NOT_FOUND", "TPRA assessment not found.", 404);
 
-      // Best-effort webhook dispatch for TPRA assessment submission
-      if (deps.webhooks) {
-        try {
-          const subscribers = await deps.webhooks.findSubscribers(
-            orgId,
-            "tpra.assessment.submitted",
-          );
-          for (const endpoint of subscribers) {
-            if (!endpoint.enabled) continue;
-            await deps.webhooks.logDelivery({
-              delivery_id: newId(),
-              endpoint_id: endpoint.id,
-              event_id: newId(),
-              event_type: "tpra.assessment.submitted",
-              status: "pending",
-              http_status: null,
-              attempt_count: 0,
-              max_attempts: 3,
-              last_attempted_at: null,
-              next_retry_at: new Date().toISOString(),
-              response_body: null,
-              created_at: new Date().toISOString(),
-            });
-          }
-        } catch {
-          // Non-blocking â€” webhook delivery is best-effort
-        }
-      }
+      // Best-effort: assessment submitted
+      await dispatchWebhookEvent(deps.webhooks, {
+        organizationId: orgId,
+        eventType: "tpra.assessment.submitted",
+        eventId: newId(),
+      });
+      // Best-effort: assessment completed
+      await dispatchWebhookEvent(deps.webhooks, {
+        organizationId: orgId,
+        eventType: "tpra.assessment.completed",
+        eventId: newId(),
+      });
 
       return json({ data: updated, trace_id: traceId });
     },
@@ -907,33 +870,28 @@ export const tpraRoutes: RouteDefinition[] = [
         scf_version_id: assessment.scf_version_id,
         trace_id: traceId,
       });
-      // Best-effort webhook dispatch for TPRA risk score creation
-      if (deps.webhooks) {
-        try {
-          const subscribers = await deps.webhooks.findSubscribers(
-            orgId,
-            "tpra.risk_score.created",
-          );
-          for (const endpoint of subscribers) {
-            if (!endpoint.enabled) continue;
-            await deps.webhooks.logDelivery({
-              delivery_id: newId(),
-              endpoint_id: endpoint.id,
-              event_id: newId(),
-              event_type: "tpra.risk_score.created",
-              status: "pending",
-              http_status: null,
-              attempt_count: 0,
-              max_attempts: 3,
-              last_attempted_at: null,
-              next_retry_at: new Date().toISOString(),
-              response_body: null,
-              created_at: new Date().toISOString(),
-            });
-          }
-        } catch {
-          // Non-blocking â€” webhook delivery is best-effort
-        }
+      // Best-effort: risk score created
+      await dispatchWebhookEvent(deps.webhooks, {
+        organizationId: orgId,
+        eventType: "tpra.risk_score.created",
+        eventId: newId(),
+      });
+      // Best-effort: vendor risk score updated
+      await dispatchWebhookEvent(deps.webhooks, {
+        organizationId: orgId,
+        eventType: "vendor.risk_score.updated",
+        eventId: newId(),
+      });
+      // Condicional: ledger.audit.alert apenas para risco high ou critical
+      if (
+        riskScore.risk_category === "high" ||
+        riskScore.risk_category === "critical"
+      ) {
+        await dispatchWebhookEvent(deps.webhooks, {
+          organizationId: orgId,
+          eventType: "ledger.audit.alert",
+          eventId: newId(),
+        });
       }
 
       // M3: Reverse Mapping â€” dispatch workflow to inherit vendor controls into SoA ledger

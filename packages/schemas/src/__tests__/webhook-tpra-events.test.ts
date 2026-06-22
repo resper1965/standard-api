@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Webhook TPRA Event Types â€” W1
  *
  * Tests that TPRA (Third-Party Risk Assessment) webhook event types
@@ -27,23 +27,32 @@ describe("TPRA Webhook Event Types â€” registration contract", () => {
     expect(WEBHOOK_EVENT_TYPES).toContain("tpra.risk_score.created");
   });
 
-  it("contains all 3 TPRA events", () => {
+  it("contains all TPRA-prefixed events (tpra.*)", () => {
     const tpraEvents = WEBHOOK_EVENT_TYPES.filter((e) => e.startsWith("tpra."));
-    expect(tpraEvents).toHaveLength(3);
+    expect(tpraEvents).toHaveLength(4);
     expect(tpraEvents).toEqual(
       expect.arrayContaining([
         "tpra.vendor.created",
         "tpra.assessment.submitted",
         "tpra.risk_score.created",
+        "tpra.assessment.completed",
       ]),
     );
+  });
+
+  it("contains vendor.risk_score.updated", () => {
+    expect(WEBHOOK_EVENT_TYPES).toContain("vendor.risk_score.updated");
+  });
+
+  it("contains ledger.audit.alert", () => {
+    expect(WEBHOOK_EVENT_TYPES).toContain("ledger.audit.alert");
   });
 });
 
 describe("WEBHOOK_EVENT_TYPES â€” completeness", () => {
-  it("has correct total count (15 events)", () => {
-    // 12 core lifecycle + 3 TPRA = 15 as declared in webhooks.ts header
-    expect(WEBHOOK_EVENT_TYPES).toHaveLength(15);
+  it("has correct total count (18 events)", () => {
+    // 12 core lifecycle + 3 original TPRA + 3 mandatory TPRA = 18
+    expect(WEBHOOK_EVENT_TYPES).toHaveLength(18);
   });
 
   it("contains all core lifecycle events", () => {
@@ -88,4 +97,3 @@ describe("WebhookEventTypeSchema â€” Zod validation", () => {
     expect(result.success).toBe(false);
   });
 });
-
