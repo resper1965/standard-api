@@ -72,8 +72,8 @@
 - [x] Sparse fields selection em API responses
 - [x] STRM relationship_type filter em endpoints SCF
 - [x] API Key caching via KV com TTL (eliminar query Neon por request — IMPLEMENTATION-CONSTRAINTS.md)
-- [ ] Contract tests para endpoints compartilhados
-- [ ] Regression tests para agent outputs
+- [x] Contract tests para endpoints compartilhados (8 test files em tests/contracts/)
+- [x] Regression tests para agent outputs (5 regression + 16 agent evals em evals/)
 
 ---
 
@@ -84,11 +84,11 @@
 **Planejado**:
 - [x] TPRA ↔ SoA integration (Third-Party Risk Assessment vinculado ao SoA)
 - [x] `pg_partman` automation para particionamento de tabelas de alto volume
-- [ ] Auth containment (ADR-015 — isolamento e limites de sessão)
+- [x] Auth containment (ADR-015 — AuthRepository implementado, routes migradas, 8 testes)
 - [ ] Multi-region deployment (Cloudflare edge + PostgreSQL read replicas)
-- [ ] Custom domains via Cloudflare for SaaS
-- [ ] SOC/SIEM integration (pelo menos logging estruturado)
-- [ ] DOCX/PDF renderer para relatórios exportáveis
+- [x] Custom domains via Cloudflare for SaaS (descartado — backlog 4.8; custom domain standard-api.bekaa.eu configurado)
+- [x] SOC/SIEM integration (structured logging implementado — soc-monitoring, soc-triage, security-events)
+- [x] DOCX/PDF renderer para relatórios exportáveis (packages/reporting/src/renderers/docx-renderer.ts)
 - [ ] Production go-live checklist executado
 - [ ] Primeiro organization real onboarded
 

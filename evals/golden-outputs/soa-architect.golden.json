@@ -1,0 +1,18 @@
+{
+  "description": "Golden outputs for SoA Architect agent",
+  "test_cases": [
+    {
+      "id": "soa-001",
+      "scenario": "scope_definition",
+      "description": "Properly defines scope based on provided inputs.",
+      "input": {
+        "organization_id": "org-1",
+        "systems_in_scope": ["Payment Gateway", "User Portal"]
+      },
+      "expected_output": {
+        "statement_of_applicability_status": "draft",
+        "controls_in_scope_count_min": 10
+      }
+    }
+  ]
+}

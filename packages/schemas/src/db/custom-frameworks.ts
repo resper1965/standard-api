@@ -1,5 +1,16 @@
-import { pgTable, text, timestamp, uuid, index, uniqueIndex, boolean, integer } from "drizzle-orm/pg-core";
-import { organizations, scfFrameworkRequirements, strmOperatorEnum } from "./schema";
+import {
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+  index,
+  uniqueIndex,
+  boolean,
+  integer,
+} from "drizzle-orm/pg-core";
+import { organizations } from "./core.schema";
+import { scfFrameworkRequirements } from "./scf.schema";
+import { strmOperatorEnum } from "./_shared-enums";
 
 export const customFrameworks = pgTable(
   "custom_frameworks",
@@ -15,13 +26,15 @@ export const customFrameworks = pgTable(
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (table) => ({
-    organizationIdx: index("custom_frameworks_org_idx").on(table.organizationId),
+    organizationIdx: index("custom_frameworks_org_idx").on(
+      table.organizationId,
+    ),
     uniqueNameVersionIdx: uniqueIndex("custom_frameworks_name_version_uidx").on(
       table.organizationId,
       table.name,
-      table.version
+      table.version,
     ),
-  })
+  }),
 );
 
 export const customFrameworkRequirements = pgTable(
@@ -38,12 +51,14 @@ export const customFrameworkRequirements = pgTable(
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (table) => ({
-    frameworkIdx: index("custom_requirements_fw_idx").on(table.customFrameworkId),
+    frameworkIdx: index("custom_requirements_fw_idx").on(
+      table.customFrameworkId,
+    ),
     uniqueCodeIdx: uniqueIndex("custom_requirements_code_uidx").on(
       table.customFrameworkId,
-      table.requirementCode
+      table.requirementCode,
     ),
-  })
+  }),
 );
 
 export const customStrmMappings = pgTable(
@@ -52,7 +67,9 @@ export const customStrmMappings = pgTable(
     id: uuid("id").defaultRandom().primaryKey(),
     customFrameworkRequirementId: uuid("custom_framework_requirement_id")
       .notNull()
-      .references(() => customFrameworkRequirements.id, { onDelete: "cascade" }),
+      .references(() => customFrameworkRequirements.id, {
+        onDelete: "cascade",
+      }),
     scfFrameworkRequirementId: uuid("scf_framework_requirement_id")
       .notNull()
       .references(() => scfFrameworkRequirements.id, { onDelete: "cascade" }),
@@ -64,11 +81,15 @@ export const customStrmMappings = pgTable(
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (table) => ({
-    customReqIdx: index("custom_strm_custom_req_idx").on(table.customFrameworkRequirementId),
-    scfReqIdx: index("custom_strm_scf_req_idx").on(table.scfFrameworkRequirementId),
+    customReqIdx: index("custom_strm_custom_req_idx").on(
+      table.customFrameworkRequirementId,
+    ),
+    scfReqIdx: index("custom_strm_scf_req_idx").on(
+      table.scfFrameworkRequirementId,
+    ),
     uniqueMappingIdx: uniqueIndex("custom_strm_mapping_uidx").on(
       table.customFrameworkRequirementId,
-      table.scfFrameworkRequirementId
+      table.scfFrameworkRequirementId,
     ),
-  })
+  }),
 );

@@ -160,17 +160,15 @@ async function resolveSessionAuthContext(
     }
 
     if (!flags) {
-      const db = (context.deps as any)._db;
-      if (db) {
+      const authRepo = context.deps.authRepo;
+      if (authRepo) {
         try {
-          const rows = await db.execute(
-            sql`SELECT platform_admin, approved FROM public."user" WHERE id = ${user.id} LIMIT 1`,
-          );
-          const row = rows?.rows?.[0] ?? rows?.[0];
-          if (row) {
+          const u = await authRepo.getUserById(user.id);
+          if (u) {
             flags = {
-              platform_admin: row.platform_admin === true,
-              approved: row.approved === true,
+              platform_admin:
+                u.platformAdmin === true || (u as any).platform_admin === true,
+              approved: u.approved === true,
             };
             if (kv) {
               kv.put(flagsKvKey, JSON.stringify(flags), {
@@ -238,7 +236,10 @@ async function resolveSessionAuthContext(
         name: user.name ?? "",
         platformAdmin: isPlatformAdmin,
         approved: isApproved,
-        role: (user.role && user.role !== "user" && user.role !== "member") ? user.role : "organization_admin",
+        role:
+          user.role && user.role !== "user" && user.role !== "member"
+            ? user.role
+            : "organization_admin",
       },
       session: {
         id: session.id,
@@ -277,4 +278,3 @@ export const resolveAuthContext = async (
     throw new ApiError("UNAUTHORIZED", "Authentication required.", 401);
   }
 };
-

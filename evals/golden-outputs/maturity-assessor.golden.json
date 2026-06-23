@@ -1,0 +1,37 @@
+{
+  "description": "Golden outputs for Maturity Assessor agent",
+  "test_cases": [
+    {
+      "id": "mat-001",
+      "scenario": "level_1_initial",
+      "description": "Ad-hoc processes with minimal documentation.",
+      "input": {
+        "control_code": "AC-01",
+        "hasDocumentation": false,
+        "hasProcess": false,
+        "hasMeasurement": false,
+        "hasContinuousImprovement": false
+      },
+      "expected_output": {
+        "maturity_score": 1,
+        "maturity_level": "Initial"
+      }
+    },
+    {
+      "id": "mat-002",
+      "scenario": "level_3_defined",
+      "description": "Processes are documented and standardized.",
+      "input": {
+        "control_code": "AC-02",
+        "hasDocumentation": true,
+        "hasProcess": true,
+        "hasMeasurement": false,
+        "hasContinuousImprovement": false
+      },
+      "expected_output": {
+        "maturity_score": 3,
+        "maturity_level": "Defined"
+      }
+    }
+  ]
+}

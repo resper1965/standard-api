@@ -1,0 +1,20 @@
+{
+  "description": "Golden outputs for POA&M Planner agent",
+  "test_cases": [
+    {
+      "id": "poam-001",
+      "scenario": "high_risk_gap",
+      "description": "A high risk gap should generate a high priority POA&M item.",
+      "input": {
+        "gap_id": "gap-123",
+        "risk_level": "high",
+        "gap_description": "Lack of MFA for administrative access"
+      },
+      "expected_output": {
+        "priority": "high",
+        "estimated_effort": "medium",
+        "milestones_count_min": 2
+      }
+    }
+  ]
+}

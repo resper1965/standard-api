@@ -170,19 +170,42 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
           );
         } else {
           console.log(`[standard:auth:dev] reset â†’ ${url}`);
+          console.log(`[standard:auth:dev] reset → ${url}`);
         }
       },
     },
 
     trustedOrigins,
 
-    // â”€â”€ Database Hooks (Auth Containment) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ─── Database Hooks (Auth Containment & Auto-Provisioning) ────────────────────────
     databaseHooks: {
+      user: {
+        create: {
+          before: async (user: any) => {
+            // Auto-provisionamento do Platform Admin master account
+            const platformAdmins = ["resper@bekaa.eu"];
+            if (platformAdmins.includes(user.email)) {
+              console.log(
+                `[standard:auth] Auto-provisioning Platform Admin for: ${user.email}`,
+              );
+              return {
+                data: {
+                  ...user,
+                  platformAdmin: true,
+                  role: "admin",
+                  approved: true, // Bypass approval gate for master admins
+                },
+              };
+            }
+            return { data: user };
+          },
+        },
+      },
       session: {
         create: {
           after: async (session: any) => {
             const MAX_CONCURRENT_SESSIONS = 3;
-            // Encontra todas as sessÃµes ativas do usuÃ¡rio, da mais nova para a mais velha
+            // Encontra todas as sessões ativas do usuário, da mais nova para a mais velha
             const rows = await (db as any)
               .select({ id: baSession.id })
               .from(baSession)
@@ -268,4 +291,3 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
 };
 
 export type StandardAuth = ReturnType<typeof createAuth>;
-

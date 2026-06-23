@@ -1,0 +1,36 @@
+{
+  "description": "Golden outputs for Gap Analyst agent",
+  "test_cases": [
+    {
+      "id": "gap-001",
+      "scenario": "fully_met_control",
+      "description": "Control is fully implemented with strong evidence.",
+      "input": {
+        "control_code": "AC-01",
+        "evidence_status": "evidenced",
+        "evidence_strength": "strong"
+      },
+      "expected_output": {
+        "assessment_status": "met",
+        "gap_type": "none",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "gap-002",
+      "scenario": "partially_met_control",
+      "description": "Control is partially implemented with gaps in coverage.",
+      "input": {
+        "control_code": "AC-02",
+        "evidence_status": "evidenced",
+        "evidence_strength": "weak",
+        "coverage": "partial"
+      },
+      "expected_output": {
+        "assessment_status": "partially_met",
+        "gap_type": "implementation_gap",
+        "confidence": "medium"
+      }
+    }
+  ]
+}

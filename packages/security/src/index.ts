@@ -27,4 +27,5 @@ export * from "./types";
 export * from "./upload-security/file-policy";
 export * from "./upload-security/file-validation";
 export * from "./upload-security/malware-scan.placeholder";
+export * from "./upload-security/heuristic-scan.provider";
 export * from "./utils/sanitize-like";

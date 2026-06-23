@@ -23,11 +23,11 @@ import {
   approvalEvents,
   assessments,
   assessmentScope,
-  gapAnalysisVersions,
-  maturityAssessmentVersions,
-  poamVersions,
-  soaVersions,
 } from "./assessment.schema";
+import { soaVersions } from "./soa.schema";
+import { gapAnalysisVersions } from "./gap.schema";
+import { maturityAssessmentVersions } from "./maturity.schema";
+import { poamVersions } from "./poam.schema";
 import { scfFrameworks, scfVersions } from "./scf.schema";
 import { agentRuns } from "./agent.schema";
 

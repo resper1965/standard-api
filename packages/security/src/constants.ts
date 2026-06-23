@@ -100,7 +100,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "assessment:create",
     "assessment:read",
     "assessment:update",
-    "audit:read"
+    "audit:read",
   ],
   organization_admin: [
     "organization:read",
@@ -115,7 +115,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "soa:read",
     "gap:read",
     "poam:read",
-    "report:read"
+    "report:read",
   ],
   assessment_owner: [
     "assessment:read",
@@ -152,7 +152,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "report:read",
     "report:download",
     "agent:run",
-    "agent:read_runs"
+    "agent:read_runs",
   ],
   assessor: [
     "assessment:read",
@@ -181,9 +181,18 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "report:render",
     "report:read",
     "agent:run",
-    "agent:read_runs"
+    "agent:read_runs",
   ],
-  reviewer: ["assessment:read", "document:read", "kb:search", "soa:read", "gap:read", "maturity:read", "poam:read", "report:read"],
+  reviewer: [
+    "assessment:read",
+    "document:read",
+    "kb:search",
+    "soa:read",
+    "gap:read",
+    "maturity:read",
+    "poam:read",
+    "report:read",
+  ],
   approver: [
     "assessment:read",
     "document:read",
@@ -198,12 +207,41 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "poam:approve",
     "report:read",
     "report:approve",
-    "report:download"
+    "report:download",
   ],
-  auditor_readonly: ["assessment:read", "soa:read", "gap:read", "maturity:read", "poam:read", "report:read", "report:download", "audit:read"],
-  integration_service: ["assessment:read", "document:upload", "document:read", "kb:index", "kb:search", "report:read"],
-  support_readonly: ["tenant:read", "organization:read", "assessment:read", "audit:read"],
-  system: ["assessment:read", "assessment:update", "assessment:run_workflow", "kb:index", "agent:run", "agent:read_runs", "report:render"]
+  auditor_readonly: [
+    "assessment:read",
+    "soa:read",
+    "gap:read",
+    "maturity:read",
+    "poam:read",
+    "report:read",
+    "report:download",
+    "audit:read",
+  ],
+  integration_service: [
+    "assessment:read",
+    "document:upload",
+    "document:read",
+    "kb:index",
+    "kb:search",
+    "report:read",
+  ],
+  support_readonly: [
+    "tenant:read",
+    "organization:read",
+    "assessment:read",
+    "audit:read",
+  ],
+  system: [
+    "assessment:read",
+    "assessment:update",
+    "assessment:run_workflow",
+    "kb:index",
+    "agent:run",
+    "agent:read_runs",
+    "report:render",
+  ],
 };
 
 /**
@@ -241,10 +279,9 @@ export const DEFAULT_FILE_SECURITY_POLICY: FileSecurityPolicy = {
     "text/csv",
     "application/csv",
     "application/json",
-    "text/json"
+    "text/json",
   ],
   require_content_hash: true,
-  require_malware_scan: false,
-  quarantine_on_rejection: true
+  require_malware_scan: true,
+  quarantine_on_rejection: true,
 };
-

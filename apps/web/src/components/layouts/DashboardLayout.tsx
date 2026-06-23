@@ -403,7 +403,7 @@ export function DashboardLayout() {
       {/* ── Main Content ──────────────────────────────── */}
       <main className="flex-1 flex flex-col min-w-0">
         {/* Mobile top bar */}
-        <header className="flex h-14 items-center justify-between border-b border-border/50 bg-card px-4 md:hidden sticky top-0 z-30">
+        <header className="flex h-[68px] items-center justify-between border-b border-border/50 bg-card px-4 md:hidden sticky top-0 z-30">
           <Button variant="ghost" size="icon" onClick={() => setMobileOpen(true)} className="h-9 w-9" aria-label="Open navigation">
             <Menu className="h-5 w-5" />
           </Button>
@@ -465,7 +465,7 @@ function DesktopTopbar({
   isPlatformAdmin?: boolean
 }) {
   return (
-    <header className="hidden md:flex border-b border-border/50 bg-card/80 backdrop-blur-xl px-8 sticky top-0 z-30 h-14 items-center justify-between transition-all duration-200">
+    <header className="hidden md:flex border-b border-border/50 bg-card/80 backdrop-blur-xl px-8 sticky top-0 z-30 h-[68px] items-center justify-between transition-all duration-200">
       <div className="flex-1 flex items-center">
         {title && <h1 className="text-xl font-brand font-semibold tracking-tight">{title}</h1>}
       </div>
