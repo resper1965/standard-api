@@ -163,7 +163,7 @@ const createDrizzleScopeRepository = (
         constraints: scope.constraints,
         updatedAt: new Date(),
       } as any)
-      .where(eq(assessmentScope.id, scope.scope_id));
+      .where(eq(assessmentScope.id as any, scope.scope_id));
   },
   async get(scopeId, _organizationId) {
     const [row] = await db
@@ -222,7 +222,7 @@ const createDrizzleSoaVersionRepository = (
         metadata: version.metadata ?? {},
         updatedAt: new Date(),
       } as any)
-      .where(eq(soaVersions.id, version.soa_version_id));
+      .where(eq(soaVersions.id as any, version.soa_version_id));
   },
   async get(soaVersionId, _organizationId) {
     const [row] = await db
@@ -307,7 +307,7 @@ const createDrizzleSoaItemRepository = (
         responsibilityType: item.responsibility_type,
         updatedAt: new Date(),
       } as any)
-      .where(eq(soaItems.id, item.soa_item_id));
+      .where(eq(soaItems.id as any, item.soa_item_id));
   },
   async get(soaItemId, _organizationId) {
     const [row] = await db
