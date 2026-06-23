@@ -356,7 +356,6 @@ export function ApiKeysPage() {
     <div className="space-y-6 max-w-5xl">
       <PageHeader
         title="API Keys"
-        description="Machine-to-machine bearer tokens for authenticating API requests"
       />
 
       {/* Header */}
