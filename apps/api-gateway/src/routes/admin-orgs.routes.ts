@@ -1,5 +1,5 @@
-﻿import { z } from "zod";
-import { sql, ilike, or, desc } from "drizzle-orm";
+import { z } from "zod";
+import { sql, ilike, or, desc, eq } from "drizzle-orm";
 import { organizations } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition, RequestContext } from "../http";
@@ -75,6 +75,39 @@ export const adminOrgsRoutes: RouteDefinition[] = [
         offset: query.offset,
         trace_id: context.traceId,
       });
+    },
+  },
+  {
+    method: "DELETE",
+    path: "/api/v1/admin/organizations/:organizationId",
+    protected: true,
+    permissions: ["admin:write"],
+    requireActor: true,
+    tenantRequired: false,
+    handler: async (context) => {
+      await requirePlatformAdmin(context);
+      const db = getDb(context);
+      const orgId = context.params.organizationId;
+
+      if (!orgId) {
+        throw new ApiError("VALIDATION_ERROR", "Organization ID is required.", 400);
+      }
+
+      // Soft-delete the organization directly via Drizzle
+      const result = await db
+        .update(organizations)
+        .set({
+          status: "inactive",
+          deletedAt: new Date() as any,
+        })
+        .where(eq(organizations.id, orgId))
+        .returning({ id: organizations.id });
+
+      if (result.length === 0) {
+        throw new ApiError("NOT_FOUND", "Organization not found.", 404);
+      }
+
+      return json({ deleted: true, organization_id: orgId, trace_id: context.traceId });
     },
   },
 ];

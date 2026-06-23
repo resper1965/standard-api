@@ -18,7 +18,6 @@ const ApiKeysPage = lazy(() => import("./pages/dashboard/api-keys/ApiKeysPage").
 const WebhooksPage = lazy(() => import("./pages/dashboard/webhooks/WebhooksPage").then(m => ({ default: m.WebhooksPage })))
 const ScfExplorerPage = lazy(() => import("./pages/dashboard/scf/ScfExplorerPage").then(m => ({ default: m.ScfExplorerPage })))
 const McpPlaygroundPage = lazy(() => import("./pages/dashboard/mcp/McpPlaygroundPage").then(m => ({ default: m.McpPlaygroundPage })))
-const TpraPage = lazy(() => import("./pages/dashboard/tpra/TpraPage").then(m => ({ default: m.TpraPage })))
 
 // Docs pages (public — no auth)
 const DocsOverviewPage = lazy(() => import("./pages/docs/DocsOverviewPage").then(m => ({ default: m.DocsOverviewPage })))
@@ -93,7 +92,6 @@ export const routes = [
                     { path: "api-keys", element: <SuspenseWrap><ApiKeysPage /></SuspenseWrap> },
                     { path: "webhooks", element: <SuspenseWrap><WebhooksPage /></SuspenseWrap> },
                     { path: "scf", element: <SuspenseWrap><ScfExplorerPage /></SuspenseWrap> },
-                    { path: "tpra", element: <SuspenseWrap><TpraPage /></SuspenseWrap> },
                     { path: "sdk", element: <SuspenseWrap><SdkPage /></SuspenseWrap> },
                     { path: "mcp", element: <SuspenseWrap><McpPlaygroundPage /></SuspenseWrap> },
 

@@ -377,7 +377,7 @@ export function AdminOrganizations() {
     if (!deleteTarget) return;
     setDeleting(deleteTarget.id);
     try {
-      await api(`/api/v1/organizations/${deleteTarget.id}`, {
+      await api(`/api/v1/admin/organizations/${deleteTarget.id}`, {
         method: "DELETE",
       });
       setDeleteTarget(null);

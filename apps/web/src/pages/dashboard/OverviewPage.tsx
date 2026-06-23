@@ -303,22 +303,6 @@ export function OverviewPage() {
             </CardContent>
           </Card>
         </Link>
-        <Link to="/dashboard/tpra">
-          <Card className="border-border/60 bg-card shadow-none hover-lift group cursor-pointer transition-all hover:border-primary/30">
-            <CardContent className="flex items-center gap-4 py-5">
-              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary/20 transition-colors">
-                <Building2 className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-foreground">Third-Party Risk</p>
-                <div className="flex items-center gap-1 mt-0.5">
-                  <p className="text-xs text-muted-foreground">Manage vendor risk</p>
-                  <ArrowUpRight className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </Link>
         <Link to="/dashboard/sdk">
           <Card className="border-border/60 bg-card shadow-none hover-lift group cursor-pointer transition-all hover:border-primary/30">
             <CardContent className="flex items-center gap-4 py-5">

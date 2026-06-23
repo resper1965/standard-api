@@ -149,7 +149,7 @@ export function SelectItem({
       onClick={handleSelect}
       className={cn(
         "relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
-        isSelected && "bg-accent/50 text-accent-foreground font-medium",
+        isSelected && "bg-accent/15 text-primary font-medium",
         className
       )}
       {...props}

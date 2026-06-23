@@ -80,7 +80,7 @@ export function DocsLayout() {
       {/* Footer */}
       <footer className="border-t border-border/30 mt-20">
         <div className="max-w-screen-xl mx-auto px-6 py-6 flex items-center justify-between text-xs text-muted-foreground">
-          <span>Standard Platform — API-first GRC, Privacy &amp; TPRA</span>
+          <span>Standard Platform — API-first GRC &amp; Privacy</span>
           <span>Docs públicos — acessíveis sem autenticação a agentes e programadores</span>
         </div>
       </footer>
