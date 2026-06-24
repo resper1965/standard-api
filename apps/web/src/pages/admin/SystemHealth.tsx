@@ -33,12 +33,21 @@ function deriveHealthState(
 
   const gatewayUp = basic?.ok === true || detailed?.ok === true;
   const dbUp = basic?.database === "connected";
+  const r2Connected = basic?.r2 === "connected" || detailed?.r2 === "connected";
+  const r2Disconnected = basic?.r2 === "disconnected" || detailed?.r2 === "disconnected";
 
   const services: ServiceStatus[] = [
     { name: "API Gateway", status: gatewayUp ? "operational" : "down" },
     { name: "Database", status: dbUp ? "operational" : "down" },
     { name: "Auth (Standard Native Auth)", status: gatewayUp ? "operational" : "down" },
-    { name: "Storage (R2)", status: "unknown" as unknown as "degraded" },
+    {
+      name: "Storage (R2)",
+      status: r2Connected
+        ? "operational"
+        : r2Disconnected
+          ? "down"
+          : ("unknown" as unknown as "degraded"),
+    },
   ];
 
   const hasDown = services.some(s => s.status === "down");

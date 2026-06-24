@@ -1,4 +1,4 @@
-﻿import type { RouteDefinition } from "../http";
+import type { RouteDefinition } from "../http";
 import { json } from "../http";
 import { ApiError } from "../errors/api-error";
 
@@ -6,7 +6,7 @@ export const healthRoutes: RouteDefinition[] = [
   {
     method: "GET",
     path: "/health",
-    handler: async ({ traceId, deps }) => {
+    handler: async ({ traceId, deps, env }) => {
       let dbStatus: string;
       try {
         await deps.organizations.get("00000000-0000-0000-0000-000000000000");
@@ -14,10 +14,25 @@ export const healthRoutes: RouteDefinition[] = [
       } catch (error) {
         dbStatus = "disconnected";
       }
+
+      let r2Status = "disconnected";
+      try {
+        const bucket = env?.STANDARD_DOCUMENTS_BUCKET;
+        if (bucket) {
+          await bucket.list({ limit: 1 });
+          r2Status = "connected";
+        } else {
+          r2Status = "unconfigured";
+        }
+      } catch {
+        r2Status = "disconnected";
+      }
+
       return json({
         ok: true,
         service: "standard-api-standard",
         database: dbStatus,
+        r2: r2Status,
         trace_id: traceId,
       });
     },

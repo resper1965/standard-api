@@ -6,7 +6,7 @@
  *
  * Auth simplification: replaced memberships+users join with direct userId lookup (A7).
  */
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { organizations } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition, RequestContext } from "../http";
@@ -94,7 +94,12 @@ export const userOrgsRoutes: RouteDefinition[] = [
           createdAt: organizations.createdAt,
         })
         .from(organizations)
-        .where(eq(organizations.userId, userId));
+        .where(
+          and(
+            eq(organizations.userId, userId),
+            eq(organizations.status, "active"),
+          ),
+        );
 
       return json(
         { data: rows, trace_id: context.traceId },

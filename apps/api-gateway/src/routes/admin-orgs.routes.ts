@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { sql, ilike, or, desc, eq } from "drizzle-orm";
+import { sql, ilike, or, desc, eq, and } from "drizzle-orm";
 import { organizations } from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition, RequestContext } from "../http";
@@ -47,12 +47,15 @@ export const adminOrgsRoutes: RouteDefinition[] = [
         search: url.searchParams.get("search") ?? undefined,
       });
 
-      const conditions = query.search
-        ? or(
-            ilike(organizations.name, `%${sanitizeLikeInput(query.search)}%`),
-            ilike(organizations.slug, `%${sanitizeLikeInput(query.search)}%`),
-          )
-        : undefined;
+      const conditions = and(
+        eq(organizations.status, "active"),
+        query.search
+          ? or(
+              ilike(organizations.name, `%${sanitizeLikeInput(query.search)}%`),
+              ilike(organizations.slug, `%${sanitizeLikeInput(query.search)}%`),
+            )
+          : undefined,
+      );
 
       const [orgsList, countResult] = await Promise.all([
         db

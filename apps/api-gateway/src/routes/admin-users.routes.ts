@@ -129,7 +129,7 @@ export const adminUsersRoutes: RouteDefinition[] = [
       const CreateUserBodySchema = z.object({
         name: z.string().min(1),
         email: z.string().email(),
-        password: z.string().min(8),
+        password: z.string().min(12),
         role: z.enum(["platform_admin", "customer"]).default("customer"),
       });
 
@@ -172,7 +172,8 @@ export const adminUsersRoutes: RouteDefinition[] = [
 
         return json({ data: user, trace_id: context.traceId }, { status: 201 });
       } catch (err: unknown) {
-        throw new ApiError("VALIDATION_ERROR", "Failed to create user", 400);
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        throw new ApiError("VALIDATION_ERROR", `Failed to create user: ${errorMsg}`, 400);
       }
     },
   },

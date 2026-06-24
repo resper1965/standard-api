@@ -52,10 +52,17 @@ export function passwordStrength(pw: string): {
   if (/\d/.test(pw)) score++;
   if (/[^A-Za-z0-9]/.test(pw)) score++;
   score = Math.min(score, 4);
+
+  // If the password is less than 12 characters, cap the score at 2 (Fair)
+  // so the user knows it's not strong enough for the backend's 12-char minimum.
+  if (pw.length < 12) {
+    score = Math.min(score, 2);
+  }
+
   const labels: Record<number, { label: string; color: string }> = {
-    0: { label: "Too weak", color: "bg-destructive" },
-    1: { label: "Weak", color: "bg-destructive" },
-    2: { label: "Fair", color: "bg-amber-500" },
+    0: { label: "Too weak (min. 12 characters)", color: "bg-destructive" },
+    1: { label: "Weak (min. 12 characters)", color: "bg-destructive" },
+    2: { label: "Fair (needs at least 12 characters)", color: "bg-amber-500" },
     3: { label: "Good", color: "bg-emerald-500" },
     4: { label: "Strong", color: "bg-emerald-500" },
   };

@@ -87,7 +87,7 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
     logger: { disabled: false },
     plugins: [admin()],
 
-    // â”€â”€ Email + Password â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ————————————————————————————————————————————————————————————————————————————————
     emailAndPassword: {
       enabled: true,
       requireEmailVerification: true,
