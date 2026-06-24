@@ -13,6 +13,9 @@ import { ScfCatalogPage } from "./pages/ScfCatalog";
 import { LandingPage } from "./pages/Landing";
 import { ErrorPage } from "./components/ErrorPage";
 
+import { VersionsList } from "./pages/threat-analysis/VersionsList";
+import { ThreatDashboard } from "./pages/threat-analysis/ThreatDashboard";
+
 import { AdminOrganizations } from "./pages/admin/Organizations";
 import { AdminUsers } from "./pages/admin/Users";
 import { AdminLicenses } from "./pages/admin/Licenses";
@@ -37,6 +40,8 @@ const router = createBrowserRouter(
           <Route path="/reports" element={<ReportsPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/scf" element={<ScfCatalogPage />} />
+          <Route path="/threat-analysis" element={<VersionsList />} />
+          <Route path="/threat-analysis/versions/:id" element={<ThreatDashboard />} />
 
           {/* Admin-only routes */}
           <Route element={<AdminRoute />}>

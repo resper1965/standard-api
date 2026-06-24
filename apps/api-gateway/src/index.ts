@@ -59,7 +59,6 @@ export default {
           SOC_TRIAGE_QUEUE: env.SOC_TRIAGE_QUEUE ?? undefined,
         };
 
-<<<<<<< HEAD
         // Initialize Better Auth — self-hosted, no JWKS dependency
         cachedAuth = createAuth({
           DATABASE_URL: env.DATABASE_URL!,
@@ -67,18 +66,6 @@ export default {
           BETTER_AUTH_URL: env.BETTER_AUTH_URL,
         });
         console.log('[standard:init] Better Auth self-hosted initialized.');
-=======
-        // Initialize Better Auth with Drizzle DB + environment config
-        cachedAuth = createAuth(db, {
-          BETTER_AUTH_SECRET: env.BETTER_AUTH_SECRET,
-          BETTER_AUTH_URL: env.BETTER_AUTH_URL ?? url.origin,
-          STANDARD_ENV: env.STANDARD_ENV,
-          GOOGLE_CLIENT_ID: env.GOOGLE_CLIENT_ID,
-          GOOGLE_CLIENT_SECRET: env.GOOGLE_CLIENT_SECRET,
-          waitUntil: (p) => ctx.waitUntil(p),
-        });
-        console.log('[standard:init] Better Auth + Drizzle repositories initialized.');
->>>>>>> fdf6d291032b55389a8d20036039cda5e81d56d8
       } else {
         console.warn('[standard:init] No DATABASE_URL — using MOCK repositories. SCF data will be synthetic.');
         cachedDeps = createMockRepositories();

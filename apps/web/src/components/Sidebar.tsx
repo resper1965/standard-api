@@ -15,8 +15,11 @@ import {
   Users,
   Key,
   ScrollText,
+  Key,
+  ScrollText,
   Activity,
-  LogOut
+  LogOut,
+  ShieldAlert
 } from "lucide-react";
 
 const userLinks = [
@@ -27,6 +30,7 @@ const userLinks = [
   { to: "/agent-runs", icon: Bot, label: "Agent Runs" },
   { to: "/reports", icon: BarChart3, label: "Reports" },
   { to: "/scf", icon: Lock, label: "SCF Catalog" },
+  { to: "/threat-analysis", icon: ShieldAlert, label: "Threat Analysis" },
   { to: "/sdk", icon: Box, label: "SDK & Docs" },
   { to: "/settings", icon: Settings, label: "Settings" },
 ];

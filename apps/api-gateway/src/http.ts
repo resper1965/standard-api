@@ -166,6 +166,46 @@ export type AuditRepositoryAdapter = {
   record(event: string, metadata: Record<string, unknown>): Promise<void>;
 };
 
+export type ThreatElement = "Actor" | "Process" | "Data Store" | "Data Flow";
+export type StrideCategory = "S" | "T" | "R" | "I" | "D" | "E";
+
+export type ApplicationVersionRecord = {
+  id: string;
+  versionString: string;
+  releaseDate: string;
+  status: "Draft" | "Published" | "Archived";
+};
+
+export type ThreatModelRecord = {
+  id: string;
+  versionId: string;
+  element: ThreatElement;
+  componentName: string;
+  strideCategory: StrideCategory;
+  description: string;
+  fmea: {
+    severity: number;
+    occurrence: number;
+    detection: number;
+  };
+  rpn: number; // severity * occurrence * detection
+  mitigation: string;
+  status: "Open" | "Mitigated" | "Accepted";
+};
+
+export type ThreatAnalysisRepositoryAdapter = {
+  // Versions
+  createVersion(input: Omit<ApplicationVersionRecord, "id">): Promise<ApplicationVersionRecord>;
+  getVersions(): Promise<ApplicationVersionRecord[]>;
+  getVersion(id: string): Promise<ApplicationVersionRecord | null>;
+  
+  // Threats
+  addThreat(input: Omit<ThreatModelRecord, "id" | "rpn">): Promise<ThreatModelRecord>;
+  getThreats(versionId: string): Promise<ThreatModelRecord[]>;
+  updateThreat(threatId: string, updates: Partial<Omit<ThreatModelRecord, "id" | "versionId" | "rpn">>): Promise<ThreatModelRecord | null>;
+  deleteThreat(threatId: string): Promise<boolean>;
+};
+
 export type AppDependencies = {
   tenants: TenantRepositoryAdapter;
   organizations: OrganizationRepositoryAdapter;
@@ -187,6 +227,7 @@ export type AppDependencies = {
   observability: ObservabilityDependencies;
   alerts?: import("@standard/observability").AlertService | undefined;
   privacy: PrivacyDependencies;
+  threatAnalysis: ThreatAnalysisRepositoryAdapter;
   /** Cloudflare Email Service binding (optional — unavailable in tests) */
   email?: SendEmail | undefined;
   /** Cloudflare Queue for async agent run processing (optional) */

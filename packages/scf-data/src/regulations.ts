@@ -1,0 +1,66 @@
+import { Regulation } from "./types.js";
+
+export const REGULATIONS: Regulation[] = [
+  {
+    id: "lgpd",
+    name_i18n: { pt: "Lei Geral de Proteção de Dados", en: "General Data Protection Law" },
+    jurisdiction: "Brazil",
+    authority: "ANPD",
+    effective_date: "2020-09-18",
+    scf_domain: "Privacy",
+    version: "1.0",
+    legal_bases: [
+      {
+        id: "lgpd-art7-i",
+        code: "Art. 7, I",
+        name_i18n: { pt: "Consentimento", en: "Consent" },
+        article: "7, I",
+        applicable_data_types: "non_sensitive",
+        requires_lia: false,
+        requires_dpia: false,
+        requires_consent_record: true,
+        conditions_i18n: { pt: "Livre, informado e inequívoco.", en: "Free, informed, and unambiguous." },
+        scf_controls: ["GOV-01"],
+      },
+    ],
+    sensitive_legal_bases: [],
+    data_subject_rights: [],
+    dsar_statuses: [],
+    breach_rules: {
+      authority_deadline_hours: 48,
+      authority_name: "ANPD",
+      subject_notification: "when_high_risk",
+      required_report_fields: ["description", "data_subjects", "mitigation"],
+      severity_levels: [],
+      scf_controls: [],
+    },
+    breach_statuses: [],
+    international_transfer: {
+      adequacy_countries: [],
+      mechanisms: [],
+      safeguards: [],
+    },
+    dpa_requirements: {
+      mandatory: true,
+      minimum_clauses_i18n: { pt: "Instruções do controlador, confidencialidade...", en: "Controller instructions, confidentiality..." },
+      article: "39",
+      scf_controls: [],
+    },
+    consent_rules: {
+      validity_criteria_i18n: { pt: "...", en: "..." },
+      children_age_threshold: 12,
+      withdrawal_i18n: { pt: "Fácil e gratuito.", en: "Easy and free." },
+      article: "8",
+      scf_controls: [],
+      consent_types: [],
+      proof_types: [],
+    },
+    dpia_triggers: [],
+    penalties: {
+      max_fine_pct_revenue: 2,
+      max_fine_absolute_i18n: { pt: "R$ 50.000.000", en: "R$ 50,000,000" },
+      other_sanctions_i18n: { pt: "Bloqueio de dados, suspensão parcial...", en: "Data blocking, partial suspension..." },
+      article: "52",
+    },
+  },
+];

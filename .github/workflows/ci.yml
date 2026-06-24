@@ -118,8 +118,5 @@ jobs:
       - name: Security Audit
         run: pnpm audit --audit-level=high || true
 
-      - name: Security Audit
-        run: pnpm audit --audit-level=high
-
       - name: Build
         run: pnpm build

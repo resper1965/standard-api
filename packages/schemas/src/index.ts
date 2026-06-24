@@ -19,6 +19,7 @@ export * from "./soa";
 export * from "./agent-runtime";
 export * from "./workflow-orchestration";
 export * from "./v2-types";
+export * from "./v2-schemas";
 export * from "./security";
 export * from "./observability";
 export * from "./integration";

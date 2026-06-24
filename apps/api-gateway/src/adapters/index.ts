@@ -42,6 +42,7 @@ import { createDrizzlePoamRepositories } from "./poam.repository";
 import { createDrizzleReportRepositories } from "./reporting.repository";
 import { createMockApiKeysRepository, createDrizzleApiKeysRepository } from "./api-keys.repository";
 import { createInMemoryWebhookRepository, createDrizzleWebhookRepository } from "./webhook.repository";
+import { createInMemoryThreatAnalysisRepository } from "./threat-analysis.repository";
 import { resolveTenantContext } from "./tenant-mapping";
 
 /**
@@ -78,6 +79,7 @@ export const createMockRepositories = (): AppDependencies => {
     observability: createInMemoryObservabilityDependencies(),
     alerts: new AlertService(new SecurityEventService(createInMemoryObservabilityDependencies())),
     privacy: createInMemoryPrivacyDependencies(),
+    threatAnalysis: createInMemoryThreatAnalysisRepository(),
     webhooks: createInMemoryWebhookRepository()
   };
 };

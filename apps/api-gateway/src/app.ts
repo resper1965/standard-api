@@ -51,6 +51,7 @@ import { workflowsTemplatesRoutes } from "./routes/workflows-templates.routes";
 import { referenceDataRoutes } from "./routes/reference-data.routes";
 import { intelligenceRoutes } from "./routes/intelligence.routes";
 import { jobsRoutes } from "./routes/jobs.routes";
+import { threatAnalysisRoutes } from "./routes/threat-analysis.routes";
 
 export const routes: RouteDefinition[] = [
   ...openapiRoutes,
@@ -89,7 +90,8 @@ export const routes: RouteDefinition[] = [
   ...assessmentsTemplatesRoutes,
   ...workflowsTemplatesRoutes,
   ...referenceDataRoutes,
-  ...intelligenceRoutes
+  ...intelligenceRoutes,
+  ...threatAnalysisRoutes
 ];
 
 const matchRoute = (routePath: string, actualPath: string): Record<string, string> | null => {
