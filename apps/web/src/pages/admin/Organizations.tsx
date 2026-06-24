@@ -2,7 +2,7 @@ import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { useState, useMemo } from "react";
 import type { FormEvent } from "react";
-import { useUserOrgs, qk } from "../../lib/queries";
+import { useAdminOrgs, qk } from "../../lib/queries";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "../../lib/auth-client";
 import { api } from "../../lib/api";
@@ -218,13 +218,13 @@ export function AdminOrganizations() {
   const activeOrgId =
     (session?.session as Record<string, unknown>)?.activeOrganizationId as string | null ?? null;
 
-  const qc = useQueryClient();
-  const { data: orgsData, isLoading: loading, error: loadError, refetch } = useUserOrgs();
-  const orgs = (orgsData?.data ?? []) as Organization[];
-  const error = loadError instanceof Error ? loadError.message : null;
-
   // Search
   const [searchQuery, setSearchQuery] = useState("");
+
+  const qc = useQueryClient();
+  const { data: orgsData, isLoading: loading, error: loadError, refetch } = useAdminOrgs(0, searchQuery);
+  const orgs = (orgsData?.data ?? []) as Organization[];
+  const error = loadError instanceof Error ? loadError.message : null;
 
   // Create modal
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -250,22 +250,16 @@ export function AdminOrganizations() {
 
   const { toast } = useToast();
 
-  const invalidate = () => qc.invalidateQueries({ queryKey: qk.userOrgs() });
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: ["admin", "orgs"] });
+    qc.invalidateQueries({ queryKey: qk.userOrgs() });
+  };
 
   // -----------------------------------------------------------------------
   // Filtered orgs
   // -----------------------------------------------------------------------
 
-  const filteredOrgs = useMemo(() => {
-    if (!searchQuery.trim()) return orgs;
-    const q = searchQuery.toLowerCase();
-    return orgs.filter(
-      (o) =>
-        o.name.toLowerCase().includes(q) ||
-        o.slug.toLowerCase().includes(q) ||
-        o.id.toLowerCase().includes(q)
-    );
-  }, [orgs, searchQuery]);
+  const filteredOrgs = orgs;
 
   // -----------------------------------------------------------------------
   // Activate / Deactivate

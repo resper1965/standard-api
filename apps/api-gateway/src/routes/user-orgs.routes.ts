@@ -140,7 +140,8 @@ export const userOrgsRoutes: RouteDefinition[] = [
           .where(eq(organizations.userId, userId))
           .limit(1);
 
-        if (!org || org.id !== organizationId) {
+        const isPlatformAdmin = context.session?.user?.platformAdmin === true;
+        if (!isPlatformAdmin && (!org || org.id !== organizationId)) {
           console.warn(
             "[standard:activate] Ownership check failed. User owns org:",
             org?.id,
@@ -235,7 +236,8 @@ export const userOrgsRoutes: RouteDefinition[] = [
         .where(eq(organizations.userId, userId))
         .limit(1);
 
-      if (!org || org.id !== organizationId) {
+      const isPlatformAdmin = context.session?.user?.platformAdmin === true;
+      if (!isPlatformAdmin && (!org || org.id !== organizationId)) {
         throw new ApiError(
           "FORBIDDEN",
           "You are not the owner of this organization.",
