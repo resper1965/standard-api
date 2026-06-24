@@ -15,7 +15,7 @@ import { useSession, signOut } from "@/lib/auth-client"
 import {
   LayoutDashboard, Settings, LogOut, Loader2, Puzzle, Menu, X,
   Building2, Key, Users, ScrollText, HeartPulse, ChevronRight,
-  Bell, Webhook, Library
+  Bell, Webhook, Library, ShieldAlert
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { motion, AnimatePresence } from "framer-motion"
@@ -43,6 +43,7 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   { name: "Overview",   path: "/dashboard",          icon: LayoutDashboard, end: true },
+  { name: "Threat Analysis", path: "/dashboard/threat-analysis", icon: ShieldAlert },
   { name: "API Keys",   path: "/dashboard/api-keys", icon: Key },
   { name: "Webhooks",   path: "/dashboard/webhooks", icon: Webhook },
   { name: "SCF Explorer", path: "/dashboard/scf",    icon: Library },
@@ -59,6 +60,7 @@ const adminItems: NavItem[] = [
 /** Maps exact route paths to page titles for the sticky topbar */
 const routeTitles: Record<string, string> = {
   "/dashboard":                  "Overview",
+  "/dashboard/threat-analysis":  "Threat Analysis",
   "/dashboard/sdk":              "SDK & Docs",
   "/dashboard/settings":         "Settings",
   "/dashboard/organizations":    "Organizations",

@@ -18,7 +18,8 @@ const ApiKeysPage = lazy(() => import("./pages/dashboard/api-keys/ApiKeysPage").
 const WebhooksPage = lazy(() => import("./pages/dashboard/webhooks/WebhooksPage").then(m => ({ default: m.WebhooksPage })))
 const ScfExplorerPage = lazy(() => import("./pages/dashboard/scf/ScfExplorerPage").then(m => ({ default: m.ScfExplorerPage })))
 const McpPlaygroundPage = lazy(() => import("./pages/dashboard/mcp/McpPlaygroundPage").then(m => ({ default: m.McpPlaygroundPage })))
-
+const ThreatDashboard = lazy(() => import("./pages/threat-analysis/ThreatDashboard").then(m => ({ default: m.ThreatDashboard })))
+const VersionsList = lazy(() => import("./pages/threat-analysis/VersionsList").then(m => ({ default: m.VersionsList })))
 // Docs pages (public — no auth)
 const DocsOverviewPage = lazy(() => import("./pages/docs/DocsOverviewPage").then(m => ({ default: m.DocsOverviewPage })))
 const ApiReferencePage = lazy(() => import("./pages/docs/ApiReferencePage").then(m => ({ default: m.ApiReferencePage })))
@@ -94,7 +95,8 @@ export const routes = [
                     { path: "scf", element: <SuspenseWrap><ScfExplorerPage /></SuspenseWrap> },
                     { path: "sdk", element: <SuspenseWrap><SdkPage /></SuspenseWrap> },
                     { path: "mcp", element: <SuspenseWrap><McpPlaygroundPage /></SuspenseWrap> },
-
+                    { path: "threat-analysis", element: <SuspenseWrap><VersionsList /></SuspenseWrap> },
+                    { path: "threat-analysis/:versionId", element: <SuspenseWrap><ThreatDashboard /></SuspenseWrap> },
                     { path: "settings", element: <SettingsPage /> },
                     // Admin
                     { path: "organizations", element: <SuspenseWrap><AdminOrganizations /></SuspenseWrap> },

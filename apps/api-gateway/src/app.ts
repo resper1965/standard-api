@@ -86,7 +86,7 @@ import { madRoutes } from "./routes/mad.routes";
 import { maturityRoutes } from "./routes/maturity.routes";
 import { riskRegisterRoutes } from "./routes/risk-register.routes";
 import { riskCatalogRoutes } from "./routes/risk-catalog.routes";
-
+import { threatAnalysisRoutes } from "./routes/threat-analysis.routes";
 /**
  * Route path prefixes that are tenant-exempt by convention.
  * These are platform-admin or user-level routes that operate across tenants
@@ -169,6 +169,7 @@ export const routes: RouteDefinition[] = [
   ...maturityRoutes, // /api/v1/assessments/:id/maturity-versions + /roc-summary
   ...riskRegisterRoutes, // /api/v1/assessments/:id/risk-register (SCR-RMM Step 13)
   ...riskCatalogRoutes, // /api/v1/risk-catalog, /api/v1/threat-catalog (SCR-RMM Task 3)
+  ...threatAnalysisRoutes, // /api/v1/threat-analysis
 ];
 
 registerRoutesForOpenApi(routes);

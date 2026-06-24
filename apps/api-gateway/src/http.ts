@@ -281,6 +281,40 @@ export type AuditRepositoryAdapter = {
   record(event: string, metadata: Record<string, unknown>): Promise<void>;
 };
 
+export type ApplicationVersionRecord = {
+  id: string;
+  versionString: string;
+  releaseDate: string;
+  status: "Draft" | "Published" | "Retired";
+};
+
+export type ThreatModelRecord = {
+  id: string;
+  versionId: string;
+  element: "Actor" | "Process" | "Data Store" | "Data Flow";
+  componentName: string;
+  strideCategory: "S" | "T" | "R" | "I" | "D" | "E";
+  description: string;
+  fmea: {
+    severity: number;
+    occurrence: number;
+    detection: number;
+  };
+  rpn: number;
+  mitigation: string;
+  status: "Open" | "Mitigated" | "Accepted";
+};
+
+export type ThreatAnalysisRepositoryAdapter = {
+  createVersion(input: Omit<ApplicationVersionRecord, "id">): Promise<ApplicationVersionRecord>;
+  getVersions(): Promise<ApplicationVersionRecord[]>;
+  getVersion(id: string): Promise<ApplicationVersionRecord | null>;
+  addThreat(input: Omit<ThreatModelRecord, "id" | "rpn">): Promise<ThreatModelRecord>;
+  getThreats(versionId: string): Promise<ThreatModelRecord[]>;
+  updateThreat(threatId: string, updates: Partial<Omit<ThreatModelRecord, "id" | "versionId" | "rpn">>): Promise<ThreatModelRecord | null>;
+  deleteThreat(threatId: string): Promise<boolean>;
+};
+
 export type AppDependencies = {
   tenants: TenantRepositoryAdapter;
   organizations: OrganizationRepositoryAdapter;
@@ -300,6 +334,7 @@ export type AppDependencies = {
   poam: PoamDependencies;
   reporting: ReportingDependencies;
   agentRuntime: AgentRuntimeDependencies;
+  threatAnalysis: ThreatAnalysisRepositoryAdapter;
   workflows: WorkflowDependencies;
   observability: ObservabilityDependencies;
   alerts?: import("@standard/observability").AlertService | undefined;

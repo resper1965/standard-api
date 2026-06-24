@@ -97,6 +97,7 @@ import {
   createTpraRepository,
   createDrizzleTpraRepository,
 } from "./tpra.repository";
+import { createInMemoryThreatAnalysisRepository } from "./threat-analysis.repository";
 
 /**
  * Type bridge: NeonHttpDatabase (edge) â†” PostgresJsDatabase (packages).
@@ -208,6 +209,7 @@ export const createMockRepositories = (): AppDependencies => {
       scf,
     }),
     agentRuntime: createInMemoryAgentRuntimeDependencies(),
+    threatAnalysis: createInMemoryThreatAnalysisRepository(),
     workflows: createInMemoryWorkflowDependencies(),
     observability: createInMemoryObservabilityDependencies(),
     alerts: new AlertService(
@@ -343,6 +345,7 @@ export const createDrizzleRepositories = (
     poam,
     reporting,
     agentRuntime: composeDrizzleAgentRuntime(db, env),
+    threatAnalysis: createInMemoryThreatAnalysisRepository(), // TODO: Migrar para Drizzle quando houver tabelas reais
     workflows: createDrizzleWorkflowDependencies(db),
     observability,
     alerts,
