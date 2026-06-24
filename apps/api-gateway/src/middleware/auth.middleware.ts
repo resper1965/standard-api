@@ -20,7 +20,6 @@ import type { StandardAuth } from "@standard/auth";
 import { ApiError } from "../errors/api-error";
 import { isApiKeyToken, extractApiKeyToken } from "../utils/api-key-crypto";
 import type { RequestContext } from "../http";
-import { sql } from "drizzle-orm";
 
 // â”€â”€ Cache TTLs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const KV_API_KEY_TTL = 300; // 5 min â€” API key verification cache
@@ -236,10 +235,7 @@ async function resolveSessionAuthContext(
         name: user.name ?? "",
         platformAdmin: isPlatformAdmin,
         approved: isApproved,
-        role:
-          user.role && user.role !== "user" && user.role !== "member"
-            ? user.role
-            : "organization_admin",
+        role: isPlatformAdmin ? "platform_admin" : "customer",
       },
       session: {
         id: session.id,

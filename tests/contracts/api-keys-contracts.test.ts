@@ -117,8 +117,8 @@ test("[RBAC] a read-only role cannot mint API keys", async () => {
     "POST",
     { name: "Should Fail", scopes: ["assessment:read"] },
     {
-      ...client.authHeaders(organizationId, "auditor_readonly"),
-      authorization: "Bearer dev:auditor_readonly",
+      ...client.authHeaders(organizationId, "customer"),
+      authorization: "Bearer dev:customer",
     },
   );
 

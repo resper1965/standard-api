@@ -1,25 +1,24 @@
-import type { AuthContext, Role } from "@standard/schemas";
+import type { Permission, Role } from "@standard/schemas";
 
 /**
- * @deprecated Use `@standard/auth` (Standard Native Auth) instead.
- * This interface will be removed in v0.3.0.
+ * @deprecated Removed in auth simplification.
+ * Use `@standard/auth` (Standard Native Auth) instead.
  */
 export type AuthenticateInput = {
   actorId?: string | undefined;
   organizationId?: string | undefined;
   organizationIds?: string[] | undefined;
   roles?: Role[] | undefined;
-  permissions?: AuthContext["permissions"] | undefined;
+  permissions?: Permission[] | undefined;
   traceId: string;
   authHeader?: string | undefined;
   apiKey?: string | undefined;
 };
 
 /**
- * @deprecated Use `@standard/auth` (Standard Native Auth) instead.
- * This interface will be removed in v0.3.0.
+ * @deprecated Removed in auth simplification.
+ * Use `@standard/auth` (Standard Native Auth) instead.
  */
 export type AuthProvider = {
-  authenticate(input: AuthenticateInput): Promise<AuthContext | null>;
+  authenticate(input: AuthenticateInput): Promise<unknown>;
 };
-

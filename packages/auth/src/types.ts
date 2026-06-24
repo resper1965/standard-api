@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @module @standard/auth/types
  * @description Extended types for Standard Native Auth session fields added by plugins.
  *
@@ -37,8 +37,14 @@ export interface StandardUser {
   id: string;
   email: string;
   name: string;
-  /** Set by Standard Native Auth `admin` plugin. Defaults to undefined for regular users. */
-  role?: "admin" | "user" | string;
+  /**
+   * Standard role. Only two operational roles exist:
+   * - "platform_admin" — Bekaa operator with cross-tenant access.
+   * - "customer" — SaaS client / org owner with full tenant-scoped access.
+   * The "admin"/"user" values come from Better Auth's admin plugin and are
+   * normalised to "platform_admin"/"customer" by auth.middleware.ts.
+   */
+  role?: "platform_admin" | "customer" | "admin" | "user";
   /**
    * Platform-level admin flag (Bekaa operator).
    * Populated from `platform_admin` column via Standard Native Auth `additionalFields`.
@@ -70,21 +76,8 @@ export interface StandardUser {
 export interface StandardSession {
   id: string;
   userId: string;
-  /** Resolved domain user UUID (injected by customSession plugin). */
-  domainUserId?: string | null;
-  /** Set by customSession plugin â€” active org for this session. */
+  /** Set by organization plugin — active org for this session. */
   activeOrganizationId?: string | null;
-  /** Slug of the active organization (injected by customSession plugin). */
-  activeOrganizationSlug?: string | null;
-  /** User's role in the active organization (injected by customSession plugin). */
-  activeOrganizationRole?: string | null;
-  /** All organizations the user belongs to (injected by customSession plugin). */
-  allowedOrganizations?: Array<{
-    id: string;
-    name: string;
-    slug: string;
-    role: string;
-  }>;
   expiresAt?: Date;
   createdAt?: Date;
   updatedAt?: Date;
@@ -102,4 +95,3 @@ export interface StandardAuthSession {
 export type AuthSessionResult =
   | { resolved: true; user: StandardUser; session: StandardSession }
   | { resolved: false };
-

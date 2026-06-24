@@ -112,7 +112,7 @@ test("Approve SoA exige approval_event humano e bloqueia alteração posterior",
     {
       "x-standard-tenant-id": created.organizationId,
       "x-standard-actor-id": ids.actorId,
-      "x-standard-mock-role": "admin",
+      "x-standard-mock-role": "platform_admin",
     },
   );
   const approval = await client.send(
@@ -128,7 +128,7 @@ test("Approve SoA exige approval_event humano e bloqueia alteração posterior",
     {
       "x-standard-tenant-id": created.organizationId,
       "x-standard-actor-id": ids.actorId,
-      "x-standard-mock-role": "admin",
+      "x-standard-mock-role": "platform_admin",
     },
   );
   const approved = await client.send(
@@ -140,7 +140,7 @@ test("Approve SoA exige approval_event humano e bloqueia alteração posterior",
     {
       "x-standard-tenant-id": created.organizationId,
       "x-standard-actor-id": ids.actorId,
-      "x-standard-mock-role": "admin",
+      "x-standard-mock-role": "platform_admin",
     },
   );
   expect(approved.response.status).toBe(200);

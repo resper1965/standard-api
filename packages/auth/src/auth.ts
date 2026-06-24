@@ -170,7 +170,6 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
           );
         } else {
           console.log(`[standard:auth:dev] reset â†’ ${url}`);
-          console.log(`[standard:auth:dev] reset → ${url}`);
         }
       },
     },
@@ -183,7 +182,18 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
         create: {
           before: async (user: any) => {
             // Auto-provisionamento do Platform Admin master account
-            const platformAdmins = ["resper@bekaa.eu"];
+            // Platform admin emails: configurable via PLATFORM_ADMIN_EMAILS env var (comma-separated).
+            // Falls back to hardcoded default for backward compatibility.
+            const platformAdminEnv =
+              typeof process !== "undefined"
+                ? process.env?.PLATFORM_ADMIN_EMAILS
+                : undefined;
+            const platformAdmins = platformAdminEnv
+              ? platformAdminEnv
+                  .split(",")
+                  .map((e) => e.trim())
+                  .filter(Boolean)
+              : ["resper@bekaa.eu"];
             if (platformAdmins.includes(user.email)) {
               console.log(
                 `[standard:auth] Auto-provisioning Platform Admin for: ${user.email}`,
@@ -192,7 +202,7 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
                 data: {
                   ...user,
                   platformAdmin: true,
-                  role: "admin",
+                  role: "platform_admin",
                   approved: true, // Bypass approval gate for master admins
                 },
               };

@@ -47,7 +47,11 @@ const ListUsersQuerySchema = z.object({
   search: z.string().optional(),
 });
 
-/** Zod schema for the PATCH body. */
+/**
+ * Zod schema for the PATCH body.
+ * NOTE: "user"/"admin" are Better Auth native role labels stored in the `user.role` column.
+ * auth.middleware.ts normalizes these to "customer"/"platform_admin" at session resolution.
+ */
 const UpdateUserBodySchema = z
   .object({
     name: z.string().min(1).max(255).optional(),
@@ -68,7 +72,7 @@ const ApproveUserBodySchema = z.object({
   organization_id: z
     .string()
     .min(1, "organization_id is required to assign the user."),
-  role: z.string().min(1).max(50).default("organization_admin"),
+  role: z.enum(["platform_admin", "customer"]).default("customer"),
 });
 
 // ————————————————————————————————————————————————————————————————————————————————
@@ -126,7 +130,7 @@ export const adminUsersRoutes: RouteDefinition[] = [
         name: z.string().min(1),
         email: z.string().email(),
         password: z.string().min(8),
-        role: z.string().default("user"),
+        role: z.enum(["platform_admin", "customer"]).default("customer"),
       });
 
       const body = await parseJson(context.request, CreateUserBodySchema);
@@ -155,7 +159,7 @@ export const adminUsersRoutes: RouteDefinition[] = [
         // Auto-approve and optionally elevate to platform admin
         const repo = getRepo(context);
         const updateData: Record<string, unknown> = { approved: true };
-        if (body.role === "admin") updateData.platformAdmin = true;
+        if (body.role === "platform_admin") updateData.platformAdmin = true;
         await repo.updateUser(res.user.id, updateData as any);
         const user = await repo.getUserById(res.user.id);
 
@@ -168,11 +172,7 @@ export const adminUsersRoutes: RouteDefinition[] = [
 
         return json({ data: user, trace_id: context.traceId }, { status: 201 });
       } catch (err: unknown) {
-        throw new ApiError(
-          "VALIDATION_ERROR",
-          "Failed to create user",
-          400,
-        );
+        throw new ApiError("VALIDATION_ERROR", "Failed to create user", 400);
       }
     },
   },

@@ -227,7 +227,7 @@ export function OverviewPage() {
                         </span>
                       </div>
                     </div>
-                    <Badge variant="muted">{org.role || "owner"}</Badge>
+                    <Badge variant="muted">{org.role || "customer"}</Badge>
                   </div>
                 ))}
               </div>

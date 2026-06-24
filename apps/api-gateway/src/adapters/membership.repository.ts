@@ -37,8 +37,15 @@ export type MembershipCreateInput = {
 export type MembershipRepositoryAdapter = {
   create(input: MembershipCreateInput): Promise<MembershipRecord>;
   listByOrganization(organizationId: string): Promise<MembershipRecord[]>;
-  getById(membershipId: string, organizationId: string): Promise<MembershipRecord | null>;
-  updateRole(membershipId: string, organizationId: string, role: string): Promise<MembershipRecord | null>;
+  getById(
+    membershipId: string,
+    organizationId: string,
+  ): Promise<MembershipRecord | null>;
+  updateRole(
+    membershipId: string,
+    organizationId: string,
+    role: string,
+  ): Promise<MembershipRecord | null>;
   remove(membershipId: string, organizationId: string): Promise<boolean>;
   /**
    * Counts the number of active org memberships for a user in the Standard domain.
@@ -54,13 +61,20 @@ export type MembershipRepositoryAdapter = {
  */
 function extractRows(result: unknown): Record<string, unknown>[] {
   if (Array.isArray(result)) return result;
-  if (result && typeof result === 'object' && 'rows' in result && Array.isArray((result as any).rows)) {
+  if (
+    result &&
+    typeof result === "object" &&
+    "rows" in result &&
+    Array.isArray((result as any).rows)
+  ) {
     return (result as any).rows;
   }
   return [];
 }
 
-export function createDrizzleMembershipRepository(db: DbClient): MembershipRepositoryAdapter {
+export function createDrizzleMembershipRepository(
+  db: DbClient,
+): MembershipRepositoryAdapter {
   return {
     async create(input): Promise<MembershipRecord> {
       const result = await db.execute(
@@ -72,17 +86,22 @@ export function createDrizzleMembershipRepository(db: DbClient): MembershipRepos
               ${input.email ?? null},
               ${input.display_name ?? null},
               ${input.role},
-              ${input.status ?? 'invited'},
+              ${input.status ?? "invited"},
               ${input.invited_at ? sql`${input.invited_at}::timestamptz` : sql`NOW()`},
               ${input.accepted_at ? sql`${input.accepted_at}::timestamptz` : sql`NULL`},
               NOW(),
               NOW()
             )
             RETURNING id AS membership_id, organization_id, user_id, email, display_name, role, status,
-                      invited_at, accepted_at, created_at, updated_at`
+                      invited_at, accepted_at, created_at, updated_at`,
       );
       const row = extractRows(result)[0];
-      if (!row) throw new ApiError("INTERNAL_ERROR", "Failed to create membership.", 500);
+      if (!row)
+        throw new ApiError(
+          "INTERNAL_ERROR",
+          "Failed to create membership.",
+          500,
+        );
       return mapRow(row);
     },
 
@@ -94,12 +113,15 @@ export function createDrizzleMembershipRepository(db: DbClient): MembershipRepos
             WHERE organization_id = ${organizationId}::uuid
               AND deleted_at IS NULL
               AND status != 'removed'
-            ORDER BY created_at DESC`
+            ORDER BY created_at DESC`,
       );
       return extractRows(result).map(mapRow);
     },
 
-    async getById(membershipId, organizationId): Promise<MembershipRecord | null> {
+    async getById(
+      membershipId,
+      organizationId,
+    ): Promise<MembershipRecord | null> {
       const result = await db.execute(
         sql`SELECT id AS membership_id, organization_id, user_id, email, display_name, role, status,
                    invited_at, accepted_at, created_at, updated_at
@@ -107,13 +129,17 @@ export function createDrizzleMembershipRepository(db: DbClient): MembershipRepos
             WHERE id = ${membershipId}::uuid
               AND organization_id = ${organizationId}::uuid
               AND deleted_at IS NULL
-            LIMIT 1`
+            LIMIT 1`,
       );
       const row = extractRows(result)[0];
       return row ? mapRow(row) : null;
     },
 
-    async updateRole(membershipId, organizationId, role): Promise<MembershipRecord | null> {
+    async updateRole(
+      membershipId,
+      organizationId,
+      role,
+    ): Promise<MembershipRecord | null> {
       const result = await db.execute(
         sql`UPDATE memberships
             SET role = ${role}, updated_at = NOW()
@@ -121,7 +147,7 @@ export function createDrizzleMembershipRepository(db: DbClient): MembershipRepos
               AND organization_id = ${organizationId}::uuid
               AND deleted_at IS NULL
             RETURNING id AS membership_id, organization_id, user_id, email, display_name, role, status,
-                      invited_at, accepted_at, created_at, updated_at`
+                      invited_at, accepted_at, created_at, updated_at`,
       );
       const row = extractRows(result)[0];
       return row ? mapRow(row) : null;
@@ -134,7 +160,7 @@ export function createDrizzleMembershipRepository(db: DbClient): MembershipRepos
             WHERE id = ${membershipId}::uuid
               AND organization_id = ${organizationId}::uuid
               AND deleted_at IS NULL
-            RETURNING id`
+            RETURNING id`,
       );
       return extractRows(result).length > 0;
     },
@@ -147,7 +173,7 @@ export function createDrizzleMembershipRepository(db: DbClient): MembershipRepos
             FROM memberships
             WHERE user_id = ${userId}::uuid
               AND status != 'removed'
-              AND deleted_at IS NULL`
+              AND deleted_at IS NULL`,
       );
       const first = extractRows(result)[0];
       return Number(first?.count ?? 0);
@@ -157,17 +183,21 @@ export function createDrizzleMembershipRepository(db: DbClient): MembershipRepos
 
 function mapRow(row: Record<string, unknown>): MembershipRecord {
   return {
-    membership_id: String(row['membership_id'] ?? row['id'] ?? ''),
-    organization_id: String(row['organization_id'] ?? ''),
-    user_id: row['user_id'] ? String(row['user_id']) : null,
-    email: row['email'] ? String(row['email']) : null,
-    display_name: row['display_name'] ? String(row['display_name']) : null,
-    role: String(row['role'] && row['role'] !== 'member' && row['role'] !== 'user' ? row['role'] : 'organization_admin'),
-    status: String(row['status'] ?? 'invited'),
-    invited_at: row['invited_at'] ? String(row['invited_at']) : null,
-    accepted_at: row['accepted_at'] ? String(row['accepted_at']) : null,
-    created_at: String(row['created_at'] ?? new Date().toISOString()),
-    updated_at: String(row['updated_at'] ?? new Date().toISOString()),
+    membership_id: String(row["membership_id"] ?? row["id"] ?? ""),
+    organization_id: String(row["organization_id"] ?? ""),
+    user_id: row["user_id"] ? String(row["user_id"]) : null,
+    email: row["email"] ? String(row["email"]) : null,
+    display_name: row["display_name"] ? String(row["display_name"]) : null,
+    role: String(
+      row["role"] && row["role"] !== "member" && row["role"] !== "user"
+        ? row["role"]
+        : "customer",
+    ),
+    status: String(row["status"] ?? "invited"),
+    invited_at: row["invited_at"] ? String(row["invited_at"]) : null,
+    accepted_at: row["accepted_at"] ? String(row["accepted_at"]) : null,
+    created_at: String(row["created_at"] ?? new Date().toISOString()),
+    updated_at: String(row["updated_at"] ?? new Date().toISOString()),
   };
 }
 
@@ -183,7 +213,7 @@ export function createMockMembershipRepository(): MembershipRepositoryAdapter {
         email: input.email ?? null,
         display_name: input.display_name ?? null,
         role: input.role,
-        status: input.status ?? 'invited',
+        status: input.status ?? "invited",
         invited_at: input.invited_at ?? now,
         accepted_at: input.accepted_at ?? null,
         created_at: now,
@@ -194,7 +224,7 @@ export function createMockMembershipRepository(): MembershipRepositoryAdapter {
     },
     async listByOrganization(organizationId) {
       return [...store.values()].filter(
-        m => m.organization_id === organizationId && m.status !== 'removed'
+        (m) => m.organization_id === organizationId && m.status !== "removed",
       );
     },
     async getById(id, organizationId) {
@@ -204,22 +234,23 @@ export function createMockMembershipRepository(): MembershipRepositoryAdapter {
     async updateRole(id, organizationId, role) {
       const m = store.get(id);
       if (!m || m.organization_id !== organizationId) return null;
-      m.role = role; m.updated_at = new Date().toISOString();
+      m.role = role;
+      m.updated_at = new Date().toISOString();
       store.set(id, m);
       return m;
     },
     async remove(id, organizationId) {
       const m = store.get(id);
       if (!m || m.organization_id !== organizationId) return false;
-      m.status = 'removed'; m.updated_at = new Date().toISOString();
+      m.status = "removed";
+      m.updated_at = new Date().toISOString();
       store.set(id, m);
       return true;
     },
     async countActiveOrgsByUser(userId) {
       return [...store.values()].filter(
-        m => m.user_id === userId && m.status !== 'removed'
+        (m) => m.user_id === userId && m.status !== "removed",
       ).length;
     },
   };
 }
-

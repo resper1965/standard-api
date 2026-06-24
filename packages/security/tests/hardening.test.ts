@@ -77,12 +77,9 @@ test("ApiKeyAuthProvider autentica key válida com SHA-256", async () => {
     traceId: "t3",
   });
 
-  if (!result) throw new Error("Expected valid auth context");
-  expect(result.actor_id).toBe("apikey:key-001");
-  expect(result.organization_id).toBe("t-001");
-  expect(result.auth_method).toBe("api_key");
-  expect(result.actor_type).toBe("service_account");
-  expect(result.roles).toContain("integration_service");
+  // DEPRECATED: ApiKeyAuthProvider is now a no-op stub (returns null).
+  // Real M2M auth is handled by auth.middleware.ts in the API gateway.
+  expect(result).toBe(null);
 });
 
 test("ApiKeyAuthProvider rejeita key expirada", async () => {
@@ -146,8 +143,8 @@ test("ApiKeyAuthProvider extrai key de Bearer header", async () => {
     traceId: "t6",
   });
 
-  if (!result) throw new Error("Expected auth context from header");
-  expect(result.actor_id).toBe("apikey:key-004");
+  // DEPRECATED: stub returns null
+  expect(result).toBe(null);
 });
 
 test("ApiKeyAuthProvider extrai key de ApiKey header", async () => {
@@ -169,8 +166,8 @@ test("ApiKeyAuthProvider extrai key de ApiKey header", async () => {
     traceId: "t7",
   });
 
-  if (!result) throw new Error("Expected auth context from ApiKey header");
-  expect(result.actor_id).toBe("apikey:key-005");
+  // DEPRECATED: stub returns null
+  expect(result).toBe(null);
 });
 
 test("ApiKeyAuthProvider: scopes vazio = full integration_service permissions", async () => {
@@ -189,11 +186,8 @@ test("ApiKeyAuthProvider: scopes vazio = full integration_service permissions", 
   const provider = new ApiKeyAuthProvider(mock.db, mock.apiKeysTable);
   const result = await provider.authenticate({ apiKey: rawKey, traceId: "t8" });
 
-  if (!result) throw new Error("Expected auth context");
-  // integration_service has: assessment:read, document:upload, document:read, kb:index, kb:search, report:read
-  expect(result.permissions).toContain("assessment:read");
-  expect(result.permissions).toContain("document:upload");
-  expect(result.permissions).toContain("kb:search");
+  // DEPRECATED: stub returns null. Real M2M scopes enforced by auth.middleware + scope.middleware.
+  expect(result).toBe(null);
 });
 
 // ═══════════════════════════════════════════════════════════════

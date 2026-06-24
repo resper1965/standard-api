@@ -1,4 +1,4 @@
-﻿import type { z } from "zod";
+import type { z } from "zod";
 import type { Env } from "./types/env";
 import type { RouteConfig } from "@asteasolutions/zod-to-openapi";
 import type { AgentRuntimeDependencies } from "@standard/agent-runtime";
@@ -375,6 +375,8 @@ export type RequestContext = {
       id: string;
       email: string;
       name: string;
+      /** Normalised role: "platform_admin" | "customer". Set by auth.middleware.ts. */
+      role: "platform_admin" | "customer";
       platformAdmin: boolean;
       approved: boolean;
       [key: string]: unknown;

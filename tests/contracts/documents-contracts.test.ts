@@ -19,7 +19,7 @@ test("document upload contract returns document_id and scan_status", async () =>
     {
       "x-standard-tenant-id": tenantId,
       "x-standard-actor-id": ids.actorId,
-      authorization: "Bearer dev:organization_admin",
+      authorization: "Bearer dev:customer",
     },
   );
   // Should return 200/201 with document_id, or 501 if upload route not wired
@@ -40,7 +40,7 @@ test("document list contract returns array with required fields", async () => {
     {
       "x-standard-tenant-id": tenantId,
       "x-standard-actor-id": ids.actorId,
-      authorization: "Bearer dev:organization_admin",
+      authorization: "Bearer dev:customer",
     },
   );
   if (result.response.status === 200) {

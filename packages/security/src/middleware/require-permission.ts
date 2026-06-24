@@ -1,13 +1,25 @@
-import type { AuthContext, Permission, SecurityTenantContext } from "@standard/schemas";
-import { PolicyEngine } from "../rbac/policy-engine";
+import type {
+  AuthContext,
+  Permission,
+  SecurityTenantContext,
+} from "@standard/schemas";
 
+/**
+ * @deprecated This function is permanently broken after PolicyEngine was
+ * gutted to a deny-all stub. Use `assertRbac` from
+ * `apps/api-gateway/src/middleware/rbac.middleware.ts` instead.
+ *
+ * Kept only for API surface compatibility. Will be removed in v0.3.0.
+ */
 export const requirePermission = (
-  auth: AuthContext | undefined,
-  tenant: SecurityTenantContext | undefined,
-  permissions: Permission[],
-  traceId: string
+  _auth: AuthContext | undefined,
+  _tenant: SecurityTenantContext | undefined,
+  _permissions: Permission[],
+  _traceId: string,
 ): void => {
-  const decision = new PolicyEngine().authorize({ auth, tenant, required_permissions: permissions, trace_id: traceId });
-  if (!decision.allowed) throw new Error(decision.reason ?? "permission_missing");
+  throw new Error(
+    "[DEPRECATED] requirePermission is no longer functional. " +
+      "Use assertRbac middleware from api-gateway instead. " +
+      "See: apps/api-gateway/src/middleware/rbac.middleware.ts",
+  );
 };
-

@@ -13,7 +13,7 @@ test("gap analysis endpoint requires assessment context", async () => {
     {
       "x-standard-tenant-id": organizationId,
       "x-standard-actor-id": ids.actorId,
-      authorization: "Bearer dev:organization_admin",
+      authorization: "Bearer dev:customer",
     },
   );
   // Should return 200 (possibly empty array), 500/501 if not yet wired
@@ -46,7 +46,7 @@ test("POA&M endpoint requires assessment context", async () => {
     {
       "x-standard-tenant-id": organizationId,
       "x-standard-actor-id": ids.actorId,
-      authorization: "Bearer dev:organization_admin",
+      authorization: "Bearer dev:customer",
     },
   );
   const validStatuses = [200, 500, 501];

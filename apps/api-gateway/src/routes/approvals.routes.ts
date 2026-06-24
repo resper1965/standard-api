@@ -1,4 +1,4 @@
-﻿import { CreateApprovalRequestSchema } from "@standard/schemas";
+import { CreateApprovalRequestSchema } from "@standard/schemas";
 import { z } from "zod";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";
@@ -52,13 +52,13 @@ export const approvalsRoutes: RouteDefinition[] = [
       } as const;
       const requiredPermission = permissionByGate[body.gate];
       const sessionRole =
-        (session?.user?.role as string | undefined) ?? "viewer";
+        (session?.user?.role as string | undefined) ?? "customer";
       const gateRoleMap: Record<string, string[]> = {
-        "soa:approve": ["owner", "admin", "platform_admin"],
-        "gap:approve": ["owner", "admin", "platform_admin"],
-        "maturity:approve": ["owner", "admin", "platform_admin"],
-        "poam:approve": ["owner", "admin", "platform_admin"],
-        "report:approve": ["owner", "admin", "platform_admin"],
+        "soa:approve": ["platform_admin", "customer"],
+        "gap:approve": ["platform_admin", "customer"],
+        "maturity:approve": ["platform_admin", "customer"],
+        "poam:approve": ["platform_admin", "customer"],
+        "report:approve": ["platform_admin", "customer"],
       };
       const allowedRoles = gateRoleMap[requiredPermission] ?? [];
       if (!allowedRoles.includes(sessionRole)) {

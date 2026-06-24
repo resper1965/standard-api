@@ -92,7 +92,9 @@ export const buildSecurityHeaders = (
 ): Record<string, string> => {
   // Relax CSP for docs/llms routes so Scalar UI, fonts, and scripts load correctly
   const isDocsRoute =
-    pathname === "/" || pathname.startsWith("/docs") || pathname.startsWith("/llms");
+    pathname === "/" ||
+    pathname.startsWith("/docs") ||
+    pathname.startsWith("/llms");
   const cspValue = isDocsRoute
     ? "default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data: blob:; frame-ancestors 'none';"
     : "default-src 'none'; frame-ancestors 'none';";
@@ -155,20 +157,17 @@ const buildMockSession = (
   request: Request,
   authRoles: readonly string[],
 ): NonNullable<RequestContext["session"]> => {
-  // Priority: x-standard-mock-role header > role from Bearer header > "admin" default.
+  // Priority: x-standard-mock-role header > role from Bearer header > "customer" default.
   const overrideRole = request.headers.get("x-standard-mock-role");
   const firstAuthRole = authRoles[0] as string | undefined;
-  // We pass security-package roles through directly â€” they match
-  // STANDARD_ROLE_PERMISSIONS keys in permissions.ts (GRC roles).
-  // Only "system" maps to special handling (platform_admin flag).
+  // Normalise to 2-role model: platform_admin or customer.
   const isPlatAdmin =
-    (authRoles.includes("platform_admin" as any) ||
-      authRoles.includes("system" as any) ||
-      overrideRole === "platform_admin") &&
-    overrideRole !== "owner" &&
-    overrideRole !== "viewer" &&
-    overrideRole !== "admin";
-  const mockRole = overrideRole ?? firstAuthRole ?? "admin";
+    authRoles.includes("platform_admin" as any) ||
+    authRoles.includes("system" as any) ||
+    overrideRole === "platform_admin";
+  const mockRole = isPlatAdmin
+    ? "platform_admin"
+    : (overrideRole ?? firstAuthRole ?? "customer");
   const tenantId =
     request.headers.get("x-standard-tenant-id") ??
     request.headers.get("x-tenant-id") ??
@@ -191,7 +190,9 @@ const buildMockSession = (
       name: "Mock Test Actor",
       platformAdmin: isPlatAdmin,
       approved: true,
-      role: mockRole,
+      role: (isPlatAdmin ? "platform_admin" : "customer") as
+        | "platform_admin"
+        | "customer",
     },
     session: {
       id: `mock-session-${legacyActor}`,
@@ -276,4 +277,3 @@ export const resolveAuth = async (
     );
   }
 };
-

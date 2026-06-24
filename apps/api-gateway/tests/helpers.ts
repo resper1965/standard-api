@@ -171,11 +171,8 @@ export const createTestClient = () => {
   };
 
   // ── API key helpers ──────────────────────────────────────────────
-  // Default to an org-admin mock role so RBAC (`organization:update`) passes.
-  const authHeaders = (
-    organizationId: string,
-    role = "organization_admin",
-  ) => ({
+  // Default to customer mock role so RBAC passes for tenant-scoped routes.
+  const authHeaders = (organizationId: string, role = "customer") => ({
     "x-standard-tenant-id": organizationId,
     "x-standard-actor-id": ids.actorId,
     "x-standard-mock-role": role,

@@ -13,10 +13,7 @@ import type { RequestContext } from "../http";
 const isPlatformAdmin = (context: RequestContext): boolean => {
   // platformAdmin is explicitly typed in RequestContext.session.user (http.ts)
   // and populated by auth.middleware.ts from the Standard Native Auth `additionalFields.platformAdmin`.
-  return (
-    context.session?.user?.platformAdmin === true ||
-    (context.session?.user as any)?.platform_admin === true
-  );
+  return context.session?.user?.platformAdmin === true;
 };
 
 /**
@@ -77,21 +74,16 @@ async function gatherActorPermissions(
   if (actorPermissions.length === 0 && context.session) {
     const { DEFAULT_ROLE_PERMISSIONS } = await import("@standard/security");
 
-    // platformAdmin gets full admin permissions
-    if (context.session.user?.platformAdmin) {
-      const rolePerms =
-        DEFAULT_ROLE_PERMISSIONS[
-          "platform_admin" as keyof typeof DEFAULT_ROLE_PERMISSIONS
-        ];
-      if (rolePerms) actorPermissions.push(...rolePerms);
-    } else {
-      // Default to assessor (least privilege) — explicit role assignment required for higher access
-      const rolePerms =
-        DEFAULT_ROLE_PERMISSIONS[
-          "assessor" as keyof typeof DEFAULT_ROLE_PERMISSIONS
-        ];
-      if (rolePerms) actorPermissions.push(...rolePerms);
-    }
+    // Resolve role from session — auth.middleware.ts normalises to
+    // "platform_admin" or "customer" but we handle legacy values gracefully.
+    const userRole =
+      (context.session.user?.role as keyof typeof DEFAULT_ROLE_PERMISSIONS) ??
+      "customer";
+
+    const rolePerms =
+      DEFAULT_ROLE_PERMISSIONS[userRole] ??
+      DEFAULT_ROLE_PERMISSIONS["customer"];
+    if (rolePerms) actorPermissions.push(...rolePerms);
   }
 
   return actorPermissions;
@@ -183,41 +175,4 @@ export const assertRbac = async (
       requiredPermissions,
     );
   }
-};
-
-/**
- * Guards a route so only requests with a resolved organization context can proceed.
- *
- * This enforces the invariant that ALL users â€” including platform admins (Bekaa
- * operators) â€” must be scoped to an organization. Platform admins are auto-scoped
- * to the Bekaa operator org by auth.middleware.ts; this guard is the final check.
- *
- * Use on any route that writes or reads tenant-scoped data (assessments, KB, etc.).
- */
-const requireOrganizationContext = async (
-  context: RequestContext,
-): Promise<void> => {
-  if (context.organizationId && context.organizationId) return;
-
-  await new SecurityEventService(context.deps.observability).record({
-    organization_id: context.organizationId,
-    actor_id: context.actorId,
-    event_type: "forbidden_access_attempt",
-    severity: "medium",
-    outcome: "denied",
-    source: "api-gateway",
-    resource_type: "organization_context",
-    resource_id: context.request.url,
-    message_safe:
-      "Organization context required. Select or create an organization first.",
-    trace_id: context.traceId,
-    metadata_safe: { reason: "organization_context_missing" },
-  });
-
-  throw new ApiError(
-    "ORGANIZATION_REQUIRED",
-    "An active organization is required for this operation. Please select or create an organization.",
-    403,
-    [{ reason: "organization_context_missing" }],
-  );
 };

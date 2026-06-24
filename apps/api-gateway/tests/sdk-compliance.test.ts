@@ -128,7 +128,7 @@ test("verifyPipelineStatus lança erro quando não há gap analysis aprovada", a
     fetch: (input, init) => {
       const req = new Request(input, init);
       req.headers.set("x-standard-actor-id", ids.actorId);
-      req.headers.set("x-standard-mock-role", "organization_admin");
+      req.headers.set("x-standard-mock-role", "customer");
       return (client as any).app.fetch(req);
     },
     baseUrl: "https://api.test",
@@ -154,7 +154,7 @@ test("verifyPipelineStatus passa se não há falhas em famílias críticas, ou l
     fetch: (input, init) => {
       const req = new Request(input, init);
       req.headers.set("x-standard-actor-id", ids.actorId);
-      req.headers.set("x-standard-mock-role", "organization_admin");
+      req.headers.set("x-standard-mock-role", "customer");
       return (client as any).app.fetch(req);
     },
     baseUrl: "https://api.test",

@@ -44,7 +44,7 @@ test("rate limit: agent-runs has lower limit (10/min)", async () => {
     {
       "x-standard-actor-id": "44444444-4444-4444-8444-444444444444",
       "x-standard-tenant-id": organizationId,
-      "x-standard-mock-role": "admin",
+      "x-standard-mock-role": "platform_admin",
     },
   );
   // May return 400/422/500/etc depending on runtime mocks, but NOT 429
@@ -87,7 +87,7 @@ test("rate limit: enforces rate limiting and sets headers when KV is bound", asy
           "x-trace-id": `trace-rate-limit-test-${i}`,
           "x-standard-tenant-id": organizationId,
           "x-standard-actor-id": "44444444-4444-4444-8444-444444444444",
-          "x-standard-mock-role": "admin",
+          "x-standard-mock-role": "platform_admin",
           cookie: "__csrf=test-csrf-token",
           "x-csrf-token": "test-csrf-token",
         },

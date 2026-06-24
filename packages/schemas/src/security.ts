@@ -1,4 +1,4 @@
-﻿import { z } from "zod";
+import { z } from "zod";
 import { TraceIdSchema, UuidSchema } from "./common";
 
 export const ActorTypeSchema = z.enum([
@@ -16,19 +16,7 @@ export const AuthMethodSchema = z.enum([
   "mock_dev",
 ]);
 
-export const RoleSchema = z.enum([
-  "platform_admin",
-  "tenant_admin",
-  "organization_admin",
-  "assessment_owner",
-  "assessor",
-  "reviewer",
-  "approver",
-  "auditor_readonly",
-  "integration_service",
-  "support_readonly",
-  "system",
-]);
+export const RoleSchema = z.enum(["platform_admin", "customer", "system"]);
 
 export const PermissionSchema = z.enum([
   "tenant:read",
@@ -263,4 +251,3 @@ export type PromptContentTrustLevel = z.infer<
   typeof PromptContentTrustLevelSchema
 >;
 export type ToolUsePolicy = z.infer<typeof ToolUsePolicySchema>;
-
