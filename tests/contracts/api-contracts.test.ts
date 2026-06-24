@@ -25,7 +25,7 @@ test("audit endpoint is versioned and protected by audit:read", async () => {
     {
       "x-standard-tenant-id": created.organizationId,
       "x-standard-actor-id": ids.actorId,
-      authorization: "Bearer dev:customer",
+      authorization: "Bearer dev:system",
     },
   );
   expect(denied.response.status).toBe(403);
