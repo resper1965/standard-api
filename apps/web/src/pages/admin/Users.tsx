@@ -9,11 +9,12 @@ import { Input } from "../../components/ui/input";
 import { Badge } from "../../components/ui/badge";
 import { UserPlus, Search, AlertTriangle, RefreshCw, ShieldOff, Clock } from "lucide-react";
 
-import { User } from "./components/admin-users-utils";
+import type { User } from "./components/admin-users-utils";
 import { AdminUsersTable, AdminUsersEmptyState, TableSkeleton } from "./components/AdminUsersTable";
 import { CreateUserDialog } from "./components/CreateUserDialog";
 import { EditUserDialog } from "./components/EditUserDialog";
-import { ConfirmActionDialog, ConfirmActionState } from "./components/ConfirmActionDialog";
+import { ConfirmActionDialog } from "./components/ConfirmActionDialog";
+import type { ConfirmActionState } from "./components/ConfirmActionDialog";
 
 const PAGE_SIZE = 25;
 

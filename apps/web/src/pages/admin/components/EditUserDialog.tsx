@@ -12,7 +12,8 @@ import { Loader2, Shield, ShieldAlert } from "lucide-react";
 import { Badge } from "../../../components/ui/badge";
 import { api } from "../../../lib/api";
 import { useToast } from "../../../hooks/use-toast";
-import { User, getInitials } from "./admin-users-utils";
+import { getInitials } from "./admin-users-utils";
+import type { User } from "./admin-users-utils";
 
 function UserAvatar({ name, banned }: { name?: string; banned?: boolean }) {
   return (

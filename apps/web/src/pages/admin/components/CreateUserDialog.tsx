@@ -12,7 +12,7 @@ import { Loader2, EyeOff, Eye, Shield, ShieldAlert } from "lucide-react";
 import { passwordStrength } from "./admin-users-utils";
 import { api } from "../../../lib/api";
 import { useToast } from "../../../hooks/use-toast";
-import { User } from "./admin-users-utils";
+import type { User } from "./admin-users-utils";
 
 function PasswordStrengthBar({ password }: { password: string }) {
   const { score, label, color } = passwordStrength(password);

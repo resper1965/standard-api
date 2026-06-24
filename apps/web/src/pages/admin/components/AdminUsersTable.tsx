@@ -5,7 +5,8 @@ import { Badge } from "../../../components/ui/badge";
 import { Skeleton } from "../../../components/ui/skeleton";
 import { Button } from "../../../components/ui/button";
 import { Pencil, ShieldAlert, Shield, Ban, Trash2, UserCheck, CheckCircle2, Clock, XCircle, Users } from "lucide-react";
-import { relativeTime, getInitials, User } from "./admin-users-utils";
+import { relativeTime, getInitials } from "./admin-users-utils";
+import type { User } from "./admin-users-utils";
 
 function UserAvatar({ name, banned }: { name?: string; banned?: boolean }) {
   return (

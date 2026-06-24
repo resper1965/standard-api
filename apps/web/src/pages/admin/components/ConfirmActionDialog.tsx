@@ -10,7 +10,7 @@ import { Button } from "../../../components/ui/button";
 import { Loader2, Trash2, Ban, UserCheck, CheckCircle2, XCircle } from "lucide-react";
 import { api } from "../../../lib/api";
 import { useToast } from "../../../hooks/use-toast";
-import { User } from "./admin-users-utils";
+import type { User } from "./admin-users-utils";
 
 export type ConfirmActionType = "ban" | "unban" | "delete" | "approve" | "reject";
 
