@@ -130,7 +130,7 @@ export const adminUsersRoutes: RouteDefinition[] = [
         name: z.string().min(1),
         email: z.string().email(),
         password: z.string().min(12),
-        role: z.enum(["platform_admin", "customer"]).default("customer"),
+        role: z.enum(["user", "admin"]).default("user"),
       });
 
       const body = await parseJson(context.request, CreateUserBodySchema);
@@ -159,7 +159,12 @@ export const adminUsersRoutes: RouteDefinition[] = [
         // Auto-approve and optionally elevate to platform admin
         const repo = getRepo(context);
         const updateData: Record<string, unknown> = { approved: true };
-        if (body.role === "platform_admin") updateData.platformAdmin = true;
+        if (body.role === "admin") {
+          updateData.platformAdmin = true;
+          updateData.role = "admin";
+        } else {
+          updateData.role = "user";
+        }
         await repo.updateUser(res.user.id, updateData as any);
         const user = await repo.getUserById(res.user.id);
 
