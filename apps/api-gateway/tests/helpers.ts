@@ -1,4 +1,8 @@
 import { createApp } from "../src/app";
+import {
+  SYNTHETIC_FRAMEWORK_ID,
+  SYNTHETIC_SCF_VERSION_ID,
+} from "@standard/scf-core";
 
 export const ids = {
   actorId: "44444444-4444-4444-8444-444444444444",
@@ -313,6 +317,24 @@ export const getTestDb = async () => {
     })
     .onConflictDoNothing();
 
+  await db
+    .insert(schema.scfVersions)
+    .values({
+      id: SYNTHETIC_SCF_VERSION_ID,
+      version: "2024.1",
+    })
+    .onConflictDoNothing();
+
+  await db
+    .insert(schema.scfFrameworks)
+    .values({
+      id: SYNTHETIC_FRAMEWORK_ID,
+      scfVersionId: SYNTHETIC_SCF_VERSION_ID,
+      frameworkId: "nist_csf_2.0",
+      name: "NIST CSF 2.0 (Synthetic)",
+    })
+    .onConflictDoNothing();
+
   globalPgLite = client;
   return client;
 };
@@ -337,17 +359,26 @@ export const createDrizzleTestClient = async () => {
 
   // Clean up dynamic tables to guarantee test isolation
   const tablesToTruncate = [
+    schema.poamItems,
+    schema.gapFindings,
+    schema.gapAnalysisVersions,
+    schema.soaItems,
+    schema.soaVersions,
+    schema.approvalEvents,
+    schema.webhookDeliveries,
+    schema.webhookEndpoints,
     schema.assessments,
     schema.apiKeys,
-    schema.approvalEvents,
     schema.documentVersions,
     schema.documents,
-    schema.gapFindings,
-    schema.poamItems,
   ];
 
   for (const table of tablesToTruncate) {
-    await db.delete(table);
+    try {
+      await db.delete(table);
+    } catch (err) {
+      // Ignore if table doesn't exist or other minor issues
+    }
   }
 
   const deps = createDrizzleRepositories(

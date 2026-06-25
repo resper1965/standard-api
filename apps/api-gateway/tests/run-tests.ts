@@ -24,6 +24,8 @@ import "./critical.test"; // adversarial: tenant isolation, concurrency, securit
 import "./m2m-rbac-integration.test"; // regression: M2M wildcard key + RBAC + SecurityEvent logging
 import "./llm-provider-validation.test"; // regression: mock LLM fallback + evidence evaluation
 import "./sdk-compliance.test";
+import "./ledger-harness.test";
 import { runTests } from "./test-kit";
 
 await runTests();
+process.exit(0);

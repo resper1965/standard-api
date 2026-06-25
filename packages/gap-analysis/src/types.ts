@@ -114,6 +114,7 @@ export interface TenantScopedGapFindingRepository {
   update(finding: GapFindingResponse): Promise<void>;
   get(gapFindingId: string): Promise<GapFindingResponse | null>;
   listByVersion(gapAnalysisVersionId: string): Promise<GapFindingResponse[]>;
+  delete(gapFindingId: string): Promise<void>;
 }
 
 export type GapFindingRepository = {
@@ -127,6 +128,7 @@ export type GapFindingRepository = {
     gapAnalysisVersionId: string,
     organizationId: string,
   ): Promise<GapFindingResponse[]>;
+  delete(gapFindingId: string, organizationId: string): Promise<void>;
   withOrganization(organizationId: string): TenantScopedGapFindingRepository;
 };
 

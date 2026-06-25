@@ -34,6 +34,7 @@ import {
   routeParam,
   routeUuidParam,
   requireOrganizationId,
+  newId,
 } from "../http";
 import { parsePagination, applyPagination } from "../utils/pagination";
 import { dispatchWebhookEvent } from "../services/webhook-event-helper";
@@ -126,6 +127,10 @@ const applyTransitionIfAllowed = async (
     .withOrganization(assessment.organization_id)
     .record(result.event);
 };
+
+const BulkDeleteGapFindingsRequestSchema = z.object({
+  ids: z.array(z.string().uuid()),
+});
 
 export const gapAnalysisRoutes: RouteDefinition[] = [
   {
@@ -456,6 +461,11 @@ export const gapAnalysisRoutes: RouteDefinition[] = [
         finding.gap_analysis_version_id,
       );
       if (parentVersion && parentVersion.status === "approved") {
+        await dispatchWebhookEvent(deps.webhooks, {
+          organizationId: requireOrganizationId({ organizationId }),
+          eventType: "ledger.audit.alert",
+          eventId: newId(),
+        });
         throw new ApiError(
           "CONFLICT",
           "Cannot modify findings in an approved Gap Analysis version. Create a new draft instead.",
@@ -689,6 +699,18 @@ export const gapAnalysisRoutes: RouteDefinition[] = [
       );
       if (!version)
         throw new ApiError("NOT_FOUND", "Gap Analysis version not found.", 404);
+      if (version.status === "approved") {
+        await dispatchWebhookEvent(deps.webhooks, {
+          organizationId: requireOrganizationId({ organizationId }),
+          eventType: "ledger.audit.alert",
+          eventId: newId(),
+        });
+        throw new ApiError(
+          "CONFLICT",
+          "Cannot modify findings in an approved Gap Analysis version. Create a new draft instead.",
+          409,
+        );
+      }
       const assessment = await requireAssessment(
         deps,
         version.assessment_id,
@@ -851,6 +873,70 @@ export const gapAnalysisRoutes: RouteDefinition[] = [
           e instanceof Error ? [e.message] : [],
         );
       }
+    },
+  },
+  {
+    method: "POST",
+    path: "/api/v1/gap-findings/bulk-delete",
+    protected: true,
+    requireActor: true,
+    permissions: ["gap:update"],
+    bodySchema: BulkDeleteGapFindingsRequestSchema,
+    handler: async ({ validatedBody, deps, organizationId, traceId }) => {
+      const body = validatedBody as z.infer<
+        typeof BulkDeleteGapFindingsRequestSchema
+      >;
+      const tenantGapFindingDb =
+        deps.gapAnalysis.repositories.gapFindings.withOrganization(
+          requireOrganizationId({ organizationId }),
+        );
+      const tenantGapVersionDb =
+        deps.gapAnalysis.repositories.gapVersions.withOrganization(
+          requireOrganizationId({ organizationId }),
+        );
+
+      const findingsToDelete: any[] = [];
+      for (const id of body.ids) {
+        const finding = await tenantGapFindingDb.get(id);
+        if (!finding) {
+          throw new ApiError("NOT_FOUND", `Gap finding not found: ${id}`, 404);
+        }
+        findingsToDelete.push(finding);
+      }
+
+      // Immutability guard: reject if any finding belongs to an approved version
+      for (const finding of findingsToDelete) {
+        const parentVersion = await tenantGapVersionDb.get(
+          finding.gap_analysis_version_id,
+        );
+        if (parentVersion && parentVersion.status === "approved") {
+          await dispatchWebhookEvent(deps.webhooks, {
+            organizationId: requireOrganizationId({ organizationId }),
+            eventType: "ledger.audit.alert",
+            eventId: newId(),
+          });
+          throw new ApiError(
+            "CONFLICT",
+            "Cannot delete findings in an approved Gap Analysis version.",
+            409,
+          );
+        }
+      }
+
+      // Mass deletion guard: alert if deleting 10 or more findings
+      if (body.ids.length >= 10) {
+        await dispatchWebhookEvent(deps.webhooks, {
+          organizationId: requireOrganizationId({ organizationId }),
+          eventType: "ledger.audit.alert",
+          eventId: newId(),
+        });
+      }
+
+      for (const id of body.ids) {
+        await tenantGapFindingDb.delete(id);
+      }
+
+      return json({ success: true, count: body.ids.length, trace_id: traceId });
     },
   },
 ];

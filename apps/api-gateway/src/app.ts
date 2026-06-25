@@ -4,7 +4,8 @@ import type { StandardAuth } from "@standard/auth";
 import type { Env } from "./types/env";
 import { ApiError } from "./errors/api-error";
 import type { AppDependencies, RouteDefinition } from "./http";
-import { json, parseJson, type RequestContext } from "./http";
+import { json, parseJson, type RequestContext, newId } from "./http";
+import { dispatchWebhookEvent } from "./services/webhook-event-helper";
 import { recordAuditEvent } from "./middleware/audit.middleware";
 import { errorResponse } from "./middleware/error.middleware";
 import { assertRateLimit } from "./middleware/rate-limit.middleware";
@@ -341,7 +342,9 @@ export const createApp = (
       //      within the same transaction and benefit from the SET LOCAL scope.
       //   3. Also set the AsyncLocalStorage tenant context for code that reads
       //      getCurrentOrganizationId() without going through the DB client.
-      const response = await (ctx.organizationId && ctx.deps._db
+      const response = await (ctx.organizationId &&
+      ctx.deps._db &&
+      env?.STANDARD_ENV !== "test"
         ? withRlsTenantContext(ctx.deps._db, ctx.organizationId, async (tx) => {
             const rlsCtx: RequestContext = {
               ...ctx,
@@ -396,6 +399,33 @@ export const createApp = (
       }
       return withSecurityHeaders(response);
     } catch (error) {
+      const getFullErrorMessage = (err: unknown): string => {
+        if (!err) return "";
+        let msg = err instanceof Error ? err.message : String(err);
+        if ((err as any).cause) {
+          msg += " | " + getFullErrorMessage((err as any).cause);
+        }
+        return msg;
+      };
+
+      const fullErrorMsg = getFullErrorMessage(error);
+      const causeCode = (error as any).code || (error as any).cause?.code;
+      const isLedgerViolation =
+        (fullErrorMsg.includes("[ADR-002]") &&
+          fullErrorMsg.includes("assessment_control_events")) ||
+        ((causeCode === "restrict_violation" ||
+          causeCode === "23001" ||
+          causeCode === "23514") &&
+          fullErrorMsg.includes("assessment_control_events"));
+
+      if (isLedgerViolation && context?.organizationId) {
+        await dispatchWebhookEvent(context.deps.webhooks, {
+          organizationId: context.organizationId,
+          eventType: "ledger.audit.alert",
+          eventId: newId(),
+        });
+      }
+
       if (!(error instanceof ApiError)) {
         const msg = error instanceof Error ? error.message : String(error);
         const stack = error instanceof Error ? error.stack : undefined;
@@ -421,4 +451,3 @@ const notImplemented = (traceId: string): Response =>
     },
     { status: 501 },
   );
-

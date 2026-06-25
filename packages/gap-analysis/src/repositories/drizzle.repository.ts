@@ -6,7 +6,7 @@
  * Accepts any Drizzle-compatible db client (NeonServerless, PostgresJs, etc.)
  * via structural typing — no driver-specific import required.
  */
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 import {
   evidenceFindings,
@@ -472,6 +472,16 @@ const createDrizzleGapFindingRepository = (
         .where(eq(gapFindings.gapAnalysisVersionId, gapAnalysisVersionId));
       return rows.map(mapGapFindingRow);
     },
+    async delete(gapFindingId: string, organizationId: string) {
+      await db
+        .delete(gapFindings)
+        .where(
+          and(
+            eq(gapFindings.id, gapFindingId),
+            eq(gapFindings.organizationId, organizationId),
+          ),
+        );
+    },
     withOrganization(organizationId: string) {
       return {
         saveMany: (findings: GapFindingResponse[]) => repo.saveMany(findings),
@@ -479,6 +489,8 @@ const createDrizzleGapFindingRepository = (
         get: (gapFindingId: string) => repo.get(gapFindingId, organizationId),
         listByVersion: (gapAnalysisVersionId: string) =>
           repo.listByVersion(gapAnalysisVersionId, organizationId),
+        delete: (gapFindingId: string) =>
+          repo.delete(gapFindingId, organizationId),
       };
     },
   };
