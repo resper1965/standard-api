@@ -163,7 +163,6 @@ const buildMockSession = (
   // Normalise to 2-role model: platform_admin or customer.
   const isPlatAdmin =
     authRoles.includes("platform_admin" as any) ||
-    authRoles.includes("system" as any) ||
     overrideRole === "platform_admin";
   const mockRole = isPlatAdmin
     ? "platform_admin"
