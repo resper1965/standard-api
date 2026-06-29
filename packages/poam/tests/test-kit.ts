@@ -1,4 +1,4 @@
-// TODO: extract to shared test-utils — TestCase type, test(), runTests(),
+// ponytail: extract to shared test-utils — TestCase type, test(), runTests(),
 // core matchers (toBe, toBeGreaterThan), and expectRejects are duplicated
 // identically in the gap-analysis test-kit and partially in scf-core.
 
@@ -23,7 +23,8 @@ export const test = (name: string, run: () => Promise<void> | void): void => {
 
 export const expect = <T>(actual: T) => ({
   toBe(expected: T): void {
-    if (actual !== expected) throw assertionError(actual, `to be ${String(expected)}`);
+    if (actual !== expected)
+      throw assertionError(actual, `to be ${String(expected)}`);
   },
   toBeDefined(): void {
     if (actual === undefined || actual === null)
@@ -35,13 +36,19 @@ export const expect = <T>(actual: T) => ({
   },
 });
 
-// TODO: extract to shared test-utils — expectRejects is identical in gap-analysis test-kit.
-export const expectRejects = async (run: () => Promise<unknown>, code: string): Promise<void> => {
+// ponytail: extract to shared test-utils — expectRejects is identical in gap-analysis test-kit.
+export const expectRejects = async (
+  run: () => Promise<unknown>,
+  code: string,
+): Promise<void> => {
   try {
     await run();
   } catch (error) {
     if (error instanceof Error && error.message.includes(code)) return;
-    throw new Error(`Expected rejection with ${code}, got ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(
+      `Expected rejection with ${code}, got ${error instanceof Error ? error.message : String(error)}`,
+      { cause: error },
+    );
   }
   throw new Error(`Expected rejection with ${code}`);
 };

@@ -1,4 +1,4 @@
-// TODO: extract to shared test-utils — TestCase type, test(), runTests(), and
+// ponytail: extract to shared test-utils — TestCase type, test(), runTests(), and
 // core matchers (toBe, toBeGreaterThan) are duplicated in gap-analysis and poam test-kits.
 
 type TestCase = {
@@ -22,7 +22,8 @@ export const test = (name: string, run: () => Promise<void> | void): void => {
 
 export const expect = <T>(actual: T) => ({
   toBe(expected: T): void {
-    if (actual !== expected) throw assertionError(actual, `to be ${String(expected)}`);
+    if (actual !== expected)
+      throw assertionError(actual, `to be ${String(expected)}`);
   },
   toBeTruthy(): void {
     if (!actual) throw assertionError(actual, "to be truthy");

@@ -277,6 +277,19 @@ standard-api-standard/
 
 - `packages/assessment-engine/src/__tests__/strm-weight-calculator.contract.test.ts`
 
+## 19. Ponytail - Regras de Simplificação e YAGNI
+
+- Siga a **Escada de Decisão do Ponytail** antes de propor ou escrever qualquer código:
+  1. **YAGNI (You Aren't Gonna Need It):** Evite codificar para necessidades especulativas ou futuras. Se não é necessário agora, não faça.
+  2. **Reuso de Código:** Sempre pesquise o repositório por funções, schemas ou padrões existentes que possam ser reaproveitados.
+  3. **Biblioteca Padrão (Stdlib):** Prefira os recursos integrados da linguagem (ex: usar APIs do V8/Node/Cloudflare) em vez de instalar pacotes npm adicionais.
+  4. **Recursos Nativos da Plataforma:** Utilize elementos e componentes nativos da plataforma/browser em vez de bibliotecas pesadas de terceiros.
+  5. **Dependências Existentes:** Caso precise de dependências, limite-se estritamente ao que já está instalado no workspace em `package.json`.
+  6. **Simplicidade Extrema:** Resoluções concisas de uma linha são preferíveis a abstrações excessivas.
+  7. **Código Mínimo Essencial:** Escreva apenas o código mínimo para a feature/correção funcionar.
+- **Importante:** Simplificação de código não é pretexto para remover validações críticas, segurança, tratamento de erros, testes, auditabilidade ou acessibilidade.
+- Colete dívida técnica intencional utilizando comentários no formato `// ponytail: <motivação/atalho>` e garanta que sejam registrados.
+
 ---
 
 # Reversa
