@@ -17,6 +17,7 @@
  * always false even when platform_admin=true in the DB.
  */
 import type { StandardAuth } from "@standard/auth";
+import { isPlatformAdminEmail } from "@standard/auth";
 import { ApiError } from "../errors/api-error";
 import { isApiKeyToken, extractApiKeyToken } from "../utils/api-key-crypto";
 import type { RequestContext } from "../http";
@@ -184,10 +185,22 @@ async function resolveSessionAuthContext(
       }
     }
 
-    const isPlatformAdmin = flags
-      ? flags.platform_admin
-      : !!(user.platformAdmin ?? user.platform_admin);
-    const isApproved = flags ? flags.approved : !!user.approved;
+    // Override por email: emails em PLATFORM_ADMIN_EMAILS sÃ£o SEMPRE platform
+    // admin (e implicitamente aprovados), independentemente da coluna
+    // platform_admin na DB, do cache KV, ou de como a row foi criada. Garante
+    // que a conta master nunca perde acesso por estado divergente da DB.
+    const emailForcesAdmin = isPlatformAdminEmail(
+      user.email,
+      (context.env as any)?.PLATFORM_ADMIN_EMAILS,
+    );
+
+    const isPlatformAdmin =
+      emailForcesAdmin ||
+      (flags
+        ? flags.platform_admin
+        : !!(user.platformAdmin ?? user.platform_admin));
+    const isApproved =
+      emailForcesAdmin || (flags ? flags.approved : !!user.approved);
 
     if (!isApproved && !isPlatformAdmin) {
       throw new ApiError(

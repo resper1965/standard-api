@@ -67,6 +67,46 @@ const passwordComplexityErrors = (password: string): string[] => {
 };
 
 /**
+ * Fallback de Platform Admins quando `PLATFORM_ADMIN_EMAILS` nÃ£o estÃ¡ definido.
+ * Mantido para retrocompatibilidade â€” a conta master da Bekaa.
+ */
+export const DEFAULT_PLATFORM_ADMIN_EMAILS = ["resper@bekaa.eu"] as const;
+
+/**
+ * Fonte Ãšnica de verdade para a lista de emails Platform Admin.
+ *
+ * Faz parsing de `PLATFORM_ADMIN_EMAILS` (CSV), normaliza para lowercase e
+ * remove vazios. Se nÃ£o estiver definido, devolve {@link DEFAULT_PLATFORM_ADMIN_EMAILS}.
+ *
+ * Usado em dois sÃ­tios para garantir que estes emails sÃ£o SEMPRE platform admin:
+ *  - `databaseHooks.user.create` (auto-provisioning no momento da criaÃ§Ã£o)
+ *  - `auth.middleware` (override por request, independente do estado da DB)
+ *
+ * @param raw  valor cru de `PLATFORM_ADMIN_EMAILS` (env var)
+ */
+export const parsePlatformAdminEmails = (raw?: string | null): string[] => {
+  const list = raw
+    ? raw
+        .split(",")
+        .map((e) => e.trim().toLowerCase())
+        .filter(Boolean)
+    : [...DEFAULT_PLATFORM_ADMIN_EMAILS];
+  return list;
+};
+
+/**
+ * True se `email` pertencer Ã  lista de Platform Admins configurada.
+ * ComparaÃ§Ã£o case-insensitive.
+ */
+export const isPlatformAdminEmail = (
+  email: string | null | undefined,
+  raw?: string | null,
+): boolean => {
+  if (!email) return false;
+  return parsePlatformAdminEmails(raw).includes(email.trim().toLowerCase());
+};
+
+/**
  * Cria a instÃ¢ncia Better Auth.
  * Chamar uma vez no startup do Worker e reutilizar em todos os requests.
  *
@@ -241,20 +281,14 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
       user: {
         create: {
           before: async (user: any) => {
-            // Auto-provisionamento do Platform Admin master account
-            // Platform admin emails: configurable via PLATFORM_ADMIN_EMAILS env var (comma-separated).
-            // Falls back to hardcoded default for backward compatibility.
+            // Auto-provisionamento do Platform Admin master account.
+            // Lista configurÃ¡vel via PLATFORM_ADMIN_EMAILS (CSV); fallback para
+            // DEFAULT_PLATFORM_ADMIN_EMAILS. Fonte Ãºnica: parsePlatformAdminEmails.
             const platformAdminEnv =
               typeof process !== "undefined"
                 ? process.env?.PLATFORM_ADMIN_EMAILS
                 : undefined;
-            const platformAdmins = platformAdminEnv
-              ? platformAdminEnv
-                  .split(",")
-                  .map((e) => e.trim())
-                  .filter(Boolean)
-              : ["resper@bekaa.eu"];
-            if (platformAdmins.includes(user.email)) {
+            if (isPlatformAdminEmail(user.email, platformAdminEnv)) {
               console.log(
                 `[standard:auth] Auto-provisioning Platform Admin for: ${user.email}`,
               );

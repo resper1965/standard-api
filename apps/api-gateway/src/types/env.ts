@@ -59,7 +59,13 @@ export interface Env {
    * scoped to this org. Defaults to "bekaa" if not set.
    */
   PLATFORM_ADMIN_ORG_SLUG?: string;
+  /**
+   * Comma-separated list of emails that are ALWAYS treated as platform admin,
+   * regardless of the `platform_admin` DB column. Single source of truth is
+   * `parsePlatformAdminEmails` in @standard/auth. Falls back to the Bekaa
+   * master account (resper@bekaa.eu) when unset.
+   */
+  PLATFORM_ADMIN_EMAILS?: string;
   /** Secret for the edge recovery endpoint. Must be >= 16 chars. */
   ADMIN_RECOVERY_SECRET?: string;
 }
-
