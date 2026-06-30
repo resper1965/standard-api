@@ -11,6 +11,7 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { admin } from "better-auth/plugins";
+import { createAuthMiddleware, APIError } from "better-auth/api";
 import {
   baUser,
   baSession,
@@ -34,6 +35,35 @@ export type AuthEnv = {
   STANDARD_ENV?: string;
   /** ServiÃ§o de email injectado pelo API Gateway */
   email?: SendEmail;
+};
+
+/**
+ * Endpoints Better Auth que efectivamente DEFINEM uma password a partir de
+ * input do utilizador. Alinhado com a lista canÃ³nica do plugin oficial
+ * `haveIBeenPwned` (`/sign-up/email`, `/change-password`, `/reset-password`).
+ *
+ * A validaÃ§Ã£o de complexidade SÃ“ deve correr nestes paths. Em particular NÃƒO
+ * deve correr no `/sign-in/email`: o Better Auth chama `password.hash` no caminho
+ * de falha do login (mitigaÃ§Ã£o de timing-attack) com a password submetida, e
+ * lanÃ§ar aÃ­ revelaria a existÃªncia do utilizador e quebraria essa mitigaÃ§Ã£o.
+ */
+const PASSWORD_SETTING_PATHS = new Set<string>([
+  "/sign-up/email",
+  "/change-password",
+  "/reset-password",
+]);
+
+/**
+ * Regras de complexidade de password. Devolve a lista de requisitos em falta
+ * (vazia = vÃ¡lida). MÃ­nimo de comprimento Ã© tratado pelo `minPasswordLength`.
+ */
+const passwordComplexityErrors = (password: string): string[] => {
+  const errors: string[] = [];
+  if (!/[A-Z]/.test(password)) errors.push("uppercase letter");
+  if (!/[a-z]/.test(password)) errors.push("lowercase letter");
+  if (!/[0-9]/.test(password)) errors.push("number");
+  if (!/[^A-Za-z0-9]/.test(password)) errors.push("special character");
+  return errors;
 };
 
 /**
@@ -87,6 +117,34 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
     logger: { disabled: false },
     plugins: [admin()],
 
+    // ─── Request hooks ───────────────────────────────────────────────────────────────
+    // Valida a complexidade da password APENAS nos endpoints que definem uma
+    // password a partir de input do utilizador. Mantém o `password.hash` puro,
+    // evitando lançar no caminho de timing-mitigation do sign-in (que revelaria
+    // a existência do utilizador).
+    hooks: {
+      before: createAuthMiddleware(async (ctx) => {
+        if (!PASSWORD_SETTING_PATHS.has(ctx.path)) return;
+        const body = (ctx.body ?? {}) as {
+          password?: unknown;
+          newPassword?: unknown;
+        };
+        const password =
+          typeof body.password === "string"
+            ? body.password
+            : typeof body.newPassword === "string"
+              ? body.newPassword
+              : undefined;
+        if (password === undefined) return;
+        const errors = passwordComplexityErrors(password);
+        if (errors.length) {
+          throw new APIError("BAD_REQUEST", {
+            message: `Password requires: ${errors.join(", ")}.`,
+          });
+        }
+      }),
+    },
+
     // ————————————————————————————————————————————————————————————————————————————————
     emailAndPassword: {
       enabled: true,
@@ -95,16 +153,11 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
       maxPasswordLength: 128,
 
       password: {
+        // hash Ã© um primitivo puro: NÃ£o valida complexidade aqui. O Better Auth
+        // invoca hash() tambÃ©m no caminho de falha do sign-in (mitigaÃ§Ã£o de
+        // timing-attack), por isso a validaÃ§Ã£o vive no hook `before` abaixo,
+        // restrito aos PASSWORD_SETTING_PATHS.
         hash: async (password: string): Promise<string> => {
-          // Complexidade: uppercase, lowercase, dÃ­gito, especial
-          const errors: string[] = [];
-          if (!/[A-Z]/.test(password)) errors.push("uppercase letter");
-          if (!/[a-z]/.test(password)) errors.push("lowercase letter");
-          if (!/[0-9]/.test(password)) errors.push("number");
-          if (!/[^A-Za-z0-9]/.test(password)) errors.push("special character");
-          if (errors.length) {
-            throw new Error(`Password requires: ${errors.join(", ")}.`);
-          }
           const { hashPassword } = await import("@better-auth/utils/password");
           return hashPassword(password);
         },
@@ -119,32 +172,6 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
             await import("@better-auth/utils/password");
           return verifyPassword(hash, password);
         },
-      },
-
-      sendVerificationEmail: async ({
-        user,
-        url,
-      }: {
-        user: { email: string; name: string | null };
-        url: string;
-      }) => {
-        if (env.email) {
-          await sendStandardEmail(
-            env.email,
-            {
-              type: "verification",
-              to: user.email,
-              firstName: user.name || "User",
-              verificationUrl: url,
-              expiresIn: "24 hours",
-            },
-            { domain: "bekaa.eu" },
-          ).catch((err: unknown) =>
-            console.error("[standard:auth] sendVerificationEmail failed:", err),
-          );
-        } else {
-          console.log(`[standard:auth:dev] verify â†’ ${url}`);
-        }
       },
 
       sendResetPassword: async ({
@@ -170,6 +197,39 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
           );
         } else {
           console.log(`[standard:auth:dev] reset â†’ ${url}`);
+        }
+      },
+    },
+
+    // ─── Email verification ──────────────────────────────────────────────────────────
+    // O callback de verificação pertence a `emailVerification`, NÃO a
+    // `emailAndPassword`. Estava mal colocado e por isso o Better Auth nunca o
+    // invocava — com `requireEmailVerification: true`, o email de verificação
+    // custom não era enviado.
+    emailVerification: {
+      sendVerificationEmail: async ({
+        user,
+        url,
+      }: {
+        user: { email: string; name: string | null };
+        url: string;
+      }) => {
+        if (env.email) {
+          await sendStandardEmail(
+            env.email,
+            {
+              type: "verification",
+              to: user.email,
+              firstName: user.name || "User",
+              verificationUrl: url,
+              expiresIn: "24 hours",
+            },
+            { domain: "bekaa.eu" },
+          ).catch((err: unknown) =>
+            console.error("[standard:auth] sendVerificationEmail failed:", err),
+          );
+        } else {
+          console.log(`[standard:auth:dev] verify â†’ ${url}`);
         }
       },
     },
@@ -283,7 +343,11 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
     // â”€â”€ Advanced â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     advanced: {
       useSecureCookies: true,
-      generateId: () => crypto.randomUUID(),
+      // `generateId` vive em `advanced.database` no Better Auth 1.6.x
+      // (`advanced.generateId` deixou de existir).
+      database: {
+        generateId: () => crypto.randomUUID(),
+      },
       // Cookies cross-subdomain: partilha sessÃ£o entre
       // standard.bekaa.eu (frontend) e standard-api.bekaa.eu (API gateway)
       crossSubDomainCookies: {
