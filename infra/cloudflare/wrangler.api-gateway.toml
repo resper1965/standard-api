@@ -6,6 +6,9 @@ minify = false
 
 [vars]
 STANDARD_ENV = "development"
+# Emails sempre tratados como platform admin (CSV). Não é segredo — versionado
+# aqui de propósito. Lista exaustiva: se editares, inclui todos os admins.
+PLATFORM_ADMIN_EMAILS = "resper@bekaa.eu"
 LOG_LEVEL = "info"
 AI_GATEWAY_NAME = "standard-dev"
 AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/0a6c490dd5fe9051422c15c9e133138e/standard-dev"
@@ -75,6 +78,7 @@ name = "standard-api-gateway-staging"
 
 [env.staging.vars]
 STANDARD_ENV = "staging"
+PLATFORM_ADMIN_EMAILS = "resper@bekaa.eu"
 LOG_LEVEL = "info"
 AI_GATEWAY_NAME = "standard-staging"
 AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/0a6c490dd5fe9051422c15c9e133138e/standard-staging"
@@ -148,6 +152,7 @@ name = "standard-api-gateway-production"
 
 [env.production.vars]
 STANDARD_ENV = "production"
+PLATFORM_ADMIN_EMAILS = "resper@bekaa.eu"
 LOG_LEVEL = "warn"
 AI_GATEWAY_NAME = "standard-prod"
 AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/0a6c490dd5fe9051422c15c9e133138e/standard-prod"
