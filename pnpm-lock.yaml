@@ -450,6 +450,9 @@ importers:
         specifier: workspace:*
         version: link:../soa
     devDependencies:
+      '@standard/test-kit':
+        specifier: workspace:*
+        version: link:../test-kit
       tsx:
         specifier: ^4.21.0
         version: 4.22.4
@@ -573,6 +576,9 @@ importers:
         specifier: workspace:*
         version: link:../soa
     devDependencies:
+      '@standard/test-kit':
+        specifier: workspace:*
+        version: link:../test-kit
       tsx:
         specifier: ^4.21.0
         version: 4.22.4
@@ -639,6 +645,9 @@ importers:
         specifier: ^4.4.0
         version: 4.4.0
     devDependencies:
+      '@standard/test-kit':
+        specifier: workspace:*
+        version: link:../test-kit
       '@types/node':
         specifier: ^25.7.0
         version: 25.9.3
@@ -758,6 +767,12 @@ importers:
         specifier: 6.0.3
         version: 6.0.3
 
+  packages/test-kit:
+    devDependencies:
+      typescript:
+        specifier: 6.0.3
+        version: 6.0.3
+
   workers/ingestion:
     dependencies:
       '@neondatabase/serverless':
@@ -809,22 +824,6 @@ importers:
     devDependencies:
       '@cloudflare/workers-types':
         specifier: ^4.20260426.1
-        version: 4.20260611.1
-      typescript:
-        specifier: latest
-        version: 6.0.3
-      wrangler:
-        specifier: latest
-        version: 4.103.0(@cloudflare/workers-types@4.20260611.1)
-
-  workers/smoke-tester:
-    dependencies:
-      '@sentry/cloudflare':
-        specifier: ^10.56.0
-        version: 10.57.0(@cloudflare/workers-types@4.20260611.1)
-    devDependencies:
-      '@cloudflare/workers-types':
-        specifier: ^4.20260430.1
         version: 4.20260611.1
       typescript:
         specifier: latest

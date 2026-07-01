@@ -17,6 +17,7 @@
     "@standard/soa": "workspace:*"
   },
   "devDependencies": {
+    "@standard/test-kit": "workspace:*",
     "tsx": "^4.21.0",
     "typescript": "6.0.3"
   }
