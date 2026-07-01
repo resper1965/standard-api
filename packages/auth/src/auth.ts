@@ -33,6 +33,8 @@ export type AuthEnv = {
   ALLOWED_ORIGINS?: string;
   /** Ambiente actual: 'production' | 'staging' | 'development' */
   STANDARD_ENV?: string;
+  /** Emails sempre platform admin (CSV). Binding wrangler, NÃƒO process.env. */
+  PLATFORM_ADMIN_EMAILS?: string;
   /** ServiÃ§o de email injectado pelo API Gateway */
   email?: SendEmail;
 };
@@ -236,7 +238,10 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
             console.error("[standard:auth] sendResetPassword failed:", err),
           );
         } else {
-          console.log(`[standard:auth:dev] reset â†’ ${url}`);
+          // NÃ£o logar a URL: contÃ©m token de reset de uso Ãºnico.
+          console.log(
+            "[standard:auth:dev] reset email requested (email binding not configured)",
+          );
         }
       },
     },
@@ -269,7 +274,10 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
             console.error("[standard:auth] sendVerificationEmail failed:", err),
           );
         } else {
-          console.log(`[standard:auth:dev] verify â†’ ${url}`);
+          // NÃ£o logar a URL: contÃ©m token de verificaÃ§Ã£o de uso Ãºnico.
+          console.log(
+            "[standard:auth:dev] verification email requested (email binding not configured)",
+          );
         }
       },
     },
@@ -284,11 +292,9 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
             // Auto-provisionamento do Platform Admin master account.
             // Lista configurÃ¡vel via PLATFORM_ADMIN_EMAILS (CSV); fallback para
             // DEFAULT_PLATFORM_ADMIN_EMAILS. Fonte Ãºnica: parsePlatformAdminEmails.
-            const platformAdminEnv =
-              typeof process !== "undefined"
-                ? process.env?.PLATFORM_ADMIN_EMAILS
-                : undefined;
-            if (isPlatformAdminEmail(user.email, platformAdminEnv)) {
+            // NOTA: em Cloudflare Workers os `[vars]` do wrangler chegam pelo
+            // `env` injectado, NÃƒO por process.env â€” usar env.PLATFORM_ADMIN_EMAILS.
+            if (isPlatformAdminEmail(user.email, env.PLATFORM_ADMIN_EMAILS)) {
               console.log(
                 `[standard:auth] Auto-provisioning Platform Admin for: ${user.email}`,
               );
