@@ -22,7 +22,7 @@ export const baUser = pgTable("user", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   // Standard-specific
-  role: text("role").default("customer"),
+  role: text("role").default("org_admin"),
   platformAdmin: boolean("platform_admin").notNull().default(false), // Bekaa operator
   approved: boolean("approved").notNull().default(false), // approval gate
   jobTitle: text("job_title"),
