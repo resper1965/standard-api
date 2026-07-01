@@ -73,6 +73,25 @@ test("[SECURITY] Tenant A cannot read Tenant B organization", async () => {
   );
   const orgAId = orgA.body.organization_id as string;
 
+  // Tenant B must be a real provisioned org so its session resolves to tenantB
+  // (otherwise org resolution falls back to the path org and isolation can't be
+  // asserted).
+  await client.send(
+    "/api/v1/organizations",
+    "POST",
+    {
+      organization_id: tenantB,
+      slug: `org-b-${Date.now()}`,
+      name: "Org B",
+      user_id: ids.actorId,
+    },
+    {
+      "x-standard-tenant-id": tenantB,
+      "x-standard-actor-id": ids.actorId,
+      "x-standard-mock-role": "platform_admin",
+    },
+  );
+
   // Tenant B (scoped org_admin) tenta ler org de Tenant A → deve ser bloqueado.
   const result = await client.send(
     `/api/v1/organizations/${orgAId}`,
