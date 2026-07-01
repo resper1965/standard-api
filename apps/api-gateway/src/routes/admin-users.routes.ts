@@ -47,10 +47,7 @@ const isProtectedPlatformAdmin = (
   context: RequestContext,
 ): boolean =>
   existing.platformAdmin === true ||
-  isPlatformAdminEmail(
-    existing.email,
-    (context.env as any)?.PLATFORM_ADMIN_EMAILS,
-  );
+  isPlatformAdminEmail(existing.email, context.env?.PLATFORM_ADMIN_EMAILS);
 
 /** For domain-table queries (users, organizations, memberships) we still use _db. */
 const getDomainDb = (context: RequestContext) => {
@@ -277,7 +274,7 @@ export const adminUsersRoutes: RouteDefinition[] = [
       if (isProtectedPlatformAdmin(existing, context)) {
         throw new ApiError(
           "FORBIDDEN",
-          "Cannot ban a platform admin. Remove platform_admin flag first.",
+          "Cannot ban a protected platform admin. Remove the platform_admin flag or remove the email from PLATFORM_ADMIN_EMAILS first.",
           403,
         );
       }
@@ -495,7 +492,7 @@ export const adminUsersRoutes: RouteDefinition[] = [
       if (isProtectedPlatformAdmin(existing, context)) {
         throw new ApiError(
           "FORBIDDEN",
-          "Cannot delete a platform admin. Remove platform_admin flag first.",
+          "Cannot delete a protected platform admin. Remove the platform_admin flag or remove the email from PLATFORM_ADMIN_EMAILS first.",
           403,
         );
       }

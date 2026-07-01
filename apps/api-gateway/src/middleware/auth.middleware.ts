@@ -129,7 +129,7 @@ async function resolveSessionAuthContext(
     // dispararia antes do override e a garantia "sempre admin" cairia.
     const emailForcesAdmin = isPlatformAdminEmail(
       user.email,
-      (context.env as any)?.PLATFORM_ADMIN_EMAILS,
+      context.env?.PLATFORM_ADMIN_EMAILS,
     );
 
     // 2a. Hard revocation check (user banned/deleted/locked)
@@ -153,8 +153,9 @@ async function resolveSessionAuthContext(
       throw new ApiError("UNAUTHORIZED", "Session revoked.", 401);
     }
     if (isBanned && emailForcesAdmin) {
+      // Não logar o email (dado identificável) — só o user id opaco.
       console.warn(
-        `[standard:auth] Ignoring revocation for configured platform admin: ${user.email}`,
+        `[standard:auth] Ignoring revocation for configured platform admin (user ${user.id})`,
       );
     }
 
