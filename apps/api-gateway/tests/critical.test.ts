@@ -58,16 +58,22 @@ test("[SECURITY] Tenant A cannot read Tenant B organization", async () => {
   const orgA = await client.send(
     "/api/v1/organizations",
     "POST",
-    { organization_id: tenantA, slug: `org-a-${Date.now()}`, name: "Org A" },
+    {
+      organization_id: tenantA,
+      slug: `org-a-${Date.now()}`,
+      name: "Org A",
+      user_id: ids.actorId,
+    },
     {
       "x-standard-tenant-id": tenantA,
       "x-standard-actor-id": ids.actorId,
-      "x-standard-mock-role": "customer",
+      // Org creation is a platform_admin operation (setup).
+      "x-standard-mock-role": "platform_admin",
     },
   );
   const orgAId = orgA.body.organization_id as string;
 
-  // Tenant B tenta ler org de Tenant A
+  // Tenant B (scoped org_admin) tenta ler org de Tenant A → deve ser bloqueado.
   const result = await client.send(
     `/api/v1/organizations/${orgAId}`,
     "GET",
@@ -75,7 +81,7 @@ test("[SECURITY] Tenant A cannot read Tenant B organization", async () => {
     {
       "x-standard-tenant-id": tenantB,
       "x-standard-actor-id": ids.actorId,
-      "x-standard-mock-role": "customer",
+      "x-standard-mock-role": "org_admin",
     },
   );
 
@@ -111,11 +117,12 @@ test("[SECURITY] Tenant isolation: documents scoped to assessment tenant", async
     {
       "x-standard-tenant-id": tenantA,
       "x-standard-actor-id": ids.actorId,
-      "x-standard-mock-role": "customer",
+      // Upload is a GRC operation (platform_admin here as setup).
+      "x-standard-mock-role": "platform_admin",
     },
   );
 
-  // Tenant B tenta listar documentos do assessment de Tenant A
+  // Tenant B (scoped org_admin) tenta listar documentos do assessment de Tenant A
   const result = await client.send(
     `/api/v1/assessments/${assessmentId}/documents`,
     "GET",
@@ -123,7 +130,7 @@ test("[SECURITY] Tenant isolation: documents scoped to assessment tenant", async
     {
       "x-standard-tenant-id": tenantB,
       "x-standard-actor-id": ids.actorId,
-      "x-standard-mock-role": "customer",
+      "x-standard-mock-role": "org_admin",
     },
   );
 
@@ -136,8 +143,9 @@ test("[SECURITY] Tenant isolation: documents scoped to assessment tenant", async
       `CRITICAL: Tenant B accessed documents of Tenant A assessment ${assessmentId}`,
     );
   }
-  // Acceptable: 404 (assessment not found for tenant B) or 200 with empty array
-  if (result.response.status !== 404 && result.response.status !== 200) {
+  // Acceptable: 403 (org_admin lacks document:read), 404 (not found for tenant B),
+  // or 200 with empty array. Never 200 with Tenant A's documents.
+  if (![403, 404, 200].includes(result.response.status)) {
     throw new Error(
       `Unexpected status ${result.response.status} on cross-tenant document access`,
     );

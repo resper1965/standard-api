@@ -175,8 +175,11 @@ export const createTestClient = () => {
   };
 
   // ── API key helpers ──────────────────────────────────────────────
-  // Default to customer mock role so RBAC passes for tenant-scoped routes.
-  const authHeaders = (organizationId: string, role = "customer") => ({
+  // Default to platform_admin so GRC endpoint tests pass (in the 2-role model
+  // only platform_admin — or an API key — can exercise GRC operations). Tests
+  // that assert tenant isolation or org_admin restrictions pass an explicit
+  // scoped role (e.g. "org_admin").
+  const authHeaders = (organizationId: string, role = "platform_admin") => ({
     "x-standard-tenant-id": organizationId,
     "x-standard-actor-id": ids.actorId,
     "x-standard-mock-role": role,

@@ -23,7 +23,8 @@ test("audit logs endpoint retorna eventos do assessment para customer autenticad
   );
   expect(start.response.status).toBe(201);
 
-  // Customer has audit:read in 2-role model — should succeed
+  // Audit read is a platform_admin / API-key capability (org_admin manages only
+  // API keys) — a platform admin session succeeds.
   const allowed = await client.send(
     `/api/v1/assessments/${created.assessmentId}/audit-logs`,
     "GET",
@@ -31,7 +32,7 @@ test("audit logs endpoint retorna eventos do assessment para customer autenticad
     {
       "x-standard-tenant-id": created.organizationId,
       "x-standard-actor-id": ids.actorId,
-      authorization: "Bearer dev:customer",
+      authorization: "Bearer dev:platform_admin",
     },
   );
   expect(allowed.response.status).toBe(200);
