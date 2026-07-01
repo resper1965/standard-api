@@ -157,16 +157,19 @@ const buildMockSession = (
   request: Request,
   authRoles: readonly string[],
 ): NonNullable<RequestContext["session"]> => {
-  // Priority: x-standard-mock-role header > role from Bearer header > "customer" default.
+  // Priority: x-standard-mock-role header > role from Bearer header > "org_admin" default.
   const overrideRole = request.headers.get("x-standard-mock-role");
   const firstAuthRole = authRoles[0] as string | undefined;
-  // Normalise to 2-role model: platform_admin or customer.
+  // Normalise to 2-role model: platform_admin or org_admin (legacy "customer" → org_admin).
   const isPlatAdmin =
     authRoles.includes("platform_admin" as any) ||
     overrideRole === "platform_admin";
+  const nonAdminRole = overrideRole ?? firstAuthRole ?? "org_admin";
   const mockRole = isPlatAdmin
     ? "platform_admin"
-    : (overrideRole ?? firstAuthRole ?? "customer");
+    : nonAdminRole === "customer"
+      ? "org_admin"
+      : nonAdminRole;
   const tenantId =
     request.headers.get("x-standard-tenant-id") ??
     request.headers.get("x-tenant-id") ??
@@ -189,9 +192,9 @@ const buildMockSession = (
       name: "Mock Test Actor",
       platformAdmin: isPlatAdmin,
       approved: true,
-      role: (isPlatAdmin ? "platform_admin" : "customer") as
+      role: (isPlatAdmin ? "platform_admin" : "org_admin") as
         | "platform_admin"
-        | "customer",
+        | "org_admin",
     },
     session: {
       id: `mock-session-${legacyActor}`,

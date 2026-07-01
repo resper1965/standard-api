@@ -75,14 +75,16 @@ async function gatherActorPermissions(
     const { DEFAULT_ROLE_PERMISSIONS } = await import("@standard/security");
 
     // Resolve role from session — auth.middleware.ts normalises to
-    // "platform_admin" or "customer" but we handle legacy values gracefully.
-    const userRole =
-      (context.session.user?.role as keyof typeof DEFAULT_ROLE_PERMISSIONS) ??
-      "customer";
+    // "platform_admin" or "org_admin". The legacy "customer" value is mapped
+    // to "org_admin" for backward compatibility.
+    const rawRole = context.session.user?.role as string | undefined;
+    const userRole = (
+      rawRole === "customer" ? "org_admin" : (rawRole ?? "org_admin")
+    ) as keyof typeof DEFAULT_ROLE_PERMISSIONS;
 
     const rolePerms =
       DEFAULT_ROLE_PERMISSIONS[userRole] ??
-      DEFAULT_ROLE_PERMISSIONS["customer"];
+      DEFAULT_ROLE_PERMISSIONS["org_admin"];
     if (rolePerms) actorPermissions.push(...rolePerms);
   }
 

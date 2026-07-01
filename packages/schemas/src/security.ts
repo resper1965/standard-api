@@ -16,7 +16,14 @@ export const AuthMethodSchema = z.enum([
   "mock_dev",
 ]);
 
-export const RoleSchema = z.enum(["platform_admin", "customer", "system"]);
+// Two human roles + an internal service role:
+// - platform_admin: manages the whole platform (cross-tenant). Always resper@bekaa.eu.
+// - org_admin: organization administrator. Sole human attribution is managing the
+//   org's API keys (the GRC work runs via those keys / M2M scopes).
+//   NOTE: the legacy id "customer" is still accepted on read for backward compat
+//   and normalized to "org_admin" (see auth.middleware / app-helpers).
+// - system: internal service-to-service actor (not human-assignable).
+export const RoleSchema = z.enum(["platform_admin", "org_admin", "system"]);
 
 export const PermissionSchema = z.enum([
   "tenant:read",
@@ -26,6 +33,8 @@ export const PermissionSchema = z.enum([
   "organization:update",
   "organization:delete",
   "membership:manage",
+  "apikey:read",
+  "apikey:manage",
   "assessment:create",
   "assessment:read",
   "assessment:update",
