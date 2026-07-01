@@ -122,6 +122,16 @@ async function resolveSessionAuthContext(
     const user = rawSession.user as any;
     const session = rawSession.session as any;
 
+    // Emails em PLATFORM_ADMIN_EMAILS sÃ£o SEMPRE platform admin (e aprovados),
+    // independentemente da DB/KV. Calculado aqui no topo para tambÃ©m proteger
+    // contra revogaÃ§Ã£o: a conta master nÃ£o pode ser trancada fora por um
+    // `revocations:user:*` (ex.: outro admin a bani-la) â€” senÃ£o o 401 abaixo
+    // dispararia antes do override e a garantia "sempre admin" cairia.
+    const emailForcesAdmin = isPlatformAdminEmail(
+      user.email,
+      (context.env as any)?.PLATFORM_ADMIN_EMAILS,
+    );
+
     // 2a. Hard revocation check (user banned/deleted/locked)
     let isBanned = false;
     let isSoftRevoked = false;
@@ -139,8 +149,13 @@ async function resolveSessionAuthContext(
       }
     }
 
-    if (isBanned) {
+    if (isBanned && !emailForcesAdmin) {
       throw new ApiError("UNAUTHORIZED", "Session revoked.", 401);
+    }
+    if (isBanned && emailForcesAdmin) {
+      console.warn(
+        `[standard:auth] Ignoring revocation for configured platform admin: ${user.email}`,
+      );
     }
 
     // 2b. Read platform_admin + approved directly from DB.
@@ -185,15 +200,8 @@ async function resolveSessionAuthContext(
       }
     }
 
-    // Override por email: emails em PLATFORM_ADMIN_EMAILS sÃ£o SEMPRE platform
-    // admin (e implicitamente aprovados), independentemente da coluna
-    // platform_admin na DB, do cache KV, ou de como a row foi criada. Garante
-    // que a conta master nunca perde acesso por estado divergente da DB.
-    const emailForcesAdmin = isPlatformAdminEmail(
-      user.email,
-      (context.env as any)?.PLATFORM_ADMIN_EMAILS,
-    );
-
+    // Override por email (emailForcesAdmin calculado no topo): estes emails sÃ£o
+    // SEMPRE platform admin e aprovados, independentemente da DB/KV/criaÃ§Ã£o.
     const isPlatformAdmin =
       emailForcesAdmin ||
       (flags

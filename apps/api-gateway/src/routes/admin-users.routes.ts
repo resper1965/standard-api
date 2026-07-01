@@ -16,6 +16,7 @@ import { json, parseJson, routeParam } from "../http";
 import { requirePlatformAdmin } from "../middleware/rbac.middleware";
 import { sanitizeLikeInput } from "@standard/security";
 import type { AuthRepository } from "@standard/auth";
+import { isPlatformAdminEmail } from "@standard/auth";
 import { resolveOrganizationContext } from "../adapters/tenant-mapping";
 
 // â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -32,6 +33,24 @@ const getRepo = (context: RequestContext): AuthRepository => {
   }
   return repo;
 };
+
+/**
+ * True se o utilizador Ã© um platform admin PROTEGIDO contra ban/reject/delete.
+ * Cobre dois casos:
+ *  - `platform_admin = true` na DB (guard existente); e
+ *  - email em PLATFORM_ADMIN_EMAILS, mesmo que a flag na DB esteja a false
+ *    (estado divergente) â€” alinhado com o override por request no middleware,
+ *    para a conta master nÃ£o poder ser removida por outro admin.
+ */
+const isProtectedPlatformAdmin = (
+  existing: { platformAdmin?: boolean | null; email?: string | null },
+  context: RequestContext,
+): boolean =>
+  existing.platformAdmin === true ||
+  isPlatformAdminEmail(
+    existing.email,
+    (context.env as any)?.PLATFORM_ADMIN_EMAILS,
+  );
 
 /** For domain-table queries (users, organizations, memberships) we still use _db. */
 const getDomainDb = (context: RequestContext) => {
@@ -178,7 +197,11 @@ export const adminUsersRoutes: RouteDefinition[] = [
         return json({ data: user, trace_id: context.traceId }, { status: 201 });
       } catch (err: unknown) {
         const errorMsg = err instanceof Error ? err.message : String(err);
-        throw new ApiError("VALIDATION_ERROR", `Failed to create user: ${errorMsg}`, 400);
+        throw new ApiError(
+          "VALIDATION_ERROR",
+          `Failed to create user: ${errorMsg}`,
+          400,
+        );
       }
     },
   },
@@ -251,7 +274,7 @@ export const adminUsersRoutes: RouteDefinition[] = [
       if (!existing) {
         throw new ApiError("NOT_FOUND", "User not found.", 404);
       }
-      if (existing.platformAdmin) {
+      if (isProtectedPlatformAdmin(existing, context)) {
         throw new ApiError(
           "FORBIDDEN",
           "Cannot ban a platform admin. Remove platform_admin flag first.",
@@ -406,7 +429,7 @@ export const adminUsersRoutes: RouteDefinition[] = [
       if (!existing) {
         throw new ApiError("NOT_FOUND", "User not found.", 404);
       }
-      if (existing.platformAdmin) {
+      if (isProtectedPlatformAdmin(existing, context)) {
         throw new ApiError("FORBIDDEN", "Cannot reject a platform admin.", 403);
       }
 
@@ -469,7 +492,7 @@ export const adminUsersRoutes: RouteDefinition[] = [
       }
 
       // Prevent deleting platform admins â€” catastrophic safety net.
-      if (existing.platformAdmin) {
+      if (isProtectedPlatformAdmin(existing, context)) {
         throw new ApiError(
           "FORBIDDEN",
           "Cannot delete a platform admin. Remove platform_admin flag first.",
