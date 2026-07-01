@@ -88,7 +88,7 @@ const ApproveUserBodySchema = z.object({
   organization_id: z
     .string()
     .min(1, "organization_id is required to assign the user."),
-  role: z.enum(["platform_admin", "customer"]).default("customer"),
+  role: z.enum(["platform_admin", "org_admin"]).default("org_admin"),
 });
 
 // ————————————————————————————————————————————————————————————————————————————————

@@ -38,13 +38,15 @@ export interface StandardUser {
   email: string;
   name: string;
   /**
-   * Standard role. Only two operational roles exist:
+   * Standard role. Only two operational human roles exist:
    * - "platform_admin" — Bekaa operator with cross-tenant access.
-   * - "customer" — SaaS client / org owner with full tenant-scoped access.
-   * The "admin"/"user" values come from Better Auth's admin plugin and are
-   * normalised to "platform_admin"/"customer" by auth.middleware.ts.
+   * - "org_admin" — organization administrator; sole attribution is managing
+   *   the org's API keys (GRC work runs via those keys / M2M scopes).
+   * The "admin"/"user" values come from Better Auth's admin plugin, and the
+   * legacy "customer" value, are normalised to "platform_admin"/"org_admin"
+   * by auth.middleware.ts.
    */
-  role?: "platform_admin" | "customer" | "admin" | "user";
+  role?: "platform_admin" | "org_admin" | "customer" | "admin" | "user";
   /**
    * Platform-level admin flag (Bekaa operator).
    * Populated from `platform_admin` column via Standard Native Auth `additionalFields`.

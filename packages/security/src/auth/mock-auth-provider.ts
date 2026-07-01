@@ -53,12 +53,14 @@ export class MockAuthProvider implements AuthProvider {
   }
 
   private rolesFromHeader(authHeader?: string): Role[] {
-    if (!authHeader?.startsWith("Bearer dev:")) return ["customer"] as Role[];
+    if (!authHeader?.startsWith("Bearer dev:")) return ["org_admin"] as Role[];
     const roleText = authHeader.slice("Bearer dev:".length);
     const roles = roleText
       .split(",")
       .map((role) => role.trim())
+      // Legacy "customer" → "org_admin" (2-role model).
+      .map((role) => (role === "customer" ? "org_admin" : role))
       .filter(Boolean) as Role[];
-    return roles.length > 0 ? roles : (["customer"] as Role[]);
+    return roles.length > 0 ? roles : (["org_admin"] as Role[]);
   }
 }
