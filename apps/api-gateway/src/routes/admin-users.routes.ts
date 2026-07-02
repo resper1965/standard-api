@@ -66,7 +66,7 @@ const ListUsersQuerySchema = z.object({
 /**
  * Zod schema for the PATCH body.
  * NOTE: "user"/"admin" are Better Auth native role labels stored in the `user.role` column.
- * auth.middleware.ts normalizes these to "customer"/"platform_admin" at session resolution.
+ * auth.middleware.ts normalizes these to "org_admin"/"platform_admin" at session resolution.
  */
 const UpdateUserBodySchema = z
   .object({
