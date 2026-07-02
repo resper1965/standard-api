@@ -1,0 +1,51 @@
+name: Apply Auth Migrations (raw)
+
+# Aplica manualmente as migrações SQL da BD de auth que NÃO estão no journal do
+# drizzle-kit (0002, 0003). O `db:migrate:auth` (drizzle-kit) só corre 0000/0001,
+# por isso o rename customer→org_admin (0003) precisa deste runner de SQL cru.
+#
+# Todas as statements são idempotentes — pode correr-se as vezes que forem
+# precisas sem efeitos colaterais.
+#
+# Pré-requisito: secret `AUTH_DATABASE_URL` (connection string do auth Neon branch).
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: apply-auth-migrations
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: '22'
+  PNPM_VERSION: '9.15.9'
+
+jobs:
+  migrate-auth:
+    name: Apply raw auth migrations (0002, 0003)
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Apply raw auth migrations
+        run: pnpm --filter @standard/schemas tsx migrate-auth-raw.ts
+        env:
+          AUTH_DATABASE_URL: ${{ secrets.AUTH_DATABASE_URL }}

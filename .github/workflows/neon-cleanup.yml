@@ -1,0 +1,108 @@
+name: Neon Branch Cleanup
+
+# Lista (por defeito) ou apaga as branches de preview do Neon (`preview/pr-*`)
+# que ficaram órfãs. O cleanup por-PR (neon-branches.yml) usa
+# `continue-on-error: true`, por isso deletes falhados deixam branches para trás.
+#
+# Segurança:
+#   - Só considera branches cujo nome começa por `preview/pr-`.
+#   - NUNCA apaga a branch primária/protegida (primary/default).
+#   - `mode=list` (default) é dry-run: só reporta, não apaga nada.
+#     Escolhe `mode=delete` para apagar de facto.
+#
+# Pré-requisitos: var `NEON_PROJECT_ID` + secret `NEON_API_KEY`.
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "list (dry-run) ou delete"
+        required: true
+        default: "list"
+        type: choice
+        options:
+          - list
+          - delete
+
+permissions:
+  contents: read
+
+jobs:
+  cleanup:
+    name: "Neon preview branches — ${{ inputs.mode }}"
+    runs-on: ubuntu-latest
+    env:
+      NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+      NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+      MODE: ${{ inputs.mode }}
+    steps:
+      - name: List / delete stale preview branches
+        run: |
+          set -euo pipefail
+          API="https://console.neon.tech/api/v2"
+
+          if [ -z "${NEON_API_KEY}" ] || [ -z "${NEON_PROJECT_ID}" ]; then
+            echo "::error::NEON_API_KEY (secret) e NEON_PROJECT_ID (var) são obrigatórios."
+            exit 1
+          fi
+
+          echo "A obter branches do projeto ${NEON_PROJECT_ID} ..."
+          BRANCHES_JSON="$(curl -sS --fail \
+            -H "Authorization: Bearer ${NEON_API_KEY}" \
+            -H "Accept: application/json" \
+            "${API}/projects/${NEON_PROJECT_ID}/branches")"
+
+          # Seleciona apenas preview/pr-* que NÃO sejam primárias/protegidas.
+          CANDIDATES="$(printf '%s' "${BRANCHES_JSON}" | jq -r '
+            .branches[]
+            | select(.name | startswith("preview/pr-"))
+            | select((.primary // false) == false)
+            | select((.protected // false) == false)
+            | "\(.id)\t\(.name)"')"
+
+          if [ -z "${CANDIDATES}" ]; then
+            echo "Nenhuma branch preview/pr-* órfã encontrada. Nada a fazer."
+            {
+              echo "### Neon Branch Cleanup"
+              echo ""
+              echo "Nenhuma branch \`preview/pr-*\` encontrada."
+            } >> "${GITHUB_STEP_SUMMARY}"
+            exit 0
+          fi
+
+          COUNT="$(printf '%s\n' "${CANDIDATES}" | wc -l | tr -d ' ')"
+          {
+            echo "### Neon Branch Cleanup (${MODE})"
+            echo ""
+            echo "Encontradas **${COUNT}** branches \`preview/pr-*\`:"
+            echo ""
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+          FAIL=0
+          while IFS=$'\t' read -r ID NAME; do
+            [ -z "${ID}" ] && continue
+            if [ "${MODE}" = "delete" ]; then
+              echo "A apagar ${NAME} (${ID}) ..."
+              if curl -sS --fail -X DELETE \
+                -H "Authorization: Bearer ${NEON_API_KEY}" \
+                "${API}/projects/${NEON_PROJECT_ID}/branches/${ID}" > /dev/null; then
+                echo "- 🗑️ apagada \`${NAME}\`" >> "${GITHUB_STEP_SUMMARY}"
+              else
+                echo "::warning::Falha ao apagar ${NAME} (${ID})"
+                echo "- ⚠️ falhou \`${NAME}\`" >> "${GITHUB_STEP_SUMMARY}"
+                FAIL=1
+              fi
+            else
+              echo "DRY-RUN — apagaria ${NAME} (${ID})"
+              echo "- 🔎 \`${NAME}\` (\`${ID}\`)" >> "${GITHUB_STEP_SUMMARY}"
+            fi
+          done <<< "${CANDIDATES}"
+
+          if [ "${MODE}" != "delete" ]; then
+            {
+              echo ""
+              echo "> Dry-run. Re-executa com **mode = delete** para apagar."
+            } >> "${GITHUB_STEP_SUMMARY}"
+          fi
+
+          exit "${FAIL}"
