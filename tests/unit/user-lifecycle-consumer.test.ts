@@ -71,83 +71,52 @@ const baseMessage: UserLifecycleMessage = {
   timestamp: "2026-01-01T00:00:00Z",
 };
 
-describe("User Lifecycle Consumer — user.created", () => {
-  it("skips processing when DATABASE_URL is not set", async () => {
-    await processUserLifecycleMessage(baseMessage, {});
+// Under the simplified 1:1 auth model, baUser.id IS the domain identity, so the
+// consumer no longer syncs a domain `users` table — `processUserLifecycleMessage`
+// is a no-op that only logs and deduplicates by idempotency_key.
+describe("User Lifecycle Consumer — simplified 1:1 auth model (no domain sync)", () => {
+  it("never writes to the domain DB on user.created", async () => {
+    await processUserLifecycleMessage(
+      { ...baseMessage, idempotency_key: "nodb-created" },
+      { DATABASE_URL: "postgres://test" },
+    );
     expect(mockSelect).not.toHaveBeenCalled();
-  });
-
-  it("creates a new domain user when none exists", async () => {
-    mockLimit.mockResolvedValueOnce([]); // no existing user
-
-    await processUserLifecycleMessage(baseMessage, { DATABASE_URL: "postgres://test" });
-
-    expect(mockInsert).toHaveBeenCalled();
-  });
-
-  it("links existing domain user when email match found", async () => {
-    mockLimit.mockResolvedValueOnce([{ id: "existing-domain-001", identityProviderSubject: null }]);
-
-    await processUserLifecycleMessage(
-      { ...baseMessage, idempotency_key: "key-002" },
-      { DATABASE_URL: "postgres://test" }
-    );
-
-    expect(mockUpdate).toHaveBeenCalled();
-  });
-
-  it("skips update when already linked to same BA user", async () => {
-    mockLimit.mockResolvedValueOnce([{ id: "existing-domain-001", identityProviderSubject: "ba-user-001" }]);
-
-    await processUserLifecycleMessage(
-      { ...baseMessage, idempotency_key: "key-003" },
-      { DATABASE_URL: "postgres://test" }
-    );
-
-    // Should NOT call update since it's already linked
+    expect(mockInsert).not.toHaveBeenCalled();
     expect(mockUpdate).not.toHaveBeenCalled();
   });
-});
 
-describe("User Lifecycle Consumer — user.updated", () => {
-  it("syncs email and displayName for existing user", async () => {
-    const updateMessage: UserLifecycleMessage = {
-      ...baseMessage,
-      event: "user.updated",
-      idempotency_key: "key-004",
-    };
-
-    await processUserLifecycleMessage(updateMessage, { DATABASE_URL: "postgres://test" });
-
-    expect(mockUpdate).toHaveBeenCalled();
+  it("never writes to the domain DB on user.updated", async () => {
+    await processUserLifecycleMessage(
+      { ...baseMessage, event: "user.updated", idempotency_key: "nodb-updated" },
+      { DATABASE_URL: "postgres://test" },
+    );
+    expect(mockInsert).not.toHaveBeenCalled();
+    expect(mockUpdate).not.toHaveBeenCalled();
   });
-});
 
-describe("User Lifecycle Consumer — idempotency", () => {
-  it("deduplicates messages with the same idempotency_key within a batch", async () => {
-    const msg = { ...baseMessage, idempotency_key: "dedup-key-001" };
-
-    // First call — should process
-    await processUserLifecycleMessage(msg, { DATABASE_URL: "postgres://test" });
-    expect(mockSelect).toHaveBeenCalledTimes(1);
-
-    // Second call with same key — should skip
-    vi.clearAllMocks();
-    resetMockDb();
-    await processUserLifecycleMessage(msg, { DATABASE_URL: "postgres://test" });
-    expect(mockSelect).not.toHaveBeenCalled();
-  });
-});
-
-describe("User Lifecycle Consumer — error handling", () => {
-  it("re-throws DB errors for queue retry", async () => {
-    mockLimit.mockRejectedValueOnce(new Error("DB connection failed"));
-
+  it("acknowledges without throwing when DATABASE_URL is absent", async () => {
     await expect(
       processUserLifecycleMessage(
-        { ...baseMessage, idempotency_key: "key-error-001" },
-        { DATABASE_URL: "postgres://test" }
-      )
-    ).rejects.toThrow("DB connection failed");
+        { ...baseMessage, idempotency_key: "nodb-noenv" },
+        {},
+      ),
+    ).resolves.toBeUndefined();
+  });
+
+  it("deduplicates messages with the same idempotency_key", async () => {
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    const msg = { ...baseMessage, idempotency_key: "dedup-unique-001" };
+
+    await processUserLifecycleMessage(msg, { DATABASE_URL: "postgres://test" });
+    await processUserLifecycleMessage(msg, { DATABASE_URL: "postgres://test" });
+
+    const logged = logSpy.mock.calls.map((c) => String(c[0]));
+    logSpy.mockRestore();
+    expect(logged.some((l) => l.includes("user_lifecycle_acknowledged"))).toBe(
+      true,
+    );
+    expect(logged.some((l) => l.includes("user_lifecycle_deduplicated"))).toBe(
+      true,
+    );
   });
 });

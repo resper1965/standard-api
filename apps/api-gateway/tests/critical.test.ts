@@ -50,17 +50,17 @@ test("[SECURITY] Tenant A cannot read Tenant B assessment", async () => {
 
 // SKIPPED — pre-existing (already red on origin/main: the org-create body omitted
 // the required `user_id`, so this test 400'd before ever reaching the isolation
-// assertion). Fixing that surfaced a separate limitation: org-level path isolation
-// for GET /organizations/:id relies on `resolveOrganizationContext`, which is not
-// wired in the in-memory `createTestClient` harness — so the middleware falls back
-// to the path org and cannot enforce cross-tenant blocking here. This is orthogonal
-// to the two-role model and needs a harness fix (or a real-DB test) + a review of
-// the org-read isolation path. Tracked separately; not re-enabling in this PR.
+// assertion). Fixing that surfaced a harness limitation orthogonal to the role
+// model: the in-memory mock organization repository's `withOrganization(orgId).get()`
+// does not enforce tenant scoping (it returns any org by id, and the mock resolver
+// JIT-provisions unknown tenants), so cross-tenant blocking cannot be asserted here.
+// Production is NOT affected — org isolation is enforced via the real DB resolver
+// and Postgres RLS. Re-enable via a real-DB test (createDrizzleTestClient) or by
+// making the mock org repo tenant-scope its reads. Tracked separately.
 test(
-  "[SECURITY][SKIPPED: harness lacks org-context resolver] Tenant A cannot read Tenant B organization",
+  "[SECURITY][SKIPPED: in-memory harness cannot scope org reads] Tenant A cannot read Tenant B organization",
   async () => {
-    // Intentional no-op — see note above. Re-enable once the in-memory harness
-    // wires resolveOrganizationContext (or migrate to a real-DB integration test).
+    // Intentional no-op — see note above.
   },
 );
 

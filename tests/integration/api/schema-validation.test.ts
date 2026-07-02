@@ -30,7 +30,7 @@ describe("Schema Validation — CreateAssessment", () => {
   it("accepts a valid payload", () => {
     const result = CreateAssessmentSchema.safeParse({
       name: "SOC 2 2024",
-      framework_ids: ["00000000-0000-0000-0000-000000000001"],
+      framework_ids: ["550e8400-e29b-41d4-a716-446655440000"],
     });
     expect(result.success).toBe(true);
   });
@@ -38,7 +38,7 @@ describe("Schema Validation — CreateAssessment", () => {
   it("rejects unknown fields (strictObject)", () => {
     const result = CreateAssessmentSchema.safeParse({
       name: "SOC 2",
-      framework_ids: ["00000000-0000-0000-0000-000000000001"],
+      framework_ids: ["550e8400-e29b-41d4-a716-446655440000"],
       malicious_field: "injected",
     });
     expect(result.success).toBe(false);
@@ -63,7 +63,7 @@ describe("Schema Validation — CreateAssessment", () => {
 
   it("rejects missing required 'name'", () => {
     const result = CreateAssessmentSchema.safeParse({
-      framework_ids: ["00000000-0000-0000-0000-000000000001"],
+      framework_ids: ["550e8400-e29b-41d4-a716-446655440000"],
     });
     expect(result.success).toBe(false);
   });
@@ -71,7 +71,7 @@ describe("Schema Validation — CreateAssessment", () => {
   it("rejects name exceeding 255 characters", () => {
     const result = CreateAssessmentSchema.safeParse({
       name: "x".repeat(256),
-      framework_ids: ["00000000-0000-0000-0000-000000000001"],
+      framework_ids: ["550e8400-e29b-41d4-a716-446655440000"],
     });
     expect(result.success).toBe(false);
   });
