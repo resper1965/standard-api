@@ -18,7 +18,7 @@ test("SOC triage with asyncCall returns 202 Accepted", async () => {
     {
       "x-standard-tenant-id": organizationId,
       "x-standard-actor-id": ids.actorId,
-      authorization: "Bearer dev:customer",
+      authorization: "Bearer dev:platform_admin",
     },
   );
   expect(result.response.status).toBe(202);
@@ -39,7 +39,7 @@ test("SOC triage without asyncCall returns 200 with triage result", async () => 
     {
       "x-standard-tenant-id": organizationId,
       "x-standard-actor-id": ids.actorId,
-      authorization: "Bearer dev:customer",
+      authorization: "Bearer dev:platform_admin",
     },
   );
   // Sync mode should return 200 (or 501 if LLM not configured, or 500 if provider throws)

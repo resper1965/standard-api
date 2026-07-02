@@ -3,7 +3,7 @@
   "info": {
     "title": "Standard GRC Platform - API Reference",
     "version": "1.0.0",
-    "description": "API-first agentic GRC platform for compliance assessments powered by the Secure Controls Framework (SCF). Features 7 specialized AI agents, assessment lifecycle management, document ingestion, knowledge base search, and multi-tenant authorization.\n\n---\n\n\n> **🤖 AI-Dev First**: Se você é um Agente Autônomo ou está configurando uma integração LLM, consuma nossa documentação contextual nativa em [`/llms-full.txt`](/llms-full.txt).\n  \n\n---\n\n\n## 🚦 API Policies & Guarantees\n\n### 1. Versioning Policy\nStandard GRC follows a strict, non-breaking versioning policy for `/api/v1/`:\n- **Additive Changes:** New fields in JSON responses are not considered breaking changes. Client SDKs must ignore unknown fields.\n- **Breaking Changes:** Any breaking change (renamed fields, removed fields, change of type) will result in a new API version (e.g., `/api/v2/`).\n- **Sunset Period:** Deprecated endpoints will continue to function and return a `Deprecation: true` header for at least **90 days** before removal.\n\n### 2. Rate Limits & AI Budget\n- **General API:** `100 requests / 10 seconds` per tenant.\n- **AI Endpoints (Intelligence & Agents):** Handled via Cloudflare AI Gateway. Large batches are enqueued.\n- **Circuit Breaker:** Requests loop-detected per tenant will return `429 Too Many Requests`.\n\n### 3. Asynchronous AI Operations (ADR-003)\nAI endpoints (like evaluate-evidence) are **asynchronous**.\n- They return `HTTP 202 Accepted` and a `job_id`.\n- You must rely on **Webhooks** or poll the job status.\n\n### 4. Idempotency\nPOST endpoints that generate artifacts (e.g., Gap Analysis Draft) support the `Idempotency-Key` header. Passing the same key multiple times will return the exact same cached response (`200 OK` or `409 Conflict` depending on the resource state) without regenerating the artifact.\n\n### 5. Webhooks & Security (HMAC)\nAll Webhooks dispatched by Standard GRC include an `x-standard-signature` header.\n- **Signature Algorithm:** HMAC-SHA256 of the raw payload using your Webhook Secret.\n- **Retry Policy:** Exponential backoff via Cloudflare Queues (up to 5 retries over 24h).\n\n\n---\n\n\n\n---\n\n## 📖 Manuais & Cookbook\n\nConsulte [`/llms-full.txt`](/llms-full.txt) para workflows completos e [`/llms.txt`](/llms.txt) para referência rápida."
+    "description": "API-first agentic GRC platform for compliance assessments powered by the Secure Controls Framework (SCF). Features 10 specialized AI agents, assessment lifecycle management, document ingestion, knowledge base search, and multi-tenant authorization.\n\n---\n\n\n> **🤖 AI-Dev First**: Se você é um Agente Autônomo ou está configurando uma integração LLM, consuma nossa documentação contextual nativa em [`/llms-full.txt`](/llms-full.txt).\n  \n\n---\n\n\n## 🚦 API Policies & Guarantees\n\n### 1. Versioning Policy\nStandard GRC follows a strict, non-breaking versioning policy for `/api/v1/`:\n- **Additive Changes:** New fields in JSON responses are not considered breaking changes. Client SDKs must ignore unknown fields.\n- **Breaking Changes:** Any breaking change (renamed fields, removed fields, change of type) will result in a new API version (e.g., `/api/v2/`).\n- **Sunset Period:** Deprecated endpoints will continue to function and return a `Deprecation: true` header for at least **90 days** before removal.\n\n### 2. Rate Limits & AI Budget\n- **General API:** `100 requests / 10 seconds` per tenant.\n- **AI Endpoints (Intelligence & Agents):** Handled via Cloudflare AI Gateway. Large batches are enqueued.\n- **Circuit Breaker:** Requests loop-detected per tenant will return `429 Too Many Requests`.\n\n### 3. Asynchronous AI Operations (ADR-003)\nAI endpoints (like evaluate-evidence) are **asynchronous**.\n- They return `HTTP 202 Accepted` and a `job_id`.\n- You must rely on **Webhooks** or poll the job status.\n\n### 4. Idempotency\nPOST endpoints that generate artifacts (e.g., Gap Analysis Draft) support the `Idempotency-Key` header. Passing the same key multiple times will return the exact same cached response (`200 OK` or `409 Conflict` depending on the resource state) without regenerating the artifact.\n\n### 5. Webhooks & Security (HMAC)\nAll Webhooks dispatched by Standard GRC include an `x-standard-signature` header.\n- **Signature Algorithm:** HMAC-SHA256 of the raw payload using your Webhook Secret.\n- **Retry Policy:** Exponential backoff via Cloudflare Queues (up to 5 retries over 24h).\n\n\n---\n\n\n\n---\n\n## 📖 Manuais & Cookbook\n\nConsulte [`/llms-full.txt`](/llms-full.txt) para workflows completos e [`/llms.txt`](/llms.txt) para referência rápida."
   },
   "servers": [
     {
@@ -128,6 +128,8 @@
                 "organization:update",
                 "organization:delete",
                 "membership:manage",
+                "apikey:read",
+                "apikey:manage",
                 "assessment:create",
                 "assessment:read",
                 "assessment:update",
@@ -223,6 +225,8 @@
                 "organization:update",
                 "organization:delete",
                 "membership:manage",
+                "apikey:read",
+                "apikey:manage",
                 "assessment:create",
                 "assessment:read",
                 "assessment:update",
@@ -987,6 +991,8 @@
                 "organization:update",
                 "organization:delete",
                 "membership:manage",
+                "apikey:read",
+                "apikey:manage",
                 "assessment:create",
                 "assessment:read",
                 "assessment:update",
@@ -1277,6 +1283,9 @@
           "approval_event_id": {
             "type": "string",
             "format": "uuid"
+          },
+          "exception_rationale": {
+            "type": "string"
           }
         },
         "required": [
@@ -2541,15 +2550,7 @@
               "type": "string",
               "enum": [
                 "platform_admin",
-                "tenant_admin",
-                "organization_admin",
-                "assessment_owner",
-                "assessor",
-                "reviewer",
-                "approver",
-                "auditor_readonly",
-                "integration_service",
-                "support_readonly",
+                "org_admin",
                 "system"
               ]
             },
@@ -2567,6 +2568,8 @@
                 "organization:update",
                 "organization:delete",
                 "membership:manage",
+                "apikey:read",
+                "apikey:manage",
                 "assessment:create",
                 "assessment:read",
                 "assessment:update",
@@ -5097,7 +5100,10 @@
                 "compliance.gate.evaluated",
                 "tpra.assessment.submitted",
                 "tpra.risk_score.created",
-                "tpra.vendor.created"
+                "tpra.vendor.created",
+                "tpra.assessment.completed",
+                "vendor.risk_score.updated",
+                "ledger.audit.alert"
               ]
             },
             "default": []
@@ -9942,6 +9948,8 @@
           "organization:update",
           "organization:delete",
           "membership:manage",
+          "apikey:read",
+          "apikey:manage",
           "assessment:create",
           "assessment:read",
           "assessment:update",
@@ -10788,15 +10796,7 @@
                   "type": "string",
                   "enum": [
                     "platform_admin",
-                    "tenant_admin",
-                    "organization_admin",
-                    "assessment_owner",
-                    "assessor",
-                    "reviewer",
-                    "approver",
-                    "auditor_readonly",
-                    "integration_service",
-                    "support_readonly",
+                    "org_admin",
                     "system"
                   ]
                 },
@@ -10814,6 +10814,8 @@
                     "organization:update",
                     "organization:delete",
                     "membership:manage",
+                    "apikey:read",
+                    "apikey:manage",
                     "assessment:create",
                     "assessment:read",
                     "assessment:update",
@@ -10982,6 +10984,8 @@
                 "organization:update",
                 "organization:delete",
                 "membership:manage",
+                "apikey:read",
+                "apikey:manage",
                 "assessment:create",
                 "assessment:read",
                 "assessment:update",
@@ -11104,6 +11108,8 @@
                 "organization:update",
                 "organization:delete",
                 "membership:manage",
+                "apikey:read",
+                "apikey:manage",
                 "assessment:create",
                 "assessment:read",
                 "assessment:update",
@@ -11199,6 +11205,8 @@
                 "organization:update",
                 "organization:delete",
                 "membership:manage",
+                "apikey:read",
+                "apikey:manage",
                 "assessment:create",
                 "assessment:read",
                 "assessment:update",
@@ -15239,15 +15247,7 @@
         "type": "string",
         "enum": [
           "platform_admin",
-          "tenant_admin",
-          "organization_admin",
-          "assessment_owner",
-          "assessor",
-          "reviewer",
-          "approver",
-          "auditor_readonly",
-          "integration_service",
-          "support_readonly",
+          "org_admin",
           "system"
         ]
       },
@@ -18096,15 +18096,7 @@
               "type": "string",
               "enum": [
                 "platform_admin",
-                "tenant_admin",
-                "organization_admin",
-                "assessment_owner",
-                "assessor",
-                "reviewer",
-                "approver",
-                "auditor_readonly",
-                "integration_service",
-                "support_readonly",
+                "org_admin",
                 "system"
               ]
             },
@@ -18122,6 +18114,8 @@
                 "organization:update",
                 "organization:delete",
                 "membership:manage",
+                "apikey:read",
+                "apikey:manage",
                 "assessment:create",
                 "assessment:read",
                 "assessment:update",
@@ -20371,7 +20365,10 @@
                 "compliance.gate.evaluated",
                 "tpra.assessment.submitted",
                 "tpra.risk_score.created",
-                "tpra.vendor.created"
+                "tpra.vendor.created",
+                "tpra.assessment.completed",
+                "vendor.risk_score.updated",
+                "ledger.audit.alert"
               ]
             }
           },
@@ -20762,7 +20759,10 @@
                 "compliance.gate.evaluated",
                 "tpra.assessment.submitted",
                 "tpra.risk_score.created",
-                "tpra.vendor.created"
+                "tpra.vendor.created",
+                "tpra.assessment.completed",
+                "vendor.risk_score.updated",
+                "ledger.audit.alert"
               ]
             }
           },
@@ -20812,7 +20812,10 @@
           "compliance.gate.evaluated",
           "tpra.assessment.submitted",
           "tpra.risk_score.created",
-          "tpra.vendor.created"
+          "tpra.vendor.created",
+          "tpra.assessment.completed",
+          "vendor.risk_score.updated",
+          "ledger.audit.alert"
         ]
       },
       "WorkflowApprovalType": {

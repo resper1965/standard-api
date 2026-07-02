@@ -191,7 +191,7 @@ function mapRow(row: Record<string, unknown>): MembershipRecord {
     role: String(
       row["role"] && row["role"] !== "member" && row["role"] !== "user"
         ? row["role"]
-        : "customer",
+        : "org_admin",
     ),
     status: String(row["status"] ?? "invited"),
     invited_at: row["invited_at"] ? String(row["invited_at"]) : null,

@@ -8,7 +8,7 @@
  *   - the created key appearing in the list
  *   - revoke flipping status to revoked
  *   - cross-tenant isolation on the keys collection
- *   - RBAC: minting keys requires authentication
+ *   - RBAC: org_admin can mint its own org's keys; unauthenticated cannot
  */
 import { createTestClient } from "../../apps/api-gateway/tests/helpers";
 import { expect, test } from "../test-kit";
@@ -108,12 +108,31 @@ test("[SECURITY] keys are isolated per tenant", async () => {
   }
 });
 
+test("[RBAC] org_admin can mint API keys for its own org", async () => {
+  const client = createTestClient();
+  const { organizationId } = await client.createTenantOrg();
+
+  // In the 2-role model the org_admin's sole attribution IS API-key management,
+  // so it can mint keys for its own organization.
+  const res = await client.send(
+    `/api/v1/organizations/${organizationId}/api-keys`,
+    "POST",
+    { name: "Org Admin Key", scopes: ["assessment:read"] },
+    {
+      ...client.authHeaders(organizationId, "org_admin"),
+      authorization: "Bearer dev:org_admin",
+    },
+  );
+
+  expect(res.response.status).toBe(201);
+});
+
 test("[RBAC] minting API keys requires authentication", async () => {
   const client = createTestClient();
   const { organizationId } = await client.createTenantOrg();
 
-  // Under the simplified 2-role model (platform_admin + customer) there is no
-  // "read-only" role: an authenticated `customer` legitimately mints keys for
+  // Under the simplified 2-role model (platform_admin + org_admin) there is no
+  // "read-only" role: an authenticated `org_admin` legitimately mints keys for
   // its OWN org (covered by the "returns a one-time raw key" test above), and
   // cross-tenant access is blocked by the isolation test above. The RBAC guard
   // that remains meaningful here is that the endpoint is protected — an

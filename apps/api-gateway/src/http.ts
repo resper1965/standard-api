@@ -375,8 +375,8 @@ export type RequestContext = {
       id: string;
       email: string;
       name: string;
-      /** Normalised role: "platform_admin" | "customer". Set by auth.middleware.ts. */
-      role: "platform_admin" | "customer";
+      /** Normalised role: "platform_admin" | "org_admin". Set by auth.middleware.ts. */
+      role: "platform_admin" | "org_admin";
       platformAdmin: boolean;
       approved: boolean;
       [key: string]: unknown;

@@ -7,9 +7,9 @@ import { describe, it, expect, vi } from "vitest";
 // ── Error Sanitization (mirrors packages/security/src/middleware/secure-error.ts) ─────
 
 const SENSITIVE_PATTERNS = [
-  /stack\s*:/i,
+  /stack/i,                  // matches the "stack" key (and stack-ish values)
   /at\s+\w+\s*\(/,           // stack trace line
-  /sql\s*:/i,
+  /sql/i,
   /password/i,
   /token/i,
   /secret/i,

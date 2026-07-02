@@ -23,20 +23,21 @@ test("MockAuthProvider cria auth context dev e bloqueia production", async () =>
     actorId: ids.actorId,
     organizationId: ids.organizationId,
     traceId: "trace-test-0001",
-    roles: ["customer"],
+    roles: ["org_admin"],
   });
 
   if (!auth) throw new Error("auth should be resolved");
   expect(auth.actor_id).toBe(ids.actorId);
   expect(auth.auth_method).toBe("mock_dev");
-  expect(auth.permissions).toContain("document:upload");
+  // org_admin's sole attribution is API-key management.
+  expect(auth.permissions).toContain("apikey:manage");
 
   try {
     await new MockAuthProvider("production").authenticate({
       actorId: ids.actorId,
       organizationId: ids.organizationId,
       traceId: "trace-test-0001",
-      roles: ["customer"],
+      roles: ["org_admin"],
     });
     throw new Error("production mock auth should fail");
   } catch (error) {
@@ -52,8 +53,8 @@ test("PolicyEngine (deprecated stub) always denies with policy_not_configured", 
       actor_type: "user",
       organization_id: ids.organizationId,
       organization_ids: [ids.orgId],
-      roles: ["customer"],
-      permissions: DEFAULT_ROLE_PERMISSIONS.customer,
+      roles: ["org_admin"],
+      permissions: DEFAULT_ROLE_PERMISSIONS.org_admin,
       auth_method: "mock_dev",
       issued_at: "2026-04-28T20:00:00.000Z",
       trace_id: "trace-test-0001",

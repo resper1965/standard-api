@@ -42,11 +42,13 @@ test("admin SCF import bloqueia usuário não admin", async () => {
   expect(result.response.status).toBe(403);
 });
 
-test("customer com permissions válidas pode buscar KB", async () => {
+test("org_admin (human) is blocked from KB search — GRC is via API key", async () => {
   const client = createTestClient();
   const created = await client.createAssessment(1);
 
-  // customer role has kb:search — should pass auth/RBAC (returns 200 or business error, NOT 403)
+  // 2-role model: org_admin's sole attribution is API-key management; it has no
+  // kb:search permission, so a human org_admin session is forbidden. The GRC
+  // work runs via API keys (M2M scopes) instead.
   const result = await client.send(
     `/api/v1/assessments/${created.assessmentId}/kb/search`,
     "POST",
@@ -58,15 +60,14 @@ test("customer com permissions válidas pode buscar KB", async () => {
     {
       "x-standard-tenant-id": created.organizationId,
       "x-standard-actor-id": ids.actorId,
-      authorization: "Bearer dev:customer",
+      authorization: "Bearer dev:org_admin",
     },
   );
 
-  // With 2-role model, customer has kb:search so request should NOT be 403
-  expect(result.response.status !== 403).toBe(true);
+  expect(result.response.status).toBe(403);
 });
 
-test("customer com permissions válidas pode criar agent run", async () => {
+test("org_admin (human) is blocked from creating an agent run", async () => {
   const client = createTestClient();
   const created = await client.createAssessment(1);
 
@@ -85,15 +86,14 @@ test("customer com permissions válidas pode criar agent run", async () => {
     {
       "x-standard-tenant-id": created.organizationId,
       "x-standard-actor-id": ids.actorId,
-      authorization: "Bearer dev:customer",
+      authorization: "Bearer dev:org_admin",
     },
   );
 
-  // With 2-role model, customer has agent:run+agent:create so request should NOT be 403
-  expect(result.response.status !== 403).toBe(true);
+  expect(result.response.status).toBe(403);
 });
 
-test("customer com permissions válidas pode criar approval", async () => {
+test("org_admin (human) is blocked from creating an approval", async () => {
   const client = createTestClient();
   const created = await client.createAssessment(1);
   const result = await client.send(
@@ -109,10 +109,9 @@ test("customer com permissions válidas pode criar approval", async () => {
     {
       "x-standard-tenant-id": created.organizationId,
       "x-standard-actor-id": ids.actorId,
-      authorization: "Bearer dev:customer",
+      authorization: "Bearer dev:org_admin",
     },
   );
 
-  // With 2-role model, customer has approval:create so request should NOT be 403
-  expect(result.response.status !== 403).toBe(true);
+  expect(result.response.status).toBe(403);
 });

@@ -137,7 +137,7 @@ export const apiKeysRoutes: RouteDefinition[] = [
     path: "/api/v1/organizations/:organizationId/api-keys",
     protected: true,
     requireActor: true,
-    permissions: ["organization:read"],
+    permissions: ["apikey:read"],
     openapi: {
       summary: "List API Keys",
       description:
@@ -220,7 +220,7 @@ export const apiKeysRoutes: RouteDefinition[] = [
     path: "/api/v1/organizations/:organizationId/api-keys",
     protected: true,
     requireActor: true,
-    permissions: ["organization:update"],
+    permissions: ["apikey:manage"],
     bodySchema: createApiKeyInput,
     openapi: {
       summary: "Create API Key",
@@ -314,7 +314,7 @@ export const apiKeysRoutes: RouteDefinition[] = [
     path: "/api/v1/organizations/:organizationId/api-keys/:keyId",
     protected: true,
     requireActor: true,
-    permissions: ["organization:read"],
+    permissions: ["apikey:read"],
     handler: async (context) => {
       const { organizationId, keyId } = context.params;
       const tenantCtx = await resolveOrgCtx(
@@ -358,7 +358,7 @@ export const apiKeysRoutes: RouteDefinition[] = [
     path: "/api/v1/organizations/:organizationId/api-keys/:keyId",
     protected: true,
     requireActor: true,
-    permissions: ["organization:update"],
+    permissions: ["apikey:manage"],
     bodySchema: updateApiKeyInput,
     openapi: {
       summary: "Update API Key",
@@ -443,7 +443,7 @@ export const apiKeysRoutes: RouteDefinition[] = [
     path: "/api/v1/organizations/:organizationId/api-keys/:keyId",
     protected: true,
     requireActor: true,
-    permissions: ["organization:update"],
+    permissions: ["apikey:manage"],
     handler: async (context) => {
       const { organizationId, keyId } = context.params;
       const tenantCtx = await resolveOrgCtx(
@@ -492,7 +492,7 @@ export const apiKeysRoutes: RouteDefinition[] = [
     path: "/api/v1/organizations/:organizationId/api-keys/:keyId/rotate",
     protected: true,
     requireActor: true,
-    permissions: ["organization:update"],
+    permissions: ["apikey:manage"],
     bodySchema: z.object({
       gracePeriodHours: z.number().int().min(0).max(168).default(24),
     }),
@@ -648,7 +648,7 @@ export const apiKeysRoutes: RouteDefinition[] = [
     path: "/api/v1/organizations/:organizationId/api-keys/:keyId/usage",
     protected: true,
     requireActor: true,
-    permissions: ["organization:read"],
+    permissions: ["apikey:read"],
     handler: async (context) => {
       const { organizationId, keyId } = context.params;
       const tenantCtx = await resolveOrgCtx(

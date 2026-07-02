@@ -51,14 +51,16 @@ export const approvalsRoutes: RouteDefinition[] = [
         report: "report:approve",
       } as const;
       const requiredPermission = permissionByGate[body.gate];
+      const rawSessionRole =
+        (session?.user?.role as string | undefined) ?? "org_admin";
       const sessionRole =
-        (session?.user?.role as string | undefined) ?? "customer";
+        rawSessionRole === "customer" ? "org_admin" : rawSessionRole;
       const gateRoleMap: Record<string, string[]> = {
-        "soa:approve": ["platform_admin", "customer"],
-        "gap:approve": ["platform_admin", "customer"],
-        "maturity:approve": ["platform_admin", "customer"],
-        "poam:approve": ["platform_admin", "customer"],
-        "report:approve": ["platform_admin", "customer"],
+        "soa:approve": ["platform_admin", "org_admin"],
+        "gap:approve": ["platform_admin", "org_admin"],
+        "maturity:approve": ["platform_admin", "org_admin"],
+        "poam:approve": ["platform_admin", "org_admin"],
+        "report:approve": ["platform_admin", "org_admin"],
       };
       const allowedRoles = gateRoleMap[requiredPermission] ?? [];
       if (!allowedRoles.includes(sessionRole)) {

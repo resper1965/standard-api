@@ -257,7 +257,7 @@ async function resolveSessionAuthContext(
         name: user.name ?? "",
         platformAdmin: isPlatformAdmin,
         approved: isApproved,
-        role: isPlatformAdmin ? "platform_admin" : "customer",
+        role: isPlatformAdmin ? "platform_admin" : "org_admin",
       },
       session: {
         id: session.id,

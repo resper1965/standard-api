@@ -32,13 +32,21 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "node",
+    setupFiles: ["./vitest.setup.ts"],
     include: [
       "packages/*/src/**/*.test.ts",
       "apps/*/src/**/*.test.ts",
       "workers/*/src/**/*.test.ts",
       "tests/**/*.test.ts",
     ],
-    exclude: ["**/node_modules/**", "**/dist/**"],
+    exclude: [
+      "**/node_modules/**",
+      "**/dist/**",
+      // These use a bespoke tsx runner (tests/test-kit.ts) that executes on
+      // import — they are run via `pnpm test:contracts` / `pnpm test`, not vitest.
+      "tests/contracts/**",
+      "tests/e2e-synthetic/**",
+    ],
     coverage: {
       provider: "v8",
       reporter: ["text", "json-summary"],

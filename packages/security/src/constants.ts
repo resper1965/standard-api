@@ -8,6 +8,8 @@ export const ALL_PERMISSIONS = [
   "organization:update",
   "organization:delete",
   "membership:manage",
+  "apikey:read",
+  "apikey:manage",
   "assessment:create",
   "assessment:read",
   "assessment:update",
@@ -91,101 +93,16 @@ export const ALL_PERMISSIONS = [
 
 export const DEFAULT_ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   platform_admin: [...ALL_PERMISSIONS],
-  customer: [
-    // Organization
-    "organization:create",
+  // org_admin — the organization administrator. Sole human attribution is
+  // managing the org's API keys (plus reading its own org context). All GRC
+  // work (assessments, gap, poam, reports, …) runs via those API keys / M2M
+  // scopes, NOT via this human role — so those permissions are intentionally
+  // absent here and any GRC route will 403 for a bare org_admin session.
+  org_admin: [
     "organization:read",
-    "organization:update",
-    "organization:delete",
-    "membership:manage",
-    // Assessment lifecycle
-    "assessment:create",
-    "assessment:read",
-    "assessment:update",
-    "assessment:delete",
-    "assessment:run_workflow",
-    "assessment:close",
-    "assessment:cancel",
-    // Documents
-    "document:upload",
-    "document:read",
-    "document:delete",
-    "document:reprocess",
-    "document:write",
-    // KB
-    "kb:index",
-    "kb:search",
-    "kb:read",
-    "kb:write",
-    // SCF (read-only)
-    "scf:read",
-    // Scope & SoA
-    "scope:create",
-    "scope:update",
-    "scope:approve",
-    "soa:create",
-    "soa:update",
-    "soa:submit_review",
-    "soa:approve",
-    "soa:read",
-    // Evidence
-    "evidence:run",
-    "evidence:read",
-    // Gap Analysis
-    "gap:create",
-    "gap:update",
-    "gap:submit_review",
-    "gap:approve",
-    "gap:read",
-    // Maturity
-    "maturity:create",
-    "maturity:update",
-    "maturity:submit_review",
-    "maturity:approve",
-    "maturity:read",
-    // POA&M
-    "poam:create",
-    "poam:update",
-    "poam:submit_review",
-    "poam:approve",
-    "poam:read",
-    // Reporting
-    "report:create",
-    "report:render",
-    "report:approve",
-    "report:read",
-    "report:download",
-    "report:update",
-    // Agents
-    "agent:run",
-    "agent:dry_run",
-    "agent:read_runs",
-    "agent:read",
-    "agent:create",
-    // Webhooks
-    "webhook:create",
-    "webhook:read",
-    "webhook:update",
-    "webhook:delete",
-    // Artifacts
-    "artifact:create",
-    "artifact:read",
-    "artifact:update",
-    "artifact:approve",
-    // Approvals
-    "approval:create",
-    "approval:read",
-    // Privacy
-    "privacy:create",
-    "privacy:read",
-    "privacy:update",
-    "privacy:delete",
-    // Intelligence
-    "intelligence:read",
-    "intelligence:create",
-    // Audit
-    "audit:read",
-    // Tenant (own org usage/stats)
+    "apikey:read",
+    "apikey:manage",
+    // Own-org usage/stats
     "tenant:read",
   ],
   system: [
