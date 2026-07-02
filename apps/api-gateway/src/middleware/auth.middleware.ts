@@ -17,6 +17,7 @@
  * always false even when platform_admin=true in the DB.
  */
 import type { StandardAuth } from "@standard/auth";
+import { isPlatformAdminEmail } from "@standard/auth";
 import { ApiError } from "../errors/api-error";
 import { isApiKeyToken, extractApiKeyToken } from "../utils/api-key-crypto";
 import type { RequestContext } from "../http";
@@ -121,6 +122,16 @@ async function resolveSessionAuthContext(
     const user = rawSession.user as any;
     const session = rawSession.session as any;
 
+    // Emails em PLATFORM_ADMIN_EMAILS sÃ£o SEMPRE platform admin (e aprovados),
+    // independentemente da DB/KV. Calculado aqui no topo para tambÃ©m proteger
+    // contra revogaÃ§Ã£o: a conta master nÃ£o pode ser trancada fora por um
+    // `revocations:user:*` (ex.: outro admin a bani-la) â€” senÃ£o o 401 abaixo
+    // dispararia antes do override e a garantia "sempre admin" cairia.
+    const emailForcesAdmin = isPlatformAdminEmail(
+      user.email,
+      context.env?.PLATFORM_ADMIN_EMAILS,
+    );
+
     // 2a. Hard revocation check (user banned/deleted/locked)
     let isBanned = false;
     let isSoftRevoked = false;
@@ -138,8 +149,14 @@ async function resolveSessionAuthContext(
       }
     }
 
-    if (isBanned) {
+    if (isBanned && !emailForcesAdmin) {
       throw new ApiError("UNAUTHORIZED", "Session revoked.", 401);
+    }
+    if (isBanned && emailForcesAdmin) {
+      // Não logar o email (dado identificável) — só o user id opaco.
+      console.warn(
+        `[standard:auth] Ignoring revocation for configured platform admin (user ${user.id})`,
+      );
     }
 
     // 2b. Read platform_admin + approved directly from DB.
@@ -184,10 +201,15 @@ async function resolveSessionAuthContext(
       }
     }
 
-    const isPlatformAdmin = flags
-      ? flags.platform_admin
-      : !!(user.platformAdmin ?? user.platform_admin);
-    const isApproved = flags ? flags.approved : !!user.approved;
+    // Override por email (emailForcesAdmin calculado no topo): estes emails sÃ£o
+    // SEMPRE platform admin e aprovados, independentemente da DB/KV/criaÃ§Ã£o.
+    const isPlatformAdmin =
+      emailForcesAdmin ||
+      (flags
+        ? flags.platform_admin
+        : !!(user.platformAdmin ?? user.platform_admin));
+    const isApproved =
+      emailForcesAdmin || (flags ? flags.approved : !!user.approved);
 
     if (!isApproved && !isPlatformAdmin) {
       throw new ApiError(

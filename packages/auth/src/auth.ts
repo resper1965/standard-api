@@ -11,6 +11,7 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { admin } from "better-auth/plugins";
+import { createAuthMiddleware, APIError } from "better-auth/api";
 import {
   baUser,
   baSession,
@@ -32,8 +33,79 @@ export type AuthEnv = {
   ALLOWED_ORIGINS?: string;
   /** Ambiente actual: 'production' | 'staging' | 'development' */
   STANDARD_ENV?: string;
+  /** Emails sempre platform admin (CSV). Binding wrangler, NÃƒO process.env. */
+  PLATFORM_ADMIN_EMAILS?: string;
   /** ServiÃ§o de email injectado pelo API Gateway */
   email?: SendEmail;
+};
+
+/**
+ * Endpoints Better Auth que efectivamente DEFINEM uma password a partir de
+ * input do utilizador. Alinhado com a lista canÃ³nica do plugin oficial
+ * `haveIBeenPwned` (`/sign-up/email`, `/change-password`, `/reset-password`).
+ *
+ * A validaÃ§Ã£o de complexidade SÃ“ deve correr nestes paths. Em particular NÃƒO
+ * deve correr no `/sign-in/email`: o Better Auth chama `password.hash` no caminho
+ * de falha do login (mitigaÃ§Ã£o de timing-attack) com a password submetida, e
+ * lanÃ§ar aÃ­ revelaria a existÃªncia do utilizador e quebraria essa mitigaÃ§Ã£o.
+ */
+const PASSWORD_SETTING_PATHS = new Set<string>([
+  "/sign-up/email",
+  "/change-password",
+  "/reset-password",
+]);
+
+/**
+ * Regras de complexidade de password. Devolve a lista de requisitos em falta
+ * (vazia = vÃ¡lida). MÃ­nimo de comprimento Ã© tratado pelo `minPasswordLength`.
+ */
+const passwordComplexityErrors = (password: string): string[] => {
+  const errors: string[] = [];
+  if (!/[A-Z]/.test(password)) errors.push("uppercase letter");
+  if (!/[a-z]/.test(password)) errors.push("lowercase letter");
+  if (!/[0-9]/.test(password)) errors.push("number");
+  if (!/[^A-Za-z0-9]/.test(password)) errors.push("special character");
+  return errors;
+};
+
+/**
+ * Fallback de Platform Admins quando `PLATFORM_ADMIN_EMAILS` nÃ£o estÃ¡ definido.
+ * Mantido para retrocompatibilidade â€” a conta master da Bekaa.
+ */
+export const DEFAULT_PLATFORM_ADMIN_EMAILS = ["resper@bekaa.eu"] as const;
+
+/**
+ * Fonte Ãšnica de verdade para a lista de emails Platform Admin.
+ *
+ * Faz parsing de `PLATFORM_ADMIN_EMAILS` (CSV), normaliza para lowercase e
+ * remove vazios. Se nÃ£o estiver definido, devolve {@link DEFAULT_PLATFORM_ADMIN_EMAILS}.
+ *
+ * Usado em dois sÃ­tios para garantir que estes emails sÃ£o SEMPRE platform admin:
+ *  - `databaseHooks.user.create` (auto-provisioning no momento da criaÃ§Ã£o)
+ *  - `auth.middleware` (override por request, independente do estado da DB)
+ *
+ * @param raw  valor cru de `PLATFORM_ADMIN_EMAILS` (env var)
+ */
+export const parsePlatformAdminEmails = (raw?: string | null): string[] => {
+  const list = raw
+    ? raw
+        .split(",")
+        .map((e) => e.trim().toLowerCase())
+        .filter(Boolean)
+    : [...DEFAULT_PLATFORM_ADMIN_EMAILS];
+  return list;
+};
+
+/**
+ * True se `email` pertencer Ã  lista de Platform Admins configurada.
+ * ComparaÃ§Ã£o case-insensitive.
+ */
+export const isPlatformAdminEmail = (
+  email: string | null | undefined,
+  raw?: string | null,
+): boolean => {
+  if (!email) return false;
+  return parsePlatformAdminEmails(raw).includes(email.trim().toLowerCase());
 };
 
 /**
@@ -87,6 +159,34 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
     logger: { disabled: false },
     plugins: [admin()],
 
+    // ─── Request hooks ───────────────────────────────────────────────────────────────
+    // Valida a complexidade da password APENAS nos endpoints que definem uma
+    // password a partir de input do utilizador. Mantém o `password.hash` puro,
+    // evitando lançar no caminho de timing-mitigation do sign-in (que revelaria
+    // a existência do utilizador).
+    hooks: {
+      before: createAuthMiddleware(async (ctx) => {
+        if (!PASSWORD_SETTING_PATHS.has(ctx.path)) return;
+        const body = (ctx.body ?? {}) as {
+          password?: unknown;
+          newPassword?: unknown;
+        };
+        const password =
+          typeof body.password === "string"
+            ? body.password
+            : typeof body.newPassword === "string"
+              ? body.newPassword
+              : undefined;
+        if (password === undefined) return;
+        const errors = passwordComplexityErrors(password);
+        if (errors.length) {
+          throw new APIError("BAD_REQUEST", {
+            message: `Password requires: ${errors.join(", ")}.`,
+          });
+        }
+      }),
+    },
+
     // ————————————————————————————————————————————————————————————————————————————————
     emailAndPassword: {
       enabled: true,
@@ -95,16 +195,11 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
       maxPasswordLength: 128,
 
       password: {
+        // hash Ã© um primitivo puro: NÃ£o valida complexidade aqui. O Better Auth
+        // invoca hash() tambÃ©m no caminho de falha do sign-in (mitigaÃ§Ã£o de
+        // timing-attack), por isso a validaÃ§Ã£o vive no hook `before` abaixo,
+        // restrito aos PASSWORD_SETTING_PATHS.
         hash: async (password: string): Promise<string> => {
-          // Complexidade: uppercase, lowercase, dÃ­gito, especial
-          const errors: string[] = [];
-          if (!/[A-Z]/.test(password)) errors.push("uppercase letter");
-          if (!/[a-z]/.test(password)) errors.push("lowercase letter");
-          if (!/[0-9]/.test(password)) errors.push("number");
-          if (!/[^A-Za-z0-9]/.test(password)) errors.push("special character");
-          if (errors.length) {
-            throw new Error(`Password requires: ${errors.join(", ")}.`);
-          }
           const { hashPassword } = await import("@better-auth/utils/password");
           return hashPassword(password);
         },
@@ -119,32 +214,6 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
             await import("@better-auth/utils/password");
           return verifyPassword(hash, password);
         },
-      },
-
-      sendVerificationEmail: async ({
-        user,
-        url,
-      }: {
-        user: { email: string; name: string | null };
-        url: string;
-      }) => {
-        if (env.email) {
-          await sendStandardEmail(
-            env.email,
-            {
-              type: "verification",
-              to: user.email,
-              firstName: user.name || "User",
-              verificationUrl: url,
-              expiresIn: "24 hours",
-            },
-            { domain: "bekaa.eu" },
-          ).catch((err: unknown) =>
-            console.error("[standard:auth] sendVerificationEmail failed:", err),
-          );
-        } else {
-          console.log(`[standard:auth:dev] verify â†’ ${url}`);
-        }
       },
 
       sendResetPassword: async ({
@@ -169,7 +238,46 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
             console.error("[standard:auth] sendResetPassword failed:", err),
           );
         } else {
-          console.log(`[standard:auth:dev] reset â†’ ${url}`);
+          // NÃ£o logar a URL: contÃ©m token de reset de uso Ãºnico.
+          console.log(
+            "[standard:auth:dev] reset email requested (email binding not configured)",
+          );
+        }
+      },
+    },
+
+    // ─── Email verification ──────────────────────────────────────────────────────────
+    // O callback de verificação pertence a `emailVerification`, NÃO a
+    // `emailAndPassword`. Estava mal colocado e por isso o Better Auth nunca o
+    // invocava — com `requireEmailVerification: true`, o email de verificação
+    // custom não era enviado.
+    emailVerification: {
+      sendVerificationEmail: async ({
+        user,
+        url,
+      }: {
+        user: { email: string; name: string | null };
+        url: string;
+      }) => {
+        if (env.email) {
+          await sendStandardEmail(
+            env.email,
+            {
+              type: "verification",
+              to: user.email,
+              firstName: user.name || "User",
+              verificationUrl: url,
+              expiresIn: "24 hours",
+            },
+            { domain: "bekaa.eu" },
+          ).catch((err: unknown) =>
+            console.error("[standard:auth] sendVerificationEmail failed:", err),
+          );
+        } else {
+          // NÃ£o logar a URL: contÃ©m token de verificaÃ§Ã£o de uso Ãºnico.
+          console.log(
+            "[standard:auth:dev] verification email requested (email binding not configured)",
+          );
         }
       },
     },
@@ -181,20 +289,12 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
       user: {
         create: {
           before: async (user: any) => {
-            // Auto-provisionamento do Platform Admin master account
-            // Platform admin emails: configurable via PLATFORM_ADMIN_EMAILS env var (comma-separated).
-            // Falls back to hardcoded default for backward compatibility.
-            const platformAdminEnv =
-              typeof process !== "undefined"
-                ? process.env?.PLATFORM_ADMIN_EMAILS
-                : undefined;
-            const platformAdmins = platformAdminEnv
-              ? platformAdminEnv
-                  .split(",")
-                  .map((e) => e.trim())
-                  .filter(Boolean)
-              : ["resper@bekaa.eu"];
-            if (platformAdmins.includes(user.email)) {
+            // Auto-provisionamento do Platform Admin master account.
+            // Lista configurÃ¡vel via PLATFORM_ADMIN_EMAILS (CSV); fallback para
+            // DEFAULT_PLATFORM_ADMIN_EMAILS. Fonte Ãºnica: parsePlatformAdminEmails.
+            // NOTA: em Cloudflare Workers os `[vars]` do wrangler chegam pelo
+            // `env` injectado, NÃƒO por process.env â€” usar env.PLATFORM_ADMIN_EMAILS.
+            if (isPlatformAdminEmail(user.email, env.PLATFORM_ADMIN_EMAILS)) {
               console.log(
                 `[standard:auth] Auto-provisioning Platform Admin for: ${user.email}`,
               );
@@ -283,7 +383,11 @@ export const createAuth = (env: AuthEnv, db: DrizzleClient) => {
     // â”€â”€ Advanced â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     advanced: {
       useSecureCookies: true,
-      generateId: () => crypto.randomUUID(),
+      // `generateId` vive em `advanced.database` no Better Auth 1.6.x
+      // (`advanced.generateId` deixou de existir).
+      database: {
+        generateId: () => crypto.randomUUID(),
+      },
       // Cookies cross-subdomain: partilha sessÃ£o entre
       // standard.bekaa.eu (frontend) e standard-api.bekaa.eu (API gateway)
       crossSubDomainCookies: {
