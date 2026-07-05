@@ -120,6 +120,15 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
+      # The auth DB (control plane) lives on a separate Neon branch and its
+      # hand-written SQL (0002, 0003) is NOT in the drizzle-kit journal, so
+      # `migrate.ts` above never touches it. Apply it here so every production
+      # deploy keeps the auth schema current. The runner is idempotent.
+      - name: Run Auth DB Migrations (raw, journal-external)
+        run: pnpm --filter @standard/schemas tsx migrate-auth-raw.ts
+        env:
+          AUTH_DATABASE_URL: ${{ secrets.AUTH_DATABASE_URL }}
+
   deploy:
     name: Deploy Cloudflare Workers
     runs-on: ubuntu-latest
