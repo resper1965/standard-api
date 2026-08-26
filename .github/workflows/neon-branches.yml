@@ -42,9 +42,9 @@ jobs:
           SLUG=$(echo "${HEAD_REF}" | tr '[:upper:]' '[:lower:]' | sed 's#[^a-z0-9]#-#g; s#-\{2,\}#-#g; s#^-##; s#-$##' | cut -c1-40)
           echo "name=preview-pr-${{ github.event.number }}-${SLUG}" >> "${GITHUB_OUTPUT}"
 
-      # username and database are required for the action to emit db_url* -
-      # without them it exits 0 in about a second with an empty connection
-      # string, which then surfaced as an unrelated error further down.
+      # The action creates the branch but does not reliably emit db_url* at this
+      # pin (the log shows "created successfully" with an empty output). Build
+      # the connection string from the Neon API instead, which is deterministic.
       - name: Create Neon Branch
         id: create_neon_branch
         uses: neondatabase/create-branch-action@fb620d43d4c565abaf088b848a4e28e5c4ea4d9c
@@ -52,8 +52,48 @@ jobs:
           project_id: ${{ vars.NEON_PROJECT_ID }}
           branch_name: ${{ steps.neon_branch.outputs.name }}
           api_key: ${{ secrets.NEON_API_KEY }}
-          username: ${{ vars.NEON_DB_ROLE || 'neondb_owner' }}
+          role: ${{ vars.NEON_DB_ROLE || 'neondb_owner' }}
           database: ${{ vars.NEON_DB_NAME || 'neondb' }}
+
+      - name: Resolve branch connection string
+        id: neon_db
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+          BRANCH_NAME: ${{ steps.neon_branch.outputs.name }}
+          DB_ROLE: ${{ vars.NEON_DB_ROLE || 'neondb_owner' }}
+          DB_NAME: ${{ vars.NEON_DB_NAME || 'neondb' }}
+        run: |
+          set -euo pipefail
+          api() { curl -sS -f -H "Authorization: Bearer ${NEON_API_KEY}" "https://console.neon.tech/api/v2/$1"; }
+
+          BRANCH_ID=$(api "projects/${PROJECT_ID}/branches" \
+            | jq -r --arg n "${BRANCH_NAME}" '.branches[] | select(.name == $n) | .id' | head -n1)
+          if [ -z "${BRANCH_ID}" ]; then
+            echo "::error title=Neon branch missing::No branch named ${BRANCH_NAME} in project ${PROJECT_ID}."
+            exit 1
+          fi
+
+          HOST=$(api "projects/${PROJECT_ID}/branches/${BRANCH_ID}/endpoints" \
+            | jq -r '.endpoints[] | select(.type == "read_write") | .host' | head -n1)
+          if [ -z "${HOST}" ]; then
+            echo "::error title=No compute endpoint::Branch ${BRANCH_NAME} has no read_write endpoint."
+            exit 1
+          fi
+          POOLED_HOST=$(echo "${HOST}" | sed 's#^\([^.]*\)\.#\1-pooler.#')
+
+          PASSWORD=$(api "projects/${PROJECT_ID}/branches/${BRANCH_ID}/roles/${DB_ROLE}/reveal_password" \
+            | jq -r '.password')
+          if [ -z "${PASSWORD}" ] || [ "${PASSWORD}" = "null" ]; then
+            echo "::error title=Role password unavailable::Could not reveal password for role ${DB_ROLE}."
+            exit 1
+          fi
+
+          echo "::add-mask::${PASSWORD}"
+          URL="postgresql://${DB_ROLE}:${PASSWORD}@${POOLED_HOST}/${DB_NAME}?sslmode=require"
+          echo "::add-mask::${URL}"
+          echo "url=${URL}" >> "${GITHUB_OUTPUT}"
+          echo "Resolved pooled endpoint ${POOLED_HOST} for branch ${BRANCH_NAME}."
 
       - name: Setup pnpm
         uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1
@@ -72,25 +112,10 @@ jobs:
       - name: Install Wrangler
         run: npm install -g wrangler@latest
 
-      # The Neon action reports success and returns an empty connection string
-      # when project_id or api_key are missing, so the failure only surfaced
-      # three steps later as "DATABASE_URL environment variable is not set" -
-      # which reads like a code bug rather than missing configuration. Fail here,
-      # naming the actual cause.
-      - name: Verify Neon branch was created
-        env:
-          DB_URL: ${{ steps.create_neon_branch.outputs.db_url_with_pooler }}
-        run: |
-          if [ -z "${DB_URL}" ]; then
-            echo "::error title=Neon branch not created::Create Neon Branch returned an empty connection string. Check that the repository variable NEON_PROJECT_ID and the secret NEON_API_KEY are both set."
-            exit 1
-          fi
-          echo "Neon branch ready."
-
       - name: Run Migrations
         run: pnpm db:migrate
         env:
-          DATABASE_URL: ${{ steps.create_neon_branch.outputs.db_url_with_pooler }}
+          DATABASE_URL: ${{ steps.neon_db.outputs.url }}
 
       - name: Build Frontend
         run: pnpm --filter @standard/web build
