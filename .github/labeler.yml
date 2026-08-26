@@ -1,57 +1,73 @@
-version: 1
+# Configuration for actions/labeler v5+.
+#
+# The previous file used the `version:` / `labels:` / `matcher:` shape from a
+# different labeler action, so v5 read the top-level `version` key as a label
+# name and failed every run with:
+#   found unexpected type for label 'version' (should be array of config options)
+#
+# v5 expects: <label-name>: - changed-files: - any-glob-to-any-file: [...]
+# `sync-labels: true` is set on the workflow step, so per-label `sync` is gone.
 
-labels:
-  - label: "api-gateway"
-    sync: true
-    matcher:
-      files: ["apps/api-gateway/**"]
+api-gateway:
+  - changed-files:
+      - any-glob-to-any-file: ["apps/api-gateway/**"]
 
-  - label: "frontend"
-    sync: true
-    matcher:
-      files: ["apps/web/**"]
+frontend:
+  - changed-files:
+      - any-glob-to-any-file: ["apps/web/**"]
 
-  - label: "packages"
-    sync: true
-    matcher:
-      files: ["packages/**"]
+packages:
+  - changed-files:
+      - any-glob-to-any-file: ["packages/**"]
 
-  - label: "workers"
-    sync: true
-    matcher:
-      files: ["workers/**"]
+workers:
+  - changed-files:
+      - any-glob-to-any-file: ["workers/**"]
 
-  - label: "infrastructure"
-    sync: true
-    matcher:
-      files: ["infra/**", ".github/workflows/**", "*.toml"]
+infrastructure:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "infra/**"
+          - ".github/workflows/**"
+          - "**/*.toml"
 
-  - label: "security"
-    sync: true
-    matcher:
-      files: ["packages/security/**", "SECURITY.md", ".github/workflows/security-scan.yml"]
+security:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "packages/security/**"
+          - "SECURITY.md"
+          - ".github/workflows/security-scan.yml"
 
-  - label: "documentation"
-    sync: true
-    matcher:
-      files: ["docs/**", "*.md", "adr/**"]
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "docs/**"
+          - "**/*.md"
+          - "adr/**"
 
-  - label: "tests"
-    sync: true
-    matcher:
-      files: ["tests/**", "evals/**", "**/*.test.ts"]
+tests:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "tests/**"
+          - "evals/**"
+          - "**/*.test.ts"
 
-  - label: "agent-runtime"
-    sync: true
-    matcher:
-      files: ["packages/agent-runtime/**", "prompts/**"]
+agent-runtime:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "packages/agent-runtime/**"
+          - "prompts/**"
 
-  - label: "scf"
-    sync: true
-    matcher:
-      files: ["packages/scf-core/**", "packages/scf-catalog/**"]
+scf:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "packages/scf-core/**"
+          - "packages/scf-catalog/**"
 
-  - label: "assessment"
-    sync: true
-    matcher:
-      files: ["packages/assessment-engine/**", "packages/soa/**", "packages/gap-analysis/**", "packages/poam/**"]
+assessment:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "packages/assessment-engine/**"
+          - "packages/soa/**"
+          - "packages/gap-analysis/**"
+          - "packages/poam/**"
