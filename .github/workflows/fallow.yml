@@ -71,7 +71,30 @@ jobs:
         with:
           node-version: "22"
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1
+        with:
+          version: "9.15.9"
+
+      - name: Install
+        run: pnpm install --no-frozen-lockfile
+
+      # Without real coverage the audit estimates CRAP from export references,
+      # which reads every exported function as untested. Extracting a helper
+      # then raises the score while the code gets simpler, and adding tests
+      # does not lower it - three rounds on #131 chased findings that only
+      # existed because of the estimate.
+      - name: Collect coverage for CRAP scoring
+        run: pnpm coverage
+        continue-on-error: true
+
       - name: Run Fallow Audit on PR
-        run: npx -y fallow audit
+        run: |
+          if [ -f coverage/coverage-final.json ]; then
+            npx -y fallow audit --coverage coverage/coverage-final.json
+          else
+            echo "::warning title=No coverage::Coverage was not produced; CRAP scores fall back to estimates from export references."
+            npx -y fallow audit
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
