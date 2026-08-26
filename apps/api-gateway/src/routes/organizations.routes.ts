@@ -85,7 +85,12 @@ export const organizationsRoutes: RouteDefinition[] = [
     permissions: ["organization:read"],
     openapi: {
       summary: "List Organizations by Tenant",
-      description: "Returns all organizations for the specified tenant.",
+      deprecated: true,
+      description:
+        "Returns all organizations for the specified tenant. DEPRECATED:" +
+        " `tenant` is legacy vocabulary for `organization_id` (renamed in" +
+        " migration 0032). This alias returns a Deprecation header and is" +
+        " scheduled for removal after Wed, 25 Nov 2026 00:00:00 GMT.",
       request: {
         params: z.object({ organizationId: z.string() }),
       },
@@ -115,7 +120,14 @@ export const organizationsRoutes: RouteDefinition[] = [
         requireOrganizationId({ organizationId }),
       );
       const organizations = await tenantDb.list();
-      return json({ data: organizations, trace_id: traceId });
+      const response = json({ data: organizations, trace_id: traceId });
+      response.headers.set("Deprecation", "true");
+      response.headers.set("Sunset", "Wed, 25 Nov 2026 00:00:00 GMT");
+      response.headers.set(
+        "Link",
+        '</api/v1/organizations>; rel="successor-version"',
+      );
+      return response;
     },
   },
 
