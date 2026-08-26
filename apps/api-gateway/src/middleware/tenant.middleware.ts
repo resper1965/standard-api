@@ -147,9 +147,20 @@ export const resolveOrganizationContext = async (
         resolvedOrgId = resolved.organization_id;
       }
     } catch (e) {
+      // Fail closed. Continuing here would fall through to the raw,
+      // client-supplied identifier as the tenant context - turning a database
+      // blip into a tenant-isolation failure (audit M-06).
       console.error(
         "[standard:tenant-middleware] Failed to resolve tenant context:",
         e,
+      );
+      // 503 rather than a new error code: ApiErrorCode is part of the public
+      // API contract and consumers validate against it, so a security fix is
+      // not the place to widen it. The status carries the semantics.
+      throw new ApiError(
+        "INTERNAL_ERROR",
+        "Unable to resolve organization context.",
+        503,
       );
     }
   }

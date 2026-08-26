@@ -5,7 +5,7 @@ import { ApiError } from "../errors/api-error";
 import { hashPassword } from "@better-auth/utils/password";
 
 import { sql } from "drizzle-orm";
-import { createDb } from "../adapters/db";
+import { createDisposableDb } from "../adapters/db";
 
 const RecoveryBodySchema = z.object({
   email: z.string().email(),
@@ -54,6 +54,7 @@ export const recoveryRoutes: RouteDefinition[] = [
         );
       }
 
+      let closeAuthDb: (() => Promise<void>) | undefined;
       try {
         const authDbUrlRaw =
           (context.env as any).AUTH_DATABASE_URL || context.env?.DATABASE_URL;
@@ -68,9 +69,13 @@ export const recoveryRoutes: RouteDefinition[] = [
         // Strip ZERO-WIDTH SPACE (BOM) if it exists, which corrupts the URL!
         const authDbUrl = authDbUrlRaw.replace(/^\uFEFF/, "").trim();
 
-        const authDb = (context.env as any).HYPERDRIVE_AUTH
-          ? createDb(authDbUrl, (context.env as any).HYPERDRIVE_AUTH)
-          : createDb(authDbUrl, undefined);
+        // Disposable: a fresh Pool per request must be released, otherwise this
+        // unauthenticated endpoint leaks a Neon connection on every call (M-07).
+        const authDbHandle = (context.env as any).HYPERDRIVE_AUTH
+          ? createDisposableDb(authDbUrl, (context.env as any).HYPERDRIVE_AUTH)
+          : createDisposableDb(authDbUrl, undefined);
+        closeAuthDb = authDbHandle.close;
+        const authDb = authDbHandle.db;
 
         // Find the user first
         const users = await authDb.execute(
@@ -99,6 +104,8 @@ export const recoveryRoutes: RouteDefinition[] = [
           err instanceof Error ? err.message : "unknown error",
         );
         throw new ApiError("INTERNAL_ERROR", "Password reset failed.", 500);
+      } finally {
+        await closeAuthDb?.();
       }
     },
   },
@@ -140,6 +147,7 @@ export const recoveryRoutes: RouteDefinition[] = [
         throw new ApiError("FORBIDDEN", "Invalid recovery secret", 403);
       }
 
+      let closeAuthDb: (() => Promise<void>) | undefined;
       try {
         const authDbUrlRaw =
           (context.env as any).AUTH_DATABASE_URL || context.env?.DATABASE_URL;
@@ -151,9 +159,13 @@ export const recoveryRoutes: RouteDefinition[] = [
           );
         }
         const authDbUrl = authDbUrlRaw.replace(/^\uFEFF/, "").trim();
-        const authDb = (context.env as any).HYPERDRIVE_AUTH
-          ? createDb(authDbUrl, (context.env as any).HYPERDRIVE_AUTH)
-          : createDb(authDbUrl, undefined);
+        // Disposable: a fresh Pool per request must be released, otherwise this
+        // unauthenticated endpoint leaks a Neon connection on every call (M-07).
+        const authDbHandle = (context.env as any).HYPERDRIVE_AUTH
+          ? createDisposableDb(authDbUrl, (context.env as any).HYPERDRIVE_AUTH)
+          : createDisposableDb(authDbUrl, undefined);
+        closeAuthDb = authDbHandle.close;
+        const authDb = authDbHandle.db;
 
         // Only works when no platform_admin exists yet
         const existingAdmins = await authDb.execute(
@@ -208,6 +220,8 @@ export const recoveryRoutes: RouteDefinition[] = [
           err instanceof Error ? err.message : "unknown error",
         );
         throw new ApiError("INTERNAL_ERROR", "Bootstrap failed", 500);
+      } finally {
+        await closeAuthDb?.();
       }
     },
   },

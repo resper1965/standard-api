@@ -22,7 +22,7 @@
     "lint": "node scripts/lint.mjs && pnpm -r --if-present lint",
     "typecheck": "pnpm -r --if-present typecheck",
     "test": "pnpm -r --if-present test",
-    "test:unit": "pnpm -r --if-present --filter \"./packages/*\" test",
+    "test:unit": "pnpm -r --if-present --filter \"./packages/*\" --filter \"./workers/*\" test",
     "test:integration": "pnpm --filter @standard/api-gateway test && pnpm --filter @standard/workflows test",
     "test:contracts": "tsx tests/contracts/run-tests.ts",
     "test:security": "pnpm --filter @standard/security test && pnpm --filter @standard/api-gateway test",
