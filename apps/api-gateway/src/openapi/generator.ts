@@ -279,6 +279,58 @@ function postProcessPaths(spec: any): void {
   }
 }
 
+/**
+ * Field documentation, applied to the emitted components after generation.
+ *
+ * `.openapi({ description })` on a Zod schema does not survive: this project
+ * converts schemas with its own zod-converter, which reads `def.type` and
+ * `def.checks` and nothing else, so the library's metadata is dropped. Rather
+ * than leave decoration in the schema files that silently does nothing, the
+ * text lives here and is written onto the generated component.
+ *
+ * Keyed "ComponentName.field". A key naming a component or field that does not
+ * exist is a no-op, and the test alongside this file fails on it.
+ */
+export const FIELD_DOCS: Record<
+  string,
+  { description: string; example?: string | number | boolean }
+> = {
+  // Two identifiers, both strings, and not interchangeable. A client keying on
+  // one while joining on the other matches nothing and fails silently - a
+  // customer lost three nightly assessment runs to exactly that.
+  "ScfControlResponse.control_id": {
+    description:
+      "Surrogate primary key for this control row. Opaque UUID, unique per SCF version: the same control has a different control_id in each version. Use it for links between Standard resources, never as a join key against your own catalogue.",
+    example: "9f1c2d3e-4a5b-6c7d-8e9f-0a1b2c3d4e5f",
+  },
+  "ScfControlResponse.control_code": {
+    description:
+      "The control's identifier in the Secure Controls Framework, stable across SCF versions. This is the value to join on when reconciling with your own catalogue or another tool's export.",
+    example: "GOV-01",
+  },
+};
+
+/** Returns the keys that matched nothing, so drift is visible rather than silent. */
+export function annotateFields(spec: any): string[] {
+  const orphans: string[] = [];
+
+  for (const [key, doc] of Object.entries(FIELD_DOCS)) {
+    const [component, field] = key.split(".");
+    const target =
+      spec?.components?.schemas?.[component as string]?.properties?.[
+        field as string
+      ];
+    if (!target) {
+      orphans.push(key);
+      continue;
+    }
+    target.description = doc.description;
+    if (doc.example !== undefined) target.example = doc.example;
+  }
+
+  return orphans;
+}
+
 export function generateOpenApiSpec() {
   if (cachedSpec) {
     return cachedSpec;
@@ -308,6 +360,7 @@ export function generateOpenApiSpec() {
   }
 
   postProcessPaths(cachedSpec);
+  annotateFields(cachedSpec);
 
   return cachedSpec;
 }

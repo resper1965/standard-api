@@ -11721,6 +11721,8 @@ components:
         control_id:
           type: string
           format: uuid
+          description: 'Surrogate primary key for this control row. Opaque UUID, unique per SCF version: the same control has a different control_id in each version. Use it for links between Standard resources, never as a join key against your own catalogue.'
+          example: 9f1c2d3e-4a5b-6c7d-8e9f-0a1b2c3d4e5f
         scf_version_id:
           type: string
           format: uuid
@@ -11729,6 +11731,8 @@ components:
           format: uuid
         control_code:
           type: string
+          description: The control's identifier in the Secure Controls Framework, stable across SCF versions. This is the value to join on when reconciling with your own catalogue or another tool's export.
+          example: GOV-01
         control_title:
           type: string
         control_description:

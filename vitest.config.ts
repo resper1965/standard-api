@@ -49,7 +49,11 @@ export default defineConfig({
     ],
     coverage: {
       provider: "v8",
-      reporter: ["text", "json-summary"],
+      // "json" emits coverage/coverage-final.json, the Istanbul per-function
+      // format `fallow audit --coverage` needs. Without it the PR Risk Audit
+      // estimates CRAP from export references, which reads every exported
+      // function as untested and rises when code is decomposed.
+      reporter: ["text", "json-summary", "json"],
       include: ["packages/*/src/**/*.ts", "apps/*/src/**/*.ts"],
       exclude: ["**/*.test.ts", "**/*.d.ts", "**/node_modules/**"],
       thresholds: {

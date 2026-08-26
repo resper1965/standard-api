@@ -86,17 +86,59 @@ describe("RESPONSE_SCHEMAS", () => {
   // A renamed route would leave its key orphaned here and the endpoint would
   // silently fall back to the generic response — documented, but shapeless,
   // and nothing would fail. This is that alarm.
-  it("keys every entry to a route that exists", async () => {
-    const { RESPONSE_SCHEMAS } = await import("../response-schemas");
-    const { routes } = await import("../../app");
+  // Importing app.ts pulls in the whole route table and every module behind
+  // it, which takes ~4.5s here - close enough to the 5s default that the test
+  // passed alone and timed out inside the full suite. The work is real, so
+  // the timeout is raised rather than the assertion weakened.
+  it(
+    "keys every entry to a route that exists",
+    { timeout: 30_000 },
+    async () => {
+      const { RESPONSE_SCHEMAS } = await import("../response-schemas");
+      const { routes } = await import("../../app");
 
-    const real = new Set(
-      (routes as { method: string; path: string }[]).map(
-        (r) => `${r.method.toUpperCase()} ${r.path}`,
-      ),
-    );
-    const orphans = Object.keys(RESPONSE_SCHEMAS).filter((k) => !real.has(k));
+      const real = new Set(
+        (routes as { method: string; path: string }[]).map(
+          (r) => `${r.method.toUpperCase()} ${r.path}`,
+        ),
+      );
+      const orphans = Object.keys(RESPONSE_SCHEMAS).filter((k) => !real.has(k));
 
-    expect(orphans).toEqual([]);
+      expect(orphans).toEqual([]);
+    },
+  );
+});
+
+describe("FIELD_DOCS", () => {
+  // A renamed component or field would leave the documentation pointing at
+  // nothing, and the spec would quietly lose it. annotateFields reports what
+  // it could not place.
+  it("places every entry on a component that exists", async () => {
+    const { annotateFields, FIELD_DOCS } = await import("../generator");
+
+    const spec = {
+      components: {
+        schemas: Object.entries(FIELD_DOCS).reduce<Record<string, any>>(
+          (acc, [key]) => {
+            const [component, field] = key.split(".");
+            acc[component as string] ??= { properties: {} };
+            acc[component as string].properties[field as string] = {
+              type: "string",
+            };
+            return acc;
+          },
+          {},
+        ),
+      },
+    };
+
+    expect(annotateFields(spec)).toEqual([]);
+  });
+
+  it("reports a key it could not place instead of dropping it", async () => {
+    const { annotateFields } = await import("../generator");
+    expect(
+      annotateFields({ components: { schemas: {} } }).length,
+    ).toBeGreaterThanOrEqual(1);
   });
 });
