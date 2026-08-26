@@ -11,15 +11,15 @@
     "test:watch": "vitest",
     "db:generate": "drizzle-kit generate --config drizzle.config.ts",
     "db:generate:auth": "drizzle-kit generate --config drizzle-auth.config.ts",
-    "db:migrate": "tsx --env-file=../../.env migrate.ts",
+    "db:migrate": "tsx --env-file-if-exists=../../.env migrate.ts",
     "db:migrate:auth": "drizzle-kit migrate --config drizzle-auth.config.ts",
     "db:migrate:kit": "drizzle-kit migrate --config drizzle.config.ts",
-    "db:seed": "tsx --env-file=../../.env src/seed.ts",
-    "db:seed:scf": "tsx --env-file=../../.env src/seed-scf-catalog.ts",
-    "db:seed:scf:dry-run": "tsx --env-file=../../.env src/seed-scf-catalog.ts --dry-run",
-    "db:seed:strm": "tsx --env-file=../../.env src/seed-strm-bundle.ts",
-    "db:seed:strm:dry-run": "tsx --env-file=../../.env src/seed-strm-bundle.ts --dry-run",
-    "db:lifecycle-proof": "tsx --env-file=../../.env src/lifecycle-proof.ts"
+    "db:seed": "tsx --env-file-if-exists=../../.env src/seed.ts",
+    "db:seed:scf": "tsx --env-file-if-exists=../../.env src/seed-scf-catalog.ts",
+    "db:seed:scf:dry-run": "tsx --env-file-if-exists=../../.env src/seed-scf-catalog.ts --dry-run",
+    "db:seed:strm": "tsx --env-file-if-exists=../../.env src/seed-strm-bundle.ts",
+    "db:seed:strm:dry-run": "tsx --env-file-if-exists=../../.env src/seed-strm-bundle.ts --dry-run",
+    "db:lifecycle-proof": "tsx --env-file-if-exists=../../.env src/lifecycle-proof.ts"
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^8.5.0",
