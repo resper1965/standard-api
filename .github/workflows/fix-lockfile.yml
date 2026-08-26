@@ -1,5 +1,12 @@
 name: Fix Lockfile
 
+# This workflow commits a regenerated lockfile, so it genuinely needs write.
+# Declared explicitly rather than inherited, so the scope is visible and
+# reviewable instead of defaulting to every scope the repository allows.
+permissions:
+  contents: write
+
+
 on:
   workflow_dispatch:
 

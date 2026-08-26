@@ -6,11 +6,13 @@
 **Method:** Static analysis + local execution of the complete CI battery
 **Report (rendered):** https://claude.ai/code/artifact/a605aba6-ebaa-4a43-b7e9-2a29bf9cc999
 
-> **Handling.** This repository is public. Findings C-02 and C-03 describe
-> cross-organization access defects whose fixes are not yet deployed to
-> production, so exploitation detail is deliberately withheld here and shared
-> through the private channel in `SECURITY.md`. Until those fixes ship, treat
-> this document as describing live exposure.
+> **Handling.** This report was committed while the repository was public, and
+> the owner has since decided to return it to private. Findings C-02 and C-03
+> describe cross-organization access defects, so exploitation detail was removed
+> and shared through the private channel in `SECURITY.md`. It stays out of this
+> file: git history is not a place to put a reproduction, and visibility can
+> change again. The window of public exposure was roughly an hour — short, but
+> long enough that shipping the C-02/C-03 fixes remains the real mitigation.
 
 ## Executive Summary
 
