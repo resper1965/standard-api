@@ -1,4 +1,6 @@
 import { OpenApiGeneratorV3 } from "@asteasolutions/zod-to-openapi";
+import type { RouteConfig } from "@asteasolutions/zod-to-openapi";
+import { z } from "@standard/schemas";
 import { registry } from "./registry";
 import type { RouteDefinition } from "../http";
 import { convertZodToOpenApi } from "./zod-converter";
@@ -11,6 +13,77 @@ let cachedSpec: any = null;
  * Registers all routes with OpenAPI configurations into the central registry.
  * This should be called once at startup (e.g., from app.ts) to break circular dependencies.
  */
+/** Turns "/api/v1/scf/versions/:id/controls" into "SCF" for grouping. */
+function tagForPath(path: string): string {
+  const segments = path.replace(/^\/api\/v\d+\//, "").split("/");
+  const head = segments[0] ?? "misc";
+  return head === "scf" ? "SCF" : head.replace(/-/g, " ");
+}
+
+/** Human-readable fallback summary, e.g. "GET /api/v1/poam/{id}". */
+function fallbackSummary(method: string, openapiPath: string): string {
+  return `${method.toUpperCase()} ${openapiPath}`;
+}
+
+/**
+ * Builds a minimal but valid OpenAPI operation for a route that declares no
+ * `openapi` block. Only 57 of 352 routes ever declared one, so the published
+ * spec listed 51 paths and omitted /scf/* and /poam/* entirely - the gap a
+ * customer hit when integrating. A generated stub is thinner than a
+ * hand-written one, but an endpoint that appears with its parameters,
+ * auth and permissions beats an endpoint that does not appear at all.
+ */
+function synthesizeOperation(
+  route: RouteDefinition,
+  openapiPath: string,
+): Omit<RouteConfig, "method" | "path"> {
+  const paramNames = Array.from(
+    openapiPath.matchAll(/\{([a-zA-Z0-9_]+)\}/g),
+    (m) => m[1] as string,
+  );
+
+  const description = [
+    "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet.",
+    route.permissions?.length
+      ? `Requires permission(s): ${route.permissions.join(", ")}.`
+      : null,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  const config: Record<string, unknown> = {
+    tags: [tagForPath(route.path)],
+    summary: fallbackSummary(route.method, openapiPath),
+    description,
+    responses: {
+      200: { description: "Successful response." },
+      400: { description: "Validation error." },
+      401: { description: "Authentication required." },
+      403: { description: "Insufficient permissions or scope." },
+      404: { description: "Resource not found." },
+    },
+  };
+
+  if (paramNames.length > 0) {
+    config.request = {
+      params: z.object(
+        Object.fromEntries(
+          paramNames.map((name) => [
+            name,
+            z.string().openapi({ description: `${name} path parameter.` }),
+          ]),
+        ),
+      ),
+    };
+  }
+
+  if (route.protected === false && route.authRequired === false) {
+    config.security = [];
+  }
+
+  return config as Omit<RouteConfig, "method" | "path">;
+}
+
 export function registerRoutesForOpenApi(routes: RouteDefinition[]) {
   routes.forEach((route) => {
     if (route.openapi) {
@@ -43,6 +116,13 @@ export function registerRoutesForOpenApi(routes: RouteDefinition[]) {
         method: route.method.toLowerCase() as any,
         path: openapiPath,
         ...route.openapi,
+      });
+    } else {
+      const openapiPath = route.path.replace(/:([a-zA-Z0-9_]+)/g, "{$1}");
+      registry.registerPath({
+        method: route.method.toLowerCase() as any,
+        path: openapiPath,
+        ...synthesizeOperation(route, openapiPath),
       });
     }
   });

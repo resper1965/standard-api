@@ -29,7 +29,7 @@
     "test:evaluations": "tsx evals/run-evals.ts",
     "test:regression": "tsx evals/regression/run-regression.ts",
     "test:synthetic-e2e": "tsx tests/e2e-synthetic/run-tests.ts",
-    "test:ci": "pnpm lint && pnpm check:migrations && pnpm typecheck && pnpm test:unit && pnpm test:contracts && pnpm test:security && pnpm test:regression && pnpm test:evaluations && pnpm test:synthetic-e2e && pnpm build",
+    "test:ci": "pnpm lint && pnpm check:migrations && pnpm check:openapi && pnpm typecheck && pnpm test:unit && pnpm test:contracts && pnpm test:security && pnpm test:regression && pnpm test:evaluations && pnpm test:synthetic-e2e && pnpm build",
     "db:generate": "pnpm --filter @standard/schemas db:generate",
     "db:migrate": "pnpm --filter @standard/schemas db:migrate",
     "dev:api": "pnpm --filter @standard/api-gateway dev",
@@ -44,7 +44,8 @@
     "db:seed:scf": "pnpm --filter @standard/schemas db:seed:scf",
     "db:seed:strm": "pnpm --filter @standard/schemas db:seed:strm",
     "db:seed:strm:dry-run": "pnpm --filter @standard/schemas db:seed:strm:dry-run",
-    "db:studio": "pnpm --filter @standard/schemas exec drizzle-kit studio --config drizzle.config.ts"
+    "db:studio": "pnpm --filter @standard/schemas exec drizzle-kit studio --config drizzle.config.ts",
+    "check:openapi": "tsx scripts/generate-openapi.ts --check"
   },
   "lint-staged": {
     "*.{ts,js}": [
