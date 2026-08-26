@@ -25,6 +25,18 @@ import {
   GapAnalysisVersionResponseSchema,
   GapFindingResponseSchema,
   GapAnalysisValidationResponseSchema,
+  // POA&M
+  PoamVersionResponseSchema,
+  PoamItemResponseSchema,
+  PoamMilestoneResponseSchema,
+  PoamDependencyResponseSchema,
+  PoamValidationResponseSchema,
+  PoamSummaryResponseSchema,
+  // Risk
+  RiskRegisterEntrySchema,
+  RiskRegisterExportSchema,
+  ScfRiskResponseSchema,
+  ScfThreatResponseSchema,
 } from "@standard/schemas";
 
 /**
@@ -274,6 +286,77 @@ export const RESPONSE_SCHEMAS: Record<string, z.ZodTypeAny> = {
   }),
   "POST /api/v1/poam/architect-remediation": z.object({
     data: z.record(z.string(), z.unknown()),
+    trace_id: traceId,
+  }),
+
+  // ── POA&M ─────────────────────────────────────────────────────────────
+  "POST /api/v1/assessments/:assessmentId/poam/draft":
+    PoamVersionResponseSchema,
+  "GET /api/v1/assessments/:assessmentId/poam": list(PoamVersionResponseSchema),
+  "GET /api/v1/assessments/:assessmentId/poam-summary":
+    PoamSummaryResponseSchema,
+  // Same summarize() call as the assessment-scoped route above, addressed by
+  // version instead.
+  "GET /api/v1/poam/:poamVersionId/summary": PoamSummaryResponseSchema,
+  // `terminology` carries the localised labels the UI renders POA&M states
+  // with; it sits alongside the version rather than inside it.
+  "GET /api/v1/poam/:poamVersionId": item(
+    PoamVersionResponseSchema.extend({
+      terminology: z.record(z.string(), z.unknown()),
+    }),
+  ),
+  "GET /api/v1/poam/:poamVersionId/items": paginated(PoamItemResponseSchema),
+  "POST /api/v1/poam/:poamVersionId/validate": PoamValidationResponseSchema,
+  "POST /api/v1/poam/:poamVersionId/submit-review": PoamVersionResponseSchema,
+  "POST /api/v1/poam/:poamVersionId/approve": PoamVersionResponseSchema,
+  "POST /api/v1/poam/:poamVersionId/regenerate": PoamVersionResponseSchema,
+  "POST /api/v1/poam/:poamVersionId/items/bulk-update": list(
+    PoamItemResponseSchema,
+  ),
+  "POST /api/v1/poam/:poamVersionId/dependencies/detect": list(
+    PoamDependencyResponseSchema,
+    total,
+  ),
+  "GET /api/v1/poam-items/:poamItemId": item(PoamItemResponseSchema),
+  "PATCH /api/v1/poam-items/:poamItemId": PoamItemResponseSchema,
+  "GET /api/v1/poam-items/:poamItemId/milestones": list(
+    PoamMilestoneResponseSchema,
+  ),
+  "POST /api/v1/poam-items/:poamItemId/milestones": PoamMilestoneResponseSchema,
+  "PATCH /api/v1/poam-milestones/:milestoneId": PoamMilestoneResponseSchema,
+
+  // ── Risk register ─────────────────────────────────────────────────────
+  "POST /api/v1/assessments/:id/risk-register": z.object({
+    data: RiskRegisterEntrySchema,
+    trace_id: traceId,
+  }),
+  "GET /api/v1/assessments/:id/risk-register": list(
+    RiskRegisterEntrySchema,
+    total,
+  ),
+  "GET /api/v1/assessments/:id/risk-register/:entryId": z.object({
+    data: RiskRegisterEntrySchema,
+    trace_id: traceId,
+  }),
+  "PATCH /api/v1/assessments/:id/risk-register/:entryId": z.object({
+    data: RiskRegisterEntrySchema,
+    trace_id: traceId,
+  }),
+  "DELETE /api/v1/assessments/:id/risk-register/:entryId": z.object({
+    success: z.boolean(),
+    trace_id: traceId,
+  }),
+  "GET /api/v1/assessments/:id/risk-register/export": RiskRegisterExportSchema,
+
+  // ── Risk and threat catalogues ────────────────────────────────────────
+  "GET /api/v1/risk-catalog": list(ScfRiskResponseSchema, total),
+  "GET /api/v1/risk-catalog/:riskId": z.object({
+    data: ScfRiskResponseSchema,
+    trace_id: traceId,
+  }),
+  "GET /api/v1/threat-catalog": list(ScfThreatResponseSchema, total),
+  "GET /api/v1/threat-catalog/:threatId": z.object({
+    data: ScfThreatResponseSchema,
     trace_id: traceId,
   }),
 };

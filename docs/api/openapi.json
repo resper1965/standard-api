@@ -28644,7 +28644,132 @@
         ],
         "responses": {
           "200": {
-            "description": "Successful response."
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "poam_version_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "organization_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "assessment_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "version_number": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "exclusiveMinimum": true
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "draft",
+                        "under_review",
+                        "approved",
+                        "superseded",
+                        "archived"
+                      ]
+                    },
+                    "source_gap_analysis_version_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "source_maturity_assessment_version_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "framework_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "scf_version_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "generated_by_agent_run_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "created_by": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "created_at": {
+                      "type": "string"
+                    },
+                    "submitted_for_review_at": {
+                      "type": "string"
+                    },
+                    "approved_by": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "approved_at": {
+                      "type": "string"
+                    },
+                    "approval_event_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "superseded_by": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "trace_id": {
+                      "type": "string",
+                      "minLength": 8
+                    },
+                    "metadata": {
+                      "type": "object",
+                      "properties": {
+                        "limitations": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "default": []
+                        },
+                        "assumptions": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "default": []
+                        },
+                        "source_status": {
+                          "type": "string"
+                        }
+                      },
+                      "default": {
+                        "limitations": [],
+                        "assumptions": []
+                      },
+                      "additionalProperties": {}
+                    }
+                  },
+                  "required": [
+                    "poam_version_id",
+                    "organization_id",
+                    "assessment_id",
+                    "version_number",
+                    "status",
+                    "source_gap_analysis_version_id",
+                    "framework_id",
+                    "scf_version_id",
+                    "created_by",
+                    "created_at",
+                    "trace_id"
+                  ]
+                }
+              }
+            }
           },
           "400": {
             "description": "Validation error."
@@ -28683,7 +28808,148 @@
         ],
         "responses": {
           "200": {
-            "description": "Successful response."
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "poam_version_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "organization_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "assessment_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "version_number": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "exclusiveMinimum": true
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "draft",
+                              "under_review",
+                              "approved",
+                              "superseded",
+                              "archived"
+                            ]
+                          },
+                          "source_gap_analysis_version_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "source_maturity_assessment_version_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "framework_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "scf_version_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "generated_by_agent_run_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "created_by": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "created_at": {
+                            "type": "string"
+                          },
+                          "submitted_for_review_at": {
+                            "type": "string"
+                          },
+                          "approved_by": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "approved_at": {
+                            "type": "string"
+                          },
+                          "approval_event_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "superseded_by": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "trace_id": {
+                            "type": "string",
+                            "minLength": 8
+                          },
+                          "metadata": {
+                            "type": "object",
+                            "properties": {
+                              "limitations": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                },
+                                "default": []
+                              },
+                              "assumptions": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                },
+                                "default": []
+                              },
+                              "source_status": {
+                                "type": "string"
+                              }
+                            },
+                            "default": {
+                              "limitations": [],
+                              "assumptions": []
+                            },
+                            "additionalProperties": {}
+                          }
+                        },
+                        "required": [
+                          "poam_version_id",
+                          "organization_id",
+                          "assessment_id",
+                          "version_number",
+                          "status",
+                          "source_gap_analysis_version_id",
+                          "framework_id",
+                          "scf_version_id",
+                          "created_by",
+                          "created_at",
+                          "trace_id"
+                        ]
+                      }
+                    },
+                    "trace_id": {
+                      "type": "string",
+                      "example": "abc-123-def"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "trace_id"
+                  ]
+                }
+              }
+            }
           },
           "400": {
             "description": "Validation error."
@@ -28722,7 +28988,58 @@
         ],
         "responses": {
           "200": {
-            "description": "Successful response."
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "assessment_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "poam_version_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "total_items": {
+                      "type": "integer"
+                    },
+                    "by_priority": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "number"
+                      }
+                    },
+                    "by_status": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "number"
+                      }
+                    },
+                    "by_action_type": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "number"
+                      }
+                    },
+                    "trace_id": {
+                      "type": "string",
+                      "minLength": 8
+                    }
+                  },
+                  "required": [
+                    "assessment_id",
+                    "poam_version_id",
+                    "total_items",
+                    "by_priority",
+                    "by_status",
+                    "by_action_type",
+                    "trace_id"
+                  ]
+                }
+              }
+            }
           },
           "400": {
             "description": "Validation error."
@@ -28761,7 +29078,137 @@
         ],
         "responses": {
           "200": {
-            "description": "Successful response."
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "poam_version_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "organization_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "assessment_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "version_number": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "exclusiveMinimum": true
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "draft",
+                        "under_review",
+                        "approved",
+                        "superseded",
+                        "archived"
+                      ]
+                    },
+                    "source_gap_analysis_version_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "source_maturity_assessment_version_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "framework_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "scf_version_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "generated_by_agent_run_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "created_by": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "created_at": {
+                      "type": "string"
+                    },
+                    "submitted_for_review_at": {
+                      "type": "string"
+                    },
+                    "approved_by": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "approved_at": {
+                      "type": "string"
+                    },
+                    "approval_event_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "superseded_by": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "trace_id": {
+                      "type": "string",
+                      "example": "abc-123-def"
+                    },
+                    "metadata": {
+                      "type": "object",
+                      "properties": {
+                        "limitations": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "default": []
+                        },
+                        "assumptions": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "default": []
+                        },
+                        "source_status": {
+                          "type": "string"
+                        }
+                      },
+                      "default": {
+                        "limitations": [],
+                        "assumptions": []
+                      },
+                      "additionalProperties": {}
+                    },
+                    "terminology": {
+                      "type": "object",
+                      "additionalProperties": {}
+                    }
+                  },
+                  "required": [
+                    "poam_version_id",
+                    "organization_id",
+                    "assessment_id",
+                    "version_number",
+                    "status",
+                    "source_gap_analysis_version_id",
+                    "framework_id",
+                    "scf_version_id",
+                    "created_by",
+                    "created_at",
+                    "trace_id",
+                    "terminology"
+                  ]
+                }
+              }
+            }
           },
           "400": {
             "description": "Validation error."
@@ -28800,7 +29247,245 @@
         ],
         "responses": {
           "200": {
-            "description": "Successful response."
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "poam_item_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "organization_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "assessment_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "poam_version_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "related_gap_finding_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "source_maturity_score_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "soa_item_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "framework_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "framework_requirement_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "scf_version_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "scf_domain_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "scf_control_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "poam_code": {
+                            "type": "string"
+                          },
+                          "corrective_action": {
+                            "type": "string"
+                          },
+                          "action_type": {
+                            "type": "string",
+                            "enum": [
+                              "policy_update",
+                              "procedure_creation",
+                              "technical_implementation",
+                              "evidence_collection",
+                              "governance_improvement",
+                              "monitoring_improvement",
+                              "training",
+                              "third_party_action",
+                              "risk_acceptance",
+                              "validation_required",
+                              "other"
+                            ]
+                          },
+                          "priority": {
+                            "type": "string",
+                            "enum": [
+                              "low",
+                              "medium",
+                              "high",
+                              "critical",
+                              "urgent"
+                            ]
+                          },
+                          "severity": {
+                            "type": "string",
+                            "enum": [
+                              "informational",
+                              "low",
+                              "medium",
+                              "high",
+                              "critical"
+                            ]
+                          },
+                          "risk_rating": {
+                            "type": "string"
+                          },
+                          "effort_estimate": {
+                            "type": "string",
+                            "enum": [
+                              "small",
+                              "medium",
+                              "large",
+                              "extra_large",
+                              "unknown"
+                            ]
+                          },
+                          "suggested_owner": {
+                            "type": "string"
+                          },
+                          "owner_role": {
+                            "type": "string"
+                          },
+                          "due_date": {
+                            "type": "string"
+                          },
+                          "target_maturity_score": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 5
+                          },
+                          "expected_evidence": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "default": []
+                          },
+                          "acceptance_criteria": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "default": []
+                          },
+                          "dependencies_summary": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "draft",
+                              "approved",
+                              "in_progress",
+                              "blocked",
+                              "completed",
+                              "cancelled",
+                              "deferred"
+                            ]
+                          },
+                          "rationale": {
+                            "type": "string"
+                          },
+                          "confidence_score": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          },
+                          "requires_user_validation": {
+                            "type": "boolean"
+                          },
+                          "risk_acceptance_expires_at": {
+                            "type": "string",
+                            "format": "date"
+                          },
+                          "created_at": {
+                            "type": "string"
+                          },
+                          "updated_at": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "poam_item_id",
+                          "organization_id",
+                          "assessment_id",
+                          "poam_version_id",
+                          "framework_id",
+                          "scf_version_id",
+                          "poam_code",
+                          "corrective_action",
+                          "action_type",
+                          "priority",
+                          "severity",
+                          "risk_rating",
+                          "effort_estimate",
+                          "status",
+                          "rationale",
+                          "confidence_score",
+                          "requires_user_validation",
+                          "created_at",
+                          "updated_at"
+                        ]
+                      }
+                    },
+                    "pagination": {
+                      "type": "object",
+                      "properties": {
+                        "has_more": {
+                          "type": "boolean"
+                        },
+                        "next_cursor": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "limit": {
+                          "type": "number"
+                        },
+                        "offset": {
+                          "type": "number"
+                        },
+                        "total": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "has_more"
+                      ]
+                    },
+                    "trace_id": {
+                      "type": "string",
+                      "example": "abc-123-def"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "pagination",
+                    "trace_id"
+                  ]
+                }
+              }
+            }
           },
           "400": {
             "description": "Validation error."
@@ -28839,7 +29524,58 @@
         ],
         "responses": {
           "200": {
-            "description": "Successful response."
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "assessment_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "poam_version_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "total_items": {
+                      "type": "integer"
+                    },
+                    "by_priority": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "number"
+                      }
+                    },
+                    "by_status": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "number"
+                      }
+                    },
+                    "by_action_type": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "number"
+                      }
+                    },
+                    "trace_id": {
+                      "type": "string",
+                      "minLength": 8
+                    }
+                  },
+                  "required": [
+                    "assessment_id",
+                    "poam_version_id",
+                    "total_items",
+                    "by_priority",
+                    "by_status",
+                    "by_action_type",
+                    "trace_id"
+                  ]
+                }
+              }
+            }
           },
           "400": {
             "description": "Validation error."
@@ -28878,7 +29614,209 @@
         ],
         "responses": {
           "200": {
-            "description": "Successful response."
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "poam_item_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "organization_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "assessment_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "poam_version_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "related_gap_finding_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "source_maturity_score_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "soa_item_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "framework_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "framework_requirement_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "scf_version_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "scf_domain_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "scf_control_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "poam_code": {
+                      "type": "string"
+                    },
+                    "corrective_action": {
+                      "type": "string"
+                    },
+                    "action_type": {
+                      "type": "string",
+                      "enum": [
+                        "policy_update",
+                        "procedure_creation",
+                        "technical_implementation",
+                        "evidence_collection",
+                        "governance_improvement",
+                        "monitoring_improvement",
+                        "training",
+                        "third_party_action",
+                        "risk_acceptance",
+                        "validation_required",
+                        "other"
+                      ]
+                    },
+                    "priority": {
+                      "type": "string",
+                      "enum": [
+                        "low",
+                        "medium",
+                        "high",
+                        "critical",
+                        "urgent"
+                      ]
+                    },
+                    "severity": {
+                      "type": "string",
+                      "enum": [
+                        "informational",
+                        "low",
+                        "medium",
+                        "high",
+                        "critical"
+                      ]
+                    },
+                    "risk_rating": {
+                      "type": "string"
+                    },
+                    "effort_estimate": {
+                      "type": "string",
+                      "enum": [
+                        "small",
+                        "medium",
+                        "large",
+                        "extra_large",
+                        "unknown"
+                      ]
+                    },
+                    "suggested_owner": {
+                      "type": "string"
+                    },
+                    "owner_role": {
+                      "type": "string"
+                    },
+                    "due_date": {
+                      "type": "string"
+                    },
+                    "target_maturity_score": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 5
+                    },
+                    "expected_evidence": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "default": []
+                    },
+                    "acceptance_criteria": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "default": []
+                    },
+                    "dependencies_summary": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "draft",
+                        "approved",
+                        "in_progress",
+                        "blocked",
+                        "completed",
+                        "cancelled",
+                        "deferred"
+                      ]
+                    },
+                    "rationale": {
+                      "type": "string"
+                    },
+                    "confidence_score": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    },
+                    "requires_user_validation": {
+                      "type": "boolean"
+                    },
+                    "risk_acceptance_expires_at": {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    "created_at": {
+                      "type": "string"
+                    },
+                    "updated_at": {
+                      "type": "string"
+                    },
+                    "trace_id": {
+                      "type": "string",
+                      "example": "abc-123-def"
+                    }
+                  },
+                  "required": [
+                    "poam_item_id",
+                    "organization_id",
+                    "assessment_id",
+                    "poam_version_id",
+                    "framework_id",
+                    "scf_version_id",
+                    "poam_code",
+                    "corrective_action",
+                    "action_type",
+                    "priority",
+                    "severity",
+                    "risk_rating",
+                    "effort_estimate",
+                    "status",
+                    "rationale",
+                    "confidence_score",
+                    "requires_user_validation",
+                    "created_at",
+                    "updated_at",
+                    "trace_id"
+                  ]
+                }
+              }
+            }
           },
           "400": {
             "description": "Validation error."
@@ -28915,7 +29853,204 @@
         ],
         "responses": {
           "200": {
-            "description": "Successful response."
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "poam_item_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "organization_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "assessment_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "poam_version_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "related_gap_finding_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "source_maturity_score_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "soa_item_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "framework_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "framework_requirement_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "scf_version_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "scf_domain_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "scf_control_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "poam_code": {
+                      "type": "string"
+                    },
+                    "corrective_action": {
+                      "type": "string"
+                    },
+                    "action_type": {
+                      "type": "string",
+                      "enum": [
+                        "policy_update",
+                        "procedure_creation",
+                        "technical_implementation",
+                        "evidence_collection",
+                        "governance_improvement",
+                        "monitoring_improvement",
+                        "training",
+                        "third_party_action",
+                        "risk_acceptance",
+                        "validation_required",
+                        "other"
+                      ]
+                    },
+                    "priority": {
+                      "type": "string",
+                      "enum": [
+                        "low",
+                        "medium",
+                        "high",
+                        "critical",
+                        "urgent"
+                      ]
+                    },
+                    "severity": {
+                      "type": "string",
+                      "enum": [
+                        "informational",
+                        "low",
+                        "medium",
+                        "high",
+                        "critical"
+                      ]
+                    },
+                    "risk_rating": {
+                      "type": "string"
+                    },
+                    "effort_estimate": {
+                      "type": "string",
+                      "enum": [
+                        "small",
+                        "medium",
+                        "large",
+                        "extra_large",
+                        "unknown"
+                      ]
+                    },
+                    "suggested_owner": {
+                      "type": "string"
+                    },
+                    "owner_role": {
+                      "type": "string"
+                    },
+                    "due_date": {
+                      "type": "string"
+                    },
+                    "target_maturity_score": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 5
+                    },
+                    "expected_evidence": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "default": []
+                    },
+                    "acceptance_criteria": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "default": []
+                    },
+                    "dependencies_summary": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "draft",
+                        "approved",
+                        "in_progress",
+                        "blocked",
+                        "completed",
+                        "cancelled",
+                        "deferred"
+                      ]
+                    },
+                    "rationale": {
+                      "type": "string"
+                    },
+                    "confidence_score": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    },
+                    "requires_user_validation": {
+                      "type": "boolean"
+                    },
+                    "risk_acceptance_expires_at": {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    "created_at": {
+                      "type": "string"
+                    },
+                    "updated_at": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "poam_item_id",
+                    "organization_id",
+                    "assessment_id",
+                    "poam_version_id",
+                    "framework_id",
+                    "scf_version_id",
+                    "poam_code",
+                    "corrective_action",
+                    "action_type",
+                    "priority",
+                    "severity",
+                    "risk_rating",
+                    "effort_estimate",
+                    "status",
+                    "rationale",
+                    "confidence_score",
+                    "requires_user_validation",
+                    "created_at",
+                    "updated_at"
+                  ]
+                }
+              }
+            }
           },
           "400": {
             "description": "Validation error."
@@ -28954,7 +30089,104 @@
         ],
         "responses": {
           "200": {
-            "description": "Successful response."
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "poam_milestone_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "organization_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "assessment_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "poam_item_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "milestone_code": {
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "due_date": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "draft",
+                              "approved",
+                              "in_progress",
+                              "blocked",
+                              "completed",
+                              "cancelled",
+                              "deferred"
+                            ]
+                          },
+                          "acceptance_criteria": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "default": []
+                          },
+                          "expected_evidence": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "default": []
+                          },
+                          "created_at": {
+                            "type": "string"
+                          },
+                          "updated_at": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "poam_milestone_id",
+                          "organization_id",
+                          "assessment_id",
+                          "poam_item_id",
+                          "milestone_code",
+                          "title",
+                          "description",
+                          "status",
+                          "created_at",
+                          "updated_at"
+                        ]
+                      }
+                    },
+                    "trace_id": {
+                      "type": "string",
+                      "example": "abc-123-def"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "trace_id"
+                  ]
+                }
+              }
+            }
           },
           "400": {
             "description": "Validation error."
@@ -28991,7 +30223,88 @@
         ],
         "responses": {
           "200": {
-            "description": "Successful response."
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "poam_milestone_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "organization_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "assessment_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "poam_item_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "milestone_code": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "due_date": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "draft",
+                        "approved",
+                        "in_progress",
+                        "blocked",
+                        "completed",
+                        "cancelled",
+                        "deferred"
+                      ]
+                    },
+                    "acceptance_criteria": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "default": []
+                    },
+                    "expected_evidence": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "default": []
+                    },
+                    "created_at": {
+                      "type": "string"
+                    },
+                    "updated_at": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "poam_milestone_id",
+                    "organization_id",
+                    "assessment_id",
+                    "poam_item_id",
+                    "milestone_code",
+                    "title",
+                    "description",
+                    "status",
+                    "created_at",
+                    "updated_at"
+                  ]
+                }
+              }
+            }
           },
           "400": {
             "description": "Validation error."
@@ -29030,7 +30343,88 @@
         ],
         "responses": {
           "200": {
-            "description": "Successful response."
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "poam_milestone_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "organization_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "assessment_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "poam_item_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "milestone_code": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "due_date": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "draft",
+                        "approved",
+                        "in_progress",
+                        "blocked",
+                        "completed",
+                        "cancelled",
+                        "deferred"
+                      ]
+                    },
+                    "acceptance_criteria": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "default": []
+                    },
+                    "expected_evidence": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "default": []
+                    },
+                    "created_at": {
+                      "type": "string"
+                    },
+                    "updated_at": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "poam_milestone_id",
+                    "organization_id",
+                    "assessment_id",
+                    "poam_item_id",
+                    "milestone_code",
+                    "title",
+                    "description",
+                    "status",
+                    "created_at",
+                    "updated_at"
+                  ]
+                }
+              }
+            }
           },
           "400": {
             "description": "Validation error."
@@ -29069,7 +30463,49 @@
         ],
         "responses": {
           "200": {
-            "description": "Successful response."
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "valid": {
+                      "type": "boolean"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "warnings": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "items_requiring_validation": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "format": "uuid"
+                      }
+                    },
+                    "trace_id": {
+                      "type": "string",
+                      "minLength": 8
+                    }
+                  },
+                  "required": [
+                    "valid",
+                    "errors",
+                    "warnings",
+                    "items_requiring_validation",
+                    "trace_id"
+                  ]
+                }
+              }
+            }
           },
           "400": {
             "description": "Validation error."
@@ -29108,7 +30544,132 @@
         ],
         "responses": {
           "200": {
-            "description": "Successful response."
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "poam_version_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "organization_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "assessment_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "version_number": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "exclusiveMinimum": true
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "draft",
+                        "under_review",
+                        "approved",
+                        "superseded",
+                        "archived"
+                      ]
+                    },
+                    "source_gap_analysis_version_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "source_maturity_assessment_version_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "framework_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "scf_version_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "generated_by_agent_run_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "created_by": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "created_at": {
+                      "type": "string"
+                    },
+                    "submitted_for_review_at": {
+                      "type": "string"
+                    },
+                    "approved_by": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "approved_at": {
+                      "type": "string"
+                    },
+                    "approval_event_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "superseded_by": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "trace_id": {
+                      "type": "string",
+                      "minLength": 8
+                    },
+                    "metadata": {
+                      "type": "object",
+                      "properties": {
+                        "limitations": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "default": []
+                        },
+                        "assumptions": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "default": []
+                        },
+                        "source_status": {
+                          "type": "string"
+                        }
+                      },
+                      "default": {
+                        "limitations": [],
+                        "assumptions": []
+                      },
+                      "additionalProperties": {}
+                    }
+                  },
+                  "required": [
+                    "poam_version_id",
+                    "organization_id",
+                    "assessment_id",
+                    "version_number",
+                    "status",
+                    "source_gap_analysis_version_id",
+                    "framework_id",
+                    "scf_version_id",
+                    "created_by",
+                    "created_at",
+                    "trace_id"
+                  ]
+                }
+              }
+            }
           },
           "400": {
             "description": "Validation error."
@@ -29147,7 +30708,132 @@
         ],
         "responses": {
           "200": {
-            "description": "Successful response."
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "poam_version_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "organization_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "assessment_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "version_number": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "exclusiveMinimum": true
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "draft",
+                        "under_review",
+                        "approved",
+                        "superseded",
+                        "archived"
+                      ]
+                    },
+                    "source_gap_analysis_version_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "source_maturity_assessment_version_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "framework_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "scf_version_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "generated_by_agent_run_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "created_by": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "created_at": {
+                      "type": "string"
+                    },
+                    "submitted_for_review_at": {
+                      "type": "string"
+                    },
+                    "approved_by": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "approved_at": {
+                      "type": "string"
+                    },
+                    "approval_event_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "superseded_by": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "trace_id": {
+                      "type": "string",
+                      "minLength": 8
+                    },
+                    "metadata": {
+                      "type": "object",
+                      "properties": {
+                        "limitations": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "default": []
+                        },
+                        "assumptions": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "default": []
+                        },
+                        "source_status": {
+                          "type": "string"
+                        }
+                      },
+                      "default": {
+                        "limitations": [],
+                        "assumptions": []
+                      },
+                      "additionalProperties": {}
+                    }
+                  },
+                  "required": [
+                    "poam_version_id",
+                    "organization_id",
+                    "assessment_id",
+                    "version_number",
+                    "status",
+                    "source_gap_analysis_version_id",
+                    "framework_id",
+                    "scf_version_id",
+                    "created_by",
+                    "created_at",
+                    "trace_id"
+                  ]
+                }
+              }
+            }
           },
           "400": {
             "description": "Validation error."
@@ -29186,7 +30872,132 @@
         ],
         "responses": {
           "200": {
-            "description": "Successful response."
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "poam_version_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "organization_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "assessment_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "version_number": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "exclusiveMinimum": true
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "draft",
+                        "under_review",
+                        "approved",
+                        "superseded",
+                        "archived"
+                      ]
+                    },
+                    "source_gap_analysis_version_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "source_maturity_assessment_version_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "framework_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "scf_version_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "generated_by_agent_run_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "created_by": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "created_at": {
+                      "type": "string"
+                    },
+                    "submitted_for_review_at": {
+                      "type": "string"
+                    },
+                    "approved_by": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "approved_at": {
+                      "type": "string"
+                    },
+                    "approval_event_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "superseded_by": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "trace_id": {
+                      "type": "string",
+                      "minLength": 8
+                    },
+                    "metadata": {
+                      "type": "object",
+                      "properties": {
+                        "limitations": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "default": []
+                        },
+                        "assumptions": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "default": []
+                        },
+                        "source_status": {
+                          "type": "string"
+                        }
+                      },
+                      "default": {
+                        "limitations": [],
+                        "assumptions": []
+                      },
+                      "additionalProperties": {}
+                    }
+                  },
+                  "required": [
+                    "poam_version_id",
+                    "organization_id",
+                    "assessment_id",
+                    "version_number",
+                    "status",
+                    "source_gap_analysis_version_id",
+                    "framework_id",
+                    "scf_version_id",
+                    "created_by",
+                    "created_at",
+                    "trace_id"
+                  ]
+                }
+              }
+            }
           },
           "400": {
             "description": "Validation error."
@@ -29225,7 +31036,220 @@
         ],
         "responses": {
           "200": {
-            "description": "Successful response."
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "poam_item_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "organization_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "assessment_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "poam_version_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "related_gap_finding_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "source_maturity_score_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "soa_item_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "framework_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "framework_requirement_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "scf_version_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "scf_domain_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "scf_control_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "poam_code": {
+                            "type": "string"
+                          },
+                          "corrective_action": {
+                            "type": "string"
+                          },
+                          "action_type": {
+                            "type": "string",
+                            "enum": [
+                              "policy_update",
+                              "procedure_creation",
+                              "technical_implementation",
+                              "evidence_collection",
+                              "governance_improvement",
+                              "monitoring_improvement",
+                              "training",
+                              "third_party_action",
+                              "risk_acceptance",
+                              "validation_required",
+                              "other"
+                            ]
+                          },
+                          "priority": {
+                            "type": "string",
+                            "enum": [
+                              "low",
+                              "medium",
+                              "high",
+                              "critical",
+                              "urgent"
+                            ]
+                          },
+                          "severity": {
+                            "type": "string",
+                            "enum": [
+                              "informational",
+                              "low",
+                              "medium",
+                              "high",
+                              "critical"
+                            ]
+                          },
+                          "risk_rating": {
+                            "type": "string"
+                          },
+                          "effort_estimate": {
+                            "type": "string",
+                            "enum": [
+                              "small",
+                              "medium",
+                              "large",
+                              "extra_large",
+                              "unknown"
+                            ]
+                          },
+                          "suggested_owner": {
+                            "type": "string"
+                          },
+                          "owner_role": {
+                            "type": "string"
+                          },
+                          "due_date": {
+                            "type": "string"
+                          },
+                          "target_maturity_score": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 5
+                          },
+                          "expected_evidence": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "default": []
+                          },
+                          "acceptance_criteria": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "default": []
+                          },
+                          "dependencies_summary": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "draft",
+                              "approved",
+                              "in_progress",
+                              "blocked",
+                              "completed",
+                              "cancelled",
+                              "deferred"
+                            ]
+                          },
+                          "rationale": {
+                            "type": "string"
+                          },
+                          "confidence_score": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          },
+                          "requires_user_validation": {
+                            "type": "boolean"
+                          },
+                          "risk_acceptance_expires_at": {
+                            "type": "string",
+                            "format": "date"
+                          },
+                          "created_at": {
+                            "type": "string"
+                          },
+                          "updated_at": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "poam_item_id",
+                          "organization_id",
+                          "assessment_id",
+                          "poam_version_id",
+                          "framework_id",
+                          "scf_version_id",
+                          "poam_code",
+                          "corrective_action",
+                          "action_type",
+                          "priority",
+                          "severity",
+                          "risk_rating",
+                          "effort_estimate",
+                          "status",
+                          "rationale",
+                          "confidence_score",
+                          "requires_user_validation",
+                          "created_at",
+                          "updated_at"
+                        ]
+                      }
+                    },
+                    "trace_id": {
+                      "type": "string",
+                      "example": "abc-123-def"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "trace_id"
+                  ]
+                }
+              }
+            }
           },
           "400": {
             "description": "Validation error."
@@ -29264,7 +31288,81 @@
         ],
         "responses": {
           "200": {
-            "description": "Successful response."
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "poam_dependency_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "organization_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "assessment_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "poam_item_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "depends_on_poam_item_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "dependency_type": {
+                            "type": "string",
+                            "enum": [
+                              "blocks",
+                              "related_to",
+                              "prerequisite",
+                              "duplicates",
+                              "depends_on_external_party"
+                            ]
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "created_at": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "poam_dependency_id",
+                          "organization_id",
+                          "assessment_id",
+                          "poam_item_id",
+                          "dependency_type",
+                          "description",
+                          "created_at"
+                        ]
+                      }
+                    },
+                    "trace_id": {
+                      "type": "string",
+                      "example": "abc-123-def"
+                    },
+                    "total": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "trace_id",
+                    "total"
+                  ]
+                }
+              }
+            }
           },
           "400": {
             "description": "Validation error."
@@ -45769,7 +47867,158 @@
         ],
         "responses": {
           "200": {
-            "description": "Successful response."
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "organization_id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "assessment_id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "scf_version_id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "gap_finding_id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "scf_risk_id": {
+                          "type": "string",
+                          "nullable": true,
+                          "format": "uuid"
+                        },
+                        "risk_title": {
+                          "type": "string"
+                        },
+                        "risk_description": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "inherent_risk_score": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "residual_risk_score": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "risk_category": {
+                          "type": "string",
+                          "nullable": true,
+                          "enum": [
+                            "low",
+                            "moderate",
+                            "high",
+                            "severe",
+                            "extreme",
+                            null
+                          ]
+                        },
+                        "treatment": {
+                          "type": "string",
+                          "enum": [
+                            "mitigate",
+                            "accept",
+                            "transfer",
+                            "avoid",
+                            "monitor"
+                          ]
+                        },
+                        "treatment_rationale": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "owner_id": {
+                          "type": "string",
+                          "nullable": true,
+                          "format": "uuid"
+                        },
+                        "review_date": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "roc_determination": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "risk_appetite_input": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "risk_tolerance_input": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "risk_threshold_input": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "within_tolerance": {
+                          "type": "boolean",
+                          "nullable": true
+                        },
+                        "trace_id": {
+                          "type": "string"
+                        },
+                        "created_at": {
+                          "type": "string"
+                        },
+                        "updated_at": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "organization_id",
+                        "assessment_id",
+                        "scf_version_id",
+                        "gap_finding_id",
+                        "scf_risk_id",
+                        "risk_title",
+                        "risk_description",
+                        "inherent_risk_score",
+                        "residual_risk_score",
+                        "risk_category",
+                        "treatment",
+                        "treatment_rationale",
+                        "owner_id",
+                        "review_date",
+                        "roc_determination",
+                        "risk_appetite_input",
+                        "risk_tolerance_input",
+                        "risk_threshold_input",
+                        "within_tolerance",
+                        "trace_id",
+                        "created_at",
+                        "updated_at"
+                      ]
+                    },
+                    "trace_id": {
+                      "type": "string",
+                      "example": "abc-123-def"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "trace_id"
+                  ]
+                }
+              }
+            }
           },
           "400": {
             "description": "Validation error."
@@ -45806,7 +48055,165 @@
         ],
         "responses": {
           "200": {
-            "description": "Successful response."
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "organization_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "assessment_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "scf_version_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "gap_finding_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "scf_risk_id": {
+                            "type": "string",
+                            "nullable": true,
+                            "format": "uuid"
+                          },
+                          "risk_title": {
+                            "type": "string"
+                          },
+                          "risk_description": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "inherent_risk_score": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "residual_risk_score": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "risk_category": {
+                            "type": "string",
+                            "nullable": true,
+                            "enum": [
+                              "low",
+                              "moderate",
+                              "high",
+                              "severe",
+                              "extreme",
+                              null
+                            ]
+                          },
+                          "treatment": {
+                            "type": "string",
+                            "enum": [
+                              "mitigate",
+                              "accept",
+                              "transfer",
+                              "avoid",
+                              "monitor"
+                            ]
+                          },
+                          "treatment_rationale": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "owner_id": {
+                            "type": "string",
+                            "nullable": true,
+                            "format": "uuid"
+                          },
+                          "review_date": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "roc_determination": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "risk_appetite_input": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "risk_tolerance_input": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "risk_threshold_input": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "within_tolerance": {
+                            "type": "boolean",
+                            "nullable": true
+                          },
+                          "trace_id": {
+                            "type": "string"
+                          },
+                          "created_at": {
+                            "type": "string"
+                          },
+                          "updated_at": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "organization_id",
+                          "assessment_id",
+                          "scf_version_id",
+                          "gap_finding_id",
+                          "scf_risk_id",
+                          "risk_title",
+                          "risk_description",
+                          "inherent_risk_score",
+                          "residual_risk_score",
+                          "risk_category",
+                          "treatment",
+                          "treatment_rationale",
+                          "owner_id",
+                          "review_date",
+                          "roc_determination",
+                          "risk_appetite_input",
+                          "risk_tolerance_input",
+                          "risk_threshold_input",
+                          "within_tolerance",
+                          "trace_id",
+                          "created_at",
+                          "updated_at"
+                        ]
+                      }
+                    },
+                    "trace_id": {
+                      "type": "string",
+                      "example": "abc-123-def"
+                    },
+                    "total": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "trace_id",
+                    "total"
+                  ]
+                }
+              }
+            }
           },
           "400": {
             "description": "Validation error."
@@ -45845,7 +48252,186 @@
         ],
         "responses": {
           "200": {
-            "description": "Successful response."
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "assessment_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "exported_at": {
+                      "type": "string"
+                    },
+                    "total": {
+                      "type": "number"
+                    },
+                    "entries": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "organization_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "assessment_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "scf_version_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "gap_finding_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "scf_risk_id": {
+                            "type": "string",
+                            "nullable": true,
+                            "format": "uuid"
+                          },
+                          "risk_title": {
+                            "type": "string"
+                          },
+                          "risk_description": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "inherent_risk_score": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "residual_risk_score": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "risk_category": {
+                            "type": "string",
+                            "nullable": true,
+                            "enum": [
+                              "low",
+                              "moderate",
+                              "high",
+                              "severe",
+                              "extreme",
+                              null
+                            ]
+                          },
+                          "treatment": {
+                            "type": "string",
+                            "enum": [
+                              "mitigate",
+                              "accept",
+                              "transfer",
+                              "avoid",
+                              "monitor"
+                            ]
+                          },
+                          "treatment_rationale": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "owner_id": {
+                            "type": "string",
+                            "nullable": true,
+                            "format": "uuid"
+                          },
+                          "review_date": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "roc_determination": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "risk_appetite_input": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "risk_tolerance_input": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "risk_threshold_input": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "within_tolerance": {
+                            "type": "boolean",
+                            "nullable": true
+                          },
+                          "trace_id": {
+                            "type": "string"
+                          },
+                          "created_at": {
+                            "type": "string"
+                          },
+                          "updated_at": {
+                            "type": "string"
+                          },
+                          "_export_at": {
+                            "type": "string"
+                          },
+                          "_assessment_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "_standard_version": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "organization_id",
+                          "assessment_id",
+                          "scf_version_id",
+                          "gap_finding_id",
+                          "scf_risk_id",
+                          "risk_title",
+                          "risk_description",
+                          "inherent_risk_score",
+                          "residual_risk_score",
+                          "risk_category",
+                          "treatment",
+                          "treatment_rationale",
+                          "owner_id",
+                          "review_date",
+                          "roc_determination",
+                          "risk_appetite_input",
+                          "risk_tolerance_input",
+                          "risk_threshold_input",
+                          "within_tolerance",
+                          "trace_id",
+                          "created_at",
+                          "updated_at",
+                          "_export_at",
+                          "_assessment_id",
+                          "_standard_version"
+                        ]
+                      }
+                    },
+                    "trace_id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "assessment_id",
+                    "exported_at",
+                    "total",
+                    "entries",
+                    "trace_id"
+                  ]
+                }
+              }
+            }
           },
           "400": {
             "description": "Validation error."
@@ -45894,7 +48480,158 @@
         ],
         "responses": {
           "200": {
-            "description": "Successful response."
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "organization_id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "assessment_id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "scf_version_id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "gap_finding_id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "scf_risk_id": {
+                          "type": "string",
+                          "nullable": true,
+                          "format": "uuid"
+                        },
+                        "risk_title": {
+                          "type": "string"
+                        },
+                        "risk_description": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "inherent_risk_score": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "residual_risk_score": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "risk_category": {
+                          "type": "string",
+                          "nullable": true,
+                          "enum": [
+                            "low",
+                            "moderate",
+                            "high",
+                            "severe",
+                            "extreme",
+                            null
+                          ]
+                        },
+                        "treatment": {
+                          "type": "string",
+                          "enum": [
+                            "mitigate",
+                            "accept",
+                            "transfer",
+                            "avoid",
+                            "monitor"
+                          ]
+                        },
+                        "treatment_rationale": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "owner_id": {
+                          "type": "string",
+                          "nullable": true,
+                          "format": "uuid"
+                        },
+                        "review_date": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "roc_determination": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "risk_appetite_input": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "risk_tolerance_input": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "risk_threshold_input": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "within_tolerance": {
+                          "type": "boolean",
+                          "nullable": true
+                        },
+                        "trace_id": {
+                          "type": "string"
+                        },
+                        "created_at": {
+                          "type": "string"
+                        },
+                        "updated_at": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "organization_id",
+                        "assessment_id",
+                        "scf_version_id",
+                        "gap_finding_id",
+                        "scf_risk_id",
+                        "risk_title",
+                        "risk_description",
+                        "inherent_risk_score",
+                        "residual_risk_score",
+                        "risk_category",
+                        "treatment",
+                        "treatment_rationale",
+                        "owner_id",
+                        "review_date",
+                        "roc_determination",
+                        "risk_appetite_input",
+                        "risk_tolerance_input",
+                        "risk_threshold_input",
+                        "within_tolerance",
+                        "trace_id",
+                        "created_at",
+                        "updated_at"
+                      ]
+                    },
+                    "trace_id": {
+                      "type": "string",
+                      "example": "abc-123-def"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "trace_id"
+                  ]
+                }
+              }
+            }
           },
           "400": {
             "description": "Validation error."
@@ -45941,7 +48678,158 @@
         ],
         "responses": {
           "200": {
-            "description": "Successful response."
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "organization_id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "assessment_id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "scf_version_id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "gap_finding_id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "scf_risk_id": {
+                          "type": "string",
+                          "nullable": true,
+                          "format": "uuid"
+                        },
+                        "risk_title": {
+                          "type": "string"
+                        },
+                        "risk_description": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "inherent_risk_score": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "residual_risk_score": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "risk_category": {
+                          "type": "string",
+                          "nullable": true,
+                          "enum": [
+                            "low",
+                            "moderate",
+                            "high",
+                            "severe",
+                            "extreme",
+                            null
+                          ]
+                        },
+                        "treatment": {
+                          "type": "string",
+                          "enum": [
+                            "mitigate",
+                            "accept",
+                            "transfer",
+                            "avoid",
+                            "monitor"
+                          ]
+                        },
+                        "treatment_rationale": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "owner_id": {
+                          "type": "string",
+                          "nullable": true,
+                          "format": "uuid"
+                        },
+                        "review_date": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "roc_determination": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "risk_appetite_input": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "risk_tolerance_input": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "risk_threshold_input": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "within_tolerance": {
+                          "type": "boolean",
+                          "nullable": true
+                        },
+                        "trace_id": {
+                          "type": "string"
+                        },
+                        "created_at": {
+                          "type": "string"
+                        },
+                        "updated_at": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "organization_id",
+                        "assessment_id",
+                        "scf_version_id",
+                        "gap_finding_id",
+                        "scf_risk_id",
+                        "risk_title",
+                        "risk_description",
+                        "inherent_risk_score",
+                        "residual_risk_score",
+                        "risk_category",
+                        "treatment",
+                        "treatment_rationale",
+                        "owner_id",
+                        "review_date",
+                        "roc_determination",
+                        "risk_appetite_input",
+                        "risk_tolerance_input",
+                        "risk_threshold_input",
+                        "within_tolerance",
+                        "trace_id",
+                        "created_at",
+                        "updated_at"
+                      ]
+                    },
+                    "trace_id": {
+                      "type": "string",
+                      "example": "abc-123-def"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "trace_id"
+                  ]
+                }
+              }
+            }
           },
           "400": {
             "description": "Validation error."
@@ -45988,7 +48876,27 @@
         ],
         "responses": {
           "200": {
-            "description": "Successful response."
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "trace_id": {
+                      "type": "string",
+                      "example": "abc-123-def"
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "trace_id"
+                  ]
+                }
+              }
+            }
           },
           "400": {
             "description": "Validation error."
@@ -46015,7 +48923,80 @@
         "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet.",
         "responses": {
           "200": {
-            "description": "Successful response."
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "scf_version_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "risk_code": {
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "category": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "mitigating_control_ids": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "format": "uuid"
+                            },
+                            "default": []
+                          },
+                          "created_at": {
+                            "type": "string"
+                          },
+                          "updated_at": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "scf_version_id",
+                          "risk_code",
+                          "title",
+                          "created_at",
+                          "updated_at"
+                        ]
+                      }
+                    },
+                    "trace_id": {
+                      "type": "string",
+                      "example": "abc-123-def"
+                    },
+                    "total": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "trace_id",
+                    "total"
+                  ]
+                }
+              }
+            }
           },
           "400": {
             "description": "Validation error."
@@ -46054,7 +49035,73 @@
         ],
         "responses": {
           "200": {
-            "description": "Successful response."
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "scf_version_id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "risk_code": {
+                          "type": "string"
+                        },
+                        "title": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "category": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "mitigating_control_ids": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "default": []
+                        },
+                        "created_at": {
+                          "type": "string"
+                        },
+                        "updated_at": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "scf_version_id",
+                        "risk_code",
+                        "title",
+                        "created_at",
+                        "updated_at"
+                      ]
+                    },
+                    "trace_id": {
+                      "type": "string",
+                      "example": "abc-123-def"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "trace_id"
+                  ]
+                }
+              }
+            }
           },
           "400": {
             "description": "Validation error."
@@ -46081,7 +49128,80 @@
         "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet.",
         "responses": {
           "200": {
-            "description": "Successful response."
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "scf_version_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "threat_code": {
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "category": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "mitigating_control_ids": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "format": "uuid"
+                            },
+                            "default": []
+                          },
+                          "created_at": {
+                            "type": "string"
+                          },
+                          "updated_at": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "scf_version_id",
+                          "threat_code",
+                          "title",
+                          "created_at",
+                          "updated_at"
+                        ]
+                      }
+                    },
+                    "trace_id": {
+                      "type": "string",
+                      "example": "abc-123-def"
+                    },
+                    "total": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "trace_id",
+                    "total"
+                  ]
+                }
+              }
+            }
           },
           "400": {
             "description": "Validation error."
@@ -46120,7 +49240,73 @@
         ],
         "responses": {
           "200": {
-            "description": "Successful response."
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "scf_version_id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "threat_code": {
+                          "type": "string"
+                        },
+                        "title": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "category": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "mitigating_control_ids": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "default": []
+                        },
+                        "created_at": {
+                          "type": "string"
+                        },
+                        "updated_at": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "scf_version_id",
+                        "threat_code",
+                        "title",
+                        "created_at",
+                        "updated_at"
+                      ]
+                    },
+                    "trace_id": {
+                      "type": "string",
+                      "example": "abc-123-def"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "trace_id"
+                  ]
+                }
+              }
+            }
           },
           "400": {
             "description": "Validation error."
