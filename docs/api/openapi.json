@@ -43652,7 +43652,7 @@
           "intelligence"
         ],
         "summary": "POST /api/v1/intelligence/council",
-        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet.",
+        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): intelligence:create.",
         "responses": {
           "200": {
             "description": "Successful response."

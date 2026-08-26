@@ -133,3 +133,93 @@ test("routing: an unknown path still returns 404", async () => {
   const { response } = await client.send("/api/v1/no-such-endpoint", "GET");
   expect(response.status).toBe(404);
 });
+
+// ─── Second round of the same customer report (2026-08-26) ──────────────
+//
+// The scope derivation above fixed /scf/*, and the customer confirmed it. Ten
+// more routes stayed denied with the identical message, and one, the gap
+// evidence evaluation, failed differently: its scope check passed and RBAC
+// then answered "Permission denied." Two distinct defects behind one symptom.
+
+test("M2M scopes: every intelligence route declares permissions to derive from", () => {
+  const intelligence = routes.filter((route) =>
+    route.path.startsWith("/api/v1/intelligence/"),
+  );
+
+  expect(intelligence.length).toBeGreaterThanOrEqual(9);
+
+  const undeclared = intelligence
+    .filter((route) => !route.permissions?.length)
+    .map((route) => `${route.method} ${route.path}`);
+
+  // A protected route with no permissions has nothing to derive a scope from,
+  // so scope.middleware fails closed and no key can ever reach it.
+  expect(undeclared).toEqual([]);
+});
+
+test("M2M scopes: the scoring and vendor-scan routes resolve to a real scope", () => {
+  for (const path of [
+    "/api/v1/intelligence/compliance-score",
+    "/api/v1/intelligence/cross-coverage",
+    "/api/v1/intelligence/council",
+  ]) {
+    expect(scopesFor("POST", path, ["intelligence:create"])).toContain(
+      "intelligence:run",
+    );
+  }
+
+  expect(
+    scopesFor("POST", "/api/v1/privacy/scan-vendor-contract", ["privacy:read"]),
+  ).toContain("privacy:read");
+});
+
+test("M2M scopes: a key's scope satisfies the permission it was derived from", async () => {
+  const { PERMISSION_TO_SCOPE } = await import("@standard/schemas");
+
+  // The vocabularies differ: routes declare permissions ("evidence:run"), keys
+  // carry scopes ("gap:write"). RBAC compared them directly, which only worked
+  // where the two strings coincide - "scf:read" maps to "scf:read". That is
+  // precisely why /scf/* worked for the customer and /gap/evaluate-evidence
+  // did not, even though its scope check had already passed.
+  //
+  // Permissions with no scope are the ones API keys must never satisfy:
+  // approval gates (a human has to sign), key and webhook management (a key
+  // must not mint or enumerate keys), and destructive operations. Anything
+  // NEW landing in this list is a route silently unreachable by every key,
+  // which is how the original defect shipped.
+  const INTENTIONALLY_UNREACHABLE_BY_KEYS = [
+    "agent:create",
+    "organization:create",
+    "organization:update",
+    "organization:delete",
+    "apikey:read",
+    "apikey:manage",
+    "gap:approve",
+    "poam:approve",
+    "report:approve",
+    "approval:create",
+    "artifact:approve",
+    "scf:import",
+    "soa:approve",
+    "webhook:create",
+    "webhook:read",
+    "webhook:update",
+    "webhook:delete",
+    "privacy:delete",
+    "maturity:approve",
+  ];
+
+  const untranslatable = [
+    ...new Set(
+      routes
+        .flatMap((route) => route.permissions ?? [])
+        .filter(
+          (permission) =>
+            !permission.startsWith("admin:") &&
+            !PERMISSION_TO_SCOPE[permission],
+        ),
+    ),
+  ].sort();
+
+  expect(untranslatable).toEqual([...INTENTIONALLY_UNREACHABLE_BY_KEYS].sort());
+});

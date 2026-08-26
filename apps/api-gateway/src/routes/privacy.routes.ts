@@ -825,6 +825,7 @@ export const privacyRoutes: RouteDefinition[] = [
     path: "/api/v1/privacy/scan-vendor-contract",
     authRequired: true,
     tenantRequired: true,
+    permissions: ["privacy:read"],
     handler: async (ctx) => {
       try {
         const body = await parseJson(

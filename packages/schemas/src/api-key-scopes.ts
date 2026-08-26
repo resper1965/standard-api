@@ -223,7 +223,7 @@ export function hasRequiredScopes(
  * unreachable with an API key (platform administration, membership management,
  * approval gates that require a human actor).
  */
-const PERMISSION_TO_SCOPE: Partial<Record<string, M2mScope>> = {
+export const PERMISSION_TO_SCOPE: Partial<Record<string, M2mScope>> = {
   "assessment:read": "assessment:read",
   "assessment:create": "assessment:write",
   "assessment:update": "assessment:write",
