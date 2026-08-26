@@ -331,7 +331,10 @@ export const createApp = (
       // would scope scopeWhere() to a different org than the RLS envelope below.
       attachTenantDb(ctx);
 
-      await assertRbac(ctx, route.permissions);
+      // Scopes before RBAC. Both gates deny a machine actor that lacks a
+      // scope, but only this one says which scope: RBAC answers a flat
+      // "Permission denied.", and running it first hid the actionable message
+      // behind it. A customer spent a round-trip on exactly that.
       assertApiKeyScopes(
         ctx,
         route.path,
@@ -342,6 +345,7 @@ export const createApp = (
             Boolean(route.permissions?.length)),
         route.permissions ?? [],
       );
+      await assertRbac(ctx, route.permissions);
       await assertRateLimit(ctx, route.path, env?.STANDARD_CACHE);
       // M3 fix: CSRF verification (after auth, before handler)
       verifyCsrf(ctx);
