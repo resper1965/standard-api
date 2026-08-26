@@ -6,6 +6,12 @@
 **Method:** Static analysis + local execution of the complete CI battery
 **Report (rendered):** https://claude.ai/code/artifact/a605aba6-ebaa-4a43-b7e9-2a29bf9cc999
 
+> **Handling.** This repository is public. Findings C-02 and C-03 describe
+> cross-organization access defects whose fixes are not yet deployed to
+> production, so exploitation detail is deliberately withheld here and shared
+> through the private channel in `SECURITY.md`. Until those fixes ship, treat
+> this document as describing live exposure.
+
 ## Executive Summary
 
 The platform has above-average engineering discipline: 390 of 407 routes require
@@ -88,11 +94,9 @@ a trusted value. It is overwritten here by a client-controlled header with no
 membership check. The consistency checks below it only fire when a path param is
 also present, which is not the case for most endpoints.
 
-```
-curl https://standard-api.bekaa.eu/api/v1/assessments \
-  -H "Authorization: Bearer standard_live_<org_A_key>" \
-  -H "x-standard-tenant-id: <org_B_uuid>"
-```
+A reproduction is deliberately omitted from this document: the repository is
+public and the fix is not yet deployed. Reproduction steps were shared through
+the private channel in `SECURITY.md`.
 
 The RLS envelope receives the same overwritten value, so even with `0053` applied
 it would enforce the forged organization rather than block it.
