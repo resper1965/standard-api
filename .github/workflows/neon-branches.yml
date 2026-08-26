@@ -57,6 +57,21 @@ jobs:
       - name: Install Wrangler
         run: npm install -g wrangler@latest
 
+      # The Neon action reports success and returns an empty connection string
+      # when project_id or api_key are missing, so the failure only surfaced
+      # three steps later as "DATABASE_URL environment variable is not set" -
+      # which reads like a code bug rather than missing configuration. Fail here,
+      # naming the actual cause.
+      - name: Verify Neon branch was created
+        env:
+          DB_URL: ${{ steps.create_neon_branch.outputs.db_url_with_pooler }}
+        run: |
+          if [ -z "${DB_URL}" ]; then
+            echo "::error title=Neon branch not created::Create Neon Branch returned an empty connection string. Check that the repository variable NEON_PROJECT_ID and the secret NEON_API_KEY are both set."
+            exit 1
+          fi
+          echo "Neon branch ready."
+
       - name: Run Migrations
         run: pnpm db:migrate
         env:
