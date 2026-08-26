@@ -1,3 +1,4 @@
+import { PERMISSION_TO_SCOPE } from "@standard/schemas";
 import { SecurityEventService } from "@standard/observability";
 
 import type { Permission } from "@standard/schemas";
@@ -164,11 +165,20 @@ export const assertRbac = async (
     );
   }
 
-  // Check that the actor's permissions include ALL required permissions
+  // Check that the actor's permissions include ALL required permissions.
+  //
+  // M2M keys carry SCOPES ("gap:write"), routes declare PERMISSIONS
+  // ("evidence:run"), and the two are different vocabularies. Comparing them
+  // directly only happened to work where a permission and its scope share a
+  // name - "scf:read" maps to "scf:read", which is exactly why /scf/* worked
+  // for API keys while /gap/evaluate-evidence returned "Permission denied."
+  // after its scope check had already passed. Translate before comparing.
   const actorPermissions = await gatherActorPermissions(context);
-  const missingPermissions = requiredPermissions.filter(
-    (perm) => !actorPermissions.includes(perm),
-  );
+  const missingPermissions = requiredPermissions.filter((perm) => {
+    if (actorPermissions.includes(perm)) return false;
+    const scope = PERMISSION_TO_SCOPE[perm];
+    return !(scope && actorPermissions.includes(scope));
+  });
 
   if (missingPermissions.length > 0) {
     await handleRbacDenied(

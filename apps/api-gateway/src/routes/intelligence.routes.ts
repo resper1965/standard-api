@@ -36,6 +36,7 @@ export const intelligenceRoutes: RouteDefinition[] = [
     path: "/api/v1/intelligence/blast-radius",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["intelligence:create"],
     bodySchema: BlastRadiusRequestSchema,
     openapi: {
       tags: ["Intelligence"],
@@ -67,6 +68,7 @@ export const intelligenceRoutes: RouteDefinition[] = [
     path: "/api/v1/intelligence/gap-analysis",
     authRequired: true,
     tenantRequired: false, // Core rules engine is tenant agnostic
+    permissions: ["intelligence:create"],
     bodySchema: GapAnalysisRequestSchema,
     openapi: {
       tags: ["Intelligence"],
@@ -121,6 +123,7 @@ export const intelligenceRoutes: RouteDefinition[] = [
     path: "/api/v1/intelligence/dpia-score",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["intelligence:create"],
     bodySchema: DpiaScoreRequestSchema,
     openapi: {
       tags: ["Intelligence"],
@@ -214,6 +217,7 @@ export const intelligenceRoutes: RouteDefinition[] = [
     path: "/api/v1/intelligence/compliance-score",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["intelligence:create"],
     bodySchema: ComplianceScoreRequestSchema,
     openapi: {
       tags: ["Intelligence"],
@@ -275,6 +279,7 @@ export const intelligenceRoutes: RouteDefinition[] = [
     path: "/api/v1/intelligence/retention-check",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["intelligence:create"],
     bodySchema: RetentionCheckRequestSchema,
     openapi: {
       tags: ["Intelligence"],
@@ -336,6 +341,7 @@ export const intelligenceRoutes: RouteDefinition[] = [
     path: "/api/v1/intelligence/breach-sla",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["intelligence:create"],
     bodySchema: BreachSlaRequestSchema,
     openapi: {
       tags: ["Intelligence"],
@@ -394,6 +400,7 @@ export const intelligenceRoutes: RouteDefinition[] = [
     path: "/api/v1/intelligence/cross-coverage",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["intelligence:create"],
     bodySchema: CrossCoverageRequestSchema,
     openapi: {
       tags: ["Intelligence"],
@@ -464,6 +471,7 @@ export const intelligenceRoutes: RouteDefinition[] = [
     path: "/api/v1/intelligence/roi-path",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["intelligence:create"],
     bodySchema: RoiPathRequestSchema,
     openapi: {
       tags: ["Intelligence"],
@@ -595,6 +603,7 @@ export const intelligenceRoutes: RouteDefinition[] = [
     path: "/api/v1/intelligence/council",
     authRequired: true,
     tenantRequired: true,
+    permissions: ["intelligence:create"],
     bodySchema: z.object({
       assessment_id: z.string().uuid(),
       target_framework_id: z.string().uuid(),

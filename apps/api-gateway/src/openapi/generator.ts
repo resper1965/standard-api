@@ -2,6 +2,7 @@ import { OpenApiGeneratorV3 } from "@asteasolutions/zod-to-openapi";
 import type { RouteConfig } from "@asteasolutions/zod-to-openapi";
 import { z } from "@standard/schemas";
 import { registry } from "./registry";
+import { responseSchemaFor } from "./response-schemas";
 import type { RouteDefinition } from "../http";
 import { convertZodToOpenApi } from "./zod-converter";
 
@@ -84,12 +85,19 @@ export function synthesizeOperation(
   openapiPath: string,
 ): Omit<RouteConfig, "method" | "path"> {
   const params = pathParamNames(openapiPath);
+  const body = responseSchemaFor(route.method, route.path);
+  const ok = body
+    ? {
+        description: "Successful response.",
+        content: { "application/json": { schema: body } },
+      }
+    : DEFAULT_RESPONSES[200];
 
   return {
     tags: [tagForPath(route.path)],
     summary: fallbackSummary(route.method, openapiPath),
     description: synthesizedDescription(route),
-    responses: { ...DEFAULT_RESPONSES },
+    responses: { ...DEFAULT_RESPONSES, 200: ok },
     ...(params.length > 0 ? { request: { params: paramsSchema(params) } } : {}),
     ...(isPublic(route) ? { security: [] } : {}),
   } as Omit<RouteConfig, "method" | "path">;
