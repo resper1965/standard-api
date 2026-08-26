@@ -13,6 +13,9 @@ export default [
       "scratch/**",
       "evals/**",
       "scripts/_archive/**",
+      // CommonJS launcher declared under `bin`; the TS-oriented rules below
+      // reject its require() calls and it is not part of the typed source.
+      "packages/mcp-server/bin/**",
     ],
   },
   js.configs.recommended,
