@@ -25,6 +25,8 @@ import "./m2m-rbac-integration.test"; // regression: M2M wildcard key + RBAC + S
 import "./llm-provider-validation.test"; // regression: mock LLM fallback + evidence evaluation
 import "./sdk-compliance.test";
 import "./ledger-harness.test";
+import "./provenance-validation.test"; // audit M-04: existed on disk but was never imported
+import "./cross-tenant-isolation.test"; // audit C-02/C-03/A-03: cross-organization access regressions
 import { runTests } from "./test-kit";
 
 await runTests();

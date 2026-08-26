@@ -13,6 +13,7 @@ import { recordRequestObservability } from "./middleware/request-observability.m
 import { assertRbac } from "./middleware/rbac.middleware";
 import { assertApiKeyScopes } from "./middleware/scope.middleware";
 import { resolveOrganizationContext } from "./middleware/tenant.middleware";
+import { attachTenantDb } from "./middleware/tenant-db.middleware";
 import { resolveTraceId } from "./middleware/trace.middleware";
 import {
   checkIdempotency,
@@ -289,6 +290,11 @@ export const createApp = (
       const tenantRequired =
         route.tenantRequired ?? defaultTenantRequired(route);
       await resolveOrganizationContext(ctx, tenantRequired);
+
+      // Attach the tenant-scoped DB helpers only once the organization is fully
+      // resolved (slug -> UUID, platform-admin org switch). Attaching earlier
+      // would scope scopeWhere() to a different org than the RLS envelope below.
+      attachTenantDb(ctx);
 
       await assertRbac(ctx, route.permissions);
       assertApiKeyScopes(
