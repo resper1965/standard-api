@@ -21977,7 +21977,7 @@
     "/docs/openapi.json": {
       "get": {
         "tags": [
-          ""
+          "docs"
         ],
         "summary": "GET /docs/openapi.json",
         "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet.",
@@ -22004,7 +22004,7 @@
     "/openapi.json": {
       "get": {
         "tags": [
-          ""
+          "openapi.json"
         ],
         "summary": "GET /openapi.json",
         "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet.",
@@ -22031,7 +22031,7 @@
     "/": {
       "get": {
         "tags": [
-          ""
+          "root"
         ],
         "summary": "GET /",
         "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet.",
@@ -22058,7 +22058,7 @@
     "/docs": {
       "get": {
         "tags": [
-          ""
+          "docs"
         ],
         "summary": "GET /docs",
         "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet.",
@@ -22085,7 +22085,7 @@
     "/docs/cookbook": {
       "get": {
         "tags": [
-          ""
+          "docs"
         ],
         "summary": "GET /docs/cookbook",
         "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet.",
@@ -22112,7 +22112,7 @@
     "/llms.txt": {
       "get": {
         "tags": [
-          ""
+          "llms.txt"
         ],
         "summary": "GET /llms.txt",
         "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet.",
@@ -22139,7 +22139,7 @@
     "/llms-full.txt": {
       "get": {
         "tags": [
-          ""
+          "llms full.txt"
         ],
         "summary": "GET /llms-full.txt",
         "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet.",
@@ -22166,7 +22166,7 @@
     "/mcp": {
       "get": {
         "tags": [
-          ""
+          "mcp"
         ],
         "summary": "GET /mcp",
         "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet.",
@@ -22191,7 +22191,7 @@
       },
       "post": {
         "tags": [
-          ""
+          "mcp"
         ],
         "summary": "POST /mcp",
         "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): agent:create.",
@@ -22218,7 +22218,7 @@
     "/docs/mcp": {
       "get": {
         "tags": [
-          ""
+          "docs"
         ],
         "summary": "GET /docs/mcp",
         "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet.",
@@ -22323,7 +22323,7 @@
     "/health": {
       "get": {
         "tags": [
-          ""
+          "health"
         ],
         "summary": "GET /health",
         "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet.",
@@ -22404,7 +22404,7 @@
     "/api/health/auth": {
       "get": {
         "tags": [
-          ""
+          "api"
         ],
         "summary": "GET /api/health/auth",
         "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet.",
@@ -28699,7 +28699,7 @@
     "/api/observability/audit": {
       "get": {
         "tags": [
-          ""
+          "api"
         ],
         "summary": "GET /api/observability/audit",
         "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): audit:read.",
@@ -36472,7 +36472,7 @@
     "/.well-known/security.txt": {
       "get": {
         "tags": [
-          ""
+          ".well known"
         ],
         "summary": "GET /.well-known/security.txt",
         "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet.",
@@ -36499,7 +36499,7 @@
     "/security.txt": {
       "get": {
         "tags": [
-          ""
+          "security.txt"
         ],
         "summary": "GET /security.txt",
         "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet.",
@@ -36526,7 +36526,7 @@
     "/robots.txt": {
       "get": {
         "tags": [
-          ""
+          "robots.txt"
         ],
         "summary": "GET /robots.txt",
         "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet.",

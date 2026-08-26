@@ -1,0 +1,83 @@
+import { describe, expect, it } from "vitest";
+import type { RouteDefinition } from "../../http";
+import { synthesizeOperation, tagForPath } from "../generator";
+
+const route = (over: Partial<RouteDefinition> = {}): RouteDefinition =>
+  ({
+    method: "GET",
+    path: "/api/v1/scf/versions/:versionId/controls",
+    protected: true,
+    handler: async () => new Response(null),
+    ...over,
+  }) as RouteDefinition;
+
+describe("tagForPath", () => {
+  it("groups by the resource segment, not the version prefix", () => {
+    expect(tagForPath("/api/v1/assessments/:id")).toBe("assessments");
+  });
+
+  it("upper-cases the SCF acronym", () => {
+    expect(tagForPath("/api/v1/scf/versions")).toBe("SCF");
+  });
+
+  it("turns a hyphenated segment into words", () => {
+    expect(tagForPath("/api/v1/risk-register/:id")).toBe("risk register");
+  });
+
+  it("falls back to the first segment for unversioned paths", () => {
+    expect(tagForPath("/health")).toBe("health");
+    expect(tagForPath("/llms-full.txt")).toBe("llms full.txt");
+  });
+
+  it("never yields an empty tag for the root path", () => {
+    expect(tagForPath("/")).toBe("root");
+  });
+});
+
+describe("synthesizeOperation", () => {
+  it("declares every path parameter it is given", () => {
+    const op = synthesizeOperation(
+      route(),
+      "/api/v1/scf/versions/{versionId}/controls",
+    ) as any;
+
+    expect(Object.keys(op.request.params.shape)).toEqual(["versionId"]);
+  });
+
+  it("omits the request block when the path has no parameters", () => {
+    const op = synthesizeOperation(
+      route({ path: "/api/v1/scf/versions" }),
+      "/api/v1/scf/versions",
+    ) as any;
+
+    expect(op.request).toBeUndefined();
+  });
+
+  it("names the permissions the route already declares", () => {
+    const op = synthesizeOperation(
+      route({ permissions: ["assessment:read", "scf:read"] as any }),
+      "/api/v1/scf/versions",
+    ) as any;
+
+    expect(op.description).toContain("assessment:read, scf:read");
+  });
+
+  // A route that opts out of auth must not inherit the global BearerApiKey
+  // requirement, or the spec would tell clients to authenticate against
+  // endpoints that reject credentials.
+  it("clears security only for routes that are both unprotected and unauthenticated", () => {
+    const open = synthesizeOperation(
+      route({ protected: false, authRequired: false }),
+      "/health",
+    ) as any;
+    expect(open.security).toEqual([]);
+
+    const closed = synthesizeOperation(route(), "/api/v1/scf/versions") as any;
+    expect(closed.security).toBeUndefined();
+  });
+
+  it("carries the 403 the scope middleware can raise", () => {
+    const op = synthesizeOperation(route(), "/api/v1/scf/versions") as any;
+    expect(Object.keys(op.responses)).toContain("403");
+  });
+});

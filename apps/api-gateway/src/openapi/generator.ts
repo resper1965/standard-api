@@ -14,9 +14,16 @@ let cachedSpec: any = null;
  * This should be called once at startup (e.g., from app.ts) to break circular dependencies.
  */
 /** Turns "/api/v1/scf/versions/:id/controls" into "SCF" for grouping. */
-function tagForPath(path: string): string {
-  const segments = path.replace(/^\/api\/v\d+\//, "").split("/");
-  const head = segments[0] ?? "misc";
+export function tagForPath(path: string): string {
+  // Unversioned paths ("/health", "/llms.txt", and "/" itself) have no
+  // /api/v1/ prefix to strip, so splitting leaves an empty leading segment.
+  // Falling through with it produced 16 operations tagged "" in the spec.
+  const head = path
+    .replace(/^\/api\/v\d+\//, "")
+    .split("/")
+    .find((segment) => segment.length > 0);
+
+  if (!head) return "root";
   return head === "scf" ? "SCF" : head.replace(/-/g, " ");
 }
 
@@ -33,7 +40,7 @@ function fallbackSummary(method: string, openapiPath: string): string {
  * hand-written one, but an endpoint that appears with its parameters,
  * auth and permissions beats an endpoint that does not appear at all.
  */
-function synthesizeOperation(
+export function synthesizeOperation(
   route: RouteDefinition,
   openapiPath: string,
 ): Omit<RouteConfig, "method" | "path"> {
