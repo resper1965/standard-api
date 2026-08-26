@@ -100,3 +100,37 @@ describe("RESPONSE_SCHEMAS", () => {
     expect(orphans).toEqual([]);
   });
 });
+
+describe("FIELD_DOCS", () => {
+  // A renamed component or field would leave the documentation pointing at
+  // nothing, and the spec would quietly lose it. annotateFields reports what
+  // it could not place.
+  it("places every entry on a component that exists", async () => {
+    const { annotateFields, FIELD_DOCS } = await import("../generator");
+
+    const spec = {
+      components: {
+        schemas: Object.entries(FIELD_DOCS).reduce<Record<string, any>>(
+          (acc, [key]) => {
+            const [component, field] = key.split(".");
+            acc[component as string] ??= { properties: {} };
+            acc[component as string].properties[field as string] = {
+              type: "string",
+            };
+            return acc;
+          },
+          {},
+        ),
+      },
+    };
+
+    expect(annotateFields(spec)).toEqual([]);
+  });
+
+  it("reports a key it could not place instead of dropping it", async () => {
+    const { annotateFields } = await import("../generator");
+    expect(
+      annotateFields({ components: { schemas: {} } }).length,
+    ).toBeGreaterThanOrEqual(1);
+  });
+});
