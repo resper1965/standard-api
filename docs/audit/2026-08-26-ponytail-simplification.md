@@ -220,6 +220,32 @@ pretext for removing validation, security, auditability or tests.
 
 ---
 
+## Removed: `apps/docs` (done)
+
+An Astro/Starlight site — 96 markdown files, 109 files total — that **no workflow
+ever built or deployed**. Grepping `package.json`, `pnpm-workspace.yaml`,
+`.github/` and `scripts/` for `apps/docs` or `@standard/docs` returned nothing.
+
+It was also redundant: 55 of 60 sampled files under
+`apps/docs/src/content/docs/` had a byte-for-byte twin in `docs/`. The content
+lives and is maintained in `docs/`; the Astro copy was a stale mirror, last
+touched in passing on 2026-07-01.
+
+The cost was not the disk space. It pulled `astro`, `sharp` and `svgo` into the
+dependency tree, and three of the 25 high-severity advisories cleared in
+`2c6d952` entered through this package alone. After removal, `pnpm why astro`
+and `pnpm why svgo` return nothing and both overrides were dropped. `sharp`
+stays overridden because `wrangler > miniflare` still depends on it.
+
+Removing it also let the `js-yaml` override return to global scope: it had been
+narrowed to `cosmiconfig>js-yaml` solely because `@astrojs/internal-helpers`
+does `import yaml from "js-yaml"` and 4.3.x dropped the default export.
+
+If published documentation is wanted later, Starlight can be regenerated from
+`docs/` in an afternoon — this time wired to a workflow that actually deploys it.
+
+---
+
 ## Suggested order
 
 Highest return first, assuming the security-audit queue comes before this.
@@ -230,6 +256,7 @@ Highest return first, assuming the security-audit queue comes before this.
 | Act on the 118 files in `fallow-report.txt` | High | Low |
 | Consolidate the 16 test-kits into `@standard/test-kit` | ~600 lines | Low |
 | Unify the 3 agent-runtime repositories | ~230 lines | Low |
+| Remove `apps/docs` (never deployed, mirrors `docs/`) | 109 files + 3 deps | None — **done** |
 | Take `.archive/` and friends out of the working tree | 75 files | None |
 | Type `Env` and drop the bindings `as any` | ~100 `any` | Medium |
 | Evaluate unifying the PostgreSQL drivers | 1 dep | Medium |

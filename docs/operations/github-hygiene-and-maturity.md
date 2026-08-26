@@ -59,7 +59,7 @@ repositories. On Free, protection silently stops applying when a public
 repository is made private. Check immediately after the change — a GRC platform
 with an unprotected production branch is worse than the problem privacy solves.
 
-### Release process is broken
+### Release process is broken — FIXED in #128
 
 `package.json` says `1.2.2` and releases exist through `v1.2.2` (2026-06-03).
 Yet release-please PR #101, open since 2026-06-22 and marked `stale`, proposes
@@ -77,8 +77,16 @@ including auth fixes, with no release or changelog. For a platform selling audit
 trails, untraceable versioning of the product itself is an inconsistency an
 external auditor would notice.
 
-**Fix:** move to `release-please-config.json` + `.release-please-manifest.json`
+**Resolved in #128.** Moved to `release-please-config.json` +
+`.release-please-manifest.json`
 pinned to `{".": "1.2.2"}`, then close #101 as born from invalid state.
+
+A side effect worth recording: the same `release-please.yml` already generates a
+CycloneDX SBOM and attaches it to each release. With no releases cutting, no SBOM
+has been produced either — so a supply-chain artifact the repository already
+builds has been silently missing for three months. Restoring releases restores it
+with no new tooling, which moves one row of the maturity table below from "gap"
+to "already built, just unreachable".
 
 ### Open PRs
 
@@ -118,7 +126,7 @@ the controls ran.
 | --- | --- | --- |
 | Required status checks | Protection exists, but required checks did not stop three broken workflows going unnoticed for months | Require `Lint & Typecheck`, `Unit & Contract Tests`, `Regression, Ev & E2E`. A check failing 100% of PRs and blocking nothing is not a control. |
 | Deploy credentials | Long-lived tokens in secrets: Cloudflare, Neon, DefectDojo | OIDC with ephemeral credentials where supported. Removes the whole "leaked secret stays valid" class. |
-| Build provenance | None | `actions/attest-build-provenance` on artifacts, CycloneDX SBOM attached to releases. |
+| Build provenance | CycloneDX SBOM already wired into `release-please.yml`, but inert — no release has cut since 2026-06-03, so no SBOM was produced either (fixed in #128). No attestation. | Keep the restored SBOM; add `actions/attest-build-provenance` on artifacts. |
 | Measurable posture | No aggregate metric | Weekly OpenSSF Scorecard — a numeric baseline that catches config regressions, exactly the category of this audit's three bugs. |
 | Vulnerability disclosure | `SECURITY.md` points at email and advisories | Enable Private Vulnerability Reporting so the channel exists in the UI, not only in the document. |
 | Commit integrity | No signing requirement | Require signed commits and linear history on `main`. Consistent with the ADR-002 forensic-immutability claim. |
@@ -146,7 +154,7 @@ mandatory enough that a break shows up the same day.
 | This week | Required reviewers on `production` and recovery environments | 10 min |
 | This week | Auto-delete branches; clear the five stale ones | 10 min |
 | This month | Private Vulnerability Reporting; OpenSSF Scorecard | 1 h |
-| This month | SBOM and attestation on releases | half a day |
+| This month | Build attestation on releases (SBOM restored by #128) | 2 hours |
 | Next quarter | OIDC for Cloudflare and Neon; signed commits | 1–2 days |
 
 ---

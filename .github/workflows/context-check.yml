@@ -46,7 +46,20 @@ jobs:
             exit 0
           fi
 
-          changed_files="$(gh pr diff "${PR_NUMBER}" --name-only)"
+          # `gh pr diff --name-only` downloads the whole unified diff just to
+          # list filenames, and GitHub refuses it past 20k lines:
+          #   HTTP 406: Sorry, the diff exceeded the maximum number of lines
+          #   PullRequest.diff too_large
+          # A PR that deletes a directory hits that easily. The files endpoint
+          # returns names only and paginates, so size stops mattering.
+          changed_files="$(gh api --paginate \
+            "repos/${GH_REPO}/pulls/${PR_NUMBER}/files" \
+            --jq '.[].filename')"
+
+          if [ -z "${changed_files}" ]; then
+            echo "::error::Could not read the changed-file list for PR #${PR_NUMBER}."
+            exit 1
+          fi
 
           echo "Changed files:"
           echo "${changed_files}"
