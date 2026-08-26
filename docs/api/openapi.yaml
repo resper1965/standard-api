@@ -19151,6 +19151,112 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  assessment_id:
+                    type: string
+                    format: uuid
+                  soa_version_id:
+                    type: string
+                    format: uuid
+                  findings:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        evidence_finding_id:
+                          type: string
+                          format: uuid
+                        organization_id:
+                          type: string
+                          format: uuid
+                        assessment_id:
+                          type: string
+                          format: uuid
+                        soa_version_id:
+                          type: string
+                          format: uuid
+                        soa_item_id:
+                          type: string
+                          format: uuid
+                        framework_id:
+                          type: string
+                          format: uuid
+                        framework_requirement_id:
+                          type: string
+                          format: uuid
+                        scf_version_id:
+                          type: string
+                          format: uuid
+                        scf_control_id:
+                          type: string
+                          format: uuid
+                        evidence_strength:
+                          type: string
+                          enum:
+                            - strong
+                            - partial
+                            - weak
+                            - absent
+                            - conflicting
+                            - not_checked
+                        evidence_status:
+                          type: string
+                          enum:
+                            - candidate
+                            - accepted
+                            - rejected
+                            - insufficient
+                            - conflicting
+                            - not_evidenced
+                        evidence_summary:
+                          type: string
+                        evidence_limitations:
+                          type: array
+                          items:
+                            type: string
+                          default: []
+                        confidence_score:
+                          type: number
+                          minimum: 0
+                          maximum: 1
+                        generated_by_agent_run_id:
+                          type: string
+                          format: uuid
+                        trace_id:
+                          type: string
+                          minLength: 8
+                        created_at:
+                          type: string
+                        updated_at:
+                          type: string
+                      required:
+                        - evidence_finding_id
+                        - organization_id
+                        - assessment_id
+                        - soa_version_id
+                        - soa_item_id
+                        - framework_id
+                        - framework_requirement_id
+                        - scf_version_id
+                        - evidence_strength
+                        - evidence_status
+                        - evidence_summary
+                        - confidence_score
+                        - trace_id
+                        - created_at
+                        - updated_at
+                  trace_id:
+                    type: string
+                    minLength: 8
+                required:
+                  - assessment_id
+                  - soa_version_id
+                  - findings
+                  - trace_id
         '400':
           description: Validation error.
         '401':
@@ -19177,6 +19283,121 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        evidence_finding_id:
+                          type: string
+                          format: uuid
+                        organization_id:
+                          type: string
+                          format: uuid
+                        assessment_id:
+                          type: string
+                          format: uuid
+                        soa_version_id:
+                          type: string
+                          format: uuid
+                        soa_item_id:
+                          type: string
+                          format: uuid
+                        framework_id:
+                          type: string
+                          format: uuid
+                        framework_requirement_id:
+                          type: string
+                          format: uuid
+                        scf_version_id:
+                          type: string
+                          format: uuid
+                        scf_control_id:
+                          type: string
+                          format: uuid
+                        evidence_strength:
+                          type: string
+                          enum:
+                            - strong
+                            - partial
+                            - weak
+                            - absent
+                            - conflicting
+                            - not_checked
+                        evidence_status:
+                          type: string
+                          enum:
+                            - candidate
+                            - accepted
+                            - rejected
+                            - insufficient
+                            - conflicting
+                            - not_evidenced
+                        evidence_summary:
+                          type: string
+                        evidence_limitations:
+                          type: array
+                          items:
+                            type: string
+                          default: []
+                        confidence_score:
+                          type: number
+                          minimum: 0
+                          maximum: 1
+                        generated_by_agent_run_id:
+                          type: string
+                          format: uuid
+                        trace_id:
+                          type: string
+                          minLength: 8
+                        created_at:
+                          type: string
+                        updated_at:
+                          type: string
+                      required:
+                        - evidence_finding_id
+                        - organization_id
+                        - assessment_id
+                        - soa_version_id
+                        - soa_item_id
+                        - framework_id
+                        - framework_requirement_id
+                        - scf_version_id
+                        - evidence_strength
+                        - evidence_status
+                        - evidence_summary
+                        - confidence_score
+                        - trace_id
+                        - created_at
+                        - updated_at
+                  pagination:
+                    type: object
+                    properties:
+                      has_more:
+                        type: boolean
+                      next_cursor:
+                        type: string
+                        nullable: true
+                      limit:
+                        type: number
+                      offset:
+                        type: number
+                      total:
+                        type: number
+                    required:
+                      - has_more
+                  trace_id:
+                    type: string
+                    example: abc-123-def
+                required:
+                  - data
+                  - pagination
+                  - trace_id
         '400':
           description: Validation error.
         '401':
@@ -19203,6 +19424,93 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  evidence_finding_id:
+                    type: string
+                    format: uuid
+                  organization_id:
+                    type: string
+                    format: uuid
+                  assessment_id:
+                    type: string
+                    format: uuid
+                  soa_version_id:
+                    type: string
+                    format: uuid
+                  soa_item_id:
+                    type: string
+                    format: uuid
+                  framework_id:
+                    type: string
+                    format: uuid
+                  framework_requirement_id:
+                    type: string
+                    format: uuid
+                  scf_version_id:
+                    type: string
+                    format: uuid
+                  scf_control_id:
+                    type: string
+                    format: uuid
+                  evidence_strength:
+                    type: string
+                    enum:
+                      - strong
+                      - partial
+                      - weak
+                      - absent
+                      - conflicting
+                      - not_checked
+                  evidence_status:
+                    type: string
+                    enum:
+                      - candidate
+                      - accepted
+                      - rejected
+                      - insufficient
+                      - conflicting
+                      - not_evidenced
+                  evidence_summary:
+                    type: string
+                  evidence_limitations:
+                    type: array
+                    items:
+                      type: string
+                    default: []
+                  confidence_score:
+                    type: number
+                    minimum: 0
+                    maximum: 1
+                  generated_by_agent_run_id:
+                    type: string
+                    format: uuid
+                  trace_id:
+                    type: string
+                    example: abc-123-def
+                  created_at:
+                    type: string
+                  updated_at:
+                    type: string
+                required:
+                  - evidence_finding_id
+                  - organization_id
+                  - assessment_id
+                  - soa_version_id
+                  - soa_item_id
+                  - framework_id
+                  - framework_requirement_id
+                  - scf_version_id
+                  - evidence_strength
+                  - evidence_status
+                  - evidence_summary
+                  - confidence_score
+                  - trace_id
+                  - created_at
+                  - updated_at
         '400':
           description: Validation error.
         '401':
@@ -19229,6 +19537,93 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  evidence_finding_id:
+                    type: string
+                    format: uuid
+                  organization_id:
+                    type: string
+                    format: uuid
+                  assessment_id:
+                    type: string
+                    format: uuid
+                  soa_version_id:
+                    type: string
+                    format: uuid
+                  soa_item_id:
+                    type: string
+                    format: uuid
+                  framework_id:
+                    type: string
+                    format: uuid
+                  framework_requirement_id:
+                    type: string
+                    format: uuid
+                  scf_version_id:
+                    type: string
+                    format: uuid
+                  scf_control_id:
+                    type: string
+                    format: uuid
+                  evidence_strength:
+                    type: string
+                    enum:
+                      - strong
+                      - partial
+                      - weak
+                      - absent
+                      - conflicting
+                      - not_checked
+                  evidence_status:
+                    type: string
+                    enum:
+                      - candidate
+                      - accepted
+                      - rejected
+                      - insufficient
+                      - conflicting
+                      - not_evidenced
+                  evidence_summary:
+                    type: string
+                  evidence_limitations:
+                    type: array
+                    items:
+                      type: string
+                    default: []
+                  confidence_score:
+                    type: number
+                    minimum: 0
+                    maximum: 1
+                  generated_by_agent_run_id:
+                    type: string
+                    format: uuid
+                  trace_id:
+                    type: string
+                    minLength: 8
+                  created_at:
+                    type: string
+                  updated_at:
+                    type: string
+                required:
+                  - evidence_finding_id
+                  - organization_id
+                  - assessment_id
+                  - soa_version_id
+                  - soa_item_id
+                  - framework_id
+                  - framework_requirement_id
+                  - scf_version_id
+                  - evidence_strength
+                  - evidence_status
+                  - evidence_summary
+                  - confidence_score
+                  - trace_id
+                  - created_at
+                  - updated_at
         '400':
           description: Validation error.
         '401':
@@ -19255,6 +19650,74 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        evidence_source_id:
+                          type: string
+                          format: uuid
+                        organization_id:
+                          type: string
+                          format: uuid
+                        assessment_id:
+                          type: string
+                          format: uuid
+                        evidence_finding_id:
+                          type: string
+                          format: uuid
+                        document_id:
+                          type: string
+                          format: uuid
+                        chunk_id:
+                          type: string
+                          format: uuid
+                        vector_reference_id:
+                          type: string
+                          format: uuid
+                        source_type:
+                          type: string
+                        source_title:
+                          type: string
+                        source_location:
+                          type: string
+                        snippet:
+                          type: string
+                          maxLength: 500
+                        retrieval_score:
+                          type: number
+                          minimum: 0
+                        retrieval_method:
+                          type: string
+                        candidate_evidence:
+                          type: boolean
+                        created_at:
+                          type: string
+                      required:
+                        - evidence_source_id
+                        - organization_id
+                        - assessment_id
+                        - evidence_finding_id
+                        - document_id
+                        - chunk_id
+                        - source_type
+                        - snippet
+                        - retrieval_score
+                        - retrieval_method
+                        - candidate_evidence
+                        - created_at
+                  trace_id:
+                    type: string
+                    example: abc-123-def
+                required:
+                  - data
+                  - trace_id
         '400':
           description: Validation error.
         '401':
@@ -19281,6 +19744,81 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  gap_analysis_version_id:
+                    type: string
+                    format: uuid
+                  organization_id:
+                    type: string
+                    format: uuid
+                  assessment_id:
+                    type: string
+                    format: uuid
+                  version_number:
+                    type: integer
+                    minimum: 0
+                    exclusiveMinimum: true
+                  status:
+                    type: string
+                    enum:
+                      - draft
+                      - under_review
+                      - approved
+                      - superseded
+                      - archived
+                  source_soa_version_id:
+                    type: string
+                    format: uuid
+                  framework_id:
+                    type: string
+                    format: uuid
+                  scf_version_id:
+                    type: string
+                    format: uuid
+                  generated_by_agent_run_id:
+                    type: string
+                    format: uuid
+                  created_by:
+                    type: string
+                    format: uuid
+                  created_at:
+                    type: string
+                  submitted_for_review_at:
+                    type: string
+                  approved_by:
+                    type: string
+                    format: uuid
+                  approved_at:
+                    type: string
+                  approval_event_id:
+                    type: string
+                    format: uuid
+                  superseded_by:
+                    type: string
+                    format: uuid
+                  trace_id:
+                    type: string
+                    minLength: 8
+                  metadata:
+                    type: object
+                    additionalProperties: {}
+                    default: {}
+                required:
+                  - gap_analysis_version_id
+                  - organization_id
+                  - assessment_id
+                  - version_number
+                  - status
+                  - source_soa_version_id
+                  - framework_id
+                  - scf_version_id
+                  - created_by
+                  - created_at
+                  - trace_id
         '400':
           description: Validation error.
         '401':
@@ -19307,6 +19845,92 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        gap_analysis_version_id:
+                          type: string
+                          format: uuid
+                        organization_id:
+                          type: string
+                          format: uuid
+                        assessment_id:
+                          type: string
+                          format: uuid
+                        version_number:
+                          type: integer
+                          minimum: 0
+                          exclusiveMinimum: true
+                        status:
+                          type: string
+                          enum:
+                            - draft
+                            - under_review
+                            - approved
+                            - superseded
+                            - archived
+                        source_soa_version_id:
+                          type: string
+                          format: uuid
+                        framework_id:
+                          type: string
+                          format: uuid
+                        scf_version_id:
+                          type: string
+                          format: uuid
+                        generated_by_agent_run_id:
+                          type: string
+                          format: uuid
+                        created_by:
+                          type: string
+                          format: uuid
+                        created_at:
+                          type: string
+                        submitted_for_review_at:
+                          type: string
+                        approved_by:
+                          type: string
+                          format: uuid
+                        approved_at:
+                          type: string
+                        approval_event_id:
+                          type: string
+                          format: uuid
+                        superseded_by:
+                          type: string
+                          format: uuid
+                        trace_id:
+                          type: string
+                          minLength: 8
+                        metadata:
+                          type: object
+                          additionalProperties: {}
+                          default: {}
+                      required:
+                        - gap_analysis_version_id
+                        - organization_id
+                        - assessment_id
+                        - version_number
+                        - status
+                        - source_soa_version_id
+                        - framework_id
+                        - scf_version_id
+                        - created_by
+                        - created_at
+                        - trace_id
+                  trace_id:
+                    type: string
+                    example: abc-123-def
+                required:
+                  - data
+                  - trace_id
         '400':
           description: Validation error.
         '401':
@@ -19333,6 +19957,81 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  gap_analysis_version_id:
+                    type: string
+                    format: uuid
+                  organization_id:
+                    type: string
+                    format: uuid
+                  assessment_id:
+                    type: string
+                    format: uuid
+                  version_number:
+                    type: integer
+                    minimum: 0
+                    exclusiveMinimum: true
+                  status:
+                    type: string
+                    enum:
+                      - draft
+                      - under_review
+                      - approved
+                      - superseded
+                      - archived
+                  source_soa_version_id:
+                    type: string
+                    format: uuid
+                  framework_id:
+                    type: string
+                    format: uuid
+                  scf_version_id:
+                    type: string
+                    format: uuid
+                  generated_by_agent_run_id:
+                    type: string
+                    format: uuid
+                  created_by:
+                    type: string
+                    format: uuid
+                  created_at:
+                    type: string
+                  submitted_for_review_at:
+                    type: string
+                  approved_by:
+                    type: string
+                    format: uuid
+                  approved_at:
+                    type: string
+                  approval_event_id:
+                    type: string
+                    format: uuid
+                  superseded_by:
+                    type: string
+                    format: uuid
+                  trace_id:
+                    type: string
+                    example: abc-123-def
+                  metadata:
+                    type: object
+                    additionalProperties: {}
+                    default: {}
+                required:
+                  - gap_analysis_version_id
+                  - organization_id
+                  - assessment_id
+                  - version_number
+                  - status
+                  - source_soa_version_id
+                  - framework_id
+                  - scf_version_id
+                  - created_by
+                  - created_at
+                  - trace_id
         '400':
           description: Validation error.
         '401':
@@ -19359,6 +20058,174 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        gap_finding_id:
+                          type: string
+                          format: uuid
+                        organization_id:
+                          type: string
+                          format: uuid
+                        assessment_id:
+                          type: string
+                          format: uuid
+                        gap_analysis_version_id:
+                          type: string
+                          format: uuid
+                        soa_version_id:
+                          type: string
+                          format: uuid
+                        soa_item_id:
+                          type: string
+                          format: uuid
+                        framework_id:
+                          type: string
+                          format: uuid
+                        framework_requirement_id:
+                          type: string
+                          format: uuid
+                        scf_version_id:
+                          type: string
+                          format: uuid
+                        scf_control_id:
+                          type: string
+                          format: uuid
+                        evidence_finding_id:
+                          type: string
+                          format: uuid
+                        gap_code:
+                          type: string
+                        assessment_status:
+                          type: string
+                          enum:
+                            - met
+                            - partially_met
+                            - not_met
+                            - not_evidenced
+                            - not_applicable_justified
+                            - not_applicable_not_justified
+                            - requires_validation
+                        gap_type:
+                          type: string
+                          enum:
+                            - documentation_gap
+                            - implementation_gap
+                            - evidence_gap
+                            - effectiveness_gap
+                            - governance_gap
+                            - technical_gap
+                            - contractual_gap
+                            - monitoring_gap
+                            - no_gap
+                            - not_applicable
+                        severity:
+                          type: string
+                          enum:
+                            - informational
+                            - low
+                            - medium
+                            - high
+                            - critical
+                        is_mcr_gap:
+                          type: boolean
+                          default: false
+                        impact:
+                          type: string
+                        likelihood:
+                          type: string
+                        gap_summary:
+                          type: string
+                        gap_rationale:
+                          type: string
+                        recommendation_summary:
+                          type: string
+                        confidence_score:
+                          type: number
+                          minimum: 0
+                          maximum: 1
+                        requires_user_validation:
+                          type: boolean
+                        responsibility_type:
+                          type: string
+                          enum:
+                            - internal
+                            - customer
+                            - third_party_provider
+                            - shared
+                        roc_determination:
+                          type: string
+                          enum:
+                            - strictly_conforms
+                            - conforms
+                            - significant_deficiency
+                            - material_weakness
+                        inherent_risk_score:
+                          type: string
+                        residual_risk_score:
+                          type: string
+                        source_chunks:
+                          type: array
+                          items:
+                            type: string
+                        created_at:
+                          type: string
+                        updated_at:
+                          type: string
+                      required:
+                        - gap_finding_id
+                        - organization_id
+                        - assessment_id
+                        - gap_analysis_version_id
+                        - soa_version_id
+                        - soa_item_id
+                        - framework_id
+                        - framework_requirement_id
+                        - scf_version_id
+                        - gap_code
+                        - assessment_status
+                        - gap_type
+                        - severity
+                        - gap_summary
+                        - confidence_score
+                        - requires_user_validation
+                        - responsibility_type
+                        - created_at
+                        - updated_at
+                  pagination:
+                    type: object
+                    properties:
+                      has_more:
+                        type: boolean
+                      next_cursor:
+                        type: string
+                        nullable: true
+                      limit:
+                        type: number
+                      offset:
+                        type: number
+                      total:
+                        type: number
+                    required:
+                      - has_more
+                  trace_id:
+                    type: string
+                    example: abc-123-def
+                  meta:
+                    type: object
+                    additionalProperties: {}
+                required:
+                  - data
+                  - pagination
+                  - trace_id
+                  - meta
         '400':
           description: Validation error.
         '401':
@@ -19385,6 +20252,146 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  gap_finding_id:
+                    type: string
+                    format: uuid
+                  organization_id:
+                    type: string
+                    format: uuid
+                  assessment_id:
+                    type: string
+                    format: uuid
+                  gap_analysis_version_id:
+                    type: string
+                    format: uuid
+                  soa_version_id:
+                    type: string
+                    format: uuid
+                  soa_item_id:
+                    type: string
+                    format: uuid
+                  framework_id:
+                    type: string
+                    format: uuid
+                  framework_requirement_id:
+                    type: string
+                    format: uuid
+                  scf_version_id:
+                    type: string
+                    format: uuid
+                  scf_control_id:
+                    type: string
+                    format: uuid
+                  evidence_finding_id:
+                    type: string
+                    format: uuid
+                  gap_code:
+                    type: string
+                  assessment_status:
+                    type: string
+                    enum:
+                      - met
+                      - partially_met
+                      - not_met
+                      - not_evidenced
+                      - not_applicable_justified
+                      - not_applicable_not_justified
+                      - requires_validation
+                  gap_type:
+                    type: string
+                    enum:
+                      - documentation_gap
+                      - implementation_gap
+                      - evidence_gap
+                      - effectiveness_gap
+                      - governance_gap
+                      - technical_gap
+                      - contractual_gap
+                      - monitoring_gap
+                      - no_gap
+                      - not_applicable
+                  severity:
+                    type: string
+                    enum:
+                      - informational
+                      - low
+                      - medium
+                      - high
+                      - critical
+                  is_mcr_gap:
+                    type: boolean
+                    default: false
+                  impact:
+                    type: string
+                  likelihood:
+                    type: string
+                  gap_summary:
+                    type: string
+                  gap_rationale:
+                    type: string
+                  recommendation_summary:
+                    type: string
+                  confidence_score:
+                    type: number
+                    minimum: 0
+                    maximum: 1
+                  requires_user_validation:
+                    type: boolean
+                  responsibility_type:
+                    type: string
+                    enum:
+                      - internal
+                      - customer
+                      - third_party_provider
+                      - shared
+                  roc_determination:
+                    type: string
+                    enum:
+                      - strictly_conforms
+                      - conforms
+                      - significant_deficiency
+                      - material_weakness
+                  inherent_risk_score:
+                    type: string
+                  residual_risk_score:
+                    type: string
+                  source_chunks:
+                    type: array
+                    items:
+                      type: string
+                  created_at:
+                    type: string
+                  updated_at:
+                    type: string
+                  trace_id:
+                    type: string
+                    example: abc-123-def
+                required:
+                  - gap_finding_id
+                  - organization_id
+                  - assessment_id
+                  - gap_analysis_version_id
+                  - soa_version_id
+                  - soa_item_id
+                  - framework_id
+                  - framework_requirement_id
+                  - scf_version_id
+                  - gap_code
+                  - assessment_status
+                  - gap_type
+                  - severity
+                  - gap_summary
+                  - confidence_score
+                  - requires_user_validation
+                  - responsibility_type
+                  - created_at
+                  - updated_at
+                  - trace_id
         '400':
           description: Validation error.
         '401':
@@ -19410,6 +20417,142 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  gap_finding_id:
+                    type: string
+                    format: uuid
+                  organization_id:
+                    type: string
+                    format: uuid
+                  assessment_id:
+                    type: string
+                    format: uuid
+                  gap_analysis_version_id:
+                    type: string
+                    format: uuid
+                  soa_version_id:
+                    type: string
+                    format: uuid
+                  soa_item_id:
+                    type: string
+                    format: uuid
+                  framework_id:
+                    type: string
+                    format: uuid
+                  framework_requirement_id:
+                    type: string
+                    format: uuid
+                  scf_version_id:
+                    type: string
+                    format: uuid
+                  scf_control_id:
+                    type: string
+                    format: uuid
+                  evidence_finding_id:
+                    type: string
+                    format: uuid
+                  gap_code:
+                    type: string
+                  assessment_status:
+                    type: string
+                    enum:
+                      - met
+                      - partially_met
+                      - not_met
+                      - not_evidenced
+                      - not_applicable_justified
+                      - not_applicable_not_justified
+                      - requires_validation
+                  gap_type:
+                    type: string
+                    enum:
+                      - documentation_gap
+                      - implementation_gap
+                      - evidence_gap
+                      - effectiveness_gap
+                      - governance_gap
+                      - technical_gap
+                      - contractual_gap
+                      - monitoring_gap
+                      - no_gap
+                      - not_applicable
+                  severity:
+                    type: string
+                    enum:
+                      - informational
+                      - low
+                      - medium
+                      - high
+                      - critical
+                  is_mcr_gap:
+                    type: boolean
+                    default: false
+                  impact:
+                    type: string
+                  likelihood:
+                    type: string
+                  gap_summary:
+                    type: string
+                  gap_rationale:
+                    type: string
+                  recommendation_summary:
+                    type: string
+                  confidence_score:
+                    type: number
+                    minimum: 0
+                    maximum: 1
+                  requires_user_validation:
+                    type: boolean
+                  responsibility_type:
+                    type: string
+                    enum:
+                      - internal
+                      - customer
+                      - third_party_provider
+                      - shared
+                  roc_determination:
+                    type: string
+                    enum:
+                      - strictly_conforms
+                      - conforms
+                      - significant_deficiency
+                      - material_weakness
+                  inherent_risk_score:
+                    type: string
+                  residual_risk_score:
+                    type: string
+                  source_chunks:
+                    type: array
+                    items:
+                      type: string
+                  created_at:
+                    type: string
+                  updated_at:
+                    type: string
+                required:
+                  - gap_finding_id
+                  - organization_id
+                  - assessment_id
+                  - gap_analysis_version_id
+                  - soa_version_id
+                  - soa_item_id
+                  - framework_id
+                  - framework_requirement_id
+                  - scf_version_id
+                  - gap_code
+                  - assessment_status
+                  - gap_type
+                  - severity
+                  - gap_summary
+                  - confidence_score
+                  - requires_user_validation
+                  - responsibility_type
+                  - created_at
+                  - updated_at
         '400':
           description: Validation error.
         '401':
@@ -19436,6 +20579,29 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valid:
+                    type: boolean
+                  blocking_errors:
+                    type: array
+                    items:
+                      type: string
+                  warnings:
+                    type: array
+                    items:
+                      type: string
+                  trace_id:
+                    type: string
+                    minLength: 8
+                required:
+                  - valid
+                  - blocking_errors
+                  - warnings
+                  - trace_id
         '400':
           description: Validation error.
         '401':
@@ -19462,6 +20628,81 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  gap_analysis_version_id:
+                    type: string
+                    format: uuid
+                  organization_id:
+                    type: string
+                    format: uuid
+                  assessment_id:
+                    type: string
+                    format: uuid
+                  version_number:
+                    type: integer
+                    minimum: 0
+                    exclusiveMinimum: true
+                  status:
+                    type: string
+                    enum:
+                      - draft
+                      - under_review
+                      - approved
+                      - superseded
+                      - archived
+                  source_soa_version_id:
+                    type: string
+                    format: uuid
+                  framework_id:
+                    type: string
+                    format: uuid
+                  scf_version_id:
+                    type: string
+                    format: uuid
+                  generated_by_agent_run_id:
+                    type: string
+                    format: uuid
+                  created_by:
+                    type: string
+                    format: uuid
+                  created_at:
+                    type: string
+                  submitted_for_review_at:
+                    type: string
+                  approved_by:
+                    type: string
+                    format: uuid
+                  approved_at:
+                    type: string
+                  approval_event_id:
+                    type: string
+                    format: uuid
+                  superseded_by:
+                    type: string
+                    format: uuid
+                  trace_id:
+                    type: string
+                    minLength: 8
+                  metadata:
+                    type: object
+                    additionalProperties: {}
+                    default: {}
+                required:
+                  - gap_analysis_version_id
+                  - organization_id
+                  - assessment_id
+                  - version_number
+                  - status
+                  - source_soa_version_id
+                  - framework_id
+                  - scf_version_id
+                  - created_by
+                  - created_at
+                  - trace_id
         '400':
           description: Validation error.
         '401':
@@ -19488,6 +20729,81 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  gap_analysis_version_id:
+                    type: string
+                    format: uuid
+                  organization_id:
+                    type: string
+                    format: uuid
+                  assessment_id:
+                    type: string
+                    format: uuid
+                  version_number:
+                    type: integer
+                    minimum: 0
+                    exclusiveMinimum: true
+                  status:
+                    type: string
+                    enum:
+                      - draft
+                      - under_review
+                      - approved
+                      - superseded
+                      - archived
+                  source_soa_version_id:
+                    type: string
+                    format: uuid
+                  framework_id:
+                    type: string
+                    format: uuid
+                  scf_version_id:
+                    type: string
+                    format: uuid
+                  generated_by_agent_run_id:
+                    type: string
+                    format: uuid
+                  created_by:
+                    type: string
+                    format: uuid
+                  created_at:
+                    type: string
+                  submitted_for_review_at:
+                    type: string
+                  approved_by:
+                    type: string
+                    format: uuid
+                  approved_at:
+                    type: string
+                  approval_event_id:
+                    type: string
+                    format: uuid
+                  superseded_by:
+                    type: string
+                    format: uuid
+                  trace_id:
+                    type: string
+                    minLength: 8
+                  metadata:
+                    type: object
+                    additionalProperties: {}
+                    default: {}
+                required:
+                  - gap_analysis_version_id
+                  - organization_id
+                  - assessment_id
+                  - version_number
+                  - status
+                  - source_soa_version_id
+                  - framework_id
+                  - scf_version_id
+                  - created_by
+                  - created_at
+                  - trace_id
         '400':
           description: Validation error.
         '401':
@@ -19514,6 +20830,81 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  gap_analysis_version_id:
+                    type: string
+                    format: uuid
+                  organization_id:
+                    type: string
+                    format: uuid
+                  assessment_id:
+                    type: string
+                    format: uuid
+                  version_number:
+                    type: integer
+                    minimum: 0
+                    exclusiveMinimum: true
+                  status:
+                    type: string
+                    enum:
+                      - draft
+                      - under_review
+                      - approved
+                      - superseded
+                      - archived
+                  source_soa_version_id:
+                    type: string
+                    format: uuid
+                  framework_id:
+                    type: string
+                    format: uuid
+                  scf_version_id:
+                    type: string
+                    format: uuid
+                  generated_by_agent_run_id:
+                    type: string
+                    format: uuid
+                  created_by:
+                    type: string
+                    format: uuid
+                  created_at:
+                    type: string
+                  submitted_for_review_at:
+                    type: string
+                  approved_by:
+                    type: string
+                    format: uuid
+                  approved_at:
+                    type: string
+                  approval_event_id:
+                    type: string
+                    format: uuid
+                  superseded_by:
+                    type: string
+                    format: uuid
+                  trace_id:
+                    type: string
+                    minLength: 8
+                  metadata:
+                    type: object
+                    additionalProperties: {}
+                    default: {}
+                required:
+                  - gap_analysis_version_id
+                  - organization_id
+                  - assessment_id
+                  - version_number
+                  - status
+                  - source_soa_version_id
+                  - framework_id
+                  - scf_version_id
+                  - created_by
+                  - created_at
+                  - trace_id
         '400':
           description: Validation error.
         '401':
@@ -19540,6 +20931,153 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        gap_finding_id:
+                          type: string
+                          format: uuid
+                        organization_id:
+                          type: string
+                          format: uuid
+                        assessment_id:
+                          type: string
+                          format: uuid
+                        gap_analysis_version_id:
+                          type: string
+                          format: uuid
+                        soa_version_id:
+                          type: string
+                          format: uuid
+                        soa_item_id:
+                          type: string
+                          format: uuid
+                        framework_id:
+                          type: string
+                          format: uuid
+                        framework_requirement_id:
+                          type: string
+                          format: uuid
+                        scf_version_id:
+                          type: string
+                          format: uuid
+                        scf_control_id:
+                          type: string
+                          format: uuid
+                        evidence_finding_id:
+                          type: string
+                          format: uuid
+                        gap_code:
+                          type: string
+                        assessment_status:
+                          type: string
+                          enum:
+                            - met
+                            - partially_met
+                            - not_met
+                            - not_evidenced
+                            - not_applicable_justified
+                            - not_applicable_not_justified
+                            - requires_validation
+                        gap_type:
+                          type: string
+                          enum:
+                            - documentation_gap
+                            - implementation_gap
+                            - evidence_gap
+                            - effectiveness_gap
+                            - governance_gap
+                            - technical_gap
+                            - contractual_gap
+                            - monitoring_gap
+                            - no_gap
+                            - not_applicable
+                        severity:
+                          type: string
+                          enum:
+                            - informational
+                            - low
+                            - medium
+                            - high
+                            - critical
+                        is_mcr_gap:
+                          type: boolean
+                          default: false
+                        impact:
+                          type: string
+                        likelihood:
+                          type: string
+                        gap_summary:
+                          type: string
+                        gap_rationale:
+                          type: string
+                        recommendation_summary:
+                          type: string
+                        confidence_score:
+                          type: number
+                          minimum: 0
+                          maximum: 1
+                        requires_user_validation:
+                          type: boolean
+                        responsibility_type:
+                          type: string
+                          enum:
+                            - internal
+                            - customer
+                            - third_party_provider
+                            - shared
+                        roc_determination:
+                          type: string
+                          enum:
+                            - strictly_conforms
+                            - conforms
+                            - significant_deficiency
+                            - material_weakness
+                        inherent_risk_score:
+                          type: string
+                        residual_risk_score:
+                          type: string
+                        source_chunks:
+                          type: array
+                          items:
+                            type: string
+                        created_at:
+                          type: string
+                        updated_at:
+                          type: string
+                      required:
+                        - gap_finding_id
+                        - organization_id
+                        - assessment_id
+                        - gap_analysis_version_id
+                        - soa_version_id
+                        - soa_item_id
+                        - framework_id
+                        - framework_requirement_id
+                        - scf_version_id
+                        - gap_code
+                        - assessment_status
+                        - gap_type
+                        - severity
+                        - gap_summary
+                        - confidence_score
+                        - requires_user_validation
+                        - responsibility_type
+                        - created_at
+                        - updated_at
+                  trace_id:
+                    type: string
+                    example: abc-123-def
+                required:
+                  - data
+                  - trace_id
         '400':
           description: Validation error.
         '401':
@@ -19558,6 +21096,20 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    additionalProperties: {}
+                  trace_id:
+                    type: string
+                    example: abc-123-def
+                required:
+                  - data
+                  - trace_id
         '400':
           description: Validation error.
         '401':
@@ -19576,6 +21128,20 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - queued
+                  job_id:
+                    type: string
+                required:
+                  - status
+                  - job_id
         '400':
           description: Validation error.
         '401':
@@ -19594,6 +21160,20 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    additionalProperties: {}
+                  trace_id:
+                    type: string
+                    example: abc-123-def
+                required:
+                  - data
+                  - trace_id
         '400':
           description: Validation error.
         '401':
@@ -19612,6 +21192,22 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  count:
+                    type: number
+                  trace_id:
+                    type: string
+                    example: abc-123-def
+                required:
+                  - success
+                  - count
+                  - trace_id
         '400':
           description: Validation error.
         '401':
@@ -21575,6 +23171,20 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: {}
+                  trace_id:
+                    type: string
+                    example: abc-123-def
+                required:
+                  - data
+                  - trace_id
         '400':
           description: Validation error.
         '401':
@@ -21593,6 +23203,52 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        scf_version_id:
+                          type: string
+                          format: uuid
+                        version_label:
+                          type: string
+                        release_date:
+                          type: string
+                        source_hash:
+                          type: string
+                        import_status:
+                          type: string
+                          enum:
+                            - pending
+                            - running
+                            - succeeded
+                            - failed
+                            - partial
+                            - rolled_back
+                        imported_at:
+                          type: string
+                        is_synthetic:
+                          type: boolean
+                        trace_id:
+                          type: string
+                      required:
+                        - scf_version_id
+                        - version_label
+                        - source_hash
+                        - import_status
+                        - is_synthetic
+                  trace_id:
+                    type: string
+                    example: abc-123-def
+                required:
+                  - data
+                  - trace_id
         '400':
           description: Validation error.
         '401':
@@ -21611,6 +23267,43 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  scf_version_id:
+                    type: string
+                    format: uuid
+                  version_label:
+                    type: string
+                  release_date:
+                    type: string
+                  source_hash:
+                    type: string
+                  import_status:
+                    type: string
+                    enum:
+                      - pending
+                      - running
+                      - succeeded
+                      - failed
+                      - partial
+                      - rolled_back
+                  imported_at:
+                    type: string
+                  is_synthetic:
+                    type: boolean
+                  trace_id:
+                    type: string
+                    example: abc-123-def
+                required:
+                  - scf_version_id
+                  - version_label
+                  - source_hash
+                  - import_status
+                  - is_synthetic
+                  - trace_id
         '400':
           description: Validation error.
         '401':
@@ -21637,6 +23330,43 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  scf_version_id:
+                    type: string
+                    format: uuid
+                  version_label:
+                    type: string
+                  release_date:
+                    type: string
+                  source_hash:
+                    type: string
+                  import_status:
+                    type: string
+                    enum:
+                      - pending
+                      - running
+                      - succeeded
+                      - failed
+                      - partial
+                      - rolled_back
+                  imported_at:
+                    type: string
+                  is_synthetic:
+                    type: boolean
+                  trace_id:
+                    type: string
+                    example: abc-123-def
+                required:
+                  - scf_version_id
+                  - version_label
+                  - source_hash
+                  - import_status
+                  - is_synthetic
+                  - trace_id
         '400':
           description: Validation error.
         '401':
@@ -21663,6 +23393,55 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        organization_id:
+                          type: string
+                          format: uuid
+                        scf_version_id:
+                          type: string
+                          format: uuid
+                        domain_code:
+                          type: string
+                          minLength: 1
+                        domain_name:
+                          type: string
+                          minLength: 1
+                        description:
+                          type: string
+                        sort_order:
+                          type: integer
+                          default: 0
+                        is_synthetic:
+                          type: boolean
+                          default: false
+                        trace_id:
+                          type: string
+                      required:
+                        - id
+                        - scf_version_id
+                        - domain_code
+                        - domain_name
+                  trace_id:
+                    type: string
+                    example: abc-123-def
+                  scf_version_id:
+                    type: string
+                required:
+                  - data
+                  - trace_id
+                  - scf_version_id
         '400':
           description: Validation error.
         '401':
@@ -21689,6 +23468,73 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        control_id:
+                          type: string
+                          format: uuid
+                        scf_version_id:
+                          type: string
+                          format: uuid
+                        scf_domain_id:
+                          type: string
+                          format: uuid
+                        control_code:
+                          type: string
+                        control_title:
+                          type: string
+                        control_description:
+                          type: string
+                        status:
+                          type: string
+                          enum:
+                            - active
+                            - deprecated
+                            - draft
+                            - archived
+                        is_synthetic:
+                          type: boolean
+                        trace_id:
+                          type: string
+                      required:
+                        - control_id
+                        - scf_version_id
+                        - scf_domain_id
+                        - control_code
+                        - control_title
+                        - status
+                        - is_synthetic
+                  pagination:
+                    type: object
+                    properties:
+                      has_more:
+                        type: boolean
+                      next_cursor:
+                        type: string
+                        nullable: true
+                      limit:
+                        type: number
+                      offset:
+                        type: number
+                      total:
+                        type: number
+                    required:
+                      - has_more
+                  trace_id:
+                    type: string
+                    example: abc-123-def
+                required:
+                  - data
+                  - pagination
+                  - trace_id
         '400':
           description: Validation error.
         '401':
@@ -21715,6 +23561,62 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        control_id:
+                          type: string
+                          format: uuid
+                        scf_version_id:
+                          type: string
+                          format: uuid
+                        scf_domain_id:
+                          type: string
+                          format: uuid
+                        control_code:
+                          type: string
+                        control_title:
+                          type: string
+                        control_description:
+                          type: string
+                        status:
+                          type: string
+                          enum:
+                            - active
+                            - deprecated
+                            - draft
+                            - archived
+                        is_synthetic:
+                          type: boolean
+                        trace_id:
+                          type: string
+                      required:
+                        - control_id
+                        - scf_version_id
+                        - scf_domain_id
+                        - control_code
+                        - control_title
+                        - status
+                        - is_synthetic
+                  trace_id:
+                    type: string
+                    example: abc-123-def
+                  domain_code:
+                    type: string
+                  scf_version_id:
+                    type: string
+                required:
+                  - data
+                  - trace_id
+                  - domain_code
+                  - scf_version_id
         '400':
           description: Validation error.
         '401':
@@ -21741,6 +23643,47 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  control_id:
+                    type: string
+                    format: uuid
+                  scf_version_id:
+                    type: string
+                    format: uuid
+                  scf_domain_id:
+                    type: string
+                    format: uuid
+                  control_code:
+                    type: string
+                  control_title:
+                    type: string
+                  control_description:
+                    type: string
+                  status:
+                    type: string
+                    enum:
+                      - active
+                      - deprecated
+                      - draft
+                      - archived
+                  is_synthetic:
+                    type: boolean
+                  trace_id:
+                    type: string
+                    example: abc-123-def
+                required:
+                  - control_id
+                  - scf_version_id
+                  - scf_domain_id
+                  - control_code
+                  - control_title
+                  - status
+                  - is_synthetic
+                  - trace_id
         '400':
           description: Validation error.
         '401':
@@ -21759,6 +23702,54 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        framework_id:
+                          type: string
+                          format: uuid
+                        framework_code:
+                          type: string
+                        framework_name:
+                          type: string
+                        framework_version:
+                          type: string
+                        publisher:
+                          type: string
+                        jurisdiction:
+                          type: string
+                        category:
+                          type: string
+                        status:
+                          type: string
+                          enum:
+                            - active
+                            - deprecated
+                            - draft
+                            - archived
+                        is_synthetic:
+                          type: boolean
+                        trace_id:
+                          type: string
+                      required:
+                        - framework_id
+                        - framework_code
+                        - framework_name
+                        - status
+                        - is_synthetic
+                  trace_id:
+                    type: string
+                    example: abc-123-def
+                required:
+                  - data
+                  - trace_id
         '400':
           description: Validation error.
         '401':
@@ -21785,6 +23776,45 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  framework_id:
+                    type: string
+                    format: uuid
+                  framework_code:
+                    type: string
+                  framework_name:
+                    type: string
+                  framework_version:
+                    type: string
+                  publisher:
+                    type: string
+                  jurisdiction:
+                    type: string
+                  category:
+                    type: string
+                  status:
+                    type: string
+                    enum:
+                      - active
+                      - deprecated
+                      - draft
+                      - archived
+                  is_synthetic:
+                    type: boolean
+                  trace_id:
+                    type: string
+                    example: abc-123-def
+                required:
+                  - framework_id
+                  - framework_code
+                  - framework_name
+                  - status
+                  - is_synthetic
+                  - trace_id
         '400':
           description: Validation error.
         '401':
@@ -21811,6 +23841,47 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  control_id:
+                    type: string
+                    format: uuid
+                  scf_version_id:
+                    type: string
+                    format: uuid
+                  scf_domain_id:
+                    type: string
+                    format: uuid
+                  control_code:
+                    type: string
+                  control_title:
+                    type: string
+                  control_description:
+                    type: string
+                  status:
+                    type: string
+                    enum:
+                      - active
+                      - deprecated
+                      - draft
+                      - archived
+                  is_synthetic:
+                    type: boolean
+                  trace_id:
+                    type: string
+                    example: abc-123-def
+                required:
+                  - control_id
+                  - scf_version_id
+                  - scf_domain_id
+                  - control_code
+                  - control_title
+                  - status
+                  - is_synthetic
+                  - trace_id
         '400':
           description: Validation error.
         '401':
@@ -21837,6 +23908,65 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        requirement_id:
+                          type: string
+                          format: uuid
+                        framework_id:
+                          type: string
+                          format: uuid
+                        requirement_code:
+                          type: string
+                        fde_code:
+                          type: string
+                        requirement_title:
+                          type: string
+                        requirement_text:
+                          type: string
+                        status:
+                          type: string
+                          enum:
+                            - active
+                            - deprecated
+                            - draft
+                            - archived
+                        is_synthetic:
+                          type: boolean
+                        is_mcr:
+                          type: boolean
+                          default: false
+                        mcr_rationale:
+                          type: string
+                        trace_id:
+                          type: string
+                      required:
+                        - requirement_id
+                        - framework_id
+                        - requirement_code
+                        - requirement_title
+                        - status
+                        - is_synthetic
+                  trace_id:
+                    type: string
+                    example: abc-123-def
+                  framework_id:
+                    type: string
+                  mcr_only:
+                    type: boolean
+                required:
+                  - data
+                  - trace_id
+                  - framework_id
+                  - mcr_only
         '400':
           description: Validation error.
         '401':
@@ -21863,6 +23993,90 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        organization_id:
+                          type: string
+                          format: uuid
+                        scf_version_id:
+                          type: string
+                          format: uuid
+                        scf_framework_id:
+                          type: string
+                          format: uuid
+                        scf_framework_requirement_id:
+                          type: string
+                          format: uuid
+                        scf_control_id:
+                          type: string
+                          format: uuid
+                        relationship_type:
+                          type: string
+                          enum:
+                            - equal
+                            - subset
+                            - intersects
+                            - superset
+                            - no_relation
+                        relationship_strength:
+                          type: string
+                        mapping_rationale:
+                          type: string
+                        mapping_source:
+                          type: string
+                          minLength: 1
+                        is_official:
+                          type: boolean
+                        status:
+                          type: string
+                          enum:
+                            - active
+                            - deprecated
+                            - draft
+                            - archived
+                        is_synthetic:
+                          type: boolean
+                          default: false
+                        control_code:
+                          type: string
+                        requirement_code:
+                          type: string
+                        framework_code:
+                          type: string
+                        framework_name:
+                          type: string
+                        trace_id:
+                          type: string
+                      required:
+                        - id
+                        - scf_version_id
+                        - scf_framework_id
+                        - scf_framework_requirement_id
+                        - scf_control_id
+                        - relationship_type
+                        - mapping_source
+                        - is_official
+                        - status
+                  trace_id:
+                    type: string
+                    example: abc-123-def
+                  scf_version_id:
+                    type: string
+                required:
+                  - data
+                  - trace_id
+                  - scf_version_id
         '400':
           description: Validation error.
         '401':
@@ -21889,6 +24103,87 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        organization_id:
+                          type: string
+                          format: uuid
+                        scf_version_id:
+                          type: string
+                          format: uuid
+                        scf_framework_id:
+                          type: string
+                          format: uuid
+                        scf_framework_requirement_id:
+                          type: string
+                          format: uuid
+                        scf_control_id:
+                          type: string
+                          format: uuid
+                        relationship_type:
+                          type: string
+                          enum:
+                            - equal
+                            - subset
+                            - intersects
+                            - superset
+                            - no_relation
+                        relationship_strength:
+                          type: string
+                        mapping_rationale:
+                          type: string
+                        mapping_source:
+                          type: string
+                          minLength: 1
+                        is_official:
+                          type: boolean
+                        status:
+                          type: string
+                          enum:
+                            - active
+                            - deprecated
+                            - draft
+                            - archived
+                        is_synthetic:
+                          type: boolean
+                          default: false
+                        control_code:
+                          type: string
+                        requirement_code:
+                          type: string
+                        framework_code:
+                          type: string
+                        framework_name:
+                          type: string
+                        trace_id:
+                          type: string
+                      required:
+                        - id
+                        - scf_version_id
+                        - scf_framework_id
+                        - scf_framework_requirement_id
+                        - scf_control_id
+                        - relationship_type
+                        - mapping_source
+                        - is_official
+                        - status
+                  trace_id:
+                    type: string
+                    example: abc-123-def
+                required:
+                  - data
+                  - trace_id
         '400':
           description: Validation error.
         '401':
@@ -21915,6 +24210,43 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  framework_id:
+                    type: string
+                    format: uuid
+                  scf_version_id:
+                    type: string
+                    format: uuid
+                  requirement_count:
+                    type: integer
+                    minimum: 0
+                  mapped_requirement_count:
+                    type: integer
+                    minimum: 0
+                  control_count:
+                    type: integer
+                    minimum: 0
+                  official_mapping_count:
+                    type: integer
+                    minimum: 0
+                  is_synthetic:
+                    type: boolean
+                  trace_id:
+                    type: string
+                    example: abc-123-def
+                required:
+                  - framework_id
+                  - scf_version_id
+                  - requirement_count
+                  - mapped_requirement_count
+                  - control_count
+                  - official_mapping_count
+                  - is_synthetic
+                  - trace_id
         '400':
           description: Validation error.
         '401':
@@ -21948,6 +24280,79 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      framework_a:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                          name:
+                            type: string
+                          requirement_count:
+                            type: number
+                          control_count:
+                            type: number
+                        required:
+                          - id
+                          - name
+                          - requirement_count
+                          - control_count
+                      framework_b:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                          name:
+                            type: string
+                          requirement_count:
+                            type: number
+                          control_count:
+                            type: number
+                        required:
+                          - id
+                          - name
+                          - requirement_count
+                          - control_count
+                      overlap:
+                        type: object
+                        properties:
+                          shared_control_count:
+                            type: number
+                          only_in_a:
+                            type: number
+                          only_in_b:
+                            type: number
+                          overlap_percentage:
+                            type: number
+                        required:
+                          - shared_control_count
+                          - only_in_a
+                          - only_in_b
+                          - overlap_percentage
+                      interpretation:
+                        type: string
+                        description: 'Prose reading of overlap_percentage: high at 80 or above, moderate from 50, otherwise low.'
+                    required:
+                      - framework_a
+                      - framework_b
+                      - overlap
+                      - interpretation
+                  scf_version_id:
+                    type: string
+                  trace_id:
+                    type: string
+                    example: abc-123-def
+                required:
+                  - data
+                  - scf_version_id
+                  - trace_id
         '400':
           description: Validation error.
         '401':
@@ -21966,6 +24371,140 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  import_run:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      scf_version_id:
+                        type: string
+                        format: uuid
+                      source_type:
+                        type: string
+                        enum:
+                          - xlsx
+                          - csv
+                          - oscal_json
+                          - synthetic_fixture
+                      source_filename:
+                        type: string
+                      source_hash:
+                        type: string
+                        minLength: 1
+                      status:
+                        type: string
+                        enum:
+                          - pending
+                          - running
+                          - succeeded
+                          - failed
+                          - partial
+                          - rolled_back
+                      started_at:
+                        type: string
+                      completed_at:
+                        type: string
+                      error_summary_safe:
+                        type: string
+                      import_statistics:
+                        type: object
+                        properties:
+                          versions:
+                            type: integer
+                            minimum: 0
+                            default: 0
+                          domains:
+                            type: integer
+                            minimum: 0
+                            default: 0
+                          controls:
+                            type: integer
+                            minimum: 0
+                            default: 0
+                          frameworks:
+                            type: integer
+                            minimum: 0
+                            default: 0
+                          requirements:
+                            type: integer
+                            minimum: 0
+                            default: 0
+                          mappings:
+                            type: integer
+                            minimum: 0
+                            default: 0
+                          strm_relationships:
+                            type: integer
+                            minimum: 0
+                            default: 0
+                          warnings:
+                            type: integer
+                            minimum: 0
+                            default: 0
+                          synthetic_records:
+                            type: integer
+                            minimum: 0
+                            default: 0
+                          assessment_objectives:
+                            type: integer
+                            minimum: 0
+                          evidence_requests:
+                            type: integer
+                            minimum: 0
+                          maturity_criteria:
+                            type: integer
+                            minimum: 0
+                          risks:
+                            type: integer
+                            minimum: 0
+                          threats:
+                            type: integer
+                            minimum: 0
+                          dpmp_principles:
+                            type: integer
+                            minimum: 0
+                          dpmp_framework_mappings:
+                            type: integer
+                            minimum: 0
+                          cdpas_standards:
+                            type: integer
+                            minimum: 0
+                          cdpas_sub_requirements:
+                            type: integer
+                            minimum: 0
+                          mad_standards:
+                            type: integer
+                            minimum: 0
+                          mad_sub_requirements:
+                            type: integer
+                            minimum: 0
+                      trace_id:
+                        type: string
+                    required:
+                      - id
+                      - source_type
+                      - source_hash
+                      - status
+                      - started_at
+                      - import_statistics
+                      - trace_id
+                  warnings:
+                    type: array
+                    items:
+                      type: string
+                    default: []
+                  trace_id:
+                    type: string
+                    example: abc-123-def
+                required:
+                  - import_run
+                  - trace_id
         '400':
           description: Validation error.
         '401':
@@ -21983,6 +24522,137 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        scf_version_id:
+                          type: string
+                          format: uuid
+                        source_type:
+                          type: string
+                          enum:
+                            - xlsx
+                            - csv
+                            - oscal_json
+                            - synthetic_fixture
+                        source_filename:
+                          type: string
+                        source_hash:
+                          type: string
+                          minLength: 1
+                        status:
+                          type: string
+                          enum:
+                            - pending
+                            - running
+                            - succeeded
+                            - failed
+                            - partial
+                            - rolled_back
+                        started_at:
+                          type: string
+                        completed_at:
+                          type: string
+                        error_summary_safe:
+                          type: string
+                        import_statistics:
+                          type: object
+                          properties:
+                            versions:
+                              type: integer
+                              minimum: 0
+                              default: 0
+                            domains:
+                              type: integer
+                              minimum: 0
+                              default: 0
+                            controls:
+                              type: integer
+                              minimum: 0
+                              default: 0
+                            frameworks:
+                              type: integer
+                              minimum: 0
+                              default: 0
+                            requirements:
+                              type: integer
+                              minimum: 0
+                              default: 0
+                            mappings:
+                              type: integer
+                              minimum: 0
+                              default: 0
+                            strm_relationships:
+                              type: integer
+                              minimum: 0
+                              default: 0
+                            warnings:
+                              type: integer
+                              minimum: 0
+                              default: 0
+                            synthetic_records:
+                              type: integer
+                              minimum: 0
+                              default: 0
+                            assessment_objectives:
+                              type: integer
+                              minimum: 0
+                            evidence_requests:
+                              type: integer
+                              minimum: 0
+                            maturity_criteria:
+                              type: integer
+                              minimum: 0
+                            risks:
+                              type: integer
+                              minimum: 0
+                            threats:
+                              type: integer
+                              minimum: 0
+                            dpmp_principles:
+                              type: integer
+                              minimum: 0
+                            dpmp_framework_mappings:
+                              type: integer
+                              minimum: 0
+                            cdpas_standards:
+                              type: integer
+                              minimum: 0
+                            cdpas_sub_requirements:
+                              type: integer
+                              minimum: 0
+                            mad_standards:
+                              type: integer
+                              minimum: 0
+                            mad_sub_requirements:
+                              type: integer
+                              minimum: 0
+                        trace_id:
+                          type: string
+                      required:
+                        - id
+                        - source_type
+                        - source_hash
+                        - status
+                        - started_at
+                        - import_statistics
+                        - trace_id
+                  trace_id:
+                    type: string
+                    example: abc-123-def
+                required:
+                  - data
+                  - trace_id
         '400':
           description: Validation error.
         '401':
@@ -22009,6 +24679,127 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  scf_version_id:
+                    type: string
+                    format: uuid
+                  source_type:
+                    type: string
+                    enum:
+                      - xlsx
+                      - csv
+                      - oscal_json
+                      - synthetic_fixture
+                  source_filename:
+                    type: string
+                  source_hash:
+                    type: string
+                    minLength: 1
+                  status:
+                    type: string
+                    enum:
+                      - pending
+                      - running
+                      - succeeded
+                      - failed
+                      - partial
+                      - rolled_back
+                  started_at:
+                    type: string
+                  completed_at:
+                    type: string
+                  error_summary_safe:
+                    type: string
+                  import_statistics:
+                    type: object
+                    properties:
+                      versions:
+                        type: integer
+                        minimum: 0
+                        default: 0
+                      domains:
+                        type: integer
+                        minimum: 0
+                        default: 0
+                      controls:
+                        type: integer
+                        minimum: 0
+                        default: 0
+                      frameworks:
+                        type: integer
+                        minimum: 0
+                        default: 0
+                      requirements:
+                        type: integer
+                        minimum: 0
+                        default: 0
+                      mappings:
+                        type: integer
+                        minimum: 0
+                        default: 0
+                      strm_relationships:
+                        type: integer
+                        minimum: 0
+                        default: 0
+                      warnings:
+                        type: integer
+                        minimum: 0
+                        default: 0
+                      synthetic_records:
+                        type: integer
+                        minimum: 0
+                        default: 0
+                      assessment_objectives:
+                        type: integer
+                        minimum: 0
+                      evidence_requests:
+                        type: integer
+                        minimum: 0
+                      maturity_criteria:
+                        type: integer
+                        minimum: 0
+                      risks:
+                        type: integer
+                        minimum: 0
+                      threats:
+                        type: integer
+                        minimum: 0
+                      dpmp_principles:
+                        type: integer
+                        minimum: 0
+                      dpmp_framework_mappings:
+                        type: integer
+                        minimum: 0
+                      cdpas_standards:
+                        type: integer
+                        minimum: 0
+                      cdpas_sub_requirements:
+                        type: integer
+                        minimum: 0
+                      mad_standards:
+                        type: integer
+                        minimum: 0
+                      mad_sub_requirements:
+                        type: integer
+                        minimum: 0
+                  trace_id:
+                    type: string
+                    example: abc-123-def
+                required:
+                  - id
+                  - source_type
+                  - source_hash
+                  - status
+                  - started_at
+                  - import_statistics
+                  - trace_id
         '400':
           description: Validation error.
         '401':
@@ -22035,6 +24826,143 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  import_run:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      scf_version_id:
+                        type: string
+                        format: uuid
+                      source_type:
+                        type: string
+                        enum:
+                          - xlsx
+                          - csv
+                          - oscal_json
+                          - synthetic_fixture
+                      source_filename:
+                        type: string
+                      source_hash:
+                        type: string
+                        minLength: 1
+                      status:
+                        type: string
+                        enum:
+                          - pending
+                          - running
+                          - succeeded
+                          - failed
+                          - partial
+                          - rolled_back
+                      started_at:
+                        type: string
+                      completed_at:
+                        type: string
+                      error_summary_safe:
+                        type: string
+                      import_statistics:
+                        type: object
+                        properties:
+                          versions:
+                            type: integer
+                            minimum: 0
+                            default: 0
+                          domains:
+                            type: integer
+                            minimum: 0
+                            default: 0
+                          controls:
+                            type: integer
+                            minimum: 0
+                            default: 0
+                          frameworks:
+                            type: integer
+                            minimum: 0
+                            default: 0
+                          requirements:
+                            type: integer
+                            minimum: 0
+                            default: 0
+                          mappings:
+                            type: integer
+                            minimum: 0
+                            default: 0
+                          strm_relationships:
+                            type: integer
+                            minimum: 0
+                            default: 0
+                          warnings:
+                            type: integer
+                            minimum: 0
+                            default: 0
+                          synthetic_records:
+                            type: integer
+                            minimum: 0
+                            default: 0
+                          assessment_objectives:
+                            type: integer
+                            minimum: 0
+                          evidence_requests:
+                            type: integer
+                            minimum: 0
+                          maturity_criteria:
+                            type: integer
+                            minimum: 0
+                          risks:
+                            type: integer
+                            minimum: 0
+                          threats:
+                            type: integer
+                            minimum: 0
+                          dpmp_principles:
+                            type: integer
+                            minimum: 0
+                          dpmp_framework_mappings:
+                            type: integer
+                            minimum: 0
+                          cdpas_standards:
+                            type: integer
+                            minimum: 0
+                          cdpas_sub_requirements:
+                            type: integer
+                            minimum: 0
+                          mad_standards:
+                            type: integer
+                            minimum: 0
+                          mad_sub_requirements:
+                            type: integer
+                            minimum: 0
+                      trace_id:
+                        type: string
+                    required:
+                      - id
+                      - source_type
+                      - source_hash
+                      - status
+                      - started_at
+                      - import_statistics
+                      - trace_id
+                  warnings:
+                    type: array
+                    items:
+                      type: string
+                    default: []
+                  import_run_id:
+                    type: string
+                  trace_id:
+                    type: string
+                    example: abc-123-def
+                required:
+                  - import_run
+                  - import_run_id
+                  - trace_id
         '400':
           description: Validation error.
         '401':
@@ -22053,6 +24981,146 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  import_run:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      scf_version_id:
+                        type: string
+                        format: uuid
+                      source_type:
+                        type: string
+                        enum:
+                          - xlsx
+                          - csv
+                          - oscal_json
+                          - synthetic_fixture
+                      source_filename:
+                        type: string
+                      source_hash:
+                        type: string
+                        minLength: 1
+                      status:
+                        type: string
+                        enum:
+                          - pending
+                          - running
+                          - succeeded
+                          - failed
+                          - partial
+                          - rolled_back
+                      started_at:
+                        type: string
+                      completed_at:
+                        type: string
+                      error_summary_safe:
+                        type: string
+                      import_statistics:
+                        type: object
+                        properties:
+                          versions:
+                            type: integer
+                            minimum: 0
+                            default: 0
+                          domains:
+                            type: integer
+                            minimum: 0
+                            default: 0
+                          controls:
+                            type: integer
+                            minimum: 0
+                            default: 0
+                          frameworks:
+                            type: integer
+                            minimum: 0
+                            default: 0
+                          requirements:
+                            type: integer
+                            minimum: 0
+                            default: 0
+                          mappings:
+                            type: integer
+                            minimum: 0
+                            default: 0
+                          strm_relationships:
+                            type: integer
+                            minimum: 0
+                            default: 0
+                          warnings:
+                            type: integer
+                            minimum: 0
+                            default: 0
+                          synthetic_records:
+                            type: integer
+                            minimum: 0
+                            default: 0
+                          assessment_objectives:
+                            type: integer
+                            minimum: 0
+                          evidence_requests:
+                            type: integer
+                            minimum: 0
+                          maturity_criteria:
+                            type: integer
+                            minimum: 0
+                          risks:
+                            type: integer
+                            minimum: 0
+                          threats:
+                            type: integer
+                            minimum: 0
+                          dpmp_principles:
+                            type: integer
+                            minimum: 0
+                          dpmp_framework_mappings:
+                            type: integer
+                            minimum: 0
+                          cdpas_standards:
+                            type: integer
+                            minimum: 0
+                          cdpas_sub_requirements:
+                            type: integer
+                            minimum: 0
+                          mad_standards:
+                            type: integer
+                            minimum: 0
+                          mad_sub_requirements:
+                            type: integer
+                            minimum: 0
+                      trace_id:
+                        type: string
+                    required:
+                      - id
+                      - source_type
+                      - source_hash
+                      - status
+                      - started_at
+                      - import_statistics
+                      - trace_id
+                  warnings:
+                    type: array
+                    items:
+                      type: string
+                    default: []
+                  source_filename:
+                    type: string
+                  file_size_bytes:
+                    type: number
+                  trace_id:
+                    type: string
+                    example: abc-123-def
+                required:
+                  - import_run
+                  - source_filename
+                  - file_size_bytes
+                  - trace_id
         '400':
           description: Validation error.
         '401':
@@ -22071,6 +25139,146 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  import_run:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      scf_version_id:
+                        type: string
+                        format: uuid
+                      source_type:
+                        type: string
+                        enum:
+                          - xlsx
+                          - csv
+                          - oscal_json
+                          - synthetic_fixture
+                      source_filename:
+                        type: string
+                      source_hash:
+                        type: string
+                        minLength: 1
+                      status:
+                        type: string
+                        enum:
+                          - pending
+                          - running
+                          - succeeded
+                          - failed
+                          - partial
+                          - rolled_back
+                      started_at:
+                        type: string
+                      completed_at:
+                        type: string
+                      error_summary_safe:
+                        type: string
+                      import_statistics:
+                        type: object
+                        properties:
+                          versions:
+                            type: integer
+                            minimum: 0
+                            default: 0
+                          domains:
+                            type: integer
+                            minimum: 0
+                            default: 0
+                          controls:
+                            type: integer
+                            minimum: 0
+                            default: 0
+                          frameworks:
+                            type: integer
+                            minimum: 0
+                            default: 0
+                          requirements:
+                            type: integer
+                            minimum: 0
+                            default: 0
+                          mappings:
+                            type: integer
+                            minimum: 0
+                            default: 0
+                          strm_relationships:
+                            type: integer
+                            minimum: 0
+                            default: 0
+                          warnings:
+                            type: integer
+                            minimum: 0
+                            default: 0
+                          synthetic_records:
+                            type: integer
+                            minimum: 0
+                            default: 0
+                          assessment_objectives:
+                            type: integer
+                            minimum: 0
+                          evidence_requests:
+                            type: integer
+                            minimum: 0
+                          maturity_criteria:
+                            type: integer
+                            minimum: 0
+                          risks:
+                            type: integer
+                            minimum: 0
+                          threats:
+                            type: integer
+                            minimum: 0
+                          dpmp_principles:
+                            type: integer
+                            minimum: 0
+                          dpmp_framework_mappings:
+                            type: integer
+                            minimum: 0
+                          cdpas_standards:
+                            type: integer
+                            minimum: 0
+                          cdpas_sub_requirements:
+                            type: integer
+                            minimum: 0
+                          mad_standards:
+                            type: integer
+                            minimum: 0
+                          mad_sub_requirements:
+                            type: integer
+                            minimum: 0
+                      trace_id:
+                        type: string
+                    required:
+                      - id
+                      - source_type
+                      - source_hash
+                      - status
+                      - started_at
+                      - import_statistics
+                      - trace_id
+                  warnings:
+                    type: array
+                    items:
+                      type: string
+                    default: []
+                  source_filename:
+                    type: string
+                  file_size_bytes:
+                    type: number
+                  trace_id:
+                    type: string
+                    example: abc-123-def
+                required:
+                  - import_run
+                  - source_filename
+                  - file_size_bytes
+                  - trace_id
         '400':
           description: Validation error.
         '401':
@@ -22097,6 +25305,70 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        scf_version_id:
+                          type: string
+                          format: uuid
+                        scf_control_id:
+                          type: string
+                          format: uuid
+                        objective_code:
+                          type: string
+                          minLength: 1
+                        text:
+                          type: string
+                          minLength: 1
+                        pptdf_people:
+                          type: boolean
+                        pptdf_process:
+                          type: boolean
+                        pptdf_technology:
+                          type: boolean
+                        pptdf_data:
+                          type: boolean
+                        pptdf_facility:
+                          type: boolean
+                        pptdf_dimensions:
+                          type: array
+                          items:
+                            type: string
+                            enum:
+                              - people
+                              - process
+                              - technology
+                              - data
+                              - facility
+                          default: []
+                      required:
+                        - id
+                        - scf_version_id
+                        - scf_control_id
+                        - objective_code
+                        - text
+                  trace_id:
+                    type: string
+                    example: abc-123-def
+                  control_id:
+                    type: string
+                  count:
+                    type: number
+                required:
+                  - data
+                  - trace_id
+                  - control_id
+                  - count
         '400':
           description: Validation error.
         '401':
@@ -22123,6 +25395,34 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  control_id:
+                    type: string
+                  active_dimensions:
+                    type: array
+                    items:
+                      type: string
+                      enum:
+                        - people
+                        - process
+                        - technology
+                        - data
+                        - facility
+                  pptdf_profile:
+                    type: object
+                    additionalProperties: {}
+                  trace_id:
+                    type: string
+                    example: abc-123-def
+                required:
+                  - control_id
+                  - active_dimensions
+                  - pptdf_profile
+                  - trace_id
         '400':
           description: Validation error.
         '401':
@@ -22149,6 +25449,47 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        scf_version_id:
+                          type: string
+                          format: uuid
+                        scf_control_id:
+                          type: string
+                          format: uuid
+                        request_item:
+                          type: string
+                          minLength: 1
+                        evidence_type:
+                          type: string
+                      required:
+                        - id
+                        - scf_version_id
+                        - scf_control_id
+                        - request_item
+                  trace_id:
+                    type: string
+                    example: abc-123-def
+                  control_id:
+                    type: string
+                  count:
+                    type: number
+                required:
+                  - data
+                  - trace_id
+                  - control_id
+                  - count
         '400':
           description: Validation error.
         '401':
@@ -22175,6 +25516,52 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        scf_version_id:
+                          type: string
+                          format: uuid
+                        scf_control_id:
+                          type: string
+                          format: uuid
+                        level:
+                          type: integer
+                          minimum: 0
+                          maximum: 5
+                        criteria_text:
+                          type: string
+                          minLength: 1
+                        remediation_guidance:
+                          type: string
+                      required:
+                        - id
+                        - scf_version_id
+                        - scf_control_id
+                        - level
+                        - criteria_text
+                  trace_id:
+                    type: string
+                    example: abc-123-def
+                  control_id:
+                    type: string
+                  count:
+                    type: number
+                required:
+                  - data
+                  - trace_id
+                  - control_id
+                  - count
         '400':
           description: Validation error.
         '401':
@@ -22201,6 +25588,49 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        scf_version_id:
+                          type: string
+                          format: uuid
+                        risk_code:
+                          type: string
+                          minLength: 1
+                        title:
+                          type: string
+                          minLength: 1
+                        description:
+                          type: string
+                        category:
+                          type: string
+                      required:
+                        - id
+                        - scf_version_id
+                        - risk_code
+                        - title
+                  trace_id:
+                    type: string
+                    example: abc-123-def
+                  control_id:
+                    type: string
+                  count:
+                    type: number
+                required:
+                  - data
+                  - trace_id
+                  - control_id
+                  - count
         '400':
           description: Validation error.
         '401':
@@ -22227,6 +25657,49 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        scf_version_id:
+                          type: string
+                          format: uuid
+                        threat_code:
+                          type: string
+                          minLength: 1
+                        title:
+                          type: string
+                          minLength: 1
+                        description:
+                          type: string
+                        category:
+                          type: string
+                      required:
+                        - id
+                        - scf_version_id
+                        - threat_code
+                        - title
+                  trace_id:
+                    type: string
+                    example: abc-123-def
+                  control_id:
+                    type: string
+                  count:
+                    type: number
+                required:
+                  - data
+                  - trace_id
+                  - control_id
+                  - count
         '400':
           description: Validation error.
         '401':
@@ -22245,6 +25718,76 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        organization_id:
+                          type: string
+                          format: uuid
+                        scf_mapping_id:
+                          type: string
+                          nullable: true
+                          format: uuid
+                        scf_control_id:
+                          type: string
+                          nullable: true
+                          format: uuid
+                        fde_code:
+                          type: string
+                        fde_name:
+                          type: string
+                        relationship_type:
+                          type: string
+                          enum:
+                            - equal
+                            - subset
+                            - intersects
+                            - superset
+                            - no_relation
+                        relationship_strength:
+                          type: string
+                          nullable: true
+                        rationale:
+                          type: string
+                        source:
+                          type: string
+                          minLength: 1
+                        scf_version_id:
+                          type: string
+                          format: uuid
+                        framework_code:
+                          type: string
+                        framework_name:
+                          type: string
+                        requirement_code:
+                          type: string
+                        control_code:
+                          type: string
+                        trace_id:
+                          type: string
+                      required:
+                        - id
+                        - relationship_type
+                        - source
+                  trace_id:
+                    type: string
+                    example: abc-123-def
+                  count:
+                    type: number
+                required:
+                  - data
+                  - trace_id
+                  - count
         '400':
           description: Validation error.
         '401':
@@ -22263,6 +25806,79 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        organization_id:
+                          type: string
+                          format: uuid
+                        scf_mapping_id:
+                          type: string
+                          nullable: true
+                          format: uuid
+                        scf_control_id:
+                          type: string
+                          nullable: true
+                          format: uuid
+                        fde_code:
+                          type: string
+                        fde_name:
+                          type: string
+                        relationship_type:
+                          type: string
+                          enum:
+                            - equal
+                            - subset
+                            - intersects
+                            - superset
+                            - no_relation
+                        relationship_strength:
+                          type: string
+                          nullable: true
+                        rationale:
+                          type: string
+                        source:
+                          type: string
+                          minLength: 1
+                        scf_version_id:
+                          type: string
+                          format: uuid
+                        framework_code:
+                          type: string
+                        framework_name:
+                          type: string
+                        requirement_code:
+                          type: string
+                        control_code:
+                          type: string
+                        trace_id:
+                          type: string
+                      required:
+                        - id
+                        - relationship_type
+                        - source
+                  trace_id:
+                    type: string
+                    example: abc-123-def
+                  fde_code:
+                    type: string
+                  count:
+                    type: number
+                required:
+                  - data
+                  - trace_id
+                  - fde_code
+                  - count
         '400':
           description: Validation error.
         '401':
@@ -22289,6 +25905,79 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        organization_id:
+                          type: string
+                          format: uuid
+                        scf_mapping_id:
+                          type: string
+                          nullable: true
+                          format: uuid
+                        scf_control_id:
+                          type: string
+                          nullable: true
+                          format: uuid
+                        fde_code:
+                          type: string
+                        fde_name:
+                          type: string
+                        relationship_type:
+                          type: string
+                          enum:
+                            - equal
+                            - subset
+                            - intersects
+                            - superset
+                            - no_relation
+                        relationship_strength:
+                          type: string
+                          nullable: true
+                        rationale:
+                          type: string
+                        source:
+                          type: string
+                          minLength: 1
+                        scf_version_id:
+                          type: string
+                          format: uuid
+                        framework_code:
+                          type: string
+                        framework_name:
+                          type: string
+                        requirement_code:
+                          type: string
+                        control_code:
+                          type: string
+                        trace_id:
+                          type: string
+                      required:
+                        - id
+                        - relationship_type
+                        - source
+                  trace_id:
+                    type: string
+                    example: abc-123-def
+                  control_code:
+                    type: string
+                  count:
+                    type: number
+                required:
+                  - data
+                  - trace_id
+                  - control_code
+                  - count
         '400':
           description: Validation error.
         '401':
@@ -22307,6 +25996,117 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  framework_id:
+                    type: string
+                    format: uuid
+                  framework_code:
+                    type: string
+                  framework_name:
+                    type: string
+                  scf_version_id:
+                    type: string
+                    format: uuid
+                  total_mappings:
+                    type: integer
+                    minimum: 0
+                  strm_breakdown:
+                    type: object
+                    properties:
+                      equal:
+                        type: object
+                        properties:
+                          count:
+                            type: integer
+                            minimum: 0
+                          percentage:
+                            type: number
+                            minimum: 0
+                            maximum: 100
+                        required:
+                          - count
+                          - percentage
+                      subset:
+                        type: object
+                        properties:
+                          count:
+                            type: integer
+                            minimum: 0
+                          percentage:
+                            type: number
+                            minimum: 0
+                            maximum: 100
+                        required:
+                          - count
+                          - percentage
+                      intersects:
+                        type: object
+                        properties:
+                          count:
+                            type: integer
+                            minimum: 0
+                          percentage:
+                            type: number
+                            minimum: 0
+                            maximum: 100
+                        required:
+                          - count
+                          - percentage
+                      superset:
+                        type: object
+                        properties:
+                          count:
+                            type: integer
+                            minimum: 0
+                          percentage:
+                            type: number
+                            minimum: 0
+                            maximum: 100
+                        required:
+                          - count
+                          - percentage
+                      no_relation:
+                        type: object
+                        properties:
+                          count:
+                            type: integer
+                            minimum: 0
+                          percentage:
+                            type: number
+                            minimum: 0
+                            maximum: 100
+                        required:
+                          - count
+                          - percentage
+                    required:
+                      - equal
+                      - subset
+                      - intersects
+                      - superset
+                      - no_relation
+                  coverage_quality_score:
+                    type: number
+                    minimum: 0
+                    maximum: 1
+                  inference_source:
+                    type: string
+                  trace_id:
+                    type: string
+                    example: abc-123-def
+                required:
+                  - framework_id
+                  - framework_code
+                  - framework_name
+                  - scf_version_id
+                  - total_mappings
+                  - strm_breakdown
+                  - coverage_quality_score
+                  - inference_source
+                  - trace_id
         '400':
           description: Validation error.
         '401':
@@ -22343,6 +26143,46 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        scf_version_id:
+                          type: string
+                          format: uuid
+                        risk_code:
+                          type: string
+                          minLength: 1
+                        title:
+                          type: string
+                          minLength: 1
+                        description:
+                          type: string
+                        category:
+                          type: string
+                      required:
+                        - id
+                        - scf_version_id
+                        - risk_code
+                        - title
+                  trace_id:
+                    type: string
+                    example: abc-123-def
+                  total:
+                    type: number
+                required:
+                  - data
+                  - trace_id
+                  - total
         '400':
           description: Validation error.
         '401':
@@ -22369,6 +26209,46 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      scf_version_id:
+                        type: string
+                        format: uuid
+                      risk_code:
+                        type: string
+                        minLength: 1
+                      title:
+                        type: string
+                        minLength: 1
+                      description:
+                        type: string
+                      category:
+                        type: string
+                      mapped_control_ids:
+                        type: array
+                        items:
+                          type: string
+                    required:
+                      - id
+                      - scf_version_id
+                      - risk_code
+                      - title
+                      - mapped_control_ids
+                  trace_id:
+                    type: string
+                    example: abc-123-def
+                required:
+                  - data
+                  - trace_id
         '400':
           description: Validation error.
         '401':
@@ -22387,6 +26267,46 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        scf_version_id:
+                          type: string
+                          format: uuid
+                        threat_code:
+                          type: string
+                          minLength: 1
+                        title:
+                          type: string
+                          minLength: 1
+                        description:
+                          type: string
+                        category:
+                          type: string
+                      required:
+                        - id
+                        - scf_version_id
+                        - threat_code
+                        - title
+                  trace_id:
+                    type: string
+                    example: abc-123-def
+                  total:
+                    type: number
+                required:
+                  - data
+                  - trace_id
+                  - total
         '400':
           description: Validation error.
         '401':
@@ -22413,6 +26333,46 @@ paths:
       responses:
         '200':
           description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      scf_version_id:
+                        type: string
+                        format: uuid
+                      threat_code:
+                        type: string
+                        minLength: 1
+                      title:
+                        type: string
+                        minLength: 1
+                      description:
+                        type: string
+                      category:
+                        type: string
+                      mapped_control_ids:
+                        type: array
+                        items:
+                          type: string
+                    required:
+                      - id
+                      - scf_version_id
+                      - threat_code
+                      - title
+                      - mapped_control_ids
+                  trace_id:
+                    type: string
+                    example: abc-123-def
+                required:
+                  - data
+                  - trace_id
         '400':
           description: Validation error.
         '401':

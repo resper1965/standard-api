@@ -81,3 +81,22 @@ describe("synthesizeOperation", () => {
     expect(Object.keys(op.responses)).toContain("403");
   });
 });
+
+describe("RESPONSE_SCHEMAS", () => {
+  // A renamed route would leave its key orphaned here and the endpoint would
+  // silently fall back to the generic response — documented, but shapeless,
+  // and nothing would fail. This is that alarm.
+  it("keys every entry to a route that exists", async () => {
+    const { RESPONSE_SCHEMAS } = await import("../response-schemas");
+    const { routes } = await import("../../app");
+
+    const real = new Set(
+      (routes as { method: string; path: string }[]).map(
+        (r) => `${r.method.toUpperCase()} ${r.path}`,
+      ),
+    );
+    const orphans = Object.keys(RESPONSE_SCHEMAS).filter((k) => !real.has(k));
+
+    expect(orphans).toEqual([]);
+  });
+});
