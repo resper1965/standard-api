@@ -129,8 +129,15 @@ jobs:
             --project-name=standard-web-production \
             --branch=${{ steps.branch_name.outputs.current_branch }} 2>&1)
           echo "$DEPLOY_OUTPUT"
-          PREVIEW_URL=$(echo "$DEPLOY_OUTPUT" | grep -oP 'https://[^ ]*\.pages\.dev')
-          echo "preview_url=$PREVIEW_URL" >> $GITHUB_OUTPUT
+          # wrangler prints both a deployment URL and an alias URL; taking both
+          # made this a multi-line value, which GITHUB_OUTPUT rejects. Keep the
+          # alias (last line) - it is stable across pushes to the same branch.
+          PREVIEW_URL=$(echo "$DEPLOY_OUTPUT" | grep -oP 'https://[^ ]*\.pages\.dev' | tail -n1)
+          if [ -z "${PREVIEW_URL}" ]; then
+            echo "::error title=No preview URL::wrangler printed no .pages.dev URL."
+            exit 1
+          fi
+          echo "preview_url=${PREVIEW_URL}" >> "${GITHUB_OUTPUT}"
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
