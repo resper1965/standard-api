@@ -25,9 +25,9 @@ import type { Env } from "./index";
 
 export interface RetentionPurgeMessage {
   queue_type: "data_retention_purge";
-  dry_run?: boolean;           // if true, logs what would be purged without deleting
+  dry_run?: boolean; // if true, logs what would be purged without deleting
   scope?: "metrics" | "assessments" | "tenants" | "all";
-  initiated_by?: string;       // operator user ID for audit trail
+  initiated_by?: string; // operator user ID for audit trail
 }
 
 interface PurgeSummary {
@@ -47,10 +47,12 @@ interface PurgeSummary {
 
 export async function processDataRetentionPurge(
   body: RetentionPurgeMessage,
-  env: Env
+  env: Env,
 ): Promise<PurgeSummary> {
   if (!env.DATABASE_URL) {
-    throw new Error("[retention] DATABASE_URL not configured — cannot run purge");
+    throw new Error(
+      "[retention] DATABASE_URL not configured — cannot run purge",
+    );
   }
 
   const sql = neon(env.DATABASE_URL);
@@ -73,12 +75,16 @@ export async function processDataRetentionPurge(
     errors: [],
   };
 
-  console.log(`[retention] Starting purge. dry_run=${dryRun}, scope=${scope}, initiated_by=${initiatedBy}`);
+  console.log(
+    `[retention] Starting purge. dry_run=${dryRun}, scope=${scope}, initiated_by=${initiatedBy}`,
+  );
 
   // ── 1. Operational metrics > 90 days ────────────────────────────────
   if (scope === "all" || scope === "metrics") {
     try {
-      const cutoff = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
+      const cutoff = new Date(
+        Date.now() - 90 * 24 * 60 * 60 * 1000,
+      ).toISOString();
 
       if (dryRun) {
         const count = await sql`
@@ -86,14 +92,18 @@ export async function processDataRetentionPurge(
           WHERE created_at < ${cutoff}
         `;
         summary.deleted.operational_metrics = Number(count[0]?.n ?? 0);
-        console.log(`[retention] [dry-run] Would delete ${summary.deleted.operational_metrics} operational_metrics rows`);
+        console.log(
+          `[retention] [dry-run] Would delete ${summary.deleted.operational_metrics} operational_metrics rows`,
+        );
       } else {
         const result = await sql`
           DELETE FROM operational_metrics
           WHERE created_at < ${cutoff}
         `;
         summary.deleted.operational_metrics = (result as any).count ?? 0;
-        console.log(`[retention] Deleted ${summary.deleted.operational_metrics} operational_metrics rows (>90d)`);
+        console.log(
+          `[retention] Deleted ${summary.deleted.operational_metrics} operational_metrics rows (>90d)`,
+        );
       }
     } catch (e: any) {
       // Table may not exist yet — not fatal
@@ -106,7 +116,9 @@ export async function processDataRetentionPurge(
   // ── 2. Agent usage records > 1 year ─────────────────────────────────
   if (scope === "all" || scope === "metrics") {
     try {
-      const cutoff = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString();
+      const cutoff = new Date(
+        Date.now() - 365 * 24 * 60 * 60 * 1000,
+      ).toISOString();
 
       if (dryRun) {
         const count = await sql`
@@ -114,14 +126,18 @@ export async function processDataRetentionPurge(
           WHERE created_at < ${cutoff}
         `;
         summary.deleted.agent_usage_records = Number(count[0]?.n ?? 0);
-        console.log(`[retention] [dry-run] Would delete ${summary.deleted.agent_usage_records} agent_usage_records rows`);
+        console.log(
+          `[retention] [dry-run] Would delete ${summary.deleted.agent_usage_records} agent_usage_records rows`,
+        );
       } else {
         const result = await sql`
           DELETE FROM agent_usage_records
           WHERE created_at < ${cutoff}
         `;
         summary.deleted.agent_usage_records = (result as any).count ?? 0;
-        console.log(`[retention] Deleted ${summary.deleted.agent_usage_records} agent_usage_records rows (>1y)`);
+        console.log(
+          `[retention] Deleted ${summary.deleted.agent_usage_records} agent_usage_records rows (>1y)`,
+        );
       }
     } catch (e: any) {
       const msg = `agent_usage_records purge: ${e.message}`;
@@ -133,7 +149,9 @@ export async function processDataRetentionPurge(
   // ── 3. Workflow runs for assessments closed > 1 year ─────────────────
   if (scope === "all" || scope === "assessments") {
     try {
-      const cutoff = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString();
+      const cutoff = new Date(
+        Date.now() - 365 * 24 * 60 * 60 * 1000,
+      ).toISOString();
 
       if (dryRun) {
         const count = await sql`
@@ -149,7 +167,9 @@ export async function processDataRetentionPurge(
             )
         `;
         summary.deleted.workflow_runs = Number(count[0]?.n ?? 0);
-        console.log(`[retention] [dry-run] Would delete ${summary.deleted.workflow_runs} workflow_runs rows`);
+        console.log(
+          `[retention] [dry-run] Would delete ${summary.deleted.workflow_runs} workflow_runs rows`,
+        );
       } else {
         const result = await sql`
           DELETE FROM workflow_runs
@@ -167,7 +187,9 @@ export async function processDataRetentionPurge(
           )
         `;
         summary.deleted.workflow_runs = (result as any).count ?? 0;
-        console.log(`[retention] Deleted ${summary.deleted.workflow_runs} workflow_runs rows`);
+        console.log(
+          `[retention] Deleted ${summary.deleted.workflow_runs} workflow_runs rows`,
+        );
       }
     } catch (e: any) {
       const msg = `workflow_runs purge: ${e.message}`;
@@ -179,28 +201,41 @@ export async function processDataRetentionPurge(
   // ── 4. Soft-deleted tenants past 90-day window ───────────────────────
   if (scope === "all" || scope === "tenants") {
     try {
-      const cutoff = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
+      const cutoff = new Date(
+        Date.now() - 90 * 24 * 60 * 60 * 1000,
+      ).toISOString();
 
+      // The `tenants` table was dropped in migration 0032_drop_legacy_tenants;
+      // `organizations` IS the tenant (ADR 0002 Phase 2/3). Querying `tenants`
+      // here threw `relation "tenants" does not exist` on every run, and the
+      // error was swallowed into summary.errors below - so this purge has been
+      // silently doing nothing. See the 2026-08-26 audit, finding M-01.
       const expiredTenants = await sql`
-        SELECT id, slug FROM tenants
+        SELECT id, slug FROM organizations
         WHERE deleted_at IS NOT NULL
           AND deleted_at < ${cutoff}
           AND NOT EXISTS (
             SELECT 1 FROM legal_holds lh
-            WHERE lh.organization_id = tenants.id AND lh.active = true
+            WHERE lh.organization_id = organizations.id AND lh.active = true
           )
         LIMIT 50
       `;
 
       for (const tenant of expiredTenants) {
         if (dryRun) {
-          console.log(`[retention] [dry-run] Would purge tenant ${tenant.id} (${tenant.slug})`);
+          console.log(
+            `[retention] [dry-run] Would purge tenant ${tenant.id} (${tenant.slug})`,
+          );
           summary.deleted.soft_deleted_tenants++;
         } else {
-          // Cascade: assessments, documents, KB entries, audit logs (except regulatory)
-          // Full cascade is handled by FK ON DELETE CASCADE in the schema.
-          // Regulatory tables (audit_logs, security_events, approval_events) are exempt.
-          await sql`DELETE FROM tenants WHERE id = ${tenant.id}`;
+          // NOTE: the foreign keys pointing at organizations are ON DELETE NO
+          // ACTION (see migration 0047), NOT cascade as an earlier comment here
+          // claimed. This DELETE therefore fails with a foreign-key violation
+          // whenever the organization still owns any row. Deleting dependants in
+          // order - and deciding what happens to the append-only ledger, which
+          // migration 0054 forbids deleting at all - is audit finding M-02 and
+          // needs an ADR before this can do real work.
+          await sql`DELETE FROM organizations WHERE id = ${tenant.id}`;
           summary.deleted.soft_deleted_tenants++;
 
           // Audit the purge action itself
@@ -214,7 +249,9 @@ export async function processDataRetentionPurge(
             )
           `.catch(() => {}); // audit failure is non-fatal
 
-          console.log(`[retention] Hard-purged tenant ${tenant.id} (${tenant.slug})`);
+          console.log(
+            `[retention] Hard-purged tenant ${tenant.id} (${tenant.slug})`,
+          );
         }
       }
     } catch (e: any) {
@@ -227,7 +264,9 @@ export async function processDataRetentionPurge(
   // ── 5. Soft-deleted assessments past 1-year window ───────────────────
   if (scope === "all" || scope === "assessments") {
     try {
-      const cutoff = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString();
+      const cutoff = new Date(
+        Date.now() - 365 * 24 * 60 * 60 * 1000,
+      ).toISOString();
 
       const expiredAssessments = await sql`
         SELECT id, organization_id, title FROM assessments
@@ -244,7 +283,9 @@ export async function processDataRetentionPurge(
 
       for (const a of expiredAssessments) {
         if (dryRun) {
-          console.log(`[retention] [dry-run] Would purge assessment ${a.id} (${a.title})`);
+          console.log(
+            `[retention] [dry-run] Would purge assessment ${a.id} (${a.title})`,
+          );
           summary.deleted.soft_deleted_assessments++;
         } else {
           await sql`DELETE FROM assessments WHERE id = ${a.id}`;
@@ -272,10 +313,25 @@ export async function processDataRetentionPurge(
 
   summary.completed_at = new Date().toISOString();
 
-  const totalDeleted = Object.values(summary.deleted).reduce((a, b) => a + b, 0);
-  console.log(
-    `[retention] Purge complete. dry_run=${dryRun} | deleted=${totalDeleted} | errors=${summary.errors.length}`
+  const totalDeleted = Object.values(summary.deleted).reduce(
+    (a, b) => a + b,
+    0,
   );
+
+  if (summary.errors.length > 0) {
+    // Previously every failure was console.warn'd and the run still reported
+    // success, which is how a purge querying a table dropped in 0032 went
+    // unnoticed indefinitely. A retention job that cannot delete is a
+    // compliance failure and must be loud (audit M-01).
+    console.error(
+      `[retention] Purge FAILED with ${summary.errors.length} error(s). ` +
+        `dry_run=${dryRun} | deleted=${totalDeleted} | errors=${JSON.stringify(summary.errors)}`,
+    );
+  } else {
+    console.log(
+      `[retention] Purge complete. dry_run=${dryRun} | deleted=${totalDeleted}`,
+    );
+  }
 
   return summary;
 }

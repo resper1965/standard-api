@@ -54,3 +54,27 @@ export const createDb = (
 };
 
 export type DbClient = ReturnType<typeof createDb>;
+
+/**
+ * Creates a Drizzle client that the caller is responsible for closing.
+ *
+ * `createDb` is meant for the module-level singleton built once at bootstrap.
+ * Calling it inside a request handler opens a fresh Neon Pool per request and
+ * never releases it — a connection leak on exactly the kind of unauthenticated
+ * endpoint an attacker would hammer (audit finding M-07).
+ *
+ * Use this instead when a handler genuinely needs its own connection (e.g. the
+ * auth database, which is a separate Neon branch), and always close it in a
+ * `finally` block.
+ */
+export const createDisposableDb = (
+  databaseUrl: string,
+  hyperdrive?: HyperdriveBinding,
+): { db: DbClient; close: () => Promise<void> } => {
+  const connectionString = hyperdrive?.connectionString ?? databaseUrl;
+  const pool = new Pool({ connectionString });
+  return {
+    db: drizzle({ client: pool, schema }),
+    close: () => pool.end().catch(() => {}),
+  };
+};

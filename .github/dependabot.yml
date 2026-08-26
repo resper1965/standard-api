@@ -7,7 +7,14 @@ updates:
       interval: "weekly"
       day: "monday"
     groups:
+      # Security patches stay on their own so they are never queued behind a
+      # routine version sweep — better-auth's account-takeover advisory sat in
+      # an unreviewed PR (#118) for a month while it was grouped with the rest.
+      security:
+        applies-to: security-updates
+        patterns: ["*"]
       minor-and-patch:
+        applies-to: version-updates
         update-types: ["minor", "patch"]
     open-pull-requests-limit: 10
     labels: ["dependencies", "automated"]
@@ -16,11 +23,18 @@ updates:
       include: "scope"
 
   # ─── GitHub Actions ───────────────────────────────────────────
+  # Grouped: ungrouped action bumps produced five separate open PRs
+  # (checkout, setup-node, cache, pnpm/action-setup, codeql-action), each
+  # needing its own review cycle for what is really one routine sweep.
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
       day: "monday"
+    groups:
+      actions:
+        patterns: ["*"]
+    open-pull-requests-limit: 5
     labels: ["ci", "automated"]
     commit-message:
       prefix: "ci"

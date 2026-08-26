@@ -15,20 +15,21 @@
   ],
   "scripts": {
     "generate:openapi": "tsx scripts/generate-openapi.ts",
+    "check:migrations": "node scripts/check-migration-journal.mjs",
     "prepare": "node -e \"if(process.env.NODE_ENV==='production'){process.exit(0)}process.exit(1)\" || husky",
     "dev": "pnpm dev:api",
     "build": "pnpm -r --if-present build",
     "lint": "node scripts/lint.mjs && pnpm -r --if-present lint",
     "typecheck": "pnpm -r --if-present typecheck",
     "test": "pnpm -r --if-present test",
-    "test:unit": "pnpm -r --if-present --filter \"./packages/*\" test",
+    "test:unit": "pnpm -r --if-present --filter \"./packages/*\" --filter \"./workers/*\" test",
     "test:integration": "pnpm --filter @standard/api-gateway test && pnpm --filter @standard/workflows test",
     "test:contracts": "tsx tests/contracts/run-tests.ts",
     "test:security": "pnpm --filter @standard/security test && pnpm --filter @standard/api-gateway test",
     "test:evaluations": "tsx evals/run-evals.ts",
     "test:regression": "tsx evals/regression/run-regression.ts",
     "test:synthetic-e2e": "tsx tests/e2e-synthetic/run-tests.ts",
-    "test:ci": "pnpm lint && pnpm typecheck && pnpm test:unit && pnpm test:contracts && pnpm test:security && pnpm test:regression && pnpm test:evaluations && pnpm test:synthetic-e2e && pnpm build",
+    "test:ci": "pnpm lint && pnpm check:migrations && pnpm typecheck && pnpm test:unit && pnpm test:contracts && pnpm test:security && pnpm test:regression && pnpm test:evaluations && pnpm test:synthetic-e2e && pnpm build",
     "db:generate": "pnpm --filter @standard/schemas db:generate",
     "db:migrate": "pnpm --filter @standard/schemas db:migrate",
     "dev:api": "pnpm --filter @standard/api-gateway dev",
@@ -70,12 +71,12 @@
     "zod": "^4.4.0"
   },
   "dependencies": {
-    "better-auth": "1.6.14",
+    "better-auth": "1.6.30",
     "dotenv": "^17.4.2"
   },
   "pnpm": {
     "overrides": {
-      "better-auth": "1.6.14",
+      "better-auth": "1.6.30",
       "uuid": ">=11.1.1",
       "i18next": "^25.1.0",
       "mysql2": "^3.22.0",

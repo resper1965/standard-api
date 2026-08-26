@@ -1,5 +1,12 @@
 name: "SSDLC: Nightly Scans & Dojo Upload"
 
+# Least privilege: the scanners read the tree and publish findings; nothing
+# here writes to the repository.
+permissions:
+  contents: read
+  security-events: write
+
+
 on:
   schedule:
     - cron: '0 3 * * *'

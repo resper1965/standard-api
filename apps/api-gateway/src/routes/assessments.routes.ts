@@ -66,11 +66,17 @@ export const assessmentsRoutes: RouteDefinition[] = [
     requireActor: true,
     permissions: ["assessment:create"],
     bodySchema: CreateAssessmentRequestSchema,
-    handler: async ({ validatedBody, deps, organizationId, traceId }) => {
+    handler: async ({
+      validatedBody,
+      deps,
+      organizationId,
+      traceId,
+      session,
+    }) => {
       const body =
         validatedBody as import("@standard/schemas").CreateAssessmentRequest;
 
-      // Bridge Standard Native Auth text ID â†’ Standard domain UUID context
+      // Bridge Standard Native Auth text ID -> Standard domain UUID context
       const standardAuthOrgId =
         body.organization_id ?? requireOrganizationId({ organizationId });
       if (!deps.resolveOrganizationContext) {
@@ -87,6 +93,26 @@ export const assessmentsRoutes: RouteDefinition[] = [
           `Organization "${standardAuthOrgId}" not found in Standard Native Auth. Please create an organization first.`,
           404,
         );
+      }
+
+      // Cross-tenant write guard.
+      //
+      // `organization_id` stays in the request contract (API-first: consumers
+      // send it explicitly), but it may only name the caller's OWN organization.
+      // Without this check any authenticated actor could create an assessment
+      // inside another tenant — and because the ledger is fed from the
+      // assessment, those append-only events could never be removed again.
+      //
+      // Platform admins operate across tenants by design and are exempt.
+      if (session?.user?.platformAdmin !== true) {
+        const actorOrgId = requireOrganizationId({ organizationId });
+        if (ctx.organization_id !== actorOrgId) {
+          throw new ApiError(
+            "FORBIDDEN",
+            "organization_id must match the authenticated organization.",
+            403,
+          );
+        }
       }
 
       const tenantDb = deps.assessments.withOrganization(ctx.organization_id);

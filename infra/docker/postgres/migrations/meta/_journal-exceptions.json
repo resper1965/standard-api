@@ -1,0 +1,68 @@
+{
+  "$comment": [
+    "Migrations that exist on disk but are deliberately NOT in _journal.json,",
+    "and are therefore never applied by packages/schemas/migrate.ts.",
+    "",
+    "Every entry here is technical debt with a deadline, not a permanent state.",
+    "All nine below were discovered by the 2026-08-26 platform audit",
+    "(docs/audit/2026-08-26-platform-security-audit.md, finding C-01) and are",
+    "listed so scripts/check-migration-journal.mjs can keep NEW drift from",
+    "appearing while these are worked through.",
+    "",
+    "Applying them requires verifying real production state first — see",
+    "docs/runbooks/apply-orphaned-migrations.md. 0049 in particular rewrites the",
+    "ledger tables as partitioned tables and moves data; it needs a maintenance",
+    "window and a validated backup, not a routine deploy."
+  ],
+  "unapplied": [
+    {
+      "tag": "0049_partition_ledger_tables",
+      "reason": "Partitions assessment_control_events and audit_logs and migrates existing rows. Destructive, non-idempotent, needs a maintenance window.",
+      "risk": "high",
+      "blocks": ["0057_partman_security_events"]
+    },
+    {
+      "tag": "0050_index_scf_versions_org",
+      "reason": "Index only. Safe to apply once the journal is reconciled.",
+      "risk": "low"
+    },
+    {
+      "tag": "0051_strm_canonical_enums",
+      "reason": "Enum widening on existing columns. Verify no rows hold values outside the new enum before applying.",
+      "risk": "medium"
+    },
+    {
+      "tag": "0052_tpra_persistence",
+      "reason": "Creates TPRA tables. TPRA routes may already be failing in production because these do not exist — verify before assuming.",
+      "risk": "medium"
+    },
+    {
+      "tag": "0053_rls_complete",
+      "reason": "53 RLS policies. Made idempotent (DROP POLICY IF EXISTS) and hardened with FORCE ROW LEVEL SECURITY + WITH CHECK on 2026-08-26. Apply only after confirming the application does NOT connect as a role that needs to bypass RLS for background jobs.",
+      "risk": "medium"
+    },
+    {
+      "tag": "0054_ledger_immutability_triggers",
+      "reason": "ADR-002 append-only triggers. Made idempotent (DROP TRIGGER IF EXISTS) on 2026-08-26. Blocked on M-02: the data-retention purge deletes assessments, which these triggers will reject. Settle that conflict first.",
+      "risk": "medium",
+      "blocked_by": "audit finding M-02"
+    },
+    {
+      "tag": "0055_soa_items_strm_enum",
+      "reason": "Enum widening on soa_items. Same precondition as 0051.",
+      "risk": "medium"
+    },
+    {
+      "tag": "0056_tpra_vendor_controls_and_partman",
+      "reason": "Depends on 0052 tables existing.",
+      "risk": "medium",
+      "depends_on": ["0052_tpra_persistence"]
+    },
+    {
+      "tag": "0057_partman_security_events",
+      "reason": "Requires the pg_partman extension and the partitioning groundwork from 0049.",
+      "risk": "medium",
+      "depends_on": ["0049_partition_ledger_tables"]
+    }
+  ]
+}

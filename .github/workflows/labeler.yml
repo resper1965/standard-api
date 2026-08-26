@@ -8,6 +8,13 @@ permissions:
   contents: read
   pull-requests: write
 
+# Cancel superseded runs: a new push to the same PR makes the previous run's
+# result irrelevant, and once this repository is private those minutes are
+# metered. `github.ref` keeps concurrent PRs independent of each other.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   label:
     runs-on: ubuntu-latest

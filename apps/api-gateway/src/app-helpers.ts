@@ -4,7 +4,6 @@ import type { Env } from "./types/env";
 import { ApiError } from "./errors/api-error";
 import type { RequestContext, RouteDefinition } from "./http";
 import { resolveAuthContext } from "./middleware/auth.middleware";
-import { attachTenantDb } from "./middleware/tenant-db.middleware";
 
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // CORS helpers
@@ -220,8 +219,9 @@ export const resolveAuth = async (
   // â”€â”€ Standard Native Auth â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (auth) {
     await resolveAuthContext(context, auth, authRequired);
-    // Attach RLS-scoped DB access after org context is resolved
-    attachTenantDb(context);
+    // NOTE: tenantScope is attached by app.ts AFTER resolveOrganizationContext.
+    // Attaching it here would freeze the pre-resolution organization, leaving
+    // scopeWhere() and the RLS envelope scoped to two different tenants.
     return;
   }
 

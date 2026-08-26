@@ -64,8 +64,53 @@ export const resolveOrganizationContext = async (
       // No header override or same org â€” use session org
       rawTenantId = sessionOrgId ?? pathTenantId;
     }
+  } else if (context.actorId?.startsWith("m2m:")) {
+    // â”€â”€ IDOR FIX (M2M parity with the session branch above) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // An API key is bound to exactly one organization; auth.middleware already
+    // put that organization in context.organizationId from the key record.
+    // It is the ONLY source of truth here â€” a client-supplied header must never
+    // be able to repoint a key at another tenant. Accept the header only when it
+    // names the same org (clients echo it for symmetry with the browser flow).
+    const keyOrgId = context.organizationId;
+
+    if (headerTenantId && keyOrgId && headerTenantId !== keyOrgId) {
+      // The header may carry a slug while the key carries a UUID â€” resolve
+      // before deciding, so a legitimate echo is not rejected as an attack.
+      let resolvedHeaderOrgId = headerTenantId;
+      if (context.deps.resolveOrganizationContext) {
+        try {
+          const resolved =
+            await context.deps.resolveOrganizationContext(headerTenantId);
+          if (resolved) resolvedHeaderOrgId = resolved.organization_id;
+        } catch {
+          // Resolution failed â€” fall through to the mismatch check below.
+        }
+      }
+
+      if (resolvedHeaderOrgId !== keyOrgId) {
+        void new SecurityEventService(context.deps.observability).record({
+          organization_id: keyOrgId,
+          actor_id: context.actorId,
+          event_type: "cross_tenant_access_blocked",
+          severity: "critical",
+          outcome: "blocked",
+          source: "api-gateway",
+          message_safe:
+            "Header x-standard-tenant-id does not match the API key organization.",
+          trace_id: context.traceId,
+        });
+        throw new ApiError(
+          "FORBIDDEN",
+          "This API key can only access its own organization.",
+          403,
+        );
+      }
+    }
+
+    rawTenantId = keyOrgId ?? headerTenantId ?? pathTenantId;
   } else {
-    // M2M API key or unauthenticated: original behavior
+    // Unauthenticated: no trusted context to defend, auth middleware gates the
+    // route. Keep the original resolution order.
     rawTenantId = headerTenantId ?? pathTenantId ?? context.organizationId;
   }
 
@@ -102,9 +147,20 @@ export const resolveOrganizationContext = async (
         resolvedOrgId = resolved.organization_id;
       }
     } catch (e) {
+      // Fail closed. Continuing here would fall through to the raw,
+      // client-supplied identifier as the tenant context - turning a database
+      // blip into a tenant-isolation failure (audit M-06).
       console.error(
         "[standard:tenant-middleware] Failed to resolve tenant context:",
         e,
+      );
+      // 503 rather than a new error code: ApiErrorCode is part of the public
+      // API contract and consumers validate against it, so a security fix is
+      // not the place to widen it. The status carries the semantics.
+      throw new ApiError(
+        "INTERNAL_ERROR",
+        "Unable to resolve organization context.",
+        503,
       );
     }
   }
@@ -218,4 +274,3 @@ export const resolveOrganizationContext = async (
       traceId: context.traceId,
     }) ?? undefined;
 };
-

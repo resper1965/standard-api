@@ -48,10 +48,12 @@ COMMENT ON FUNCTION prevent_ledger_mutation() IS
 -- assessment_control_events — append-only triggers
 -- ─────────────────────────────────────────────────────────────────────────────
 
+DROP TRIGGER IF EXISTS trg_ace_prevent_update ON assessment_control_events;
 CREATE TRIGGER trg_ace_prevent_update
   BEFORE UPDATE ON assessment_control_events
   FOR EACH ROW EXECUTE FUNCTION prevent_ledger_mutation();
 
+DROP TRIGGER IF EXISTS trg_ace_prevent_delete ON assessment_control_events;
 CREATE TRIGGER trg_ace_prevent_delete
   BEFORE DELETE ON assessment_control_events
   FOR EACH ROW EXECUTE FUNCTION prevent_ledger_mutation();
@@ -60,10 +62,12 @@ CREATE TRIGGER trg_ace_prevent_delete
 -- audit_logs — append-only triggers
 -- ─────────────────────────────────────────────────────────────────────────────
 
+DROP TRIGGER IF EXISTS trg_al_prevent_update ON audit_logs;
 CREATE TRIGGER trg_al_prevent_update
   BEFORE UPDATE ON audit_logs
   FOR EACH ROW EXECUTE FUNCTION prevent_ledger_mutation();
 
+DROP TRIGGER IF EXISTS trg_al_prevent_delete ON audit_logs;
 CREATE TRIGGER trg_al_prevent_delete
   BEFORE DELETE ON audit_logs
   FOR EACH ROW EXECUTE FUNCTION prevent_ledger_mutation();

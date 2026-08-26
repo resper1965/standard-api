@@ -47,6 +47,11 @@ jobs:
       - name: Validate OpenAPI Spec (blocking)
         run: pnpm dlx tsx scripts/validate-openapi.ts
 
+      # A .sql file with no journal entry is never applied by the deploy runner.
+      # This is how migrations 0049-0057 went missing (2026-08-26 audit, C-01).
+      - name: Validate migration journal (blocking)
+        run: node scripts/check-migration-journal.mjs
+
   test-fast:
     name: Unit & Contract Tests
     runs-on: ubuntu-latest

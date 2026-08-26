@@ -736,6 +736,7 @@ export const gapAnalysisRoutes: RouteDefinition[] = [
     path: "/api/v1/gap/evaluate-evidence",
     authRequired: true,
     tenantRequired: true,
+    permissions: ["evidence:run"],
     bodySchema: EvaluateEvidenceRequestSchema,
     handler: async (ctx) => {
       try {
@@ -783,6 +784,7 @@ export const gapAnalysisRoutes: RouteDefinition[] = [
     path: "/api/v1/gap/evaluate-evidence/batch",
     authRequired: true,
     tenantRequired: true,
+    permissions: ["evidence:run"],
     bodySchema: EvaluateEvidenceBatchRequestSchema,
     handler: async (ctx) => {
       const body = ctx.validatedBody as z.infer<
