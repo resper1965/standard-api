@@ -7,7 +7,11 @@
  *
  * M4 fix: Keys with no scopes (empty array) have ZERO permissions (least privilege).
  */
-import { hasRequiredScopes, getRequiredScopesForRoute, type M2mScope } from "@standard/schemas";
+import {
+  hasRequiredScopes,
+  getRequiredScopesForRoute,
+  type M2mScope,
+} from "@standard/schemas";
 import { ApiError } from "../errors/api-error";
 import type { RequestContext } from "../http";
 
@@ -18,7 +22,8 @@ export const assertApiKeyScopes = (
   context: RequestContext,
   routePath: string,
   method: string,
-  authRequired: boolean
+  authRequired: boolean,
+  routePermissions: readonly string[] = [],
 ): void => {
   // Only enforce for M2M agents (actorId begins with m2m:)
   if (!context.actorId?.startsWith("m2m:")) return;
@@ -29,11 +34,15 @@ export const assertApiKeyScopes = (
     throw new ApiError(
       "INSUFFICIENT_SCOPE",
       "This API key has no scopes configured. Assign at least one scope to enable access.",
-      403
+      403,
     );
   }
 
-  const requiredScopes = getRequiredScopesForRoute(method, routePath);
+  const requiredScopes = getRequiredScopesForRoute(
+    method,
+    routePath,
+    routePermissions,
+  );
 
   // Protected route with no mapped scopes = fail closed for M2M
   if (requiredScopes.length === 0) {
@@ -41,21 +50,24 @@ export const assertApiKeyScopes = (
       throw new ApiError(
         "INSUFFICIENT_SCOPE",
         `This route is protected but has no API key scopes configured. Access denied for machine-to-machine actors.`,
-        403
+        403,
       );
     }
     return;
   }
 
-  if (!hasRequiredScopes(context.m2mScopes as M2mScope[] | undefined, requiredScopes)) {
+  if (
+    !hasRequiredScopes(
+      context.m2mScopes as M2mScope[] | undefined,
+      requiredScopes,
+    )
+  ) {
     throw new ApiError(
       "INSUFFICIENT_SCOPE",
       `This API key lacks the required scope(s): ${requiredScopes.join(", ")}. ` +
-      `Key has: ${context.m2mScopes?.length ? context.m2mScopes.join(", ") : "none"}. ` +
-      `Create a new key with the necessary scopes or use a wildcard key.`,
-      403
+        `Key has: ${context.m2mScopes?.length ? context.m2mScopes.join(", ") : "none"}. ` +
+        `Create a new key with the necessary scopes or use a wildcard key.`,
+      403,
     );
   }
 };
-
-

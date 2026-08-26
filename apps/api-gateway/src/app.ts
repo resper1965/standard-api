@@ -235,6 +235,22 @@ const findRoute = (
   );
 };
 
+/**
+ * Methods allowed on a pathname, regardless of the method that was requested.
+ *
+ * Used to answer 405 instead of 404 when the path exists but the verb does not.
+ * Conflating the two sent a customer chasing "documented but returns 404" on
+ * GET /api/v1/organizations, which is POST-only - the spec was right and the
+ * status code was lying.
+ */
+const allowedMethodsFor = (pathname: string): string[] => {
+  const methods = new Set<string>();
+  for (const route of routes) {
+    if (matchRoute(route.path, pathname)) methods.add(route.method);
+  }
+  return [...methods].sort();
+};
+
 export const createApp = (
   deps: AppDependencies = createMockRepositories(),
   env?: Partial<Env>,
@@ -268,6 +284,25 @@ export const createApp = (
     try {
       const route = findRoute(request.method, url.pathname);
       if (!route) {
+        // Distinguish "no such path" from "wrong verb on a real path".
+        const allowed = allowedMethodsFor(url.pathname);
+        if (allowed.length > 0) {
+          const res = withSecurityHeaders(
+            errorResponse(
+              new ApiError(
+                "BAD_REQUEST",
+                `Method ${request.method} is not allowed on this endpoint. Allowed: ${allowed.join(", ")}.`,
+                405,
+              ),
+              traceId,
+              url.pathname,
+            ),
+          );
+          // RFC 9110 requires Allow on a 405.
+          const headers = new Headers(res.headers);
+          headers.set("Allow", allowed.join(", "));
+          return new Response(res.body, { status: res.status, headers });
+        }
         throw new ApiError("NOT_FOUND", "Endpoint not found.", 404);
       }
 
@@ -305,6 +340,7 @@ export const createApp = (
           (Boolean(route.protected) ||
             Boolean(route.requireActor) ||
             Boolean(route.permissions?.length)),
+        route.permissions ?? [],
       );
       await assertRateLimit(ctx, route.path, env?.STANDARD_CACHE);
       // M3 fix: CSRF verification (after auth, before handler)

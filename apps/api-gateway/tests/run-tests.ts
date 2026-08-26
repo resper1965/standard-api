@@ -26,7 +26,8 @@ import "./llm-provider-validation.test"; // regression: mock LLM fallback + evid
 import "./sdk-compliance.test";
 import "./ledger-harness.test";
 import "./provenance-validation.test"; // audit M-04: existed on disk but was never imported
-import "./cross-tenant-isolation.test"; // audit C-02/C-03/A-03: cross-organization access regressions
+import "./cross-tenant-isolation.test";
+import "./m2m-scope-coverage.test"; // customer-reported 403 INSUFFICIENT_SCOPE on protected routes // audit C-02/C-03/A-03: cross-organization access regressions
 import { runTests } from "./test-kit";
 
 await runTests();
