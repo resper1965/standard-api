@@ -44,8 +44,14 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
+      # Was scripts/validate-openapi.ts, which only asserted "at least 56
+      # operations". With 407 real operations that threshold could not fail:
+      # coverage could collapse back to 56 and the check would still pass.
+      # check:openapi compares the committed spec byte-for-byte against a
+      # fresh generation, so any drift - a lost route or an uncommitted
+      # regeneration - fails here.
       - name: Validate OpenAPI Spec (blocking)
-        run: pnpm dlx tsx scripts/validate-openapi.ts
+        run: pnpm check:openapi
 
       # A .sql file with no journal entry is never applied by the deploy runner.
       # This is how migrations 0049-0057 went missing (2026-08-26 audit, C-01).
