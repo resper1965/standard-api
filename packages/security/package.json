@@ -12,7 +12,6 @@
   "dependencies": {
     "@standard/document-ingestion": "workspace:*",
     "@standard/schemas": "workspace:*",
-    "jose": "^6.2.3",
     "zod": "^4.4.0"
   },
   "devDependencies": {
@@ -21,4 +20,3 @@
     "typescript": "6.0.3"
   }
 }
-

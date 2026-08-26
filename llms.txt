@@ -26,9 +26,10 @@ This file provides the single source of truth for architecture and technical sta
 
 ### 2. Authentication Model
 
-- **Provider:** Standard Native Auth v1.6.11.
+- **Provider:** Standard Native Auth (better-auth) v1.6.30.
 - **Rule:** Do NOT use or reference Clerk, Supabase, Auth0, or any other external provider.
-- **API Keys:** Format `standard_live_...` — handled via `@standard-native-auth/api-key` plugin.
+- **API Keys:** Format `standard_live_...` — handled by the gateway's own implementation
+  (`utils/api-key-crypto.ts` + `adapters/api-keys.repository.ts`), NOT by an auth-provider plugin.
 - **Auth flow:** Bearer token (API key) OR session cookie. Organization context automatically resolved — no custom headers required.
 
 ---
@@ -37,7 +38,7 @@ This file provides the single source of truth for architecture and technical sta
 
 - **Application:** **Platform Console** for managing Orgs, Users, API keys, and System Health.
 - **Rule:** It is **NOT** a GRC Dashboard for end-users. Assessment features are consumed via the API.
-- **Stack:** React 18 + Vite 5 + React Router + TanStack Query v5 + better-auth v1.6.11
+- **Stack:** React 18 + Vite 5 + React Router + TanStack Query v5 + better-auth v1.6.30
 - **API client:** `src/lib/api.ts` — typed fetch wrapper, injects `x-standard-tenant-id`, handles 401→/login, 15s timeout
 - **Hospedagem:** Hospedado estritamente no Cloudflare Pages. Uso de Vercel ou qualquer arquivo legado como `vercel.json` é terminantemente proibido.
 - **Production URL:** resolved from `VITE_API_URL=https://standard-api.bekaa.eu`
@@ -47,7 +48,8 @@ This file provides the single source of truth for architecture and technical sta
 ### 4. Core Stack
 
 - **Edge:** Cloudflare Workers, Workflows, Queues, KV, R2, Vectorize, AI Gateway
-- **Database:** Neon Serverless PostgreSQL + Drizzle ORM (migrations `0001`→`0045`)
+- **Database:** Neon Serverless PostgreSQL + Drizzle ORM (migrations `0001`→`0057` on disk; the journal
+  stops at `0048` — see docs/runbooks/apply-orphaned-migrations.md)
 - **AI/Vector:** Cloudflare Vectorize + R2 for documents
 - **Package Manager:** pnpm workspaces
 
