@@ -47,32 +47,38 @@ const DISCLOSED = [
   "/api/v1/soc/triage-incident",
 ];
 
+const ROUTE_PATH = /^\s*path:\s*"([^"]+)"/;
+
+const instantiatesModel = (line: string): boolean =>
+  LLM_USE_CASES.some((useCase) => line.includes(`new ${useCase}(`));
+
+/** Route paths in one file that sit above an LLM use case instantiation. */
+function modelCallsIn(source: string): string[] {
+  const found: string[] = [];
+  let currentPath: string | null = null;
+
+  for (const line of source.split("\n")) {
+    const declared = line.match(ROUTE_PATH)?.[1];
+    if (declared) currentPath = declared;
+    if (currentPath && instantiatesModel(line)) found.push(currentPath);
+  }
+
+  return found;
+}
+
 /**
- * Walks each route file, tracking the most recent `path:` seen, and records it
- * when an LLM use case is instantiated below it. Static analysis because the
- * instantiation happens inside the handler, at request time.
+ * Static analysis rather than importing the routes: the use case is
+ * instantiated inside the handler, at request time, so nothing is observable
+ * from the route table alone.
  */
 function routesCallingAModel(): string[] {
   const dir = join(here, "..", "src", "routes");
-  const found = new Set<string>();
+  const files = readdirSync(dir).filter((f) => f.endsWith(".routes.ts"));
+  const found = files.flatMap((f) =>
+    modelCallsIn(readFileSync(join(dir, f), "utf8")),
+  );
 
-  for (const file of readdirSync(dir).filter((f) => f.endsWith(".routes.ts"))) {
-    let currentPath: string | null = null;
-
-    for (const line of readFileSync(join(dir, file), "utf8").split("\n")) {
-      const pathMatch = line.match(/^\s*path:\s*"([^"]+)"/);
-      if (pathMatch?.[1]) currentPath = pathMatch[1];
-
-      if (
-        currentPath &&
-        LLM_USE_CASES.some((u) => line.includes(`new ${u}(`))
-      ) {
-        found.add(currentPath);
-      }
-    }
-  }
-
-  return [...found].sort();
+  return [...new Set(found)].sort();
 }
 
 test("AI disclosure: every route that calls a model is documented", () => {
