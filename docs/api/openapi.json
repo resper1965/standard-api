@@ -42207,7 +42207,7 @@
           "privacy"
         ],
         "summary": "POST /api/v1/privacy/processing-activities",
-        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.",
+        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): privacy:create. API keys need scope(s): privacy:write.",
         "responses": {
           "200": {
             "description": "Successful response."
@@ -42296,7 +42296,7 @@
           "privacy"
         ],
         "summary": "PUT /api/v1/privacy/processing-activities/{id}",
-        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.",
+        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): privacy:update. API keys need scope(s): privacy:write.",
         "parameters": [
           {
             "schema": {
@@ -42333,7 +42333,7 @@
           "privacy"
         ],
         "summary": "DELETE /api/v1/privacy/processing-activities/{id}",
-        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.",
+        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): privacy:delete. Not reachable with an API key: this route is restricted to human actors.",
         "parameters": [
           {
             "schema": {
@@ -42372,7 +42372,7 @@
           "privacy"
         ],
         "summary": "POST /api/v1/privacy/processing-activities/{id}/status",
-        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.",
+        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): privacy:update. API keys need scope(s): privacy:write.",
         "parameters": [
           {
             "schema": {
@@ -42450,7 +42450,7 @@
           "privacy"
         ],
         "summary": "POST /api/v1/privacy/processing-activities/{id}/data-subjects",
-        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.",
+        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): privacy:create. API keys need scope(s): privacy:write.",
         "parameters": [
           {
             "schema": {
@@ -42526,7 +42526,7 @@
           "privacy"
         ],
         "summary": "DELETE /api/v1/privacy/processing-activities/{id}/data-subjects/{subjectId}",
-        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.",
+        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): privacy:delete. Not reachable with an API key: this route is restricted to human actors.",
         "parameters": [
           {
             "schema": {
@@ -42575,7 +42575,7 @@
           "privacy"
         ],
         "summary": "POST /api/v1/privacy/processing-activities/{id}/data-categories",
-        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.",
+        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): privacy:create. API keys need scope(s): privacy:write.",
         "parameters": [
           {
             "schema": {
@@ -42651,7 +42651,7 @@
           "privacy"
         ],
         "summary": "DELETE /api/v1/privacy/processing-activities/{id}/data-categories/{categoryId}",
-        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.",
+        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): privacy:delete. Not reachable with an API key: this route is restricted to human actors.",
         "parameters": [
           {
             "schema": {
@@ -42700,7 +42700,7 @@
           "privacy"
         ],
         "summary": "POST /api/v1/privacy/processing-activities/{id}/third-parties",
-        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.",
+        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): privacy:create. API keys need scope(s): privacy:write.",
         "parameters": [
           {
             "schema": {
@@ -42776,7 +42776,7 @@
           "privacy"
         ],
         "summary": "DELETE /api/v1/privacy/processing-activities/{id}/third-parties/{partyId}",
-        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.",
+        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): privacy:delete. Not reachable with an API key: this route is restricted to human actors.",
         "parameters": [
           {
             "schema": {
@@ -42825,7 +42825,7 @@
           "privacy"
         ],
         "summary": "POST /api/v1/privacy/processing-activities/{id}/screen",
-        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.",
+        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): privacy:update. API keys need scope(s): privacy:write.",
         "parameters": [
           {
             "schema": {
@@ -42903,7 +42903,7 @@
           "privacy"
         ],
         "summary": "POST /api/v1/privacy/processing-activities/{id}/field-reviews",
-        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.",
+        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): privacy:create. API keys need scope(s): privacy:write.",
         "parameters": [
           {
             "schema": {
@@ -42979,7 +42979,7 @@
           "privacy"
         ],
         "summary": "PUT /api/v1/privacy/processing-activities/{id}/field-reviews/{reviewId}",
-        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.",
+        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): privacy:update. API keys need scope(s): privacy:write.",
         "parameters": [
           {
             "schema": {
@@ -43029,7 +43029,7 @@
         ],
         "summary": "Extract Processing Activity from free text",
         "deprecated": true,
-        "description": "DEPRECATED: extraction is rule-based (regular expressions and keyword matching), not a language model, and it persists the activity and its child records without review. Build the activity with POST /api/v1/privacy/processing-activities and the child endpoints instead. Returns a Deprecation header and is scheduled for removal after Wed, 25 Nov 2026. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.",
+        "description": "DEPRECATED: extraction is rule-based (regular expressions and keyword matching), not a language model, and it persists the activity and its child records without review. Build the activity with POST /api/v1/privacy/processing-activities and the child endpoints instead. Returns a Deprecation header and is scheduled for removal after Wed, 25 Nov 2026. Requires permission(s): privacy:create. API keys need scope(s): privacy:write.",
         "responses": {
           "201": {
             "description": "Activity created from the extracted text."
@@ -43054,7 +43054,7 @@
           "privacy"
         ],
         "summary": "POST /api/v1/privacy/analyze-ropa",
-        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.",
+        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): privacy:read. API keys need scope(s): privacy:read.",
         "responses": {
           "200": {
             "description": "Successful response."
@@ -43081,7 +43081,7 @@
           "privacy"
         ],
         "summary": "POST /api/v1/privacy/assess-dpia",
-        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.",
+        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): privacy:read. API keys need scope(s): privacy:read.",
         "responses": {
           "200": {
             "description": "Successful response."
@@ -43105,7 +43105,7 @@
     "/api/v1/privacy/scan-vendor-contract/batch": {
       "post": {
         "summary": "Scan Vendor Contracts in Bulk (Async)",
-        "description": "Dispatches long-running analysis across up to 500 contract snippets simultaneously. Returns a jobId for polling. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.",
+        "description": "Dispatches long-running analysis across up to 500 contract snippets simultaneously. Returns a jobId for polling. Requires permission(s): privacy:read. API keys need scope(s): privacy:read.",
         "requestBody": {
           "content": {
             "application/json": {
