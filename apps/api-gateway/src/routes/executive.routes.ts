@@ -3,6 +3,7 @@ import { z } from "zod";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";
 import { json, parseJson, requireOrganizationId } from "../http";
+import { agentFailure } from "./agent-failure";
 
 export const executiveRoutes: RouteDefinition[] = [
   // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
@@ -57,13 +58,10 @@ export const executiveRoutes: RouteDefinition[] = [
 
         return json({ data: result, trace_id: ctx.traceId }, { status: 200 });
       } catch (e) {
-        console.error("[POST /api/v1/executive/translate-risk] Failure:", e);
-        if (e instanceof ApiError) throw e;
-        throw new ApiError(
-          "INTERNAL_ERROR",
-          `Agent Board Translation failed: ${e instanceof Error ? e.message : String(e)}`,
-          500,
-          e instanceof Error ? [e.message] : [],
+        agentFailure(
+          "POST /api/v1/executive/translate-risk",
+          "Agent Board Translation",
+          e,
         );
       }
     },

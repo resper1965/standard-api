@@ -66,7 +66,7 @@ curl -X POST https://api.standard.dev/api/v1/privacy/processing-activities/from-
 ## Complete Lifecycle {#complete-lifecycle}
 
 ```
-1. POST /from-text           → Create activity from natural language
+1. POST /processing-activities → Create the activity (from-text is deprecated)
    or POST /                 → Create activity from structured JSON
 
 2. GET /:id/completeness     → Check what's missing
@@ -224,7 +224,7 @@ Sources: `human`, `ai_suggestion`, `system_rule`, `import`
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `POST` | `/privacy/processing-activities/from-text` | Extract ROPA from natural language |
+| `POST` | `/privacy/processing-activities/from-text` | **DEPRECATED** — rule-based extraction that persists without review. Use `POST /privacy/processing-activities`. Removal after 2026-11-25. |
 
 **Body:**
 ```json

@@ -29,6 +29,7 @@ import {
 import { ApiError } from "../errors/api-error";
 import type { ApiErrorCode } from "../errors/error-codes";
 import type { RouteDefinition } from "../http";
+import { agentFailure } from "./agent-failure";
 import {
   json,
   parseJson,
@@ -78,7 +79,17 @@ export const privacyRoutes: RouteDefinition[] = [
           organization_id: ctx.organizationId,
           trace_id: ctx.traceId,
         });
-        return json({ data: result, trace_id: ctx.traceId }, { status: 201 });
+        const response = json(
+          { data: result, trace_id: ctx.traceId },
+          { status: 201 },
+        );
+        response.headers.set("Deprecation", "true");
+        response.headers.set("Sunset", "Wed, 25 Nov 2026 00:00:00 GMT");
+        response.headers.set(
+          "Link",
+          '</api/v1/privacy/processing-activities>; rel="successor-version"',
+        );
+        return response;
       } catch (e) {
         return toApiError(e);
       }
@@ -568,11 +579,35 @@ export const privacyRoutes: RouteDefinition[] = [
   // Phase 6: AI Extraction (Text â†’ ROPA)
   // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
+  // DEPRECATED. This route extracts a processing activity from free text and
+  // persists it with its child records - data subjects, data categories, third
+  // parties - in one call. The extraction is regular expressions and keyword
+  // matching (agent_model: "rule-based-v1"), which gets the shape right and the
+  // judgement wrong. A ROPA produced this way and not reviewed *looks*
+  // complete, which in an artefact built to be audited is worse than an empty
+  // field.
+  //
+  // The layer buys nothing that POST /processing-activities plus the child
+  // endpoints do not already do, with the operator seeing what is recorded.
+  //
+  // Kept working for the 90 days the versioning policy promises, because it is
+  // published as the first step of the recommended Privacy flow in llms.txt and
+  // in docs/api/privacy-ropa-sdk.md.
   {
     method: "POST",
     path: "/api/v1/privacy/processing-activities/from-text",
     authRequired: true,
     tenantRequired: true,
+    openapi: {
+      tags: ["Privacy"],
+      summary: "Extract Processing Activity from free text",
+      deprecated: true,
+      description:
+        "DEPRECATED: extraction is rule-based (regular expressions and keyword matching), not a language model, and it persists the activity and its child records without review. Build the activity with POST /api/v1/privacy/processing-activities and the child endpoints instead. Returns a Deprecation header and is scheduled for removal after Wed, 25 Nov 2026.",
+      responses: {
+        201: { description: "Activity created from the extracted text." },
+      },
+    },
     handler: async (ctx) => {
       try {
         const body = await parseJson(
@@ -586,7 +621,11 @@ export const privacyRoutes: RouteDefinition[] = [
           body.text,
           privacyContext(ctx),
         );
-        await ctx.deps.audit.record("privacy.ai.extraction", {
+        // Event renamed from "privacy.ai.extraction": nothing here reaches a
+        // language model, and a customer reading their own audit trail would
+        // have concluded their processing-activity text had been sent to an
+        // external AI. Historical events keep the old name.
+        await ctx.deps.audit.record("privacy.rule_based.extraction", {
           activity_id: result.activity.id,
           confidence: result.confidence,
           agent_model: result.agent_model,
@@ -641,13 +680,10 @@ export const privacyRoutes: RouteDefinition[] = [
         });
         return json({ data: result, trace_id: ctx.traceId }, { status: 200 });
       } catch (e) {
-        console.error("[POST /api/v1/privacy/analyze-ropa] Failure:", e);
-        if (e instanceof ApiError) throw e;
-        throw new ApiError(
-          "INTERNAL_ERROR",
-          `Agent generation failed: ${e instanceof Error ? e.message : String(e)}`,
-          500,
-          e instanceof Error ? [e.message] : [],
+        agentFailure(
+          "POST /api/v1/privacy/analyze-ropa",
+          "Agent generation",
+          e,
         );
       }
     },
@@ -709,13 +745,10 @@ export const privacyRoutes: RouteDefinition[] = [
         });
         return json({ data: result, trace_id: ctx.traceId }, { status: 200 });
       } catch (e) {
-        console.error("[POST /api/v1/privacy/assess-dpia] Failure:", e);
-        if (e instanceof ApiError) throw e;
-        throw new ApiError(
-          "INTERNAL_ERROR",
-          `Agent DPIA assessment failed: ${e instanceof Error ? e.message : String(e)}`,
-          500,
-          e instanceof Error ? [e.message] : [],
+        agentFailure(
+          "POST /api/v1/privacy/assess-dpia",
+          "Agent DPIA assessment",
+          e,
         );
       }
     },
@@ -860,16 +893,10 @@ export const privacyRoutes: RouteDefinition[] = [
         });
         return json({ data: result, trace_id: ctx.traceId }, { status: 200 });
       } catch (e) {
-        console.error(
-          "[POST /api/v1/privacy/scan-vendor-contract] Failure:",
+        agentFailure(
+          "POST /api/v1/privacy/scan-vendor-contract",
+          "Agent Vendor Contract Scanning",
           e,
-        );
-        if (e instanceof ApiError) throw e;
-        throw new ApiError(
-          "INTERNAL_ERROR",
-          `Agent Vendor Contract Scanning failed: ${e instanceof Error ? e.message : String(e)}`,
-          500,
-          e instanceof Error ? [e.message] : [],
         );
       }
     },

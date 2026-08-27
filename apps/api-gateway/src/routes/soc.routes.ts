@@ -3,6 +3,7 @@ import { z } from "zod";
 import { ApiError } from "../errors/api-error";
 import type { RouteDefinition } from "../http";
 import { json, parseJson, requireOrganizationId } from "../http";
+import { agentFailure } from "./agent-failure";
 
 export const socRoutes: RouteDefinition[] = [
   // â”€â”€ GET /api/v1/soc/status â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -139,13 +140,10 @@ export const socRoutes: RouteDefinition[] = [
 
         return json({ data: result, trace_id: ctx.traceId }, { status: 200 });
       } catch (e) {
-        console.error("[POST /api/v1/soc/triage-incident] Failure:", e);
-        if (e instanceof ApiError) throw e;
-        throw new ApiError(
-          "INTERNAL_ERROR",
-          `Agent SOC Incident Triage failed: ${e instanceof Error ? e.message : String(e)}`,
-          500,
-          e instanceof Error ? [e.message] : [],
+        agentFailure(
+          "POST /api/v1/soc/triage-incident",
+          "Agent SOC Incident Triage",
+          e,
         );
       }
     },

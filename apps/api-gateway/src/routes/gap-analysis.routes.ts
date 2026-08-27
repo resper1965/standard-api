@@ -38,6 +38,7 @@ import {
 } from "../http";
 import { parsePagination, applyPagination } from "../utils/pagination";
 import { dispatchWebhookEvent } from "../services/webhook-event-helper";
+import { agentFailure } from "./agent-failure";
 
 /** Schema for POST /api/v1/gap/evaluate-evidence */
 const EvaluateEvidenceRequestSchema = z.object({
@@ -768,13 +769,10 @@ export const gapAnalysisRoutes: RouteDefinition[] = [
         });
         return json({ data: result, trace_id: ctx.traceId }, { status: 200 });
       } catch (e) {
-        console.error("[POST /api/v1/gap/evaluate-evidence] Failure:", e);
-        if (e instanceof ApiError) throw e;
-        throw new ApiError(
-          "INTERNAL_ERROR",
-          `Agent Evidence evaluation failed: ${e instanceof Error ? e.message : String(e)}`,
-          500,
-          e instanceof Error ? [e.message] : [],
+        agentFailure(
+          "POST /api/v1/gap/evaluate-evidence",
+          "Agent Evidence evaluation",
+          e,
         );
       }
     },
@@ -866,13 +864,10 @@ export const gapAnalysisRoutes: RouteDefinition[] = [
         });
         return json({ data: result, trace_id: ctx.traceId }, { status: 200 });
       } catch (e) {
-        console.error("[POST /api/v1/poam/architect-remediation] Failure:", e);
-        if (e instanceof ApiError) throw e;
-        throw new ApiError(
-          "INTERNAL_ERROR",
-          `Agent PoAM Architecture failed: ${e instanceof Error ? e.message : String(e)}`,
-          500,
-          e instanceof Error ? [e.message] : [],
+        agentFailure(
+          "POST /api/v1/poam/architect-remediation",
+          "Agent PoAM Architecture",
+          e,
         );
       }
     },
