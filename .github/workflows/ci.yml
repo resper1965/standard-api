@@ -80,6 +80,16 @@ jobs:
       - name: Unit Tests
         run: pnpm test:unit
 
+      # test:unit runs each package's own `test` script; this runs the root
+      # vitest suite with coverage, which is a different set of files. It is
+      # added rather than substituted so nothing that ran before stops running.
+      #
+      # Its purpose is the floors in vitest.config.ts, which were never
+      # enforced: no CI job collected coverage, so functions sat at 21.87%
+      # under a declared 30% for as long as the config has existed.
+      - name: Coverage floors
+        run: pnpm coverage
+
       # Blocking: contract tests exercise the real HTTP edge (createApp +
       # app.fetch) against in-memory adapters — no CF/wrangler/DB required.
       # They guard the golden-path regressions (e.g. API key creation) that

@@ -84,6 +84,10 @@ jobs:
       # then raises the score while the code gets simpler, and adding tests
       # does not lower it - three rounds on #131 chased findings that only
       # existed because of the estimate.
+      # continue-on-error on purpose: this job scores complexity, it does not
+      # gate coverage. The floors are enforced in the CI workflow's unit job;
+      # here a threshold failure must still leave coverage-final.json behind
+      # rather than abort the audit.
       - name: Collect coverage for CRAP scoring
         run: pnpm coverage
         continue-on-error: true
