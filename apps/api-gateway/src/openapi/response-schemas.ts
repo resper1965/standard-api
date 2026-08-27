@@ -105,11 +105,38 @@ export const RESPONSE_SCHEMAS: Record<string, z.ZodTypeAny> = {
     ScfDomainResponseSchema,
     scfVersionId,
   ),
-  // Also streams NDJSON when the request sends Accept: application/x-ndjson;
-  // the JSON shape below is what a normal request gets.
-  "GET /api/v1/scf/versions/:scfVersionId/controls": paginated(
-    ScfControlResponseSchema,
-  ),
+  // Three response shapes, and declaring only one of them was wrong: a
+  // customer read `pagination` off the spec, never received it, and had to
+  // terminate their walk by guessing that a short page meant the last page.
+  //
+  //   ?after=<cursor>  -> { data, pagination: { has_more, next_cursor? } }
+  //   default          -> { data, page, per_page }        no pagination object
+  //   Accept: application/x-ndjson -> a stream, not JSON
+  //
+  // Neither JSON shape carries a total.
+  "GET /api/v1/scf/versions/:scfVersionId/controls": z
+    .union([
+      z.object({
+        data: z.array(ScfControlResponseSchema),
+        pagination: z.object({
+          has_more: z.boolean(),
+          next_cursor: z.string().optional(),
+        }),
+        scf_version_id: z.string(),
+        trace_id: traceId,
+      }),
+      z.object({
+        data: z.array(ScfControlResponseSchema),
+        scf_version_id: z.string(),
+        page: z.number(),
+        per_page: z.number(),
+        trace_id: traceId,
+      }),
+    ])
+    .openapi({
+      description:
+        "Cursor form when `after` is supplied, offset form otherwise. Only the cursor form returns a `pagination` object; neither returns a total. Send `Accept: application/x-ndjson` to stream instead.",
+    }),
   "GET /api/v1/scf/domains/:domainCode/controls": list(
     ScfControlResponseSchema,
     { domain_code: z.string(), ...scfVersionId },

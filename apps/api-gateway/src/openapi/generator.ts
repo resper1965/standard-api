@@ -72,8 +72,24 @@ function paramsSchema(names: string[]) {
  * Returns null for routes that require no permission, so public endpoints do
  * not grow a misleading clause.
  */
+function requiresAuth(route: RouteDefinition): boolean {
+  return (
+    route.authRequired ??
+    (Boolean(route.protected) ||
+      Boolean(route.requireActor) ||
+      Boolean(route.permissions?.length))
+  );
+}
+
 function authClause(route: RouteDefinition): string | null {
-  if (!route.permissions?.length) return null;
+  if (!route.permissions?.length) {
+    // Protected, but nothing to derive a scope from, so scope.middleware fails
+    // closed and every machine actor gets a 403. The spec used to say nothing
+    // at all here, and a customer reasonably read that silence as "open to any
+    // valid key" before hitting the 403 on GET /api/v1/regulations.
+    if (!requiresAuth(route)) return null;
+    return "Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.";
+  }
 
   const scopes = getRequiredScopesForRoute(
     route.method,
