@@ -324,12 +324,7 @@ describe("routes with no declared permission", () => {
 
   it("has not grown", async () => {
     const { routes } = await import("../../app");
-
-    const requiresAuth = (route: any) =>
-      route.authRequired ??
-      (Boolean(route.protected) ||
-        Boolean(route.requireActor) ||
-        Boolean(route.permissions?.length));
+    const { requiresAuth } = await import("../generator");
 
     const actual = (routes as any[])
       .filter((route) => requiresAuth(route) && !route.permissions?.length)

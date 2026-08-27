@@ -72,7 +72,12 @@ function paramsSchema(names: string[]) {
  * Returns null for routes that require no permission, so public endpoints do
  * not grow a misleading clause.
  */
-function requiresAuth(route: RouteDefinition): boolean {
+/**
+ * Mirrors the gate in app.ts: a route is protected when it says so, or when
+ * anything else about it implies authentication. Exported so the tests assert
+ * against this definition rather than a second copy that can drift from it.
+ */
+export function requiresAuth(route: RouteDefinition): boolean {
   return (
     route.authRequired ??
     (Boolean(route.protected) ||
