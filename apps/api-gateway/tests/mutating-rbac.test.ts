@@ -22,8 +22,6 @@ import { expect, test } from "./test-kit";
 const KNOWN_WITHOUT_RBAC = new Set([
   "POST /api/v1/poam/architect-remediation",
   "POST /api/v1/optimizer/compliance-strategy",
-  "POST /api/v1/admin/recovery/reset-password",
-  "POST /api/v1/admin/recovery/bootstrap-admin",
   "DELETE /api/v1/auth/sessions/others",
   "POST /api/v1/soc/triage-incident",
   "POST /api/v1/executive/translate-risk",
@@ -34,13 +32,24 @@ const KNOWN_WITHOUT_RBAC = new Set([
   "DELETE /api/v1/assessments/:id/risk-register/:entryId",
 ]);
 
+/**
+ * Mirrors the expression `app.ts` uses to decide whether a route is protected.
+ * Reading only `authRequired` would sweep in the deliberately unauthenticated
+ * routes — `/admin/recovery/*` is `protected: false` and gated by a
+ * constant-time comparison against `ADMIN_RECOVERY_SECRET`, which no
+ * permission would improve.
+ */
+const isProtected = (r: (typeof routes)[number]) =>
+  r.authRequired ??
+  (Boolean(r.protected) ||
+    Boolean(r.requireActor) ||
+    Boolean(r.permissions?.length));
+
 const mutatingWithoutRbac = () =>
   routes
     .filter(
       (r) =>
-        r.method !== "GET" &&
-        r.authRequired !== false &&
-        !(r.permissions?.length ?? 0),
+        r.method !== "GET" && isProtected(r) && !(r.permissions?.length ?? 0),
     )
     .map((r) => `${r.method} ${r.path}`);
 
