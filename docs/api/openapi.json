@@ -28534,7 +28534,7 @@
           "poam"
         ],
         "summary": "POST /api/v1/poam/architect-remediation",
-        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.",
+        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): poam:create. API keys need scope(s): poam:write.",
         "responses": {
           "200": {
             "description": "Successful response.",
@@ -37872,7 +37872,7 @@
           "optimizer"
         ],
         "summary": "POST /api/v1/optimizer/compliance-strategy",
-        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.",
+        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.",
         "responses": {
           "200": {
             "description": "Successful response."
@@ -43817,7 +43817,7 @@
           "soc"
         ],
         "summary": "POST /api/v1/soc/triage-incident",
-        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.",
+        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): intelligence:create. API keys need scope(s): intelligence:run.",
         "responses": {
           "200": {
             "description": "Successful response."
@@ -43844,7 +43844,7 @@
           "executive"
         ],
         "summary": "POST /api/v1/executive/translate-risk",
-        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.",
+        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): intelligence:create. API keys need scope(s): intelligence:run.",
         "responses": {
           "200": {
             "description": "Successful response."
@@ -46497,7 +46497,7 @@
           "tpra"
         ],
         "summary": "POST /api/v1/tpra/score",
-        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.",
+        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.",
         "responses": {
           "200": {
             "description": "Successful response."
@@ -47807,7 +47807,7 @@
           "assessments"
         ],
         "summary": "PUT /api/v1/assessments/{id}/maturity-targets",
-        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.",
+        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): maturity:update. API keys need scope(s): gap:write.",
         "parameters": [
           {
             "schema": {
@@ -47932,7 +47932,7 @@
           "assessments"
         ],
         "summary": "POST /api/v1/assessments/{id}/risk-register",
-        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.",
+        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:create. API keys need scope(s): assessment:write.",
         "parameters": [
           {
             "schema": {
@@ -48733,7 +48733,7 @@
           "assessments"
         ],
         "summary": "PATCH /api/v1/assessments/{id}/risk-register/{entryId}",
-        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.",
+        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:update. API keys need scope(s): assessment:write.",
         "parameters": [
           {
             "schema": {
@@ -48931,7 +48931,7 @@
           "assessments"
         ],
         "summary": "DELETE /api/v1/assessments/{id}/risk-register/{entryId}",
-        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.",
+        "description": "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:update. API keys need scope(s): assessment:write.",
         "parameters": [
           {
             "schema": {

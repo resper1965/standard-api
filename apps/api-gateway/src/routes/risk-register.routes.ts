@@ -64,6 +64,7 @@ export const riskRegisterRoutes: RouteDefinition[] = [
     path: "/api/v1/assessments/:id/risk-register",
     authRequired: true,
     tenantRequired: true,
+    permissions: ["assessment:create"],
     handler: async ({
       deps,
       params,
@@ -209,6 +210,7 @@ export const riskRegisterRoutes: RouteDefinition[] = [
     path: "/api/v1/assessments/:id/risk-register/:entryId",
     authRequired: true,
     tenantRequired: true,
+    permissions: ["assessment:update"],
     handler: async ({ deps, params, request, organizationId, traceId }) => {
       const orgId = requireOrganizationId({ organizationId });
       const assessmentId = routeUuidParam(params, "id");
@@ -231,6 +233,7 @@ export const riskRegisterRoutes: RouteDefinition[] = [
     path: "/api/v1/assessments/:id/risk-register/:entryId",
     authRequired: true,
     tenantRequired: true,
+    permissions: ["assessment:update"],
     handler: async ({ deps, params, organizationId, traceId }) => {
       const orgId = requireOrganizationId({ organizationId });
       const assessmentId = routeUuidParam(params, "id");

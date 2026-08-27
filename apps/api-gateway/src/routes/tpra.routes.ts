@@ -610,6 +610,7 @@ export const tpraRoutes: RouteDefinition[] = [
     path: "/api/v1/tpra/score",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, traceId }) => {
       const body = await parseJson(request, TpraScoreRequestSchema);
       const q = TPRA_INDEX.get(body.questionnaire_id ?? "standard_v1");

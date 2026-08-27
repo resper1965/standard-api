@@ -14,6 +14,7 @@ export const executiveRoutes: RouteDefinition[] = [
     path: "/api/v1/executive/translate-risk",
     authRequired: true,
     tenantRequired: true,
+    permissions: ["intelligence:create"],
     handler: async (ctx) => {
       try {
         const body = await parseJson(

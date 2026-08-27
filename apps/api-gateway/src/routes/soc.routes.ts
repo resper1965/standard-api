@@ -81,6 +81,7 @@ export const socRoutes: RouteDefinition[] = [
     path: "/api/v1/soc/triage-incident",
     authRequired: true,
     tenantRequired: true,
+    permissions: ["intelligence:create"],
     handler: async (ctx) => {
       try {
         const body = await parseJson(
