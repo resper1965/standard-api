@@ -1,6 +1,6 @@
 import { OpenApiGeneratorV3 } from "@asteasolutions/zod-to-openapi";
 import type { RouteConfig } from "@asteasolutions/zod-to-openapi";
-import { z } from "@standard/schemas";
+import { getRequiredScopesForRoute, z } from "@standard/schemas";
 import { registry } from "./registry";
 import { responseSchemaFor } from "./response-schemas";
 import type { RouteDefinition } from "../http";
@@ -60,11 +60,39 @@ function paramsSchema(names: string[]) {
   );
 }
 
+/**
+ * The authorization line for a route: the permission a session needs AND the
+ * scope an API key needs.
+ *
+ * Both, because they are different vocabularies and a caller cannot derive one
+ * from the other. A route declares `evidence:run`; a key carries `gap:write`.
+ * A customer reading only the permission was told the wrong string to ask for,
+ * and reported exactly that.
+ *
+ * Returns null for routes that require no permission, so public endpoints do
+ * not grow a misleading clause.
+ */
+function authClause(route: RouteDefinition): string | null {
+  if (!route.permissions?.length) return null;
+
+  const scopes = getRequiredScopesForRoute(
+    route.method,
+    route.path,
+    route.permissions,
+  );
+
+  const permissions = `Requires permission(s): ${route.permissions.join(", ")}.`;
+  if (scopes.length === 0) {
+    return `${permissions} Not reachable with an API key: this route is restricted to human actors.`;
+  }
+  return `${permissions} API keys need scope(s): ${scopes.join(", ")}.`;
+}
+
 function synthesizedDescription(route: RouteDefinition): string {
   const base =
     "Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet.";
-  if (!route.permissions?.length) return base;
-  return `${base} Requires permission(s): ${route.permissions.join(", ")}.`;
+  const auth = authClause(route);
+  return auth ? `${base} ${auth}` : base;
 }
 
 /** A route that opts out of both gates must not advertise the global scheme. */
@@ -133,14 +161,41 @@ function injectInferredRequestBody(route: RouteDefinition): void {
   };
 }
 
+/**
+ * Adds the authorization line to a hand-written OpenAPI block.
+ *
+ * The clause used to reach only synthesized operations, so the routes a human
+ * had bothered to document were precisely the ones that said nothing about
+ * what they need - the inverse of useful. A block that already spells out its
+ * own permissions is left alone.
+ */
+function withAuthClause(
+  route: RouteDefinition,
+  config: Omit<RouteConfig, "method" | "path">,
+): Omit<RouteConfig, "method" | "path"> {
+  const auth = authClause(route);
+  if (!auth) return config;
+
+  const existing = (config as { description?: string }).description ?? "";
+  if (existing.includes("Requires permission(s):")) return config;
+
+  return {
+    ...config,
+    description: existing ? `${existing} ${auth}` : auth,
+  } as Omit<RouteConfig, "method" | "path">;
+}
+
 export function registerRoutesForOpenApi(routes: RouteDefinition[]) {
   routes.forEach((route) => {
     injectInferredRequestBody(route);
     const openapiPath = toOpenApiPath(route.path);
+    const config = route.openapi
+      ? withAuthClause(route, route.openapi)
+      : synthesizeOperation(route, openapiPath);
     registry.registerPath({
       method: route.method.toLowerCase() as any,
       path: openapiPath,
-      ...(route.openapi ?? synthesizeOperation(route, openapiPath)),
+      ...config,
     });
   });
 }

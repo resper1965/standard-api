@@ -142,3 +142,46 @@ describe("FIELD_DOCS", () => {
     ).toBeGreaterThanOrEqual(1);
   });
 });
+
+type PermissionedRoute = {
+  method: string;
+  path: string;
+  permissions?: string[];
+};
+
+/** Either a scope a key can hold, or an explicit "no key qualifies". */
+const namesScope = (description: string): boolean =>
+  description.includes("API keys need scope(s):") ||
+  description.includes("restricted to human actors");
+
+const describesAuth = (description: string): boolean =>
+  description.includes("Requires permission(s):") && namesScope(description);
+
+const operationFor = (spec: any, route: PermissionedRoute) =>
+  spec.paths?.[route.path.replace(/:([a-zA-Z0-9_]+)/g, "{$1}")]?.[
+    route.method.toLowerCase()
+  ];
+
+describe("authorization clause", () => {
+  // A customer could not work out which scope to request, because the clause
+  // reached only synthesized operations and named the permission rather than
+  // the scope their key carries. Both halves are asserted here: every route
+  // that declares permissions says so, and says which scope satisfies it.
+  it("documents permission and scope for every route that needs one", async () => {
+    const { registerRoutesForOpenApi, generateOpenApiSpec } =
+      await import("../generator");
+    const { routes } = await import("../../app");
+
+    registerRoutesForOpenApi(routes as any);
+    const spec = generateOpenApiSpec() as any;
+
+    const mute = (routes as PermissionedRoute[])
+      .filter((route) => route.permissions?.length)
+      .filter(
+        (route) => !describesAuth(operationFor(spec, route)?.description ?? ""),
+      )
+      .map((route) => `${route.method} ${route.path}`);
+
+    expect(mute).toEqual([]);
+  }, 30_000);
+});
