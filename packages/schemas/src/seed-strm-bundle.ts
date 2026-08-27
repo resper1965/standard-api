@@ -38,9 +38,20 @@ import { parseStrmBundleDirectory } from "../../scf-core/src/importers/strm-bund
  * Returns null for anything that is not a finite number, so an unquantified or
  * malformed source value never becomes a confident-looking 0.500.
  */
-const parseStrength = (raw?: string | null): string | null => {
-  const parsed = Number.parseFloat(raw?.trim() ?? "");
-  return Number.isFinite(parsed) ? parsed.toFixed(3) : null;
+/**
+ * Normalise the bundle's 0-10 strength onto the 0.0-1.0 scale the column
+ * stores. Anything outside that range, or not a number, stays null rather
+ * than becoming a fabricated value.
+ *
+ * The bundle's own `relationship_strength` is the enum the importer derives
+ * (strong/moderate/weak), not a number. Parsing that string is what used to
+ * yield NaN and, through a `|| 0.5` fallback, publish 0.500 on every single
+ * official row.
+ */
+const parseStrength = (raw: number | undefined | null): string | null => {
+  if (typeof raw !== "number" || !Number.isFinite(raw)) return null;
+  if (raw < 0 || raw > 10) return null;
+  return (raw / 10).toFixed(3);
 };
 
 const STRM_BUNDLE_DIR = path.resolve(
@@ -198,7 +209,7 @@ async function main() {
       fde_code: string;
       fde_name: string;
       relationship_type: string;
-      relationship_strength: string;
+      strength_raw: number;
       rationale: string | null;
       source: string;
       scf_mapping_id: string | null;
@@ -230,7 +241,7 @@ async function main() {
           fde_code: entry.fde_code.trim(),
           fde_name: entry.fde_name.trim(),
           relationship_type: entry.relationship_type,
-          relationship_strength: entry.relationship_strength,
+          strength_raw: entry.strength_raw,
           rationale: entry.strm_rationale || null,
           source: SOURCE_LABEL,
           scf_mapping_id: mappingId,
@@ -314,7 +325,7 @@ async function main() {
             // It used to fall back to 0.5, which published a fabricated 0.500
             // indistinguishable from a measured one. ADR-001 already applies
             // the 0.5 default at calculation time, where it belongs.
-            strengthScore: parseStrength(row.relationship_strength),
+            strengthScore: parseStrength(row.strength_raw),
             rationale: row.rationale,
             source: row.source,
           })),
