@@ -110,6 +110,22 @@ const TENANT_EXEMPT_PREFIXES = [
   "/api/v1/users/me",
 ] as const;
 
+/**
+ * Whether a route is behind authentication.
+ *
+ * `authRequired` is the explicit answer when a route states one; otherwise it
+ * is implied by `protected`, `requireActor`, or the presence of permissions.
+ * Exported because the RBAC guard in the test suite must ask the same question
+ * this dispatcher asks — a second copy of this expression drifted once already
+ * and listed the deliberately public `/admin/recovery` routes as unprotected
+ * debt.
+ */
+export const isRouteProtected = (route: RouteDefinition): boolean =>
+  route.authRequired ??
+  (Boolean(route.protected) ||
+    Boolean(route.requireActor) ||
+    Boolean(route.permissions?.length));
+
 const defaultTenantRequired = (route: RouteDefinition): boolean =>
   Boolean(route.protected) &&
   !TENANT_EXEMPT_PREFIXES.some((prefix) => route.path.startsWith(prefix));
@@ -339,10 +355,7 @@ export const createApp = (
         ctx,
         route.path,
         request.method,
-        route.authRequired ??
-          (Boolean(route.protected) ||
-            Boolean(route.requireActor) ||
-            Boolean(route.permissions?.length)),
+        isRouteProtected(route),
         route.permissions ?? [],
       );
       await assertRbac(ctx, route.permissions);

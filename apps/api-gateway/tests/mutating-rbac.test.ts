@@ -15,7 +15,7 @@
  * a new mutating route with no permissions fails this test by name, and a
  * route removed from the list may not return to it.
  */
-import { routes } from "../src/app";
+import { isRouteProtected, routes } from "../src/app";
 import { expect, test } from "./test-kit";
 
 /** Routes that still mutate state with no permission declared. Only shrinks. */
@@ -32,24 +32,13 @@ const KNOWN_WITHOUT_RBAC = new Set([
   "DELETE /api/v1/assessments/:id/risk-register/:entryId",
 ]);
 
-/**
- * Mirrors the expression `app.ts` uses to decide whether a route is protected.
- * Reading only `authRequired` would sweep in the deliberately unauthenticated
- * routes — `/admin/recovery/*` is `protected: false` and gated by a
- * constant-time comparison against `ADMIN_RECOVERY_SECRET`, which no
- * permission would improve.
- */
-const isProtected = (r: (typeof routes)[number]) =>
-  r.authRequired ??
-  (Boolean(r.protected) ||
-    Boolean(r.requireActor) ||
-    Boolean(r.permissions?.length));
-
 const mutatingWithoutRbac = () =>
   routes
     .filter(
       (r) =>
-        r.method !== "GET" && isProtected(r) && !(r.permissions?.length ?? 0),
+        r.method !== "GET" &&
+        isRouteProtected(r) &&
+        !(r.permissions?.length ?? 0),
     )
     .map((r) => `${r.method} ${r.path}`);
 
