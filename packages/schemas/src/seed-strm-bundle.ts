@@ -48,11 +48,10 @@ import { parseStrmBundleDirectory } from "../../scf-core/src/importers/strm-bund
  * yield NaN and, through a `|| 0.5` fallback, publish 0.500 on every single
  * official row.
  */
-const parseStrength = (raw: number | undefined | null): string | null => {
-  if (typeof raw !== "number" || !Number.isFinite(raw)) return null;
-  if (raw < 0 || raw > 10) return null;
-  return (raw / 10).toFixed(3);
-};
+const parseStrength = (raw?: number | null): string | null =>
+  typeof raw === "number" && raw >= 0 && raw <= 10
+    ? (raw / 10).toFixed(3)
+    : null;
 
 const STRM_BUNDLE_DIR = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
