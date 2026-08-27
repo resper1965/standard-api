@@ -38,9 +38,8 @@ import { parseStrmBundleDirectory } from "../../scf-core/src/importers/strm-bund
  * Returns null for anything that is not a finite number, so an unquantified or
  * malformed source value never becomes a confident-looking 0.500.
  */
-const parseStrength = (raw: string | undefined | null): string | null => {
-  if (raw === undefined || raw === null || raw.trim() === "") return null;
-  const parsed = Number.parseFloat(raw);
+const parseStrength = (raw?: string | null): string | null => {
+  const parsed = Number.parseFloat(raw?.trim() ?? "");
   return Number.isFinite(parsed) ? parsed.toFixed(3) : null;
 };
 
