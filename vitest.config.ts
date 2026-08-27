@@ -56,11 +56,24 @@ export default defineConfig({
       reporter: ["text", "json-summary", "json"],
       include: ["packages/*/src/**/*.ts", "apps/*/src/**/*.ts"],
       exclude: ["**/*.test.ts", "**/*.d.ts", "**/node_modules/**"],
+      // Floors set one point under the measured value, so each one is true and
+      // any real regression trips it. A flat 30 across all four was not a
+      // floor: lines and statements sat at 39 and branches at 83, so branch
+      // coverage could halve and still pass, while functions sat at 21.87 and
+      // failed - which nothing noticed, because no CI job ran coverage until
+      // #134 added one.
+      //
+      // Ratchet: when a metric climbs, raise its floor in the same PR. Never
+      // lower one to make a red build green; that is how a gate becomes
+      // decoration.
+      //
+      // Measured 2026-08-27 on 6b90be9:
+      //   lines 39.28 · statements 39.28 · functions 21.87 · branches 83.33
       thresholds: {
-        lines: 30,
-        functions: 30,
-        branches: 30,
-        statements: 30,
+        lines: 38,
+        statements: 38,
+        functions: 21,
+        branches: 82,
       },
     },
   },
