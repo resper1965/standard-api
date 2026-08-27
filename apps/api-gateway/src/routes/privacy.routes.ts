@@ -29,6 +29,7 @@ import {
 import { ApiError } from "../errors/api-error";
 import type { ApiErrorCode } from "../errors/error-codes";
 import type { RouteDefinition } from "../http";
+import { agentFailure } from "./agent-failure";
 import {
   json,
   parseJson,
@@ -679,13 +680,10 @@ export const privacyRoutes: RouteDefinition[] = [
         });
         return json({ data: result, trace_id: ctx.traceId }, { status: 200 });
       } catch (e) {
-        console.error("[POST /api/v1/privacy/analyze-ropa] Failure:", e);
-        if (e instanceof ApiError) throw e;
-        throw new ApiError(
-          "INTERNAL_ERROR",
-          `Agent generation failed: ${e instanceof Error ? e.message : String(e)}`,
-          500,
-          e instanceof Error ? [e.message] : [],
+        agentFailure(
+          "POST /api/v1/privacy/analyze-ropa",
+          "Agent generation",
+          e,
         );
       }
     },
@@ -747,13 +745,10 @@ export const privacyRoutes: RouteDefinition[] = [
         });
         return json({ data: result, trace_id: ctx.traceId }, { status: 200 });
       } catch (e) {
-        console.error("[POST /api/v1/privacy/assess-dpia] Failure:", e);
-        if (e instanceof ApiError) throw e;
-        throw new ApiError(
-          "INTERNAL_ERROR",
-          `Agent DPIA assessment failed: ${e instanceof Error ? e.message : String(e)}`,
-          500,
-          e instanceof Error ? [e.message] : [],
+        agentFailure(
+          "POST /api/v1/privacy/assess-dpia",
+          "Agent DPIA assessment",
+          e,
         );
       }
     },
@@ -898,16 +893,10 @@ export const privacyRoutes: RouteDefinition[] = [
         });
         return json({ data: result, trace_id: ctx.traceId }, { status: 200 });
       } catch (e) {
-        console.error(
-          "[POST /api/v1/privacy/scan-vendor-contract] Failure:",
+        agentFailure(
+          "POST /api/v1/privacy/scan-vendor-contract",
+          "Agent Vendor Contract Scanning",
           e,
-        );
-        if (e instanceof ApiError) throw e;
-        throw new ApiError(
-          "INTERNAL_ERROR",
-          `Agent Vendor Contract Scanning failed: ${e instanceof Error ? e.message : String(e)}`,
-          500,
-          e instanceof Error ? [e.message] : [],
         );
       }
     },
