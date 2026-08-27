@@ -485,6 +485,7 @@ export const maturityRoutes: RouteDefinition[] = [
     path: "/api/v1/assessments/:id/maturity-targets",
     authRequired: true,
     tenantRequired: true,
+    permissions: ["maturity:update"],
     handler: async ({ deps, params, request, organizationId, traceId }) => {
       const orgId = requireOrganizationId({ organizationId });
       const assessmentId = routeUuidParam(params, "id");

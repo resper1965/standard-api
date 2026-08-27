@@ -1598,6 +1598,7 @@ export const scfRoutes: RouteDefinition[] = [
     path: "/api/v1/optimizer/compliance-strategy",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, deps, traceId }) => {
       const body = await parseJson(request, ComplianceStrategyRequestSchema);
 

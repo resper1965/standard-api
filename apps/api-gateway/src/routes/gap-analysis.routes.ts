@@ -832,6 +832,7 @@ export const gapAnalysisRoutes: RouteDefinition[] = [
     path: "/api/v1/poam/architect-remediation",
     authRequired: true,
     tenantRequired: true,
+    permissions: ["poam:create"],
     bodySchema: ArchitectRemediationRequestSchema,
     handler: async (ctx) => {
       try {
