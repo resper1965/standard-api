@@ -66,6 +66,7 @@ export const privacyRoutes: RouteDefinition[] = [
     path: "/api/v1/privacy/processing-activities",
     authRequired: true,
     tenantRequired: true,
+    permissions: ["privacy:create"],
     handler: async (ctx) => {
       try {
         const body = await parseJson(
@@ -144,6 +145,7 @@ export const privacyRoutes: RouteDefinition[] = [
     path: "/api/v1/privacy/processing-activities/:id",
     authRequired: true,
     tenantRequired: true,
+    permissions: ["privacy:update"],
     handler: async (ctx) => {
       try {
         const body = await parseJson(
@@ -173,6 +175,7 @@ export const privacyRoutes: RouteDefinition[] = [
     path: "/api/v1/privacy/processing-activities/:id",
     authRequired: true,
     tenantRequired: true,
+    permissions: ["privacy:delete"],
     handler: async (ctx) => {
       try {
         const svc = new PrivacyCrudService(ctx.deps.privacy);
@@ -199,6 +202,7 @@ export const privacyRoutes: RouteDefinition[] = [
     path: "/api/v1/privacy/processing-activities/:id/status",
     authRequired: true,
     tenantRequired: true,
+    permissions: ["privacy:update"],
     handler: async (ctx) => {
       try {
         const body = await parseJson(
@@ -253,6 +257,7 @@ export const privacyRoutes: RouteDefinition[] = [
     path: "/api/v1/privacy/processing-activities/:id/data-subjects",
     authRequired: true,
     tenantRequired: true,
+    permissions: ["privacy:create"],
     handler: async (ctx) => {
       try {
         const body = await parseJson(
@@ -298,6 +303,7 @@ export const privacyRoutes: RouteDefinition[] = [
     path: "/api/v1/privacy/processing-activities/:id/data-subjects/:subjectId",
     authRequired: true,
     tenantRequired: true,
+    permissions: ["privacy:delete"],
     handler: async (ctx) => {
       const svc = new PrivacyCrudService(ctx.deps.privacy);
       await svc.removeDataSubject(
@@ -322,6 +328,7 @@ export const privacyRoutes: RouteDefinition[] = [
     path: "/api/v1/privacy/processing-activities/:id/data-categories",
     authRequired: true,
     tenantRequired: true,
+    permissions: ["privacy:create"],
     handler: async (ctx) => {
       try {
         const body = await parseJson(
@@ -367,6 +374,7 @@ export const privacyRoutes: RouteDefinition[] = [
     path: "/api/v1/privacy/processing-activities/:id/data-categories/:categoryId",
     authRequired: true,
     tenantRequired: true,
+    permissions: ["privacy:delete"],
     handler: async (ctx) => {
       const svc = new PrivacyCrudService(ctx.deps.privacy);
       await svc.removeDataCategory(
@@ -391,6 +399,7 @@ export const privacyRoutes: RouteDefinition[] = [
     path: "/api/v1/privacy/processing-activities/:id/third-parties",
     authRequired: true,
     tenantRequired: true,
+    permissions: ["privacy:create"],
     handler: async (ctx) => {
       try {
         const body = await parseJson(
@@ -436,6 +445,7 @@ export const privacyRoutes: RouteDefinition[] = [
     path: "/api/v1/privacy/processing-activities/:id/third-parties/:partyId",
     authRequired: true,
     tenantRequired: true,
+    permissions: ["privacy:delete"],
     handler: async (ctx) => {
       const svc = new PrivacyCrudService(ctx.deps.privacy);
       await svc.removeThirdParty(
@@ -460,6 +470,7 @@ export const privacyRoutes: RouteDefinition[] = [
     path: "/api/v1/privacy/processing-activities/:id/screen",
     authRequired: true,
     tenantRequired: true,
+    permissions: ["privacy:update"],
     handler: async (ctx) => {
       try {
         const svc = new PrivacyScreeningService(ctx.deps.privacy);
@@ -504,6 +515,7 @@ export const privacyRoutes: RouteDefinition[] = [
     path: "/api/v1/privacy/processing-activities/:id/field-reviews",
     authRequired: true,
     tenantRequired: true,
+    permissions: ["privacy:create"],
     handler: async (ctx) => {
       try {
         const body = await parseJson(
@@ -550,6 +562,7 @@ export const privacyRoutes: RouteDefinition[] = [
     path: "/api/v1/privacy/processing-activities/:id/field-reviews/:reviewId",
     authRequired: true,
     tenantRequired: true,
+    permissions: ["privacy:update"],
     handler: async (ctx) => {
       try {
         const body = await parseJson(
@@ -598,6 +611,7 @@ export const privacyRoutes: RouteDefinition[] = [
     path: "/api/v1/privacy/processing-activities/from-text",
     authRequired: true,
     tenantRequired: true,
+    permissions: ["privacy:create"],
     openapi: {
       tags: ["Privacy"],
       summary: "Extract Processing Activity from free text",
@@ -648,6 +662,7 @@ export const privacyRoutes: RouteDefinition[] = [
     path: "/api/v1/privacy/analyze-ropa",
     authRequired: true,
     tenantRequired: true,
+    permissions: ["privacy:read"],
     handler: async (ctx) => {
       try {
         const body = await parseJson(
@@ -694,6 +709,7 @@ export const privacyRoutes: RouteDefinition[] = [
     path: "/api/v1/privacy/assess-dpia",
     authRequired: true,
     tenantRequired: true,
+    permissions: ["privacy:read"],
     handler: async (ctx) => {
       try {
         // Zod enforcement for Agentic Chaining
@@ -763,6 +779,7 @@ export const privacyRoutes: RouteDefinition[] = [
     path: "/api/v1/privacy/scan-vendor-contract/batch",
     authRequired: true,
     tenantRequired: true,
+    permissions: ["privacy:read"],
     bodySchema: z.object({
       batch_id: z.string().optional(),
       items: z
