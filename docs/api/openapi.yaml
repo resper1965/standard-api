@@ -16698,7 +16698,7 @@ paths:
       tags:
         - mcp
       summary: POST /mcp
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): agent:create.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): agent:create. API keys need scope(s): assessment:read, scf:read, soa:read, gap:read, poam:read, report:read, kb:read, kb:search, agent:run, intelligence:run.'
       responses:
         '200':
           description: Successful response.
@@ -16734,7 +16734,7 @@ paths:
       tags:
         - jobs
       summary: GET /api/v1/jobs/{job_id}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): document:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): document:read. API keys need scope(s): document:read.'
       parameters:
         - schema:
             type: string
@@ -16822,7 +16822,7 @@ paths:
       tags:
         - health
       summary: GET /api/v1/health/metrics
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): admin:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): admin:read. Not reachable with an API key: this route is restricted to human actors.'
       responses:
         '200':
           description: Successful response.
@@ -16858,7 +16858,7 @@ paths:
       tags:
         - auth
       summary: GET /api/v1/auth/debug
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): admin:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): admin:read. Not reachable with an API key: this route is restricted to human actors.'
       responses:
         '200':
           description: Successful response.
@@ -16877,7 +16877,7 @@ paths:
         - Tenants
       summary: Create Tenant
       deprecated: true
-      description: 'PLATFORM ADMIN ONLY. Creates a new tenant (organization) in the system. DEPRECATED: use the equivalent /api/v1/organizations endpoint. This alias returns a Deprecation header and is scheduled for removal after Wed, 25 Nov 2026 00:00:00 GMT.'
+      description: 'PLATFORM ADMIN ONLY. Creates a new tenant (organization) in the system. DEPRECATED: use the equivalent /api/v1/organizations endpoint. This alias returns a Deprecation header and is scheduled for removal after Wed, 25 Nov 2026 00:00:00 GMT. Requires permission(s): admin:write. Not reachable with an API key: this route is restricted to human actors.'
       requestBody:
         content:
           application/json:
@@ -16936,7 +16936,7 @@ paths:
         - Tenants
       summary: Get Tenant
       deprecated: true
-      description: 'PLATFORM ADMIN ONLY. Retrieves the details of a specific tenant. DEPRECATED: use the equivalent /api/v1/organizations endpoint. This alias returns a Deprecation header and is scheduled for removal after Wed, 25 Nov 2026 00:00:00 GMT.'
+      description: 'PLATFORM ADMIN ONLY. Retrieves the details of a specific tenant. DEPRECATED: use the equivalent /api/v1/organizations endpoint. This alias returns a Deprecation header and is scheduled for removal after Wed, 25 Nov 2026 00:00:00 GMT. Requires permission(s): admin:read. Not reachable with an API key: this route is restricted to human actors.'
       responses:
         '200':
           description: Tenant Details
@@ -16984,7 +16984,7 @@ paths:
         - Tenants
       summary: Update Tenant
       deprecated: true
-      description: 'PLATFORM ADMIN ONLY. Updates the status or details of a tenant. DEPRECATED: use the equivalent /api/v1/organizations endpoint. This alias returns a Deprecation header and is scheduled for removal after Wed, 25 Nov 2026 00:00:00 GMT.'
+      description: 'PLATFORM ADMIN ONLY. Updates the status or details of a tenant. DEPRECATED: use the equivalent /api/v1/organizations endpoint. This alias returns a Deprecation header and is scheduled for removal after Wed, 25 Nov 2026 00:00:00 GMT. Requires permission(s): admin:write. Not reachable with an API key: this route is restricted to human actors.'
       requestBody:
         content:
           application/json:
@@ -17043,7 +17043,7 @@ paths:
   /api/v1/organizations:
     post:
       summary: Create Organization
-      description: Creates an organization under the authenticated tenant.
+      description: 'Creates an organization under the authenticated tenant. Requires permission(s): organization:create. Not reachable with an API key: this route is restricted to human actors.'
       requestBody:
         content:
           application/json:
@@ -17103,7 +17103,7 @@ paths:
       tags:
         - organizations
       summary: GET /api/v1/organizations/{organizationId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): organization:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): organization:read. API keys need scope(s): organization:read.'
       parameters:
         - schema:
             type: string
@@ -17128,7 +17128,7 @@ paths:
     get:
       summary: List Organizations by Tenant
       deprecated: true
-      description: 'Returns all organizations for the specified tenant. DEPRECATED: `tenant` is legacy vocabulary for `organization_id` (renamed in migration 0032). This alias returns a Deprecation header and is scheduled for removal after Wed, 25 Nov 2026 00:00:00 GMT.'
+      description: 'Returns all organizations for the specified tenant. DEPRECATED: `tenant` is legacy vocabulary for `organization_id` (renamed in migration 0032). This alias returns a Deprecation header and is scheduled for removal after Wed, 25 Nov 2026 00:00:00 GMT. Requires permission(s): organization:read. API keys need scope(s): organization:read.'
       parameters:
         - schema:
             type: string
@@ -17178,7 +17178,7 @@ paths:
       tags:
         - organizations
       summary: GET /api/v1/organizations/{orgId}/usage
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): organization:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): organization:read. API keys need scope(s): organization:read.'
       parameters:
         - schema:
             type: string
@@ -17202,7 +17202,7 @@ paths:
   /api/v1/organizations/{id}:
     patch:
       summary: Update Organization
-      description: Updates the name and/or slug of an organization.
+      description: 'Updates the name and/or slug of an organization. Requires permission(s): organization:update. Not reachable with an API key: this route is restricted to human actors.'
       parameters:
         - schema:
             type: string
@@ -17258,7 +17258,7 @@ paths:
       operationId: patchOrganizationsById
     delete:
       summary: Delete Organization
-      description: Soft-deletes an organization by marking it inactive. Data is retained for audit purposes.
+      description: 'Soft-deletes an organization by marking it inactive. Data is retained for audit purposes. Requires permission(s): organization:delete. Not reachable with an API key: this route is restricted to human actors.'
       parameters:
         - schema:
             type: string
@@ -17294,7 +17294,7 @@ paths:
   /api/v1/organizations/{organizationId}/api-keys:
     get:
       summary: List API Keys
-      description: Returns all API keys for the authenticated organization (masked). Use ?active=true to exclude revoked keys.
+      description: 'Returns all API keys for the authenticated organization (masked). Use ?active=true to exclude revoked keys. Requires permission(s): apikey:read. Not reachable with an API key: this route is restricted to human actors.'
       parameters:
         - schema:
             type: string
@@ -17373,7 +17373,7 @@ paths:
       operationId: getOrganizationsByOrganizationIdApiKeys
     post:
       summary: Create API Key
-      description: Creates a new M2M API key. The raw key is returned only once â€” store it securely.
+      description: 'Creates a new M2M API key. The raw key is returned only once â€” store it securely. Requires permission(s): apikey:manage. Not reachable with an API key: this route is restricted to human actors.'
       parameters:
         - schema:
             type: string
@@ -17490,7 +17490,7 @@ paths:
       tags:
         - organizations
       summary: GET /api/v1/organizations/{organizationId}/api-keys/{keyId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): apikey:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): apikey:read. Not reachable with an API key: this route is restricted to human actors.'
       parameters:
         - schema:
             type: string
@@ -17520,7 +17520,7 @@ paths:
       operationId: getOrganizationsByOrganizationIdApiKeysByKeyId
     patch:
       summary: Update API Key
-      description: Update name, expiration date, and/or scopes of an existing API key.
+      description: 'Update name, expiration date, and/or scopes of an existing API key. Requires permission(s): apikey:manage. Not reachable with an API key: this route is restricted to human actors.'
       parameters:
         - schema:
             type: string
@@ -17604,7 +17604,7 @@ paths:
       tags:
         - organizations
       summary: DELETE /api/v1/organizations/{organizationId}/api-keys/{keyId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): apikey:manage.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): apikey:manage. Not reachable with an API key: this route is restricted to human actors.'
       parameters:
         - schema:
             type: string
@@ -17635,7 +17635,7 @@ paths:
   /api/v1/organizations/{organizationId}/api-keys/{keyId}/rotate:
     post:
       summary: Rotate API Key
-      description: Creates a new replacement key and schedules revocation of the old key after an optional grace period.
+      description: 'Creates a new replacement key and schedules revocation of the old key after an optional grace period. Requires permission(s): apikey:manage. Not reachable with an API key: this route is restricted to human actors.'
       parameters:
         - schema:
             type: string
@@ -17725,7 +17725,7 @@ paths:
       tags:
         - organizations
       summary: GET /api/v1/organizations/{organizationId}/api-keys/{keyId}/usage
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): apikey:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): apikey:read. Not reachable with an API key: this route is restricted to human actors.'
       parameters:
         - schema:
             type: string
@@ -17758,7 +17758,7 @@ paths:
       tags:
         - assessments
       summary: POST /api/v1/assessments
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:create.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:create. API keys need scope(s): assessment:write.'
       responses:
         '200':
           description: Successful response.
@@ -17775,7 +17775,7 @@ paths:
       tags:
         - assessments
       summary: GET /api/v1/assessments
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read. API keys need scope(s): assessment:read.'
       responses:
         '200':
           description: Successful response.
@@ -17793,7 +17793,7 @@ paths:
       tags:
         - assessments
       summary: GET /api/v1/assessments/{assessmentId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read. API keys need scope(s): assessment:read.'
       parameters:
         - schema:
             type: string
@@ -17818,7 +17818,7 @@ paths:
       tags:
         - assessments
       summary: PATCH /api/v1/assessments/{assessmentId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:update.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:update. API keys need scope(s): assessment:write.'
       parameters:
         - schema:
             type: string
@@ -17844,7 +17844,7 @@ paths:
       tags:
         - Assessments
       summary: List Assessments by Organization
-      description: Lists all assessments for a specific organization.
+      description: 'Lists all assessments for a specific organization. Requires permission(s): assessment:read. API keys need scope(s): assessment:read.'
       responses:
         '200':
           description: List of Assessments
@@ -17948,7 +17948,7 @@ paths:
       tags:
         - Assessments
       summary: Get Assessment Status
-      description: Retrieves the current lifecycle status and phase of an assessment.
+      description: 'Retrieves the current lifecycle status and phase of an assessment. Requires permission(s): assessment:read. API keys need scope(s): assessment:read.'
       responses:
         '200':
           description: Assessment Status
@@ -18024,7 +18024,7 @@ paths:
       tags:
         - Assessments
       summary: Get Assessment Timeline
-      description: Retrieves the chronological timeline of events for an assessment.
+      description: 'Retrieves the chronological timeline of events for an assessment. Requires permission(s): assessment:read. API keys need scope(s): assessment:read.'
       responses:
         '200':
           description: Assessment Timeline
@@ -18074,7 +18074,7 @@ paths:
       tags:
         - Assessments
       summary: Evaluate Compliance Gate
-      description: Evaluates if the assessment meets all requirements to pass its current gate.
+      description: 'Evaluates if the assessment meets all requirements to pass its current gate. Requires permission(s): assessment:read. API keys need scope(s): assessment:read.'
       responses:
         '200':
           description: Compliance Gate Status
@@ -18099,7 +18099,7 @@ paths:
       tags:
         - Assessments
       summary: Update Automation Rules
-      description: Updates the automation execution rules for an assessment.
+      description: 'Updates the automation execution rules for an assessment. Requires permission(s): assessment:update. API keys need scope(s): assessment:write.'
       responses:
         '200':
           description: Updated Assessment
@@ -18200,7 +18200,7 @@ paths:
       tags:
         - Assessments
       summary: Start New Assessment Cycle
-      description: Clones an existing assessment into a new assessment cycle.
+      description: 'Clones an existing assessment into a new assessment cycle. Requires permission(s): assessment:create. API keys need scope(s): assessment:write.'
       responses:
         '201':
           description: New Assessment Cycle
@@ -18301,7 +18301,7 @@ paths:
       tags:
         - Assessments
       summary: Live Collaboration Channel
-      description: WebSocket connection for live collaboration on an assessment.
+      description: 'WebSocket connection for live collaboration on an assessment. Requires permission(s): assessment:read. API keys need scope(s): assessment:read.'
       responses:
         '101':
           description: Switching Protocols (WebSocket)
@@ -18323,7 +18323,7 @@ paths:
       tags:
         - assessments
       summary: POST /api/v1/assessments/{assessmentId}/documents
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): document:upload.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): document:upload. API keys need scope(s): document:write.'
       parameters:
         - schema:
             type: string
@@ -18348,7 +18348,7 @@ paths:
       tags:
         - assessments
       summary: GET /api/v1/assessments/{assessmentId}/documents
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): document:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): document:read. API keys need scope(s): document:read.'
       parameters:
         - schema:
             type: string
@@ -18374,7 +18374,7 @@ paths:
       tags:
         - documents
       summary: GET /api/v1/documents/{documentId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): document:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): document:read. API keys need scope(s): document:read.'
       parameters:
         - schema:
             type: string
@@ -18399,7 +18399,7 @@ paths:
       tags:
         - documents
       summary: DELETE /api/v1/documents/{documentId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): document:delete.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): document:delete. API keys need scope(s): document:delete.'
       parameters:
         - schema:
             type: string
@@ -18425,7 +18425,7 @@ paths:
       tags:
         - Documents
       summary: Get Document Chunks
-      description: Retrieves the parsed text chunks for a processed document.
+      description: 'Retrieves the parsed text chunks for a processed document. Requires permission(s): document:read. API keys need scope(s): document:read.'
       responses:
         '200':
           description: List of Chunks
@@ -18508,7 +18508,7 @@ paths:
       tags:
         - Documents
       summary: List Document Jobs
-      description: Lists all background processing jobs associated with a document.
+      description: 'Lists all background processing jobs associated with a document. Requires permission(s): document:read. API keys need scope(s): document:read.'
       responses:
         '200':
           description: List of processing jobs
@@ -18603,7 +18603,7 @@ paths:
       tags:
         - Documents
       summary: Reprocess Document
-      description: Forces a document to be reprocessed by the ingestion pipeline.
+      description: 'Forces a document to be reprocessed by the ingestion pipeline. Requires permission(s): document:reprocess. API keys need scope(s): document:write.'
       requestBody:
         content:
           application/json:
@@ -18655,7 +18655,7 @@ paths:
       tags:
         - Documents
       summary: List Assessment Ingestion Jobs
-      description: Lists all document ingestion jobs for a given assessment.
+      description: 'Lists all document ingestion jobs for a given assessment. Requires permission(s): document:read. API keys need scope(s): document:read.'
       responses:
         '200':
           description: List of ingestion jobs
@@ -18750,7 +18750,7 @@ paths:
       tags:
         - Documents
       summary: Get Ingestion Job
-      description: Retrieves details of a specific ingestion job.
+      description: 'Retrieves details of a specific ingestion job. Requires permission(s): document:read. API keys need scope(s): document:read.'
       responses:
         '200':
           description: Job Details
@@ -18841,7 +18841,7 @@ paths:
       tags:
         - Documents
       summary: Submit Document for Embedding
-      description: Forces a document to be embedded and added to the Knowledge Base.
+      description: 'Forces a document to be embedded and added to the Knowledge Base. Requires permission(s): document:write. API keys need scope(s): document:write.'
       responses:
         '200':
           description: Submission successful
@@ -18875,7 +18875,7 @@ paths:
       tags:
         - Documents
       summary: Trigger Job Processing
-      description: Manually triggers the processing queue for a specific job.
+      description: 'Manually triggers the processing queue for a specific job. Requires permission(s): document:write. API keys need scope(s): document:write.'
       responses:
         '200':
           description: Processing Triggered
@@ -18909,7 +18909,7 @@ paths:
       tags:
         - assessments
       summary: POST /api/v1/assessments/{assessmentId}/kb/index
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): kb:index.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): kb:index. API keys need scope(s): kb:write.'
       parameters:
         - schema:
             type: string
@@ -18935,7 +18935,7 @@ paths:
       tags:
         - assessments
       summary: GET /api/v1/assessments/{assessmentId}/kb/indexing-jobs
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): kb:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): kb:read. API keys need scope(s): kb:read.'
       parameters:
         - schema:
             type: string
@@ -18961,7 +18961,7 @@ paths:
       tags:
         - kb
       summary: GET /api/v1/kb/indexing-jobs/{jobId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): kb:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): kb:read. API keys need scope(s): kb:read.'
       parameters:
         - schema:
             type: string
@@ -18987,7 +18987,7 @@ paths:
       tags:
         - documents
       summary: POST /api/v1/documents/{documentId}/kb/reindex
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): kb:index.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): kb:index. API keys need scope(s): kb:write.'
       parameters:
         - schema:
             type: string
@@ -19013,7 +19013,7 @@ paths:
       tags:
         - assessments
       summary: POST /api/v1/assessments/{assessmentId}/kb/search
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): kb:search.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): kb:search. API keys need scope(s): kb:search.'
       parameters:
         - schema:
             type: string
@@ -19039,7 +19039,7 @@ paths:
       tags:
         - assessments
       summary: GET /api/v1/assessments/{assessmentId}/kb/vector-references
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): kb:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): kb:read. API keys need scope(s): kb:read.'
       parameters:
         - schema:
             type: string
@@ -19065,7 +19065,7 @@ paths:
       tags:
         - documents
       summary: GET /api/v1/documents/{documentId}/kb/vector-references
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): kb:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): kb:read. API keys need scope(s): kb:read.'
       parameters:
         - schema:
             type: string
@@ -19091,7 +19091,7 @@ paths:
       tags:
         - chunks
       summary: GET /api/v1/chunks/{chunkId}/context
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): kb:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): kb:read. API keys need scope(s): kb:read.'
       parameters:
         - schema:
             type: string
@@ -19117,7 +19117,7 @@ paths:
       tags:
         - kb
       summary: POST /api/v1/kb/indexing-jobs/{jobId}/process
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): kb:write.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): kb:write. API keys need scope(s): kb:write.'
       parameters:
         - schema:
             type: string
@@ -19143,7 +19143,7 @@ paths:
       tags:
         - assessments
       summary: POST /api/v1/assessments/{assessmentId}/evidence-analysis/run
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): gap:create.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): gap:create. API keys need scope(s): gap:write.'
       parameters:
         - schema:
             type: string
@@ -19275,7 +19275,7 @@ paths:
       tags:
         - assessments
       summary: GET /api/v1/assessments/{assessmentId}/evidence-findings
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): gap:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): gap:read. API keys need scope(s): gap:read.'
       parameters:
         - schema:
             type: string
@@ -19416,7 +19416,7 @@ paths:
       tags:
         - evidence findings
       summary: GET /api/v1/evidence-findings/{evidenceFindingId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): gap:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): gap:read. API keys need scope(s): gap:read.'
       parameters:
         - schema:
             type: string
@@ -19529,7 +19529,7 @@ paths:
       tags:
         - evidence findings
       summary: POST /api/v1/evidence-findings/{evidenceFindingId}/refresh
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): gap:update.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): gap:update. API keys need scope(s): gap:write.'
       parameters:
         - schema:
             type: string
@@ -19642,7 +19642,7 @@ paths:
       tags:
         - evidence findings
       summary: GET /api/v1/evidence-findings/{evidenceFindingId}/sources
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): gap:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): gap:read. API keys need scope(s): gap:read.'
       parameters:
         - schema:
             type: string
@@ -19736,7 +19736,7 @@ paths:
       tags:
         - assessments
       summary: POST /api/v1/assessments/{assessmentId}/gap-analysis/draft
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): gap:create.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): gap:create. API keys need scope(s): gap:write.'
       parameters:
         - schema:
             type: string
@@ -19837,7 +19837,7 @@ paths:
       tags:
         - assessments
       summary: GET /api/v1/assessments/{assessmentId}/gap-analysis
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): gap:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): gap:read. API keys need scope(s): gap:read.'
       parameters:
         - schema:
             type: string
@@ -19949,7 +19949,7 @@ paths:
       tags:
         - gap analysis
       summary: GET /api/v1/gap-analysis/{gapAnalysisVersionId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): gap:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): gap:read. API keys need scope(s): gap:read.'
       parameters:
         - schema:
             type: string
@@ -20050,7 +20050,7 @@ paths:
       tags:
         - gap analysis
       summary: GET /api/v1/gap-analysis/{gapAnalysisVersionId}/findings
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): gap:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): gap:read. API keys need scope(s): gap:read.'
       parameters:
         - schema:
             type: string
@@ -20244,7 +20244,7 @@ paths:
       tags:
         - gap findings
       summary: GET /api/v1/gap-findings/{gapFindingId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): gap:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): gap:read. API keys need scope(s): gap:read.'
       parameters:
         - schema:
             type: string
@@ -20409,7 +20409,7 @@ paths:
       tags:
         - gap findings
       summary: PATCH /api/v1/gap-findings/{gapFindingId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): gap:update.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): gap:update. API keys need scope(s): gap:write.'
       parameters:
         - schema:
             type: string
@@ -20571,7 +20571,7 @@ paths:
       tags:
         - gap analysis
       summary: POST /api/v1/gap-analysis/{gapAnalysisVersionId}/validate
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): gap:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): gap:read. API keys need scope(s): gap:read.'
       parameters:
         - schema:
             type: string
@@ -20620,7 +20620,7 @@ paths:
       tags:
         - gap analysis
       summary: POST /api/v1/gap-analysis/{gapAnalysisVersionId}/submit-review
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): gap:update.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): gap:update. API keys need scope(s): gap:write.'
       parameters:
         - schema:
             type: string
@@ -20721,7 +20721,7 @@ paths:
       tags:
         - gap analysis
       summary: POST /api/v1/gap-analysis/{gapAnalysisVersionId}/approve
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): gap:approve.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): gap:approve. Not reachable with an API key: this route is restricted to human actors.'
       parameters:
         - schema:
             type: string
@@ -20822,7 +20822,7 @@ paths:
       tags:
         - gap analysis
       summary: POST /api/v1/gap-analysis/{gapAnalysisVersionId}/regenerate
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): gap:create.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): gap:create. API keys need scope(s): gap:write.'
       parameters:
         - schema:
             type: string
@@ -20923,7 +20923,7 @@ paths:
       tags:
         - gap analysis
       summary: POST /api/v1/gap-analysis/{gapAnalysisVersionId}/findings/bulk-update
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): gap:update.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): gap:update. API keys need scope(s): gap:write.'
       parameters:
         - schema:
             type: string
@@ -21096,7 +21096,7 @@ paths:
       tags:
         - gap
       summary: POST /api/v1/gap/evaluate-evidence
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): evidence:run.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): evidence:run. API keys need scope(s): gap:write.'
       responses:
         '200':
           description: Successful response.
@@ -21128,7 +21128,7 @@ paths:
       tags:
         - gap
       summary: POST /api/v1/gap/evaluate-evidence/batch
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): evidence:run.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): evidence:run. API keys need scope(s): gap:write.'
       responses:
         '200':
           description: Successful response.
@@ -21192,7 +21192,7 @@ paths:
       tags:
         - gap findings
       summary: POST /api/v1/gap-findings/bulk-delete
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): gap:update.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): gap:update. API keys need scope(s): gap:write.'
       responses:
         '200':
           description: Successful response.
@@ -21226,7 +21226,7 @@ paths:
       tags:
         - assessments
       summary: POST /api/v1/assessments/{assessmentId}/poam/draft
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): poam:create.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): poam:create. API keys need scope(s): poam:write.'
       parameters:
         - schema:
             type: string
@@ -21345,7 +21345,7 @@ paths:
       tags:
         - assessments
       summary: GET /api/v1/assessments/{assessmentId}/poam
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): poam:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): poam:read. API keys need scope(s): poam:read.'
       parameters:
         - schema:
             type: string
@@ -21475,7 +21475,7 @@ paths:
       tags:
         - assessments
       summary: GET /api/v1/assessments/{assessmentId}/poam-summary
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): poam:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): poam:read. API keys need scope(s): poam:read.'
       parameters:
         - schema:
             type: string
@@ -21537,7 +21537,7 @@ paths:
       tags:
         - poam
       summary: GET /api/v1/poam/{poamVersionId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): poam:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): poam:read. API keys need scope(s): poam:read.'
       parameters:
         - schema:
             type: string
@@ -21660,7 +21660,7 @@ paths:
       tags:
         - poam
       summary: GET /api/v1/poam/{poamVersionId}/items
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): poam:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): poam:read. API keys need scope(s): poam:read.'
       parameters:
         - schema:
             type: string
@@ -21866,7 +21866,7 @@ paths:
       tags:
         - poam
       summary: GET /api/v1/poam/{poamVersionId}/summary
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): poam:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): poam:read. API keys need scope(s): poam:read.'
       parameters:
         - schema:
             type: string
@@ -21928,7 +21928,7 @@ paths:
       tags:
         - poam items
       summary: GET /api/v1/poam-items/{poamItemId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): poam:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): poam:read. API keys need scope(s): poam:read.'
       parameters:
         - schema:
             type: string
@@ -22109,7 +22109,7 @@ paths:
       tags:
         - poam items
       summary: PATCH /api/v1/poam-items/{poamItemId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): poam:update.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): poam:update. API keys need scope(s): poam:write.'
       parameters:
         - schema:
             type: string
@@ -22287,7 +22287,7 @@ paths:
       tags:
         - poam items
       summary: GET /api/v1/poam-items/{poamItemId}/milestones
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): poam:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): poam:read. API keys need scope(s): poam:read.'
       parameters:
         - schema:
             type: string
@@ -22383,7 +22383,7 @@ paths:
       tags:
         - poam items
       summary: POST /api/v1/poam-items/{poamItemId}/milestones
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): poam:create.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): poam:create. API keys need scope(s): poam:write.'
       parameters:
         - schema:
             type: string
@@ -22469,7 +22469,7 @@ paths:
       tags:
         - poam milestones
       summary: PATCH /api/v1/poam-milestones/{milestoneId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): poam:update.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): poam:update. API keys need scope(s): poam:write.'
       parameters:
         - schema:
             type: string
@@ -22555,7 +22555,7 @@ paths:
       tags:
         - poam
       summary: POST /api/v1/poam/{poamVersionId}/validate
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): poam:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): poam:read. API keys need scope(s): poam:read.'
       parameters:
         - schema:
             type: string
@@ -22610,7 +22610,7 @@ paths:
       tags:
         - poam
       summary: POST /api/v1/poam/{poamVersionId}/submit-review
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): poam:update.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): poam:update. API keys need scope(s): poam:write.'
       parameters:
         - schema:
             type: string
@@ -22729,7 +22729,7 @@ paths:
       tags:
         - poam
       summary: POST /api/v1/poam/{poamVersionId}/approve
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): poam:approve.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): poam:approve. Not reachable with an API key: this route is restricted to human actors.'
       parameters:
         - schema:
             type: string
@@ -22848,7 +22848,7 @@ paths:
       tags:
         - poam
       summary: POST /api/v1/poam/{poamVersionId}/regenerate
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): poam:create.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): poam:create. API keys need scope(s): poam:write.'
       parameters:
         - schema:
             type: string
@@ -22967,7 +22967,7 @@ paths:
       tags:
         - poam
       summary: POST /api/v1/poam/{poamVersionId}/items/bulk-update
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): poam:update.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): poam:update. API keys need scope(s): poam:write.'
       parameters:
         - schema:
             type: string
@@ -23156,7 +23156,7 @@ paths:
       tags:
         - poam
       summary: POST /api/v1/poam/{poamVersionId}/dependencies/detect
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): poam:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): poam:read. API keys need scope(s): poam:read.'
       parameters:
         - schema:
             type: string
@@ -23236,7 +23236,7 @@ paths:
       tags:
         - assessments
       summary: POST /api/v1/assessments/{assessmentId}/reports/draft
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): report:create.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): report:create. API keys need scope(s): report:write.'
       parameters:
         - schema:
             type: string
@@ -23262,7 +23262,7 @@ paths:
       tags:
         - assessments
       summary: GET /api/v1/assessments/{assessmentId}/reports
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): report:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): report:read. API keys need scope(s): report:read.'
       parameters:
         - schema:
             type: string
@@ -23288,7 +23288,7 @@ paths:
       tags:
         - reports
       summary: GET /api/v1/reports/{reportVersionId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): report:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): report:read. API keys need scope(s): report:read.'
       parameters:
         - schema:
             type: string
@@ -23314,7 +23314,7 @@ paths:
       tags:
         - reports
       summary: GET /api/v1/reports/{reportVersionId}/sections
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): report:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): report:read. API keys need scope(s): report:read.'
       parameters:
         - schema:
             type: string
@@ -23340,7 +23340,7 @@ paths:
       tags:
         - reports
       summary: GET /api/v1/reports/{reportVersionId}/artifacts
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): report:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): report:read. API keys need scope(s): report:read.'
       parameters:
         - schema:
             type: string
@@ -23366,7 +23366,7 @@ paths:
       tags:
         - reports
       summary: POST /api/v1/reports/{reportVersionId}/validate
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): report:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): report:read. API keys need scope(s): report:read.'
       parameters:
         - schema:
             type: string
@@ -23392,7 +23392,7 @@ paths:
       tags:
         - reports
       summary: POST /api/v1/reports/{reportVersionId}/render
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): report:create.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): report:create. API keys need scope(s): report:write.'
       parameters:
         - schema:
             type: string
@@ -23418,7 +23418,7 @@ paths:
       tags:
         - reports
       summary: POST /api/v1/reports/{reportVersionId}/submit-review
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): report:update.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): report:update. API keys need scope(s): report:write.'
       parameters:
         - schema:
             type: string
@@ -23444,7 +23444,7 @@ paths:
       tags:
         - reports
       summary: POST /api/v1/reports/{reportVersionId}/approve
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): report:approve.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): report:approve. Not reachable with an API key: this route is restricted to human actors.'
       parameters:
         - schema:
             type: string
@@ -23470,7 +23470,7 @@ paths:
       tags:
         - reports
       summary: POST /api/v1/reports/{reportVersionId}/regenerate
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): report:update.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): report:update. API keys need scope(s): report:write.'
       parameters:
         - schema:
             type: string
@@ -23496,7 +23496,7 @@ paths:
       tags:
         - report artifacts
       summary: GET /api/v1/report-artifacts/{artifactId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): report:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): report:read. API keys need scope(s): report:read.'
       parameters:
         - schema:
             type: string
@@ -23522,7 +23522,7 @@ paths:
       tags:
         - report artifacts
       summary: GET /api/v1/report-artifacts/{artifactId}/download-url
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): report:download.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): report:download. API keys need scope(s): report:export.'
       parameters:
         - schema:
             type: string
@@ -23548,7 +23548,7 @@ paths:
       tags:
         - assessments
       summary: POST /api/v1/assessments/{assessmentId}/exports
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): report:create.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): report:create. API keys need scope(s): report:write.'
       parameters:
         - schema:
             type: string
@@ -23573,7 +23573,7 @@ paths:
       tags:
         - assessments
       summary: GET /api/v1/assessments/{assessmentId}/exports
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): report:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): report:read. API keys need scope(s): report:read.'
       parameters:
         - schema:
             type: string
@@ -23599,7 +23599,7 @@ paths:
       tags:
         - export jobs
       summary: GET /api/v1/export-jobs/{exportJobId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): report:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): report:read. API keys need scope(s): report:read.'
       parameters:
         - schema:
             type: string
@@ -23625,7 +23625,7 @@ paths:
       tags:
         - reports
       summary: POST /api/v1/reports/{reportVersionId}/exports/{format}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): report:create.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): report:create. API keys need scope(s): report:write.'
       parameters:
         - schema:
             type: string
@@ -23658,7 +23658,7 @@ paths:
       tags:
         - assessments
       summary: POST /api/v1/assessments/{assessmentId}/audit-package
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): report:create.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): report:create. API keys need scope(s): report:write.'
       parameters:
         - schema:
             type: string
@@ -23684,7 +23684,7 @@ paths:
       tags:
         - export jobs
       summary: GET /api/v1/export-jobs/{exportJobId}/download
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): report:download.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): report:download. API keys need scope(s): report:export.'
       parameters:
         - schema:
             type: string
@@ -23710,7 +23710,7 @@ paths:
       tags:
         - agent runtime
       summary: GET /api/v1/agent-runtime/agents
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): agent:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): agent:read. API keys need scope(s): agent:read.'
       responses:
         '200':
           description: Successful response.
@@ -23728,7 +23728,7 @@ paths:
       tags:
         - assessments
       summary: POST /api/v1/assessments/{assessmentId}/agent-runs
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): agent:run.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): agent:run. API keys need scope(s): agent:run.'
       parameters:
         - schema:
             type: string
@@ -23753,7 +23753,7 @@ paths:
       tags:
         - assessments
       summary: GET /api/v1/assessments/{assessmentId}/agent-runs
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): agent:read_runs.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): agent:read_runs. API keys need scope(s): agent:read.'
       parameters:
         - schema:
             type: string
@@ -23779,7 +23779,7 @@ paths:
       tags:
         - agent runs
       summary: GET /api/v1/agent-runs/{agentRunId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): agent:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): agent:read. API keys need scope(s): agent:read.'
       parameters:
         - schema:
             type: string
@@ -23805,7 +23805,7 @@ paths:
       tags:
         - agent runs
       summary: POST /api/v1/agent-runs/{agentRunId}/tool-calls
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): agent:create.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): agent:create. Not reachable with an API key: this route is restricted to human actors.'
       parameters:
         - schema:
             type: string
@@ -23831,7 +23831,7 @@ paths:
       tags:
         - agent runs
       summary: POST /api/v1/agent-runs/{agentRunId}/complete
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): agent:create.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): agent:create. Not reachable with an API key: this route is restricted to human actors.'
       parameters:
         - schema:
             type: string
@@ -23857,7 +23857,7 @@ paths:
       tags:
         - assessments
       summary: POST /api/v1/assessments/{assessmentId}/workflows/lifecycle/start
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:run_workflow.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:run_workflow. API keys need scope(s): workflow:write.'
       parameters:
         - schema:
             type: string
@@ -23883,7 +23883,7 @@ paths:
       tags:
         - assessments
       summary: GET /api/v1/assessments/{assessmentId}/workflows/lifecycle
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read. API keys need scope(s): workflow:read.'
       parameters:
         - schema:
             type: string
@@ -23909,7 +23909,7 @@ paths:
       tags:
         - workflows
       summary: GET /api/v1/workflows/{workflowRunId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read. API keys need scope(s): assessment:read.'
       parameters:
         - schema:
             type: string
@@ -23935,7 +23935,7 @@ paths:
       tags:
         - workflows
       summary: POST /api/v1/workflows/{workflowRunId}/cancel
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:cancel.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:cancel. API keys need scope(s): workflow:write.'
       parameters:
         - schema:
             type: string
@@ -23961,7 +23961,7 @@ paths:
       tags:
         - workflows
       summary: POST /api/v1/workflows/{workflowRunId}/resume
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:run_workflow.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:run_workflow. API keys need scope(s): workflow:write.'
       parameters:
         - schema:
             type: string
@@ -23987,7 +23987,7 @@ paths:
       tags:
         - workflows
       summary: POST /api/v1/workflows/{workflowRunId}/signals
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:run_workflow.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:run_workflow. API keys need scope(s): workflow:signal.'
       parameters:
         - schema:
             type: string
@@ -24013,7 +24013,7 @@ paths:
       tags:
         - assessments
       summary: GET /api/v1/assessments/{assessmentId}/audit-logs
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): audit:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): audit:read. API keys need scope(s): audit:read.'
       parameters:
         - schema:
             type: string
@@ -24039,7 +24039,7 @@ paths:
       tags:
         - audit logs
       summary: GET /api/v1/audit-logs/{auditLogId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): audit:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): audit:read. API keys need scope(s): audit:read.'
       parameters:
         - schema:
             type: string
@@ -24065,7 +24065,7 @@ paths:
       tags:
         - admin
       summary: GET /api/v1/admin/security-events
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): admin:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): admin:read. Not reachable with an API key: this route is restricted to human actors.'
       responses:
         '200':
           description: Successful response.
@@ -24083,7 +24083,7 @@ paths:
       tags:
         - admin
       summary: GET /api/v1/admin/security-events/{securityEventId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): admin:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): admin:read. Not reachable with an API key: this route is restricted to human actors.'
       parameters:
         - schema:
             type: string
@@ -24109,7 +24109,7 @@ paths:
       tags:
         - assessments
       summary: GET /api/v1/assessments/{assessmentId}/metrics
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read. API keys need scope(s): metrics:read.'
       parameters:
         - schema:
             type: string
@@ -24135,7 +24135,7 @@ paths:
       tags:
         - admin
       summary: GET /api/v1/admin/metrics/operational
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): admin:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): admin:read. Not reachable with an API key: this route is restricted to human actors.'
       responses:
         '200':
           description: Successful response.
@@ -24153,7 +24153,7 @@ paths:
       tags:
         - assessments
       summary: GET /api/v1/assessments/{assessmentId}/usage
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read. API keys need scope(s): usage:read.'
       parameters:
         - schema:
             type: string
@@ -24179,7 +24179,7 @@ paths:
       tags:
         - tenants
       summary: GET /api/v1/tenants/{organizationId}/usage
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): tenant:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): tenant:read. API keys need scope(s): organization:read.'
       parameters:
         - schema:
             type: string
@@ -24205,7 +24205,7 @@ paths:
       tags:
         - admin
       summary: GET /api/v1/admin/usage
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): admin:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): admin:read. Not reachable with an API key: this route is restricted to human actors.'
       responses:
         '200':
           description: Successful response.
@@ -24223,7 +24223,7 @@ paths:
       tags:
         - observability
       summary: GET /api/v1/observability/audit-logs
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): audit:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): audit:read. API keys need scope(s): audit:read.'
       responses:
         '200':
           description: Successful response.
@@ -24241,7 +24241,7 @@ paths:
       tags:
         - observability
       summary: GET /api/v1/observability/audit
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): audit:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): audit:read. API keys need scope(s): audit:read.'
       responses:
         '200':
           description: Successful response.
@@ -24259,7 +24259,7 @@ paths:
       tags:
         - api
       summary: GET /api/observability/audit
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): audit:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): audit:read. API keys need scope(s): audit:read.'
       responses:
         '200':
           description: Successful response.
@@ -24277,7 +24277,7 @@ paths:
       tags:
         - observability
       summary: GET /api/v1/observability/metrics
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): admin:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): admin:read. Not reachable with an API key: this route is restricted to human actors.'
       responses:
         '200':
           description: Successful response.
@@ -24295,7 +24295,7 @@ paths:
       tags:
         - observability
       summary: GET /api/v1/observability/security-events
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): admin:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): admin:read. Not reachable with an API key: this route is restricted to human actors.'
       responses:
         '200':
           description: Successful response.
@@ -24313,7 +24313,7 @@ paths:
       tags:
         - observability
       summary: GET /api/v1/observability/usage
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): tenant:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): tenant:read. API keys need scope(s): organization:read.'
       responses:
         '200':
           description: Successful response.
@@ -24331,7 +24331,7 @@ paths:
       tags:
         - assessments
       summary: POST /api/v1/assessments/{assessmentId}/transitions
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:update.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:update. API keys need scope(s): assessment:transition.'
       parameters:
         - schema:
             type: string
@@ -24357,7 +24357,7 @@ paths:
       tags:
         - assessments
       summary: GET /api/v1/assessments/{assessmentId}/available-transitions
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read. API keys need scope(s): assessment:read.'
       parameters:
         - schema:
             type: string
@@ -24383,7 +24383,7 @@ paths:
       tags:
         - assessments
       summary: GET /api/v1/assessments/{assessmentId}/lifecycle-events
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read. API keys need scope(s): assessment:read.'
       parameters:
         - schema:
             type: string
@@ -24409,7 +24409,7 @@ paths:
       tags:
         - assessments
       summary: POST /api/v1/assessments/{assessmentId}/approvals
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): approval:create.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): approval:create. Not reachable with an API key: this route is restricted to human actors.'
       parameters:
         - schema:
             type: string
@@ -24434,7 +24434,7 @@ paths:
       tags:
         - assessments
       summary: GET /api/v1/assessments/{assessmentId}/approvals
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): approval:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): approval:read. API keys need scope(s): approval:read.'
       parameters:
         - schema:
             type: string
@@ -24460,7 +24460,7 @@ paths:
       tags:
         - approvals
       summary: GET /api/v1/approvals/{approvalId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): approval:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): approval:read. API keys need scope(s): approval:read.'
       parameters:
         - schema:
             type: string
@@ -24486,7 +24486,7 @@ paths:
       tags:
         - organizations
       summary: GET /api/v1/organizations/{orgId}/approvals/pending
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): approval:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): approval:read. API keys need scope(s): approval:read.'
       parameters:
         - schema:
             type: string
@@ -24512,7 +24512,7 @@ paths:
       tags:
         - approvals
       summary: POST /api/v1/approvals/{approvalId}/approve
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): approval:create.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): approval:create. Not reachable with an API key: this route is restricted to human actors.'
       parameters:
         - schema:
             type: string
@@ -24538,7 +24538,7 @@ paths:
       tags:
         - approvals
       summary: POST /api/v1/approvals/{approvalId}/reject
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): approval:create.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): approval:create. Not reachable with an API key: this route is restricted to human actors.'
       parameters:
         - schema:
             type: string
@@ -24564,7 +24564,7 @@ paths:
       tags:
         - assessments
       summary: POST /api/v1/assessments/{assessmentId}/artifacts/{artifactType}/versions
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): artifact:create.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): artifact:create. API keys need scope(s): artifact:write.'
       parameters:
         - schema:
             type: string
@@ -24596,7 +24596,7 @@ paths:
       tags:
         - assessments
       summary: GET /api/v1/assessments/{assessmentId}/artifacts/{artifactType}/versions
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): artifact:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): artifact:read. API keys need scope(s): artifact:read.'
       parameters:
         - schema:
             type: string
@@ -24629,7 +24629,7 @@ paths:
       tags:
         - artifacts
       summary: GET /api/v1/artifacts/{artifactVersionId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): artifact:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): artifact:read. API keys need scope(s): artifact:read.'
       parameters:
         - schema:
             type: string
@@ -24655,7 +24655,7 @@ paths:
       tags:
         - artifacts
       summary: POST /api/v1/artifacts/{artifactVersionId}/submit-review
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): artifact:update.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): artifact:update. API keys need scope(s): artifact:write.'
       parameters:
         - schema:
             type: string
@@ -24681,7 +24681,7 @@ paths:
       tags:
         - artifacts
       summary: POST /api/v1/artifacts/{artifactVersionId}/approve
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): artifact:approve.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): artifact:approve. Not reachable with an API key: this route is restricted to human actors.'
       parameters:
         - schema:
             type: string
@@ -24707,7 +24707,7 @@ paths:
       tags:
         - artifacts
       summary: POST /api/v1/artifacts/{artifactVersionId}/supersede
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): artifact:create.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): artifact:create. API keys need scope(s): artifact:write.'
       parameters:
         - schema:
             type: string
@@ -24733,7 +24733,7 @@ paths:
       tags:
         - SCF
       summary: GET /api/v1/scf/controls/{controlId}/linked-entities
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string
@@ -24773,7 +24773,7 @@ paths:
       tags:
         - SCF
       summary: GET /api/v1/scf/versions
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -24837,7 +24837,7 @@ paths:
       tags:
         - SCF
       summary: GET /api/v1/scf/versions/latest
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -24892,7 +24892,7 @@ paths:
       tags:
         - SCF
       summary: GET /api/v1/scf/versions/{scfVersionId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string
@@ -24955,7 +24955,7 @@ paths:
       tags:
         - SCF
       summary: GET /api/v1/scf/versions/{scfVersionId}/domains
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string
@@ -25030,7 +25030,7 @@ paths:
       tags:
         - SCF
       summary: GET /api/v1/scf/versions/{scfVersionId}/controls
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string
@@ -25123,7 +25123,7 @@ paths:
       tags:
         - SCF
       summary: GET /api/v1/scf/domains/{domainCode}/controls
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string
@@ -25205,7 +25205,7 @@ paths:
       tags:
         - SCF
       summary: GET /api/v1/scf/controls/by-code/{controlCode}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string
@@ -25272,7 +25272,7 @@ paths:
       tags:
         - SCF
       summary: GET /api/v1/scf/frameworks
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -25338,7 +25338,7 @@ paths:
       tags:
         - SCF
       summary: GET /api/v1/scf/frameworks/{frameworkId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string
@@ -25403,7 +25403,7 @@ paths:
       tags:
         - SCF
       summary: GET /api/v1/scf/controls/{controlId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string
@@ -25470,7 +25470,7 @@ paths:
       tags:
         - SCF
       summary: GET /api/v1/scf/frameworks/{frameworkId}/requirements
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string
@@ -25555,7 +25555,7 @@ paths:
       tags:
         - SCF
       summary: GET /api/v1/scf/requirements/{requirementId}/mappings
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string
@@ -25665,7 +25665,7 @@ paths:
       tags:
         - SCF
       summary: GET /api/v1/scf/controls/{controlId}/mappings
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string
@@ -25772,7 +25772,7 @@ paths:
       tags:
         - SCF
       summary: GET /api/v1/scf/frameworks/{frameworkId}/coverage
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string
@@ -25835,7 +25835,7 @@ paths:
       tags:
         - SCF
       summary: GET /api/v1/scf/cross-mapping/{frameworkA}/{frameworkB}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string
@@ -25941,7 +25941,7 @@ paths:
       tags:
         - admin
       summary: POST /api/v1/admin/scf/import-runs
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:import.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:import. Not reachable with an API key: this route is restricted to human actors.'
       responses:
         '200':
           description: Successful response.
@@ -26092,7 +26092,7 @@ paths:
       tags:
         - admin
       summary: GET /api/v1/admin/scf/import-runs
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -26241,7 +26241,7 @@ paths:
       tags:
         - admin
       summary: GET /api/v1/admin/scf/import-runs/{importRunId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string
@@ -26388,7 +26388,7 @@ paths:
       tags:
         - admin
       summary: POST /api/v1/admin/scf/import-runs/{importRunId}/dry-run
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:import.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:import. Not reachable with an API key: this route is restricted to human actors.'
       parameters:
         - schema:
             type: string
@@ -26551,7 +26551,7 @@ paths:
       tags:
         - admin
       summary: POST /api/v1/admin/scf/import-xlsx
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:import.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:import. Not reachable with an API key: this route is restricted to human actors.'
       responses:
         '200':
           description: Successful response.
@@ -26709,7 +26709,7 @@ paths:
       tags:
         - admin
       summary: POST /api/v1/admin/scf/import-xlsx/dry-run
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:import.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:import. Not reachable with an API key: this route is restricted to human actors.'
       responses:
         '200':
           description: Successful response.
@@ -26867,7 +26867,7 @@ paths:
       tags:
         - SCF
       summary: GET /api/v1/scf/controls/{controlId}/assessment-objectives
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string
@@ -26957,7 +26957,7 @@ paths:
       tags:
         - SCF
       summary: GET /api/v1/scf/controls/{controlId}/pptdf-profile
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string
@@ -27011,7 +27011,7 @@ paths:
       tags:
         - SCF
       summary: GET /api/v1/scf/controls/{controlId}/evidence-requests
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string
@@ -27078,7 +27078,7 @@ paths:
       tags:
         - SCF
       summary: GET /api/v1/scf/controls/{controlId}/maturity-criteria
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string
@@ -27150,7 +27150,7 @@ paths:
       tags:
         - SCF
       summary: GET /api/v1/scf/controls/{controlId}/risks
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string
@@ -27219,7 +27219,7 @@ paths:
       tags:
         - SCF
       summary: GET /api/v1/scf/controls/{controlId}/threats
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string
@@ -27288,7 +27288,7 @@ paths:
       tags:
         - SCF
       summary: GET /api/v1/scf/strm
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -27376,7 +27376,7 @@ paths:
       tags:
         - SCF
       summary: GET /api/v1/scf/strm/lookup
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -27467,7 +27467,7 @@ paths:
       tags:
         - SCF
       summary: GET /api/v1/scf/strm/control/{control_code}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string
@@ -27566,7 +27566,7 @@ paths:
       tags:
         - SCF
       summary: GET /api/v1/scf/strm/compare
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -27961,7 +27961,7 @@ paths:
       tags:
         - cdpas
       summary: GET /api/v1/cdpas/standards
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -27979,7 +27979,7 @@ paths:
       tags:
         - cdpas
       summary: GET /api/v1/cdpas/standards/{standardId}/sub-requirements
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string
@@ -28005,7 +28005,7 @@ paths:
       tags:
         - cdpas
       summary: GET /api/v1/cdpas/sub-requirements/{subReqId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string
@@ -28031,7 +28031,7 @@ paths:
       tags:
         - assessments
       summary: GET /api/v1/assessments/{assessmentId}/cdpas/findings
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read. API keys need scope(s): assessment:read.'
       parameters:
         - schema:
             type: string
@@ -28057,7 +28057,7 @@ paths:
       tags:
         - assessments
       summary: PUT /api/v1/assessments/{assessmentId}/cdpas/findings/{subReqId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:update.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:update. API keys need scope(s): assessment:write.'
       parameters:
         - schema:
             type: string
@@ -28090,7 +28090,7 @@ paths:
       tags:
         - assessments
       summary: GET /api/v1/assessments/{assessmentId}/cdpas/summary
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read. API keys need scope(s): assessment:read.'
       parameters:
         - schema:
             type: string
@@ -28116,7 +28116,7 @@ paths:
       tags:
         - SoA & Scope
       summary: Create Scope
-      description: Creates the initial scope definition for an assessment.
+      description: 'Creates the initial scope definition for an assessment. Requires permission(s): soa:create. API keys need scope(s): soa:write.'
       requestBody:
         content:
           application/json:
@@ -28318,7 +28318,7 @@ paths:
       tags:
         - SoA & Scope
       summary: Get Assessment Scope
-      description: Retrieves the scope definition for a given assessment.
+      description: 'Retrieves the scope definition for a given assessment. Requires permission(s): soa:read. API keys need scope(s): soa:read.'
       responses:
         '200':
           description: Scope Details
@@ -28455,7 +28455,7 @@ paths:
       tags:
         - SoA & Scope
       summary: Get Scope by ID
-      description: Retrieves a specific scope by its ID.
+      description: 'Retrieves a specific scope by its ID. Requires permission(s): soa:read. API keys need scope(s): soa:read.'
       responses:
         '200':
           description: Scope Details
@@ -28591,7 +28591,7 @@ paths:
       tags:
         - SoA & Scope
       summary: Update Scope
-      description: Updates properties of an existing scope.
+      description: 'Updates properties of an existing scope. Requires permission(s): soa:update. API keys need scope(s): soa:write.'
       requestBody:
         content:
           application/json:
@@ -28791,7 +28791,7 @@ paths:
       tags:
         - SoA & Scope
       summary: Submit Scope for Review
-      description: Submits a drafted scope for review.
+      description: 'Submits a drafted scope for review. Requires permission(s): soa:update. API keys need scope(s): soa:write.'
       responses:
         '200':
           description: Scope submitted successfully
@@ -28928,7 +28928,7 @@ paths:
       tags:
         - SoA & Scope
       summary: Approve Scope
-      description: Approves a scope that is under review.
+      description: 'Approves a scope that is under review. Requires permission(s): soa:approve. Not reachable with an API key: this route is restricted to human actors.'
       requestBody:
         content:
           application/json:
@@ -29077,7 +29077,7 @@ paths:
       tags:
         - SoA & Scope
       summary: Create SoA Draft
-      description: Generates a new Statement of Applicability draft for an assessment.
+      description: 'Generates a new Statement of Applicability draft for an assessment. Requires permission(s): soa:create. API keys need scope(s): soa:write.'
       requestBody:
         content:
           application/json:
@@ -29199,7 +29199,7 @@ paths:
       tags:
         - SoA & Scope
       summary: List Assessment SoA Versions
-      description: Lists all Statement of Applicability versions for an assessment.
+      description: 'Lists all Statement of Applicability versions for an assessment. Requires permission(s): soa:read. API keys need scope(s): soa:read.'
       responses:
         '200':
           description: List of SoA Versions
@@ -29305,7 +29305,7 @@ paths:
       tags:
         - SoA & Scope
       summary: Get SoA Version
-      description: Retrieves a specific SoA version by its ID.
+      description: 'Retrieves a specific SoA version by its ID. Requires permission(s): soa:read. API keys need scope(s): soa:read.'
       responses:
         '200':
           description: SoA Version
@@ -29408,7 +29408,7 @@ paths:
       tags:
         - SoA & Scope
       summary: List SoA Items
-      description: Lists all items (controls) in a specific SoA version.
+      description: 'Lists all items (controls) in a specific SoA version. Requires permission(s): soa:read. API keys need scope(s): soa:read.'
       responses:
         '200':
           description: List of SoA Items
@@ -29559,7 +29559,7 @@ paths:
       tags:
         - SoA & Scope
       summary: Update SoA Item
-      description: Updates an individual item in the Statement of Applicability.
+      description: 'Updates an individual item in the Statement of Applicability. Requires permission(s): soa:update. API keys need scope(s): soa:write.'
       requestBody:
         content:
           application/json:
@@ -29763,7 +29763,7 @@ paths:
       tags:
         - SoA & Scope
       summary: Refresh SoA Evidence
-      description: Forces a refresh of evidence mapping for the SoA.
+      description: 'Forces a refresh of evidence mapping for the SoA. Requires permission(s): soa:update. API keys need scope(s): soa:write.'
       requestBody:
         content:
           application/json:
@@ -29809,7 +29809,7 @@ paths:
       tags:
         - SoA & Scope
       summary: Submit SoA for Review
-      description: Submits a drafted SoA for review.
+      description: 'Submits a drafted SoA for review. Requires permission(s): soa:update. API keys need scope(s): soa:write.'
       requestBody:
         content:
           application/json:
@@ -29921,7 +29921,7 @@ paths:
       tags:
         - SoA & Scope
       summary: Approve SoA Version
-      description: Approves an SoA that is under review.
+      description: 'Approves an SoA that is under review. Requires permission(s): soa:approve. Not reachable with an API key: this route is restricted to human actors.'
       requestBody:
         content:
           application/json:
@@ -30036,7 +30036,7 @@ paths:
       tags:
         - SoA & Scope
       summary: Mark SoA as Ingested
-      description: Marks an approved SoA as fully ingested into the assessment.
+      description: 'Marks an approved SoA as fully ingested into the assessment. Requires permission(s): soa:update. API keys need scope(s): soa:write.'
       responses:
         '200':
           description: SoA marked as ingested
@@ -30139,7 +30139,7 @@ paths:
       tags:
         - SoA & Scope
       summary: Mark Ingestion Required
-      description: Flags the SoA as needing re-ingestion.
+      description: 'Flags the SoA as needing re-ingestion. Requires permission(s): soa:update. API keys need scope(s): soa:write.'
       responses:
         '200':
           description: Flagged successfully
@@ -30242,7 +30242,7 @@ paths:
       tags:
         - SoA & Scope
       summary: Regenerate SoA
-      description: Regenerates an SoA based on updated frameworks or scopes.
+      description: 'Regenerates an SoA based on updated frameworks or scopes. Requires permission(s): soa:update. API keys need scope(s): soa:write.'
       responses:
         '201':
           description: New Draft SoA Version
@@ -30345,7 +30345,7 @@ paths:
       tags:
         - SoA & Scope
       summary: Validate SoA
-      description: Runs validation checks against the SoA.
+      description: 'Runs validation checks against the SoA. Requires permission(s): soa:read. API keys need scope(s): soa:read.'
       responses:
         '200':
           description: Validation Report
@@ -30397,7 +30397,7 @@ paths:
       tags:
         - email
       summary: POST /api/v1/email/test
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): admin:write.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): admin:write. Not reachable with an API key: this route is restricted to human actors.'
       responses:
         '200':
           description: Successful response.
@@ -30415,7 +30415,7 @@ paths:
       tags:
         - agent tools
       summary: GET /api/v1/agent-tools/scf-controls
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): agent:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): agent:read. API keys need scope(s): agent:read.'
       responses:
         '200':
           description: Successful response.
@@ -30433,7 +30433,7 @@ paths:
       tags:
         - integrations
       summary: POST /api/v1/integrations/assessments/{assessmentId}/analyze-text
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): organization:create.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): organization:create. API keys need scope(s): integration:analyze.'
       parameters:
         - schema:
             type: string
@@ -30495,7 +30495,7 @@ paths:
       tags:
         - organizations
       summary: POST /api/v1/organizations/{organizationId}/webhooks
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): webhook:create.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): webhook:create. Not reachable with an API key: this route is restricted to human actors.'
       parameters:
         - schema:
             type: string
@@ -30520,7 +30520,7 @@ paths:
       tags:
         - organizations
       summary: GET /api/v1/organizations/{organizationId}/webhooks
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): webhook:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): webhook:read. Not reachable with an API key: this route is restricted to human actors.'
       parameters:
         - schema:
             type: string
@@ -30546,7 +30546,7 @@ paths:
       tags:
         - webhooks
       summary: GET /api/v1/webhooks/{webhookId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): webhook:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): webhook:read. Not reachable with an API key: this route is restricted to human actors.'
       parameters:
         - schema:
             type: string
@@ -30571,7 +30571,7 @@ paths:
       tags:
         - webhooks
       summary: PATCH /api/v1/webhooks/{webhookId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): webhook:update.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): webhook:update. Not reachable with an API key: this route is restricted to human actors.'
       parameters:
         - schema:
             type: string
@@ -30596,7 +30596,7 @@ paths:
       tags:
         - webhooks
       summary: DELETE /api/v1/webhooks/{webhookId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): webhook:delete.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): webhook:delete. Not reachable with an API key: this route is restricted to human actors.'
       parameters:
         - schema:
             type: string
@@ -30622,7 +30622,7 @@ paths:
       tags:
         - webhooks
       summary: GET /api/v1/webhooks/{webhookId}/deliveries
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): webhook:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): webhook:read. Not reachable with an API key: this route is restricted to human actors.'
       parameters:
         - schema:
             type: string
@@ -30648,7 +30648,7 @@ paths:
       tags:
         - webhooks
       summary: POST /api/v1/webhooks/{webhookId}/rotate-secret
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): webhook:update.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): webhook:update. Not reachable with an API key: this route is restricted to human actors.'
       parameters:
         - schema:
             type: string
@@ -30674,7 +30674,7 @@ paths:
       tags:
         - webhooks
       summary: POST /api/v1/webhooks/{webhookId}/test
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): webhook:create.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): webhook:create. Not reachable with an API key: this route is restricted to human actors.'
       parameters:
         - schema:
             type: string
@@ -31334,7 +31334,7 @@ paths:
   /api/v1/privacy/scan-vendor-contract:
     post:
       summary: B2B Legal Analyzer (Vendor Risk Scanner)
-      description: Transforms raw contract text into executive intelligence about sub-processors and LGPD/GDPR privacy compliance.
+      description: 'Transforms raw contract text into executive intelligence about sub-processors and LGPD/GDPR privacy compliance. Requires permission(s): privacy:read. API keys need scope(s): privacy:read.'
       requestBody:
         content:
           application/json:
@@ -31491,7 +31491,7 @@ paths:
       tags:
         - Data Subject Rights
       summary: Export personal data (LGPD art. 18)
-      description: Returns a portable JSON export of all personal data stored for the authenticated user. Compliant with LGPD art. 18 (right of access and portability). The response includes a Content-Disposition header for download.
+      description: 'Returns a portable JSON export of all personal data stored for the authenticated user. Compliant with LGPD art. 18 (right of access and portability). The response includes a Content-Disposition header for download. Requires permission(s): privacy:read. API keys need scope(s): privacy:read.'
       responses:
         '200':
           description: Personal data export
@@ -31562,7 +31562,7 @@ paths:
       tags:
         - Data Subject Rights
       summary: Request account deletion (LGPD art. 18)
-      description: Initiates an account deletion request. The account is flagged for deletion immediately. Personal data is permanently purged within 30 days per the data retention policy.
+      description: 'Initiates an account deletion request. The account is flagged for deletion immediately. Personal data is permanently purged within 30 days per the data retention policy. Requires permission(s): privacy:delete. Not reachable with an API key: this route is restricted to human actors.'
       responses:
         '200':
           description: Deletion request accepted
@@ -31617,7 +31617,7 @@ paths:
       tags:
         - users
       summary: GET /api/v1/users/me/organizations
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): organization:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): organization:read. API keys need scope(s): organization:read.'
       responses:
         '200':
           description: Successful response.
@@ -31634,7 +31634,7 @@ paths:
       tags:
         - users
       summary: POST /api/v1/users/me/organizations
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): organization:create.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): organization:create. Not reachable with an API key: this route is restricted to human actors.'
       responses:
         '200':
           description: Successful response.
@@ -31652,7 +31652,7 @@ paths:
       tags:
         - users
       summary: POST /api/v1/users/me/organizations/{organizationId}/activate
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): organization:create.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): organization:create. Not reachable with an API key: this route is restricted to human actors.'
       parameters:
         - schema:
             type: string
@@ -31678,7 +31678,7 @@ paths:
       tags:
         - users
       summary: POST /api/v1/users/me/organizations/{organizationId}/deactivate
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): organization:create.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): organization:create. Not reachable with an API key: this route is restricted to human actors.'
       parameters:
         - schema:
             type: string
@@ -31722,7 +31722,7 @@ paths:
       tags:
         - SOC Monitoring
       summary: SOC pipeline health status
-      description: 'Returns SOC monitoring pipeline status: queue binding health, alert service configuration, and pipeline readiness. Requires admin:write permission (platform admin only).'
+      description: 'Returns SOC monitoring pipeline status: queue binding health, alert service configuration, and pipeline readiness. Requires admin:write permission (platform admin only). Requires permission(s): admin:write. Not reachable with an API key: this route is restricted to human actors.'
       responses:
         '200':
           description: SOC pipeline status
@@ -31812,7 +31812,7 @@ paths:
       tags:
         - assessments
       summary: GET /api/v1/assessments/{assessmentId}/summary
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read. API keys need scope(s): assessment:read.'
       parameters:
         - schema:
             type: string
@@ -31838,7 +31838,7 @@ paths:
       tags:
         - organizations
       summary: GET /api/v1/organizations/{organizationId}/dashboard
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): organization:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): organization:read. API keys need scope(s): organization:read.'
       parameters:
         - schema:
             type: string
@@ -31864,7 +31864,7 @@ paths:
       tags:
         - tenants
       summary: GET /api/v1/tenants/{organizationId}/audit-logs
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): audit:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): audit:read. API keys need scope(s): audit:read.'
       parameters:
         - schema:
             type: string
@@ -31890,7 +31890,7 @@ paths:
       tags:
         - organizations
       summary: GET /api/v1/organizations/{organizationId}/audit-logs
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): audit:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): audit:read. API keys need scope(s): audit:read.'
       parameters:
         - schema:
             type: string
@@ -32493,7 +32493,7 @@ paths:
       tags:
         - assessments
       summary: GET /api/v1/assessments/{assessmentId}/projection/{frameworkId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read. API keys need scope(s): assessment:read.'
       parameters:
         - schema:
             type: string
@@ -32884,7 +32884,7 @@ paths:
       tags:
         - Intelligence
       summary: Calculate Control Blast Radius
-      description: Determines the impact radius of a control across risks, regulations, and data categories.
+      description: 'Determines the impact radius of a control across risks, regulations, and data categories. Requires permission(s): intelligence:create. API keys need scope(s): intelligence:run.'
       responses:
         '200':
           description: Blast Radius Results
@@ -32912,7 +32912,7 @@ paths:
       tags:
         - Intelligence
       summary: Perform Gap Analysis
-      description: Analyzes implemented controls against a target framework to identify gaps.
+      description: 'Analyzes implemented controls against a target framework to identify gaps. Requires permission(s): intelligence:create. API keys need scope(s): intelligence:run.'
       responses:
         '200':
           description: Gap Analysis Results
@@ -32940,7 +32940,7 @@ paths:
       tags:
         - Intelligence
       summary: Calculate DPIA Score
-      description: Calculates the DPIA risk score based on data categories and implemented controls.
+      description: 'Calculates the DPIA risk score based on data categories and implemented controls. Requires permission(s): intelligence:create. API keys need scope(s): intelligence:run.'
       responses:
         '200':
           description: DPIA Score Results
@@ -32968,7 +32968,7 @@ paths:
       tags:
         - Intelligence
       summary: Calculate Compliance Score
-      description: Calculates compliance score against a specific regulation based on implemented controls.
+      description: 'Calculates compliance score against a specific regulation based on implemented controls. Requires permission(s): intelligence:create. API keys need scope(s): intelligence:run.'
       responses:
         '200':
           description: Compliance Score Results
@@ -32996,7 +32996,7 @@ paths:
       tags:
         - Intelligence
       summary: Check Data Retention Rules
-      description: Checks data retention rules based on category, purpose, and jurisdiction.
+      description: 'Checks data retention rules based on category, purpose, and jurisdiction. Requires permission(s): intelligence:create. API keys need scope(s): intelligence:run.'
       responses:
         '200':
           description: Retention Rules Results
@@ -33024,7 +33024,7 @@ paths:
       tags:
         - Intelligence
       summary: Check Breach Notification SLA
-      description: Determines breach notification SLA based on regulation and severity.
+      description: 'Determines breach notification SLA based on regulation and severity. Requires permission(s): intelligence:create. API keys need scope(s): intelligence:run.'
       responses:
         '200':
           description: Breach SLA Results
@@ -33052,7 +33052,7 @@ paths:
       tags:
         - Intelligence
       summary: Calculate Cross-Framework Coverage
-      description: Calculates coverage mapping between a source framework and a target framework.
+      description: 'Calculates coverage mapping between a source framework and a target framework. Requires permission(s): intelligence:create. API keys need scope(s): intelligence:run.'
       responses:
         '200':
           description: Cross Coverage Results
@@ -33080,7 +33080,7 @@ paths:
       tags:
         - Intelligence
       summary: Calculate ROI Path for Controls
-      description: Recommends the most impactful controls to implement based on ROI.
+      description: 'Recommends the most impactful controls to implement based on ROI. Requires permission(s): intelligence:create. API keys need scope(s): intelligence:run.'
       responses:
         '200':
           description: ROI Path Results
@@ -33108,7 +33108,7 @@ paths:
       tags:
         - intelligence
       summary: POST /api/v1/intelligence/council
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): intelligence:create.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): intelligence:create. API keys need scope(s): intelligence:run.'
       responses:
         '200':
           description: Successful response.
@@ -33589,7 +33589,7 @@ paths:
       tags:
         - tpra
       summary: POST /api/v1/tpra/vendors
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:create.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:create. API keys need scope(s): assessment:write.'
       responses:
         '200':
           description: Successful response.
@@ -33606,7 +33606,7 @@ paths:
       tags:
         - tpra
       summary: GET /api/v1/tpra/vendors
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read. API keys need scope(s): assessment:read.'
       responses:
         '200':
           description: Successful response.
@@ -33624,7 +33624,7 @@ paths:
       tags:
         - tpra
       summary: GET /api/v1/tpra/vendors/{vendorId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read. API keys need scope(s): assessment:read.'
       parameters:
         - schema:
             type: string
@@ -33650,7 +33650,7 @@ paths:
       tags:
         - tpra
       summary: POST /api/v1/tpra/vendors/{vendorId}/assessments
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:create.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:create. API keys need scope(s): assessment:write.'
       parameters:
         - schema:
             type: string
@@ -33675,7 +33675,7 @@ paths:
       tags:
         - tpra
       summary: GET /api/v1/tpra/vendors/{vendorId}/assessments
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read. API keys need scope(s): assessment:read.'
       parameters:
         - schema:
             type: string
@@ -33701,7 +33701,7 @@ paths:
       tags:
         - tpra
       summary: POST /api/v1/tpra/assessments/{id}/submit
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:create.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:create. API keys need scope(s): assessment:write.'
       parameters:
         - schema:
             type: string
@@ -33727,7 +33727,7 @@ paths:
       tags:
         - tpra
       summary: POST /api/v1/tpra/assessments/{id}/risk-score
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:create.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:create. API keys need scope(s): assessment:write.'
       parameters:
         - schema:
             type: string
@@ -33753,7 +33753,7 @@ paths:
       tags:
         - tpra
       summary: GET /api/v1/tpra/vendors/{vendorId}/risk-scores
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read. API keys need scope(s): assessment:read.'
       parameters:
         - schema:
             type: string
@@ -33779,7 +33779,7 @@ paths:
       tags:
         - admin
       summary: GET /api/v1/admin/users
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): admin:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): admin:read. Not reachable with an API key: this route is restricted to human actors.'
       responses:
         '200':
           description: Successful response.
@@ -33796,7 +33796,7 @@ paths:
       tags:
         - admin
       summary: POST /api/v1/admin/users
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): admin:write.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): admin:write. Not reachable with an API key: this route is restricted to human actors.'
       responses:
         '200':
           description: Successful response.
@@ -33814,7 +33814,7 @@ paths:
       tags:
         - admin
       summary: PATCH /api/v1/admin/users/{userId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): admin:write.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): admin:write. Not reachable with an API key: this route is restricted to human actors.'
       parameters:
         - schema:
             type: string
@@ -33839,7 +33839,7 @@ paths:
       tags:
         - admin
       summary: DELETE /api/v1/admin/users/{userId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): admin:delete.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): admin:delete. Not reachable with an API key: this route is restricted to human actors.'
       parameters:
         - schema:
             type: string
@@ -33865,7 +33865,7 @@ paths:
       tags:
         - admin
       summary: POST /api/v1/admin/users/{userId}/ban
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): admin:create.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): admin:create. Not reachable with an API key: this route is restricted to human actors.'
       parameters:
         - schema:
             type: string
@@ -33891,7 +33891,7 @@ paths:
       tags:
         - admin
       summary: POST /api/v1/admin/users/{userId}/unban
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): admin:create.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): admin:create. Not reachable with an API key: this route is restricted to human actors.'
       parameters:
         - schema:
             type: string
@@ -33917,7 +33917,7 @@ paths:
       tags:
         - admin
       summary: POST /api/v1/admin/users/{userId}/approve
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): admin:approve.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): admin:approve. Not reachable with an API key: this route is restricted to human actors.'
       parameters:
         - schema:
             type: string
@@ -33943,7 +33943,7 @@ paths:
       tags:
         - admin
       summary: POST /api/v1/admin/users/{userId}/reject
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): admin:create.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): admin:create. Not reachable with an API key: this route is restricted to human actors.'
       parameters:
         - schema:
             type: string
@@ -33969,7 +33969,7 @@ paths:
       tags:
         - admin
       summary: GET /api/v1/admin/users/pending-count
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): admin:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): admin:read. Not reachable with an API key: this route is restricted to human actors.'
       responses:
         '200':
           description: Successful response.
@@ -33987,7 +33987,7 @@ paths:
       tags:
         - admin
       summary: GET /api/v1/admin/organizations
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): admin:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): admin:read. Not reachable with an API key: this route is restricted to human actors.'
       responses:
         '200':
           description: Successful response.
@@ -34005,7 +34005,7 @@ paths:
       tags:
         - admin
       summary: DELETE /api/v1/admin/organizations/{organizationId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): admin:write.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): admin:write. Not reachable with an API key: this route is restricted to human actors.'
       parameters:
         - schema:
             type: string
@@ -34031,7 +34031,7 @@ paths:
       tags:
         - mad
       summary: GET /api/v1/mad/standards
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -34049,7 +34049,7 @@ paths:
       tags:
         - mad
       summary: GET /api/v1/mad/standards/{standardId}/sub-requirements
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string
@@ -34075,7 +34075,7 @@ paths:
       tags:
         - mad
       summary: GET /api/v1/mad/sub-requirements/{subReqId}/maturity-criteria
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string
@@ -34101,7 +34101,7 @@ paths:
       tags:
         - mad
       summary: POST /api/v1/mad/transaction-assessments
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:create.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:create. API keys need scope(s): assessment:write.'
       responses:
         '200':
           description: Successful response.
@@ -34118,7 +34118,7 @@ paths:
       tags:
         - mad
       summary: GET /api/v1/mad/transaction-assessments
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read. API keys need scope(s): assessment:read.'
       responses:
         '200':
           description: Successful response.
@@ -34136,7 +34136,7 @@ paths:
       tags:
         - mad
       summary: GET /api/v1/mad/transaction-assessments/{taId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read. API keys need scope(s): assessment:read.'
       parameters:
         - schema:
             type: string
@@ -34162,7 +34162,7 @@ paths:
       tags:
         - mad
       summary: PUT /api/v1/mad/transaction-assessments/{taId}/scores/{subReqId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:update.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:update. API keys need scope(s): assessment:write.'
       parameters:
         - schema:
             type: string
@@ -34195,7 +34195,7 @@ paths:
       tags:
         - mad
       summary: GET /api/v1/mad/transaction-assessments/{taId}/summary
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read. API keys need scope(s): assessment:read.'
       parameters:
         - schema:
             type: string
@@ -34221,7 +34221,7 @@ paths:
       tags:
         - assessments
       summary: POST /api/v1/assessments/{id}/maturity-versions
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:create.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:create. API keys need scope(s): assessment:write.'
       parameters:
         - schema:
             type: string
@@ -34246,7 +34246,7 @@ paths:
       tags:
         - assessments
       summary: GET /api/v1/assessments/{id}/maturity-versions
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read. API keys need scope(s): assessment:read.'
       parameters:
         - schema:
             type: string
@@ -34272,7 +34272,7 @@ paths:
       tags:
         - assessments
       summary: GET /api/v1/assessments/{id}/maturity-versions/{vid}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read. API keys need scope(s): assessment:read.'
       parameters:
         - schema:
             type: string
@@ -34305,7 +34305,7 @@ paths:
       tags:
         - assessments
       summary: GET /api/v1/assessments/{id}/maturity-versions/{vid}/scores
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read. API keys need scope(s): assessment:read.'
       parameters:
         - schema:
             type: string
@@ -34338,7 +34338,7 @@ paths:
       tags:
         - assessments
       summary: GET /api/v1/assessments/{id}/maturity-versions/{vid}/summary
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read. API keys need scope(s): assessment:read.'
       parameters:
         - schema:
             type: string
@@ -34371,7 +34371,7 @@ paths:
       tags:
         - assessments
       summary: POST /api/v1/assessments/{id}/maturity-versions/{vid}/submit-review
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:create.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:create. API keys need scope(s): assessment:write.'
       parameters:
         - schema:
             type: string
@@ -34404,7 +34404,7 @@ paths:
       tags:
         - assessments
       summary: GET /api/v1/assessments/{id}/roc-summary
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read. API keys need scope(s): assessment:read.'
       parameters:
         - schema:
             type: string
@@ -34481,7 +34481,7 @@ paths:
       tags:
         - assessments
       summary: POST /api/v1/assessments/{id}/maturity-versions/{vid}/approve
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): maturity:approve.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): maturity:approve. Not reachable with an API key: this route is restricted to human actors.'
       parameters:
         - schema:
             type: string

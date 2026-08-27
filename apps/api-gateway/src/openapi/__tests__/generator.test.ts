@@ -142,3 +142,45 @@ describe("FIELD_DOCS", () => {
     ).toBeGreaterThanOrEqual(1);
   });
 });
+
+describe("authorization clause", () => {
+  // A customer could not work out which scope to request, because the clause
+  // reached only synthesized operations and named the permission rather than
+  // the scope their key carries. Both halves are asserted here: every route
+  // that declares permissions says so, and says which scope satisfies it.
+  it("documents permission and scope for every route that needs one", async () => {
+    const { registerRoutesForOpenApi, generateOpenApiSpec } =
+      await import("../generator");
+    const { routes } = await import("../../app");
+
+    registerRoutesForOpenApi(routes as any);
+    const spec = generateOpenApiSpec() as any;
+
+    const missing: string[] = [];
+
+    for (const route of routes as {
+      method: string;
+      path: string;
+      permissions?: string[];
+    }[]) {
+      if (!route.permissions?.length) continue;
+
+      const openapiPath = route.path.replace(/:([a-zA-Z0-9_]+)/g, "{$1}");
+      const operation = spec.paths?.[openapiPath]?.[route.method.toLowerCase()];
+      const description: string = operation?.description ?? "";
+
+      const namesPermission = description.includes("Requires permission(s):");
+      // Either a scope an API key can hold, or an explicit statement that no
+      // key can reach it. Silence is the failure mode being guarded against.
+      const namesScope =
+        description.includes("API keys need scope(s):") ||
+        description.includes("restricted to human actors");
+
+      if (!namesPermission || !namesScope) {
+        missing.push(`${route.method} ${route.path}`);
+      }
+    }
+
+    expect(missing).toEqual([]);
+  }, 30_000);
+});
