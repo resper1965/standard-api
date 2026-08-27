@@ -135,7 +135,7 @@ export const RESPONSE_SCHEMAS: Record<string, z.ZodTypeAny> = {
     ])
     .openapi({
       description:
-        "Cursor form when `after` is supplied, offset form otherwise. Only the cursor form returns a `pagination` object; neither returns a total. Send `Accept: application/x-ndjson` to stream instead.",
+        "Cursor form when `after` is present, offset form otherwise. Start a cursor walk with an empty `after=`; the response carries `pagination.next_cursor` for the following page. Only the cursor form returns a `pagination` object; neither returns a total \u2014 stream the catalogue with `Accept: application/x-ndjson` to size it.",
     }),
   "GET /api/v1/scf/domains/:domainCode/controls": list(
     ScfControlResponseSchema,

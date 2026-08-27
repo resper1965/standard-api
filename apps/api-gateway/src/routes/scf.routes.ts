@@ -472,7 +472,12 @@ export const scfRoutes: RouteDefinition[] = [
 
       // â”€â”€ Standard paginated JSON path â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       // Backward compatible â€” used by all existing clients.
-      const afterCursor = url.searchParams.get("after") ?? undefined;
+      // Presence of `after` selects cursor mode, an empty value starts the
+      // walk. Reading the value alone made cursor pagination unreachable from
+      // a cold start: the first request has no cursor to send, so every client
+      // fell into the legacy offset shape and never saw `pagination`.
+      const usesCursor = url.searchParams.has("after");
+      const afterCursor = url.searchParams.get("after") || undefined;
       const sparseFields = parseSparseFields(url.searchParams.get("fields"));
       const limitStr =
         url.searchParams.get("limit") || url.searchParams.get("per_page");
@@ -516,11 +521,15 @@ export const scfRoutes: RouteDefinition[] = [
             : {}),
           limit,
           // When `after` is present, ignore page/offset â€” use cursor pagination
-          ...(afterCursor ? { after: afterCursor } : { offset }),
+          ...(usesCursor
+            ? afterCursor
+              ? { after: afterCursor }
+              : {}
+            : { offset }),
         });
 
         // â”€â”€ Cursor pagination response â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-        if (afterCursor) {
+        if (usesCursor) {
           const hasMore = controls.length > limit;
           const pageControls = hasMore ? controls.slice(0, limit) : controls;
           const lastControl = pageControls[pageControls.length - 1];

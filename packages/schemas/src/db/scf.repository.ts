@@ -130,10 +130,16 @@ const mapRequirement = (
   mcr_rationale: row.mcrRationale ?? undefined,
 });
 
-const mapMapping = (row: typeof scfMappings.$inferSelect): ScfMapping => ({
+const mapMapping = (
+  row: typeof scfMappings.$inferSelect,
+  scfFrameworkId: string,
+): ScfMapping => ({
   id: row.id,
   scf_version_id: row.scfVersionId,
-  scf_framework_id: "", // resolved at service layer via requirement
+  // Joined from the mapping's requirement. It used to be hardcoded to "",
+  // which silently broke the framework filter in ScfMappingService and told
+  // API consumers the mapping belonged to no framework.
+  scf_framework_id: scfFrameworkId,
   scf_framework_requirement_id: row.scfFrameworkRequirementId,
   scf_control_id: row.scfControlId,
   relationship_type: row.relationshipType as ScfMapping["relationship_type"],
@@ -428,28 +434,42 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
   // â”€â”€â”€ Mappings â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   listMappingsByRequirement: async (requirementId, versionId) => {
     const rows = await db
-      .select()
+      .select({
+        mapping: scfMappings,
+        frameworkId: scfFrameworkRequirements.scfFrameworkId,
+      })
       .from(scfMappings)
+      .innerJoin(
+        scfFrameworkRequirements,
+        eq(scfMappings.scfFrameworkRequirementId, scfFrameworkRequirements.id),
+      )
       .where(
         and(
           eq(scfMappings.scfFrameworkRequirementId, requirementId),
           eq(scfMappings.scfVersionId, versionId),
         ),
       );
-    return rows.map(mapMapping);
+    return rows.map((r) => mapMapping(r.mapping, r.frameworkId));
   },
 
   listMappingsByControl: async (controlId, versionId) => {
     const rows = await db
-      .select()
+      .select({
+        mapping: scfMappings,
+        frameworkId: scfFrameworkRequirements.scfFrameworkId,
+      })
       .from(scfMappings)
+      .innerJoin(
+        scfFrameworkRequirements,
+        eq(scfMappings.scfFrameworkRequirementId, scfFrameworkRequirements.id),
+      )
       .where(
         and(
           eq(scfMappings.scfControlId, controlId),
           eq(scfMappings.scfVersionId, versionId),
         ),
       );
-    return rows.map(mapMapping);
+    return rows.map((r) => mapMapping(r.mapping, r.frameworkId));
   },
 
   /**
@@ -527,15 +547,27 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
     for (let i = 0; i < reqIds.length; i += BATCH_SIZE) {
       const batch = reqIds.slice(i, i + BATCH_SIZE);
       const rows = await db
-        .select()
+        .select({
+          mapping: scfMappings,
+          frameworkId: scfFrameworkRequirements.scfFrameworkId,
+        })
         .from(scfMappings)
+        .innerJoin(
+          scfFrameworkRequirements,
+          eq(
+            scfMappings.scfFrameworkRequirementId,
+            scfFrameworkRequirements.id,
+          ),
+        )
         .where(
           and(
             eq(scfMappings.scfVersionId, versionId),
             inArray(scfMappings.scfFrameworkRequirementId, batch),
           ),
         );
-      allMappings.push(...rows.map(mapMapping));
+      allMappings.push(
+        ...rows.map((r) => mapMapping(r.mapping, r.frameworkId)),
+      );
     }
 
     return allMappings;
@@ -1457,4 +1489,3 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
     }));
   },
 });
-

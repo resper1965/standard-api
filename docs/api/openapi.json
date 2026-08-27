@@ -34244,7 +34244,7 @@
                       ]
                     }
                   ],
-                  "description": "Cursor form when `after` is supplied, offset form otherwise. Only the cursor form returns a `pagination` object; neither returns a total. Send `Accept: application/x-ndjson` to stream instead."
+                  "description": "Cursor form when `after` is present, offset form otherwise. Start a cursor walk with an empty `after=`; the response carries `pagination.next_cursor` for the following page. Only the cursor form returns a `pagination` object; neither returns a total — stream the catalogue with `Accept: application/x-ndjson` to size it."
                 }
               }
             }
