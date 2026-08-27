@@ -143,6 +143,25 @@ describe("FIELD_DOCS", () => {
   });
 });
 
+type PermissionedRoute = {
+  method: string;
+  path: string;
+  permissions?: string[];
+};
+
+/** Either a scope a key can hold, or an explicit "no key qualifies". */
+const namesScope = (description: string): boolean =>
+  description.includes("API keys need scope(s):") ||
+  description.includes("restricted to human actors");
+
+const describesAuth = (description: string): boolean =>
+  description.includes("Requires permission(s):") && namesScope(description);
+
+const operationFor = (spec: any, route: PermissionedRoute) =>
+  spec.paths?.[route.path.replace(/:([a-zA-Z0-9_]+)/g, "{$1}")]?.[
+    route.method.toLowerCase()
+  ];
+
 describe("authorization clause", () => {
   // A customer could not work out which scope to request, because the clause
   // reached only synthesized operations and named the permission rather than
@@ -156,31 +175,13 @@ describe("authorization clause", () => {
     registerRoutesForOpenApi(routes as any);
     const spec = generateOpenApiSpec() as any;
 
-    const missing: string[] = [];
+    const mute = (routes as PermissionedRoute[])
+      .filter((route) => route.permissions?.length)
+      .filter(
+        (route) => !describesAuth(operationFor(spec, route)?.description ?? ""),
+      )
+      .map((route) => `${route.method} ${route.path}`);
 
-    for (const route of routes as {
-      method: string;
-      path: string;
-      permissions?: string[];
-    }[]) {
-      if (!route.permissions?.length) continue;
-
-      const openapiPath = route.path.replace(/:([a-zA-Z0-9_]+)/g, "{$1}");
-      const operation = spec.paths?.[openapiPath]?.[route.method.toLowerCase()];
-      const description: string = operation?.description ?? "";
-
-      const namesPermission = description.includes("Requires permission(s):");
-      // Either a scope an API key can hold, or an explicit statement that no
-      // key can reach it. Silence is the failure mode being guarded against.
-      const namesScope =
-        description.includes("API keys need scope(s):") ||
-        description.includes("restricted to human actors");
-
-      if (!namesPermission || !namesScope) {
-        missing.push(`${route.method} ${route.path}`);
-      }
-    }
-
-    expect(missing).toEqual([]);
+    expect(mute).toEqual([]);
   }, 30_000);
 });
