@@ -1299,6 +1299,7 @@ export const ropaRoutes: RouteDefinition[] = [
     path: "/api/v1/ropa/data-subjects",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, traceId }) => {
       const locale = (new URL(request.url).searchParams.get("locale") ||
         "pt") as any;
@@ -1314,6 +1315,7 @@ export const ropaRoutes: RouteDefinition[] = [
     path: "/api/v1/ropa/data-categories",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, traceId }) => {
       const locale = (new URL(request.url).searchParams.get("locale") ||
         "pt") as any;
@@ -1334,6 +1336,7 @@ export const ropaRoutes: RouteDefinition[] = [
     path: "/api/v1/ropa/life-cycle-stages",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, traceId }) => {
       const locale = (new URL(request.url).searchParams.get("locale") ||
         "pt") as any;
@@ -1348,6 +1351,7 @@ export const ropaRoutes: RouteDefinition[] = [
     path: "/api/v1/ropa/data-origins",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, traceId }) => {
       const locale = (new URL(request.url).searchParams.get("locale") ||
         "pt") as any;
@@ -1362,6 +1366,7 @@ export const ropaRoutes: RouteDefinition[] = [
     path: "/api/v1/ropa/collection-methods",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, traceId }) => {
       const locale = (new URL(request.url).searchParams.get("locale") ||
         "pt") as any;
@@ -1376,6 +1381,7 @@ export const ropaRoutes: RouteDefinition[] = [
     path: "/api/v1/ropa/processing-purposes",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, traceId }) => {
       const locale = (new URL(request.url).searchParams.get("locale") ||
         "pt") as any;
@@ -1395,6 +1401,7 @@ export const ropaRoutes: RouteDefinition[] = [
     path: "/api/v1/ropa/retention-rules",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, traceId }) => {
       const locale = (new URL(request.url).searchParams.get("locale") ||
         "pt") as any;
@@ -1422,6 +1429,7 @@ export const ropaRoutes: RouteDefinition[] = [
     path: "/api/v1/ropa/security-measures",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, traceId }) => {
       const locale = (new URL(request.url).searchParams.get("locale") ||
         "pt") as any;
@@ -1444,6 +1452,7 @@ export const ropaRoutes: RouteDefinition[] = [
     path: "/api/v1/ropa/disposal-methods",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, traceId }) => {
       const locale = (new URL(request.url).searchParams.get("locale") ||
         "pt") as any;
@@ -1458,6 +1467,7 @@ export const ropaRoutes: RouteDefinition[] = [
     path: "/api/v1/ropa/risk-factors",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, traceId }) => {
       const locale = (new URL(request.url).searchParams.get("locale") ||
         "pt") as any;
@@ -1476,6 +1486,7 @@ export const ropaRoutes: RouteDefinition[] = [
     path: "/api/v1/ropa/volume-scale",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, traceId }) => {
       const locale = (new URL(request.url).searchParams.get("locale") ||
         "pt") as any;

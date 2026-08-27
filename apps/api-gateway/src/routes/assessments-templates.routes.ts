@@ -334,6 +334,7 @@ export const assessmentsTemplatesRoutes: RouteDefinition[] = [
     path: "/api/v1/assessments/templates",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, traceId }) => {
       const locale = new URL(request.url).searchParams.get("locale") ?? "";
       const summary = ASSESSMENT_TEMPLATES.map((q) => ({
@@ -355,6 +356,7 @@ export const assessmentsTemplatesRoutes: RouteDefinition[] = [
     path: "/api/v1/assessments/templates/:templateId",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, params, traceId }) => {
       const locale = new URL(request.url).searchParams.get("locale") ?? "";
       const q = TEMPLATES_INDEX.get(routeUuidParam(params, "templateId"));

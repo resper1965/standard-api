@@ -1641,6 +1641,7 @@ export const scfRoutes: RouteDefinition[] = [
     path: "/api/v1/scf/risks",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ deps, request, traceId }) => {
       if (!deps._db)
         throw new ApiError("INTERNAL_ERROR", "DB client not available.", 500);
@@ -1658,6 +1659,7 @@ export const scfRoutes: RouteDefinition[] = [
     path: "/api/v1/scf/risks/:riskId",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ deps, params, traceId }) => {
       if (!deps._db)
         throw new ApiError("INTERNAL_ERROR", "DB client not available.", 500);
@@ -1679,6 +1681,7 @@ export const scfRoutes: RouteDefinition[] = [
     path: "/api/v1/scf/threats",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ deps, request, traceId }) => {
       if (!deps._db)
         throw new ApiError("INTERNAL_ERROR", "DB client not available.", 500);
@@ -1696,6 +1699,7 @@ export const scfRoutes: RouteDefinition[] = [
     path: "/api/v1/scf/threats/:threatId",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ deps, params, traceId }) => {
       if (!deps._db)
         throw new ApiError("INTERNAL_ERROR", "DB client not available.", 500);

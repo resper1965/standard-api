@@ -892,6 +892,7 @@ export const riskRoutes: RouteDefinition[] = [
     path: "/api/v1/risk/methodology",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, traceId }) => {
       const locale = new URL(request.url).searchParams.get("locale") || "pt";
       const method = RISK_METHODOLOGIES[0];
@@ -903,6 +904,7 @@ export const riskRoutes: RouteDefinition[] = [
     path: "/api/v1/risk/methodologies",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, traceId }) => {
       const locale = new URL(request.url).searchParams.get("locale") || "pt";
       const data = RISK_METHODOLOGIES.map((m) => ({
@@ -917,6 +919,7 @@ export const riskRoutes: RouteDefinition[] = [
     path: "/api/v1/risk/methodologies/:methodId",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, params, traceId }) => {
       const locale = new URL(request.url).searchParams.get("locale") || "pt";
       const method = METHODOLOGY_INDEX.get(routeUuidParam(params, "methodId"));
@@ -930,6 +933,7 @@ export const riskRoutes: RouteDefinition[] = [
     path: "/api/v1/risk/methodologies/:methodId/matrix",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, params, traceId }) => {
       const locale = new URL(request.url).searchParams.get("locale") || "pt";
       const method = METHODOLOGY_INDEX.get(routeUuidParam(params, "methodId"));
@@ -978,6 +982,7 @@ export const riskRoutes: RouteDefinition[] = [
     path: "/api/v1/risk/categories",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, traceId }) => {
       const locale = new URL(request.url).searchParams.get("locale") || "pt";
       return json({
@@ -992,6 +997,7 @@ export const riskRoutes: RouteDefinition[] = [
     path: "/api/v1/risk/taxonomy",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, traceId }) => {
       const locale = new URL(request.url).searchParams.get("locale") || "pt";
       const summary = RISK_TAXONOMY.categories.map((c) => ({
@@ -1015,6 +1021,7 @@ export const riskRoutes: RouteDefinition[] = [
     path: "/api/v1/risk/taxonomy/:categoryId",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, params, traceId }) => {
       const locale = new URL(request.url).searchParams.get("locale") || "pt";
       const cat = TAXONOMY_CAT_INDEX.get(routeUuidParam(params, "categoryId"));
@@ -1032,6 +1039,7 @@ export const riskRoutes: RouteDefinition[] = [
     path: "/api/v1/risk/taxonomy/:categoryId/:riskId",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, params, traceId }) => {
       const locale = new URL(request.url).searchParams.get("locale") || "pt";
       const cat = TAXONOMY_CAT_INDEX.get(routeUuidParam(params, "categoryId"));
@@ -1058,6 +1066,7 @@ export const riskRoutes: RouteDefinition[] = [
     path: "/api/v1/risk/kris",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, traceId }) => {
       const locale = new URL(request.url).searchParams.get("locale") || "pt";
       const url = new URL(request.url);
@@ -1092,6 +1101,7 @@ export const riskRoutes: RouteDefinition[] = [
     path: "/api/v1/risk/treatment-options",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, traceId }) => {
       const locale = new URL(request.url).searchParams.get("locale") || "pt";
       return json({
@@ -1109,6 +1119,7 @@ export const riskRoutes: RouteDefinition[] = [
     path: "/api/v1/risk/controls/:riskId",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, params, traceId }) => {
       const locale = new URL(request.url).searchParams.get("locale") || "pt";
       const riskId = routeUuidParam(params, "riskId");
@@ -1132,6 +1143,7 @@ export const riskRoutes: RouteDefinition[] = [
     path: "/api/v1/assessments/:assessmentId/risk-exposure",
     authRequired: true,
     tenantRequired: true,
+    permissions: ["assessment:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
       const orgId = requireOrganizationId({ organizationId });
       const assessmentId = routeUuidParam(params, "assessmentId");

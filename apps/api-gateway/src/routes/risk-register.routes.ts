@@ -140,6 +140,7 @@ export const riskRegisterRoutes: RouteDefinition[] = [
     path: "/api/v1/assessments/:id/risk-register",
     authRequired: true,
     tenantRequired: true,
+    permissions: ["assessment:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
       const orgId = requireOrganizationId({ organizationId });
       const assessmentId = routeUuidParam(params, "id");
@@ -158,6 +159,7 @@ export const riskRegisterRoutes: RouteDefinition[] = [
     path: "/api/v1/assessments/:id/risk-register/export",
     authRequired: true,
     tenantRequired: true,
+    permissions: ["assessment:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
       const orgId = requireOrganizationId({ organizationId });
       const assessmentId = routeUuidParam(params, "id");
@@ -189,6 +191,7 @@ export const riskRegisterRoutes: RouteDefinition[] = [
     path: "/api/v1/assessments/:id/risk-register/:entryId",
     authRequired: true,
     tenantRequired: true,
+    permissions: ["assessment:read"],
     handler: async ({ deps, params, organizationId, traceId }) => {
       const orgId = requireOrganizationId({ organizationId });
       const assessmentId = routeUuidParam(params, "id");

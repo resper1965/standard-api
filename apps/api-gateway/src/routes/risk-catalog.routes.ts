@@ -34,6 +34,7 @@ export const riskCatalogRoutes: RouteDefinition[] = [
     path: "/api/v1/risk-catalog",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ deps, request, traceId }) => {
       const repo = requireCatalogRepo(deps);
       const url = new URL(request.url);
@@ -51,6 +52,7 @@ export const riskCatalogRoutes: RouteDefinition[] = [
     path: "/api/v1/risk-catalog/:riskId",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ deps, params, traceId }) => {
       const repo = requireCatalogRepo(deps);
       const riskId = routeUuidParam(params, "riskId");
@@ -68,6 +70,7 @@ export const riskCatalogRoutes: RouteDefinition[] = [
     path: "/api/v1/threat-catalog",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ deps, request, traceId }) => {
       const repo = requireCatalogRepo(deps);
       const url = new URL(request.url);
@@ -85,6 +88,7 @@ export const riskCatalogRoutes: RouteDefinition[] = [
     path: "/api/v1/threat-catalog/:threatId",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ deps, params, traceId }) => {
       const repo = requireCatalogRepo(deps);
       const threatId = routeUuidParam(params, "threatId");

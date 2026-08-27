@@ -533,6 +533,7 @@ export const tpraRoutes: RouteDefinition[] = [
     path: "/api/v1/tpra/questionnaires",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, traceId }) => {
       const locale = (new URL(request.url).searchParams.get("locale") ||
         "pt") as any;
@@ -556,6 +557,7 @@ export const tpraRoutes: RouteDefinition[] = [
     path: "/api/v1/tpra/questionnaires/:questionnaireId",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, params, traceId }) => {
       const locale = (new URL(request.url).searchParams.get("locale") ||
         "pt") as any;
@@ -574,6 +576,7 @@ export const tpraRoutes: RouteDefinition[] = [
     path: "/api/v1/tpra/questionnaires/:questionnaireId/sections/:sectionId",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, params, traceId }) => {
       const locale = (new URL(request.url).searchParams.get("locale") ||
         "pt") as any;
@@ -594,6 +597,7 @@ export const tpraRoutes: RouteDefinition[] = [
     path: "/api/v1/tpra/tiers",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, traceId }) => {
       const locale = (new URL(request.url).searchParams.get("locale") ||
         "pt") as any;
@@ -686,6 +690,7 @@ export const tpraRoutes: RouteDefinition[] = [
     path: "/api/v1/tpra/scf-mapping",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, traceId }) => {
       const q = TPRA_QUESTIONNAIRES[0];
       if (!q) return json({ data: [], trace_id: traceId });

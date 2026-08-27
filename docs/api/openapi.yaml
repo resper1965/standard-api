@@ -16760,7 +16760,7 @@ paths:
       tags:
         - agent runs
       summary: GET /api/v1/agent-runs/{jobId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): agent:read_runs. API keys need scope(s): agent:read.'
       parameters:
         - schema:
             type: string
@@ -27767,7 +27767,7 @@ paths:
       tags:
         - SCF
       summary: GET /api/v1/scf/risks
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -27825,7 +27825,7 @@ paths:
       tags:
         - SCF
       summary: GET /api/v1/scf/risks/{riskId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string
@@ -27891,7 +27891,7 @@ paths:
       tags:
         - SCF
       summary: GET /api/v1/scf/threats
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -27949,7 +27949,7 @@ paths:
       tags:
         - SCF
       summary: GET /api/v1/scf/threats/{threatId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string
@@ -30771,7 +30771,7 @@ paths:
       tags:
         - privacy
       summary: GET /api/v1/privacy/processing-activities
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): privacy:read. API keys need scope(s): privacy:read.'
       responses:
         '200':
           description: Successful response.
@@ -30789,7 +30789,7 @@ paths:
       tags:
         - privacy
       summary: GET /api/v1/privacy/processing-activities/{id}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): privacy:read. API keys need scope(s): privacy:read.'
       parameters:
         - schema:
             type: string
@@ -30891,7 +30891,7 @@ paths:
       tags:
         - privacy
       summary: GET /api/v1/privacy/processing-activities/{id}/completeness
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): privacy:read. API keys need scope(s): privacy:read.'
       parameters:
         - schema:
             type: string
@@ -30942,7 +30942,7 @@ paths:
       tags:
         - privacy
       summary: GET /api/v1/privacy/processing-activities/{id}/data-subjects
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): privacy:read. API keys need scope(s): privacy:read.'
       parameters:
         - schema:
             type: string
@@ -31026,7 +31026,7 @@ paths:
       tags:
         - privacy
       summary: GET /api/v1/privacy/processing-activities/{id}/data-categories
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): privacy:read. API keys need scope(s): privacy:read.'
       parameters:
         - schema:
             type: string
@@ -31110,7 +31110,7 @@ paths:
       tags:
         - privacy
       summary: GET /api/v1/privacy/processing-activities/{id}/third-parties
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): privacy:read. API keys need scope(s): privacy:read.'
       parameters:
         - schema:
             type: string
@@ -31195,7 +31195,7 @@ paths:
       tags:
         - privacy
       summary: GET /api/v1/privacy/processing-activities/{id}/screenings
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): privacy:read. API keys need scope(s): privacy:read.'
       parameters:
         - schema:
             type: string
@@ -31246,7 +31246,7 @@ paths:
       tags:
         - privacy
       summary: GET /api/v1/privacy/processing-activities/{id}/field-reviews
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): privacy:read. API keys need scope(s): privacy:read.'
       parameters:
         - schema:
             type: string
@@ -31412,7 +31412,7 @@ paths:
       tags:
         - dpmp
       summary: GET /api/v1/dpmp/principles
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -31430,7 +31430,7 @@ paths:
       tags:
         - dpmp
       summary: GET /api/v1/dpmp/principles/{principleId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string
@@ -31456,7 +31456,7 @@ paths:
       tags:
         - dpmp
       summary: GET /api/v1/dpmp/domains
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -31474,7 +31474,7 @@ paths:
       tags:
         - dpmp
       summary: GET /api/v1/dpmp/frameworks
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -31492,7 +31492,7 @@ paths:
       tags:
         - dpmp
       summary: GET /api/v1/dpmp/frameworks/{frameworkId}/principles
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string
@@ -31518,7 +31518,7 @@ paths:
       tags:
         - privacy
       summary: GET /api/v1/privacy/processing-activities/{id}/report
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): privacy:read. API keys need scope(s): privacy:read.'
       parameters:
         - schema:
             type: string
@@ -32023,7 +32023,7 @@ paths:
       tags:
         - regulations
       summary: GET /api/v1/regulations
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -32041,7 +32041,7 @@ paths:
       tags:
         - regulations
       summary: GET /api/v1/regulations/{regulationId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string
@@ -32067,7 +32067,7 @@ paths:
       tags:
         - regulations
       summary: GET /api/v1/regulations/{regulationId}/legal-bases
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string
@@ -32093,7 +32093,7 @@ paths:
       tags:
         - regulations
       summary: GET /api/v1/regulations/{regulationId}/rights
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string
@@ -32119,7 +32119,7 @@ paths:
       tags:
         - regulations
       summary: GET /api/v1/regulations/{regulationId}/dsar-statuses
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string
@@ -32145,7 +32145,7 @@ paths:
       tags:
         - regulations
       summary: GET /api/v1/regulations/{regulationId}/breach-rules
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string
@@ -32171,7 +32171,7 @@ paths:
       tags:
         - regulations
       summary: GET /api/v1/regulations/{regulationId}/transfer-mechanisms
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string
@@ -32197,7 +32197,7 @@ paths:
       tags:
         - regulations
       summary: GET /api/v1/regulations/{regulationId}/consent
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string
@@ -32223,7 +32223,7 @@ paths:
       tags:
         - regulations
       summary: GET /api/v1/regulations/{regulationId}/dpia-triggers
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string
@@ -32249,7 +32249,7 @@ paths:
       tags:
         - regulations
       summary: GET /api/v1/regulations/{regulationId}/penalties
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string
@@ -32275,7 +32275,7 @@ paths:
       tags:
         - risk
       summary: GET /api/v1/risk/methodology
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -32293,7 +32293,7 @@ paths:
       tags:
         - risk
       summary: GET /api/v1/risk/methodologies
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -32311,7 +32311,7 @@ paths:
       tags:
         - risk
       summary: GET /api/v1/risk/methodologies/{methodId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string
@@ -32337,7 +32337,7 @@ paths:
       tags:
         - risk
       summary: GET /api/v1/risk/methodologies/{methodId}/matrix
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string
@@ -32363,7 +32363,7 @@ paths:
       tags:
         - risk
       summary: GET /api/v1/risk/categories
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -32381,7 +32381,7 @@ paths:
       tags:
         - risk
       summary: GET /api/v1/risk/taxonomy
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -32399,7 +32399,7 @@ paths:
       tags:
         - risk
       summary: GET /api/v1/risk/taxonomy/{categoryId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string
@@ -32425,7 +32425,7 @@ paths:
       tags:
         - risk
       summary: GET /api/v1/risk/taxonomy/{categoryId}/{riskId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string
@@ -32458,7 +32458,7 @@ paths:
       tags:
         - risk
       summary: GET /api/v1/risk/kris
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -32476,7 +32476,7 @@ paths:
       tags:
         - risk
       summary: GET /api/v1/risk/treatment-options
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -32494,7 +32494,7 @@ paths:
       tags:
         - risk
       summary: GET /api/v1/risk/controls/{riskId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string
@@ -32520,7 +32520,7 @@ paths:
       tags:
         - assessments
       summary: GET /api/v1/assessments/{assessmentId}/risk-exposure
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read. API keys need scope(s): assessment:read.'
       parameters:
         - schema:
             type: string
@@ -32579,7 +32579,7 @@ paths:
       tags:
         - assessments
       summary: GET /api/v1/assessments/templates
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -32597,7 +32597,7 @@ paths:
       tags:
         - assessments
       summary: GET /api/v1/assessments/templates/{templateId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string
@@ -32623,7 +32623,7 @@ paths:
       tags:
         - workflows
       summary: GET /api/v1/workflows/templates
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -32641,7 +32641,7 @@ paths:
       tags:
         - workflows
       summary: GET /api/v1/workflows/templates/{templateId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string
@@ -32667,7 +32667,7 @@ paths:
       tags:
         - reference data
       summary: GET /api/v1/reference-data/data-subjects
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -32685,7 +32685,7 @@ paths:
       tags:
         - reference data
       summary: GET /api/v1/reference-data/data-categories
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -32703,7 +32703,7 @@ paths:
       tags:
         - reference data
       summary: GET /api/v1/reference-data/retention-rules
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -32721,7 +32721,7 @@ paths:
       tags:
         - reference data
       summary: GET /api/v1/reference-data/life-cycle-stages
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -32739,7 +32739,7 @@ paths:
       tags:
         - reference data
       summary: GET /api/v1/reference-data/data-origins
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -32757,7 +32757,7 @@ paths:
       tags:
         - reference data
       summary: GET /api/v1/reference-data/collection-methods
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -32775,7 +32775,7 @@ paths:
       tags:
         - reference data
       summary: GET /api/v1/reference-data/processing-purposes
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -32793,7 +32793,7 @@ paths:
       tags:
         - reference data
       summary: GET /api/v1/reference-data/security-measures
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -32811,7 +32811,7 @@ paths:
       tags:
         - reference data
       summary: GET /api/v1/reference-data/disposal-methods
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -32829,7 +32829,7 @@ paths:
       tags:
         - reference data
       summary: GET /api/v1/reference-data/risk-factors
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -32847,7 +32847,7 @@ paths:
       tags:
         - reference data
       summary: GET /api/v1/reference-data/volume-scale
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -32865,7 +32865,7 @@ paths:
       tags:
         - reference data
       summary: GET /api/v1/reference-data/maturity-levels
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -32883,7 +32883,7 @@ paths:
       tags:
         - reference data
       summary: GET /api/v1/reference-data/bg-check-types
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -32901,7 +32901,7 @@ paths:
       tags:
         - reference data
       summary: GET /api/v1/reference-data/clearance-levels
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -32919,7 +32919,7 @@ paths:
       tags:
         - reference data
       summary: GET /api/v1/reference-data/departments
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -33179,7 +33179,7 @@ paths:
       tags:
         - flow templates
       summary: GET /api/v1/flow-templates
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -33197,7 +33197,7 @@ paths:
       tags:
         - flow templates
       summary: GET /api/v1/flow-templates/{templateId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string
@@ -33223,7 +33223,7 @@ paths:
       tags:
         - flow templates
       summary: GET /api/v1/flow-templates/scf-mapping
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -33241,7 +33241,7 @@ paths:
       tags:
         - governance
       summary: GET /api/v1/governance/maturity-levels
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -33259,7 +33259,7 @@ paths:
       tags:
         - governance
       summary: GET /api/v1/governance/bg-check-types
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -33277,7 +33277,7 @@ paths:
       tags:
         - governance
       summary: GET /api/v1/governance/clearance-levels
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -33295,7 +33295,7 @@ paths:
       tags:
         - governance
       summary: GET /api/v1/governance/departments
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -33313,7 +33313,7 @@ paths:
       tags:
         - ropa
       summary: GET /api/v1/ropa/data-subjects
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -33331,7 +33331,7 @@ paths:
       tags:
         - ropa
       summary: GET /api/v1/ropa/data-categories
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -33349,7 +33349,7 @@ paths:
       tags:
         - ropa
       summary: GET /api/v1/ropa/life-cycle-stages
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -33367,7 +33367,7 @@ paths:
       tags:
         - ropa
       summary: GET /api/v1/ropa/data-origins
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -33385,7 +33385,7 @@ paths:
       tags:
         - ropa
       summary: GET /api/v1/ropa/collection-methods
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -33403,7 +33403,7 @@ paths:
       tags:
         - ropa
       summary: GET /api/v1/ropa/processing-purposes
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -33421,7 +33421,7 @@ paths:
       tags:
         - ropa
       summary: GET /api/v1/ropa/retention-rules
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -33439,7 +33439,7 @@ paths:
       tags:
         - ropa
       summary: GET /api/v1/ropa/security-measures
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -33457,7 +33457,7 @@ paths:
       tags:
         - ropa
       summary: GET /api/v1/ropa/disposal-methods
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -33475,7 +33475,7 @@ paths:
       tags:
         - ropa
       summary: GET /api/v1/ropa/risk-factors
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -33493,7 +33493,7 @@ paths:
       tags:
         - ropa
       summary: GET /api/v1/ropa/volume-scale
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -33511,7 +33511,7 @@ paths:
       tags:
         - tpra
       summary: GET /api/v1/tpra/questionnaires
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -33529,7 +33529,7 @@ paths:
       tags:
         - tpra
       summary: GET /api/v1/tpra/questionnaires/{questionnaireId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string
@@ -33555,7 +33555,7 @@ paths:
       tags:
         - tpra
       summary: GET /api/v1/tpra/questionnaires/{questionnaireId}/sections/{sectionId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string
@@ -33588,7 +33588,7 @@ paths:
       tags:
         - tpra
       summary: GET /api/v1/tpra/tiers
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -33624,7 +33624,7 @@ paths:
       tags:
         - tpra
       summary: GET /api/v1/tpra/scf-mapping
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -34508,7 +34508,7 @@ paths:
       tags:
         - assessments
       summary: GET /api/v1/assessments/{id}/maturity-targets
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read. API keys need scope(s): assessment:read.'
       parameters:
         - schema:
             type: string
@@ -34709,7 +34709,7 @@ paths:
       tags:
         - assessments
       summary: GET /api/v1/assessments/{id}/risk-register
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read. API keys need scope(s): assessment:read.'
       parameters:
         - schema:
             type: string
@@ -34857,7 +34857,7 @@ paths:
       tags:
         - assessments
       summary: GET /api/v1/assessments/{id}/risk-register/export
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read. API keys need scope(s): assessment:read.'
       parameters:
         - schema:
             type: string
@@ -35021,7 +35021,7 @@ paths:
       tags:
         - assessments
       summary: GET /api/v1/assessments/{id}/risk-register/{entryId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): assessment:read. API keys need scope(s): assessment:read.'
       parameters:
         - schema:
             type: string
@@ -35365,7 +35365,7 @@ paths:
       tags:
         - risk catalog
       summary: GET /api/v1/risk-catalog
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -35435,7 +35435,7 @@ paths:
       tags:
         - risk catalog
       summary: GET /api/v1/risk-catalog/{riskId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string
@@ -35508,7 +35508,7 @@ paths:
       tags:
         - threat catalog
       summary: GET /api/v1/threat-catalog
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       responses:
         '200':
           description: Successful response.
@@ -35578,7 +35578,7 @@ paths:
       tags:
         - threat catalog
       summary: GET /api/v1/threat-catalog/{threatId}
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Requires permission(s): scf:read. API keys need scope(s): scf:read.'
       parameters:
         - schema:
             type: string

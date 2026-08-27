@@ -1487,6 +1487,7 @@ export const flowTemplateRoutes: RouteDefinition[] = [
     path: "/api/v1/flow-templates",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, traceId }) => {
       const url = new URL(request.url);
       const module = url.searchParams.get("module");
@@ -1517,6 +1518,7 @@ export const flowTemplateRoutes: RouteDefinition[] = [
     path: "/api/v1/flow-templates/:templateId",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, params, traceId }) => {
       const locale = (new URL(request.url).searchParams.get("locale") ||
         "pt") as any;
@@ -1537,6 +1539,7 @@ export const flowTemplateRoutes: RouteDefinition[] = [
     path: "/api/v1/flow-templates/scf-mapping",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, traceId }) => {
       const locale = (new URL(request.url).searchParams.get("locale") ||
         "pt") as any;

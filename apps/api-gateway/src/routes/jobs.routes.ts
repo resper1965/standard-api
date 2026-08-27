@@ -41,11 +41,7 @@ export const jobsRoutes: RouteDefinition[] = [
         });
       } catch (err) {
         if (err instanceof ApiError) throw err;
-        throw new ApiError(
-          "INTERNAL_ERROR",
-          "Failed to fetch job status",
-          500,
-        );
+        throw new ApiError("INTERNAL_ERROR", "Failed to fetch job status", 500);
       }
     },
   },
@@ -58,6 +54,7 @@ export const jobsRoutes: RouteDefinition[] = [
     path: "/api/v1/agent-runs/:jobId",
     protected: true,
     tenantRequired: true,
+    permissions: ["agent:read_runs"],
     handler: async (ctx) => {
       const jobId = ctx.params["jobId"];
       if (!jobId || !z.string().uuid().safeParse(jobId).success) {

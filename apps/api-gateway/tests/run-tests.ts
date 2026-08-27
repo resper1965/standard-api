@@ -29,7 +29,7 @@ import "./provenance-validation.test"; // audit M-04: existed on disk but was ne
 import "./cross-tenant-isolation.test";
 import "./m2m-scope-coverage.test"; // customer-reported 403 INSUFFICIENT_SCOPE on protected routes // audit C-02/C-03/A-03: cross-organization access regressions
 import "./ai-disclosure.test";
-import "./mutating-rbac.test";
+import "./route-rbac.test";
 import { runTests } from "./test-kit";
 
 await runTests();
