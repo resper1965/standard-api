@@ -31303,20 +31303,19 @@ paths:
   /api/v1/privacy/processing-activities/from-text:
     post:
       tags:
-        - privacy
-      summary: POST /api/v1/privacy/processing-activities/from-text
-      description: 'Generated from the route definition; no hand-written OpenAPI block exists for this endpoint yet. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
+        - Privacy
+      summary: Extract Processing Activity from free text
+      deprecated: true
+      description: 'DEPRECATED: extraction is rule-based (regular expressions and keyword matching), not a language model, and it persists the activity and its child records without review. Build the activity with POST /api/v1/privacy/processing-activities and the child endpoints instead. Returns a Deprecation header and is scheduled for removal after Wed, 25 Nov 2026. Not reachable with an API key: this route is protected but declares no permission, so no scope can be derived for it. Reachable with a signed-in session.'
       responses:
-        '200':
-          description: Successful response.
+        '201':
+          description: Activity created from the extracted text.
         '400':
-          description: Validation error.
-        '401':
-          description: Authentication required.
-        '403':
-          description: Insufficient permissions or scope.
-        '404':
-          description: Resource not found.
+          description: Bad Request / Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
       operationId: postPrivacyProcessingActivitiesFromText
   /api/v1/privacy/analyze-ropa:
     post:

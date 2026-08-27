@@ -434,17 +434,17 @@ curl -X POST ${baseUrl}/api/v1/privacy/assess-dpia \\\\
 
 ---
 
-### Recipe 10: Full Privacy Activity from Text (Multi-step)
+### Recipe 10: Full Privacy Activity (Multi-step)
 
 > Send natural language â†’ get a complete processing activity with screening and report.
 
-**Step 1: Create activity from text**
+**Step 1: Create the activity**
 \\\`\\\`\\\`bash
-curl -X POST ${baseUrl}/api/v1/privacy/processing-activities/from-text \\\\
+curl -X POST ${baseUrl}/api/v1/privacy/processing-activities \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID" \\\\
   -H "Content-Type: application/json" \\\\
-  -d '{"text": "We collect customer emails... "}'
+  -d '{"name": "Customer support tickets", "purpose": "Handle support requests", "legal_basis": "legitimate_interest"}'
 \\\`\\\`\\\`
 
 **Step 2: Run screening**
@@ -708,7 +708,7 @@ export const getLlmsFullQuickRef = () => `## Quick Reference
 
 | Flow | Steps |
 |------|-------|
-| Privacy Activity | \\\`from-text\\\` â†’ \\\`screen\\\` â†’ \\\`report\\\` |
+| Privacy Activity | create activity -> screen -> report |
 | Full Assessment | \\\`POST assessments\\\` â†’ \\\`upload docs\\\` â†’ \\\`evaluate-evidence\\\` â†’ \\\`compliance-gate\\\` |
 
 ### CRUD Resources
