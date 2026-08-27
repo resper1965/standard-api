@@ -34552,7 +34552,8 @@
                   "required": [
                     "data",
                     "trace_id"
-                  ]
+                  ],
+                  "description": "Returns the complete framework list in one response and takes no pagination parameters. `limit` and `offset` are accepted by the URL but ignored — said here because a client sent three offsets and got the same rows three times."
                 }
               }
             }

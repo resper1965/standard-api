@@ -33,13 +33,18 @@ export const MAX_MATURITY_LEVEL = 5 as const;
  *
  * Maps a STRM operator + optional strength score to a weight [0.0, 1.0].
  *
- * | Operator   | Symbol | Weight logic                          |
- * |------------|--------|---------------------------------------|
- * | equal      | =      | always 1.0                            |
- * | subset     | âŠ‚      | always 1.0 (SCF broader than req)     |
- * | intersects | âˆ©      | strength_score (default 0.5)          |
- * | superset   | âŠƒ      | min(0.5, strength_score) (max 0.5)    |
- * | no_relation| Ã˜      | always 0.0 (excluded from index)      |
+ * The operator names are **requirement-relative**: read each as
+ * `requirement <operator> control`. That is the opposite of the intuitive
+ * reading, and the symbols here used to be printed against the control, which
+ * made the table contradict itself ("subset ⊂" annotated "SCF broader").
+ *
+ * | Operator   | Reads as              | Coverage                | Weight         |
+ * |------------|-----------------------|-------------------------|----------------|
+ * | equal      | requirement = control | exact                   | 1.0            |
+ * | subset     | requirement ⊂ control | control covers all      | 1.0            |
+ * | intersects | requirement ∩ control | partial overlap         | strength_score |
+ * | superset   | requirement ⊃ control | control covers part     | min(0.5,score) |
+ * | no_relation| requirement ∅ control | none                    | 0.0 (excluded) |
  *
  * @throws {Error} if operator is not a canonical StrmOperator value
  */
@@ -60,7 +65,7 @@ export function computeStrmWeight(
   switch (operator) {
     case "equal":
     case "subset":
-      // Full compliance coverage â€” always 1.0
+      // Requirement fits inside the control — full coverage, always 1.0
       return 1.0;
 
     case "intersects": {
@@ -73,7 +78,7 @@ export function computeStrmWeight(
     }
 
     case "superset": {
-      // SCF narrower than requirement â€” cap at 0.5
+      // Requirement is broader than the control — partial coverage, cap 0.5
       if (strengthScore === null || strengthScore === undefined) {
         return SUPERSET_MAX_WEIGHT;
       }
@@ -229,4 +234,3 @@ export function computeStrmWeightFromString(
 
   return computeStrmWeight(parsed.data, strengthScore);
 }
-
