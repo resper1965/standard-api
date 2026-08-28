@@ -50,6 +50,14 @@ import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import * as schema from "./db/schema.js";
 
+/**
+ * Only the official bundle grades a mapping. `scf_strm_relationships` also
+ * holds rows sourced from structural inference; those describe how a crosswalk
+ * happens to be shaped, not what the SCF states, and must never become an
+ * operator the API serves as recorded.
+ */
+const OFFICIAL_SOURCE = "scf_official_strm_bundle_2026.1";
+
 const DRY_RUN = process.argv.slice(2).includes("--dry-run");
 
 type CoverageRow = {
@@ -99,6 +107,7 @@ async function main() {
       LEFT JOIN scf_strm_relationships s
         ON s.scf_control_id = m.scf_control_id
        AND s.fde_code       = r.fde_code
+       AND s.source         = 'scf_official_strm_bundle_2026.1'
       GROUP BY f.framework_id, f.name
       ORDER BY COUNT(s.relationship_type) DESC, COUNT(*) DESC
     `)) as unknown as CoverageRow[];
@@ -157,6 +166,7 @@ async function main() {
        WHERE m.scf_framework_requirement_id = r.id
          AND s.scf_control_id = m.scf_control_id
          AND s.fde_code       = r.fde_code
+         AND s.source         = 'scf_official_strm_bundle_2026.1'
          AND s.relationship_type IS NOT NULL
          AND m.relationship_type IS DISTINCT FROM s.relationship_type
     `);
