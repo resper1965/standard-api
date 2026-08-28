@@ -1464,18 +1464,13 @@ export const createXlsxScfImporter = (): ScfImporter => ({
       source: e.source,
     }));
 
-    // Also update allMappings relationship_type to the inferred STRM type
-    // so scf_mappings.relationship_type reflects actual STRM (not hardcoded "related")
-    const mappingIdToStrmType = new Map<string, string>();
-    for (const e of strmInferred) {
-      mappingIdToStrmType.set(e.mapping_id, e.relationship_type);
-    }
-    for (const m of allMappings) {
-      const inferredType = mappingIdToStrmType.get(m.id);
-      if (inferredType) {
-        (m as { relationship_type: string }).relationship_type = inferredType;
-      }
-    }
+    // Deliberately NOT copied onto allMappings. These operators are inferred
+    // from mapping cardinality, not stated by the SCF: a requirement mapping to
+    // exactly one control becomes `equal`, which the consumer's policy reads as
+    // "satisfies". Writing that into scf_mappings.relationship_type would make
+    // a structural coincidence indistinguishable from a recorded relationship.
+    // They stay in scf_strm_relationships under their own source label, where a
+    // reader can tell what produced them.
 
     const importRun: ScfImportRun = {
       id: newId(),
