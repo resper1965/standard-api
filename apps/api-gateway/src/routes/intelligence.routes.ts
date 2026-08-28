@@ -100,19 +100,27 @@ export const intelligenceRoutes: RouteDefinition[] = [
         body.scf_controls_implemented,
       );
 
+      const gaps = metrics.missingControls.length;
       const result = {
         framework: body.framework_mask,
         summary: {
           total_required_controls: metrics.totalControls,
           implemented_controls: metrics.implementedCount,
-          missing_controls: metrics.missingControls.length,
+          missing_controls: gaps,
           compliance_percentage: metrics.compliancePercentage,
+          compliance_reason: metrics.complianceReason,
         },
         missing_controls: metrics.missingControls,
-        actionable_insights_i18n: {
-          pt: `Sua conformidade avaliada com ${body.framework_mask} estÃ¡ em ${metrics.compliancePercentage}%. VocÃª possui lacunas em ${metrics.missingControls.length} controles que deverÃ£o ser mitigadas.`,
-          en: `Your assessed compliance with ${body.framework_mask} is at ${metrics.compliancePercentage}%. You have gaps in ${metrics.missingControls.length} controls that must be mitigated.`,
-        },
+        actionable_insights_i18n:
+          metrics.compliancePercentage === null
+            ? {
+                pt: `NÃ£o hÃ¡ mapeamento STRM legÃ­vel para ${body.framework_mask}, portanto nÃ£o hÃ¡ Ã­ndice de conformidade a calcular. VocÃª possui lacunas em ${gaps} controles que deverÃ£o ser mitigadas.`,
+                en: `No readable STRM mapping exists for ${body.framework_mask}, so no compliance index can be computed. You have gaps in ${gaps} controls that must be mitigated.`,
+              }
+            : {
+                pt: `Sua conformidade avaliada com ${body.framework_mask} estÃ¡ em ${metrics.compliancePercentage}%. VocÃª possui lacunas em ${gaps} controles que deverÃ£o ser mitigadas.`,
+                en: `Your assessed compliance with ${body.framework_mask} is at ${metrics.compliancePercentage}%. You have gaps in ${gaps} controls that must be mitigated.`,
+              },
       };
 
       return json({ data: flattenI18n(result, locale), trace_id: traceId });
@@ -259,16 +267,25 @@ export const intelligenceRoutes: RouteDefinition[] = [
       const totalControls = metrics.totalControls;
       const missingControls = metrics.missingControls;
 
+      const namePt = regulation.name_i18n.pt;
+      const nameEn = regulation.name_i18n.en || namePt;
       const result = {
         regulation_id: body.regulation_id,
         score: score,
+        reason: metrics.complianceReason,
         scf_controls_implemented_count: implementedCount,
         total_required_controls: totalControls,
         missing_controls: missingControls,
-        message_i18n: {
-          pt: `O score de conformidade para ${regulation.name_i18n.pt} Ã© de ${score}%.`,
-          en: `The compliance score for ${regulation.name_i18n.en || regulation.name_i18n.pt} is ${score}%.`,
-        },
+        message_i18n:
+          score === null
+            ? {
+                pt: `NÃ£o hÃ¡ mapeamento STRM legÃ­vel para ${namePt}, portanto nÃ£o hÃ¡ score de conformidade a calcular.`,
+                en: `No readable STRM mapping exists for ${nameEn}, so no compliance score can be computed.`,
+              }
+            : {
+                pt: `O score de conformidade para ${namePt} Ã© de ${score}%.`,
+                en: `The compliance score for ${nameEn} is ${score}%.`,
+              },
       };
 
       return json({ data: flattenI18n(result, locale), trace_id: traceId });
