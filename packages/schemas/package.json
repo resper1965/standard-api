@@ -19,6 +19,8 @@
     "db:seed:scf:dry-run": "tsx --env-file-if-exists=../../.env src/seed-scf-catalog.ts --dry-run",
     "db:seed:strm": "tsx --env-file-if-exists=../../.env src/seed-strm-bundle.ts",
     "db:seed:strm:dry-run": "tsx --env-file-if-exists=../../.env src/seed-strm-bundle.ts --dry-run",
+    "db:backfill:strm-operators": "tsx --env-file-if-exists=../../.env src/backfill-mapping-strm-operators.ts",
+    "db:backfill:strm-operators:dry-run": "tsx --env-file-if-exists=../../.env src/backfill-mapping-strm-operators.ts --dry-run",
     "db:lifecycle-proof": "tsx --env-file-if-exists=../../.env src/lifecycle-proof.ts"
   },
   "dependencies": {

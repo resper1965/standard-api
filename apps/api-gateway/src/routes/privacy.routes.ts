@@ -102,6 +102,7 @@ export const privacyRoutes: RouteDefinition[] = [
     path: "/api/v1/privacy/processing-activities",
     authRequired: true,
     tenantRequired: true,
+    permissions: ["privacy:read"],
     handler: async (ctx) => {
       const svc = new PrivacyCrudService(ctx.deps.privacy);
       const url = new URL(ctx.request.url);
@@ -128,6 +129,7 @@ export const privacyRoutes: RouteDefinition[] = [
     path: "/api/v1/privacy/processing-activities/:id",
     authRequired: true,
     tenantRequired: true,
+    permissions: ["privacy:read"],
     handler: async (ctx) => {
       const svc = new PrivacyCrudService(ctx.deps.privacy);
       const activity = await svc.getActivity(
@@ -234,6 +236,7 @@ export const privacyRoutes: RouteDefinition[] = [
     path: "/api/v1/privacy/processing-activities/:id/completeness",
     authRequired: true,
     tenantRequired: true,
+    permissions: ["privacy:read"],
     handler: async (ctx) => {
       try {
         const svc = new PrivacyCompletenessService(ctx.deps.privacy);
@@ -288,6 +291,7 @@ export const privacyRoutes: RouteDefinition[] = [
     path: "/api/v1/privacy/processing-activities/:id/data-subjects",
     authRequired: true,
     tenantRequired: true,
+    permissions: ["privacy:read"],
     handler: async (ctx) => {
       const svc = new PrivacyCrudService(ctx.deps.privacy);
       const result = await svc.listDataSubjects(
@@ -359,6 +363,7 @@ export const privacyRoutes: RouteDefinition[] = [
     path: "/api/v1/privacy/processing-activities/:id/data-categories",
     authRequired: true,
     tenantRequired: true,
+    permissions: ["privacy:read"],
     handler: async (ctx) => {
       const svc = new PrivacyCrudService(ctx.deps.privacy);
       const result = await svc.listDataCategories(
@@ -430,6 +435,7 @@ export const privacyRoutes: RouteDefinition[] = [
     path: "/api/v1/privacy/processing-activities/:id/third-parties",
     authRequired: true,
     tenantRequired: true,
+    permissions: ["privacy:read"],
     handler: async (ctx) => {
       const svc = new PrivacyCrudService(ctx.deps.privacy);
       const result = await svc.listThirdParties(
@@ -496,6 +502,7 @@ export const privacyRoutes: RouteDefinition[] = [
     path: "/api/v1/privacy/processing-activities/:id/screenings",
     authRequired: true,
     tenantRequired: true,
+    permissions: ["privacy:read"],
     handler: async (ctx) => {
       const svc = new PrivacyScreeningService(ctx.deps.privacy);
       const result = await svc.listScreenings(
@@ -547,6 +554,7 @@ export const privacyRoutes: RouteDefinition[] = [
     path: "/api/v1/privacy/processing-activities/:id/field-reviews",
     authRequired: true,
     tenantRequired: true,
+    permissions: ["privacy:read"],
     handler: async (ctx) => {
       const svc = new PrivacyCrudService(ctx.deps.privacy);
       const result = await svc.listFieldReviews(
@@ -949,6 +957,7 @@ export const privacyRoutes: RouteDefinition[] = [
     method: "GET",
     path: "/api/v1/dpmp/principles",
     authRequired: true,
+    permissions: ["scf:read"],
     handler: async (ctx) => {
       const url = new URL(ctx.request.url);
       const scfVersionId = url.searchParams.get("scf_version") ?? undefined;
@@ -982,6 +991,7 @@ export const privacyRoutes: RouteDefinition[] = [
     method: "GET",
     path: "/api/v1/dpmp/principles/:principleId",
     authRequired: true,
+    permissions: ["scf:read"],
     handler: async (ctx) => {
       const principleId = routeParam(ctx.params, "principleId");
       const principle = await (ctx.deps as any).dpmp.getPrincipleWithMappings(
@@ -997,6 +1007,7 @@ export const privacyRoutes: RouteDefinition[] = [
     method: "GET",
     path: "/api/v1/dpmp/domains",
     authRequired: true,
+    permissions: ["scf:read"],
     handler: async (ctx) => {
       const url = new URL(ctx.request.url);
       const scfVersionId = url.searchParams.get("scf_version") ?? undefined;
@@ -1009,6 +1020,7 @@ export const privacyRoutes: RouteDefinition[] = [
     method: "GET",
     path: "/api/v1/dpmp/frameworks",
     authRequired: true,
+    permissions: ["scf:read"],
     handler: async (ctx) => {
       const url = new URL(ctx.request.url);
       const scfVersionId = url.searchParams.get("scf_version") ?? undefined;
@@ -1023,6 +1035,7 @@ export const privacyRoutes: RouteDefinition[] = [
     method: "GET",
     path: "/api/v1/dpmp/frameworks/:frameworkId/principles",
     authRequired: true,
+    permissions: ["scf:read"],
     handler: async (ctx) => {
       const frameworkId = routeParam(ctx.params, "frameworkId");
       const url = new URL(ctx.request.url);
@@ -1049,6 +1062,7 @@ export const privacyRoutes: RouteDefinition[] = [
     path: "/api/v1/privacy/processing-activities/:id/report",
     authRequired: true,
     tenantRequired: true,
+    permissions: ["privacy:read"],
     handler: async (ctx) => {
       try {
         const url = new URL(ctx.request.url);

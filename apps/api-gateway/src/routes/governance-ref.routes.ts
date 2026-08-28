@@ -291,6 +291,7 @@ export const governanceRefRoutes: RouteDefinition[] = [
     path: "/api/v1/governance/maturity-levels",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ traceId }) =>
       json({ data: MATURITY_LEVELS, trace_id: traceId }),
   },
@@ -299,6 +300,7 @@ export const governanceRefRoutes: RouteDefinition[] = [
     path: "/api/v1/governance/bg-check-types",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ traceId }) =>
       json({
         data: BG_CHECK_TYPES,
@@ -311,6 +313,7 @@ export const governanceRefRoutes: RouteDefinition[] = [
     path: "/api/v1/governance/clearance-levels",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ traceId }) =>
       json({ data: CLEARANCE_LEVELS, trace_id: traceId }),
   },
@@ -319,6 +322,7 @@ export const governanceRefRoutes: RouteDefinition[] = [
     path: "/api/v1/governance/departments",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ traceId }) =>
       json({ data: DEPARTMENTS, total: DEPARTMENTS.length, trace_id: traceId }),
   },

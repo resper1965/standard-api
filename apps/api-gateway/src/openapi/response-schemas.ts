@@ -135,7 +135,7 @@ export const RESPONSE_SCHEMAS: Record<string, z.ZodTypeAny> = {
     ])
     .openapi({
       description:
-        "Cursor form when `after` is supplied, offset form otherwise. Only the cursor form returns a `pagination` object; neither returns a total. Send `Accept: application/x-ndjson` to stream instead.",
+        "Cursor form when `after` is present, offset form otherwise. Start a cursor walk with an empty `after=`; the response carries `pagination.next_cursor` for the following page. Only the cursor form returns a `pagination` object; neither returns a total \u2014 stream the catalogue with `Accept: application/x-ndjson` to size it.",
     }),
   "GET /api/v1/scf/domains/:domainCode/controls": list(
     ScfControlResponseSchema,
@@ -148,7 +148,10 @@ export const RESPONSE_SCHEMAS: Record<string, z.ZodTypeAny> = {
   "GET /api/v1/scf/controls/:controlId/linked-entities": list(z.unknown()),
 
   // ── SCF: frameworks, requirements, mappings ───────────────────────────
-  "GET /api/v1/scf/frameworks": list(ScfFrameworkResponseSchema),
+  "GET /api/v1/scf/frameworks": list(ScfFrameworkResponseSchema).openapi({
+    description:
+      "Returns the complete framework list in one response and takes no pagination parameters. `limit` and `offset` are accepted by the URL but ignored \u2014 said here because a client sent three offsets and got the same rows three times.",
+  }),
   "GET /api/v1/scf/frameworks/:frameworkId": item(ScfFrameworkResponseSchema),
   "GET /api/v1/scf/frameworks/:frameworkId/requirements": list(
     ScfRequirementResponseSchema,

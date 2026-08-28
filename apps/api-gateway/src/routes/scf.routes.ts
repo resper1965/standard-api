@@ -424,7 +424,14 @@ export const scfRoutes: RouteDefinition[] = [
                 offset,
               });
 
-              for (const control of batch) {
+              // searchControls fetches limit + 1 rows to signal "more exist",
+              // so a full batch is batchSize + 1. Comparing against batchSize
+              // made the very first batch look short and ended the stream after
+              // 51 rows, with a clean 200 and no way for a client to tell.
+              hasMore = batch.length > batchSize;
+              const page = hasMore ? batch.slice(0, batchSize) : batch;
+
+              for (const control of page) {
                 await writer.write(
                   encoder.encode(
                     JSON.stringify(controlResponse(control)) + "\n",
@@ -432,8 +439,7 @@ export const scfRoutes: RouteDefinition[] = [
                 );
               }
 
-              hasMore = batch.length === batchSize;
-              offset += batch.length;
+              offset += page.length;
             }
           } catch (err: any) {
             // Write error sentinel as last NDJSON line so clients can detect failure
@@ -472,14 +478,26 @@ export const scfRoutes: RouteDefinition[] = [
 
       // â”€â”€ Standard paginated JSON path â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       // Backward compatible â€” used by all existing clients.
-      const afterCursor = url.searchParams.get("after") ?? undefined;
+      // Presence of `after` selects cursor mode, an empty value starts the
+      // walk. Reading the value alone made cursor pagination unreachable from
+      // a cold start: the first request has no cursor to send, so every client
+      // fell into the legacy offset shape and never saw `pagination`.
+      const usesCursor = url.searchParams.has("after");
+      const afterCursor = url.searchParams.get("after") || undefined;
       const sparseFields = parseSparseFields(url.searchParams.get("fields"));
       const limitStr =
         url.searchParams.get("limit") || url.searchParams.get("per_page");
       const pageStr = url.searchParams.get("page");
       const limit = limitStr ? Math.min(parseInt(limitStr, 10), 100) : 50;
       const page = pageStr ? parseInt(pageStr, 10) : 1;
-      const offset = Math.max(0, (page - 1) * limit);
+      // `offset` was accepted and silently ignored: it was only ever derived
+      // from `page`, so ?offset=500 returned page 1. A client burned a
+      // debugging cycle on three offsets that gave identical rows.
+      const offsetStr = url.searchParams.get("offset");
+      const offset =
+        offsetStr !== null
+          ? Math.max(0, parseInt(offsetStr, 10) || 0)
+          : Math.max(0, (page - 1) * limit);
 
       const domainCode =
         url.searchParams.get("domain_code") || url.searchParams.get("domain");
@@ -516,11 +534,15 @@ export const scfRoutes: RouteDefinition[] = [
             : {}),
           limit,
           // When `after` is present, ignore page/offset â€” use cursor pagination
-          ...(afterCursor ? { after: afterCursor } : { offset }),
+          ...(usesCursor
+            ? afterCursor
+              ? { after: afterCursor }
+              : {}
+            : { offset }),
         });
 
         // â”€â”€ Cursor pagination response â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-        if (afterCursor) {
+        if (usesCursor) {
           const hasMore = controls.length > limit;
           const pageControls = hasMore ? controls.slice(0, limit) : controls;
           const lastControl = pageControls[pageControls.length - 1];
@@ -1641,6 +1663,7 @@ export const scfRoutes: RouteDefinition[] = [
     path: "/api/v1/scf/risks",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ deps, request, traceId }) => {
       if (!deps._db)
         throw new ApiError("INTERNAL_ERROR", "DB client not available.", 500);
@@ -1658,6 +1681,7 @@ export const scfRoutes: RouteDefinition[] = [
     path: "/api/v1/scf/risks/:riskId",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ deps, params, traceId }) => {
       if (!deps._db)
         throw new ApiError("INTERNAL_ERROR", "DB client not available.", 500);
@@ -1679,6 +1703,7 @@ export const scfRoutes: RouteDefinition[] = [
     path: "/api/v1/scf/threats",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ deps, request, traceId }) => {
       if (!deps._db)
         throw new ApiError("INTERNAL_ERROR", "DB client not available.", 500);
@@ -1696,6 +1721,7 @@ export const scfRoutes: RouteDefinition[] = [
     path: "/api/v1/scf/threats/:threatId",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ deps, params, traceId }) => {
       if (!deps._db)
         throw new ApiError("INTERNAL_ERROR", "DB client not available.", 500);

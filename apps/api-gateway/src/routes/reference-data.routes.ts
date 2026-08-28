@@ -1685,6 +1685,7 @@ export const referenceDataRoutes: RouteDefinition[] = [
     path: "/api/v1/reference-data/data-subjects",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, traceId }) =>
       json(
         flattenI18n(
@@ -1702,6 +1703,7 @@ export const referenceDataRoutes: RouteDefinition[] = [
     path: "/api/v1/reference-data/data-categories",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, traceId }) => {
       const url = new URL(request.url);
       const sensitivity = url.searchParams.get("sensitivity");
@@ -1721,6 +1723,7 @@ export const referenceDataRoutes: RouteDefinition[] = [
     path: "/api/v1/reference-data/retention-rules",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, traceId }) =>
       json(
         flattenI18n(
@@ -1734,6 +1737,7 @@ export const referenceDataRoutes: RouteDefinition[] = [
     path: "/api/v1/reference-data/life-cycle-stages",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, traceId }) =>
       json(
         flattenI18n(
@@ -1747,6 +1751,7 @@ export const referenceDataRoutes: RouteDefinition[] = [
     path: "/api/v1/reference-data/data-origins",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, traceId }) =>
       json(
         flattenI18n(
@@ -1760,6 +1765,7 @@ export const referenceDataRoutes: RouteDefinition[] = [
     path: "/api/v1/reference-data/collection-methods",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, traceId }) =>
       json(
         flattenI18n(
@@ -1773,6 +1779,7 @@ export const referenceDataRoutes: RouteDefinition[] = [
     path: "/api/v1/reference-data/processing-purposes",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, traceId }) => {
       const url = new URL(request.url);
       const category = url.searchParams.get("category");
@@ -1791,6 +1798,7 @@ export const referenceDataRoutes: RouteDefinition[] = [
     path: "/api/v1/reference-data/security-measures",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, traceId }) => {
       const url = new URL(request.url);
       const sensitivity = url.searchParams.get("sensitivity");
@@ -1812,6 +1820,7 @@ export const referenceDataRoutes: RouteDefinition[] = [
     path: "/api/v1/reference-data/disposal-methods",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, traceId }) =>
       json(
         flattenI18n(
@@ -1825,6 +1834,7 @@ export const referenceDataRoutes: RouteDefinition[] = [
     path: "/api/v1/reference-data/risk-factors",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, traceId }) =>
       json(
         flattenI18n(
@@ -1838,6 +1848,7 @@ export const referenceDataRoutes: RouteDefinition[] = [
     path: "/api/v1/reference-data/volume-scale",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, traceId }) =>
       json(
         flattenI18n(
@@ -1853,6 +1864,7 @@ export const referenceDataRoutes: RouteDefinition[] = [
     path: "/api/v1/reference-data/maturity-levels",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, traceId }) =>
       json(
         flattenI18n(
@@ -1866,6 +1878,7 @@ export const referenceDataRoutes: RouteDefinition[] = [
     path: "/api/v1/reference-data/bg-check-types",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, traceId }) =>
       json(
         flattenI18n(
@@ -1883,6 +1896,7 @@ export const referenceDataRoutes: RouteDefinition[] = [
     path: "/api/v1/reference-data/clearance-levels",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, traceId }) =>
       json(
         flattenI18n(
@@ -1896,6 +1910,7 @@ export const referenceDataRoutes: RouteDefinition[] = [
     path: "/api/v1/reference-data/departments",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, traceId }) =>
       json(
         flattenI18n(

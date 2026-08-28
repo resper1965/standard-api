@@ -205,7 +205,8 @@ export const ScfStructuredMappingSchema = z.object({
   scf_framework_id: UuidSchema,
   scf_framework_requirement_id: UuidSchema,
   scf_control_id: UuidSchema,
-  relationship_type: ScfRelationshipTypeSchema,
+  // Nullable: null = a origem não declara operador STRM (ADR-001).
+  relationship_type: ScfRelationshipTypeSchema.nullable(),
   relationship_strength: z.string().optional(),
   mapping_rationale: z.string().optional(),
   mapping_source: z.string().min(1),

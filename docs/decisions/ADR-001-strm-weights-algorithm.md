@@ -28,6 +28,22 @@ O Blueprint especifica o motor STRM baseado em NIST IR 8477 com pesos matemátic
 
 Adoptar a **Weights Matrix STRM** como único mecanismo de cálculo de compliance index.
 
+### Convenção de leitura dos operadores
+
+Os nomes são **relativos ao requisito**: leia cada um como
+`requisito <operador> controlo`.
+
+- `subset` — o requisito cabe dentro do controlo. O controlo cobre o requisito
+  inteiro, daí peso 1.0.
+- `superset` — o requisito é mais amplo que o controlo. O controlo cobre apenas
+  parte, daí o tecto de 0.5.
+
+Esta é a leitura inversa da intuitiva, e não estava declarada em lugar nenhum.
+Um cliente a integrar contra a API chegou às duas hipóteses e teve de perguntar
+qual valia. O comentário em `strm-weight-calculator.ts` contradizia-se —
+imprimia o símbolo ⊂ ao lado de "SCF broader than req" — o que tornava a
+ambiguidade indistinguível de um erro.
+
 ### Weights Matrix
 
 | Operador STRM | Símbolo | Peso |

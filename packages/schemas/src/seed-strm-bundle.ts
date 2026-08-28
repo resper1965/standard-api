@@ -32,6 +32,27 @@ import { parseStrmBundleDirectory } from "../../scf-core/src/importers/strm-bund
 
 // â”€â”€â”€â”€ Configuration â”€â”€â”€â”€
 
+/**
+ * Parse a STRM strength value from the source bundle.
+ *
+ * Returns null for anything that is not a finite number, so an unquantified or
+ * malformed source value never becomes a confident-looking 0.500.
+ */
+/**
+ * Normalise the bundle's 0-10 strength onto the 0.0-1.0 scale the column
+ * stores. Anything outside that range, or not a number, stays null rather
+ * than becoming a fabricated value.
+ *
+ * The bundle's own `relationship_strength` is the enum the importer derives
+ * (strong/moderate/weak), not a number. Parsing that string is what used to
+ * yield NaN and, through a `|| 0.5` fallback, publish 0.500 on every single
+ * official row.
+ */
+const parseStrength = (raw?: number | null): string | null =>
+  typeof raw === "number" && raw >= 0 && raw <= 10
+    ? (raw / 10).toFixed(3)
+    : null;
+
 const STRM_BUNDLE_DIR = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   "../../../assets/strm",
@@ -187,7 +208,7 @@ async function main() {
       fde_code: string;
       fde_name: string;
       relationship_type: string;
-      relationship_strength: string;
+      strength_raw: number;
       rationale: string | null;
       source: string;
       scf_mapping_id: string | null;
@@ -219,7 +240,7 @@ async function main() {
           fde_code: entry.fde_code.trim(),
           fde_name: entry.fde_name.trim(),
           relationship_type: entry.relationship_type,
-          relationship_strength: entry.relationship_strength,
+          strength_raw: entry.strength_raw,
           rationale: entry.strm_rationale || null,
           source: SOURCE_LABEL,
           scf_mapping_id: mappingId,
@@ -299,10 +320,11 @@ async function main() {
               | "superset"
               | "no_relation",
             // strengthScore replaces legacy relationshipStrength (text â†’ numeric string for Drizzle)
-            strengthScore:
-              row.relationship_strength && row.relationship_strength !== ""
-                ? (parseFloat(row.relationship_strength) || 0.5).toFixed(3)
-                : null,
+            // A value that does not parse stays null ("related, unquantified").
+            // It used to fall back to 0.5, which published a fabricated 0.500
+            // indistinguishable from a measured one. ADR-001 already applies
+            // the 0.5 default at calculation time, where it belongs.
+            strengthScore: parseStrength(row.strength_raw),
             rationale: row.rationale,
             source: row.source,
           })),

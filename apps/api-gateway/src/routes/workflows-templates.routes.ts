@@ -236,6 +236,7 @@ export const workflowsTemplatesRoutes: RouteDefinition[] = [
     path: "/api/v1/workflows/templates",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, traceId }) => {
       const locale = new URL(request.url).searchParams.get("locale") ?? "";
       const summary = WORKFLOW_TEMPLATES.map((t) => ({
@@ -255,6 +256,7 @@ export const workflowsTemplatesRoutes: RouteDefinition[] = [
     path: "/api/v1/workflows/templates/:templateId",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, params, traceId }) => {
       const locale = new URL(request.url).searchParams.get("locale") ?? "";
       const t = TEMPLATES_INDEX.get(routeUuidParam(params, "templateId"));

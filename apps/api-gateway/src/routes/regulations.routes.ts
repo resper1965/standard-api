@@ -36,6 +36,7 @@ export const regulationsRoutes: RouteDefinition[] = [
     path: "/api/v1/regulations",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, traceId }) => {
       const locale = (new URL(request.url).searchParams.get("locale") ||
         "pt") as any;
@@ -61,6 +62,7 @@ export const regulationsRoutes: RouteDefinition[] = [
     path: "/api/v1/regulations/:regulationId",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, params, traceId }) => {
       const locale = (new URL(request.url).searchParams.get("locale") ||
         "pt") as any;
@@ -74,6 +76,7 @@ export const regulationsRoutes: RouteDefinition[] = [
     path: "/api/v1/regulations/:regulationId/legal-bases",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, params, traceId }) => {
       const locale = new URL(request.url).searchParams.get("locale") || "pt";
       const reg = REGULATION_INDEX.get(routeUuidParam(params, "regulationId"));
@@ -94,6 +97,7 @@ export const regulationsRoutes: RouteDefinition[] = [
     path: "/api/v1/regulations/:regulationId/rights",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, params, traceId }) => {
       const locale = new URL(request.url).searchParams.get("locale") || "pt";
       const reg = REGULATION_INDEX.get(routeUuidParam(params, "regulationId"));
@@ -110,6 +114,7 @@ export const regulationsRoutes: RouteDefinition[] = [
     path: "/api/v1/regulations/:regulationId/dsar-statuses",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, params, traceId }) => {
       const locale = new URL(request.url).searchParams.get("locale") || "pt";
       const reg = REGULATION_INDEX.get(routeUuidParam(params, "regulationId"));
@@ -126,6 +131,7 @@ export const regulationsRoutes: RouteDefinition[] = [
     path: "/api/v1/regulations/:regulationId/breach-rules",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, params, traceId }) => {
       const locale = new URL(request.url).searchParams.get("locale") || "pt";
       const reg = REGULATION_INDEX.get(routeUuidParam(params, "regulationId"));
@@ -143,6 +149,7 @@ export const regulationsRoutes: RouteDefinition[] = [
     path: "/api/v1/regulations/:regulationId/transfer-mechanisms",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, params, traceId }) => {
       const locale = new URL(request.url).searchParams.get("locale") || "pt";
       const reg = REGULATION_INDEX.get(routeUuidParam(params, "regulationId"));
@@ -160,6 +167,7 @@ export const regulationsRoutes: RouteDefinition[] = [
     path: "/api/v1/regulations/:regulationId/consent",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, params, traceId }) => {
       const locale = new URL(request.url).searchParams.get("locale") || "pt";
       const reg = REGULATION_INDEX.get(routeUuidParam(params, "regulationId"));
@@ -176,6 +184,7 @@ export const regulationsRoutes: RouteDefinition[] = [
     path: "/api/v1/regulations/:regulationId/dpia-triggers",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ request, params, traceId }) => {
       const locale = new URL(request.url).searchParams.get("locale") || "pt";
       const reg = REGULATION_INDEX.get(routeUuidParam(params, "regulationId"));
@@ -192,6 +201,7 @@ export const regulationsRoutes: RouteDefinition[] = [
     path: "/api/v1/regulations/:regulationId/penalties",
     authRequired: true,
     tenantRequired: false,
+    permissions: ["scf:read"],
     handler: async ({ params, request, traceId }) => {
       const locale = (new URL(request.url).searchParams.get("locale") ||
         "pt") as any;

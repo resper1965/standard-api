@@ -20,7 +20,8 @@ export type ScfCrossMappingItem = {
   control_id: string;
   control_title: string;
   control_description: string;
-  mapping_type: string;
+  /** null when the source states no STRM operator (ADR-001). */
+  mapping_type: string | null;
 };
 
 export type ScfControlCrossMapping = {
@@ -74,7 +75,8 @@ export type ScfRepository = {
   ): Promise<
     Array<{
       scf_control_id: string;
-      relationship_type: string;
+      /** null when no STRM operator is recorded; excluded from the index. */
+      relationship_type: string | null;
       strength_score: number | null;
     }>
   >;
@@ -500,4 +502,3 @@ export const createInMemoryScfRepository = (
     },
   };
 };
-
