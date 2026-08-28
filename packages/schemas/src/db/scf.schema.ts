@@ -263,7 +263,9 @@ export const scfStrmRelationships = pgTable(
     /** Human-readable name of the FDE requirement. */
     fdeName: text("fde_name"),
     // ⛔ ADR-001: usar strmOperatorEnum — NUNCA text livre com "direct"/"related"
-    relationshipType: strmOperatorEnum("relationship_type").notNull(),
+    // Nullable de propósito (0059): null = a origem não declara operador. Um
+    // default aqui foi o que produziu 'intersects' em 79.127 de 79.133 linhas.
+    relationshipType: strmOperatorEnum("relationship_type"),
     // Peso numérico 0.0–1.0 para operador "intersects"
     strengthScore: numeric("strength_score", { precision: 4, scale: 3 }),
     rationale: text("rationale"),

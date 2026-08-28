@@ -29,6 +29,10 @@ import { eq, sql, count } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import * as schema from "./db/schema.js";
 import { parseStrmBundleDirectory } from "../../scf-core/src/importers/strm-bundle-importer.js";
+import {
+  toCanonicalOperator,
+  type StrmOperator,
+} from "../../scf-core/src/importers/strm-operator.js";
 
 // â”€â”€â”€â”€ Configuration â”€â”€â”€â”€
 
@@ -208,6 +212,10 @@ async function main() {
       fde_code: string;
       fde_name: string;
       relationship_type: string;
+      /** Computed once here, reused at the insert site instead of recomputed. */
+      relationship_type_canonical: StrmOperator | null;
+      /** Set when the source operator could not be canonicalised. */
+      operator_unrecognised: boolean;
       strength_raw: number;
       rationale: string | null;
       source: string;
@@ -235,11 +243,15 @@ async function main() {
         // Try to find a matching scf_mapping for backward-compat
         const mappingId = ctrlToMappingIds.get(controlId)?.[0] ?? null;
 
+        const canonical = toCanonicalOperator(entry.relationship_type);
+
         deduped.set(dedupeKey, {
           scf_control_id: controlId,
           fde_code: entry.fde_code.trim(),
           fde_name: entry.fde_name.trim(),
           relationship_type: entry.relationship_type,
+          relationship_type_canonical: canonical,
+          operator_unrecognised: canonical === null,
           strength_raw: entry.strength_raw,
           rationale: entry.strm_rationale || null,
           source: SOURCE_LABEL,
@@ -263,6 +275,19 @@ async function main() {
       `     No control:      ${noControl} (${unknownControls.size} unique)`,
     );
     console.log(`     Join time:       ${elapsed(joinMs)}`);
+
+    const unrecognised = rows.filter((r) => r.operator_unrecognised);
+    console.log(`     Unrecognised op: ${unrecognised.length}`);
+    if (unrecognised.length > 0) {
+      const vocab = [...new Set(unrecognised.map((r) => r.relationship_type))];
+      console.log(`     Values seen:     ${vocab.slice(0, 10).join(", ")}`);
+      console.log(
+        "     These are stored as NULL. A new source vocabulary belongs in",
+      );
+      console.log(
+        "     toCanonicalOperator, not in a fallback at the write site.",
+      );
+    }
 
     if (rows.length === 0) {
       console.warn(
@@ -296,29 +321,11 @@ async function main() {
             fdeCode: row.fde_code,
             fdeName: row.fde_name,
             scfMappingId: row.scf_mapping_id,
-            // ADR-001: map legacy relationship_type strings to canonical STRM operators
-            relationshipType: (row.relationship_type === "direct"
-              ? "equal"
-              : row.relationship_type === "related"
-                ? "intersects"
-                : row.relationship_type === "intersecting"
-                  ? "intersects"
-                  : row.relationship_type === "no_relationship"
-                    ? "no_relation"
-                    : [
-                          "equal",
-                          "subset",
-                          "intersects",
-                          "superset",
-                          "no_relation",
-                        ].includes(row.relationship_type)
-                      ? row.relationship_type
-                      : "intersects") as  // safe fallback for unknown values
-              | "equal"
-              | "subset"
-              | "intersects"
-              | "superset"
-              | "no_relation",
+            // Unknown operators become NULL (0059). They are not coerced to
+            // `intersects`: that asserts scope overlap, which a value we could
+            // not read does not support. The count is reported below so an
+            // unrecognised vocabulary shows up as a number, not as silence.
+            relationshipType: row.relationship_type_canonical,
             // strengthScore replaces legacy relationshipStrength (text â†’ numeric string for Drizzle)
             // A value that does not parse stays null ("related, unquantified").
             // It used to fall back to 0.5, which published a fabricated 0.500
