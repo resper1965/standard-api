@@ -107,7 +107,7 @@ async function main() {
       LEFT JOIN scf_strm_relationships s
         ON s.scf_control_id = m.scf_control_id
        AND s.fde_code       = r.fde_code
-       AND s.source         = 'scf_official_strm_bundle_2026.1'
+       AND s.source         = ${OFFICIAL_SOURCE}
       GROUP BY f.framework_id, f.name
       ORDER BY COUNT(s.relationship_type) DESC, COUNT(*) DESC
     `)) as unknown as CoverageRow[];
@@ -166,7 +166,7 @@ async function main() {
        WHERE m.scf_framework_requirement_id = r.id
          AND s.scf_control_id = m.scf_control_id
          AND s.fde_code       = r.fde_code
-         AND s.source         = 'scf_official_strm_bundle_2026.1'
+         AND s.source         = ${OFFICIAL_SOURCE}
          AND s.relationship_type IS NOT NULL
          AND m.relationship_type IS DISTINCT FROM s.relationship_type
     `);
