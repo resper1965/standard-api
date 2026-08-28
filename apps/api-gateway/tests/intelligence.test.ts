@@ -38,11 +38,23 @@ test("Intelligence Gap Analysis returns correct structure for framework mask", a
   if (!Array.isArray(data.missing_controls)) {
     throw new Error(`Gap Analysis response missing_controls must be an array. Got: ${JSON.stringify(data).slice(0,300)}`);
   }
-  const pct = summary.compliance_percentage ?? summary.compliancePercentage;
-  if (typeof pct !== "number") {
+  // ADR-001: with no DB the framework has no mappings, so there is nothing to
+  // weigh and the honest answer is null + a reason — not a percentage built
+  // from a hardcoded intersects/0.5 proxy.
+  // NOT `a ?? b` — null is a meaningful value here and ?? would hide it.
+  const pct =
+    "compliance_percentage" in summary
+      ? summary.compliance_percentage
+      : summary.compliancePercentage;
+  if (pct === null) {
+    if (summary.compliance_reason !== "nothing_assessable") {
+      throw new Error(
+        `null compliance_percentage must carry compliance_reason "nothing_assessable", got: ${String(summary.compliance_reason)}`,
+      );
+    }
+  } else if (typeof pct !== "number") {
     throw new Error(`Gap Analysis response missing compliance_percentage number field`);
-  }
-  if (pct < 0 || pct > 100) {
+  } else if (pct < 0 || pct > 100) {
     throw new Error(`compliance_percentage out of range: ${pct}`);
   }
 });

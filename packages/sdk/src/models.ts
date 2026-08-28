@@ -385,7 +385,10 @@ export type AssessmentSummary = {
   state: string;
   total_controls: number;
   implemented_controls: number;
-  compliance_pct: number;
+  /** STRM-weighted index (0-100), or null when nothing in scope is gradeable. */
+  compliance_pct: number | null;
+  /** Why `compliance_pct` is null. null when an index was computed. */
+  compliance_reason: "nothing_assessable" | null;
   total_findings: number;
   critical_findings: number;
   high_findings: number;
@@ -402,7 +405,10 @@ export type OrganizationDashboard = {
   organization_name: string;
   total_assessments: number;
   assessments_by_state: Record<string, number>;
-  compliance_avg_pct: number;
+  /** Mean STRM-weighted index across gradeable assessments, or null if none was. */
+  compliance_avg_pct: number | null;
+  /** Why `compliance_avg_pct` is null. null when an average was computed. */
+  compliance_reason: "nothing_assessable" | null;
   total_open_poams: number;
   total_critical_findings: number;
   total_high_findings: number;
