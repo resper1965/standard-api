@@ -58,8 +58,8 @@ export interface StrmBundleEntry {
   fde_name: string;
   /** Tipo de rationale STRM: "Functional" | "Structural" */
   strm_rationale: string;
-  /** Tipo de relaÃ§Ã£o STRM normalizado */
-  relationship_type: StrmRelationshipType;
+  /** Operador STRM normalizado; null = a origem nao declara um que saibamos ler */
+  relationship_type: StrmRelationshipType | null;
   /** CÃ³digo do controle SCF (ex: "IAC-15.8", "GOV-02") */
   scf_code: string;
   /** Nome do controle SCF */
@@ -87,12 +87,16 @@ export interface StrmBundleFileResult {
   warnings: string[];
   /** Linhas skipped (ex: N/A, No Relationship) */
   skipped: number;
+  /** Rows kept with no operator because the source cell was unreadable */
+  unknown_operator: number;
 }
 
 export interface StrmBundleImportSummary {
   total_files: number;
   total_entries: number;
   total_skipped: number;
+  /** Rows kept with no operator because the source cell was unreadable */
+  total_unknown_operator: number;
   total_warnings: number;
   files: StrmBundleFileResult[];
 }
@@ -100,37 +104,62 @@ export interface StrmBundleImportSummary {
 // â”€â”€â”€â”€ Helpers â”€â”€â”€â”€
 
 /**
- * Normaliza o campo "STRM Relationship" do XLSX para operadores canÃ³nicos (ADR-001).
+ * Reads the XLSX "STRM Relationship" cell.
+ *
+ * Three outcomes, deliberately distinguished:
+ *   operator - the cell states one of the five canonical STRM operators
+ *   skip     - a leaked header row; not data, drop the row entirely
+ *   unknown  - a real row whose operator we cannot read; keep the row, and
+ *              record no operator for it
  *
  * Valores reais nos 183 arquivos do bundle (raw scan):
- *   "Intersects With"    39,373  â†’ intersects
- *   "Subset Of"           8,856  â†’ subset
- *   "Equal"               4,850  â†’ equal
- *   "Functional"            567  â†’ null (leaked header row, skip)
- *   "Instersects With"      295  â†’ intersects (typo no bundle)
- *   "STRM\nRelationship"    179  â†’ null (leaked header row, skip)
- *   "intersects"            120  â†’ intersects
- *   "Subset of"             116  â†’ subset
- *   "Superset Of"            42  â†’ superset
- *   "superset of"             1  â†’ superset
+ *   "Intersects With"    39,373  -> intersects
+ *   "Subset Of"           8,856  -> subset
+ *   "Equal"               4,850  -> equal
+ *   "Functional"            567  -> skip (leaked header row)
+ *   "Instersects With"      295  -> intersects (typo no bundle)
+ *   "STRM\nRelationship"    179  -> skip (leaked header row)
+ *   "intersects"            120  -> intersects
+ *   "Subset of"             116  -> subset
+ *   "Superset Of"            42  -> superset
+ *   "superset of"             1  -> superset
  *
- * â›” NEVER return "intersecting", "no_relationship", "related", or "source_defined".
- *    See docs/decisions/ADR-001-strm-weights-algorithm.md
+ * `unknown` used to return "intersects" under a comment calling it a
+ * conservative fallback. It is not conservative: `intersects` asserts that two
+ * scopes overlap, which is a claim the unreadable cell does not support. That
+ * fallback is upstream of every other guard in this codebase, so it silently
+ * defeated them.
+ *
+ * Deliberately absent from the mapping below: "direct", "related",
+ * "source_defined" and "no_relationship". None appears in the recorded scan
+ * of the 183 files, and the header above already forbade emitting the middle
+ * two. They now read as unknown.
+ * â›” See docs/decisions/ADR-001-strm-weights-algorithm.md
  */
-function normalizeRelationshipType(raw: string): StrmRelationshipType | null {
+export type StrmOperatorCell =
+  | { kind: "operator"; value: StrmRelationshipType }
+  | { kind: "skip" }
+  | { kind: "unknown"; raw: string };
+
+export function parseStrmOperatorCell(raw: string): StrmOperatorCell {
   const v = raw.trim().toLowerCase();
-  if (v === "") return null;
-  if (v === "equal" || v === "direct") return "equal";
-  if (v === "subset" || v === "subset of") return "subset";
-  if (v === "superset" || v === "superset of") return "superset";
-  if (v.startsWith("intersect") || v === "related" || v === "source_defined")
-    return "intersects";
-  if (v === "no relationship" || v === "no_relationship" || v === "no relation")
-    return "no_relation";
-  // Leaked header rows â€” not data, skip
-  if (v === "functional" || v.startsWith("strm")) return null;
-  // Unknown â€” conservative fallback to intersects (partial overlap)
-  return "intersects";
+
+  if (v === "") return { kind: "skip" };
+  // Leaked header rows â€” the sheet's own headings, not data.
+  if (v === "functional" || v.startsWith("strm")) return { kind: "skip" };
+
+  if (v === "equal") return { kind: "operator", value: "equal" };
+  if (v === "subset" || v === "subset of")
+    return { kind: "operator", value: "subset" };
+  if (v === "superset" || v === "superset of")
+    return { kind: "operator", value: "superset" };
+  if (v === "no relationship" || v === "no relation")
+    return { kind: "operator", value: "no_relation" };
+  // "instersect" is a misspelling present on 295 rows of the bundle.
+  if (v.startsWith("intersect") || v.startsWith("instersect"))
+    return { kind: "operator", value: "intersects" };
+
+  return { kind: "unknown", raw };
 }
 
 /**
@@ -167,6 +196,7 @@ export async function parseStrmBundleFile(
 
   const warnings: string[] = [];
   let skipped = 0;
+  let unknownOperator = 0;
 
   // Read via buffer (avoid ExcelJS Unicode path bug on Windows)
   const buf = fs.readFileSync(resolvedPath);
@@ -185,6 +215,7 @@ export async function parseStrmBundleFile(
       entries: [],
       warnings: ["No sheets found in workbook"],
       skipped: 0,
+      unknown_operator: 0,
     };
   }
 
@@ -198,6 +229,7 @@ export async function parseStrmBundleFile(
       entries: [],
       warnings: ["Sheet not accessible"],
       skipped: 0,
+      unknown_operator: 0,
     };
   }
 
@@ -249,12 +281,20 @@ export async function parseStrmBundleFile(
       continue;
     }
 
-    const relationship_type = normalizeRelationshipType(strm_relationship_raw);
+    const cell = parseStrmOperatorCell(strm_relationship_raw);
 
-    // Skip leaked header rows (normalizer returns null)
-    if (relationship_type === null) {
+    if (cell.kind === "skip") {
       skipped++;
       continue;
+    }
+
+    const relationship_type = cell.kind === "operator" ? cell.value : null;
+
+    if (cell.kind === "unknown") {
+      unknownOperator++;
+      warnings.push(
+        `Row ${i + 5}: unreadable STRM operator "${cell.raw}" (SCF: ${scf_code}) - kept with no operator`,
+      );
     }
 
     // Skip no_relation unless explicitly included
@@ -279,7 +319,7 @@ export async function parseStrmBundleFile(
       fde_code,
       fde_name,
       strm_rationale,
-      relationship_type, // guaranteed non-null here
+      relationship_type, // null when the source operator was unreadable
       scf_code,
       scf_control_name,
       strength_raw,
@@ -296,6 +336,7 @@ export async function parseStrmBundleFile(
     entries,
     warnings,
     skipped,
+    unknown_operator: unknownOperator,
   };
 }
 
@@ -340,6 +381,10 @@ export async function parseStrmBundleDirectory(
     total_files: results.length,
     total_entries: results.reduce((sum, r) => sum + r.entries.length, 0),
     total_skipped: results.reduce((sum, r) => sum + r.skipped, 0),
+    total_unknown_operator: results.reduce(
+      (sum, r) => sum + r.unknown_operator,
+      0,
+    ),
     total_warnings: results.reduce((sum, r) => sum + r.warnings.length, 0),
     files: results,
   };

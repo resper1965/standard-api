@@ -147,8 +147,9 @@ async function main() {
   const breakdown: Record<string, number> = {};
   for (const file of summary.files) {
     for (const e of file.entries) {
-      breakdown[e.relationship_type] =
-        (breakdown[e.relationship_type] ?? 0) + 1;
+      // null = source operator unreadable (kept, not coerced to intersects)
+      const key = e.relationship_type ?? "unknown";
+      breakdown[key] = (breakdown[key] ?? 0) + 1;
     }
   }
   console.log("\n  ðŸ“Š Relationship type breakdown:");
@@ -211,7 +212,8 @@ async function main() {
       scf_control_id: string;
       fde_code: string;
       fde_name: string;
-      relationship_type: string;
+      /** null = source operator unreadable; kept, not coerced to intersects */
+      relationship_type: string | null;
       /** Computed once here, reused at the insert site instead of recomputed. */
       relationship_type_canonical: StrmOperator | null;
       /** Set when the source operator could not be canonicalised. */
