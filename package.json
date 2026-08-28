@@ -83,6 +83,7 @@
       "i18next": "^25.1.0",
       "mysql2": "^3.22.0",
       "zod": "^4.4.0",
+      "miniflare>zod": "3.25.76",
       "undici": ">=7.29.0",
       "ws": ">=8.17.1",
       "@electric-sql/pglite": "0.5.1",

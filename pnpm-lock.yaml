@@ -10,6 +10,7 @@ overrides:
   i18next: ^25.1.0
   mysql2: ^3.22.0
   zod: ^4.4.0
+  miniflare>zod: 3.25.76
   undici: '>=7.29.0'
   ws: '>=8.17.1'
   '@electric-sql/pglite': 0.5.1
@@ -5508,6 +5509,9 @@ packages:
     peerDependencies:
       zod: ^4.4.0
 
+  zod@3.25.76:
+    resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
+
   zod@4.4.3:
     resolution: {integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==}
 
@@ -8873,7 +8877,7 @@ snapshots:
       workerd: 1.20250718.0
       ws: 8.21.0
       youch: 3.3.4
-      zod: 4.4.3
+      zod: 3.25.76
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
@@ -10466,6 +10470,8 @@ snapshots:
   zod-validation-error@4.0.2(zod@4.4.3):
     dependencies:
       zod: 4.4.3
+
+  zod@3.25.76: {}
 
   zod@4.4.3: {}
 

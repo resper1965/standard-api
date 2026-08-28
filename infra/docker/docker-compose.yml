@@ -9,15 +9,29 @@ services:
     ports:
       - "5432:5432"
     volumes:
+      # Banco vazio de proposito: as migrations sao aplicadas por pnpm db:migrate,
+      # que respeita meta/_journal.json e as excecoes em _journal-exceptions.json.
       - postgres-data:/var/lib/postgresql/data
-      - ./postgres/migrations:/docker-entrypoint-initdb.d:ro
-      - ./postgres/seeds/0001_synthetic_seed.sql:/docker-entrypoint-initdb.d/901_synthetic_seed.sql:ro
-      - ./postgres/seeds/0002_synthetic_scf_seed.sql:/docker-entrypoint-initdb.d/902_synthetic_scf_seed.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U standard -d standard"]
       interval: 10s
       timeout: 5s
       retries: 5
+
+  # @neondatabase/serverless fala WebSocket com o proxy da Neon, nao TCP direto.
+  # Sem este proxy o gateway sobe mas toda query trava em dev local.
+  neon-proxy:
+    image: ghcr.io/neondatabase/wsproxy:latest
+    container_name: standard-neon-proxy
+    environment:
+      APPEND_PORT: "postgres:5432"
+      ALLOW_ADDR_REGEX: ".*"
+      LOG_TRAFFIC: "false"
+    ports:
+      - "4444:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
 
 volumes:
   postgres-data:

@@ -37,15 +37,26 @@ Nós utilizamos um monorepo gerenciado via `pnpm` com PostgreSQL rodando via Doc
 # 1. Instale as dependências (Node >= 22 requerido)
 pnpm install
 
-# 2. Suba a infraestrutura do Neon PostgreSQL local
+# 2. Configure os segredos locais (gere um BETTER_AUTH_SECRET real em ambos)
+cp .env.example .env
+cp apps/api-gateway/.dev.vars.example apps/api-gateway/.dev.vars
+
+# 3. Suba PostgreSQL + proxy WebSocket da Neon
 docker compose -f infra/docker/docker-compose.yml up -d
 
-# 3. Sincronize os schemas (Drizzle ORM)
+# 4. Sincronize os schemas (Drizzle ORM)
 pnpm db:migrate
 
-# 4. Inicie o API Gateway e o Frontend (Platform Console)
+# 5. Compile os pacotes (o gateway consome @standard/sdk/dist)
+pnpm build
+
+# 6. Inicie o API Gateway e o Frontend (Platform Console)
 pnpm dev
 ```
+
+> O gateway declara Workflows por `script_name` no worker `standard-workflows`.
+> Em local o runtime exige esse worker na mesma sessão — é o que `pnpm dev:api`
+> faz ao passar o config dele como worker auxiliar.
 
 ### Workers em Background (Desenvolvimento Avançado)
 Para simular a máquina de estados completa do Assessment, você precisará rodar os processos isolados em abas secundárias:
