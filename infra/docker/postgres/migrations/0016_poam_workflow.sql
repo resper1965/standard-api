@@ -60,11 +60,32 @@ ALTER TABLE poam_items
   ADD COLUMN IF NOT EXISTS confidence_score numeric(5,4),
   ADD COLUMN IF NOT EXISTS requires_user_validation boolean NOT NULL DEFAULT false;
 
-UPDATE poam_items SET poam_code = COALESCE(poam_code, item_code) WHERE poam_code IS NULL;
-UPDATE poam_items SET related_gap_finding_id = COALESCE(related_gap_finding_id, related_gap_id) WHERE related_gap_finding_id IS NULL;
+-- Backfill das colunas legadas. Num banco criado do zero elas nunca existiram,
+-- entao cada UPDATE so e planejado se a coluna de origem estiver presente.
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns
+             WHERE table_schema = 'public' AND table_name = 'poam_items' AND column_name = 'item_code') THEN
+    UPDATE poam_items SET poam_code = COALESCE(poam_code, item_code) WHERE poam_code IS NULL;
+  END IF;
+
+  IF EXISTS (SELECT 1 FROM information_schema.columns
+             WHERE table_schema = 'public' AND table_name = 'poam_items' AND column_name = 'related_gap_id') THEN
+    UPDATE poam_items SET related_gap_finding_id = COALESCE(related_gap_finding_id, related_gap_id) WHERE related_gap_finding_id IS NULL;
+  END IF;
+
+  IF EXISTS (SELECT 1 FROM information_schema.columns
+             WHERE table_schema = 'public' AND table_name = 'poam_items' AND column_name = 'severity') THEN
+    UPDATE poam_items SET risk_rating = COALESCE(risk_rating, severity::text) WHERE risk_rating IS NULL;
+  END IF;
+
+  IF EXISTS (SELECT 1 FROM information_schema.columns
+             WHERE table_schema = 'public' AND table_name = 'poam_items' AND column_name = 'corrective_action') THEN
+    UPDATE poam_items SET rationale = COALESCE(rationale, corrective_action) WHERE rationale IS NULL;
+  END IF;
+END $$;
+
 UPDATE poam_items SET action_type = COALESCE(action_type, 'other'::poam_action_type) WHERE action_type IS NULL;
-UPDATE poam_items SET risk_rating = COALESCE(risk_rating, severity::text) WHERE risk_rating IS NULL;
-UPDATE poam_items SET rationale = COALESCE(rationale, corrective_action) WHERE rationale IS NULL;
 UPDATE poam_items SET confidence_score = COALESCE(confidence_score, 0.5000) WHERE confidence_score IS NULL;
 
 ALTER TABLE poam_items

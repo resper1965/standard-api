@@ -32,6 +32,31 @@ interface HyperdriveBinding {
 }
 
 /**
+ * Aponta o driver da Neon para o wsproxy de infra/docker quando a connection
+ * string e o Postgres local. Neon so fala WebSocket com o proxy dela, entao sem
+ * isto toda query trava em dev local. Inerte fora de localhost: nenhuma URL da
+ * Neon aponta para 127.0.0.1, logo staging/producao nunca entram aqui.
+ */
+const configureLocalProxy = (connectionString: string) => {
+  const host = (() => {
+    try {
+      return new URL(connectionString).hostname;
+    } catch {
+      return "";
+    }
+  })();
+  if (host !== "localhost" && host !== "127.0.0.1") return;
+
+  // O destino real vem do APPEND_PORT do servico neon-proxy no compose
+  // (postgres:5432), resolvido dentro da rede do Docker; por isso nao vai
+  // address= na URL. O path /v1 e o que o wsproxy expoe.
+  neonConfig.wsProxy = () => "localhost:4444/v1";
+  neonConfig.useSecureWebSocket = false;
+  neonConfig.pipelineTLS = false;
+  neonConfig.pipelineConnect = false;
+};
+
+/**
  * Creates a Drizzle client backed by @neondatabase/serverless Pool.
  *
  * With `poolQueryViaFetch = true` (set globally above), the Pool routes all
@@ -49,6 +74,7 @@ export const createDb = (
   hyperdrive?: HyperdriveBinding,
 ) => {
   const connectionString = hyperdrive?.connectionString ?? databaseUrl;
+  configureLocalProxy(connectionString);
   const pool = new Pool({ connectionString });
   return drizzle({ client: pool, schema });
 };
@@ -72,6 +98,7 @@ export const createDisposableDb = (
   hyperdrive?: HyperdriveBinding,
 ): { db: DbClient; close: () => Promise<void> } => {
   const connectionString = hyperdrive?.connectionString ?? databaseUrl;
+  configureLocalProxy(connectionString);
   const pool = new Pool({ connectionString });
   return {
     db: drizzle({ client: pool, schema }),

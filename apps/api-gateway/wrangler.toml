@@ -79,6 +79,10 @@ script_name = "standard-workflows"
 [[hyperdrive]]
 binding = "HYPERDRIVE_AUTH"
 id = "0cdc4cfbf47a472fb1fda01d5987499c"
+# Usado somente por `wrangler dev` (ignorado em deploy). Sem isto o dev local
+# aborta. Aponta para o Postgres de infra/docker: local o auth vive no mesmo
+# banco, conforme o fallback AUTH_DATABASE_URL || DATABASE_URL.
+localConnectionString = "postgres://standard:standard_dev_password@localhost:5432/standard"
 
 [[durable_objects.bindings]]
 name = "ASSESSMENT_SESSION_DO"

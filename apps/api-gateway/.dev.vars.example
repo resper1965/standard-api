@@ -1,0 +1,10 @@
+# Segredos lidos pelo `wrangler dev` (o .env da raiz nao chega ao Worker).
+# Copie para .dev.vars — que e ignorado pelo git — e gere um segredo real.
+#
+# Local usa um unico Postgres: o gateway faz fallback AUTH_DATABASE_URL || DATABASE_URL.
+DATABASE_URL="postgres://standard:standard_dev_password@localhost:5432/standard"
+AUTH_DATABASE_URL="postgres://standard:standard_dev_password@localhost:5432/standard"
+
+# node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
+BETTER_AUTH_SECRET="__GERE_UM_SEGREDO__"
+BETTER_AUTH_URL="http://localhost:8787"
