@@ -351,6 +351,13 @@
       "when": 1787875200000,
       "tag": "0058_scf_mappings_relationship_type_nullable",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1787961600000,
+      "tag": "0059_strm_relationships_relationship_type_nullable",
+      "breakpoints": true
     }
   ]
 }
