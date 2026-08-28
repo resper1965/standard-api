@@ -16539,7 +16539,8 @@
               "intersects",
               "superset",
               "no_relation"
-            ]
+            ],
+            "nullable": true
           },
           "relationship_strength": {
             "type": "string"
@@ -17340,7 +17341,8 @@
               "intersects",
               "superset",
               "no_relation"
-            ]
+            ],
+            "nullable": true
           },
           "relationship_strength": {
             "type": "string"
@@ -34943,12 +34945,14 @@
                           },
                           "relationship_type": {
                             "type": "string",
+                            "nullable": true,
                             "enum": [
                               "equal",
                               "subset",
                               "intersects",
                               "superset",
-                              "no_relation"
+                              "no_relation",
+                              null
                             ]
                           },
                           "relationship_strength": {
@@ -35097,12 +35101,14 @@
                           },
                           "relationship_type": {
                             "type": "string",
+                            "nullable": true,
                             "enum": [
                               "equal",
                               "subset",
                               "intersects",
                               "superset",
-                              "no_relation"
+                              "no_relation",
+                              null
                             ]
                           },
                           "relationship_strength": {

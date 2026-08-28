@@ -12511,6 +12511,7 @@ components:
             - intersects
             - superset
             - no_relation
+          nullable: true
         relationship_strength:
           type: string
         mapping_rationale:
@@ -13100,6 +13101,7 @@ components:
             - intersects
             - superset
             - no_relation
+          nullable: true
         relationship_strength:
           type: string
         mapping_rationale:
@@ -25652,12 +25654,14 @@ paths:
                           format: uuid
                         relationship_type:
                           type: string
+                          nullable: true
                           enum:
                             - equal
                             - subset
                             - intersects
                             - superset
                             - no_relation
+                            - null
                         relationship_strength:
                           type: string
                         mapping_rationale:
@@ -25762,12 +25766,14 @@ paths:
                           format: uuid
                         relationship_type:
                           type: string
+                          nullable: true
                           enum:
                             - equal
                             - subset
                             - intersects
                             - superset
                             - no_relation
+                            - null
                         relationship_strength:
                           type: string
                         mapping_rationale:

@@ -487,7 +487,7 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
   ): Promise<
     Array<{
       scf_control_id: string;
-      relationship_type: string;
+      relationship_type: string | null;
       strength_score: number | null;
     }>
   > => {
@@ -495,7 +495,7 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
 
     const result: Array<{
       scf_control_id: string;
-      relationship_type: string;
+      relationship_type: string | null;
       strength_score: number | null;
     }> = [];
 

@@ -349,8 +349,12 @@ const parseCrosswalkTab = (
         scf_framework_id: frameworkId,
         scf_framework_requirement_id: requirementId,
         scf_control_id: controlId,
-        // ADR-001: canonical STRM operator â€” crosswalk rows default to intersects
-        relationship_type: "intersects",
+        // No STRM operator: the crosswalk sheet states which requirement a
+        // control maps to, not how their scopes relate. This used to default
+        // to "intersects", which put that value on 79.127 of 79.133 rows and
+        // made an absent field look like a measured one. Left unset; the
+        // backfill fills it from the STRM bundle where the bundle says so.
+        relationship_type: null,
         mapping_source: `SCF XLSX crosswalk: ${sheetName}`,
         is_official: true,
         status: "active",

@@ -305,20 +305,20 @@ export class IntelligenceService {
       for (const code of requiredControls) {
         const isImplemented = implementedSet.has(code);
         const mapping = mappingMap.get(code);
-        if (mapping) {
+        // A control with no mapping, or a mapping with no STRM operator, is
+        // left out of the index rather than counted as "intersects" at 0.5.
+        // Inventing a relationship to fill the denominator is how an absent
+        // crosswalk turns into a published percentage.
+        const operator = mapping
+          ? sanitizeStrmOperator(mapping.relationship_type)
+          : null;
+        if (mapping && operator) {
           controlInputs.push({
             maturity_level: isImplemented ? 5 : 0,
-            strm_operator: sanitizeStrmOperator(mapping.relationship_type),
+            strm_operator: operator,
             strength_score: mapping.relationship_strength
               ? parseFloat(mapping.relationship_strength)
               : null,
-          });
-        } else {
-          // Fallback if this control code isn't in mapping metadata
-          controlInputs.push({
-            maturity_level: isImplemented ? 5 : 0,
-            strm_operator: "intersects" as const,
-            strength_score: 0.5,
           });
         }
       }
@@ -392,8 +392,18 @@ export class IntelligenceService {
   }
 }
 
-function sanitizeStrmOperator(op: string | null | undefined): StrmOperator {
-  if (!op) return "intersects";
+/**
+ * Read a stored STRM operator, or null when there is none to read.
+ *
+ * Absent and unrecognised both return null so the mapping is left out of the
+ * compliance index entirely. This used to fall back to "intersects", which is
+ * a claim about scope overlap and not a safe default: it put a real weight on
+ * a relationship nobody had recorded.
+ */
+function sanitizeStrmOperator(
+  op: string | null | undefined,
+): StrmOperator | null {
+  if (!op) return null;
   const lower = op.toLowerCase();
   if (lower === "equal") return "equal";
   if (lower === "subset") return "subset";
@@ -401,5 +411,5 @@ function sanitizeStrmOperator(op: string | null | undefined): StrmOperator {
   if (lower === "superset") return "superset";
   if (lower === "no_relation" || lower === "no_relationship")
     return "no_relation";
-  return "intersects"; // Safe fallback
+  return null;
 }
