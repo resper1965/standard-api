@@ -4,6 +4,7 @@ export * from "./fixtures/synthetic-scf.fixture";
 export * from "./repositories/scf.repository";
 
 export { createXlsxScfImporter } from "./importers/xlsx-importer";
+export * from "./importers/strm-operator";
 export * from "./schemas";
 export * from "./services/scf-control.service";
 export * from "./services/scf-domain.service";
