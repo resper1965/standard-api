@@ -802,3 +802,284 @@ git commit -m "docs(runbooks): record STRM re-import results and customer reply"
 **Type consistency.** `toCanonicalOperator(raw: string | null | undefined): StrmOperator | null` is defined in Task 1 and used with that exact signature in Task 4. `OFFICIAL_SOURCE` in Task 5 matches `SOURCE_LABEL` in `seed-strm-bundle.ts` byte for byte (`scf_official_strm_bundle_2026.1`). Migration `0059` is referenced by number in Tasks 3, 4 and 8.
 
 **Known gap, stated rather than papered over.** Task 7 Step 2 can fail the whole premise: if the bundle's own operator distribution is as flat as the crosswalk's, no amount of plumbing produces graded coverage. That branch is explicit rather than discovered at Task 8.
+
+---
+
+## Amendments made during execution
+
+Two tasks were added after execution began. Both close defects of the same
+class the plan already targets, found by review rather than by the plan.
+
+---
+
+### Task 10: The bundle importer stops coercing unknown operators (Defect D)
+
+**Found during Task 5.** `packages/scf-core/src/importers/strm-bundle-importer.ts`
+runs UPSTREAM of the seeder. Its `normalizeRelationshipType` ends with a
+`return "intersects";` under the comment "Unknown — conservative fallback to
+intersects (partial overlap)".
+
+So the value Task 4's `toCanonicalOperator` receives has already been coerced,
+and Task 4's null path can never fire for an unknown bundle operator. **Task 4
+is decorative until this is fixed.**
+
+Two further problems in the same function:
+
+- It maps `related` and `source_defined` to `intersects`, which its own header
+  comment forbids in capitals ("NEVER return ... related, or source_defined").
+  Neither value appears in the recorded scan of the 183 files.
+- The bundle's 295 rows spelled `"Instersects With"` (a typo in the source) do
+  NOT match `v.startsWith("intersect")` — `instersects` begins `i-n-s-t`. They
+  reach `intersects` only by falling through to the very fallback being removed.
+  Removing it without an explicit alias silently loses 295 real operators.
+
+The function must also distinguish two cases it currently collapses into `null`:
+a leaked header row is not data and must be dropped, while an unrecognised
+operator is a real bundle entry whose operator we cannot read and must be kept
+with a null operator. Collapsing them discards real rows.
+
+**Files:**
+- Modify: `packages/scf-core/src/importers/strm-bundle-importer.ts` — the
+  `StrmBundleEntry.relationship_type` field (line 62), `normalizeRelationshipType`
+  (lines 120-135), its caller (lines 252-260), and the summary type (line 95)
+- Test: `packages/scf-core/src/__tests__/strm-bundle-operator.test.ts`
+
+**Interfaces:**
+- Consumes: nothing from earlier tasks.
+- Produces: `StrmBundleEntry.relationship_type` becomes
+  `StrmRelationshipType | null`, and the directory summary gains
+  `total_unknown_operator: number`. Task 4's seeder already tolerates a null
+  here, because `toCanonicalOperator` accepts `string | null | undefined`.
+
+- [ ] **Step 1: Write the failing test**
+
+Create `packages/scf-core/src/__tests__/strm-bundle-operator.test.ts`:
+
+```typescript
+import { describe, it, expect } from "vitest";
+import { parseStrmOperatorCell } from "../importers/strm-bundle-importer.js";
+
+describe("parseStrmOperatorCell", () => {
+  it("reads the vocabulary the 183 bundle files actually contain", () => {
+    expect(parseStrmOperatorCell("Intersects With")).toEqual({ kind: "operator", value: "intersects" });
+    expect(parseStrmOperatorCell("Subset Of")).toEqual({ kind: "operator", value: "subset" });
+    expect(parseStrmOperatorCell("Subset of")).toEqual({ kind: "operator", value: "subset" });
+    expect(parseStrmOperatorCell("Equal")).toEqual({ kind: "operator", value: "equal" });
+    expect(parseStrmOperatorCell("Superset Of")).toEqual({ kind: "operator", value: "superset" });
+    expect(parseStrmOperatorCell("superset of")).toEqual({ kind: "operator", value: "superset" });
+    expect(parseStrmOperatorCell("intersects")).toEqual({ kind: "operator", value: "intersects" });
+  });
+
+  // 295 rows in the bundle are spelled this way. They do not start with
+  // "intersect" and previously reached `intersects` only via the fallback
+  // this task removes, so they need an alias of their own.
+  it("reads the bundle's Instersects typo", () => {
+    expect(parseStrmOperatorCell("Instersects With")).toEqual({ kind: "operator", value: "intersects" });
+  });
+
+  it("drops leaked header rows as non-data", () => {
+    expect(parseStrmOperatorCell("Functional")).toEqual({ kind: "skip" });
+    expect(parseStrmOperatorCell("STRM\nRelationship")).toEqual({ kind: "skip" });
+    expect(parseStrmOperatorCell("")).toEqual({ kind: "skip" });
+    expect(parseStrmOperatorCell("   ")).toEqual({ kind: "skip" });
+  });
+
+  // The point of the task: an operator we cannot read is kept as a row with an
+  // unknown operator. It is neither coerced to intersects nor silently dropped.
+  it("keeps an unrecognised operator as unknown, never as intersects", () => {
+    expect(parseStrmOperatorCell("Partially Related")).toEqual({ kind: "unknown", raw: "Partially Related" });
+    expect(parseStrmOperatorCell("related")).toEqual({ kind: "unknown", raw: "related" });
+    expect(parseStrmOperatorCell("source_defined")).toEqual({ kind: "unknown", raw: "source_defined" });
+  });
+});
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `pnpm --filter @standard/scf-core exec vitest run src/__tests__/strm-bundle-operator.test.ts`
+Expected: FAIL — `parseStrmOperatorCell` is not exported.
+
+- [ ] **Step 3: Replace the normaliser**
+
+In `packages/scf-core/src/importers/strm-bundle-importer.ts`, replace the whole
+of `normalizeRelationshipType` with:
+
+```typescript
+/**
+ * Reads the XLSX "STRM Relationship" cell.
+ *
+ * Three outcomes, deliberately distinguished:
+ *   operator — the cell states one of the five canonical STRM operators
+ *   skip     — a leaked header row; not data, drop the row entirely
+ *   unknown  — a real row whose operator we cannot read; keep the row, and
+ *              record no operator for it
+ *
+ * `unknown` used to return "intersects" under a comment calling it a
+ * conservative fallback. It is not conservative: `intersects` asserts that two
+ * scopes overlap, which is a claim the unreadable cell does not support. That
+ * fallback is upstream of every other guard in this codebase, so it silently
+ * defeated them.
+ */
+export type StrmOperatorCell =
+  | { kind: "operator"; value: StrmRelationshipType }
+  | { kind: "skip" }
+  | { kind: "unknown"; raw: string };
+
+export function parseStrmOperatorCell(raw: string): StrmOperatorCell {
+  const v = raw.trim().toLowerCase();
+
+  if (v === "") return { kind: "skip" };
+  // Leaked header rows — the sheet's own headings, not data.
+  if (v === "functional" || v.startsWith("strm")) return { kind: "skip" };
+
+  if (v === "equal") return { kind: "operator", value: "equal" };
+  if (v === "subset" || v === "subset of")
+    return { kind: "operator", value: "subset" };
+  if (v === "superset" || v === "superset of")
+    return { kind: "operator", value: "superset" };
+  if (v === "no relationship" || v === "no relation")
+    return { kind: "operator", value: "no_relation" };
+  // "instersect" is a misspelling present on 295 rows of the bundle.
+  if (v.startsWith("intersect") || v.startsWith("instersect"))
+    return { kind: "operator", value: "intersects" };
+
+  return { kind: "unknown", raw };
+}
+```
+
+Note what is deliberately absent: `direct`, `related`, `source_defined` and
+`no_relationship`. None appears in the recorded scan of the 183 files, and the
+function's own header forbade emitting the middle two. They now read as unknown.
+
+- [ ] **Step 4: Widen the entry type and the summary**
+
+At line 62, `StrmBundleEntry.relationship_type` becomes:
+
+```typescript
+  /** Operador STRM normalizado; null = a origem nao declara um que saibamos ler */
+  relationship_type: StrmRelationshipType | null;
+```
+
+In the summary type near line 95, add beside `total_skipped`:
+
+```typescript
+  /** Rows kept with no operator because the source cell was unreadable */
+  total_unknown_operator: number;
+```
+
+- [ ] **Step 5: Rewrite the caller**
+
+Replace lines 252-260 (`const relationship_type = normalizeRelationshipType(...)`
+through the leaked-header `continue`) with:
+
+```typescript
+    const cell = parseStrmOperatorCell(strm_relationship_raw);
+
+    if (cell.kind === "skip") {
+      skipped++;
+      continue;
+    }
+
+    const relationship_type = cell.kind === "operator" ? cell.value : null;
+
+    if (cell.kind === "unknown") {
+      unknownOperator++;
+      warnings.push(
+        `Row ${i + 5}: unreadable STRM operator "${cell.raw}" (SCF: ${scf_code}) - kept with no operator`,
+      );
+    }
+```
+
+Declare `let unknownOperator = 0;` beside the existing `skipped` counter, return
+it from the per-file result, and sum it into `total_unknown_operator` in the
+directory summary the same way `total_skipped` is summed at line 342.
+
+The `no_relation` skip branch that follows must keep working — it now tests
+`relationship_type === "no_relation"`, which is still reachable.
+
+- [ ] **Step 6: Run the tests**
+
+Run: `pnpm --filter @standard/scf-core exec vitest run src/__tests__/strm-bundle-operator.test.ts`
+Expected: PASS, 4 tests.
+
+Run: `pnpm --filter @standard/scf-core test`
+Expected: PASS. Then `pnpm --filter @standard/schemas typecheck` — the seeder
+consumes `entry.relationship_type`, now nullable, and must still compile.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add packages/scf-core/src/importers/strm-bundle-importer.ts packages/scf-core/src/__tests__/strm-bundle-operator.test.ts
+git commit -m "fix(scf-core): unreadable bundle operator is unknown, not intersects"
+```
+
+---
+
+### Task 9: Retire the duplicate alias map
+
+**Found during Task 1.** `packages/assessment-engine/src/strm-normaliser.ts`
+carries a second alias map, `LEGACY_MAP`, including
+`source_defined: "intersects"` with the comment "fallback conservador". Its only
+consumer is `apps/api-gateway/src/routes/scf.routes.ts:131`, which normalises the
+`?relationship_type` query parameter and throws 400 on anything it cannot map —
+so this one never writes data. It is a duplication of Task 1's function, not a
+fabrication, and it is fixed last for that reason.
+
+**Files:**
+- Modify: `packages/assessment-engine/src/strm-normaliser.ts`
+- Test: `packages/assessment-engine/src/__tests__/strm-normaliser.test.ts`
+
+**Interfaces:**
+- Consumes: `toCanonicalOperator` from Task 1.
+- Produces: no signature change — `normaliseRelationshipType(raw: string):
+  StrmOperator | null` keeps its shape, so `scf.routes.ts` needs no edit.
+
+- [ ] **Step 1: Write the failing test**
+
+```typescript
+import { describe, it, expect } from "vitest";
+import { normaliseRelationshipType } from "../strm-normaliser.js";
+
+describe("normaliseRelationshipType", () => {
+  it("still accepts the canonical five and the legacy DB aliases", () => {
+    expect(normaliseRelationshipType("equal")).toBe("equal");
+    expect(normaliseRelationshipType("no_relation")).toBe("no_relation");
+    expect(normaliseRelationshipType("direct")).toBe("equal");
+    expect(normaliseRelationshipType("related")).toBe("intersects");
+    expect(normaliseRelationshipType("intersecting")).toBe("intersects");
+    expect(normaliseRelationshipType("no_relationship")).toBe("no_relation");
+  });
+
+  // A caller filtering ?relationship_type=source_defined was silently served
+  // `intersects` rows. It is not one of the five, so it is a 400.
+  it("rejects source_defined instead of aliasing it to intersects", () => {
+    expect(normaliseRelationshipType("source_defined")).toBeNull();
+  });
+});
+```
+
+- [ ] **Step 2: Run it and watch the second case fail**
+
+Run: `pnpm --filter @standard/assessment-engine exec vitest run src/__tests__/strm-normaliser.test.ts`
+Expected: FAIL — `source_defined` currently returns `"intersects"`.
+
+- [ ] **Step 3: Delegate to Task 1's function**
+
+Replace `LEGACY_MAP` and the body of `normaliseRelationshipType` with a call to
+`toCanonicalOperator` from `@standard/scf-core`, which already covers `direct`,
+`related`, `intersecting` and `no_relationship` and returns null for everything
+else. Delete `LEGACY_MAP` entirely. Keep `STRENGTH_MAP` and the rest of the file
+untouched.
+
+- [ ] **Step 4: Run the tests**
+
+Run: `pnpm --filter @standard/assessment-engine test` and
+`pnpm --filter @standard/api-gateway typecheck`
+Expected: PASS both.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add packages/assessment-engine/src/strm-normaliser.ts packages/assessment-engine/src/__tests__/strm-normaliser.test.ts
+git commit -m "refactor(assessment-engine): one canonicaliser, and source_defined is a 400"
+```
