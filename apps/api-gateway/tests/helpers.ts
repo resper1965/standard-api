@@ -123,7 +123,13 @@ export const createTestClient = () => {
     };
   };
 
-  const createAssessment = async (documentCount = 0) => {
+  // scfVersionId defaults to ids.scfVersionId, which has NO mappings in the
+  // synthetic fixture. Pass SYNTHETIC_SCF_VERSION_ID when the test needs the
+  // STRM path to find real mappings.
+  const createAssessment = async (
+    documentCount = 0,
+    scfVersionId = ids.scfVersionId,
+  ) => {
     const { organizationId } = await createTenantOrg();
     const result = await send(
       "/api/v1/assessments",
@@ -131,7 +137,7 @@ export const createTestClient = () => {
       {
         organization_id: organizationId,
         name: "Assessment Test",
-        scf_version_id: ids.scfVersionId,
+        scf_version_id: scfVersionId,
         document_count: documentCount,
       },
       {

@@ -269,7 +269,12 @@ export class IntelligenceService {
   }
 
   /**
-   * Async version of calculateGapAnalysis — uses DB-backed framework controls and STRM weights (ADR-001) when available.
+   * Gap analysis over DB-backed framework controls, weighted by STRM (ADR-001).
+   *
+   * `compliancePercentage` is null when no required control has a readable STRM
+   * operator to weigh: an absent crosswalk has no index, and inventing one is
+   * how a framework the bundle does not cover starts reporting a percentage.
+   * `complianceReason` says why.
    */
   async calculateGapAnalysisAsync(
     frameworkMask: string,
@@ -322,72 +327,23 @@ export class IntelligenceService {
           });
         }
       }
-    } else {
-      // Fallback: conservative STRM proxy
-      for (const code of requiredControls) {
-        const isImplemented = implementedSet.has(code);
-        controlInputs.push({
-          maturity_level: isImplemented ? 5 : 0,
-          strm_operator: "intersects" as const,
-          strength_score: 0.5,
-        });
-      }
     }
+    // ⛔ No else branch. This used to score every required control as
+    // intersects/0.5 when the framework had no mappings at all, which is the
+    // same fabrication sanitizeStrmOperator() below refuses to make one row at
+    // a time. No mappings means no index.
 
-    const compliancePercentage =
-      totalControls === 0
-        ? 100
-        : Math.round(computeComplianceIndex(controlInputs).percentage);
+    // total_weight 0 (every input no_relation) is also nothing to grade.
+    const index =
+      controlInputs.length > 0 ? computeComplianceIndex(controlInputs) : null;
+    const gradeable = index !== null && index.total_weight > 0;
 
     return {
       totalControls,
       implementedCount,
       missingControls,
-      compliancePercentage,
-    };
-  }
-
-  static calculateGapAnalysis(
-    frameworkMask: string,
-    implementedControls: string[],
-  ) {
-    const implementedSet = new Set(implementedControls);
-    const requiredControls = this.extractFrameworkControls(frameworkMask);
-
-    const missingControls: string[] = [];
-    let implementedCount = 0;
-    const totalControls = requiredControls.size;
-
-    for (const reqControl of requiredControls) {
-      if (implementedSet.has(reqControl)) {
-        implementedCount++;
-      } else {
-        missingControls.push(reqControl);
-      }
-    }
-
-    // Static fallback: conservative STRM proxy
-    const controlInputs: StrmControlInput[] = Array.from(requiredControls).map(
-      (code) => {
-        const isImplemented = implementedSet.has(code);
-        return {
-          maturity_level: isImplemented ? 5 : 0,
-          strm_operator: "intersects" as const,
-          strength_score: 0.5,
-        };
-      },
-    );
-
-    const compliancePercentage =
-      totalControls === 0
-        ? 100
-        : Math.round(computeComplianceIndex(controlInputs).percentage);
-
-    return {
-      totalControls,
-      implementedCount,
-      missingControls,
-      compliancePercentage,
+      compliancePercentage: gradeable ? Math.round(index.percentage) : null,
+      complianceReason: gradeable ? null : ("nothing_assessable" as const),
     };
   }
 }

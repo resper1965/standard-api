@@ -5,9 +5,9 @@ import {
 import { createTestClient, ids } from "./helpers";
 import { expect, test } from "./test-kit";
 
-const createSoaDraft = async () => {
+const createSoaDraft = async (scfVersionId = SYNTHETIC_SCF_VERSION_ID) => {
   const client = createTestClient();
-  const created = await client.createAssessment();
+  const created = await client.createAssessment(0, scfVersionId);
   const scope = await client.send(
     `/api/v1/assessments/${created.assessmentId}/scope`,
     "POST",
@@ -55,6 +55,7 @@ test("GET /api/v1/assessments/:assessmentId/summary calcula score real por STRM"
   );
   expect(summary1.response.status).toBe(200);
   expect(summary1.body.compliance_pct).toBe(0);
+  expect(summary1.body.compliance_reason).toBe(null);
   expect(summary1.body.compliance_method).toBe("strm_real_scf_mappings");
 
   // 2. Fetch items and update implementation status to "implemented"
@@ -96,7 +97,29 @@ test("GET /api/v1/assessments/:assessmentId/summary calcula score real por STRM"
   );
   expect(summary2.response.status).toBe(200);
   expect(summary2.body.compliance_pct).toBeGreaterThanOrEqual(1);
+  expect(summary2.body.compliance_reason).toBe(null);
   expect(summary2.body.compliance_method).toBe("strm_real_scf_mappings");
+});
+
+// ADR-001: an assessment whose scf_version has no mappings has nothing to
+// weigh. This used to report a percentage built from a hardcoded
+// intersects/0.5 proxy — an absent crosswalk published as a compliance number.
+test("GET /assessments/:id/summary não inventa índice quando não há mapping STRM", async () => {
+  const { client, created } = await createSoaDraft(ids.scfVersionId);
+
+  const summary = await client.send(
+    `/api/v1/assessments/${created.assessmentId}/summary`,
+    "GET",
+    undefined,
+    {
+      "x-standard-tenant-id": created.organizationId,
+      "x-standard-actor-id": ids.actorId,
+    },
+  );
+
+  expect(summary.response.status).toBe(200);
+  expect(summary.body.compliance_pct).toBe(null);
+  expect(summary.body.compliance_reason).toBe("nothing_assessable");
 });
 
 test("GET /api/v1/organizations/:organizationId/dashboard calcula média de compliance", async () => {

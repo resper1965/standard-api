@@ -17,8 +17,18 @@ export const AssessmentSummarySchema = z.object({
   total_controls: z.number().int().nonnegative(),
   /** Controls with "implemented" or "operational" status */
   implemented_controls: z.number().int().nonnegative(),
-  /** Compliance percentage (0-100) = implemented / total Ã— 100 */
-  compliance_pct: z.number().min(0).max(100),
+  /**
+   * STRM-weighted compliance index as a percentage (0-100), or null when no
+   * control in scope carries a readable STRM operator (ADR-001).
+   *
+   * Since migration 0059 an operator the source never stated is NULL, so
+   * "nothing gradeable" is the normal state for a framework the STRM bundle
+   * does not cover. There is no number to publish in that case; see
+   * `compliance_reason`.
+   */
+  compliance_pct: z.number().min(0).max(100).nullable(),
+  /** Why `compliance_pct` is null. null when an index was actually computed. */
+  compliance_reason: z.enum(["nothing_assessable"]).nullable(),
 
   /** Gap findings */
   total_findings: z.number().int().nonnegative(),
@@ -50,7 +60,13 @@ export const OrganizationDashboardSchema = z.object({
   assessments_by_state: z.record(z.string(), z.number().int().nonnegative()),
 
   /** Aggregated KPIs */
-  compliance_avg_pct: z.number().min(0).max(100),
+  /**
+   * Mean STRM-weighted compliance index across the assessments that had one,
+   * or null when no assessment in the organization was gradeable (ADR-001).
+   */
+  compliance_avg_pct: z.number().min(0).max(100).nullable(),
+  /** Why `compliance_avg_pct` is null. null when an average was computed. */
+  compliance_reason: z.enum(["nothing_assessable"]).nullable(),
   total_open_poams: z.number().int().nonnegative(),
   total_critical_findings: z.number().int().nonnegative(),
   total_high_findings: z.number().int().nonnegative(),

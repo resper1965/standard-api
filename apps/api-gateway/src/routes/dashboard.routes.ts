@@ -24,12 +24,20 @@ import {
 } from "../http";
 
 /**
- * computeRealStrmCompliance â€” builds STRM inputs from real scf_mappings data.
+ * computeRealStrmCompliance â€” builds STRM inputs from real scf_mappings data
+ * and returns the weighted index as a percentage, or null when there is
+ * nothing gradeable (ADR-001).
  *
- * Replaces strmProxyFromSoaItems() which used intersects/0.5 hardcoded.
- * Now reads actual relationship_type + strength_score from scf_mappings (ADR-001).
+ * Reads actual relationship_type + strength_score from scf_mappings. A mapping
+ * whose relationship_type is NULL â€” since migration 0059 that is how "the
+ * source states no operator" is stored â€” is left out by
+ * buildStrmControlInputs().
  *
- * Falls back to conservative proxy (intersects/0.5) when scf.repository unavailable.
+ * â›” There is deliberately no proxy fallback. This used to score every SoA
+ * item as intersects/0.5 whenever no gradeable mapping was found, which turned
+ * an absent crosswalk into a published percentage. When nothing is gradeable
+ * the honest answer is "no index computable", so the caller gets null and
+ * reports reason "nothing_assessable".
  */
 async function computeRealStrmCompliance(
   deps: {
@@ -57,8 +65,8 @@ async function computeRealStrmCompliance(
     implementationStatus?: string;
   }>,
   scfVersionId: string | null | undefined,
-): Promise<{ index: number; percentage: number }> {
-  if (soaItems.length === 0) return { index: 0, percentage: 0 };
+): Promise<number | null> {
+  if (soaItems.length === 0) return null;
 
   // Use real mappings if repository available and we have a scf_version_id
   if (deps.scf?.repository?.listMappingsByControlIds && scfVersionId) {
@@ -114,31 +122,15 @@ async function computeRealStrmCompliance(
 
       const strmInputs = buildStrmControlInputs(soaItemsWithMappings);
       if (strmInputs.length > 0) {
-        return computeComplianceIndex(strmInputs);
+        const result = computeComplianceIndex(strmInputs);
+        // total_weight 0 means every input was no_relation: nothing sits in
+        // the denominator, so there is no index either.
+        return result.total_weight > 0 ? result.percentage : null;
       }
     }
   }
 
-  // Fallback: conservative STRM proxy (no scf_version_id or no mappings found)
-  // Maps implementation_status â†’ maturity level, uses intersects/0.5 as conservative estimate
-  const fallbackControls = soaItems.map((item) => {
-    const implStatus =
-      item.implementation_status ?? item.implementationStatus ?? "not_assessed";
-    const maturityVal =
-      item.maturityLevel ??
-      item.maturity_level ??
-      (implStatus === "implemented"
-        ? 5
-        : implStatus === "partially_implemented"
-          ? 2
-          : 0);
-    return {
-      maturity_level: maturityVal,
-      strm_operator: "intersects" as const,
-      strength_score: 0.5,
-    };
-  });
-  return computeComplianceIndex(fallbackControls);
+  return null;
 }
 
 const parseQuery = (
@@ -242,15 +234,15 @@ export const dashboardRoutes: RouteDefinition[] = [
         ).length;
       }
 
-      // ADR-001: STRM-weighted compliance index â€” real scf_mappings data
-      // â›” was: strmProxyFromSoaItems() with hardcoded intersects/0.5
-      let strmResult = { index: 0, percentage: 0 };
+      // ADR-001: STRM-weighted compliance index â€” real scf_mappings data.
+      // null when no control in scope carries a readable STRM operator.
+      let compliancePct: number | null = null;
       if (latestSoa) {
         const soaItemsForStrm = await deps.soa.repositories.items.listByVersion(
           latestSoa.soa_version_id,
           requireOrganizationId({ organizationId }),
         );
-        strmResult = await computeRealStrmCompliance(
+        compliancePct = await computeRealStrmCompliance(
           deps as any,
           soaItemsForStrm as any[],
           assessment.scf_version_id,
@@ -264,7 +256,8 @@ export const dashboardRoutes: RouteDefinition[] = [
         total_controls: totalControls,
         implemented_controls: implementedControls,
         // ADR-001: STRM-weighted compliance index, not binary percentage
-        compliance_pct: strmResult.percentage,
+        compliance_pct: compliancePct,
+        compliance_reason: compliancePct === null ? "nothing_assessable" : null,
         total_findings: totalFindings,
         critical_findings: critical,
         high_findings: high,
@@ -322,15 +315,18 @@ export const dashboardRoutes: RouteDefinition[] = [
             requireOrganizationId({ organizationId }),
           );
           if (items.length > 0) {
-            // ADR-001: STRM-weighted compliance index â€” real scf_mappings data
-            // â›” was: strmProxyFromSoaItems() with hardcoded intersects/0.5
-            const strmResult = await computeRealStrmCompliance(
+            // ADR-001: STRM-weighted compliance index â€” real scf_mappings data.
+            // Assessments with nothing gradeable are left out of the mean
+            // rather than averaged in at a fabricated intersects/0.5 score.
+            const pct = await computeRealStrmCompliance(
               deps as any,
               items as any[],
               a.scf_version_id,
             );
-            complianceSum += strmResult.percentage;
-            complianceCount++;
+            if (pct !== null) {
+              complianceSum += pct;
+              complianceCount++;
+            }
           }
         }
 
@@ -384,7 +380,9 @@ export const dashboardRoutes: RouteDefinition[] = [
         compliance_avg_pct:
           complianceCount > 0
             ? Math.round((complianceSum / complianceCount) * 100) / 100
-            : 0,
+            : null,
+        compliance_reason:
+          complianceCount > 0 ? null : ("nothing_assessable" as const),
         total_open_poams: totalOpenPoams,
         total_critical_findings: totalCritical,
         total_high_findings: totalHigh,

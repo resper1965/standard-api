@@ -49,6 +49,16 @@ export const BlastRadiusOutputSchema = z.object({
 }).openapi("BlastRadiusOutput");
 
 export const GapAnalysisOutputSchema = z.object({
+  framework: z.string(),
+  summary: z.object({
+    total_required_controls: z.number(),
+    implemented_controls: z.number(),
+    missing_controls: z.number(),
+    /** STRM-weighted index (0-100), or null when nothing is gradeable (ADR-001). */
+    compliance_percentage: z.number().nullable(),
+    /** Why compliance_percentage is null. null when an index was computed. */
+    compliance_reason: z.enum(["nothing_assessable"]).nullable(),
+  }),
   missing_controls: z.array(z.string())
 }).openapi("GapAnalysisOutput");
 
@@ -56,7 +66,10 @@ export const ComplianceScoreOutputSchema = z.object({
   total_required: z.number(),
   implemented: z.number(),
   missing: z.number(),
-  score: z.number()
+  /** STRM-weighted score (0-100), or null when nothing is gradeable (ADR-001). */
+  score: z.number().nullable(),
+  /** Why score is null. null when a score was computed. */
+  reason: z.enum(["nothing_assessable"]).nullable()
 }).openapi("ComplianceScoreOutput");
 
 export const DpiaScoreOutputSchema = z.object({
