@@ -5,15 +5,16 @@
  * Popula `scf_strm_relationships` com os tipos STRM oficiais da SCF a partir
  * dos 183 XLSXs do STRM Bundle.
  *
- * EstratÃ©gia v2 (sem dependÃªncia de scf_framework_requirements):
+ * EstratÃ©gia (sem dependÃªncia de scf_framework_requirements):
  *   Para cada entry do bundle (fde_code, scf_code, relationship_type):
  *     1. Resolve scf_control_id via control_code ILIKE scf_code
- *     2. Upsert em scf_strm_relationships (scf_control_id, fde_code) com
- *        ON CONFLICT (scf_control_id, fde_code) DO UPDATE
- *     3. Opcionalmente resolve scf_mapping_id para backward-compat
+ *     2. Registra o focal document (nome do arquivo XLSX â€” um por framework) e
+ *        resolve o framework por nome exato; nÃ£o resolvido fica NULL
+ *     3. Upsert em (scf_control_id, fde_code, focal_document) â€” a chave da 0060
  *
- * Isso garante 100% das entries do bundle sejam preservadas, independente
- * de existir ou nÃ£o um scf_framework_requirement com fde_code correspondente.
+ * Um FDE code sÃ³ Ã© Ãºnico dentro do seu focal document: "1.1.1" existe no CIS e
+ * no PCI DSS. Sem o focal document na chave, o Ãºltimo dos 183 arquivos lido
+ * sobrescrevia o operador de todos os frameworks anteriores.
  *
  * AGENTS.md compliance:
  *   - Â§8: source = "scf_official_strm_bundle_2026.1" â€” dado normativo oficial
@@ -33,6 +34,12 @@ import {
   toCanonicalOperator,
   type StrmOperator,
 } from "../../scf-core/src/importers/strm-operator.js";
+import {
+  strmDedupeKey,
+  normaliseFrameworkKey,
+  resolveFrameworkId,
+  pickUnambiguousMappingId,
+} from "./strm-focal-document.js";
 
 // â”€â”€â”€â”€ Configuration â”€â”€â”€â”€
 
@@ -204,6 +211,19 @@ async function main() {
     }
     console.log(`     Mappings loaded: ${mappingRows.length}`);
 
+    // â”€â”€ 4b. Framework lookup, for resolving each file's focal document â”€â”€
+    const frameworkRows = await db
+      .select({
+        id: schema.scfFrameworks.id,
+        name: schema.scfFrameworks.name,
+      })
+      .from(schema.scfFrameworks);
+
+    const frameworkByName = new Map<string, string>(
+      frameworkRows.map((f) => [normaliseFrameworkKey(f.name), f.id]),
+    );
+    console.log(`     Frameworks loaded: ${frameworkByName.size}`);
+
     // â”€â”€ 5. Build upsert records â”€â”€
     console.log("\n  ðŸ”— Resolving STRM entries against DB controls...");
     const joinStart = Date.now();
@@ -212,6 +232,10 @@ async function main() {
       scf_control_id: string;
       fde_code: string;
       fde_name: string;
+      /** Bundle file this row came from â€” part of the 0060 unique key. */
+      focal_document: string;
+      /** Framework the focal document resolved to; null = unresolved. */
+      scf_framework_id: string | null;
       /** null = source operator unreadable; kept, not coerced to intersects */
       relationship_type: string | null;
       /** Computed once here, reused at the insert site instead of recomputed. */
@@ -224,12 +248,21 @@ async function main() {
       scf_mapping_id: string | null;
     };
 
-    // Deduplicate by (scf_control_id, fde_code) â€” last entry wins (official)
+    // Deduplicate by (scf_control_id, fde_code, focal_document) â€” 0060's key.
+    // An FDE code is unique only inside its focal document, so keying without
+    // it made the last file parsed overwrite every earlier framework's operator.
     const deduped = new Map<string, UpsertRow>();
     let noControl = 0;
     const unknownControls = new Set<string>();
+    const unresolvedFocalDocuments = new Set<string>();
 
     for (const file of summary.files) {
+      const frameworkId = resolveFrameworkId(
+        file.framework_name,
+        frameworkByName,
+      );
+      if (!frameworkId) unresolvedFocalDocuments.add(file.filename);
+
       for (const entry of file.entries) {
         const controlId = controlCodeToId.get(
           entry.scf_code.trim().toUpperCase(),
@@ -240,24 +273,23 @@ async function main() {
           continue;
         }
 
-        const dedupeKey = `${controlId}||${entry.fde_code.trim().toLowerCase()}`;
-
-        // Try to find a matching scf_mapping for backward-compat
-        const mappingId = ctrlToMappingIds.get(controlId)?.[0] ?? null;
-
         const canonical = toCanonicalOperator(entry.relationship_type);
 
-        deduped.set(dedupeKey, {
+        deduped.set(strmDedupeKey(controlId, entry.fde_code, file.filename), {
           scf_control_id: controlId,
           fde_code: entry.fde_code.trim(),
           fde_name: entry.fde_name.trim(),
+          focal_document: file.filename,
+          scf_framework_id: frameworkId,
           relationship_type: entry.relationship_type,
           relationship_type_canonical: canonical,
           operator_unrecognised: canonical === null,
           strength_raw: entry.strength_raw,
           rationale: entry.strm_rationale || null,
           source: SOURCE_LABEL,
-          scf_mapping_id: mappingId,
+          scf_mapping_id: pickUnambiguousMappingId(
+            ctrlToMappingIds.get(controlId),
+          ),
         });
       }
     }
@@ -288,6 +320,25 @@ async function main() {
       );
       console.log(
         "     toCanonicalOperator, not in a fallback at the write site.",
+      );
+    }
+
+    const resolvedRows = rows.filter((r) => r.scf_framework_id !== null).length;
+    console.log(
+      `     Framework resolved: ${resolvedRows.toLocaleString()} of ${rows.length.toLocaleString()} rows`,
+    );
+    if (unresolvedFocalDocuments.size > 0) {
+      console.log(
+        `     Unresolved files:   ${unresolvedFocalDocuments.size} â€” these grade NO mapping.`,
+      );
+      for (const f of [...unresolvedFocalDocuments].slice(0, 15)) {
+        console.log(`       ${f}`);
+      }
+      console.log(
+        "     Resolution is exact-match on scf_frameworks.name. Fix the name in",
+      );
+      console.log(
+        "     the catalogue; never widen the matcher to close the gap.",
       );
     }
 
@@ -322,6 +373,8 @@ async function main() {
             scfControlId: row.scf_control_id,
             fdeCode: row.fde_code,
             fdeName: row.fde_name,
+            focalDocument: row.focal_document,
+            scfFrameworkId: row.scf_framework_id,
             scfMappingId: row.scf_mapping_id,
             // Unknown operators become NULL (0059). They are not coerced to
             // `intersects`: that asserts scope overlap, which a value we could
@@ -339,12 +392,16 @@ async function main() {
           })),
         )
         .onConflictDoUpdate({
+          // 0060: the key includes the focal document. Without it this upsert
+          // was the write half of the cross-framework overwrite.
           target: [
             schema.scfStrmRelationships.scfControlId,
             schema.scfStrmRelationships.fdeCode,
+            schema.scfStrmRelationships.focalDocument,
           ],
           set: {
             fdeName: sql`EXCLUDED.fde_name`,
+            scfFrameworkId: sql`EXCLUDED.scf_framework_id`,
             scfMappingId: sql`EXCLUDED.scf_mapping_id`,
             relationshipType: sql`EXCLUDED.relationship_type`,
             strengthScore: sql`EXCLUDED.strength_score`,
