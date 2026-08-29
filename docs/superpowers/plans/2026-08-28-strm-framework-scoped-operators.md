@@ -168,12 +168,16 @@ describe("scf_strm_relationships is keyed by focal document", () => {
     // the same SCF control. Before this key, the second insert overwrote the
     // first and one operator was served to both.
     const control = "30000000-0000-4000-8000-000000000001";
+    // scf_controls.scf_domain_id is NOT NULL, so a domain comes first.
     await ctx.client.exec(`
       INSERT INTO scf_versions (id, version)
         VALUES ('30000000-0000-4000-8000-0000000000ff', '2026.1.1')
         ON CONFLICT DO NOTHING;
-      INSERT INTO scf_controls (id, scf_version_id, control_code, title)
-        VALUES ('${control}', '30000000-0000-4000-8000-0000000000ff', 'GOV-01', 'Synthetic control')
+      INSERT INTO scf_domains (id, scf_version_id, domain_code, name)
+        VALUES ('30000000-0000-4000-8000-0000000000fe', '30000000-0000-4000-8000-0000000000ff', 'GOV', 'Governance')
+        ON CONFLICT DO NOTHING;
+      INSERT INTO scf_controls (id, scf_version_id, scf_domain_id, control_code, title)
+        VALUES ('${control}', '30000000-0000-4000-8000-0000000000ff', '30000000-0000-4000-8000-0000000000fe', 'GOV-01', 'Synthetic control')
         ON CONFLICT DO NOTHING;
     `);
 
@@ -209,8 +213,8 @@ describe("scf_strm_relationships is keyed by focal document", () => {
   it("still collapses two rows from the same focal document", async () => {
     const control = "30000000-0000-4000-8000-000000000002";
     await ctx.client.exec(`
-      INSERT INTO scf_controls (id, scf_version_id, control_code, title)
-        VALUES ('${control}', '30000000-0000-4000-8000-0000000000ff', 'GOV-02', 'Synthetic control 2')
+      INSERT INTO scf_controls (id, scf_version_id, scf_domain_id, control_code, title)
+        VALUES ('${control}', '30000000-0000-4000-8000-0000000000ff', '30000000-0000-4000-8000-0000000000fe', 'GOV-02', 'Synthetic control 2')
         ON CONFLICT DO NOTHING;
     `);
 
@@ -241,8 +245,8 @@ describe("scf_strm_relationships is keyed by focal document", () => {
     // keeps their behaviour exactly as it was rather than letting them multiply.
     const control = "30000000-0000-4000-8000-000000000003";
     await ctx.client.exec(`
-      INSERT INTO scf_controls (id, scf_version_id, control_code, title)
-        VALUES ('${control}', '30000000-0000-4000-8000-0000000000ff', 'GOV-03', 'Synthetic control 3')
+      INSERT INTO scf_controls (id, scf_version_id, scf_domain_id, control_code, title)
+        VALUES ('${control}', '30000000-0000-4000-8000-0000000000ff', '30000000-0000-4000-8000-0000000000fe', 'GOV-03', 'Synthetic control 3')
         ON CONFLICT DO NOTHING;
     `);
 
@@ -801,10 +805,17 @@ describe("the backfill grades per framework", () => {
     const mapA = "40000000-0000-4000-8000-0000000000a2";
     const mapB = "40000000-0000-4000-8000-0000000000b2";
 
+    const dom = "40000000-0000-4000-8000-0000000000fe";
+
+    // scf_mappings has NO framework column — the framework reaches it through
+    // scf_framework_requirements, which is exactly why the backfill has to join
+    // through r to know which framework a mapping belongs to.
     await ctx.client.exec(`
       INSERT INTO scf_versions (id, version) VALUES ('${v}', '2026.1.2');
-      INSERT INTO scf_controls (id, scf_version_id, control_code, title)
-        VALUES ('${ctrl}', '${v}', 'GOV-10', 'Shared control');
+      INSERT INTO scf_domains (id, scf_version_id, domain_code, name)
+        VALUES ('${dom}', '${v}', 'GOV', 'Governance');
+      INSERT INTO scf_controls (id, scf_version_id, scf_domain_id, control_code, title)
+        VALUES ('${ctrl}', '${v}', '${dom}', 'GOV-10', 'Shared control');
       INSERT INTO scf_frameworks (id, scf_version_id, framework_id, name)
         VALUES ('${fwA}', '${v}', 'cis-v8', 'CIS Controls v8'),
                ('${fwB}', '${v}', 'pci-dss-4', 'PCI DSS 4.0');
@@ -813,9 +824,9 @@ describe("the backfill grades per framework", () => {
         VALUES ('${reqA}', '${v}', '${fwA}', '1.1.1', '1.1.1', 'CIS 1.1.1'),
                ('${reqB}', '${v}', '${fwB}', '1.1.1', '1.1.1', 'PCI 1.1.1');
       INSERT INTO scf_mappings
-        (id, scf_version_id, scf_framework_id, scf_framework_requirement_id, scf_control_id)
-        VALUES ('${mapA}', '${v}', '${fwA}', '${reqA}', '${ctrl}'),
-               ('${mapB}', '${v}', '${fwB}', '${reqB}', '${ctrl}');
+        (id, scf_version_id, scf_framework_requirement_id, scf_control_id)
+        VALUES ('${mapA}', '${v}', '${reqA}', '${ctrl}'),
+               ('${mapB}', '${v}', '${reqB}', '${ctrl}');
       INSERT INTO scf_strm_relationships
         (scf_control_id, scf_framework_id, fde_code, focal_document, relationship_type, source)
         VALUES ('${ctrl}', '${fwA}', '1.1.1', 'cis-v8.xlsx',  'equal',
@@ -865,18 +876,22 @@ describe("the backfill grades per framework", () => {
     const req = "50000000-0000-4000-8000-0000000000a1";
     const map = "50000000-0000-4000-8000-0000000000a2";
 
+    const dom = "50000000-0000-4000-8000-0000000000fe";
+
     await ctx.client.exec(`
       INSERT INTO scf_versions (id, version) VALUES ('${v}', '2026.1.3');
-      INSERT INTO scf_controls (id, scf_version_id, control_code, title)
-        VALUES ('${ctrl}', '${v}', 'GOV-20', 'Ambiguous control');
+      INSERT INTO scf_domains (id, scf_version_id, domain_code, name)
+        VALUES ('${dom}', '${v}', 'GOV', 'Governance');
+      INSERT INTO scf_controls (id, scf_version_id, scf_domain_id, control_code, title)
+        VALUES ('${ctrl}', '${v}', '${dom}', 'GOV-20', 'Ambiguous control');
       INSERT INTO scf_frameworks (id, scf_version_id, framework_id, name)
         VALUES ('${fw}', '${v}', 'dupe', 'Duplicated Framework');
       INSERT INTO scf_framework_requirements
         (id, scf_version_id, scf_framework_id, requirement_code, fde_code, title)
         VALUES ('${req}', '${v}', '${fw}', 'AC-1', 'AC-1', 'AC-1');
       INSERT INTO scf_mappings
-        (id, scf_version_id, scf_framework_id, scf_framework_requirement_id, scf_control_id)
-        VALUES ('${map}', '${v}', '${fw}', '${req}', '${ctrl}');
+        (id, scf_version_id, scf_framework_requirement_id, scf_control_id)
+        VALUES ('${map}', '${v}', '${req}', '${ctrl}');
       INSERT INTO scf_strm_relationships
         (scf_control_id, scf_framework_id, fde_code, focal_document, relationship_type, source)
         VALUES ('${ctrl}', '${fw}', 'AC-1', 'dupe-2025.xlsx', 'equal',
