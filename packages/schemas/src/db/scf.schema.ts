@@ -7,6 +7,7 @@ import {
   pgTable,
   text,
   timestamp,
+  unique,
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
@@ -262,6 +263,13 @@ export const scfStrmRelationships = pgTable(
     fdeCode: text("fde_code"),
     /** Human-readable name of the FDE requirement. */
     fdeName: text("fde_name"),
+    /** Bundle file this row came from — one file per framework. Part of the
+     *  unique key: an FDE code is only unique inside its focal document.
+     *  NULL means the row predates the STRM bundle seeder (0060). */
+    focalDocument: text("focal_document"),
+    /** Framework the focal document resolved to, exact-match only. NULL means
+     *  unresolved, and an unresolved row grades no mapping (0060). */
+    scfFrameworkId: uuid("scf_framework_id").references(() => scfFrameworks.id),
     // ⛔ ADR-001: usar strmOperatorEnum — NUNCA text livre com "direct"/"related"
     // Nullable de propósito (0059): null = a origem não declara operador. Um
     // default aqui foi o que produziu 'intersects' em 79.127 de 79.133 linhas.
@@ -276,10 +284,14 @@ export const scfStrmRelationships = pgTable(
     index("scf_strm_mapping_idx").on(table.scfMappingId),
     index("scf_strm_control_idx").on(table.scfControlId),
     index("scf_strm_fde_code_idx").on(table.fdeCode),
-    uniqueIndex("scf_strm_control_fde_uidx").on(
-      table.scfControlId,
-      table.fdeCode,
-    ),
+    index("scf_strm_framework_idx").on(table.scfFrameworkId),
+    // 0060: UNIQUE NULLS NOT DISTINCT — pre-0060 rows have no focal document
+    // and must keep collapsing on (control, fde) as they did before.
+    // `.nullsNotDistinct()` exists on unique() and NOT on uniqueIndex(), which
+    // is why this is a constraint rather than an index.
+    unique("scf_strm_control_fde_focal_uidx")
+      .on(table.scfControlId, table.fdeCode, table.focalDocument)
+      .nullsNotDistinct(),
   ],
 );
 
