@@ -7,14 +7,14 @@ CREATE TYPE "public"."report_artifact_type" AS ENUM('report', 'export', 'evidenc
 CREATE TYPE "public"."report_format" AS ENUM('json', 'markdown', 'html', 'docx', 'pdf', 'csv', 'xlsx', 'zip');--> statement-breakpoint
 CREATE TYPE "public"."report_type" AS ENUM('full_assessment_report', 'executive_summary', 'soa_export', 'gap_analysis_report', 'maturity_report', 'poam_report', 'audit_package', 'machine_readable_export');--> statement-breakpoint
 CREATE TYPE "public"."workflow_run_status" AS ENUM('pending', 'running', 'waiting_for_input', 'waiting_for_approval', 'blocked', 'failed', 'cancelled', 'completed');--> statement-breakpoint
-ALTER TYPE "public"."approval_gate" ADD VALUE 'report';--> statement-breakpoint
-ALTER TYPE "public"."evidence_strength" ADD VALUE 'not_checked';--> statement-breakpoint
-ALTER TYPE "public"."gap_type" ADD VALUE 'no_gap';--> statement-breakpoint
-ALTER TYPE "public"."gap_type" ADD VALUE 'not_applicable';--> statement-breakpoint
-ALTER TYPE "public"."poam_status" ADD VALUE 'deferred';--> statement-breakpoint
-ALTER TYPE "public"."priority" ADD VALUE 'urgent';--> statement-breakpoint
-ALTER TYPE "public"."severity" ADD VALUE 'informational' BEFORE 'low';--> statement-breakpoint
-ALTER TYPE "public"."storage_provider" ADD VALUE 'r2_compatible_mock';--> statement-breakpoint
+ALTER TYPE "public"."approval_gate" ADD VALUE IF NOT EXISTS 'report';--> statement-breakpoint
+ALTER TYPE "public"."evidence_strength" ADD VALUE IF NOT EXISTS 'not_checked';--> statement-breakpoint
+ALTER TYPE "public"."gap_type" ADD VALUE IF NOT EXISTS 'no_gap';--> statement-breakpoint
+ALTER TYPE "public"."gap_type" ADD VALUE IF NOT EXISTS 'not_applicable';--> statement-breakpoint
+ALTER TYPE "public"."poam_status" ADD VALUE IF NOT EXISTS 'deferred';--> statement-breakpoint
+ALTER TYPE "public"."priority" ADD VALUE IF NOT EXISTS 'urgent';--> statement-breakpoint
+ALTER TYPE "public"."severity" ADD VALUE IF NOT EXISTS 'informational' BEFORE 'low';--> statement-breakpoint
+ALTER TYPE "public"."storage_provider" ADD VALUE IF NOT EXISTS 'r2_compatible_mock';--> statement-breakpoint
 CREATE TABLE "agent_tool_calls" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"tenant_id" uuid NOT NULL,

@@ -1,20 +1,20 @@
 -- CREATE EXTENSION IF NOT EXISTS pgcrypto;--> statement-breakpoint
 CREATE TYPE "public"."agent_run_status" AS ENUM('queued', 'running', 'completed', 'failed', 'cancelled');--> statement-breakpoint
 CREATE TYPE "public"."approval_decision" AS ENUM('approved', 'rejected', 'changes_requested');--> statement-breakpoint
-CREATE TYPE "public"."approval_gate" AS ENUM('soa', 'gap_analysis', 'maturity_assessment', 'poam');--> statement-breakpoint
+CREATE TYPE "public"."approval_gate" AS ENUM('soa', 'gap_analysis', 'maturity_assessment', 'poam', 'report');--> statement-breakpoint
 CREATE TYPE "public"."artifact_status" AS ENUM('draft', 'under_review', 'approved', 'superseded', 'archived');--> statement-breakpoint
 CREATE TYPE "public"."assessment_state" AS ENUM('draft', 'documents_ingesting', 'kb_building', 'preliminary_scf_analysis', 'framework_selection_pending', 'scope_soa_drafting', 'soa_approval_pending', 'soa_reingesting', 'gap_analysis_running', 'gap_analysis_approval_pending', 'maturity_assessment_running', 'maturity_approval_pending', 'poam_generation_running', 'poam_approval_pending', 'completed', 'cancelled', 'failed');--> statement-breakpoint
 CREATE TYPE "public"."document_classification" AS ENUM('public', 'internal', 'confidential', 'restricted');--> statement-breakpoint
 CREATE TYPE "public"."document_type" AS ENUM('policy', 'procedure', 'standard', 'evidence', 'soa', 'report', 'other');--> statement-breakpoint
-CREATE TYPE "public"."evidence_strength" AS ENUM('strong', 'partial', 'weak', 'absent', 'conflicting');--> statement-breakpoint
+CREATE TYPE "public"."evidence_strength" AS ENUM('strong', 'partial', 'weak', 'absent', 'conflicting', 'not_checked');--> statement-breakpoint
 CREATE TYPE "public"."extraction_job_status" AS ENUM('queued', 'processing', 'completed', 'failed', 'cancelled');--> statement-breakpoint
 CREATE TYPE "public"."gap_status" AS ENUM('met', 'partially_met', 'not_met', 'not_evidenced', 'not_applicable_justified', 'not_applicable_not_justified', 'requires_validation');--> statement-breakpoint
-CREATE TYPE "public"."gap_type" AS ENUM('documentation_gap', 'implementation_gap', 'evidence_gap', 'effectiveness_gap', 'governance_gap', 'technical_gap', 'contractual_gap', 'monitoring_gap');--> statement-breakpoint
+CREATE TYPE "public"."gap_type" AS ENUM('documentation_gap', 'implementation_gap', 'evidence_gap', 'effectiveness_gap', 'governance_gap', 'technical_gap', 'contractual_gap', 'monitoring_gap', 'no_gap', 'not_applicable');--> statement-breakpoint
 CREATE TYPE "public"."mapping_source" AS ENUM('official_scf', 'derived', 'consultative');--> statement-breakpoint
-CREATE TYPE "public"."poam_status" AS ENUM('draft', 'approved', 'in_progress', 'blocked', 'completed', 'cancelled');--> statement-breakpoint
-CREATE TYPE "public"."priority" AS ENUM('low', 'medium', 'high', 'critical');--> statement-breakpoint
-CREATE TYPE "public"."severity" AS ENUM('low', 'medium', 'high', 'critical');--> statement-breakpoint
-CREATE TYPE "public"."storage_provider" AS ENUM('r2', 'external');--> statement-breakpoint
+CREATE TYPE "public"."poam_status" AS ENUM('draft', 'approved', 'in_progress', 'blocked', 'completed', 'cancelled', 'deferred');--> statement-breakpoint
+CREATE TYPE "public"."priority" AS ENUM('low', 'medium', 'high', 'critical', 'urgent');--> statement-breakpoint
+CREATE TYPE "public"."severity" AS ENUM('informational', 'low', 'medium', 'high', 'critical');--> statement-breakpoint
+CREATE TYPE "public"."storage_provider" AS ENUM('r2', 'external', 'r2_compatible_mock');--> statement-breakpoint
 CREATE TABLE "agent_decisions" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"tenant_id" uuid NOT NULL,
