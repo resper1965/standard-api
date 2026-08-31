@@ -655,6 +655,17 @@ git commit -m "docs(runbooks): STRM bundle provenance and re-import procedure"
 
 ### Task 7: Dry run — the measurement the customer asked for
 
+**Prerequisite (was a blocker):** `docs/superpowers/plans/2026-08-28-strm-framework-scoped-operators.md`
+must be complete. Until it is, `scf_strm_relationships` is keyed without a
+framework and the per-framework coverage this task measures silently
+misattributes operators between frameworks sharing a requirement code.
+
+**Read before trusting the numbers:** the seeder now prints "Framework
+resolved: N of M rows" and lists unresolved files. The backfill's coverage
+table gains `ambig` and `unres` columns. A framework whose focal document did
+not resolve reports 0 graded — that is an unresolved NAME, not an uncovered
+framework, and it is fixed in the catalogue, never by widening the matcher.
+
 This produces the Q12 deliverable: per framework, total mappings, how many the bundle grades, how many reach `equal` or `subset`.
 
 **Files:** none modified. This task produces a recorded measurement.

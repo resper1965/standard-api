@@ -129,3 +129,144 @@ describe("scf_strm_relationships is keyed by focal document", () => {
     );
   });
 });
+
+describe("the backfill grades per framework", () => {
+  it("gives each framework the operator its own focal document stated", async () => {
+    // Two frameworks, both with a requirement coded "1.1.1", both mapped to the
+    // same SCF control, and the bundle states a DIFFERENT operator for each.
+    // Before 0060 this was one row and both frameworks got one operator.
+    const v = "40000000-0000-4000-8000-0000000000ff";
+    const ctrl = "40000000-0000-4000-8000-000000000001";
+    const fwA = "40000000-0000-4000-8000-00000000000a";
+    const fwB = "40000000-0000-4000-8000-00000000000b";
+    const reqA = "40000000-0000-4000-8000-0000000000a1";
+    const reqB = "40000000-0000-4000-8000-0000000000b1";
+    const mapA = "40000000-0000-4000-8000-0000000000a2";
+    const mapB = "40000000-0000-4000-8000-0000000000b2";
+
+    const dom = "40000000-0000-4000-8000-0000000000fe";
+
+    // scf_mappings has NO framework column — the framework reaches it through
+    // scf_framework_requirements, which is exactly why the backfill has to join
+    // through r to know which framework a mapping belongs to.
+    await ctx.client.exec(`
+      INSERT INTO scf_versions (id, version) VALUES ('${v}', '2026.1.2');
+      INSERT INTO scf_domains (id, scf_version_id, domain_code, name)
+        VALUES ('${dom}', '${v}', 'GOV', 'Governance');
+      INSERT INTO scf_controls (id, scf_version_id, scf_domain_id, control_code, title)
+        VALUES ('${ctrl}', '${v}', '${dom}', 'GOV-10', 'Shared control');
+      INSERT INTO scf_frameworks (id, scf_version_id, framework_id, name)
+        VALUES ('${fwA}', '${v}', 'cis-v8', 'CIS Controls v8'),
+               ('${fwB}', '${v}', 'pci-dss-4', 'PCI DSS 4.0');
+      INSERT INTO scf_framework_requirements
+        (id, scf_version_id, scf_framework_id, requirement_code, fde_code, title)
+        VALUES ('${reqA}', '${v}', '${fwA}', '1.1.1', '1.1.1', 'CIS 1.1.1'),
+               ('${reqB}', '${v}', '${fwB}', '1.1.1', '1.1.1', 'PCI 1.1.1');
+      INSERT INTO scf_mappings
+        (id, scf_version_id, scf_framework_requirement_id, scf_control_id)
+        VALUES ('${mapA}', '${v}', '${reqA}', '${ctrl}'),
+               ('${mapB}', '${v}', '${reqB}', '${ctrl}');
+      INSERT INTO scf_strm_relationships
+        (scf_control_id, scf_framework_id, fde_code, focal_document, relationship_type, source)
+        VALUES ('${ctrl}', '${fwA}', '1.1.1', 'cis-v8.xlsx',  'equal',
+                'scf_official_strm_bundle_2026.1'),
+               ('${ctrl}', '${fwB}', '1.1.1', 'pci-dss.xlsx', 'superset',
+                'scf_official_strm_bundle_2026.1');
+    `);
+
+    await ctx.db.execute(sql`
+      WITH graded AS (
+        SELECT m.id AS mapping_id,
+               MIN(s.relationship_type::text) AS op
+          FROM scf_mappings m
+          JOIN scf_framework_requirements r ON m.scf_framework_requirement_id = r.id
+          JOIN scf_strm_relationships s
+            ON s.scf_control_id   = m.scf_control_id
+           AND s.fde_code         = r.fde_code
+           AND s.scf_framework_id = r.scf_framework_id
+           AND s.source           = 'scf_official_strm_bundle_2026.1'
+           AND s.relationship_type IS NOT NULL
+         GROUP BY m.id
+        HAVING COUNT(DISTINCT s.relationship_type) = 1
+      )
+      UPDATE scf_mappings m
+         SET relationship_type = g.op::strm_operator
+        FROM graded g
+       WHERE m.id = g.mapping_id
+    `);
+
+    const rows = (
+      await ctx.db.execute(sql`
+      SELECT id, relationship_type FROM scf_mappings
+       WHERE id IN (${mapA}, ${mapB}) ORDER BY id
+    `)
+    ).rows as unknown as Array<{ id: string; relationship_type: string }>;
+
+    const byId = new Map(rows.map((r) => [r.id, r.relationship_type]));
+    expect(byId.get(mapA)).toBe("equal");
+    expect(byId.get(mapB)).toBe("superset");
+  });
+
+  it("refuses to grade when two bundle rows disagree for one framework", async () => {
+    // Two focal documents can resolve to the SAME framework (two editions of
+    // one file). If they disagree, picking either is a coin flip presented as
+    // a measurement, so the mapping stays NULL.
+    const v = "50000000-0000-4000-8000-0000000000ff";
+    const ctrl = "50000000-0000-4000-8000-000000000001";
+    const fw = "50000000-0000-4000-8000-00000000000a";
+    const req = "50000000-0000-4000-8000-0000000000a1";
+    const map = "50000000-0000-4000-8000-0000000000a2";
+
+    const dom = "50000000-0000-4000-8000-0000000000fe";
+
+    await ctx.client.exec(`
+      INSERT INTO scf_versions (id, version) VALUES ('${v}', '2026.1.3');
+      INSERT INTO scf_domains (id, scf_version_id, domain_code, name)
+        VALUES ('${dom}', '${v}', 'GOV', 'Governance');
+      INSERT INTO scf_controls (id, scf_version_id, scf_domain_id, control_code, title)
+        VALUES ('${ctrl}', '${v}', '${dom}', 'GOV-20', 'Ambiguous control');
+      INSERT INTO scf_frameworks (id, scf_version_id, framework_id, name)
+        VALUES ('${fw}', '${v}', 'dupe', 'Duplicated Framework');
+      INSERT INTO scf_framework_requirements
+        (id, scf_version_id, scf_framework_id, requirement_code, fde_code, title)
+        VALUES ('${req}', '${v}', '${fw}', 'AC-1', 'AC-1', 'AC-1');
+      INSERT INTO scf_mappings
+        (id, scf_version_id, scf_framework_requirement_id, scf_control_id)
+        VALUES ('${map}', '${v}', '${req}', '${ctrl}');
+      INSERT INTO scf_strm_relationships
+        (scf_control_id, scf_framework_id, fde_code, focal_document, relationship_type, source)
+        VALUES ('${ctrl}', '${fw}', 'AC-1', 'dupe-2025.xlsx', 'equal',
+                'scf_official_strm_bundle_2026.1'),
+               ('${ctrl}', '${fw}', 'AC-1', 'dupe-2026.xlsx', 'subset',
+                'scf_official_strm_bundle_2026.1');
+    `);
+
+    await ctx.db.execute(sql`
+      WITH graded AS (
+        SELECT m.id AS mapping_id, MIN(s.relationship_type::text) AS op
+          FROM scf_mappings m
+          JOIN scf_framework_requirements r ON m.scf_framework_requirement_id = r.id
+          JOIN scf_strm_relationships s
+            ON s.scf_control_id   = m.scf_control_id
+           AND s.fde_code         = r.fde_code
+           AND s.scf_framework_id = r.scf_framework_id
+           AND s.source           = 'scf_official_strm_bundle_2026.1'
+           AND s.relationship_type IS NOT NULL
+         GROUP BY m.id
+        HAVING COUNT(DISTINCT s.relationship_type) = 1
+      )
+      UPDATE scf_mappings m
+         SET relationship_type = g.op::strm_operator
+        FROM graded g
+       WHERE m.id = g.mapping_id
+    `);
+
+    const rows = (
+      await ctx.db.execute(sql`
+      SELECT relationship_type FROM scf_mappings WHERE id = ${map}
+    `)
+    ).rows as unknown as Array<{ relationship_type: string | null }>;
+
+    expect(rows[0]?.relationship_type).toBe(null);
+  });
+});
