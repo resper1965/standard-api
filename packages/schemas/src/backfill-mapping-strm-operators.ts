@@ -56,6 +56,7 @@ import postgres from "postgres";
 import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import * as schema from "./db/schema.js";
+import { sslForDatabaseUrl } from "./db-ssl.js";
 
 /**
  * Only the official bundle grades a mapping. `scf_strm_relationships` also
@@ -92,7 +93,7 @@ async function main() {
     process.exit(1);
   }
 
-  const client = postgres(databaseUrl, { ssl: "require", max: 5 });
+  const client = postgres(databaseUrl, { ssl: sslForDatabaseUrl(databaseUrl), max: 5 });
   const db = drizzle(client, { schema });
 
   try {

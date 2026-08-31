@@ -22,6 +22,7 @@ import postgres from "postgres";
 import { drizzle } from "drizzle-orm/postgres-js";
 import { eq, and } from "drizzle-orm";
 import * as schema from "./db/schema";
+import { sslForDatabaseUrl } from "./db-ssl.js";
 
 const IDS = {
   tenant: "10000000-0000-4000-8000-000000000001",
@@ -43,7 +44,7 @@ async function main() {
   console.log("ðŸ”¬ Standard Lifecycle Proof â€” Starting...");
   console.log(`   trace_id: ${traceId}\n`);
 
-  const client = postgres(databaseUrl, { ssl: "require" });
+  const client = postgres(databaseUrl, { ssl: sslForDatabaseUrl(databaseUrl) });
   const db = drizzle(client, { schema });
 
   // â”€â”€ Step 1: Verify seeded assessment exists in "draft" â”€â”€

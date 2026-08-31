@@ -20,6 +20,7 @@ import postgres from "postgres";
 import { drizzle } from "drizzle-orm/postgres-js";
 import { eq, and, sql } from "drizzle-orm";
 import * as schema from "./db/schema";
+import { sslForDatabaseUrl } from "./db-ssl.js";
 
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Stable synthetic slugs / natural keys
@@ -63,7 +64,7 @@ async function main() {
 
   console.log("ðŸŒ± Standard Synthetic Seed â€” Starting...\n");
 
-  const client = postgres(databaseUrl, { ssl: "require" });
+  const client = postgres(databaseUrl, { ssl: sslForDatabaseUrl(databaseUrl) });
   const db = drizzle(client, { schema });
 
   // â”€â”€ 1. Organization (was: Tenant â€” ADR 0002 Phase 2/3) â”€â”€

@@ -34,6 +34,7 @@ import {
   ScfImportService,
 } from "@standard/scf-core";
 import { createDrizzleScfRepository } from "./db/scf.repository";
+import { sslForDatabaseUrl } from "./db-ssl.js";
 
 // â”€â”€â”€â”€ Configuration â”€â”€â”€â”€
 
@@ -98,7 +99,7 @@ async function main() {
 
   // â”€â”€ 3. Connect to database â”€â”€
   console.log("  ðŸ”Œ Connecting to database...");
-  const client = postgres(databaseUrl, { ssl: "require", max: 1 });
+  const client = postgres(databaseUrl, { ssl: sslForDatabaseUrl(databaseUrl), max: 1 });
   const db = drizzle(client, { schema });
 
   try {
