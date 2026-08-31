@@ -21,6 +21,7 @@ import * as fs from "node:fs";
 const DRY_RUN = process.argv.includes("--dry-run");
 
 import { fileURLToPath } from "node:url";
+import { sslForDatabaseUrl } from "./db-ssl.js";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const XLSX_PATH = path.resolve(
@@ -201,7 +202,7 @@ async function main() {
 
   // Apply to database
   const client = postgres(process.env.DATABASE_URL!, {
-    ssl: "require",
+    ssl: sslForDatabaseUrl(process.env.DATABASE_URL!),
     max: 3,
   });
 
