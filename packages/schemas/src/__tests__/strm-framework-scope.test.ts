@@ -6,10 +6,12 @@ let ctx: Awaited<ReturnType<typeof makeTestDb>>;
 
 beforeAll(async () => {
   ctx = await makeTestDb();
-});
+}, 120_000);
 afterAll(async () => {
-  await ctx.client.close();
-});
+  if (ctx) {
+    await ctx.client.close();
+  }
+}, 120_000);
 
 describe("scf_strm_relationships is keyed by focal document", () => {
   it("keeps one row per focal document for the same control and FDE code", async () => {
