@@ -31,6 +31,7 @@
 import ExcelJS from "exceljs";
 import * as path from "node:path";
 import * as fs from "node:fs";
+import { Readable } from "node:stream";
 import { fileURLToPath } from "node:url";
 
 const projectRoot = path.resolve(
@@ -75,7 +76,7 @@ export interface StrmBundleEntry {
 export interface StrmBundleFileResult {
   /** Nome do arquivo XLSX */
   filename: string;
-  /** Nome do framework (sheet name) */
+  /** Nome do focal document (row 0 col 6); falls back to sheet name, then filename */
   framework_name: string;
   /** URL do focal document */
   focal_document_url: string;
@@ -198,14 +199,41 @@ export async function parseStrmBundleFile(
   let skipped = 0;
   let unknownOperator = 0;
 
-  // Read via buffer (avoid ExcelJS Unicode path bug on Windows)
+  // Read via the streaming reader, fed from a Buffer (avoid ExcelJS Unicode
+  // path bug on Windows). `Workbook().xlsx.load()` throws
+  // "Cannot read properties of undefined (reading 'comments')" on 175/183
+  // real bundle files; the streaming reader parses all of them.
   const buf = fs.readFileSync(resolvedPath);
-  const wb = new ExcelJS.Workbook();
-  await wb.xlsx.load(
-    buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength),
-  );
+  const reader = new ExcelJS.stream.xlsx.WorkbookReader(Readable.from(buf), {
+    worksheets: "emit",
+    sharedStrings: "cache",
+    styles: "ignore",
+    hyperlinks: "ignore",
+  });
 
-  const sheetName = wb.worksheets[0]?.name;
+  // Collect all rows as arrays of cell values (matching SheetJS header:1 format)
+  let sheetName: string | undefined;
+  const allRows: (string | number)[][] = [];
+  let sheetIndex = 0;
+  for await (const worksheet of reader) {
+    const isFirstSheet = sheetIndex === 0;
+    sheetIndex++;
+    for await (const row of worksheet) {
+      if (!isFirstSheet) continue; // only the first worksheet is used, exactly as today
+      const values = row.values as (string | number | undefined)[];
+      // ExcelJS row.values is 1-indexed (index 0 is undefined), so slice from 1
+      const cells = values.slice(1).map((v) => v ?? "");
+      // The streaming reader (unlike `eachRow({ includeEmpty: false })`)
+      // yields blank rows too; drop them so every fixed offset below holds.
+      if (cells.every((v) => String(v).trim() === "")) continue;
+      allRows.push(cells);
+    }
+    // `.name` is set at runtime (workbook-reader.js) but missing from
+    // ExcelJS's WorksheetReader type declarations.
+    if (isFirstSheet)
+      sheetName = (worksheet as unknown as { name?: string }).name;
+  }
+
   if (!sheetName) {
     return {
       filename,
@@ -219,33 +247,17 @@ export async function parseStrmBundleFile(
     };
   }
 
-  const ws = wb.getWorksheet(sheetName);
-  if (!ws) {
-    return {
-      filename,
-      framework_name: sheetName,
-      focal_document_url: "",
-      published_strm_url: "",
-      entries: [],
-      warnings: ["Sheet not accessible"],
-      skipped: 0,
-      unknown_operator: 0,
-    };
-  }
-
-  // Collect all rows as arrays of cell values (matching SheetJS header:1 format)
-  const allRows: (string | number)[][] = [];
-  ws.eachRow({ includeEmpty: false }, (row) => {
-    const values = row.values as (string | number | undefined)[];
-    // ExcelJS row.values is 1-indexed (index 0 is undefined), so slice from 1
-    allRows.push(values.slice(1).map((v) => v ?? ""));
-  });
-
   // Rows 0-2: metadata
   // Row 0: ["NIST IR 8477...", "", ..., "Focal Document: ", "<framework name>"]
   // Row 1: ["Reference document:", "SCF 2026.1", ..., "Focal Document URL: ", "<url>"]
   // Row 2: ["STRM Guidance: ", "<url>", ..., "Published STRM URL:", "<url>"]
+  //
+  // Row 0 col 6 holds the actual focal document name (the sheet itself is
+  // named "Sheet1" in almost every one of the 183 files); fall back to the
+  // sheet name, then the filename, if it is blank.
 
+  const frameworkNameFromCell = String(allRows[0]?.[6] ?? "").trim();
+  const frameworkName = frameworkNameFromCell || sheetName || filename;
   const focalDocumentUrl = String(allRows[1]?.[6] ?? "");
   const publishedStrmUrl = String(allRows[2]?.[6] ?? "");
 
@@ -330,7 +342,7 @@ export async function parseStrmBundleFile(
 
   return {
     filename,
-    framework_name: sheetName,
+    framework_name: frameworkName,
     focal_document_url: focalDocumentUrl,
     published_strm_url: publishedStrmUrl,
     entries,
@@ -367,14 +379,31 @@ export async function parseStrmBundleDirectory(
 
   for (const filename of files) {
     const filePath = path.join(dirPath, filename);
-    const result = await parseStrmBundleFile(
-      filePath,
-      filename,
-      options.includeNoRelationship !== undefined
-        ? { includeNoRelationship: options.includeNoRelationship }
-        : {},
-    );
-    results.push(result);
+    try {
+      const result = await parseStrmBundleFile(
+        filePath,
+        filename,
+        options.includeNoRelationship !== undefined
+          ? { includeNoRelationship: options.includeNoRelationship }
+          : {},
+      );
+      results.push(result);
+    } catch (error) {
+      // One bad file must not abort the other 182 — but it must stay
+      // visible, since a silently skipped framework is indistinguishable
+      // from one the bundle does not cover.
+      const message = error instanceof Error ? error.message : String(error);
+      results.push({
+        filename,
+        framework_name: filename,
+        focal_document_url: "",
+        published_strm_url: "",
+        entries: [],
+        warnings: [`Failed to parse ${filename}: ${message}`],
+        skipped: 0,
+        unknown_operator: 0,
+      });
+    }
   }
 
   return {
