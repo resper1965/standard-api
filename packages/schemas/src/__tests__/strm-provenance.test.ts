@@ -37,4 +37,23 @@ describe("backfill provenance", () => {
   it("never writes an operator sourced from structural inference", () => {
     expect(src).not.toMatch(/inferred_structural_analysis/);
   });
+
+  it("scopes both statements' joins by scf_framework_id, not bare fde_code", () => {
+    // An FDE code is unique only inside its own focal document: two
+    // frameworks can both use requirement code "1.1.1". Without
+    // scf_framework_id in the join, one framework's bundle row grades the
+    // other framework's mapping (migration 0060). This guards against that
+    // regression coming back.
+    const coverageMatch = src.match(/const coverage = \(await db\.execute\(sql`[\s\S]*?`\)/);
+    expect(coverageMatch).toBeTruthy();
+    expect(coverageMatch![0]).toMatch(
+      /LEFT JOIN scf_strm_relationships[\s\S]*?s\.scf_framework_id\s*=\s*r\.scf_framework_id/,
+    );
+
+    const updateMatch = src.match(/const updated = await db\.execute\(sql`[\s\S]*?`\);/);
+    expect(updateMatch).toBeTruthy();
+    expect(updateMatch![0]).toMatch(
+      /JOIN scf_strm_relationships s[\s\S]*?s\.scf_framework_id\s*=\s*r\.scf_framework_id/,
+    );
+  });
 });
