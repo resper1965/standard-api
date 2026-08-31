@@ -24,10 +24,14 @@ describe("backfill provenance", () => {
     expect(coverageMatch).toBeTruthy();
     expect(coverageMatch![0]).toMatch(/LEFT JOIN scf_strm_relationships[\s\S]*?s\.source/);
 
-    // Extract the UPDATE statement (the second db.execute).
+    // Extract the UPDATE statement (the second db.execute). It grades through
+    // a `graded` CTE, so the source filter sits on the join feeding that CTE
+    // — textually before the UPDATE keyword, not after.
     const updateMatch = src.match(/const updated = await db\.execute\(sql`[\s\S]*?`\);/);
     expect(updateMatch).toBeTruthy();
-    expect(updateMatch![0]).toMatch(/UPDATE scf_mappings[\s\S]*?s\.source/);
+    expect(updateMatch![0]).toMatch(
+      /JOIN scf_strm_relationships s[\s\S]*?s\.source[\s\S]*?UPDATE scf_mappings/,
+    );
   });
 
   it("never writes an operator sourced from structural inference", () => {
