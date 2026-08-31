@@ -74,7 +74,7 @@ type CoverageRow = {
   graded: number;
   /** Mappings whose bundle rows disagree — deliberately left ungraded. */
   ambiguous: number;
-  /** Bundle rows matching on code but whose focal document never resolved. */
+  /** Mappings whose bundle row matched on code but whose focal document never resolved to a framework. */
   unresolved: number;
   equal: number;
   subset: number;
