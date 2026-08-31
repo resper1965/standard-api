@@ -39,6 +39,7 @@ import {
   normaliseFrameworkKey,
   resolveFrameworkId,
   pickUnambiguousMappingId,
+  buildFrameworkByName,
 } from "./strm-focal-document.js";
 
 // â”€â”€â”€â”€ Configuration â”€â”€â”€â”€
@@ -219,10 +220,14 @@ async function main() {
       })
       .from(schema.scfFrameworks);
 
-    const frameworkByName = new Map<string, string>(
-      frameworkRows.map((f) => [normaliseFrameworkKey(f.name), f.id]),
-    );
+    const { byName: frameworkByName, collidedKeys: collidedFrameworkKeys } =
+      buildFrameworkByName(frameworkRows);
     console.log(`     Frameworks loaded: ${frameworkByName.size}`);
+    if (collidedFrameworkKeys.size > 0) {
+      console.log(
+        `     Ambiguous names:   ${collidedFrameworkKeys.size} â€” shared by >1 scf_frameworks row, resolve to none.`,
+      );
+    }
 
     // â”€â”€ 5. Build upsert records â”€â”€
     console.log("\n  ðŸ”— Resolving STRM entries against DB controls...");
@@ -255,13 +260,19 @@ async function main() {
     let noControl = 0;
     const unknownControls = new Set<string>();
     const unresolvedFocalDocuments = new Set<string>();
+    const collidedFocalDocuments = new Set<string>();
 
     for (const file of summary.files) {
       const frameworkId = resolveFrameworkId(
         file.framework_name,
         frameworkByName,
       );
-      if (!frameworkId) unresolvedFocalDocuments.add(file.filename);
+      if (!frameworkId) {
+        unresolvedFocalDocuments.add(file.filename);
+        if (collidedFrameworkKeys.has(normaliseFrameworkKey(file.framework_name))) {
+          collidedFocalDocuments.add(file.filename);
+        }
+      }
 
       for (const entry of file.entries) {
         const controlId = controlCodeToId.get(
@@ -332,7 +343,10 @@ async function main() {
         `     Unresolved files:   ${unresolvedFocalDocuments.size} â€” these grade NO mapping.`,
       );
       for (const f of [...unresolvedFocalDocuments].slice(0, 15)) {
-        console.log(`       ${f}`);
+        const reason = collidedFocalDocuments.has(f)
+          ? "ambiguous â€” name shared by >1 scf_frameworks row"
+          : "absent â€” no scf_frameworks row has this name";
+        console.log(`       ${f}  (${reason})`);
       }
       console.log(
         "     Resolution is exact-match on scf_frameworks.name. Fix the name in",
@@ -340,6 +354,17 @@ async function main() {
       console.log(
         "     the catalogue; never widen the matcher to close the gap.",
       );
+      if (collidedFocalDocuments.size > 0) {
+        console.log(
+          `     Of those, ${collidedFocalDocuments.size} are ambiguous, not absent: the catalogue holds`,
+        );
+        console.log(
+          "     more than one scf_frameworks row with that name (e.g. one per SCF",
+        );
+        console.log(
+          "     version). Disambiguate the catalogue row, not this matcher.",
+        );
+      }
     }
 
     if (rows.length === 0) {

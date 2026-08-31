@@ -582,8 +582,7 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
       scf_control_id: row.scfControlId ?? undefined,
       fde_code: row.fdeCode ?? undefined,
       fde_name: row.fdeName ?? undefined,
-      relationship_type:
-        row.relationshipType as ScfStrmRelationship["relationship_type"],
+      relationship_type: row.relationshipType,
       // strengthScore replaces legacy relationshipStrength
       relationship_strength: row.strengthScore?.toString() ?? undefined,
       rationale: row.rationale ?? undefined,
@@ -641,8 +640,7 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
       scf_control_id: row.scfControlId ?? undefined,
       fde_code: row.fdeCode ?? undefined,
       fde_name: row.fdeName ?? undefined,
-      relationship_type:
-        row.relationshipType as ScfStrmRelationship["relationship_type"],
+      relationship_type: row.relationshipType,
       // strengthScore replaces legacy relationshipStrength
       relationship_strength: row.strengthScore?.toString() ?? undefined,
       rationale: row.rationale ?? undefined,
@@ -709,8 +707,7 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
       scf_control_id: row.scfControlId ?? undefined,
       fde_code: row.fdeCode ?? undefined,
       fde_name: row.fdeName ?? undefined,
-      relationship_type:
-        row.relationshipType as ScfStrmRelationship["relationship_type"],
+      relationship_type: row.relationshipType,
       // strengthScore replaces legacy relationshipStrength
       relationship_strength: row.strengthScore?.toString() ?? undefined,
       rationale: row.rationale ?? undefined,
@@ -820,8 +817,7 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
         scf_control_id: strm.scfControlId ?? undefined,
         fde_code: strm.fdeCode ?? undefined,
         fde_name: strm.fdeName ?? undefined,
-        relationship_type:
-          strm.relationshipType as ScfStrmRelationship["relationship_type"],
+        relationship_type: strm.relationshipType,
         relationship_strength: strm.strengthScore?.toString() ?? undefined,
         rationale: strm.rationale ?? undefined,
         source: strm.source,

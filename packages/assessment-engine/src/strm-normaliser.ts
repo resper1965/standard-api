@@ -53,30 +53,10 @@ export function normaliseRelationshipType(raw: string): StrmOperator | null {
   return toCanonicalOperator(raw);
 }
 
-// Mapa de conversÃ£o relationship_strength (texto) â†’ strength_score (numÃ©rico 0.0â€“1.0)
-const STRENGTH_MAP: Record<string, number> = {
-  strong: 1.0,
-  high: 1.0,
-  moderate: 0.5,
-  medium: 0.5,
-  related: 0.5, // legado ambÃ­guo â€” usar neutro
-  weak: 0.25,
-  low: 0.25,
-};
-
-/** Fallback conservador para valores nÃ£o mapeados */
-const DEFAULT_STRENGTH = 0.5;
-
-/**
- * estimateStrengthScore â€” converte texto legado de forÃ§a para score numÃ©rico 0.0â€“1.0.
- *
- * Usado na migration 0051 para popular a coluna strength_score a partir
- * da coluna relationship_strength (texto) existente no Neon DB.
- *
- * @param raw   Valor bruto (ex: "strong", "related", "weak")
- * @returns     Score numÃ©rico entre 0.0 e 1.0
- */
-export function estimateStrengthScore(raw: string): number {
-  return STRENGTH_MAP[raw.toLowerCase().trim()] ?? DEFAULT_STRENGTH;
-}
+// estimateStrengthScore (strength text -> numeric score) was removed here.
+// It was migration 0051's one-time backfill helper, already run; it had no
+// production callers, and its `?? 0.5` fallback was the strength half of the
+// same conservative-default family this branch removes on the operator side
+// (see toCanonicalOperator's doc comment). Do not re-add a default here â€” a
+// strength this branch cannot read should be null, not 0.5.
 

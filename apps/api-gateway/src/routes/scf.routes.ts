@@ -1,7 +1,6 @@
 import {
   ScfImportRunSchema,
   ScfStrmCoverageResponseSchema,
-  ScfStrmRelationshipResponseSchema,
   ScfThreatSchema,
   ScfRiskSchema,
   ScfMaturityCriteriaSchema,

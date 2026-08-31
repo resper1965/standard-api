@@ -41,6 +41,42 @@ export const resolveFrameworkId = (
 };
 
 /**
+ * Builds the name → id lookup the seeder resolves focal documents against.
+ *
+ * `scf_frameworks` is unique on (scf_version_id, framework_id), not on name:
+ * a database holding more than one SCF version has one row per version named
+ * e.g. "ISO 27001:2022", and they all normalise to the same key. A plain
+ * `Map.set` keeps whichever row was read last, so a focal document resolves
+ * to whichever version happened to sort last — silently, and it still counts
+ * as "resolved" in the seeder's summary.
+ *
+ * On a collision this removes the key entirely rather than picking a winner,
+ * so the name resolves to nothing. The collided key is also returned so the
+ * caller can report "this name is ambiguous in the catalogue" (had >1 row)
+ * distinctly from "this name is absent from the catalogue" (had none).
+ */
+export const buildFrameworkByName = (
+  rows: readonly { id: string; name: string }[],
+): { byName: Map<string, string>; collidedKeys: Set<string> } => {
+  const byName = new Map<string, string>();
+  const collidedKeys = new Set<string>();
+
+  for (const row of rows) {
+    const key = normaliseFrameworkKey(row.name);
+    if (!key) continue;
+    if (collidedKeys.has(key)) continue;
+    if (byName.has(key)) {
+      byName.delete(key);
+      collidedKeys.add(key);
+    } else {
+      byName.set(key, row.id);
+    }
+  }
+
+  return { byName, collidedKeys };
+};
+
+/**
  * scf_mapping_id is a backward-compat convenience, not the join the backfill
  * uses. It used to be set to `list[0]` — an arbitrary pick among every mapping
  * sharing the control, which attaches one requirement's mapping to another
