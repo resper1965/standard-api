@@ -10,6 +10,7 @@
 } from "../types";
 import type { ScfImporter } from "./scf-importer";
 import { sha256Hex, validateBaseImportSource } from "./scf-importer";
+import { toCanonicalOperator } from "./strm-operator";
 
 const newId = (): string => crypto.randomUUID();
 
@@ -186,16 +187,10 @@ const parseMappingRow = (row: Record<string, string>, ctx: ImportContext) => {
     );
     return;
   }
-  const rel = row.relationship_type;
-  // ADR-001: canonical STRM operators only â€” "related" is a legacy value
-  const relationship_type =
-    rel === "equal" ||
-    rel === "subset" ||
-    rel === "superset" ||
-    rel === "intersects" ||
-    rel === "no_relation"
-      ? rel
-      : "intersects"; // safe fallback â€” was "related" in legacy importers
+  // ADR-001: an operator this source did not state is absence, not a claim
+  // that the scopes intersect. Route through the single canonicaliser so a
+  // blank/unrecognised value lands as null instead of a fabricated overlap.
+  const relationship_type = toCanonicalOperator(row.relationship_type);
 
   ctx.mappings.push({
     id: row.id || newId(),

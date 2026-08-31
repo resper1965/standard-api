@@ -4,6 +4,7 @@ import {
   normaliseFrameworkKey,
   resolveFrameworkId,
   pickUnambiguousMappingId,
+  buildFrameworkByName,
 } from "../strm-focal-document.js";
 
 describe("strmDedupeKey", () => {
@@ -35,6 +36,52 @@ describe("resolveFrameworkId", () => {
     // return fw-nist and reintroduce exactly the misattribution 0060 removed.
     expect(resolveFrameworkId("NIST SP 800-53", byName)).toBe(null);
     expect(resolveFrameworkId("", byName)).toBe(null);
+  });
+});
+
+describe("buildFrameworkByName", () => {
+  it("resolves a name held by exactly one row", () => {
+    const { byName, collidedKeys } = buildFrameworkByName([
+      { id: "fw-iso", name: "ISO 27001:2022" },
+    ]);
+    expect(byName.get(normaliseFrameworkKey("ISO 27001:2022"))).toBe("fw-iso");
+    expect(collidedKeys.size).toBe(0);
+  });
+
+  it("resolves a colliding name to null, not to either id", () => {
+    // scf_frameworks is unique on (scf_version_id, framework_id), not name:
+    // two SCF versions can each contribute a row named "ISO 27001:2022".
+    const { byName, collidedKeys } = buildFrameworkByName([
+      { id: "fw-v1", name: "ISO 27001:2022" },
+      { id: "fw-v2", name: "ISO 27001:2022" },
+    ]);
+    expect(byName.has(normaliseFrameworkKey("ISO 27001:2022"))).toBe(false);
+    expect(collidedKeys.has(normaliseFrameworkKey("ISO 27001:2022"))).toBe(
+      true,
+    );
+  });
+
+  it("keeps a collision collided even with a third row of the same name", () => {
+    const { byName, collidedKeys } = buildFrameworkByName([
+      { id: "fw-v1", name: "ISO 27001:2022" },
+      { id: "fw-v2", name: "ISO 27001:2022" },
+      { id: "fw-v3", name: "ISO 27001:2022" },
+    ]);
+    expect(byName.has(normaliseFrameworkKey("ISO 27001:2022"))).toBe(false);
+    expect(collidedKeys.has(normaliseFrameworkKey("ISO 27001:2022"))).toBe(
+      true,
+    );
+  });
+
+  it("does not let a collision on one name affect an unrelated name", () => {
+    const { byName } = buildFrameworkByName([
+      { id: "fw-v1", name: "ISO 27001:2022" },
+      { id: "fw-v2", name: "ISO 27001:2022" },
+      { id: "fw-nist", name: "NIST SP 800-53 R5" },
+    ]);
+    expect(byName.get(normaliseFrameworkKey("NIST SP 800-53 R5"))).toBe(
+      "fw-nist",
+    );
   });
 });
 

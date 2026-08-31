@@ -74,6 +74,8 @@ type CoverageRow = {
   graded: number;
   /** Mappings whose bundle rows disagree — deliberately left ungraded. */
   ambiguous: number;
+  /** Mappings the bundle matched for this framework, but the matched row's operator was NULL — the source didn't state one we could read. */
+  null_operator: number;
   /** Mappings whose bundle row matched on code but whose focal document never resolved to a framework. */
   unresolved: number;
   equal: number;
@@ -109,6 +111,7 @@ async function main() {
                COUNT(s.relationship_type)          AS hits,
                COUNT(DISTINCT s.relationship_type) AS variants,
                MIN(s.relationship_type::text)      AS op,
+               COUNT(s.id)                         AS s_rows,
                COUNT(u.id)                         AS unresolved_hits
           FROM scf_mappings m
           JOIN scf_framework_requirements r ON m.scf_framework_requirement_id = r.id
@@ -131,7 +134,8 @@ async function main() {
         COUNT(*)::int                                              AS total,
         COUNT(*) FILTER (WHERE variants = 1)::int                  AS graded,
         COUNT(*) FILTER (WHERE variants > 1)::int                  AS ambiguous,
-        COUNT(*) FILTER (WHERE hits = 0 AND unresolved_hits > 0)::int AS unresolved,
+        COUNT(*) FILTER (WHERE hits = 0 AND s_rows > 0)::int       AS null_operator,
+        COUNT(*) FILTER (WHERE hits = 0 AND s_rows = 0 AND unresolved_hits > 0)::int AS unresolved,
         COUNT(*) FILTER (WHERE variants = 1 AND op = 'equal')::int       AS equal,
         COUNT(*) FILTER (WHERE variants = 1 AND op = 'subset')::int      AS subset,
         COUNT(*) FILTER (WHERE variants = 1 AND op = 'superset')::int    AS superset,
@@ -147,10 +151,11 @@ async function main() {
         total: acc.total + r.total,
         graded: acc.graded + r.graded,
         ambiguous: acc.ambiguous + r.ambiguous,
+        null_operator: acc.null_operator + r.null_operator,
         unresolved: acc.unresolved + r.unresolved,
         satisfying: acc.satisfying + r.equal + r.subset,
       }),
-      { total: 0, graded: 0, ambiguous: 0, unresolved: 0, satisfying: 0 },
+      { total: 0, graded: 0, ambiguous: 0, null_operator: 0, unresolved: 0, satisfying: 0 },
     );
 
     console.log("Coverage by framework (frameworks with any graded mapping):");
@@ -159,6 +164,7 @@ async function main() {
         "total".padStart(9) +
         "graded".padStart(9) +
         "ambig".padStart(8) +
+        "nullop".padStart(8) +
         "unres".padStart(8) +
         "equal".padStart(8) +
         "subset".padStart(8) +
@@ -170,6 +176,7 @@ async function main() {
           String(r.total).padStart(9) +
           String(r.graded).padStart(9) +
           String(r.ambiguous).padStart(8) +
+          String(r.null_operator).padStart(8) +
           String(r.unresolved).padStart(8) +
           String(r.equal).padStart(8) +
           String(r.subset).padStart(8) +
@@ -186,6 +193,10 @@ async function main() {
     );
     console.log(
       `  ${totals.ambiguous} mappings had bundle rows that disagree and stay ungraded.`,
+    );
+    console.log(
+      `  ${totals.null_operator} mappings matched a bundle row for their own framework whose` +
+        " operator was NULL — the source did not state one we could read; stays ungraded.",
     );
     console.log(
       `  ${totals.unresolved} mappings match a bundle row whose focal document did not` +
