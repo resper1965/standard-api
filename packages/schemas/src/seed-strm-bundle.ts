@@ -41,6 +41,7 @@ import {
   pickUnambiguousMappingId,
   buildFrameworkByName,
 } from "./strm-focal-document.js";
+import { sslForDatabaseUrl } from "./db-ssl.js";
 
 // â”€â”€â”€â”€ Configuration â”€â”€â”€â”€
 
@@ -173,7 +174,7 @@ async function main() {
 
   // â”€â”€ 2. Connect to database â”€â”€
   console.log("\n  ðŸ”Œ Connecting to database...");
-  const client = postgres(databaseUrl, { ssl: "require", max: 5 });
+  const client = postgres(databaseUrl, { ssl: sslForDatabaseUrl(databaseUrl), max: 5 });
   const db = drizzle(client, { schema });
 
   try {

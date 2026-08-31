@@ -8,8 +8,9 @@ import * as schema from "./src/db/schema.js";
 import * as path from "node:path";
 import * as fs from "node:fs";
 import { parseStrmBundleDirectory } from "../scf-core/src/importers/strm-bundle-importer.js";
+import { sslForDatabaseUrl } from "./src/db-ssl.js";
 
-const client = postgres(process.env.DATABASE_URL!, { ssl: "require", max: 1 });
+const client = postgres(process.env.DATABASE_URL!, { ssl: sslForDatabaseUrl(process.env.DATABASE_URL!), max: 1 });
 const db = drizzle(client, { schema });
 
 async function main() {
