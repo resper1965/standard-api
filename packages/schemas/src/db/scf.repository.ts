@@ -1091,6 +1091,12 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
               scfVersionId: dataset.versions[0]?.id ?? "",
               scfFrameworkId: r.scf_framework_id,
               requirementCode: r.requirement_code,
+              // Load-bearing: the STRM backfill joins scf_strm_relationships
+              // to scf_mappings on (scf_control_id, fde_code, scf_framework_id).
+              // Omitted here, every requirement landed with a NULL fde_code and
+              // the backfill graded nothing at all — silently, because a failed
+              // join reports as "no coverage" and not as an error.
+              fdeCode: r.fde_code ?? null,
               title: r.requirement_title,
               description: r.requirement_text ?? null,
               requirementText: r.requirement_text ?? null,
@@ -1105,6 +1111,9 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
             set: {
               title: sql`EXCLUDED.title`,
               description: sql`EXCLUDED.description`,
+              // Refreshed too, so re-seeding repairs rows written before
+              // fdeCode was carried through the insert above.
+              fdeCode: sql`EXCLUDED.fde_code`,
               status: sql`EXCLUDED.status`,
               updatedAt: new Date(),
             },
