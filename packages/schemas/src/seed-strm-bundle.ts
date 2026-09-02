@@ -36,10 +36,8 @@ import {
 } from "../../scf-core/src/importers/strm-operator.js";
 import {
   strmDedupeKey,
-  normaliseFrameworkKey,
-  resolveFrameworkId,
   pickUnambiguousMappingId,
-  buildFrameworkByName,
+  fdiFromBundleFilename,
 } from "./strm-focal-document.js";
 import { sslForDatabaseUrl } from "./db-ssl.js";
 
@@ -214,21 +212,20 @@ async function main() {
     console.log(`     Mappings loaded: ${mappingRows.length}`);
 
     // â”€â”€ 4b. Framework lookup, for resolving each file's focal document â”€â”€
+    // Keyed by framework_id (the Focal Document Identifier), not by name:
+    // bundle files are scf-strm-<FDI>.xlsx, and an identifier cannot collide
+    // the way a display name could.
     const frameworkRows = await db
       .select({
         id: schema.scfFrameworks.id,
-        name: schema.scfFrameworks.name,
+        frameworkId: schema.scfFrameworks.frameworkId,
       })
       .from(schema.scfFrameworks);
 
-    const { byName: frameworkByName, collidedKeys: collidedFrameworkKeys } =
-      buildFrameworkByName(frameworkRows);
-    console.log(`     Frameworks loaded: ${frameworkByName.size}`);
-    if (collidedFrameworkKeys.size > 0) {
-      console.log(
-        `     Ambiguous names:   ${collidedFrameworkKeys.size} â€” shared by >1 scf_frameworks row, resolve to none.`,
-      );
-    }
+    const frameworkByFdi = new Map<string, string>(
+      frameworkRows.map((r) => [r.frameworkId.trim().toLowerCase(), r.id]),
+    );
+    console.log(`     Frameworks loaded: ${frameworkByFdi.size}`);
 
     // â”€â”€ 5. Build upsert records â”€â”€
     console.log("\n  ðŸ”— Resolving STRM entries against DB controls...");
@@ -261,18 +258,12 @@ async function main() {
     let noControl = 0;
     const unknownControls = new Set<string>();
     const unresolvedFocalDocuments = new Set<string>();
-    const collidedFocalDocuments = new Set<string>();
 
     for (const file of summary.files) {
-      const frameworkId = resolveFrameworkId(
-        file.framework_name,
-        frameworkByName,
-      );
+      const fdi = fdiFromBundleFilename(file.filename);
+      const frameworkId = fdi ? (frameworkByFdi.get(fdi) ?? null) : null;
       if (!frameworkId) {
         unresolvedFocalDocuments.add(file.filename);
-        if (collidedFrameworkKeys.has(normaliseFrameworkKey(file.framework_name))) {
-          collidedFocalDocuments.add(file.filename);
-        }
       }
 
       for (const entry of file.entries) {
@@ -344,28 +335,19 @@ async function main() {
         `     Unresolved files:   ${unresolvedFocalDocuments.size} â€” these grade NO mapping.`,
       );
       for (const f of [...unresolvedFocalDocuments].slice(0, 15)) {
-        const reason = collidedFocalDocuments.has(f)
-          ? "ambiguous â€” name shared by >1 scf_frameworks row"
-          : "absent â€” no scf_frameworks row has this name";
+        const fdi = fdiFromBundleFilename(f);
+        const reason = fdi
+          ? `absent â€” no scf_frameworks row has framework_id "${fdi}"`
+          : "unrecognised â€” filename is not shaped like scf-strm-<FDI>.xlsx";
         console.log(`       ${f}  (${reason})`);
       }
       console.log(
-        "     Resolution is exact-match on scf_frameworks.name. Fix the name in",
+        "     Resolution is exact-match on scf_frameworks.framework_id (the FDI",
       );
       console.log(
-        "     the catalogue; never widen the matcher to close the gap.",
+        "     from Authoritative Sources). Fix the catalogue or the bundle",
       );
-      if (collidedFocalDocuments.size > 0) {
-        console.log(
-          `     Of those, ${collidedFocalDocuments.size} are ambiguous, not absent: the catalogue holds`,
-        );
-        console.log(
-          "     more than one scf_frameworks row with that name (e.g. one per SCF",
-        );
-        console.log(
-          "     version). Disambiguate the catalogue row, not this matcher.",
-        );
-      }
+      console.log("     filename; never widen the matcher to close the gap.");
     }
 
     if (rows.length === 0) {
