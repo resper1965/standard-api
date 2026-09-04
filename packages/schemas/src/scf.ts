@@ -243,8 +243,10 @@ export const ScfStrmRelationshipSchema = z.object({
   fde_code: z.string().optional(),
   /** Human-readable name of the FDE requirement. */
   fde_name: z.string().optional(),
-  // ADR-001: canonical 5-value STRM operator
-  relationship_type: StrmOperatorSchema,
+  // Nullable: null = a origem não declara operador STRM (ADR-001). Migration
+  // 0059 made the column nullable and the seeder writes NULL by design when
+  // the bundle's operator did not canonicalise; this schema has to agree.
+  relationship_type: StrmOperatorSchema.nullable(),
   /**
    * Numeric weight 0.0â€“1.0 used by STRMWeightCalculator for "intersects" operator.
    * null = use default 0.5 per ADR-001.

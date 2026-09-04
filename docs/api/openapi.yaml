@@ -1614,6 +1614,12 @@ components:
           maximum: 9007199254740991
         compliance_pct:
           type: number
+          nullable: true
+        compliance_reason:
+          type: string
+          enum:
+            - nothing_assessable
+          nullable: true
         total_findings:
           type: number
           minimum: -9007199254740991
@@ -1655,6 +1661,7 @@ components:
         - total_controls
         - implemented_controls
         - compliance_pct
+        - compliance_reason
         - total_findings
         - critical_findings
         - high_findings
@@ -7436,6 +7443,12 @@ components:
             maximum: 9007199254740991
         compliance_avg_pct:
           type: number
+          nullable: true
+        compliance_reason:
+          type: string
+          enum:
+            - nothing_assessable
+          nullable: true
         total_open_poams:
           type: number
           minimum: -9007199254740991
@@ -7461,6 +7474,7 @@ components:
         - total_assessments
         - assessments_by_state
         - compliance_avg_pct
+        - compliance_reason
         - total_open_poams
         - total_critical_findings
         - total_high_findings
@@ -12956,6 +12970,7 @@ components:
             - intersects
             - superset
             - no_relation
+          nullable: true
         relationship_strength:
           type: string
           nullable: true
@@ -13009,6 +13024,7 @@ components:
             - intersects
             - superset
             - no_relation
+          nullable: true
         relationship_strength:
           type: string
           nullable: true
@@ -16434,11 +16450,39 @@ components:
     GapAnalysisOutput:
       type: object
       properties:
+        framework:
+          type: string
+        summary:
+          type: object
+          properties:
+            total_required_controls:
+              type: number
+            implemented_controls:
+              type: number
+            missing_controls:
+              type: number
+            compliance_percentage:
+              type: number
+              nullable: true
+            compliance_reason:
+              type: string
+              nullable: true
+              enum:
+                - nothing_assessable
+                - null
+          required:
+            - total_required_controls
+            - implemented_controls
+            - missing_controls
+            - compliance_percentage
+            - compliance_reason
         missing_controls:
           type: array
           items:
             type: string
       required:
+        - framework
+        - summary
         - missing_controls
     DpiaScoreOutput:
       type: object
@@ -16466,11 +16510,19 @@ components:
           type: number
         score:
           type: number
+          nullable: true
+        reason:
+          type: string
+          nullable: true
+          enum:
+            - nothing_assessable
+            - null
       required:
         - total_required
         - implemented
         - missing
         - score
+        - reason
     RetentionCheckOutput:
       type: object
       properties:
@@ -27383,12 +27435,14 @@ paths:
                           type: string
                         relationship_type:
                           type: string
+                          nullable: true
                           enum:
                             - equal
                             - subset
                             - intersects
                             - superset
                             - no_relation
+                            - null
                         relationship_strength:
                           type: string
                           nullable: true
@@ -27471,12 +27525,14 @@ paths:
                           type: string
                         relationship_type:
                           type: string
+                          nullable: true
                           enum:
                             - equal
                             - subset
                             - intersects
                             - superset
                             - no_relation
+                            - null
                         relationship_strength:
                           type: string
                           nullable: true
@@ -27570,12 +27626,14 @@ paths:
                           type: string
                         relationship_type:
                           type: string
+                          nullable: true
                           enum:
                             - equal
                             - subset
                             - intersects
                             - superset
                             - no_relation
+                            - null
                         relationship_strength:
                           type: string
                           nullable: true

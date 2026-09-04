@@ -31,6 +31,7 @@
 import ExcelJS from "exceljs";
 import * as path from "node:path";
 import * as fs from "node:fs";
+import { Readable } from "node:stream";
 import { fileURLToPath } from "node:url";
 
 const projectRoot = path.resolve(
@@ -58,8 +59,8 @@ export interface StrmBundleEntry {
   fde_name: string;
   /** Tipo de rationale STRM: "Functional" | "Structural" */
   strm_rationale: string;
-  /** Tipo de relaÃ§Ã£o STRM normalizado */
-  relationship_type: StrmRelationshipType;
+  /** Operador STRM normalizado; null = a origem nao declara um que saibamos ler */
+  relationship_type: StrmRelationshipType | null;
   /** CÃ³digo do controle SCF (ex: "IAC-15.8", "GOV-02") */
   scf_code: string;
   /** Nome do controle SCF */
@@ -75,7 +76,7 @@ export interface StrmBundleEntry {
 export interface StrmBundleFileResult {
   /** Nome do arquivo XLSX */
   filename: string;
-  /** Nome do framework (sheet name) */
+  /** Nome do focal document (row 0 col 6); falls back to sheet name, then filename */
   framework_name: string;
   /** URL do focal document */
   focal_document_url: string;
@@ -87,12 +88,16 @@ export interface StrmBundleFileResult {
   warnings: string[];
   /** Linhas skipped (ex: N/A, No Relationship) */
   skipped: number;
+  /** Rows kept with no operator because the source cell was unreadable */
+  unknown_operator: number;
 }
 
 export interface StrmBundleImportSummary {
   total_files: number;
   total_entries: number;
   total_skipped: number;
+  /** Rows kept with no operator because the source cell was unreadable */
+  total_unknown_operator: number;
   total_warnings: number;
   files: StrmBundleFileResult[];
 }
@@ -100,37 +105,62 @@ export interface StrmBundleImportSummary {
 // â”€â”€â”€â”€ Helpers â”€â”€â”€â”€
 
 /**
- * Normaliza o campo "STRM Relationship" do XLSX para operadores canÃ³nicos (ADR-001).
+ * Reads the XLSX "STRM Relationship" cell.
+ *
+ * Three outcomes, deliberately distinguished:
+ *   operator - the cell states one of the five canonical STRM operators
+ *   skip     - a leaked header row; not data, drop the row entirely
+ *   unknown  - a real row whose operator we cannot read; keep the row, and
+ *              record no operator for it
  *
  * Valores reais nos 183 arquivos do bundle (raw scan):
- *   "Intersects With"    39,373  â†’ intersects
- *   "Subset Of"           8,856  â†’ subset
- *   "Equal"               4,850  â†’ equal
- *   "Functional"            567  â†’ null (leaked header row, skip)
- *   "Instersects With"      295  â†’ intersects (typo no bundle)
- *   "STRM\nRelationship"    179  â†’ null (leaked header row, skip)
- *   "intersects"            120  â†’ intersects
- *   "Subset of"             116  â†’ subset
- *   "Superset Of"            42  â†’ superset
- *   "superset of"             1  â†’ superset
+ *   "Intersects With"    39,373  -> intersects
+ *   "Subset Of"           8,856  -> subset
+ *   "Equal"               4,850  -> equal
+ *   "Functional"            567  -> skip (leaked header row)
+ *   "Instersects With"      295  -> intersects (typo no bundle)
+ *   "STRM\nRelationship"    179  -> skip (leaked header row)
+ *   "intersects"            120  -> intersects
+ *   "Subset of"             116  -> subset
+ *   "Superset Of"            42  -> superset
+ *   "superset of"             1  -> superset
  *
- * â›” NEVER return "intersecting", "no_relationship", "related", or "source_defined".
- *    See docs/decisions/ADR-001-strm-weights-algorithm.md
+ * `unknown` used to return "intersects" under a comment calling it a
+ * conservative fallback. It is not conservative: `intersects` asserts that two
+ * scopes overlap, which is a claim the unreadable cell does not support. That
+ * fallback is upstream of every other guard in this codebase, so it silently
+ * defeated them.
+ *
+ * Deliberately absent from the mapping below: "direct", "related",
+ * "source_defined" and "no_relationship". None appears in the recorded scan
+ * of the 183 files, and the header above already forbade emitting the middle
+ * two. They now read as unknown.
+ * â›” See docs/decisions/ADR-001-strm-weights-algorithm.md
  */
-function normalizeRelationshipType(raw: string): StrmRelationshipType | null {
+export type StrmOperatorCell =
+  | { kind: "operator"; value: StrmRelationshipType }
+  | { kind: "skip" }
+  | { kind: "unknown"; raw: string };
+
+export function parseStrmOperatorCell(raw: string): StrmOperatorCell {
   const v = raw.trim().toLowerCase();
-  if (v === "") return null;
-  if (v === "equal" || v === "direct") return "equal";
-  if (v === "subset" || v === "subset of") return "subset";
-  if (v === "superset" || v === "superset of") return "superset";
-  if (v.startsWith("intersect") || v === "related" || v === "source_defined")
-    return "intersects";
-  if (v === "no relationship" || v === "no_relationship" || v === "no relation")
-    return "no_relation";
-  // Leaked header rows â€” not data, skip
-  if (v === "functional" || v.startsWith("strm")) return null;
-  // Unknown â€” conservative fallback to intersects (partial overlap)
-  return "intersects";
+
+  if (v === "") return { kind: "skip" };
+  // Leaked header rows â€” the sheet's own headings, not data.
+  if (v === "functional" || v.startsWith("strm")) return { kind: "skip" };
+
+  if (v === "equal") return { kind: "operator", value: "equal" };
+  if (v === "subset" || v === "subset of")
+    return { kind: "operator", value: "subset" };
+  if (v === "superset" || v === "superset of")
+    return { kind: "operator", value: "superset" };
+  if (v === "no relationship" || v === "no relation")
+    return { kind: "operator", value: "no_relation" };
+  // "instersect" is a misspelling present on 295 rows of the bundle.
+  if (v.startsWith("intersect") || v.startsWith("instersect"))
+    return { kind: "operator", value: "intersects" };
+
+  return { kind: "unknown", raw };
 }
 
 /**
@@ -145,6 +175,90 @@ function normalizeStrength(raw: number | string): StrmRelationshipStrength {
   if (n >= 8) return "strong";
   if (n >= 4) return "moderate";
   return "weak";
+}
+
+/**
+ * Converts one ExcelJS streaming-reader `row.values` array into a 0-indexed
+ * cell array, or `null` if the row is genuinely blank (every cell empty).
+ *
+ * Extracted as a seam for testing: the streaming reader (unlike the old
+ * `eachRow({ includeEmpty: false })`) yields physically-blank rows too, and
+ * `parseStrmBundleFile` depends on fixed row offsets (metadata at 0-2,
+ * header at 3, data from 4) that a dropped filter would silently shift.
+ */
+export function rowValuesToCellsOrNull(
+  values: (string | number | undefined)[],
+): (string | number)[] | null {
+  // ExcelJS row.values is 1-indexed (index 0 is undefined), so slice from 1
+  const cells = values.slice(1).map((v) => v ?? "");
+  if (cells.every((v) => String(v).trim() === "")) return null;
+  return cells;
+}
+
+const normHeader = (c: unknown): string =>
+  String(c ?? "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+
+/**
+ * The metadata value is the cell immediately to the right of its label, not a
+ * fixed column: `scf-strm-usa-federal-doe-c2m2-2-1.xlsx` carries an extra
+ * leading column, so its label sits at index 6 and its value at 7 while every
+ * other file has 5 and 6. Falls back to index 6 when the label is absent.
+ */
+export function metaValueAfterLabel(
+  row: (string | number)[] | undefined,
+  label: string,
+): string {
+  if (!row) return "";
+  const i = row.findIndex((c) => normHeader(c).startsWith(label));
+  return String((i >= 0 ? row[i + 1] : row[6]) ?? "").trim();
+}
+
+/**
+ * Where each field lives in a bundle data row, read off the header row rather
+ * than assumed.
+ *
+ * `scf-strm-usa-federal-doe-c2m2-2-1.xlsx` duplicates its first column ("FDE #"
+ * appears twice), shifting every later column right by one. Read at fixed
+ * offsets, its STRM Relationship column landed on STRM Rationale, whose value
+ * is the literal "Functional" — which {@link parseStrmOperatorCell} classifies
+ * as a leaked header row. All 567 rows of that framework were dropped in
+ * silence, and were counted as leaked headers in the figure reported to the
+ * customer.
+ *
+ * First match wins for the duplicated "FDE #": the leftmost column is the one
+ * whose notation matches the catalogue ("ACCESS-1a", not "ACCESS-1.a"), and
+ * `fde_code` is what the operator backfill joins on.
+ *
+ * The fixed indices remain only as the fallback for a header a file does not
+ * name.
+ */
+export function resolveBundleColumns(headerRow: (string | number)[]): {
+  fdeCode: number;
+  fdeName: number;
+  rationale: number;
+  relationship: number;
+  scfControlName: number;
+  scfCode: number;
+  strength: number;
+  notes: number;
+} {
+  const col = (header: string, fallback: number): number => {
+    const i = headerRow.findIndex((c) => normHeader(c) === header);
+    return i >= 0 ? i : fallback;
+  };
+  return {
+    fdeCode: col("fde #", 0),
+    fdeName: col("fde name", 1),
+    rationale: col("strm rationale", 3),
+    relationship: col("strm relationship", 4),
+    scfControlName: col("scf control", 5),
+    scfCode: col("scf #", 6),
+    strength: col("strength of relationship", 8),
+    notes: col("notes", 9),
+  };
 }
 
 // â”€â”€â”€â”€ Core Parser â”€â”€â”€â”€
@@ -165,17 +279,69 @@ export async function parseStrmBundleFile(
     throw new Error(`Path traversal detected: ${filePath}`);
   }
 
+  // Read via the streaming reader, fed from a Buffer (avoid ExcelJS Unicode
+  // path bug on Windows). `Workbook().xlsx.load()` throws
+  // "Cannot read properties of undefined (reading 'comments')" on 175/183
+  // real bundle files; the streaming reader parses all of them.
+  const buf = fs.readFileSync(resolvedPath);
+  const reader = new ExcelJS.stream.xlsx.WorkbookReader(Readable.from(buf), {
+    worksheets: "emit",
+    sharedStrings: "cache",
+    styles: "ignore",
+    hyperlinks: "ignore",
+  });
+
+  // Collect all rows as arrays of cell values (matching SheetJS header:1 format)
+  let sheetName: string | undefined;
+  const allRows: (string | number)[][] = [];
+  let sheetIndex = 0;
+  for await (const worksheet of reader) {
+    const isFirstSheet = sheetIndex === 0;
+    sheetIndex++;
+    for await (const row of worksheet) {
+      if (!isFirstSheet) continue; // only the first worksheet is used, exactly as today
+      const values = row.values as (string | number | undefined)[];
+      const cells = rowValuesToCellsOrNull(values);
+      if (cells === null) continue;
+      allRows.push(cells);
+    }
+    // `.name` is set at runtime (workbook-reader.js) but missing from
+    // ExcelJS's WorksheetReader type declarations.
+    if (isFirstSheet)
+      sheetName = (worksheet as unknown as { name?: string }).name;
+  }
+
+  return parseStrmBundleRows(allRows, sheetName, filename, options);
+}
+
+/**
+ * Turns the rows of a bundle sheet into entries. Everything
+ * {@link parseStrmBundleFile} does apart from reading the file.
+ *
+ * Split out because it can be tested and this cannot: ExcelJS's `WorkbookReader`
+ * races between parsing `workbook.xml` and dispatching the worksheet entry, and
+ * loses often enough on small workbooks (roughly 1 test run in 8) that no
+ * synthetic .xlsx fixture is a stable test input. Seven approaches were measured
+ * — synchronous writes, committed fixtures, four reader-option combinations,
+ * disabling test parallelism, twenty retries per read, and chunking the source
+ * stream — and none closed it; the details are in
+ * docs/runbooks/strm-reimport.md. The real bundle is read by the seeder, 183 of
+ * 183 files on every run, which is where that path is actually proven.
+ *
+ * @param allRows   non-blank rows: 0-2 metadata, 3 header, 4+ data
+ * @param sheetName worksheet name; the framework-name fallback when the
+ *                  metadata cell is blank (real files are nearly all "Sheet1")
+ */
+export function parseStrmBundleRows(
+  allRows: (string | number)[][],
+  sheetName: string | undefined,
+  filename: string,
+  options: { includeNoRelationship?: boolean } = {},
+): StrmBundleFileResult {
   const warnings: string[] = [];
   let skipped = 0;
+  let unknownOperator = 0;
 
-  // Read via buffer (avoid ExcelJS Unicode path bug on Windows)
-  const buf = fs.readFileSync(resolvedPath);
-  const wb = new ExcelJS.Workbook();
-  await wb.xlsx.load(
-    buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength),
-  );
-
-  const sheetName = wb.worksheets[0]?.name;
   if (!sheetName) {
     return {
       filename,
@@ -185,40 +351,40 @@ export async function parseStrmBundleFile(
       entries: [],
       warnings: ["No sheets found in workbook"],
       skipped: 0,
+      unknown_operator: 0,
     };
   }
 
-  const ws = wb.getWorksheet(sheetName);
-  if (!ws) {
-    return {
-      filename,
-      framework_name: sheetName,
-      focal_document_url: "",
-      published_strm_url: "",
-      entries: [],
-      warnings: ["Sheet not accessible"],
-      skipped: 0,
-    };
-  }
-
-  // Collect all rows as arrays of cell values (matching SheetJS header:1 format)
-  const allRows: (string | number)[][] = [];
-  ws.eachRow({ includeEmpty: false }, (row) => {
-    const values = row.values as (string | number | undefined)[];
-    // ExcelJS row.values is 1-indexed (index 0 is undefined), so slice from 1
-    allRows.push(values.slice(1).map((v) => v ?? ""));
-  });
-
-  // Rows 0-2: metadata
+  // Rows 0-2: metadata, row 3: headers, row 4+: data.
   // Row 0: ["NIST IR 8477...", "", ..., "Focal Document: ", "<framework name>"]
   // Row 1: ["Reference document:", "SCF 2026.1", ..., "Focal Document URL: ", "<url>"]
   // Row 2: ["STRM Guidance: ", "<url>", ..., "Published STRM URL:", "<url>"]
+  //
+  // Both the metadata and the data columns are located by their label/header
+  // text, never by a fixed index. `scf-strm-usa-federal-doe-c2m2-2-1.xlsx`
+  // duplicates its first column ("FDE #" twice), shifting every later column
+  // right by one: read positionally, its STRM Relationship column landed on
+  // STRM Rationale, whose value is the literal "Functional", which
+  // parseStrmOperatorCell classifies as a leaked header. All 567 rows of that
+  // framework were dropped in silence. The fixed indices survive only as the
+  // fallback for a header this file does not name.
 
-  const focalDocumentUrl = String(allRows[1]?.[6] ?? "");
-  const publishedStrmUrl = String(allRows[2]?.[6] ?? "");
+  const frameworkNameFromCell = metaValueAfterLabel(
+    allRows[0],
+    "focal document:",
+  );
+  const frameworkName = frameworkNameFromCell || sheetName || filename;
+  const focalDocumentUrl = metaValueAfterLabel(
+    allRows[1],
+    "focal document url:",
+  );
+  const publishedStrmUrl = metaValueAfterLabel(
+    allRows[2],
+    "published strm url:",
+  );
 
-  // Row 3: headers â€” skip
-  // Row 4+: data
+  const COL = resolveBundleColumns(allRows[3] ?? []);
+
   const dataRows = allRows.slice(4); // skip rows 0-3 (meta + headers)
 
   const entries: StrmBundleEntry[] = [];
@@ -227,14 +393,14 @@ export async function parseStrmBundleFile(
     const row = dataRows[i];
     if (!row || row.length === 0) continue;
 
-    const fde_code = String(row[0] ?? "").trim();
-    const fde_name = String(row[1] ?? "").trim();
-    const strm_rationale = String(row[3] ?? "").trim();
-    const strm_relationship_raw = String(row[4] ?? "").trim();
-    const scf_control_name = String(row[5] ?? "").trim();
-    const scf_code = String(row[6] ?? "").trim();
-    const strength_raw_str = row[8];
-    const notes = String(row[9] ?? "").trim();
+    const fde_code = String(row[COL.fdeCode] ?? "").trim();
+    const fde_name = String(row[COL.fdeName] ?? "").trim();
+    const strm_rationale = String(row[COL.rationale] ?? "").trim();
+    const strm_relationship_raw = String(row[COL.relationship] ?? "").trim();
+    const scf_control_name = String(row[COL.scfControlName] ?? "").trim();
+    const scf_code = String(row[COL.scfCode] ?? "").trim();
+    const strength_raw_str = row[COL.strength];
+    const notes = String(row[COL.notes] ?? "").trim();
 
     // Skip empty rows
     if (!fde_code && !scf_code) continue;
@@ -249,12 +415,20 @@ export async function parseStrmBundleFile(
       continue;
     }
 
-    const relationship_type = normalizeRelationshipType(strm_relationship_raw);
+    const cell = parseStrmOperatorCell(strm_relationship_raw);
 
-    // Skip leaked header rows (normalizer returns null)
-    if (relationship_type === null) {
+    if (cell.kind === "skip") {
       skipped++;
       continue;
+    }
+
+    const relationship_type = cell.kind === "operator" ? cell.value : null;
+
+    if (cell.kind === "unknown") {
+      unknownOperator++;
+      warnings.push(
+        `Row ${i + 5}: unreadable STRM operator "${cell.raw}" (SCF: ${scf_code}) - kept with no operator`,
+      );
     }
 
     // Skip no_relation unless explicitly included
@@ -279,7 +453,7 @@ export async function parseStrmBundleFile(
       fde_code,
       fde_name,
       strm_rationale,
-      relationship_type, // guaranteed non-null here
+      relationship_type, // null when the source operator was unreadable
       scf_code,
       scf_control_name,
       strength_raw,
@@ -290,12 +464,13 @@ export async function parseStrmBundleFile(
 
   return {
     filename,
-    framework_name: sheetName,
+    framework_name: frameworkName,
     focal_document_url: focalDocumentUrl,
     published_strm_url: publishedStrmUrl,
     entries,
     warnings,
     skipped,
+    unknown_operator: unknownOperator,
   };
 }
 
@@ -326,20 +501,41 @@ export async function parseStrmBundleDirectory(
 
   for (const filename of files) {
     const filePath = path.join(dirPath, filename);
-    const result = await parseStrmBundleFile(
-      filePath,
-      filename,
-      options.includeNoRelationship !== undefined
-        ? { includeNoRelationship: options.includeNoRelationship }
-        : {},
-    );
-    results.push(result);
+    try {
+      const result = await parseStrmBundleFile(
+        filePath,
+        filename,
+        options.includeNoRelationship !== undefined
+          ? { includeNoRelationship: options.includeNoRelationship }
+          : {},
+      );
+      results.push(result);
+    } catch (error) {
+      // One bad file must not abort the other 182 — but it must stay
+      // visible, since a silently skipped framework is indistinguishable
+      // from one the bundle does not cover.
+      const message = error instanceof Error ? error.message : String(error);
+      results.push({
+        filename,
+        framework_name: filename,
+        focal_document_url: "",
+        published_strm_url: "",
+        entries: [],
+        warnings: [`Failed to parse ${filename}: ${message}`],
+        skipped: 0,
+        unknown_operator: 0,
+      });
+    }
   }
 
   return {
     total_files: results.length,
     total_entries: results.reduce((sum, r) => sum + r.entries.length, 0),
     total_skipped: results.reduce((sum, r) => sum + r.skipped, 0),
+    total_unknown_operator: results.reduce(
+      (sum, r) => sum + r.unknown_operator,
+      0,
+    ),
     total_warnings: results.reduce((sum, r) => sum + r.warnings.length, 0),
     files: results,
   };

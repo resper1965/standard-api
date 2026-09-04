@@ -6,8 +6,9 @@ import postgres from "postgres";
 import * as path from "node:path";
 import * as fs from "node:fs";
 import * as XLSX from "xlsx";
+import { sslForDatabaseUrl } from "./src/db-ssl.js";
 
-const client = postgres(process.env.DATABASE_URL!, { ssl: "require", max: 1 });
+const client = postgres(process.env.DATABASE_URL!, { ssl: sslForDatabaseUrl(process.env.DATABASE_URL!), max: 1 });
 
 async function main() {
   const STRM_DIR = path.resolve("../../assets/strm");

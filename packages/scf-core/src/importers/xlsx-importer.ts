@@ -63,6 +63,8 @@ import {
   parseSheetToRows,
   type ParsedRow,
 } from "./xlsx-tab-parser";
+import { parseAuthoritativeSources } from "./authoritative-sources";
+import { parseWideCrosswalk } from "./wide-crosswalk";
 
 const newId = (): string => crypto.randomUUID();
 
@@ -226,6 +228,46 @@ const parseControlsTab = (
 
   return { domains, controls, warnings };
 };
+
+// â”€â”€â”€â”€ Wide Crosswalk Fallback Helpers â”€â”€â”€â”€
+// Edition 2026.1.1 has no crosswalk tabs: the 250 frameworks are columns
+// inside the controls sheet, indexed by the `Authoritative Sources` sheet.
+// These helpers feed that layout to wide-crosswalk.ts, which takes plain
+// row arrays rather than a workbook.
+
+/**
+ * Read a sheet as raw row arrays (header row included at index 0), for
+ * parsers that locate columns by header text rather than by the
+ * normalized-and-keyed shape `parseSheetToRows` produces.
+ */
+const getSheetRawRows = (
+  sheet: Parameters<typeof getSheetHeaders>[0],
+): string[][] => {
+  const rows: string[][] = [];
+  sheet.eachRow({ includeEmpty: false }, (row) => {
+    const values = row.values as (string | number | undefined)[];
+    // ExcelJS row.values is 1-indexed (index 0 is undefined); slice from 1.
+    rows.push(values.slice(1).map((v) => (v == null ? "" : String(v))));
+  });
+  return rows;
+};
+
+/** Same candidate list `findControlCode` uses, applied to a raw header array. */
+const CONTROL_CODE_HEADER_CANDIDATES = [
+  "scf_control_#",
+  "scf_#",
+  "control_#",
+  "scf_control_identifier",
+  "scf_identifier",
+  "control_code",
+  "control_id",
+  "scf_control_number",
+];
+
+const findControlCodeColumnIndex = (headers: string[]): number =>
+  headers.findIndex((h) =>
+    CONTROL_CODE_HEADER_CANDIDATES.includes(normalizeHeader(h)),
+  );
 
 // â”€â”€â”€â”€ Crosswalk Tab Parser â”€â”€â”€â”€
 
@@ -1312,6 +1354,73 @@ export const createXlsxScfImporter = (): ScfImporter => ({
       }
     }
 
+    // Phase 2b: Wide crosswalk fallback. Runs ONLY when the tab-based path
+    // above found nothing — older editions with real crosswalk tabs are
+    // unaffected. Edition 2026.1.1 has none: the crosswalk is 250 columns
+    // inside the controls sheet, indexed by the `Authoritative Sources`
+    // sheet.
+    if (allFrameworks.length === 0) {
+      const authoritativeSourcesSheetName = sheetNames.find((name) => {
+        const sheet = wb.getWorksheet(name);
+        if (!sheet) return false;
+        return (
+          classifyTab(name, getSheetHeaders(sheet)).type ===
+          "authoritative_sources"
+        );
+      });
+
+      const controlsSheetName = sheetNames.find((name) => {
+        const sheet = wb.getWorksheet(name);
+        if (!sheet) return false;
+        return classifyTab(name, getSheetHeaders(sheet)).type === "controls";
+      });
+
+      if (authoritativeSourcesSheetName && controlsSheetName) {
+        const authoritativeSourcesSheet = wb.getWorksheet(
+          authoritativeSourcesSheetName,
+        )!;
+        const controlsSheet = wb.getWorksheet(controlsSheetName)!;
+
+        const { sources, warnings: authoritativeSourcesWarnings } =
+          parseAuthoritativeSources(getSheetRawRows(authoritativeSourcesSheet));
+        allWarnings.push(...authoritativeSourcesWarnings);
+
+        const [controlsHeaderRow, ...controlsDataRows] =
+          getSheetRawRows(controlsSheet);
+        const controlCodeColumn = controlsHeaderRow
+          ? findControlCodeColumnIndex(controlsHeaderRow)
+          : -1;
+
+        if (controlsHeaderRow && controlCodeColumn !== -1) {
+          const wideResult = parseWideCrosswalk({
+            headerRow: controlsHeaderRow,
+            dataRows: controlsDataRows,
+            sources,
+            versionId,
+            controlByCode,
+            controlCodeColumn,
+          });
+
+          allFrameworks.push(...wideResult.frameworks);
+          allRequirements.push(...wideResult.requirements);
+          allMappings.push(...wideResult.mappings);
+          allWarnings.push(...wideResult.warnings);
+        } else {
+          allWarnings.push(
+            `Wide crosswalk: could not locate the SCF control code column on sheet "${controlsSheetName}".`,
+          );
+        }
+      }
+
+      if (allFrameworks.length === 0) {
+        allWarnings.push(
+          "No crosswalk found: neither crosswalk tabs nor a wide " +
+            "(Authoritative Sources + column-per-framework) crosswalk " +
+            "produced any frameworks.",
+        );
+      }
+    }
+
     // Phase 1.5: Parse extended meta-model tabs (AOs, ERL, Risks, Threats, Maturity, DPMP, MA&D)
     const allAssessmentObjectives: ScfAssessmentObjective[] = [];
     const allEvidenceRequests: ScfEvidenceRequest[] = [];
@@ -1464,18 +1573,13 @@ export const createXlsxScfImporter = (): ScfImporter => ({
       source: e.source,
     }));
 
-    // Also update allMappings relationship_type to the inferred STRM type
-    // so scf_mappings.relationship_type reflects actual STRM (not hardcoded "related")
-    const mappingIdToStrmType = new Map<string, string>();
-    for (const e of strmInferred) {
-      mappingIdToStrmType.set(e.mapping_id, e.relationship_type);
-    }
-    for (const m of allMappings) {
-      const inferredType = mappingIdToStrmType.get(m.id);
-      if (inferredType) {
-        (m as { relationship_type: string }).relationship_type = inferredType;
-      }
-    }
+    // Deliberately NOT copied onto allMappings. These operators are inferred
+    // from mapping cardinality, not stated by the SCF: a requirement mapping to
+    // exactly one control becomes `equal`, which the consumer's policy reads as
+    // "satisfies". Writing that into scf_mappings.relationship_type would make
+    // a structural coincidence indistinguishable from a recorded relationship.
+    // They stay in scf_strm_relationships under their own source label, where a
+    // reader can tell what produced them.
 
     const importRun: ScfImportRun = {
       id: newId(),

@@ -2,7 +2,6 @@
 import {
   STRM_OPERATORS,
   normaliseRelationshipType,
-  estimateStrengthScore,
 } from "../strm-normaliser";
 
 describe("STRM Canonical Operators â€” NIST IR 8477", () => {
@@ -62,38 +61,7 @@ describe("normaliseRelationshipType â€” conversÃ£o de legado para canÃ³
   });
 });
 
-describe("estimateStrengthScore â€” conversÃ£o de texto legado para numÃ©rico", () => {
-  it('converte "strong" â†’ 1.0', () => {
-    expect(estimateStrengthScore("strong")).toBe(1.0);
-  });
-
-  it('converte "high" â†’ 1.0', () => {
-    expect(estimateStrengthScore("high")).toBe(1.0);
-  });
-
-  it('converte "moderate" â†’ 0.5', () => {
-    expect(estimateStrengthScore("moderate")).toBe(0.5);
-  });
-
-  it('converte "related" (legado ambÃ­guo) â†’ 0.5', () => {
-    expect(estimateStrengthScore("related")).toBe(0.5);
-  });
-
-  it('converte "weak" â†’ 0.25', () => {
-    expect(estimateStrengthScore("weak")).toBe(0.25);
-  });
-
-  it("retorna 0.5 como fallback conservador para valores desconhecidos", () => {
-    expect(estimateStrengthScore("unknown")).toBe(0.5);
-  });
-
-  it("nÃ£o produz valores fora do intervalo [0.0, 1.0]", () => {
-    const values = ["strong", "high", "moderate", "medium", "weak", "low", "related", "unknown"];
-    for (const v of values) {
-      const score = estimateStrengthScore(v);
-      expect(score).toBeGreaterThanOrEqual(0.0);
-      expect(score).toBeLessThanOrEqual(1.0);
-    }
-  });
-});
+// estimateStrengthScore and its tests were removed with it: migration 0051's
+// one-time backfill helper, no production callers, and its `?? 0.5` fallback
+// was the strength half of the fabrication family this branch removes.
 
