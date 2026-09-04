@@ -238,10 +238,13 @@ superset** — so 257 remain `intersects`, but now because the bundle says so.
   | Reader options: current / none / `worksheets:emit` / `entries:emit` | 23, 33, 36, 33 failures per 40 — the one in use is the best |
   | `vitest --no-file-parallelism` | worse: 6 runs in 8 |
   | Retrying each read up to 20 times | 20 of 200 still failed — **the failures are not independent** |
+  | Feeding the reader in 128-byte chunks instead of one buffer | 7 of 600 outside the runner (~40x better) but **6 runs in 12 inside it** — worse than doing nothing |
   | The 183 real bundle files | 183 of 183, every run |
 
   So it is neither the writer nor the test runner: the reader is unreliable on
-  small archives, and retrying does not rescue it. The three tests in
+  small archives, retrying does not rescue it, and the one change that helped
+  substantially in isolation made things worse in the runner — which is reason
+  enough not to ship it. The three tests in
   `packages/scf-core/src/__tests__/strm-bundle-file-parsing.test.ts` fail about
   1 run in 8 (down from 2 in 8, by writing the fixture synchronously from a
   buffer), and because `pnpm test` runs packages recursively, a failure there
