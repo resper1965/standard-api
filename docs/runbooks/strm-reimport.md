@@ -243,20 +243,20 @@ superset** — so 257 remain `intersects`, but now because the bundle says so.
 
   So it is neither the writer nor the test runner: the reader is unreliable on
   small archives, retrying does not rescue it, and the one change that helped
-  substantially in isolation made things worse in the runner — which is reason
-  enough not to ship it. The three tests in
-  `packages/scf-core/src/__tests__/strm-bundle-file-parsing.test.ts` fail about
-  1 run in 8 (down from 2 in 8, by writing the fixture synchronously from a
-  buffer), and because `pnpm test` runs packages recursively, a failure there
-  **aborts the whole suite** — that is why the `pnpm test` checklist box on the
-  PR is unticked.
+  substantially in isolation made things worse in the runner.
 
-  **This needs a decision, and it is not a test-only concern.** The smallest real
-  bundle file is 10,269 bytes against fixtures of ~6,500 — a factor of 1.5 from
-  the size where the read is lost more often than won. A file that fails to parse
-  is recorded as a warning and the import continues, so a framework would appear
-  in one import and be absent from the next. The options are: replace ExcelJS's
-  streaming reader for this path, drop the file round-trip and rely on the pure
-  unit tests plus the 183-file run above, or accept the flake and keep `pnpm test`
-  amber. The logic those three tests cover is already unit-tested on plain arrays
-  in `strm-bundle-columns.test.ts` and `strm-bundle-operator.test.ts`.
+  **Resolved for the test suite by not depending on it.** `parseStrmBundleFile`
+  was split: `parseStrmBundleRows` holds everything except the read, and the
+  tests drive it with plain arrays. Coverage went from three tests to eight —
+  the C2M2 shifted layout, the filename fallback, the no-sheets case and the
+  unreadable-operator path were all untested before — and the suite ran 12 of 12
+  green where it had been failing 1 in 8. `pnpm test` now exits 0.
+
+  **What remains open is the production side, and it is unrealised rather than
+  fixed.** The smallest real bundle file is 10,269 bytes against the ~6,500 of
+  the fixtures that failed — a factor of 1.5 from the size where the read is
+  lost more often than won. All 183 files parse on every run, but a file that
+  failed would be recorded as a warning while the import continues, so a
+  framework would appear in one import and be absent from the next. The signal
+  to watch is `Files processed: 183` and the framework's row in the coverage
+  table; if a file ever fails, re-run rather than accept the result.
