@@ -279,10 +279,6 @@ export async function parseStrmBundleFile(
     throw new Error(`Path traversal detected: ${filePath}`);
   }
 
-  const warnings: string[] = [];
-  let skipped = 0;
-  let unknownOperator = 0;
-
   // Read via the streaming reader, fed from a Buffer (avoid ExcelJS Unicode
   // path bug on Windows). `Workbook().xlsx.load()` throws
   // "Cannot read properties of undefined (reading 'comments')" on 175/183
@@ -314,6 +310,37 @@ export async function parseStrmBundleFile(
     if (isFirstSheet)
       sheetName = (worksheet as unknown as { name?: string }).name;
   }
+
+  return parseStrmBundleRows(allRows, sheetName, filename, options);
+}
+
+/**
+ * Turns the rows of a bundle sheet into entries. Everything
+ * {@link parseStrmBundleFile} does apart from reading the file.
+ *
+ * Split out because it can be tested and this cannot: ExcelJS's `WorkbookReader`
+ * races between parsing `workbook.xml` and dispatching the worksheet entry, and
+ * loses often enough on small workbooks (roughly 1 test run in 8) that no
+ * synthetic .xlsx fixture is a stable test input. Seven approaches were measured
+ * — synchronous writes, committed fixtures, four reader-option combinations,
+ * disabling test parallelism, twenty retries per read, and chunking the source
+ * stream — and none closed it; the details are in
+ * docs/runbooks/strm-reimport.md. The real bundle is read by the seeder, 183 of
+ * 183 files on every run, which is where that path is actually proven.
+ *
+ * @param allRows   non-blank rows: 0-2 metadata, 3 header, 4+ data
+ * @param sheetName worksheet name; the framework-name fallback when the
+ *                  metadata cell is blank (real files are nearly all "Sheet1")
+ */
+export function parseStrmBundleRows(
+  allRows: (string | number)[][],
+  sheetName: string | undefined,
+  filename: string,
+  options: { includeNoRelationship?: boolean } = {},
+): StrmBundleFileResult {
+  const warnings: string[] = [];
+  let skipped = 0;
+  let unknownOperator = 0;
 
   if (!sheetName) {
     return {
