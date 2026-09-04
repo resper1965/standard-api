@@ -177,6 +177,90 @@ function normalizeStrength(raw: number | string): StrmRelationshipStrength {
   return "weak";
 }
 
+/**
+ * Converts one ExcelJS streaming-reader `row.values` array into a 0-indexed
+ * cell array, or `null` if the row is genuinely blank (every cell empty).
+ *
+ * Extracted as a seam for testing: the streaming reader (unlike the old
+ * `eachRow({ includeEmpty: false })`) yields physically-blank rows too, and
+ * `parseStrmBundleFile` depends on fixed row offsets (metadata at 0-2,
+ * header at 3, data from 4) that a dropped filter would silently shift.
+ */
+export function rowValuesToCellsOrNull(
+  values: (string | number | undefined)[],
+): (string | number)[] | null {
+  // ExcelJS row.values is 1-indexed (index 0 is undefined), so slice from 1
+  const cells = values.slice(1).map((v) => v ?? "");
+  if (cells.every((v) => String(v).trim() === "")) return null;
+  return cells;
+}
+
+const normHeader = (c: unknown): string =>
+  String(c ?? "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+
+/**
+ * The metadata value is the cell immediately to the right of its label, not a
+ * fixed column: `scf-strm-usa-federal-doe-c2m2-2-1.xlsx` carries an extra
+ * leading column, so its label sits at index 6 and its value at 7 while every
+ * other file has 5 and 6. Falls back to index 6 when the label is absent.
+ */
+export function metaValueAfterLabel(
+  row: (string | number)[] | undefined,
+  label: string,
+): string {
+  if (!row) return "";
+  const i = row.findIndex((c) => normHeader(c).startsWith(label));
+  return String((i >= 0 ? row[i + 1] : row[6]) ?? "").trim();
+}
+
+/**
+ * Where each field lives in a bundle data row, read off the header row rather
+ * than assumed.
+ *
+ * `scf-strm-usa-federal-doe-c2m2-2-1.xlsx` duplicates its first column ("FDE #"
+ * appears twice), shifting every later column right by one. Read at fixed
+ * offsets, its STRM Relationship column landed on STRM Rationale, whose value
+ * is the literal "Functional" — which {@link parseStrmOperatorCell} classifies
+ * as a leaked header row. All 567 rows of that framework were dropped in
+ * silence, and were counted as leaked headers in the figure reported to the
+ * customer.
+ *
+ * First match wins for the duplicated "FDE #": the leftmost column is the one
+ * whose notation matches the catalogue ("ACCESS-1a", not "ACCESS-1.a"), and
+ * `fde_code` is what the operator backfill joins on.
+ *
+ * The fixed indices remain only as the fallback for a header a file does not
+ * name.
+ */
+export function resolveBundleColumns(headerRow: (string | number)[]): {
+  fdeCode: number;
+  fdeName: number;
+  rationale: number;
+  relationship: number;
+  scfControlName: number;
+  scfCode: number;
+  strength: number;
+  notes: number;
+} {
+  const col = (header: string, fallback: number): number => {
+    const i = headerRow.findIndex((c) => normHeader(c) === header);
+    return i >= 0 ? i : fallback;
+  };
+  return {
+    fdeCode: col("fde #", 0),
+    fdeName: col("fde name", 1),
+    rationale: col("strm rationale", 3),
+    relationship: col("strm relationship", 4),
+    scfControlName: col("scf control", 5),
+    scfCode: col("scf #", 6),
+    strength: col("strength of relationship", 8),
+    notes: col("notes", 9),
+  };
+}
+
 // â”€â”€â”€â”€ Core Parser â”€â”€â”€â”€
 
 /**
@@ -221,11 +305,8 @@ export async function parseStrmBundleFile(
     for await (const row of worksheet) {
       if (!isFirstSheet) continue; // only the first worksheet is used, exactly as today
       const values = row.values as (string | number | undefined)[];
-      // ExcelJS row.values is 1-indexed (index 0 is undefined), so slice from 1
-      const cells = values.slice(1).map((v) => v ?? "");
-      // The streaming reader (unlike `eachRow({ includeEmpty: false })`)
-      // yields blank rows too; drop them so every fixed offset below holds.
-      if (cells.every((v) => String(v).trim() === "")) continue;
+      const cells = rowValuesToCellsOrNull(values);
+      if (cells === null) continue;
       allRows.push(cells);
     }
     // `.name` is set at runtime (workbook-reader.js) but missing from
@@ -247,22 +328,36 @@ export async function parseStrmBundleFile(
     };
   }
 
-  // Rows 0-2: metadata
+  // Rows 0-2: metadata, row 3: headers, row 4+: data.
   // Row 0: ["NIST IR 8477...", "", ..., "Focal Document: ", "<framework name>"]
   // Row 1: ["Reference document:", "SCF 2026.1", ..., "Focal Document URL: ", "<url>"]
   // Row 2: ["STRM Guidance: ", "<url>", ..., "Published STRM URL:", "<url>"]
   //
-  // Row 0 col 6 holds the actual focal document name (the sheet itself is
-  // named "Sheet1" in almost every one of the 183 files); fall back to the
-  // sheet name, then the filename, if it is blank.
+  // Both the metadata and the data columns are located by their label/header
+  // text, never by a fixed index. `scf-strm-usa-federal-doe-c2m2-2-1.xlsx`
+  // duplicates its first column ("FDE #" twice), shifting every later column
+  // right by one: read positionally, its STRM Relationship column landed on
+  // STRM Rationale, whose value is the literal "Functional", which
+  // parseStrmOperatorCell classifies as a leaked header. All 567 rows of that
+  // framework were dropped in silence. The fixed indices survive only as the
+  // fallback for a header this file does not name.
 
-  const frameworkNameFromCell = String(allRows[0]?.[6] ?? "").trim();
+  const frameworkNameFromCell = metaValueAfterLabel(
+    allRows[0],
+    "focal document:",
+  );
   const frameworkName = frameworkNameFromCell || sheetName || filename;
-  const focalDocumentUrl = String(allRows[1]?.[6] ?? "");
-  const publishedStrmUrl = String(allRows[2]?.[6] ?? "");
+  const focalDocumentUrl = metaValueAfterLabel(
+    allRows[1],
+    "focal document url:",
+  );
+  const publishedStrmUrl = metaValueAfterLabel(
+    allRows[2],
+    "published strm url:",
+  );
 
-  // Row 3: headers â€” skip
-  // Row 4+: data
+  const COL = resolveBundleColumns(allRows[3] ?? []);
+
   const dataRows = allRows.slice(4); // skip rows 0-3 (meta + headers)
 
   const entries: StrmBundleEntry[] = [];
@@ -271,14 +366,14 @@ export async function parseStrmBundleFile(
     const row = dataRows[i];
     if (!row || row.length === 0) continue;
 
-    const fde_code = String(row[0] ?? "").trim();
-    const fde_name = String(row[1] ?? "").trim();
-    const strm_rationale = String(row[3] ?? "").trim();
-    const strm_relationship_raw = String(row[4] ?? "").trim();
-    const scf_control_name = String(row[5] ?? "").trim();
-    const scf_code = String(row[6] ?? "").trim();
-    const strength_raw_str = row[8];
-    const notes = String(row[9] ?? "").trim();
+    const fde_code = String(row[COL.fdeCode] ?? "").trim();
+    const fde_name = String(row[COL.fdeName] ?? "").trim();
+    const strm_rationale = String(row[COL.rationale] ?? "").trim();
+    const strm_relationship_raw = String(row[COL.relationship] ?? "").trim();
+    const scf_control_name = String(row[COL.scfControlName] ?? "").trim();
+    const scf_code = String(row[COL.scfCode] ?? "").trim();
+    const strength_raw_str = row[COL.strength];
+    const notes = String(row[COL.notes] ?? "").trim();
 
     // Skip empty rows
     if (!fde_code && !scf_code) continue;
