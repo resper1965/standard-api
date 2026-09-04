@@ -36,7 +36,12 @@ async function writeFixture(
   const ws = wb.addWorksheet("Sheet1");
   build(ws);
   const filePath = path.join(fixtureDir, name);
-  await wb.xlsx.writeFile(filePath);
+  // Buffer + synchronous write, not `wb.xlsx.writeFile()`: under the parallel
+  // load of the full suite that promise resolves before the archive is fully
+  // flushed, and the streaming reader then hits a truncated zip whose
+  // worksheet entry arrives before workbook.xml — ExcelJS crashes on its own
+  // output with "Cannot read properties of undefined (reading 'sheets')".
+  fs.writeFileSync(filePath, Buffer.from(await wb.xlsx.writeBuffer()));
   written.push(filePath);
   return filePath;
 }
