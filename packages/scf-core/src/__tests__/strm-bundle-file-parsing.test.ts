@@ -1,119 +1,118 @@
-import { describe, it, expect, afterEach } from "vitest";
-import ExcelJS from "exceljs";
-import * as fs from "node:fs";
-import * as path from "node:path";
-import { parseStrmBundleFile } from "../importers/strm-bundle-importer.js";
+import { describe, it, expect } from "vitest";
+import { parseStrmBundleRows } from "../importers/strm-bundle-importer.js";
 
-// Regression coverage for two defects found running the importer against the
-// real 183-file STRM bundle:
+// Regression coverage for defects found running the importer against the real
+// 183-file STRM bundle:
 //
 //   - defect 2: the streaming XLSX reader (needed because exceljs's
 //     non-streaming loader crashes on 175/183 real bundle files) yields
 //     genuinely-blank rows that `eachRow({ includeEmpty: false })` used to
 //     drop, which shifts every fixed row offset the parser relies on.
-//   - defect 3: `framework_name` must come from row 0 col 6 (the focal
-//     document name), not the sheet name — real files are almost all
-//     named "Sheet1".
+//   - defect 3: `framework_name` must come from the cell after the "Focal
+//     Document:" label, not the sheet name — real files are almost all named
+//     "Sheet1".
+//   - defect 4: scf-strm-usa-federal-doe-c2m2-2-1.xlsx duplicates its first
+//     column, shifting every later column right by one. Read at fixed offsets
+//     its operator column landed on STRM Rationale ("Functional"), which the
+//     parser drops as a leaked header — losing all 567 rows of that framework.
 //
-// A synthetic fixture is built with ExcelJS itself (the same library the
-// importer reads with) and written to a real temp .xlsx file, because the
-// bug is a property of what the streaming reader emits for physically
-// blank rows — a plain in-memory row array can't reproduce that.
+// These drive `parseStrmBundleRows` with plain arrays rather than writing an
+// .xlsx and reading it back. ExcelJS cannot reliably read small archives — the
+// same fixed bytes failed 22 of 40 reads — so a synthetic workbook is not a
+// stable test input, and the seven things tried are recorded in
+// docs/runbooks/strm-reimport.md. The reading half is proven where it matters:
+// the seeder parses 183 of 183 real files on every run.
 
-const fixtureDir = path.join(__dirname, ".tmp-strm-fixtures");
-const written: string[] = [];
+/** Metadata block as the real files carry it: label in col 5, value in col 6. */
+const meta = (name: string | "", extra: string[] = []): (string | number)[][] => [
+  ["NIST IR 8477-Based Set Theory Relationship Mapping", "", "", "", "", "Focal Document: ", name, ...extra],
+  ["Reference document:", "SCF 2026.1", "", "", "", "Focal Document URL: ", "https://example.com/focal"],
+  ["STRM Guidance: ", "https://example.com/guidance", "", "", "", "Published STRM URL:", "https://example.com/strm"],
+];
 
-afterEach(() => {
-  for (const f of written.splice(0)) fs.rmSync(f, { force: true });
-});
+const HEADER = [
+  "FDE #",
+  "FDE Name",
+  "Focal Document Element",
+  "STRM Rationale",
+  "STRM Relationship",
+  "SCF Control",
+  "SCF #",
+  "Secure Controls Framework (SCF) Control Description",
+  "Strength of Relationship",
+  "Notes",
+];
 
-async function writeFixture(
-  name: string,
-  build: (ws: ExcelJS.Worksheet) => void,
-): Promise<string> {
-  fs.mkdirSync(fixtureDir, { recursive: true });
-  const wb = new ExcelJS.Workbook();
-  const ws = wb.addWorksheet("Sheet1");
-  build(ws);
-  const filePath = path.join(fixtureDir, name);
-  // Buffer + synchronous write, not `wb.xlsx.writeFile()`: under the parallel
-  // load of the full suite that promise resolves before the archive is fully
-  // flushed, and the streaming reader then hits a truncated zip whose
-  // worksheet entry arrives before workbook.xml — ExcelJS crashes on its own
-  // output with "Cannot read properties of undefined (reading 'sheets')".
-  fs.writeFileSync(filePath, Buffer.from(await wb.xlsx.writeBuffer()));
-  written.push(filePath);
-  return filePath;
-}
-
-describe("parseStrmBundleFile", () => {
-  it("reads framework_name from row 0 col 6, not the 'Sheet1' sheet name", async () => {
-    const filePath = await writeFixture("framework-name.xlsx", (ws) => {
-      ws.getCell("F1").value = "Focal Document: ";
-      ws.getCell("G1").value = "Australia -Essential Eight maturity model (2024)";
-      ws.getCell("G2").value = "https://example.com/focal";
-      ws.getCell("G3").value = "https://example.com/strm";
-      ws.getCell("A4").value = "FDE #";
-      ws.getCell("A5").value = "FDE-1";
-      ws.getCell("E5").value = "Equal";
-      ws.getCell("G5").value = "SCF-1";
-    });
-
-    const result = await parseStrmBundleFile(filePath, "framework-name.xlsx");
+describe("parseStrmBundleRows", () => {
+  it("reads framework_name from the metadata cell, not the 'Sheet1' sheet name", () => {
+    const result = parseStrmBundleRows(
+      [
+        ...meta("Australia -Essential Eight maturity model (2024)"),
+        HEADER,
+        ["FDE-1", "", "", "", "Equal", "", "SCF-1"],
+      ],
+      "Sheet1",
+      "framework-name.xlsx",
+    );
 
     expect(result.framework_name).toBe(
       "Australia -Essential Eight maturity model (2024)",
     );
-    expect(result.framework_name).not.toBe("Sheet1");
+    expect(result.focal_document_url).toBe("https://example.com/focal");
+    expect(result.published_strm_url).toBe("https://example.com/strm");
   });
 
-  it("falls back to the sheet name when row 0 col 6 is blank", async () => {
-    const filePath = await writeFixture("framework-name-fallback.xlsx", (ws) => {
-      // Row 1 exists (label present) but the framework-name cell itself is blank.
-      ws.getCell("F1").value = "Focal Document: ";
-      ws.getCell("G2").value = "https://example.com/focal";
-      ws.getCell("G3").value = "https://example.com/strm";
-      ws.getCell("A4").value = "FDE #";
-      ws.getCell("A5").value = "FDE-1";
-      ws.getCell("E5").value = "Equal";
-      ws.getCell("G5").value = "SCF-1";
-    });
-
-    const result = await parseStrmBundleFile(
-      filePath,
+  it("falls back to the sheet name when the metadata cell is blank", () => {
+    const result = parseStrmBundleRows(
+      [...meta(""), HEADER, ["FDE-1", "", "", "", "Equal", "", "SCF-1"]],
+      "Sheet1",
       "framework-name-fallback.xlsx",
     );
 
     expect(result.framework_name).toBe("Sheet1");
   });
 
-  it("keeps the fixed row offsets when a genuinely blank row precedes the header", async () => {
-    // Row layout (1-indexed, matches the real bundle's metadata block):
-    //   1: focal document name
-    //   2: focal document URL
-    //   3: published STRM URL
-    //   4: a real but entirely empty row (present in the sheet, all cells "")
-    //   5: header row
-    //   6: data row
-    const filePath = await writeFixture("blank-row-shift.xlsx", (ws) => {
-      ws.getCell("F1").value = "Focal Document: ";
-      ws.getCell("G1").value = "Test Framework";
-      ws.getCell("G2").value = "https://example.com/focal";
-      ws.getCell("G3").value = "https://example.com/strm";
-      // A cell assigned an empty string forces ExcelJS to materialize row 4
-      // in the sheet, matching the real bundle's phantom blank row that the
-      // streaming reader (unlike eachRow({includeEmpty:false})) yields.
-      ws.getCell("A4").value = "";
-      ws.getCell("A5").value = "FDE #"; // header row
-      ws.getCell("A6").value = "FDE-1";
-      ws.getCell("B6").value = "Some Requirement";
-      ws.getCell("E6").value = "Equal";
-      ws.getCell("F6").value = "SCF Control Name";
-      ws.getCell("G6").value = "SCF-1";
-      ws.getCell("I6").value = 9;
-    });
+  it("falls back to the filename when there is no sheet name either", () => {
+    const result = parseStrmBundleRows(
+      [...meta(""), HEADER, ["FDE-1", "", "", "", "Equal", "", "SCF-1"]],
+      "",
+      "last-resort.xlsx",
+    );
 
-    const result = await parseStrmBundleFile(filePath, "blank-row-shift.xlsx");
+    expect(result.framework_name).toBe("last-resort.xlsx");
+  });
+
+  it("reports a workbook with no sheets rather than parsing one", () => {
+    const result = parseStrmBundleRows([], undefined, "empty.xlsx");
+
+    expect(result.entries).toEqual([]);
+    expect(result.warnings).toEqual(["No sheets found in workbook"]);
+  });
+
+  it("reads a row at the standard offsets", () => {
+    // The blank row the streaming reader emits is dropped upstream by
+    // rowValuesToCellsOrNull, so by here rows 0-2 are metadata, 3 the header
+    // and 4+ the data — the invariant every offset below depends on.
+    const result = parseStrmBundleRows(
+      [
+        ...meta("Test Framework"),
+        HEADER,
+        [
+          "FDE-1",
+          "Some Requirement",
+          "",
+          "Functional",
+          "Equal",
+          "SCF Control Name",
+          "SCF-1",
+          "",
+          9,
+          "a note",
+        ],
+      ],
+      "Sheet1",
+      "blank-row-shift.xlsx",
+    );
 
     expect(result.warnings).toEqual([]);
     expect(result.entries).toHaveLength(1);
@@ -123,6 +122,94 @@ describe("parseStrmBundleFile", () => {
       relationship_type: "equal",
       scf_code: "SCF-1",
       scf_control_name: "SCF Control Name",
+      strength_raw: 9,
+      relationship_strength: "strong",
+      notes: "a note",
     });
+  });
+
+  it("follows a shifted column layout instead of dropping the whole file", () => {
+    // The DOE C2M2 layout: "FDE #" twice, everything after it one column right,
+    // and the metadata label at index 6 rather than 5.
+    const result = parseStrmBundleRows(
+      [
+        [
+          "NIST IR 8477-Based Set Theory Relationship Mapping",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Focal Document: ",
+          "Cybersecurity Capability Maturity Model (C2M2)",
+        ],
+        ["Reference document: ", "Reference document: ", "SCF 2026.1", "", "", "", "Focal Document URL: ", "https://c2m2.doe.gov/"],
+        ["STRM Guidance: ", "STRM Guidance: ", "https://example.com/guidance", "", "", "", "Published STRM URL:", "https://example.com/strm"],
+        ["FDE #", "FDE #", ...HEADER.slice(1)],
+        [
+          "ASSET-1a",
+          "ASSET-1.a",
+          "N/A",
+          "IT and OT assets are inventoried",
+          "Functional",
+          "Intersects With",
+          "Asset-Service Dependency",
+          "AST-01.1",
+          "",
+          8,
+        ],
+      ],
+      "Sheet1",
+      "shifted-columns.xlsx",
+    );
+
+    expect(result.framework_name).toBe(
+      "Cybersecurity Capability Maturity Model (C2M2)",
+    );
+    expect(result.entries).toHaveLength(1);
+    // The leftmost of the two "FDE #" columns is the one whose notation matches
+    // the catalogue (ACCESS-1a, not ACCESS-1.a), and fde_code is what the
+    // operator backfill joins on.
+    expect(result.entries[0]).toMatchObject({
+      fde_code: "ASSET-1a",
+      relationship_type: "intersects",
+      scf_code: "AST-01.1",
+      scf_control_name: "Asset-Service Dependency",
+      strength_raw: 8,
+    });
+    expect(result.skipped).toBe(0);
+  });
+
+  it("keeps a row whose operator is unreadable, with no operator and a warning", () => {
+    const result = parseStrmBundleRows(
+      [
+        ...meta("Test Framework"),
+        HEADER,
+        ["FDE-1", "", "", "", "Partially Related", "", "SCF-1"],
+      ],
+      "Sheet1",
+      "unknown-operator.xlsx",
+    );
+
+    expect(result.entries).toHaveLength(1);
+    expect(result.entries[0]?.relationship_type).toBeNull();
+    expect(result.unknown_operator).toBe(1);
+    expect(result.warnings[0]).toContain("Partially Related");
+  });
+
+  it("skips rows with no applicable SCF control", () => {
+    const result = parseStrmBundleRows(
+      [
+        ...meta("Test Framework"),
+        HEADER,
+        ["FDE-1", "", "", "", "No Relationship", "", "N/A"],
+        ["FDE-2", "", "", "", "Equal", "", "SCF-1"],
+      ],
+      "Sheet1",
+      "skips.xlsx",
+    );
+
+    expect(result.entries.map((e) => e.fde_code)).toEqual(["FDE-2"]);
+    expect(result.skipped).toBe(1);
   });
 });
