@@ -144,7 +144,10 @@ async function main() {
         COUNT(*) FILTER (WHERE variants = 1 AND op = 'no_relation')::int AS no_relation
       FROM matched
       GROUP BY framework_id, framework_name
-      ORDER BY COUNT(*) FILTER (WHERE variants = 1) DESC, COUNT(*) DESC
+      -- framework_id breaks ties: this table is committed under
+      -- docs/measurements/, and without it two frameworks on the same counts
+      -- swap places between runs and bury the real changes in diff noise.
+      ORDER BY COUNT(*) FILTER (WHERE variants = 1) DESC, COUNT(*) DESC, framework_id
     `)) as unknown as CoverageRow[];
 
     const totals = coverage.reduce(
@@ -236,9 +239,11 @@ async function main() {
          AND m.relationship_type IS DISTINCT FROM g.op::strm_operator
     `);
 
-    console.log(
-      `Updated ${(updated as unknown as unknown[]).length ?? 0} rows.`,
-    );
+    // postgres.js returns a RowList: for an UPDATE with no RETURNING it is
+    // ALWAYS empty, and the affected-row count lives on `.count`. Reading
+    // `.length` here printed "Updated 0 rows." over a run that wrote 46,279 —
+    // the one number an operator reads to decide the backfill did anything.
+    console.log(`Updated ${(updated as unknown as { count?: number }).count ?? 0} rows.`);
     console.log(
       "Mappings the bundle does not cover keep relationship_type = NULL," +
         " and stay out of every compliance index.",
