@@ -226,10 +226,34 @@ superset** — so 257 remain `intersects`, but now because the bundle says so.
   and fabricates no operator, so it was deliberately left alone — but as NULL
   operators become normal it reports "0%" for frameworks the dashboard correctly
   declines to score. Two routes will disagree in front of the same customer.
-- **`packages/scf-core/src/__tests__/strm-bundle-file-parsing.test.ts` is flaky**, at
-  roughly 1 run in 8. ExcelJS's streaming reader intermittently fails to read the
-  archive ExcelJS itself just wrote (`Cannot read properties of undefined (reading
-  'sheets')` — the worksheet entry arrives before `workbook.xml`). It predates this
-  work at ~2 in 8 and was halved by writing the fixture synchronously from a buffer.
-  Removing it entirely means either committing frozen `.xlsx` fixtures or dropping the
-  file round-trip; the real bundle files are written by Excel and are unaffected.
+- **ExcelJS cannot reliably read small workbooks, and it is unsolved.**
+  `WorkbookReader` intermittently throws `Cannot read properties of undefined
+  (reading 'sheets')` — it reaches `worksheets/sheet1.xml` before `workbook.xml`
+  has finished parsing. What was measured, so the next person does not repeat it:
+
+  | Experiment | Result |
+  |---|---|
+  | Same **fixed** bytes, 40 reads, outside the test runner | 22 failed |
+  | Committed (frozen) fixtures instead of generated ones | still 3 runs in 8 |
+  | Reader options: current / none / `worksheets:emit` / `entries:emit` | 23, 33, 36, 33 failures per 40 — the one in use is the best |
+  | `vitest --no-file-parallelism` | worse: 6 runs in 8 |
+  | Retrying each read up to 20 times | 20 of 200 still failed — **the failures are not independent** |
+  | The 183 real bundle files | 183 of 183, every run |
+
+  So it is neither the writer nor the test runner: the reader is unreliable on
+  small archives, and retrying does not rescue it. The three tests in
+  `packages/scf-core/src/__tests__/strm-bundle-file-parsing.test.ts` fail about
+  1 run in 8 (down from 2 in 8, by writing the fixture synchronously from a
+  buffer), and because `pnpm test` runs packages recursively, a failure there
+  **aborts the whole suite** — that is why the `pnpm test` checklist box on the
+  PR is unticked.
+
+  **This needs a decision, and it is not a test-only concern.** The smallest real
+  bundle file is 10,269 bytes against fixtures of ~6,500 — a factor of 1.5 from
+  the size where the read is lost more often than won. A file that fails to parse
+  is recorded as a warning and the import continues, so a framework would appear
+  in one import and be absent from the next. The options are: replace ExcelJS's
+  streaming reader for this path, drop the file round-trip and rely on the pure
+  unit tests plus the 183-file run above, or accept the flake and keep `pnpm test`
+  amber. The logic those three tests cover is already unit-tested on plain arrays
+  in `strm-bundle-columns.test.ts` and `strm-bundle-operator.test.ts`.
