@@ -419,4 +419,132 @@ describe("the backfill grades per framework", () => {
       expect(buckets.reduce((a, b) => a + b, 0)).toBe(r.total);
     }
   });
+
+  it("clears an operator no bundle row backs, and keeps one that is backed", async () => {
+    // The grading statement only writes rows the bundle covers, so on a
+    // database that already holds operators the uncovered ones survive it.
+    // On a freshly seeded catalogue that is invisible — every row starts NULL —
+    // but production carries rows written by the importers this branch removed,
+    // plus migration 0047's conversion of every legacy 'related' to
+    // 'intersects'. Stopping the fabrication is not the same as undoing it.
+    const v = "70000000-0000-4000-8000-0000000000ff";
+    const dom = "70000000-0000-4000-8000-0000000000fe";
+    const ctrl = "70000000-0000-4000-8000-000000000001";
+    const fw = "70000000-0000-4000-8000-00000000000a";
+    const reqBacked = "70000000-0000-4000-8000-0000000000a1";
+    const reqStale = "70000000-0000-4000-8000-0000000000a3";
+    const mapBacked = "70000000-0000-4000-8000-0000000000a2";
+    const mapStale = "70000000-0000-4000-8000-0000000000a4";
+
+    await ctx.client.exec(`
+      INSERT INTO scf_versions (id, version) VALUES ('${v}', '2026.1.6');
+      INSERT INTO scf_domains (id, scf_version_id, domain_code, name)
+        VALUES ('${dom}', '${v}', 'GOV', 'Governance');
+      INSERT INTO scf_controls (id, scf_version_id, scf_domain_id, control_code, title)
+        VALUES ('${ctrl}', '${v}', '${dom}', 'GOV-40', 'Control');
+      INSERT INTO scf_frameworks (id, scf_version_id, framework_id, name)
+        VALUES ('${fw}', '${v}', 'iso-27001-2022', 'ISO 27001 (2022)');
+      INSERT INTO scf_framework_requirements
+        (id, scf_version_id, scf_framework_id, requirement_code, fde_code, title)
+        VALUES ('${reqBacked}', '${v}', '${fw}', 'A.5.1', 'A.5.1', 'Backed'),
+               ('${reqStale}',  '${v}', '${fw}', 'A.5.9', 'A.5.9', 'Not in the bundle');
+      -- Both already carry an operator, as production does.
+      INSERT INTO scf_mappings
+        (id, scf_version_id, scf_framework_requirement_id, scf_control_id, relationship_type)
+        VALUES ('${mapBacked}', '${v}', '${reqBacked}', '${ctrl}', 'subset'),
+               ('${mapStale}',  '${v}', '${reqStale}',  '${ctrl}', 'intersects');
+      -- The bundle mentions only A.5.1, and states 'subset' for it.
+      INSERT INTO scf_strm_relationships
+        (scf_control_id, scf_framework_id, fde_code, focal_document, relationship_type, source)
+        VALUES ('${ctrl}', '${fw}', 'A.5.1', 'iso-27001.xlsx', 'subset',
+                'scf_official_strm_bundle_2026.1');
+    `);
+
+    await ctx.db.execute(sql`
+      UPDATE scf_mappings m
+         SET relationship_type = NULL
+       WHERE m.relationship_type IS NOT NULL
+         AND NOT EXISTS (
+           SELECT 1
+             FROM scf_framework_requirements r
+             JOIN scf_strm_relationships s
+               ON s.scf_control_id   = m.scf_control_id
+              AND s.fde_code         = r.fde_code
+              AND s.scf_framework_id = r.scf_framework_id
+            WHERE r.id = m.scf_framework_requirement_id
+              AND s.source            = 'scf_official_strm_bundle_2026.1'
+              AND s.relationship_type = m.relationship_type)
+    `);
+
+    const rows = (
+      await ctx.db.execute(sql`
+      SELECT id, relationship_type FROM scf_mappings
+       WHERE id IN (${mapBacked}, ${mapStale}) ORDER BY id
+    `)
+    ).rows as unknown as Array<{
+      id: string;
+      relationship_type: string | null;
+    }>;
+    const byId = new Map(rows.map((r) => [r.id, r.relationship_type]));
+
+    expect(byId.get(mapBacked)).toBe("subset");
+    expect(byId.get(mapStale)).toBeNull();
+  });
+
+  it("clears an operator the bundle contradicts, rather than leaving it", async () => {
+    // The bundle covers this pair but states a DIFFERENT operator. The grading
+    // statement would overwrite it, so this only matters if grading were
+    // skipped — but the clearing statement must not treat "the bundle mentions
+    // this pair" as provenance for whatever value happens to be stored.
+    const v = "61000000-0000-4000-8000-0000000000ff";
+    const dom = "61000000-0000-4000-8000-0000000000fe";
+    const ctrl = "61000000-0000-4000-8000-000000000001";
+    const fw = "61000000-0000-4000-8000-00000000000a";
+    const req = "61000000-0000-4000-8000-0000000000a1";
+    const map = "61000000-0000-4000-8000-0000000000a2";
+
+    await ctx.client.exec(`
+      INSERT INTO scf_versions (id, version) VALUES ('${v}', '2026.1.5');
+      INSERT INTO scf_domains (id, scf_version_id, domain_code, name)
+        VALUES ('${dom}', '${v}', 'GOV', 'Governance');
+      INSERT INTO scf_controls (id, scf_version_id, scf_domain_id, control_code, title)
+        VALUES ('${ctrl}', '${v}', '${dom}', 'GOV-41', 'Control');
+      INSERT INTO scf_frameworks (id, scf_version_id, framework_id, name)
+        VALUES ('${fw}', '${v}', 'nist-csf-2', 'NIST CSF 2.0');
+      INSERT INTO scf_framework_requirements
+        (id, scf_version_id, scf_framework_id, requirement_code, fde_code, title)
+        VALUES ('${req}', '${v}', '${fw}', 'GV.OC-01', 'GV.OC-01', 'Contradicted');
+      INSERT INTO scf_mappings
+        (id, scf_version_id, scf_framework_requirement_id, scf_control_id, relationship_type)
+        VALUES ('${map}', '${v}', '${req}', '${ctrl}', 'intersects');
+      INSERT INTO scf_strm_relationships
+        (scf_control_id, scf_framework_id, fde_code, focal_document, relationship_type, source)
+        VALUES ('${ctrl}', '${fw}', 'GV.OC-01', 'nist-csf.xlsx', 'equal',
+                'scf_official_strm_bundle_2026.1');
+    `);
+
+    await ctx.db.execute(sql`
+      UPDATE scf_mappings m
+         SET relationship_type = NULL
+       WHERE m.relationship_type IS NOT NULL
+         AND NOT EXISTS (
+           SELECT 1
+             FROM scf_framework_requirements r
+             JOIN scf_strm_relationships s
+               ON s.scf_control_id   = m.scf_control_id
+              AND s.fde_code         = r.fde_code
+              AND s.scf_framework_id = r.scf_framework_id
+            WHERE r.id = m.scf_framework_requirement_id
+              AND s.source            = 'scf_official_strm_bundle_2026.1'
+              AND s.relationship_type = m.relationship_type)
+    `);
+
+    const rows = (
+      await ctx.db.execute(sql`
+      SELECT relationship_type FROM scf_mappings WHERE id = ${map}
+    `)
+    ).rows as unknown as Array<{ relationship_type: string | null }>;
+
+    expect(rows[0]?.relationship_type).toBeNull();
+  });
 });
