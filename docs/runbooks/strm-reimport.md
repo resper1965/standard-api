@@ -126,7 +126,27 @@ closing lines before anything else:
 0 mappings had bundle rows that disagree and stay ungraded.
 0 mappings matched a bundle row for their own framework whose operator was NULL.
 5589 mappings match a bundle row whose focal document did not resolve to a framework.
+0 mappings currently hold an operator no bundle row backs.
 ```
+
+**Read that last line before applying to an environment that already holds data.**
+It was 0 locally because the catalogue was seeded from scratch and every row
+started NULL. It will not be 0 in staging or production: those carry rows written
+by the importers this branch removed, and migration `0047` converted every legacy
+`related` to `intersects` on top of them. The backfill grades only the rows the
+bundle covers, so without a second statement the uncovered ones would keep
+asserting an overlap nobody stated, underneath a coverage table that looks
+authoritative.
+
+The apply therefore does two writes, in this order, and reports both:
+
+```
+Updated N rows.                                  # graded from the bundle
+Cleared M operators no bundle row backs.         # everything else back to NULL
+```
+
+Clearing runs second on purpose: a row the grading statement just wrote has
+provenance and survives it.
 
 ## Step 7 — Verify
 
@@ -148,7 +168,12 @@ docker exec standard-postgres psql -U standard -d standard -tAc "
         AND s.relationship_type = m.relationship_type)"
 ```
 
-Expected: **0**. Measured 2026-09-04: 0.
+Expected: **0**, and it is the same predicate the clearing statement uses, so
+after a completed apply it is 0 by construction. Measured 2026-09-04: 0.
+
+A non-zero result here means the apply did not finish — the clearing statement
+did not run, or something wrote to the column afterwards. Run the backfill again
+before reading any coverage figure; do not reconcile the number by hand.
 
 The framework predicate matters. Before migration 0060 the join was on
 `(scf_control_id, fde_code)` alone, so two frameworks using a requirement code like
@@ -226,6 +251,11 @@ superset** — so 257 remain `intersects`, but now because the bundle says so.
   and fabricates no operator, so it was deliberately left alone — but as NULL
   operators become normal it reports "0%" for frameworks the dashboard correctly
   declines to score. Two routes will disagree in front of the same customer.
+- **`workers/ingestion` has an intermittent test of its own**, unrelated to this
+  work: `malware-integration.test.ts > detects PDF with JavaScript/OpenAction
+  keywords` failed once under the load of a full `pnpm test` and passed 6 of 6
+  runs in isolation. Not investigated here — noted so a red CI on that test is
+  not read as a regression from this branch.
 - **ExcelJS cannot reliably read small workbooks, and it is unsolved.**
   `WorkbookReader` intermittently throws `Cannot read properties of undefined
   (reading 'sheets')` — it reaches `worksheets/sheet1.xml` before `workbook.xml`
