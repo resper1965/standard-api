@@ -346,6 +346,36 @@ describe("parseWideCrosswalk", () => {
     expect(frameworks[0]).not.toHaveProperty("source_reference");
   });
 
+  it("emits one mapping per requirement and control, however often the pair is cited", () => {
+    // scf_mappings carries a unique index on (requirement, control). A cell can
+    // repeat a code, and two cells in one framework column can cite the same
+    // code against the same control — both say nothing the first row does not,
+    // and both abort the seed with 23505 on a database that has the index.
+    const headerRow = ["SCF #", "AICPA TSC 2017:2022 (used for SOC 2)"];
+    const dataRows = [["GOV-01", "CC1.1\nCC1.1\nCC1.2"]];
+    const controlByCode = new Map([["GOV-01", "control-1"]]);
+
+    const { requirements, mappings } = parseWideCrosswalk({
+      headerRow,
+      dataRows,
+      sources: [source()],
+      versionId: VERSION_ID,
+      controlByCode,
+      controlCodeColumn: 0,
+    });
+
+    expect(requirements.map((r) => r.requirement_code).sort()).toEqual([
+      "CC1.1",
+      "CC1.2",
+    ]);
+    expect(mappings).toHaveLength(2);
+
+    const pairs = mappings.map(
+      (m) => `${m.scf_framework_requirement_id}::${m.scf_control_id}`,
+    );
+    expect(new Set(pairs).size).toBe(pairs.length);
+  });
+
   it("falls back to the FDI when the index states no framework name", () => {
     const headerRow = ["SCF #", "AICPA TSC 2017:2022 (used for SOC 2)"];
     const dataRows = [["GOV-01", "CC1.1"]];

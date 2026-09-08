@@ -99,6 +99,7 @@ export const parseWideCrosswalk = (
   // by two different controls becomes one requirement and two mappings.
   const requirementIdByKey = new Map<string, string>();
   const sortOrderByFramework = new Map<string, number>();
+  const mappingPairs = new Set<string>();
 
   dataRows.forEach((row, rowIdx) => {
     const controlCode = (row[controlCodeColumn] ?? "").trim();
@@ -143,6 +144,18 @@ export const parseWideCrosswalk = (
             is_mcr: false,
           });
         }
+
+        // One mapping per (requirement, control), which is what
+        // scf_mappings_requirement_control_uidx enforces. A cell can name the
+        // same code twice — "CC1.1\nCC1.1\nCC1.2" — and two cells in the same
+        // framework column can cite one code against one control. Emitting the
+        // pair twice says nothing the first row does not, and on a database
+        // carrying that index it aborts the whole seed with 23505. Found on
+        // staging, where the index exists; the local database predates it and
+        // had silently accepted 14 duplicate rows.
+        const pairKey = `${requirementId}::${controlId}`;
+        if (mappingPairs.has(pairKey)) continue;
+        mappingPairs.add(pairKey);
 
         mappings.push({
           id: newId(),
