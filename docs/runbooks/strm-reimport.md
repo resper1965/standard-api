@@ -246,11 +246,16 @@ superset** — so 257 remain `intersects`, but now because the bundle says so.
 
 ## Known limitations
 
-- **`projection.routes.ts:198`** computes its own `compliance_percentage` from status
-  counts and counts unmapped requirements in the denominator. It is not STRM-weighted
-  and fabricates no operator, so it was deliberately left alone — but as NULL
-  operators become normal it reports "0%" for frameworks the dashboard correctly
-  declines to score. Two routes will disagree in front of the same customer.
+- ~~**`projection.routes.ts`** reports "0%" for frameworks the dashboard declines to
+  score.~~ **Closed.** It computes its own percentage from status counts and returned
+  `0` when nothing had been assessed, rendered as "Critical compliance gaps (0%).
+  Framework readiness is insufficient." — the opposite of what an unassessed
+  framework means, and a direct contradiction of the dashboard once NULL operators
+  became normal. It now returns `null` with `compliance_percentage_reason:
+  "nothing_assessable"`, and the prose says which requirements are unmapped and
+  unassessed instead of announcing a posture. The denominator is deliberately
+  unchanged: dividing by the assessed subset would quietly redefine the number for
+  every framework that does have coverage.
 - **`workers/*` 5-second timeouts — cause found, fixed.** Every test in
   `malware-integration.test.ts` and the three queue consumer suites opens with
   `await import("@standard/document-ingestion")` or similar, and the first test
