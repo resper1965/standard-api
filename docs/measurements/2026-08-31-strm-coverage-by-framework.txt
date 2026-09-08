@@ -4,6 +4,7 @@ Dry run — measuring what the backfill would write. Nothing is modified.
 
 Coverage by framework (frameworks with any graded mapping):
   framework                                     total   graded   ambig  nullop   unres   equal  subset  superset
+  general-mitre-att&ck-16-1 MITRE ATT&CK (v      5039     5039       0       0       0       0       0         0
   general-aicpa-tsc-2017 Trust Services Cri      1478     1478       0       0       0      29      90         0
   usa-federal-cms-marse-2-0 MARS-E Document      1460     1460       0       0       0       0    1179         0
   general-pci-dss-4-0-1 Payment Card Indust      1218     1218       0       0       0       0     115         0
@@ -54,6 +55,7 @@ Coverage by framework (frameworks with any graded mapping):
   usa-state-ny-dfs-23-nycrr500-2023-amd2 Ne       349      349       0       0       0       3      67         0
   general-nist-800-82-r3-low NIST SP 800-82       345      345       0       0       0      85      22         0
   general-cis-csc-8-1-ig2 Critical Security       335      327       0       0       0      38      28         0
+  general-mpa-csbp-5-3-1 Content Security B       325      325       0       0       0       0      30         0
   general-iso-27001-2022 ISO 27001 (2022)         316      316       0       0       0       0      59         0
   usa-federal-dow-zt-roadmap-1-1 Department       312      312       0       0       0      10      35         0
   general-nist-100-1-ai-rmf NIST AI 100-1 (       309      309       0       0       0      46      24         0
@@ -79,6 +81,7 @@ Coverage by framework (frameworks with any graded mapping):
   usa-federal-dow-cmmc-2-level-2 Cybersecur       231      231       0       0       0      71      28         0
   general-govramp-low GovRAMP Low                 222      222       0       0       0      46      21         0
   general-tisax-6-0-3 TISAX ISA (6.0.3)           220      220       0       0       0       6      28         0
+  general-scf-dpmp-2025 Data Privacy Manage       256      207       0       0       0       0       0         0
   emea-esp-boe-a-2022-7191 Spain - BOE-A-20       204      204       0       0       0       0      16         0
   usa-federal-dhs-cisa-tic-3-0 CISA Trusted       202      202       0       0       0       0      24         2
   emea-gbr-def-stan-05-138-l1-2024 UK - Def       200      200       0       0       0       3      54         0
@@ -155,7 +158,7 @@ Coverage by framework (frameworks with any graded mapping):
   usa-federal-sro-finra FINRA Cybersecurity        46       46       0       0       0       0      24         0
   apac-chn-cybersecurity-law-2017 China - C        44       44       0       0       0       0       1         0
   usa-federal-dow-zta-reference-architectur        43       43       0       0       0       9       4         0
-  general-iso-29100-2024 ISO 29100 (2024)          48       37       0       0       1       0       6         0
+  general-iso-29100-2024 ISO 29100 (2024)          48       37       0       0       0       0       6         0
   usa-state-il-ipa-2009 Illinois Identity P        35       35       0       0       0       0      16         0
   usa-federal-omb-fipps-1973 US Fair Inform        34       34       0       0       0       0       4         0
   apac-nzl-hisf-microsmall-2023 New Zealand        33       33       0       0       0      10       4         0
@@ -182,10 +185,12 @@ Coverage by framework (frameworks with any graded mapping):
   emea-gbr-def-stan-05-138-l0-2024 UK - Def         3        3       0       0       0       0       2         0
   usa-federal-far-52-204-27 FAR 52.204-27           3        3       0       0       0       0       1         0
 
-  46844 of 67248 mappings graded (69.7%). 13157 reach equal or subset. 73 frameworks get nothing.
+  52415 of 67248 mappings graded (77.9%). 13187 reach equal or subset. 70 frameworks get nothing.
   0 mappings had bundle rows that disagree and stay ungraded.
   0 mappings matched a bundle row for their own framework whose operator was NULL — the source did not state one we could read; stays ungraded.
-  5589 mappings match a bundle row whose focal document did not resolve to a framework — re-run the seeder after fixing the name in the catalogue.
+  0 mappings match a bundle row whose focal document did not resolve to a framework — re-run the seeder after fixing the name in the catalogue.
   Frameworks with 0 graded mappings can produce no coverage figure — that is the number to read before promising one.
+
+  0 mappings currently hold an operator no bundle row backs.
 
 Dry run complete. No rows written.
