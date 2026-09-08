@@ -15,7 +15,7 @@ six are gone. This runbook is how the real operators get loaded in their place.
 
 **The outcome to expect, stated plainly:** a mapping the bundle does not cover keeps
 `relationship_type = NULL` and produces **no** coverage figure. That is the intended
-result, not a gap to close later. 30% of mappings end up NULL, and 73 of 250
+result, not a gap to close later. 22% of mappings end up NULL, and 70 of 250
 frameworks grade nothing at all. A framework with no graded mapping cannot be given a
 compliance percentage, and the API now returns `null` with a `*_reason` rather than
 inventing one.
@@ -87,28 +87,36 @@ pnpm db:seed:strm:dry-run   # parse only, no writes
 pnpm db:seed:strm
 ```
 
-Measured 2026-09-04:
+Measured 2026-09-08:
 
 | | |
 |---|---|
 | Files processed | 183 |
 | Entries parsed | 54,220 |
 | Rows upserted | 53,664 (99.0% of parsed) |
-| Framework resolved | **48,044 of 53,664 (89.5%)** |
-| Focal documents unresolved | 3 |
+| Framework resolved | **53,664 of 53,664 (100%)** |
+| Focal documents unresolved | 0 |
 
 `Framework resolved` is the go/no-go signal. A low rate is fixed by correcting the
-name in the **catalogue** — never by widening the matcher, which is how operators got
-misattributed between frameworks in the first place.
+identifier — never by widening the matcher, which is how operators got misattributed
+between frameworks in the first place.
 
-The three unresolved files, and why (their filename FDI has no match in
-`Authoritative Sources`; they account for 5,589 ungraded mappings):
+Three of the 183 files are named for an identifier the catalogue does not publish,
+and they carried 5,589 mappings that graded nothing:
 
-- `scf-strm-general-general-mitre-att_ck-16-1.xlsx` — doubled `general-general-` prefix
-- `scf-strm-general-general-mpa-csbp-5-3-1.xlsx` — doubled `general-general-` prefix
-- `scf-strm-scf-dpmp-2025.xlsx` — no corresponding FDI in the catalogue
+| Bundle filename FDI | Catalogue `framework_id` | Defect |
+|---|---|---|
+| `general-general-mitre-att_ck-16-1` | `general-mitre-att&ck-16-1` | prefix doubled; `&` is unsafe in a filename and was written `_` |
+| `general-general-mpa-csbp-5-3-1` | `general-mpa-csbp-5-3-1` | prefix doubled |
+| `scf-dpmp-2025` | `general-scf-dpmp-2025` | `general-` prefix missing |
 
-These are vendor filename defects, and they are reported, not worked around.
+They are corrected by an exhaustive three-entry table in
+`packages/schemas/src/strm-focal-document.ts`, **not** by a tolerant matcher. Each
+was checked to resolve to exactly one row in `scf_frameworks`; an FDI absent from
+that table is still resolved by exact match or not at all, and a test pins that
+nothing generalises — a filename merely resembling one of the three is passed
+through untouched. If the vendor corrects a name, its entry stops matching and the
+exact match takes over, so a fixed bundle needs no change.
 
 ## Step 6 — Backfill the operators
 
@@ -122,10 +130,10 @@ The dry run prints coverage per framework, committed as
 closing lines before anything else:
 
 ```
-46844 of 67248 mappings graded (69.7%). 13157 reach equal or subset. 73 frameworks get nothing.
+52415 of 67248 mappings graded (77.9%). 13187 reach equal or subset. 70 frameworks get nothing.
 0 mappings had bundle rows that disagree and stay ungraded.
 0 mappings matched a bundle row for their own framework whose operator was NULL.
-5589 mappings match a bundle row whose focal document did not resolve to a framework.
+0 mappings match a bundle row whose focal document did not resolve to a framework.
 0 mappings currently hold an operator no bundle row backs.
 ```
 
@@ -169,7 +177,7 @@ docker exec standard-postgres psql -U standard -d standard -tAc "
 ```
 
 Expected: **0**, and it is the same predicate the clearing statement uses, so
-after a completed apply it is 0 by construction. Measured 2026-09-04: 0.
+after a completed apply it is 0 by construction. Measured 2026-09-08: 0.
 
 A non-zero result here means the apply did not finish — the clearing statement
 did not run, or something wrote to the column afterwards. Run the backfill again
@@ -189,16 +197,16 @@ docker exec standard-postgres psql -U standard -d standard -c "
   FROM scf_mappings GROUP BY 1 ORDER BY 2 DESC"
 ```
 
-| Operator | Before (customer, 2026-08) | After (2026-09-04) |
+| Operator | Before (customer, 2026-08) | After (2026-09-08) |
 |---|---|---|
-| `intersects` | 79,127 of 79,133 (99.99%) | 33,644 (50.0%) |
-| `(null)` | — | 20,404 (30.3%) |
-| `subset` | — | 8,361 (12.4%) |
+| `intersects` | 79,127 of 79,133 (99.99%) | 39,185 (58.3%) |
+| `(null)` | — | 14,833 (22.1%) |
+| `subset` | — | 8,391 (12.5%) |
 | `equal` | — | 4,796 (7.1%) |
 | `superset` | — | 43 (0.1%) |
 
 **The API serves null.** `pnpm check:openapi` must report the spec is current
-(`366 paths, 407 operations` as of 2026-09-04). `relationship_type` is nullable in
+(`366 paths, 407 operations` as of 2026-09-08). `relationship_type` is nullable in
 the published schema, and the dashboard and intelligence endpoints return
 `null` plus a `*_reason` of `nothing_assessable` rather than a fabricated percentage.
 
@@ -213,14 +221,14 @@ Step 7 numbers for each environment here as they are applied.
 
 | Environment | Date applied | Rows graded | Provenance check |
 |---|---|---|---|
-| local | 2026-09-04 | 46,844 | 0 |
+| local | 2026-09-08 | 52,415 | 0 |
 | staging | — | — | — |
 | production | — | — | — |
 
 ## Step 9 — What the customer is owed
 
 **Q11 (when).** Not yet applied to a customer-facing environment; local verification
-completed 2026-09-04. It is an in-place correction of the existing SCF version, not a
+completed 2026-09-08. It is an in-place correction of the existing SCF version, not a
 new version — control UUIDs do not rotate, which matters because the customer keys on
 `control_code` + version precisely to survive that.
 
