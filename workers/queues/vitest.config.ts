@@ -9,5 +9,10 @@ export default defineConfig({
     globals: true,
     environment: "node",
     include: ["src/**/*.test.ts"],
+    // Same cold-import cost as workers/ingestion: 26 `await import(...)` calls
+    // across three consumer suites, and the first of each pays for transforming
+    // a workspace package. Under a full `pnpm test` that has exceeded the 5s
+    // default; on an idle machine it never does.
+    testTimeout: 30_000,
   },
 });
