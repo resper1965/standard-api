@@ -33,6 +33,14 @@ export default defineConfig({
     globals: true,
     environment: "node",
     setupFiles: ["./vitest.setup.ts"],
+    // The workers' suites open with `await import("@standard/...")`, and the
+    // first test in each file pays for transforming that workspace package.
+    // That fits in the 5s default on an idle machine and does not under this
+    // config, which collects every package at once — so the FIRST test of a
+    // file failed with "Test timed out in 5000ms", intermittently and never in
+    // isolation. The per-worker configs carry the same value; this one is what
+    // `pnpm coverage` and CI's Unit & Contract Tests job actually run.
+    testTimeout: 30_000,
     include: [
       "packages/*/src/**/*.test.ts",
       "apps/*/src/**/*.test.ts",
