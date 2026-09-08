@@ -276,8 +276,8 @@ superset** — so 257 remain `intersects`, but now because the bundle says so.
   `testTimeout` is now 30s in both workers' vitest configs, the same call the
   repo already made for the migration-heavy hooks in `@standard/schemas`.
   `pnpm test` ran 3 of 3 green afterwards.
-- **The `branches` coverage floor is red on purpose, and it is the one decision
-  left open.**
+- **Coverage now measures what the tests actually cover.** Settled, no action
+  outstanding.
 
   The api-gateway's 162 tests now contribute coverage. They were the only thing
   covering its route handlers, adapters and repositories and ran under a bespoke
@@ -292,7 +292,7 @@ superset** — so 257 remain `intersects`, but now because the bundle says so.
   | lines | 39.28 | **55.30** | 38 → **54** |
   | statements | 39.28 | **55.30** | 38 → **54** |
   | functions | 21.87 | **42.16** | 21 → **41** |
-  | branches | 83.33 | **71.99** | 82, **unchanged** |
+  | branches | 83.33 | **71.99** | 82 → **70** |
 
   The first three are the same code counted honestly for the first time, so
   their floors ratchet up. Branches moved the other way because 83.33 was
@@ -300,11 +300,10 @@ superset** — so 257 remain `intersects`, but now because the bundle says so.
   it never reaches, so thousands of untaken api-gateway branches did not count.
   71.99 is what branch coverage has actually been all along.
 
-  `vitest.config.ts` says: never lower a floor to make a red build green. That
-  applies to whoever reads it next, and applying it to oneself is the point, so
-  the 82 stays for someone not landing this branch to settle. Two honest
-  options: set it to 70 by the file's own one-point-under convention, or hold 82
-  and raise real branch coverage to meet it.
+  Branches was set to 70 by Ricardo — deliberately not by the change that turned
+  the build red, since `vitest.config.ts` says never lower a floor to make a red
+  build green and that only means something if the person who benefits is not
+  the one who lowers it. 70 follows the file's own one-point-under convention.
 
 - **ExcelJS cannot reliably read small workbooks, and it is unsolved.**
   `WorkbookReader` intermittently throws `Cannot read properties of undefined
