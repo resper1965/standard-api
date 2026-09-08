@@ -37,6 +37,36 @@ describe("fdiFromBundleFilename", () => {
     expect(fdiFromBundleFilename("scf-strm-.xlsx")).toBe(null);
     expect(fdiFromBundleFilename("")).toBe(null);
   });
+
+  // Three files out of 183 are named for an identifier the catalogue does not
+  // publish. Each was checked against scf_frameworks and resolves to exactly
+  // one row; together they carry 5,589 mappings that graded nothing.
+  it("corrects the three known vendor filename defects", () => {
+    expect(
+      fdiFromBundleFilename("scf-strm-general-general-mitre-att_ck-16-1.xlsx"),
+    ).toBe("general-mitre-att&ck-16-1");
+    expect(
+      fdiFromBundleFilename("scf-strm-general-general-mpa-csbp-5-3-1.xlsx"),
+    ).toBe("general-mpa-csbp-5-3-1");
+    expect(fdiFromBundleFilename("scf-strm-scf-dpmp-2025.xlsx")).toBe(
+      "general-scf-dpmp-2025",
+    );
+  });
+
+  it("corrects only those three, and generalises to nothing", () => {
+    // The corrections are a record of three defects, not a rule. A prefix- or
+    // punctuation-tolerant lookup is how one framework's operators come to
+    // grade another's requirements, which is the failure this branch exists to
+    // end — so a filename that merely resembles one of the three is passed
+    // through untouched and resolves by exact match or not at all.
+    expect(fdiFromBundleFilename("scf-strm-general-general-iso-27001.xlsx")).toBe(
+      "general-general-iso-27001",
+    );
+    expect(fdiFromBundleFilename("scf-strm-general-mitre-att_ck-17-0.xlsx")).toBe(
+      "general-mitre-att_ck-17-0",
+    );
+    expect(fdiFromBundleFilename("scf-strm-dpmp-2025.xlsx")).toBe("dpmp-2025");
+  });
 });
 
 describe("pickUnambiguousMappingId", () => {
