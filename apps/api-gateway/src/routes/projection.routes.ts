@@ -195,12 +195,31 @@ export const projectionRoutes: RouteDefinition[] = [
       }
 
       const totalRequirements = requirements.length;
+
+      // A requirement only carries evidence once it is both mapped to an SCF
+      // control and assessed. When none of them are, there is no compliance
+      // posture to report — and reporting 0% says the opposite of that: it
+      // reads as "assessed, and failing" rather than "nothing to assess".
+      //
+      // This is the same contract the dashboard and intelligence endpoints
+      // adopted: null plus a reason, never a number standing in for absence.
+      // It matters here because a framework the STRM bundle does not cover now
+      // legitimately grades nothing, so without this the two would contradict
+      // each other in front of the same customer — one declining to score, the
+      // other announcing critical gaps.
+      //
+      // The denominator is deliberately unchanged. Dividing by the assessed
+      // subset instead would quietly redefine the number for every framework
+      // that does have coverage; the only thing corrected here is the case
+      // where there is nothing to divide.
+      const assessedRequirements =
+        totalCompliant + totalPartial + totalNonCompliant;
       const compliancePercentage =
-        totalRequirements > 0
+        assessedRequirements > 0
           ? Math.round(
               ((totalCompliant + totalPartial * 0.5) / totalRequirements) * 100,
             )
-          : 0;
+          : null;
 
       return json({
         data: {
@@ -218,15 +237,21 @@ export const projectionRoutes: RouteDefinition[] = [
             not_assessed: totalNotAssessed,
             not_mapped: totalNotMapped,
             compliance_percentage: compliancePercentage,
+            compliance_percentage_reason:
+              compliancePercentage === null
+                ? ("nothing_assessable" as const)
+                : null,
           },
           interpretation:
-            compliancePercentage >= 90
-              ? `Strong compliance posture (${compliancePercentage}%). Minor gaps may require attention.`
-              : compliancePercentage >= 70
-                ? `Moderate compliance (${compliancePercentage}%). Significant remediation effort needed.`
-                : compliancePercentage >= 40
-                  ? `Weak compliance (${compliancePercentage}%). Major gaps exist across multiple domains.`
-                  : `Critical compliance gaps (${compliancePercentage}%). Framework readiness is insufficient.`,
+            compliancePercentage === null
+              ? `No requirement in this framework is both mapped to an SCF control and assessed, so no compliance figure can be produced. ${totalNotMapped} of ${totalRequirements} requirements are unmapped and ${totalNotAssessed} are unassessed.`
+              : compliancePercentage >= 90
+                ? `Strong compliance posture (${compliancePercentage}%). Minor gaps may require attention.`
+                : compliancePercentage >= 70
+                  ? `Moderate compliance (${compliancePercentage}%). Significant remediation effort needed.`
+                  : compliancePercentage >= 40
+                    ? `Weak compliance (${compliancePercentage}%). Major gaps exist across multiple domains.`
+                    : `Critical compliance gaps (${compliancePercentage}%). Framework readiness is insufficient.`,
           requirements: projectedRequirements,
         },
         trace_id: traceId,
