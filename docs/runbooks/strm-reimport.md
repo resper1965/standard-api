@@ -276,33 +276,35 @@ superset** — so 257 remain `intersects`, but now because the bundle says so.
   `testTimeout` is now 30s in both workers' vitest configs, the same call the
   repo already made for the migration-heavy hooks in `@standard/schemas`.
   `pnpm test` ran 3 of 3 green afterwards.
-- **The `functions` coverage floor no longer passes, and the cause is structural.**
-  `pnpm coverage` reports 19.83% against a floor of 21%: 387 of 1,951 functions,
-  23 short. Branch coverage was also under and is now fixed properly, by testing
-  the paths this branch left uncovered in `authoritative-sources.ts` and
-  `wide-crosswalk.ts` — 82.47% against a floor of 82.
+- **The `branches` coverage floor is red on purpose, and it is the one decision
+  left open.**
 
-  Functions cannot be fixed the same way. The uncovered ones are almost entirely
-  `apps/api-gateway` route handlers, adapters and repositories — `scf.routes.ts`
-  alone has 47 of 47 uncovered — and they are **not untested**: they are covered
-  by the 161-test suite in `apps/api-gateway/tests/`, which runs under a bespoke
-  `tsx` runner that the root vitest config excludes, so v8 never sees the calls.
-  This branch added a lot of api-gateway code, which grew the denominator without
-  moving the numerator, and the floor broke. `main` and PR #142 both pass it.
+  The api-gateway's 162 tests now contribute coverage. They were the only thing
+  covering its route handlers, adapters and repositories and ran under a bespoke
+  `tsx` runner the root vitest config excluded, so v8 never saw those calls —
+  `scf.routes.ts` reported 47 of 47 functions uncovered while being thoroughly
+  exercised. `tests/test-kit.ts` now registers with vitest when `VITEST` is set
+  and keeps its own array otherwise: `pnpm test` is unchanged and still passes
+  162, and all 90 files / 966 tests pass under vitest.
 
-  Two ways to close it, neither of which belongs in this branch:
+  | Metric | Before | Honestly measured | Floor |
+  |---|---|---|---|
+  | lines | 39.28 | **55.30** | 38 → **54** |
+  | statements | 39.28 | **55.30** | 38 → **54** |
+  | functions | 21.87 | **42.16** | 21 → **41** |
+  | branches | 83.33 | **71.99** | 82, **unchanged** |
 
-  1. **Make the api-gateway suite contribute coverage.** `tests/test-kit.ts` is a
-     107-line shim exposing the same `test`/`expect` surface as vitest, so those
-     files are already written in a compatible style and the port may be small.
-     It would cover ~74 functions at once and is the right long-term fix — but it
-     changes how 30 test files execute, and if it goes wrong it takes down the
-     suite that proves this work correct. It deserves its own change and review.
-  2. **Re-measure the floor.** The comment in `vitest.config.ts` sets each floor
-     "one point under the measured value"; that measurement is from 2026-08-27
-     and predates this branch. Lowering it is defensible only with the reasoning
-     written down — and it weakens the guard for everyone afterwards, so it is
-     not a call to make while landing the work that broke it.
+  The first three are the same code counted honestly for the first time, so
+  their floors ratchet up. Branches moved the other way because 83.33 was
+  measured over files that never executed — v8 reports no branch data for a line
+  it never reaches, so thousands of untaken api-gateway branches did not count.
+  71.99 is what branch coverage has actually been all along.
+
+  `vitest.config.ts` says: never lower a floor to make a red build green. That
+  applies to whoever reads it next, and applying it to oneself is the point, so
+  the 82 stays for someone not landing this branch to settle. Two honest
+  options: set it to 70 by the file's own one-point-under convention, or hold 82
+  and raise real branch coverage to meet it.
 
 - **ExcelJS cannot reliably read small workbooks, and it is unsolved.**
   `WorkbookReader` intermittently throws `Cannot read properties of undefined
