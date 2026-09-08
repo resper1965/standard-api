@@ -1,121 +1,107 @@
-import { useNavigate } from "react-router-dom"
-import { useSession, signOut } from "@/lib/auth-client"
+import { signOut } from "@/lib/auth-client"
 import "./LoginPage.css"
 
-/* ── Inline SVG Icons ── */
-const IcoShield = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-  </svg>
-)
+// The class names below are the `lp-` prefix LoginPage.css actually defines.
+// This page used to write `login-*`, which matches nothing in that stylesheet,
+// so it rendered as unstyled text with the inline SVGs at their intrinsic size.
 
 const IcoClock = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="login-ico">
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.75"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
     <circle cx="12" cy="12" r="10" />
     <path d="M12 6v6l4 2" />
   </svg>
 )
 
 export function OnboardingPage() {
-  const { data: session } = useSession()
-  const navigate = useNavigate()
-
-  // If user already has an org (e.g. assigned by admin), skip onboarding
-  // The DashboardLayout handles auto-activation.
-
   return (
-    <div className="login-page">
-      {/* ── Animated Background ── */}
-      <div className="login-aurora">
-        <div className="login-aurora-accent" />
-      </div>
-      <div className="login-grid" />
+    <div className="lp-root" role="main">
+      <div className="lp-orb lp-orb--a" aria-hidden="true" />
+      <div className="lp-orb lp-orb--b" aria-hidden="true" />
+      <div className="lp-orb lp-orb--c" aria-hidden="true" />
+      <div className="lp-grid" aria-hidden="true" />
+      <div className="lp-vignette" aria-hidden="true" />
 
-      <div className="login-container">
-        {/* ── Left Panel: Branding & Context ── */}
-        <div className="login-left">
-          <div className="login-brand">
-            <div className="login-brand-icon"><IcoShield /></div>
-            <span className="login-brand-name">Standard</span>
+      <div className="lp-layout">
+        <aside className="lp-left" aria-label="b.standard Platform overview">
+          <div className="lp-logo">
+            <div className="lp-logo-stack">
+              <span className="lp-logo-mark">
+                b<span className="lp-logo-dot">.</span>standard
+              </span>
+              <span className="lp-logo-slogan">
+                be secure<span className="lp-logo-dot">.</span>
+              </span>
+            </div>
           </div>
 
-          <h1 className="login-hero-title">
-            Welcome to{" "}
-            <span className="login-hero-gradient">Standard.</span>
-          </h1>
+          <div className="lp-hero">
+            <p className="lp-hero-eyebrow">Welcome</p>
+            <h1 className="lp-hero-title">
+              Your account is{" "}
+              <span className="lp-hero-accent">ready.</span>
+            </h1>
+            <p className="lp-hero-desc">
+              A platform administrator will assign you to an organization. Once
+              that is done you can start running assessments.
+            </p>
+          </div>
+        </aside>
 
-          <p className="login-hero-desc">
-            Your account has been created successfully. A platform administrator
-            will assign you to an organization so you can start working.
-          </p>
-        </div>
-
-        {/* ── Right Panel: Waiting State ── */}
-        <div className="login-right">
-          <div className="login-form-wrapper">
-            {/* Mobile-only brand */}
-            <div className="login-mobile-brand">
-              <div className="login-mobile-brand-icon"><IcoShield /></div>
-              <span className="login-mobile-brand-name">Standard</span>
+        <section className="lp-right lp-right--in" aria-label="Account status">
+          <div className="lp-mobile-logo" aria-hidden="true">
+            <div className="lp-mobile-logo-stack">
+              <span className="lp-logo-mark lp-logo-mark--sm">
+                b<span className="lp-logo-dot">.</span>standard
+              </span>
+              <span className="lp-logo-slogan lp-logo-slogan--sm">
+                be secure<span className="lp-logo-dot">.</span>
+              </span>
             </div>
+          </div>
 
-            <div className="login-header">
-              <h2 className="login-header-title">Awaiting Organization</h2>
-              <p className="login-header-sub">
-                Your administrator will assign you to a workspace
-              </p>
-            </div>
-
-            <div className="login-card" style={{ textAlign: "center", padding: "2.5rem 2rem" }}>
-              <div style={{
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: 64,
-                height: 64,
-                borderRadius: "50%",
-                background: "linear-gradient(135deg, rgba(96, 165, 250, 0.15), rgba(167, 139, 250, 0.15))",
-                marginBottom: 20
-              }}>
+          <div className="lp-card">
+            <div className="lp-pending">
+              <div className="lp-pending-icon">
                 <IcoClock />
               </div>
-              <h3 style={{ fontSize: "1.15rem", fontWeight: 600, marginBottom: 8, color: "var(--text-primary, #e2e8f0)" }}>
-                No Organization Assigned
-              </h3>
-              <p style={{ fontSize: "0.875rem", lineHeight: 1.7, color: "var(--text-secondary, #94a3b8)", maxWidth: 360, margin: "0 auto 24px" }}>
-                A platform administrator needs to approve your account and assign
-                you to an organization. You'll be able to access the dashboard
-                once this is complete.
+              <h2 className="lp-card-title">No Organization Assigned</h2>
+              <p className="lp-card-sub">
+                A platform administrator needs to assign you to an organization.
+                You will be able to access the dashboard once that is complete.
               </p>
-              <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+
+              <button
+                type="button"
+                className="lp-submit"
+                style={{ marginTop: "1.5rem" }}
+                onClick={() => window.location.reload()}
+              >
+                <span className="lp-submit-content">Refresh status</span>
+              </button>
+
+              <div className="lp-form-footer">
                 <button
-                  className="login-submit"
                   type="button"
-                  style={{ maxWidth: 180, opacity: 0.9 }}
-                  onClick={() => window.location.reload()}
-                >
-                  Refresh Status
-                </button>
-                <button
-                  className="login-submit"
-                  type="button"
-                  style={{
-                    maxWidth: 140,
-                    background: "transparent",
-                    border: "1px solid rgba(148, 163, 184, 0.3)",
-                    color: "var(--text-secondary, #94a3b8)"
-                  }}
+                  className="lp-link"
                   onClick={async () => {
-                    await signOut();
-                    window.location.href = "/login";
+                    await signOut()
+                    window.location.href = "/login"
                   }}
                 >
-                  Sign Out
+                  Sign out
                 </button>
               </div>
             </div>
           </div>
-        </div>
+        </section>
       </div>
     </div>
   )

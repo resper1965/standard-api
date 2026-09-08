@@ -24,7 +24,7 @@ Tenant: \`x-standard-tenant-id\` header (required)
 - [Gap Analysis](#gap-analysis): Findings, approval
 - [POA&M](#poam): Remediation planning
 - [Reports](#reports): Generate, download, audit package
-- [Dashboard KPIs](#dashboard-kpis): Server-computed compliance metrics
+- [Dashboard KPIs](#dashboard-kpis): Server-computed compliance metrics. Percentages are nullable â€” see "Compliance Figures Can Be Null" in llms-full.txt before doing arithmetic on them.
 - [Audit Trail](#audit-trail): Tenant/org-wide audit event log
 - [Members](#members): Organization membership RBAC (invite, role, remove)
 - [AI Agents](#ai-agents): 10 specialized agents (Knowledge Steward, SCF Analyst, Framework Mapper, Scope & SoA Architect, Evidence Analyst, Gap Analyst, Maturity Assessor, POA&M Planner, Report Writer, Council Orchestrator)
@@ -50,32 +50,32 @@ export const LLMS_FULL_HEADER = (
 > 1,468 controls Â· 231 frameworks Â· 33 domains Â· 13 AI-powered endpoints
 > Auto-generated from OpenAPI ${spec.openapi} spec
 
-Base URL: \\\`${baseUrl}\\\`
+Base URL: \`${baseUrl}\`
 
 ## Authentication
 
 Every request requires two headers:
 
-\\\`\\\`\\\`
+\`\`\`
 Authorization: Bearer standard_live_abc123def456
 x-standard-tenant-id: org_pa5khl
-\\\`\\\`\\\`
+\`\`\`
 
-- **Bearer API Key**: Machine-to-machine key from the dashboard (prefix: \\\`standard_live_\\\` or \\\`standard_test_\\\`)
-- **Session Cookie**: Alternative â€” set by Standard Native Auth after \\\`POST /api/auth/sign-in/email\\\`
-- **Tenant Header**: Your organization ID from Standard Native Auth (format: \\\`org_xxxxx\\\`, required for all data-scoped endpoints)
+- **Bearer API Key**: Machine-to-machine key from the dashboard (prefix: \`standard_live_\` or \`standard_test_\`)
+- **Session Cookie**: Alternative â€” set by Standard Native Auth after \`POST /api/auth/sign-in/email\`
+- **Tenant Header**: Your organization ID from Standard Native Auth (format: \`org_xxxxx\`, required for all data-scoped endpoints)
 
 ## Internationalization (i18n)
 
 Many endpoints support localized responses via query parameter:
 
-\\\`\\\`\\\`
+\`\`\`
 GET /api/v1/intelligence/compliance-score?locale=en
 GET /api/v1/intelligence/compliance-score?locale=pt
-\\\`\\\`\\\`
+\`\`\`
 
-Default locale: \\\`pt\\\` (Portuguese). Fields with \\\`_i18n\\\` suffix are automatically flattened.
-Example: \\\`message_i18n: { pt: "...", en: "..." }\\\` â†’ \\\`message: "..."\\\` based on your \\\`?locale=\\\` param.
+Default locale: \`pt\` (Portuguese). Fields with \`_i18n\` suffix are automatically flattened.
+Example: \`message_i18n: { pt: "...", en: "..." }\` â†’ \`message: "..."\` based on your \`?locale=\` param.
 
 Supported across: Intelligence, Risk, Regulations, Reference Data, Reporting, and Workflow Templates endpoints.
 
@@ -83,7 +83,7 @@ Supported across: Intelligence, Risk, Regulations, Reference Data, Reporting, an
 
 All errors follow this structure:
 
-\\\`\\\`\\\`json
+\`\`\`json
 {
   "error": {
     "code": "NOT_FOUND",
@@ -91,11 +91,54 @@ All errors follow this structure:
     "trace_id": "abc-123-def"
   }
 }
-\\\`\\\`\\\`
+\`\`\`
 
-Common codes: \\\`VALIDATION_ERROR\\\` (400), \\\`UNAUTHORIZED\\\` (401), \\\`NOT_FOUND\\\` (404), \\\`INTERNAL_ERROR\\\` (500)
+Common codes: \`VALIDATION_ERROR\` (400), \`UNAUTHORIZED\` (401), \`NOT_FOUND\` (404), \`INTERNAL_ERROR\` (500)
 
 Rate limits: 100 req/10s (general) Â· 5/min (sign-in) Â· 3/min (sign-up)
+
+## Compliance Figures Can Be Null â€” Read This Before Doing Arithmetic
+
+A compliance percentage is only produced when there is something to measure. When
+there is not, the API returns \`null\` and says why in a sibling \`*_reason\` field. It
+never substitutes a number.
+
+Affected fields, all nullable:
+
+| Field | Endpoint | Reason field |
+|---|---|---|
+| \`compliance_pct\` | \`GET /api/v1/assessments/:id/summary\` | \`compliance_reason\` |
+| \`compliance_avg_pct\` | \`GET /api/v1/organizations/:id/dashboard\` | \`compliance_reason\` |
+| \`compliance_percentage\` | \`GET /api/v1/assessments/:id/projection/:frameworkId\` | \`compliance_percentage_reason\` |
+| \`score\` | gap analysis / intelligence responses | \`reason\` |
+
+The only reason value today is \`"nothing_assessable"\`: no requirement in scope is
+both mapped to an SCF control and assessed, so no figure can be derived.
+
+\`\`\`js
+// Correct
+const pct = res.data.compliance_pct;
+if (pct === null) {
+  render(res.data.compliance_reason === "nothing_assessable" ? "Not assessable" : "â€”");
+} else {
+  render(\`\${pct}%\`);
+}
+
+// Wrong â€” null becomes 0 and an unmeasurable framework reads as total failure
+render(\`\${res.data.compliance_pct ?? 0}%\`);
+\`\`\`
+
+Do not use \`??\`, \`||\` or \`Number()\` to collapse these to 0. A null means "we cannot
+say"; a 0 means "measured, and nothing is compliant". Averaging a null as 0 drags a
+whole portfolio down with a number nobody measured.
+
+## STRM Operators Are Nullable Too
+
+\`relationship_type\` on an SCF mapping is one of \`equal\`, \`subset\`, \`intersects\`,
+\`superset\`, \`no_relation\` â€” or \`null\`, which means the official STRM bundle states no
+operator we can read for that pair. About 22% of mappings are null, and they
+contribute nothing to any weighted index. Filtering \`?relationship_type=\` accepts only
+the five canonical values and returns 400 on anything else.
 
 ---`;
 
@@ -115,10 +158,10 @@ export const getLlmsFullCookbook = (baseUrl: string) => `
 
 > Send a control requirement + evidence description â†’ get compliance verdict with confidence score.
 
-**Endpoint**: \\\`POST /api/v1/gap/evaluate-evidence\\\`
+**Endpoint**: \`POST /api/v1/gap/evaluate-evidence\`
 **Use when**: You have a security control and need to verify if your evidence satisfies it.
 
-\\\`\\\`\\\`bash
+\`\`\`bash
 curl -X POST ${baseUrl}/api/v1/gap/evaluate-evidence \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID" \\\\
@@ -127,10 +170,10 @@ curl -X POST ${baseUrl}/api/v1/gap/evaluate-evidence \\\\
     "controlRequirement": "Backup data must be encrypted at rest with AES-256.",
     "evidenceDescription": "Our AWS S3 buckets have SSE-S3 encryption enabled with AES-256. Bucket policies enforce deny on unencrypted PutObject requests."
   }'
-\\\`\\\`\\\`
+\`\`\`
 
 **Response (200)**:
-\\\`\\\`\\\`json
+\`\`\`json
 {
   "data": {
     "is_compliant": true,
@@ -140,7 +183,7 @@ curl -X POST ${baseUrl}/api/v1/gap/evaluate-evidence \\\\
   },
   "trace_id": "tr_abc123"
 }
-\\\`\\\`\\\`
+\`\`\`
 
 ---
 
@@ -148,10 +191,10 @@ curl -X POST ${baseUrl}/api/v1/gap/evaluate-evidence \\\\
 
 > Send raw security logs â†’ get instant L3 diagnosis: false positive or real incident.
 
-**Endpoint**: \\\`POST /api/v1/soc/triage-incident\\\`
+**Endpoint**: \`POST /api/v1/soc/triage-incident\`
 **Use when**: Your SIEM fires an alert and you need automated triage before escalation.
 
-\\\`\\\`\\\`bash
+\`\`\`bash
 curl -X POST ${baseUrl}/api/v1/soc/triage-incident \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID" \\\\
@@ -160,10 +203,10 @@ curl -X POST ${baseUrl}/api/v1/soc/triage-incident \\\\
     "systemModuleName": "WAF Edge Firewall",
     "rawLogsExcerpt": "[10/Oct/2026:13:55:36 +0000] GET /admin HTTP/1.1 403 154 - SqlMap/1.4"
   }'
-\\\`\\\`\\\`
+\`\`\`
 
 **Response (200)**:
-\\\`\\\`\\\`json
+\`\`\`json
 {
   "data": {
     "is_false_positive": false,
@@ -175,7 +218,7 @@ curl -X POST ${baseUrl}/api/v1/soc/triage-incident \\\\
   },
   "trace_id": "tr_def456"
 }
-\\\`\\\`\\\`
+\`\`\`
 
 ---
 
@@ -183,10 +226,10 @@ curl -X POST ${baseUrl}/api/v1/soc/triage-incident \\\\
 
 > Translate technical cybersecurity risk â†’ C-Level/Board-ready executive summary.
 
-**Endpoint**: \\\`POST /api/v1/executive/translate-risk\\\`
+**Endpoint**: \`POST /api/v1/executive/translate-risk\`
 **Use when**: CISO needs to present a technical vulnerability to the board in business terms.
 
-\\\`\\\`\\\`bash
+\`\`\`bash
 curl -X POST ${baseUrl}/api/v1/executive/translate-risk \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID" \\\\
@@ -196,10 +239,10 @@ curl -X POST ${baseUrl}/api/v1/executive/translate-risk \\\\
     "riskCategory": "security",
     "businessContext": "Cluster runs Black Friday payment processing."
   }'
-\\\`\\\`\\\`
+\`\`\`
 
 **Response (200)**:
-\\\`\\\`\\\`json
+\`\`\`json
 {
   "data": {
     "executive_summary": "A critical vulnerability in our payment processing infrastructure allows unauthorized access to core system management. This could enable attackers to intercept or modify payment transactions.",
@@ -210,7 +253,7 @@ curl -X POST ${baseUrl}/api/v1/executive/translate-risk \\\\
   },
   "trace_id": "tr_ghi789"
 }
-\\\`\\\`\\\`
+\`\`\`
 
 ---
 
@@ -218,10 +261,10 @@ curl -X POST ${baseUrl}/api/v1/executive/translate-risk \\\\
 
 > Analyze a vendor contract excerpt â†’ detect DPA compliance gaps, sub-processors, and red flags.
 
-**Endpoint**: \\\`POST /api/v1/privacy/scan-vendor-contract\\\`
+**Endpoint**: \`POST /api/v1/privacy/scan-vendor-contract\`
 **Use when**: Legal team needs to evaluate a vendor's data processing agreement.
 
-\\\`\\\`\\\`bash
+\`\`\`bash
 curl -X POST ${baseUrl}/api/v1/privacy/scan-vendor-contract \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID" \\\\
@@ -230,10 +273,10 @@ curl -X POST ${baseUrl}/api/v1/privacy/scan-vendor-contract \\\\
     "vendorName": "CloudSync Analytics Ltd.",
     "contractExcerpt": "5.1 The Processor agrees to notify the Controller of any breach within 120 hours. 6.2 Data may be transferred to sub-processors in jurisdictions deemed adequate by the Processor."
   }'
-\\\`\\\`\\\`
+\`\`\`
 
 **Response (200)**:
-\\\`\\\`\\\`json
+\`\`\`json
 {
   "data": {
     "has_standard_contractual_clauses": false,
@@ -248,7 +291,7 @@ curl -X POST ${baseUrl}/api/v1/privacy/scan-vendor-contract \\\\
   },
   "trace_id": "tr_jkl012"
 }
-\\\`\\\`\\\`
+\`\`\`
 
 ---
 
@@ -256,11 +299,11 @@ curl -X POST ${baseUrl}/api/v1/privacy/scan-vendor-contract \\\\
 
 > Calculate your compliance score against a specific regulation based on implemented controls.
 
-**Endpoint**: \\\`POST /api/v1/intelligence/compliance-score\\\`
+**Endpoint**: \`POST /api/v1/intelligence/compliance-score\`
 **Use when**: Dashboard needs real-time compliance percentage for a specific framework.
 **Note**: Pure computation â€” no LLM call, instant response.
 
-\\\`\\\`\\\`bash
+\`\`\`bash
 curl -X POST ${baseUrl}/api/v1/intelligence/compliance-score \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID" \\\\
@@ -269,10 +312,10 @@ curl -X POST ${baseUrl}/api/v1/intelligence/compliance-score \\\\
     "regulation_id": "lgpd",
     "scf_controls_implemented": ["DCH-01", "DCH-04", "PRI-01", "PRI-02", "PRI-05", "GOV-01"]
   }'
-\\\`\\\`\\\`
+\`\`\`
 
 **Response (200)**:
-\\\`\\\`\\\`json
+\`\`\`json
 {
   "data": {
     "regulation_id": "lgpd",
@@ -284,7 +327,7 @@ curl -X POST ${baseUrl}/api/v1/intelligence/compliance-score \\\\
   },
   "trace_id": "tr_mno345"
 }
-\\\`\\\`\\\`
+\`\`\`
 
 ---
 
@@ -292,10 +335,10 @@ curl -X POST ${baseUrl}/api/v1/intelligence/compliance-score \\\\
 
 > "I implemented ISO 27001. How much of SOC 2 do I already cover?"
 
-**Endpoint**: \\\`POST /api/v1/intelligence/cross-coverage\\\`
+**Endpoint**: \`POST /api/v1/intelligence/cross-coverage\`
 **Use when**: Planning multi-framework compliance â€” see overlap before investing.
 
-\\\`\\\`\\\`bash
+\`\`\`bash
 curl -X POST ${baseUrl}/api/v1/intelligence/cross-coverage \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID" \\\\
@@ -305,10 +348,10 @@ curl -X POST ${baseUrl}/api/v1/intelligence/cross-coverage \\\\
     "target_framework": "soc2",
     "scf_controls_implemented": ["GOV-01", "GOV-02", "AST-01", "IAC-01", "IAC-02"]
   }'
-\\\`\\\`\\\`
+\`\`\`
 
-**Response (200)** (with \\\`?locale=en\\\`):
-\\\`\\\`\\\`json
+**Response (200)** (with \`?locale=en\`):
+\`\`\`json
 {
   "data": {
     "source_framework": "iso27001",
@@ -321,7 +364,7 @@ curl -X POST ${baseUrl}/api/v1/intelligence/cross-coverage \\\\
   },
   "trace_id": "tr_pqr678"
 }
-\\\`\\\`\\\`
+\`\`\`
 
 ---
 
@@ -329,10 +372,10 @@ curl -X POST ${baseUrl}/api/v1/intelligence/cross-coverage \\\\
 
 > "Which controls should I implement FIRST for maximum compliance impact?"
 
-**Endpoint**: \\\`POST /api/v1/intelligence/roi-path\\\`
+**Endpoint**: \`POST /api/v1/intelligence/roi-path\`
 **Use when**: Limited budget â€” need to prioritize controls by cross-framework impact.
 
-\\\`\\\`\\\`bash
+\`\`\`bash
 curl -X POST ${baseUrl}/api/v1/intelligence/roi-path \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID" \\\\
@@ -342,10 +385,10 @@ curl -X POST ${baseUrl}/api/v1/intelligence/roi-path \\\\
     "scf_controls_implemented": ["GOV-01"],
     "top_n": 3
   }'
-\\\`\\\`\\\`
+\`\`\`
 
 **Response (200)**:
-\\\`\\\`\\\`json
+\`\`\`json
 {
   "data": {
     "target_framework": "iso27001",
@@ -360,7 +403,7 @@ curl -X POST ${baseUrl}/api/v1/intelligence/roi-path \\\\
   },
   "trace_id": "tr_stu901"
 }
-\\\`\\\`\\\`
+\`\`\`
 
 ---
 
@@ -368,19 +411,19 @@ curl -X POST ${baseUrl}/api/v1/intelligence/roi-path \\\\
 
 > "If this control fails, what breaks?"
 
-**Endpoint**: \\\`POST /api/v1/intelligence/blast-radius\\\`
+**Endpoint**: \`POST /api/v1/intelligence/blast-radius\`
 **Use when**: Risk assessment â€” understand the downstream impact of a control failure.
 
-\\\`\\\`\\\`bash
+\`\`\`bash
 curl -X POST ${baseUrl}/api/v1/intelligence/blast-radius \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID" \\\\
   -H "Content-Type: application/json" \\\\
   -d '{"control_id": "PRI-01"}'
-\\\`\\\`\\\`
+\`\`\`
 
 **Response (200)**:
-\\\`\\\`\\\`json
+\`\`\`json
 {
   "data": {
     "control_id": "PRI-01",
@@ -393,7 +436,7 @@ curl -X POST ${baseUrl}/api/v1/intelligence/blast-radius \\\\
   },
   "trace_id": "tr_vwx234"
 }
-\\\`\\\`\\\`
+\`\`\`
 
 ---
 
@@ -403,17 +446,17 @@ curl -X POST ${baseUrl}/api/v1/intelligence/blast-radius \\\\
 
 **Step 1: RoPA Analysis**
 
-\\\`\\\`\\\`bash
+\`\`\`bash
 curl -X POST ${baseUrl}/api/v1/privacy/analyze-ropa \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID" \\\\
   -H "Content-Type: application/json" \\\\
   -d '{"description": "We digitize medical records from patients at the reception desk and store them in a cloud database for 10 years.", "org_id": "org_123"}'
-\\\`\\\`\\\`
+\`\`\`
 
 **Step 2: DPIA Assessment**
 
-\\\`\\\`\\\`bash
+\`\`\`bash
 curl -X POST ${baseUrl}/api/v1/privacy/assess-dpia \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID" \\\\
@@ -430,7 +473,7 @@ curl -X POST ${baseUrl}/api/v1/privacy/assess-dpia \\\\
       "is_dpia_required": true
     }
   }'
-\\\`\\\`\\\`
+\`\`\`
 
 ---
 
@@ -439,27 +482,27 @@ curl -X POST ${baseUrl}/api/v1/privacy/assess-dpia \\\\
 > Send natural language â†’ get a complete processing activity with screening and report.
 
 **Step 1: Create the activity**
-\\\`\\\`\\\`bash
+\`\`\`bash
 curl -X POST ${baseUrl}/api/v1/privacy/processing-activities \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID" \\\\
   -H "Content-Type: application/json" \\\\
   -d '{"name": "Customer support tickets", "purpose": "Handle support requests", "legal_basis": "legitimate_interest"}'
-\\\`\\\`\\\`
+\`\`\`
 
 **Step 2: Run screening**
-\\\`\\\`\\\`bash
+\`\`\`bash
 curl -X POST ${baseUrl}/api/v1/privacy/processing-activities/ACTIVITY_ID/screen \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID"
-\\\`\\\`\\\`
+\`\`\`
 
 **Step 3: Generate report**
-\\\`\\\`\\\`bash
+\`\`\`bash
 curl -X GET "${baseUrl}/api/v1/privacy/processing-activities/ACTIVITY_ID/report?format=markdown" \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID"
-\\\`\\\`\\\`
+\`\`\`
 
 ---`;
 
@@ -476,86 +519,86 @@ export const getLlmsFullCookbookOps = (baseUrl: string) => `
 
 **Step 1: Create assessment**
 
-\\\`\\\`\\\`bash
+\`\`\`bash
 curl -X POST ${baseUrl}/api/v1/assessments \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID" \\\\
   -H "Content-Type: application/json" \\\\
   -d '{"name": "ISO 27001 Q4 2026", "scf_version_id": "SCF_VERSION_UUID", "organization_id": "YOUR_ORG_ID"}'
-\\\`\\\`\\\`
+\`\`\`
 
 **Step 2: Define scope**
 
-\\\`\\\`\\\`bash
+\`\`\`bash
 curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/scope \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID" \\\\
   -H "Content-Type: application/json" \\\\
   -d '{"framework_id": "iso27001", "departments": ["IT", "HR"], "locations": ["HQ"]}'
-\\\`\\\`\\\`
+\`\`\`
 
 **Step 3: Generate Statement of Applicability (SoA)**
 
-\\\`\\\`\\\`bash
+\`\`\`bash
 curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/soa/draft \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID"
-\\\`\\\`\\\`
+\`\`\`
 
 **Step 4: Upload evidence documents**
 
-\\\`\\\`\\\`bash
+\`\`\`bash
 curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/documents \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID" \\\\
   -F "file=@security-policy.pdf" \\\\
   -F "file=@access-control-matrix.xlsx"
-\\\`\\\`\\\`
+\`\`\`
 
 **Step 5: Run AI evidence analysis**
 
-\\\`\\\`\\\`bash
+\`\`\`bash
 curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/evidence-analysis/run \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID"
-\\\`\\\`\\\`
+\`\`\`
 
 **Step 6: Generate Gap Analysis**
 
-\\\`\\\`\\\`bash
+\`\`\`bash
 curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/gap-analysis/draft \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID"
-\\\`\\\`\\\`
+\`\`\`
 
 **Step 7: Generate POA&M (Plan of Action & Milestones)**
 
-\\\`\\\`\\\`bash
+\`\`\`bash
 curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/poam/draft \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID"
-\\\`\\\`\\\`
+\`\`\`
 
 **Step 8: Generate Report**
 
-\\\`\\\`\\\`bash
+\`\`\`bash
 curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/reports/draft \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID"
-\\\`\\\`\\\`
+\`\`\`
 
 **Step 9: Check Compliance Gate (Go/No-Go)**
 
-\\\`\\\`\\\`bash
+\`\`\`bash
 curl -X GET ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/compliance-gate \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID"
-\\\`\\\`\\\`
+\`\`\`
 
 **Notes**:
-- Each draft step (SoA, Gap, PoAM, Report) supports a review workflow: \\\`submit-review\\\` then \\\`approve\\\`
-- Use \\\`regenerate\\\` to re-run any draft with updated data
-- \\\`compliance-gate\\\` aggregates all artifact statuses into a single Go/No-Go verdict
+- Each draft step (SoA, Gap, PoAM, Report) supports a review workflow: \`submit-review\` then \`approve\`
+- Use \`regenerate\` to re-run any draft with updated data
+- \`compliance-gate\` aggregates all artifact statuses into a single Go/No-Go verdict
 
 ---
 
@@ -564,16 +607,16 @@ curl -X GET ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/compliance-gate \\\\
 > Browse the Secure Controls Framework: 1,468 controls across 33 domains and 231 mapped frameworks.
 
 **Get latest SCF version:**
-\\\`\\\`\\\`bash
+\`\`\`bash
 curl -X GET ${baseUrl}/api/v1/scf/versions/latest \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY"
-\\\`\\\`\\\`
+\`\`\`
 
 **List controls (paginated, filterable by domain):**
-\\\`\\\`\\\`bash
+\`\`\`bash
 curl -X GET "${baseUrl}/api/v1/scf/versions/SCF_VERSION_ID/controls?domain=PRI&page=1&per_page=50" \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY"
-\\\`\\\`\\\`
+\`\`\`
 
 ---
 
@@ -583,7 +626,7 @@ curl -X GET "${baseUrl}/api/v1/scf/versions/SCF_VERSION_ID/controls?domain=PRI&p
 
 **Mode A â€” Automated (run against uploaded documents):**
 
-\\\`\\\`\\\`bash
+\`\`\`bash
 # 1. Run AI evidence analysis
 curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/evidence-analysis/run \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
@@ -603,17 +646,17 @@ curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/gap-analysis/draft \\\\
 curl -X GET ${baseUrl}/api/v1/gap-analysis/GAP_VERSION_ID/findings \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID"
-\\\`\\\`\\\`
+\`\`\`
 
 **Mode C â€” Gap to PoAM chain:**
 
-\\\`\\\`\\\`bash
+\`\`\`bash
 curl -X POST ${baseUrl}/api/v1/poam/architect-remediation \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID" \\\\
   -H "Content-Type: application/json" \\\\
   -d '{"controlGap": "Missing encryption at rest for PII data", "context": "Cloud-hosted SaaS processing healthcare data"}'
-\\\`\\\`\\\`
+\`\`\`
 
 ---
 
@@ -622,17 +665,17 @@ curl -X POST ${baseUrl}/api/v1/poam/architect-remediation \\\\
 > Server-computed compliance metrics. Replace local calculations with API-driven KPIs.
 
 **Organization-level dashboard:**
-\\\`\\\`\\\`bash
+\`\`\`bash
 curl -X GET ${baseUrl}/api/v1/organizations/YOUR_ORG_ID/dashboard \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID"
-\\\`\\\`\\\`
+\`\`\`
 
 **Stateless intelligence (no assessment required):**
-- \\\`POST /intelligence/compliance-score\\\` â€” Score vs specific framework (supports ?locale=pt|en)
-- \\\`POST /intelligence/cross-coverage\\\` â€” Framework overlap %
-- \\\`POST /intelligence/gap-analysis\\\` â€” Stateless gap engine
-- \\\`POST /intelligence/roi-path\\\` â€” Optimal control priority
+- \`POST /intelligence/compliance-score\` â€” Score vs specific framework (supports ?locale=pt|en)
+- \`POST /intelligence/cross-coverage\` â€” Framework overlap %
+- \`POST /intelligence/gap-analysis\` â€” Stateless gap engine
+- \`POST /intelligence/roi-path\` â€” Optimal control priority
 
 ---
 
@@ -641,28 +684,28 @@ curl -X GET ${baseUrl}/api/v1/organizations/YOUR_ORG_ID/dashboard \\\\
 > Upload, chunk, embed, search. Full document intelligence pipeline.
 
 **Upload documents:**
-\\\`\\\`\\\`bash
+\`\`\`bash
 curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/documents \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID" \\\\
   -F "file=@policy-document.pdf"
-\\\`\\\`\\\`
+\`\`\`
 
 **Submit for embedding (RAG index):**
-\\\`\\\`\\\`bash
+\`\`\`bash
 curl -X POST ${baseUrl}/api/v1/documents/DOC_ID/submit-for-embedding \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID"
-\\\`\\\`\\\`
+\`\`\`
 
 **Semantic search in knowledge base:**
-\\\`\\\`\\\`bash
+\`\`\`bash
 curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/kb/search \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID" \\\\
   -H "Content-Type: application/json" \\\\
   -d '{"query": "What is our data retention policy for PII?", "top_k": 5}'
-\\\`\\\`\\\`
+\`\`\`
 
 ---
 
@@ -671,11 +714,11 @@ curl -X POST ${baseUrl}/api/v1/assessments/ASSESSMENT_ID/kb/search \\\\
 > All API operations are automatically logged. Query audit logs per tenant or organization.
 
 **By tenant:**
-\\\`\\\`\\\`bash
+\`\`\`bash
 curl -X GET "${baseUrl}/api/v1/tenants/TENANT_ID/audit-logs?limit=50" \\\\
   -H "Authorization: Bearer standard_live_YOUR_KEY" \\\\
   -H "x-standard-tenant-id: YOUR_ORG_ID"
-\\\`\\\`\\\`
+\`\`\`
 `;
 
 export const getLlmsFullQuickRef = () => `## Quick Reference
@@ -684,56 +727,56 @@ export const getLlmsFullQuickRef = () => `## Quick Reference
 
 | Endpoint | What it does | LLM? |
 |----------|-------------|------|
-| \\\`POST /api/v1/gap/evaluate-evidence\\\` | Check evidence against a control | Yes |
-| \\\`POST /api/v1/soc/triage-incident\\\` | Triage security incident from logs | Yes |
-| \\\`POST /api/v1/executive/translate-risk\\\` | Translate tech risk for board | Yes |
-| \\\`POST /api/v1/privacy/scan-vendor-contract\\\` | Scan vendor contract for DPA gaps | Yes |
-| \\\`POST /api/v1/intelligence/compliance-score\\\` | Calculate compliance % | No |
-| \\\`POST /api/v1/intelligence/cross-coverage\\\` | Cross-framework overlap analysis | No |
-| \\\`POST /api/v1/intelligence/roi-path\\\` | Prioritize controls by ROI | No |
-| \\\`POST /api/v1/intelligence/blast-radius\\\` | Control failure impact topology | No |
-| \\\`POST /api/v1/intelligence/gap-analysis\\\` | Missing controls vs framework | No |
-| \\\`POST /api/v1/intelligence/breach-sla\\\` | Breach notification SLA rules | No |
-| \\\`POST /api/v1/intelligence/retention-check\\\` | Data retention rules lookup | No |
-| \\\`POST /api/v1/intelligence/dpia-score\\\` | DPIA trigger score calculation | No |
+| \`POST /api/v1/gap/evaluate-evidence\` | Check evidence against a control | Yes |
+| \`POST /api/v1/soc/triage-incident\` | Triage security incident from logs | Yes |
+| \`POST /api/v1/executive/translate-risk\` | Translate tech risk for board | Yes |
+| \`POST /api/v1/privacy/scan-vendor-contract\` | Scan vendor contract for DPA gaps | Yes |
+| \`POST /api/v1/intelligence/compliance-score\` | Calculate compliance % | No |
+| \`POST /api/v1/intelligence/cross-coverage\` | Cross-framework overlap analysis | No |
+| \`POST /api/v1/intelligence/roi-path\` | Prioritize controls by ROI | No |
+| \`POST /api/v1/intelligence/blast-radius\` | Control failure impact topology | No |
+| \`POST /api/v1/intelligence/gap-analysis\` | Missing controls vs framework | No |
+| \`POST /api/v1/intelligence/breach-sla\` | Breach notification SLA rules | No |
+| \`POST /api/v1/intelligence/retention-check\` | Data retention rules lookup | No |
+| \`POST /api/v1/intelligence/dpia-score\` | DPIA trigger score calculation | No |
 
 ### Agentic Chains (output of step N â†’ input of step N+1)
 
 | Flow | Steps |
 |------|-------|
-| RoPA + DPIA | \\\`analyze-ropa\\\` â†’ \\\`assess-dpia\\\` |
-| Evidence + PoAM | \\\`evaluate-evidence\\\` â†’ \\\`architect-remediation\\\` |
+| RoPA + DPIA | \`analyze-ropa\` â†’ \`assess-dpia\` |
+| Evidence + PoAM | \`evaluate-evidence\` â†’ \`architect-remediation\` |
 
 ### Multi-step Workflows
 
 | Flow | Steps |
 |------|-------|
 | Privacy Activity | create activity -> screen -> report |
-| Full Assessment | \\\`POST assessments\\\` â†’ \\\`upload docs\\\` â†’ \\\`evaluate-evidence\\\` â†’ \\\`compliance-gate\\\` |
+| Full Assessment | \`POST assessments\` â†’ \`upload docs\` â†’ \`evaluate-evidence\` â†’ \`compliance-gate\` |
 
 ### CRUD Resources
 
 | Resource | Base Path | Methods |
 |----------|-----------|--------|
-| Assessments | \\\`/api/v1/assessments\\\` | CRUD + compliance-gate |
-| Documents | \\\`/api/v1/assessments/:id/documents\\\` | Upload, list, get |
-| Privacy Activities | \\\`/api/v1/privacy/processing-activities\\\` | Full CRUD + sub-resources |
-| SCF Controls | \\\`/api/v1/scf/versions/:id/controls\\\` | Read-only, paginated |
-| SCF Frameworks | \\\`/api/v1/scf/frameworks\\\` | Read-only (231 frameworks) |
-| Risk Management | \\\`/api/v1/risk/*\\\` | Methodologies, matrices, KRIs, categories |
-| Regulations | \\\`/api/v1/regulations\\\` | Legal bases, DSAR, breach rules, consent |
-| Reference Data | \\\`/api/v1/reference-data/*\\\` | Data subjects, categories, volume scales |
-| SOA (Statement of Applicability) | \\\`/api/v1/soa/*\\\` | Draft, review, approve |
-| Scope | \\\`/api/v1/assessments/:id/scope\\\` | CRUD + review workflow |
-| TPRA (Third Party Risk) | \\\`/api/v1/tpra/*\\\` | Questionnaires, scoring, SCF mapping |
-| Tenants | \\\`/api/v1/tenants\\\` | CRUD (admin only) |
-| Webhooks | \\\`/api/v1/webhooks\\\` | CRUD + delivery logs |
-| Workflows | \\\`/api/v1/workflows/*\\\` | Start, cancel, resume, signal |
-| Reporting | \\\`/api/v1/reports\\\` | Generate assessments reports |
+| Assessments | \`/api/v1/assessments\` | CRUD + compliance-gate |
+| Documents | \`/api/v1/assessments/:id/documents\` | Upload, list, get |
+| Privacy Activities | \`/api/v1/privacy/processing-activities\` | Full CRUD + sub-resources |
+| SCF Controls | \`/api/v1/scf/versions/:id/controls\` | Read-only, paginated |
+| SCF Frameworks | \`/api/v1/scf/frameworks\` | Read-only (231 frameworks) |
+| Risk Management | \`/api/v1/risk/*\` | Methodologies, matrices, KRIs, categories |
+| Regulations | \`/api/v1/regulations\` | Legal bases, DSAR, breach rules, consent |
+| Reference Data | \`/api/v1/reference-data/*\` | Data subjects, categories, volume scales |
+| SOA (Statement of Applicability) | \`/api/v1/soa/*\` | Draft, review, approve |
+| Scope | \`/api/v1/assessments/:id/scope\` | CRUD + review workflow |
+| TPRA (Third Party Risk) | \`/api/v1/tpra/*\` | Questionnaires, scoring, SCF mapping |
+| Tenants | \`/api/v1/tenants\` | CRUD (admin only) |
+| Webhooks | \`/api/v1/webhooks\` | CRUD + delivery logs |
+| Workflows | \`/api/v1/workflows/*\` | Start, cancel, resume, signal |
+| Reporting | \`/api/v1/reports\` | Generate assessments reports |
 
 ### Additional Intelligence Endpoints
 
 | Endpoint | What it does | LLM? |
 |----------|-------------|------|
-| \\\`POST /api/v1/intelligence/council\\\` | Orchestrate multi-agent GRC council | Yes |
+| \`POST /api/v1/intelligence/council\` | Orchestrate multi-agent GRC council | Yes |
 `;

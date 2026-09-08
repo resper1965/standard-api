@@ -18,6 +18,7 @@ skills-lock.json
 .dev.vars
 .env
 .env.*
+*.env
 !.env.example
 
 # Dev artifacts & logs

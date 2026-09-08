@@ -1,6 +1,6 @@
 # Standard GRC Platform
 
-> API-first agentic GRC platform for compliance assessments powered by the Secure Controls Framework (SCF). 7 specialized AI agents, 1,468 controls, 231 frameworks.
+> API-first agentic GRC platform for compliance assessments powered by the Secure Controls Framework (SCF). 10 specialized AI agents, 1,468 controls, 231 frameworks.
 
 ## Docs
 
@@ -12,7 +12,7 @@
 
 Base URL: `https://standard-api.bekaa.eu`
 Auth: Bearer API key (`standard_live_...`) or session cookie
-Organization: Automatically resolved from API Key or Session. No custom headers required.
+Tenant: `x-standard-tenant-id` header (required)
 
 ## Sections
 
@@ -24,18 +24,10 @@ Organization: Automatically resolved from API Key or Session. No custom headers 
 - [Gap Analysis](#gap-analysis): Findings, approval
 - [POA&M](#poam): Remediation planning
 - [Reports](#reports): Generate, download, audit package
-- [Dashboard KPIs](#dashboard-kpis): Server-computed compliance metrics
-- [Audit Trail](#audit-trail): Organization-wide audit event log
-- [Organizations](#organizations): A arquitetura é Multi-Organization. O Platform Admin cria a organização e cede acesso ao administrador. Não existem members.
-
-- [AI Agents](#ai-agents): 7 specialized agents:
-  1. **Evidence Evaluator** (Gap Analysis)
-  2. **SOC Triage Analyst** (Incident Response)
-  3. **Executive Risk Translator** (Risk Management)
-  4. **Vendor Risk Scanner** (B2B Privacy)
-  5. **Privacy Data Steward** (RoPA & DPIA Analysis)
-  6. **POA&M Architect** (Remediation Planning)
-  7. **Intelligence Council** (Async Multi-Agent Workflows)
+- [Dashboard KPIs](#dashboard-kpis): Server-computed compliance metrics. Percentages are nullable â€” see "Compliance Figures Can Be Null" in llms-full.txt before doing arithmetic on them.
+- [Audit Trail](#audit-trail): Tenant/org-wide audit event log
+- [Members](#members): Organization membership RBAC (invite, role, remove)
+- [AI Agents](#ai-agents): 10 specialized agents (Knowledge Steward, SCF Analyst, Framework Mapper, Scope & SoA Architect, Evidence Analyst, Gap Analyst, Maturity Assessor, POA&M Planner, Report Writer, Council Orchestrator)
 - [Intelligence Council](#intelligence-council): Async multi-agent workflow dispatch
 - [Jobs](#jobs): Job polling for async jobs
 - [Agent Runtime](#agent-runtime): Execution monitoring
@@ -45,3 +37,5 @@ Organization: Automatically resolved from API Key or Session. No custom headers 
 
 ## Optional
 
+- [B2B Integration Guide](https://standard-api.bekaa.eu/llms-full.txt): Tenant provisioning, SSO, white-label (see docs/api/B2B_INTEGRATION_GUIDE.md)
+- [Privacy SDK Guide](https://standard-api.bekaa.eu/llms-full.txt): RoPA, DPIA, vendor scanning (see docs/api/privacy-ropa-sdk.md)
