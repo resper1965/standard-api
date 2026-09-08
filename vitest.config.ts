@@ -92,22 +92,21 @@ export default defineConfig({
       // Three of those are the same code, honestly counted for the first time,
       // so their floors ratchet up: 38 -> 54 and 21 -> 41.
       //
-      // Branches moved the other way, and its floor is DELIBERATELY LEFT AT 82,
-      // which is red at the moment. The 83.33 above was measured over files
-      // that never executed: v8 reports no branch data for a line it never
-      // reached, so thousands of untaken branches in api-gateway simply did not
-      // count. 71.99 is what branch coverage has actually been all along. The
-      // rule above — never lower a floor to make a red build green — applies to
-      // whoever reads this next, and applying it to oneself is the whole point,
-      // so the number stays until someone who is not landing this branch
-      // decides what it should be. Two honest options: set it to 70 by the
-      // one-point-under convention, or hold 82 and raise real branch coverage
-      // to meet it.
+      // Branches is the one number here that went down, 82 -> 70. Read this
+      // before citing it as precedent for lowering another: 83.33 was measured
+      // over files that never executed, and v8 reports no branch data for a
+      // line it never reaches, so thousands of untaken api-gateway branches did
+      // not count at all. 71.99 is what branch coverage has been the whole
+      // time; the old floor guarded a measurement, not the code.
+      //
+      // Decided by Ricardo on 2026-09-08, deliberately not by the change that
+      // turned the build red. The rule above only means anything if whoever
+      // benefits from lowering a floor is not the one who lowers it.
       thresholds: {
         lines: 54,
         statements: 54,
         functions: 41,
-        branches: 82,
+        branches: 70,
       },
     },
   },
