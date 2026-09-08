@@ -12,6 +12,12 @@ LOG_LEVEL = "info"
 AI_GATEWAY_NAME = "standard-dev"
 AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/0a6c490dd5fe9051422c15c9e133138e/standard-dev"
 
+# Email Service. Sem este binding `env.EMAIL` é undefined e o Better Auth
+# engole os emails de reset/verificação em silêncio (devolve 200 na mesma).
+# Requer o domínio onboarded em Email Service (SPF + DKIM).
+[[send_email]]
+name = "EMAIL"
+
 [[r2_buckets]]
 binding = "STANDARD_DOCUMENTS_BUCKET"
 bucket_name = "standard-documents-dev"
@@ -103,6 +109,9 @@ AI_GATEWAY_NAME = "standard-staging"
 AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/0a6c490dd5fe9051422c15c9e133138e/standard-staging"
 BETTER_AUTH_URL = "https://standard-api.bekaa.eu/api/auth"
 
+[[env.staging.send_email]]
+name = "EMAIL"
+
 [[env.staging.r2_buckets]]
 binding = "STANDARD_DOCUMENTS_BUCKET"
 bucket_name = "standard-documents-staging"
@@ -192,6 +201,9 @@ LOG_LEVEL = "warn"
 AI_GATEWAY_NAME = "standard-prod"
 AI_GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/0a6c490dd5fe9051422c15c9e133138e/standard-prod"
 BETTER_AUTH_URL = "https://standard-api.bekaa.eu/api/auth"
+
+[[env.production.send_email]]
+name = "EMAIL"
 
 [[env.production.r2_buckets]]
 binding = "STANDARD_DOCUMENTS_BUCKET"
