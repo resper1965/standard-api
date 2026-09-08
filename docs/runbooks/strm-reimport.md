@@ -251,11 +251,18 @@ superset** — so 257 remain `intersects`, but now because the bundle says so.
   and fabricates no operator, so it was deliberately left alone — but as NULL
   operators become normal it reports "0%" for frameworks the dashboard correctly
   declines to score. Two routes will disagree in front of the same customer.
-- **`workers/ingestion` has an intermittent test of its own**, unrelated to this
-  work: `malware-integration.test.ts > detects PDF with JavaScript/OpenAction
-  keywords` failed once under the load of a full `pnpm test` and passed 6 of 6
-  runs in isolation. Not investigated here — noted so a red CI on that test is
-  not read as a regression from this branch.
+- **`workers/*` 5-second timeouts — cause found, fixed.** Every test in
+  `malware-integration.test.ts` and the three queue consumer suites opens with
+  `await import("@standard/document-ingestion")` or similar, and the first test
+  in each file pays for transforming that workspace package. Comfortably inside
+  the 5s default on an idle machine; not under the parallel load of a full
+  `pnpm test`, where the *first* test of the file failed with "Test timed out in
+  5000ms". Intermittent, never reproducible in isolation, which is why it read
+  as a mystery rather than as a cold import — it is the same failure the PR
+  description had been carrying as "pre-existing" since the branch opened.
+  `testTimeout` is now 30s in both workers' vitest configs, the same call the
+  repo already made for the migration-heavy hooks in `@standard/schemas`.
+  `pnpm test` ran 3 of 3 green afterwards.
 - **ExcelJS cannot reliably read small workbooks, and it is unsolved.**
   `WorkbookReader` intermittently throws `Cannot read properties of undefined
   (reading 'sheets')` — it reaches `worksheets/sheet1.xml` before `workbook.xml`
