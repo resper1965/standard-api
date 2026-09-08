@@ -5,7 +5,26 @@ type TestCase = {
 
 const tests: TestCase[] = [];
 
+/**
+ * When vitest is the runner, register with it instead of the local array.
+ *
+ * These 30 files are the only thing covering the api-gateway's route handlers,
+ * adapters and repositories, and they ran exclusively under the tsx runner
+ * below — so v8 never saw those calls and every one of those functions counted
+ * as untested. `scf.routes.ts` alone reported 47 of 47 uncovered while being
+ * exercised by this suite.
+ *
+ * `expect` needs no equivalent: it throws plain Errors, which vitest already
+ * reads as failures. Nothing about `pnpm test` changes — VITEST is unset there
+ * and the array path is taken exactly as before.
+ */
+const vitest = process.env.VITEST ? await import("vitest") : null;
+
 export const test = (name: string, run: () => Promise<void> | void): void => {
+  if (vitest) {
+    vitest.test(name, run);
+    return;
+  }
   tests.push({ name, run });
 };
 

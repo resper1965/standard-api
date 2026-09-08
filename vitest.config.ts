@@ -45,6 +45,13 @@ export default defineConfig({
       "packages/*/src/**/*.test.ts",
       "apps/*/src/**/*.test.ts",
       "workers/*/src/**/*.test.ts",
+      // The api-gateway suite — the only thing covering its route handlers,
+      // adapters and repositories. It ran under a bespoke tsx runner that v8
+      // could not see, so those functions all counted as untested while being
+      // thoroughly exercised. tests/test-kit.ts registers with vitest when
+      // VITEST is set and keeps its own array otherwise, so `pnpm test` is
+      // unchanged and this config finally measures what the suite covers.
+      "apps/*/tests/**/*.test.ts",
       "tests/**/*.test.ts",
     ],
     exclude: [
@@ -77,10 +84,29 @@ export default defineConfig({
       //
       // Measured 2026-08-27 on 6b90be9:
       //   lines 39.28 · statements 39.28 · functions 21.87 · branches 83.33
+      //
+      // Re-measured 2026-09-08, after `apps/*/tests/**` joined the include and
+      // the api-gateway's 162 tests began contributing coverage:
+      //   lines 55.30 · statements 55.30 · functions 42.16 · branches 71.99
+      //
+      // Three of those are the same code, honestly counted for the first time,
+      // so their floors ratchet up: 38 -> 54 and 21 -> 41.
+      //
+      // Branches moved the other way, and its floor is DELIBERATELY LEFT AT 82,
+      // which is red at the moment. The 83.33 above was measured over files
+      // that never executed: v8 reports no branch data for a line it never
+      // reached, so thousands of untaken branches in api-gateway simply did not
+      // count. 71.99 is what branch coverage has actually been all along. The
+      // rule above — never lower a floor to make a red build green — applies to
+      // whoever reads this next, and applying it to oneself is the whole point,
+      // so the number stays until someone who is not landing this branch
+      // decides what it should be. Two honest options: set it to 70 by the
+      // one-point-under convention, or hold 82 and raise real branch coverage
+      // to meet it.
       thresholds: {
-        lines: 38,
-        statements: 38,
-        functions: 21,
+        lines: 54,
+        statements: 54,
+        functions: 41,
         branches: 82,
       },
     },
