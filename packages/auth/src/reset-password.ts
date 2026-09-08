@@ -21,14 +21,15 @@ import { hashPassword } from "@better-auth/utils/password";
 const [email, password] = process.argv.slice(2);
 const url = process.env.AUTH_DATABASE_URL;
 
-const die = (msg: string): never => {
+// The annotation is on the variable, not just the arrow: that is what makes
+// TypeScript treat a call to it as terminating the control flow, so everything
+// below is narrowed instead of being littered with non-null assertions.
+const die: (msg: string) => never = (msg) => {
   console.error(`✗ ${msg}`);
   process.exit(1);
 };
 
-if (!email || !password) {
-  die("uso: reset-password.ts <email> <nova-password>");
-}
+if (!email || !password) die("uso: reset-password.ts <email> <nova-password>");
 if (!url) die("AUTH_DATABASE_URL não definido");
 
 // Mesmas regras do hook `before` em auth.ts — para a password nova não ficar
@@ -39,12 +40,14 @@ const missing = [
   [/[0-9]/, "number"],
   [/[^A-Za-z0-9]/, "special character"],
 ] as const;
-const errors = missing.filter(([re]) => !re.test(password!)).map(([, m]) => m);
-if (password!.length < 12) errors.unshift("12+ characters");
+const errors: string[] = missing
+  .filter(([re]) => !re.test(password))
+  .map(([, m]) => m);
+if (password.length < 12) errors.unshift("12+ characters");
 if (errors.length) die(`password requer: ${errors.join(", ")}`);
 
-const sql = neon(url!);
-const normalized = email!.trim().toLowerCase();
+const sql = neon(url);
+const normalized = email.trim().toLowerCase();
 
 const [user] = (await sql`
   SELECT id, email, email_verified, approved, platform_admin
@@ -59,7 +62,7 @@ const [user] = (await sql`
 
 if (!user) die(`utilizador não encontrado: ${normalized}`);
 
-const hash = await hashPassword(password!);
+const hash = await hashPassword(password);
 
 const updated = await sql`
   UPDATE account SET password = ${hash}, updated_at = now()
