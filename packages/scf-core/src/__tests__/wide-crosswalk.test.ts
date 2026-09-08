@@ -34,6 +34,17 @@ const AS_HEADER = [
 ];
 
 describe("parseAuthoritativeSources", () => {
+  it("reports an empty sheet instead of parsing one", () => {
+    // No header row means no way to locate a column, and guessing at fixed
+    // positions is exactly what this parser refuses to do everywhere else.
+    const { sources, warnings } = parseAuthoritativeSources([]);
+
+    expect(sources).toEqual([]);
+    expect(warnings).toEqual([
+      "Authoritative Sources: no header row found.",
+    ]);
+  });
+
   it("maps the eight columns onto the descriptor", () => {
     const rows = [
       AS_HEADER,
@@ -261,5 +272,94 @@ describe("parseWideCrosswalk", () => {
 
     expect(mappings).toEqual([]);
     expect(warnings.length).toBeGreaterThan(0);
+  });
+
+  it("skips a row with no control code without warning about it", () => {
+    // The sheet's trailing rows carry formatting but no control. They are not
+    // a defect and must not be reported as one — a warning per blank row would
+    // bury the ones that name a control the catalogue does not have.
+    const headerRow = ["SCF #", "AICPA TSC 2017:2022 (used for SOC 2)"];
+    const dataRows = [
+      ["", "CC1.1"],
+      ["   ", "CC1.2"],
+      ["GOV-01", "CC1.3"],
+    ];
+    const controlByCode = new Map([["GOV-01", "control-1"]]);
+
+    const { mappings, warnings } = parseWideCrosswalk({
+      headerRow,
+      dataRows,
+      sources: [source()],
+      versionId: VERSION_ID,
+      controlByCode,
+      controlCodeColumn: 0,
+    });
+
+    expect(warnings).toEqual([]);
+    expect(mappings).toHaveLength(1);
+  });
+
+  it("skips an empty framework cell, and treats a missing one as empty", () => {
+    const headerRow = ["SCF #", "AICPA TSC 2017:2022 (used for SOC 2)"];
+    // Row 2 is short, so the framework column is `undefined` rather than "".
+    const dataRows = [["GOV-01", ""], ["GOV-02"], ["GOV-03", "CC1.1"]];
+    const controlByCode = new Map([
+      ["GOV-01", "control-1"],
+      ["GOV-02", "control-2"],
+      ["GOV-03", "control-3"],
+    ]);
+
+    const { mappings, requirements, warnings } = parseWideCrosswalk({
+      headerRow,
+      dataRows,
+      sources: [source()],
+      versionId: VERSION_ID,
+      controlByCode,
+      controlCodeColumn: 0,
+    });
+
+    expect(warnings).toEqual([]);
+    expect(requirements).toHaveLength(1);
+    expect(mappings).toHaveLength(1);
+  });
+
+  it("omits the optional framework fields the index does not supply", () => {
+    // Geography, Source and Focal Document Source are blank for some of the
+    // 250 rows. Writing "" into jurisdiction/publisher/source_reference would
+    // record an empty string as if it were a stated value.
+    const headerRow = ["SCF #", "AICPA TSC 2017:2022 (used for SOC 2)"];
+    const dataRows = [["GOV-01", "CC1.1"]];
+    const controlByCode = new Map([["GOV-01", "control-1"]]);
+
+    const { frameworks } = parseWideCrosswalk({
+      headerRow,
+      dataRows,
+      sources: [source({ geography: "", source: "", sourceUrl: "" })],
+      versionId: VERSION_ID,
+      controlByCode,
+      controlCodeColumn: 0,
+    });
+
+    expect(frameworks).toHaveLength(1);
+    expect(frameworks[0]).not.toHaveProperty("jurisdiction");
+    expect(frameworks[0]).not.toHaveProperty("publisher");
+    expect(frameworks[0]).not.toHaveProperty("source_reference");
+  });
+
+  it("falls back to the FDI when the index states no framework name", () => {
+    const headerRow = ["SCF #", "AICPA TSC 2017:2022 (used for SOC 2)"];
+    const dataRows = [["GOV-01", "CC1.1"]];
+    const controlByCode = new Map([["GOV-01", "control-1"]]);
+
+    const { frameworks } = parseWideCrosswalk({
+      headerRow,
+      dataRows,
+      sources: [source({ name: "" })],
+      versionId: VERSION_ID,
+      controlByCode,
+      controlCodeColumn: 0,
+    });
+
+    expect(frameworks[0]?.framework_name).toBe("general-aicpa-tsc-2017");
   });
 });
