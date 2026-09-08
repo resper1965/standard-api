@@ -211,6 +211,38 @@ async function main() {
         " that is the number to read before promising one.\n",
     );
 
+    // ── Operators the bundle does not back ────────────────────────────────────
+    // The grading statement below only writes rows the bundle covers, so on a
+    // database that already holds operators the uncovered ones survive
+    // untouched. On a freshly seeded catalogue that is invisible — every row
+    // starts NULL — but production carries ~79k rows written by the importers
+    // this branch removed, and migration 0047 converted every legacy 'related'
+    // to 'intersects' on top. Stopping the fabrication is not the same as
+    // undoing it: without this, a mapping the bundle never mentions would keep
+    // asserting that two scopes overlap, and the coverage figures would be
+    // drawn over the top of it.
+    const [stale] = (await db.execute(sql`
+      SELECT count(*)::int AS n
+        FROM scf_mappings m
+       WHERE m.relationship_type IS NOT NULL
+         AND NOT EXISTS (
+           SELECT 1
+             FROM scf_framework_requirements r
+             JOIN scf_strm_relationships s
+               ON s.scf_control_id   = m.scf_control_id
+              AND s.fde_code         = r.fde_code
+              AND s.scf_framework_id = r.scf_framework_id
+            WHERE r.id = m.scf_framework_requirement_id
+              AND s.source            = ${OFFICIAL_SOURCE}
+              AND s.relationship_type = m.relationship_type)
+    `)) as unknown as { n: number }[];
+    const staleCount = stale?.n ?? 0;
+
+    console.log(
+      `  ${staleCount} mappings currently hold an operator no bundle row backs` +
+        `${staleCount > 0 ? " — these are cleared to NULL" : ""}.\n`,
+    );
+
     if (DRY_RUN) {
       console.log("Dry run complete. No rows written.");
       return;
@@ -244,6 +276,29 @@ async function main() {
     // `.length` here printed "Updated 0 rows." over a run that wrote 46,279 —
     // the one number an operator reads to decide the backfill did anything.
     console.log(`Updated ${(updated as unknown as { count?: number }).count ?? 0} rows.`);
+
+    // Runs after the grading statement, so a row the bundle just graded has
+    // provenance and survives; only rows nothing backs are cleared.
+    const cleared = await db.execute(sql`
+      UPDATE scf_mappings m
+         SET relationship_type = NULL,
+             updated_at = now()
+       WHERE m.relationship_type IS NOT NULL
+         AND NOT EXISTS (
+           SELECT 1
+             FROM scf_framework_requirements r
+             JOIN scf_strm_relationships s
+               ON s.scf_control_id   = m.scf_control_id
+              AND s.fde_code         = r.fde_code
+              AND s.scf_framework_id = r.scf_framework_id
+            WHERE r.id = m.scf_framework_requirement_id
+              AND s.source            = ${OFFICIAL_SOURCE}
+              AND s.relationship_type = m.relationship_type)
+    `);
+
+    console.log(
+      `Cleared ${(cleared as unknown as { count?: number }).count ?? 0} operators no bundle row backs.`,
+    );
     console.log(
       "Mappings the bundle does not cover keep relationship_type = NULL," +
         " and stay out of every compliance index.",

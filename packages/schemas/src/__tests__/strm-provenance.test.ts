@@ -38,6 +38,30 @@ describe("backfill provenance", () => {
     expect(src).not.toMatch(/inferred_structural_analysis/);
   });
 
+  it("clears operators no bundle row backs, scoped by framework and source", () => {
+    // Grading only writes rows the bundle covers, so on a database that
+    // already holds operators — production does, ~79k of them — the uncovered
+    // ones survive it. The clearing statement is what makes "the bundle does
+    // not cover this, so there is no operator" true rather than aspirational,
+    // and it must carry the same two filters as everything else: only the
+    // official bundle counts as provenance, and only for the mapping's OWN
+    // framework. Without the framework predicate it would accept another
+    // framework's row as backing and leave a fabricated operator in place.
+    const clearMatch = src.match(
+      /const cleared = await db\.execute\(sql`[\s\S]*?`\);/,
+    );
+    expect(clearMatch).toBeTruthy();
+    const stmt = clearMatch![0];
+
+    expect(stmt).toMatch(/SET\s+relationship_type = NULL/);
+    expect(stmt).toMatch(/NOT EXISTS/);
+    expect(stmt).toMatch(/s\.scf_framework_id\s*=\s*r\.scf_framework_id/);
+    expect(stmt).toMatch(/s\.source\s*=\s*\$\{OFFICIAL_SOURCE\}/);
+    // Provenance is the stored value matching the bundle's, not merely the
+    // pair being mentioned.
+    expect(stmt).toMatch(/s\.relationship_type\s*=\s*m\.relationship_type/);
+  });
+
   it("scopes both statements' joins by scf_framework_id, not bare fde_code", () => {
     // An FDE code is unique only inside its own focal document: two
     // frameworks can both use requirement code "1.1.1". Without
