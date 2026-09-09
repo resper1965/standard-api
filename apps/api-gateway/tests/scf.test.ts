@@ -1,4 +1,4 @@
-import { SYNTHETIC_FRAMEWORK_ID, SYNTHETIC_GOV_001_CONTROL_ID, SYNTHETIC_REQ_1_1_ID, SYNTHETIC_SCF_VERSION_ID } from "@standard/scf-core";
+import { SYNTHETIC_FRAMEWORK_ID, SYNTHETIC_GOV_001_CONTROL_ID, SYNTHETIC_REQ_1_1_ID, SYNTHETIC_SCF_VERSION_ID, SYNTHETIC_SCF_VERSION_LABEL } from "@standard/scf-core";
 import { createTestClient, ids } from "./helpers";
 import { expect, test } from "./test-kit";
 
@@ -156,6 +156,32 @@ test("SCF cross-mappings endpoint - Error: returns 400 when tenant context is mi
 
   expect(result.response.status).toBe(400);
   expect(result.body.error.code).toBe("TENANT_CONTEXT_REQUIRED");
+});
+
+test("B2: versao desconhecida devolve 400 e nomeia as formas aceitas", async () => {
+  const client = createTestClient();
+  const result = await client.send(
+    "/api/v1/scf/controls/by-code/GOV-001?version=9999.9.9",
+    "GET",
+    undefined,
+    { "x-standard-actor-id": ids.actorId },
+  );
+  expect(result.response.status).toBe(400);
+  expect(result.body.error.code).toBe("VALIDATION_ERROR");
+  expect(result.body.error.message).toContain("latest");
+});
+
+test("B2: rotulo de versao publicado resolve para o id", async () => {
+  const client = createTestClient();
+  const result = await client.send(
+    `/api/v1/scf/controls/by-code/GOV-001?version=${SYNTHETIC_SCF_VERSION_LABEL}`,
+    "GET",
+    undefined,
+    { "x-standard-actor-id": ids.actorId },
+  );
+  expect(result.response.status).toBe(200);
+  expect(result.body.control_code).toBe("GOV-001");
+  expect(result.body.scf_version_id).toBe(SYNTHETIC_SCF_VERSION_ID);
 });
 
 

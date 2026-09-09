@@ -34469,6 +34469,16 @@
             "description": "controlCode path parameter.",
             "name": "controlCode",
             "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "\"latest\", a version id (uuid), or a published version label (e.g. 2026.1.1)."
+            },
+            "required": true,
+            "description": "\"latest\", a version id (uuid), or a published version label (e.g. 2026.1.1).",
+            "name": "version",
+            "in": "query"
           }
         ],
         "responses": {

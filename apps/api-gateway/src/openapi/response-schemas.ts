@@ -398,3 +398,27 @@ export function responseSchemaFor(
 ): z.ZodTypeAny | undefined {
   return RESPONSE_SCHEMAS[`${method.toUpperCase()} ${path}`];
 }
+
+/**
+ * Documents query parameters for synthesized routes, mirroring
+ * `RESPONSE_SCHEMAS` above: keyed by "METHOD path" with the route's raw
+ * (colon-style) path. A route missing here keeps `query?: never` in the
+ * generated contract even when the handler reads a query string, so add an
+ * entry whenever a synthesized route requires one.
+ */
+export const QUERY_SCHEMAS: Record<string, z.ZodTypeAny> = {
+  "GET /api/v1/scf/controls/by-code/:controlCode": z.object({
+    version: z.string().openapi({
+      description:
+        '"latest", a version id (uuid), or a published version label (e.g. 2026.1.1).',
+    }),
+  }),
+};
+
+/** Looks up the documented query schema for a route, if this map covers it. */
+export function querySchemaFor(
+  method: string,
+  path: string,
+): z.ZodTypeAny | undefined {
+  return QUERY_SCHEMAS[`${method.toUpperCase()} ${path}`];
+}

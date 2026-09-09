@@ -2,7 +2,7 @@ import { OpenApiGeneratorV3 } from "@asteasolutions/zod-to-openapi";
 import type { RouteConfig } from "@asteasolutions/zod-to-openapi";
 import { getRequiredScopesForRoute, z } from "@standard/schemas";
 import { registry } from "./registry";
-import { responseSchemaFor } from "./response-schemas";
+import { responseSchemaFor, querySchemaFor } from "./response-schemas";
 import type { RouteDefinition } from "../http";
 import { convertZodToOpenApi } from "./zod-converter";
 
@@ -142,12 +142,18 @@ export function synthesizeOperation(
       }
     : DEFAULT_RESPONSES[200];
 
+  const query = querySchemaFor(route.method, route.path);
+  const request: RouteConfig["request"] = {
+    ...(params.length > 0 ? { params: paramsSchema(params) } : {}),
+    ...(query ? { query } : {}),
+  };
+
   return {
     tags: [tagForPath(route.path)],
     summary: fallbackSummary(route.method, openapiPath),
     description: synthesizedDescription(route),
     responses: { ...DEFAULT_RESPONSES, 200: ok },
-    ...(params.length > 0 ? { request: { params: paramsSchema(params) } } : {}),
+    ...(Object.keys(request).length > 0 ? { request } : {}),
     ...(isPublic(route) ? { security: [] } : {}),
   } as Omit<RouteConfig, "method" | "path">;
 }

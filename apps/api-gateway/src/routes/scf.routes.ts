@@ -34,6 +34,10 @@ import {
 import { eq, and } from "drizzle-orm";
 import { createDrizzleScfRiskCatalogRepository } from "../adapters/scf-risk-catalog.repository";
 
+/** Forma RFC 4122. Guarda as colunas uuid de receberem um rótulo de versão. */
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 const resolveVersionId = async (
   deps: AppDependencies,
   versionParam: string,
@@ -45,7 +49,25 @@ const resolveVersionId = async (
       throw new ApiError("NOT_FOUND", "No published SCF versions found.", 404);
     return latest.id;
   }
-  return versionParam;
+
+  // Um uuid segue para o repositório; se não existir, o chamador devolve 404,
+  // que é o comportamento de hoje e permanece.
+  if (UUID_RE.test(versionParam)) return versionParam;
+
+  // Um rótulo como "2026.1.1". Resolvê-lo aqui é o que impede uma string não
+  // validada de chegar a uma coluna uuid e transformar 22P02 em 500.
+  // O campo do tipo de dominio e version_label, NAO version: mapVersion em
+  // packages/schemas/src/db/scf.repository.ts mapeia a coluna `version` do
+  // banco para `version_label`, e ScfVersionSchema declara version_label.
+  const versions = await deps.scf.versions.listVersions(organizationId);
+  const match = versions.find((v) => v.version_label === versionParam);
+  if (match) return match.id;
+
+  throw new ApiError(
+    "VALIDATION_ERROR",
+    `Unknown SCF version: "${versionParam}". Accepted forms: "latest", a version id (uuid), or a published version label such as "2026.1.1".`,
+    400,
+  );
 };
 
 const requireVersionQuery = async (
