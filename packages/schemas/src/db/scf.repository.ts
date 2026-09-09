@@ -757,15 +757,23 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
       .from(scfStrmRelationships)
       .$dynamic();
 
-    // If we need to filter by framework_id, source_framework_id, or target_framework_id,
-    // we need to join scfMappings -> scfFrameworkRequirements
-    if (
-      query.framework_id ||
-      query.source_framework_id ||
-      query.scf_version_id
-    ) {
-      // For now we assume framework_id or source_framework_id filters by the requirement's framework
-      // We join scfMappings to get the requirement, then scfFrameworkRequirements to get the frameworkId
+    // A versão vive no controle, não na linha STRM e não no mapping. Alcançá-la
+    // por scf_mappings descartava toda linha com scf_mapping_id nulo — que é a
+    // maior parte do bundle oficial, e é por isso que esta rota devolvia 64
+    // linhas para um catálogo de dezenas de milhares.
+    //
+    // innerJoin e deliberado: uma linha sem controle resolvido não pode ser
+    // atribuída a uma versão. A auditoria de cobertura conta essas linhas.
+    if (query.scf_version_id) {
+      dbQuery = dbQuery.innerJoin(
+        scfControls,
+        eq(scfControls.id, scfStrmRelationships.scfControlId),
+      );
+      conditions.push(eq(scfControls.scfVersionId, query.scf_version_id));
+    }
+
+    // scf_mappings só entra quando o filtro pedido depende do requisito.
+    if (query.framework_id || query.source_framework_id) {
       dbQuery = dbQuery
         .leftJoin(
           scfMappings,
@@ -791,10 +799,6 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
             query.source_framework_id,
           ),
         );
-      }
-      if (query.scf_version_id) {
-        // Optionally filter by SCF version from mappings
-        conditions.push(eq(scfMappings.scfVersionId, query.scf_version_id));
       }
     }
 

@@ -6,6 +6,7 @@ import "./documents.test";
 import "./document-reprocessing-verify.test";
 import "./kb.test";
 import "./scf.test";
+import "./scf-strm-crosswalk.test"; // regressoes B1/B7/B8 do crosswalk STRM
 import "./soa.test";
 import "./dashboard.test";
 import "./projection.test";
