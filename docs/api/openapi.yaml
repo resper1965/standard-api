@@ -12958,6 +12958,13 @@ components:
           type: string
           format: uuid
           nullable: true
+        focal_document:
+          type: string
+          nullable: true
+        scf_framework_id:
+          type: string
+          format: uuid
+          nullable: true
         fde_code:
           type: string
         fde_name:
@@ -12983,8 +12990,10 @@ components:
           format: uuid
         framework_code:
           type: string
+          nullable: true
         framework_name:
           type: string
+          nullable: true
         requirement_code:
           type: string
         control_code:
@@ -13009,6 +13018,13 @@ components:
           format: uuid
           nullable: true
         scf_control_id:
+          type: string
+          format: uuid
+          nullable: true
+        focal_document:
+          type: string
+          nullable: true
+        scf_framework_id:
           type: string
           format: uuid
           nullable: true
@@ -27436,6 +27452,13 @@ paths:
                           type: string
                           nullable: true
                           format: uuid
+                        focal_document:
+                          type: string
+                          nullable: true
+                        scf_framework_id:
+                          type: string
+                          nullable: true
+                          format: uuid
                         fde_code:
                           type: string
                         fde_name:
@@ -27463,8 +27486,10 @@ paths:
                           format: uuid
                         framework_code:
                           type: string
+                          nullable: true
                         framework_name:
                           type: string
+                          nullable: true
                         requirement_code:
                           type: string
                         control_code:
@@ -27526,6 +27551,13 @@ paths:
                           type: string
                           nullable: true
                           format: uuid
+                        focal_document:
+                          type: string
+                          nullable: true
+                        scf_framework_id:
+                          type: string
+                          nullable: true
+                          format: uuid
                         fde_code:
                           type: string
                         fde_name:
@@ -27553,8 +27585,10 @@ paths:
                           format: uuid
                         framework_code:
                           type: string
+                          nullable: true
                         framework_name:
                           type: string
+                          nullable: true
                         requirement_code:
                           type: string
                         control_code:
@@ -27627,6 +27661,13 @@ paths:
                           type: string
                           nullable: true
                           format: uuid
+                        focal_document:
+                          type: string
+                          nullable: true
+                        scf_framework_id:
+                          type: string
+                          nullable: true
+                          format: uuid
                         fde_code:
                           type: string
                         fde_name:
@@ -27654,8 +27695,10 @@ paths:
                           format: uuid
                         framework_code:
                           type: string
+                          nullable: true
                         framework_name:
                           type: string
+                          nullable: true
                         requirement_code:
                           type: string
                         control_code:
