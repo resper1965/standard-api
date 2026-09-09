@@ -239,6 +239,12 @@ export const ScfStrmRelationshipSchema = z.object({
   scf_mapping_id: UuidSchema.nullable().optional(),
   /** Direct FK to the SCF control â€” always populated from bundle. */
   scf_control_id: UuidSchema.nullable().optional(),
+  /** Arquivo do bundle de onde a linha veio â€” um por framework. Parte da chave
+   *  única da migração 0060. null nas linhas anteriores ao seeder do bundle. */
+  focal_document: z.string().nullable().optional(),
+  /** Framework que o focal document resolveu, por match exato. null = não
+   *  resolvido, e uma linha não resolvida não gradua mapeamento nenhum. */
+  scf_framework_id: UuidSchema.nullable().optional(),
   /** Official Focal Document Element identifier (e.g. "AC-1", "A.5.1", "7.1"). */
   fde_code: z.string().optional(),
   /** Human-readable name of the FDE requirement. */

@@ -166,6 +166,8 @@ export const createSyntheticScfFixture = (): ScfDataset => ({
       relationship_type: "equal" as const,
       rationale: "Synthetic STRM reference row â€” equal.",
       source: "synthetic_fixture",
+      focal_document: "synthetic-fixture.xlsx",
+      scf_framework_id: SYNTHETIC_FRAMEWORK_ID,
     },
     {
       id: "20000000-0000-4000-8000-000000000702",
@@ -174,6 +176,8 @@ export const createSyntheticScfFixture = (): ScfDataset => ({
       relationship_type: "intersects" as const,
       rationale: "Synthetic STRM reference row â€” intersects.",
       source: "synthetic_fixture",
+      focal_document: "synthetic-fixture.xlsx",
+      scf_framework_id: SYNTHETIC_FRAMEWORK_ID,
     },
   ],
   importRuns: [

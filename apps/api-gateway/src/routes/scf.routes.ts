@@ -1519,6 +1519,10 @@ export const scfRoutes: RouteDefinition[] = [
         relationship_strength: r.relationship_strength,
         rationale: r.rationale,
         source: r.source,
+        focal_document: r.focal_document ?? null,
+        scf_framework_id: r.scf_framework_id ?? null,
+        framework_code: r.framework_code ?? null,
+        framework_name: r.framework_name ?? null,
       }));
 
       return json({
@@ -1582,7 +1586,7 @@ export const scfRoutes: RouteDefinition[] = [
         }
       }
 
-      const data = rows.map((r) => ({
+      const data = rows.map((r: any) => ({
         strm_id: r.id,
         fde_code: r.fde_code,
         fde_name: r.fde_name,
@@ -1590,6 +1594,10 @@ export const scfRoutes: RouteDefinition[] = [
         relationship_strength: r.relationship_strength,
         rationale: r.rationale,
         source: r.source,
+        focal_document: r.focal_document ?? null,
+        scf_framework_id: r.scf_framework_id ?? null,
+        framework_code: r.framework_code ?? null,
+        framework_name: r.framework_name ?? null,
       }));
 
       return json({

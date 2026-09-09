@@ -605,6 +605,10 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
         rationale: scfStrmRelationships.rationale,
         source: scfStrmRelationships.source,
         organizationId: scfStrmRelationships.organizationId,
+        focalDocument: scfStrmRelationships.focalDocument,
+        scfFrameworkId: scfStrmRelationships.scfFrameworkId,
+        frameworkCode: scfFrameworks.frameworkId,
+        frameworkName: scfFrameworks.name,
         // denorm
         controlCode: scfControls.controlCode,
         controlTitle: scfControls.title,
@@ -613,6 +617,10 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
       .leftJoin(
         scfControls,
         eq(scfControls.id, scfStrmRelationships.scfControlId),
+      )
+      .leftJoin(
+        scfFrameworks,
+        eq(scfFrameworks.id, scfStrmRelationships.scfFrameworkId),
       )
       .where(
         and(
@@ -646,6 +654,10 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
       rationale: row.rationale ?? undefined,
       source: row.source,
       organization_id: row.organizationId ?? undefined,
+      focal_document: row.focalDocument ?? null,
+      scf_framework_id: row.scfFrameworkId ?? null,
+      framework_code: row.frameworkCode ?? null,
+      framework_name: row.frameworkName ?? null,
       // extras â€” will be picked up by the response shape
       _control_code: row.controlCode ?? undefined,
       _control_title: row.controlTitle ?? undefined,
@@ -679,8 +691,16 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
         rationale: scfStrmRelationships.rationale,
         source: scfStrmRelationships.source,
         organizationId: scfStrmRelationships.organizationId,
+        focalDocument: scfStrmRelationships.focalDocument,
+        scfFrameworkId: scfStrmRelationships.scfFrameworkId,
+        frameworkCode: scfFrameworks.frameworkId,
+        frameworkName: scfFrameworks.name,
       })
       .from(scfStrmRelationships)
+      .leftJoin(
+        scfFrameworks,
+        eq(scfFrameworks.id, scfStrmRelationships.scfFrameworkId),
+      )
       .where(
         and(
           eq(scfStrmRelationships.scfControlId, control[0]!.id),
@@ -713,6 +733,10 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
       rationale: row.rationale ?? undefined,
       source: row.source,
       organization_id: row.organizationId ?? undefined,
+      focal_document: row.focalDocument ?? null,
+      scf_framework_id: row.scfFrameworkId ?? null,
+      framework_code: row.frameworkCode ?? null,
+      framework_name: row.frameworkName ?? null,
     }));
   },
 
@@ -753,9 +777,17 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
         rationale: scfStrmRelationships.rationale,
         source: scfStrmRelationships.source,
         organizationId: scfStrmRelationships.organizationId,
+        focalDocument: scfStrmRelationships.focalDocument,
+        scfFrameworkId: scfStrmRelationships.scfFrameworkId,
+        frameworkCode: scfFrameworks.frameworkId,
+        frameworkName: scfFrameworks.name,
       })
       .from(scfStrmRelationships)
-      .$dynamic();
+      .$dynamic()
+      .leftJoin(
+        scfFrameworks,
+        eq(scfFrameworks.id, scfStrmRelationships.scfFrameworkId),
+      );
 
     // A versão vive no controle, não na linha STRM e não no mapping. Alcançá-la
     // por scf_mappings descartava toda linha com scf_mapping_id nulo — que é a
@@ -826,6 +858,10 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
         rationale: strm.rationale ?? undefined,
         source: strm.source,
         organization_id: strm.organizationId ?? undefined,
+        focal_document: strm.focalDocument ?? null,
+        scf_framework_id: strm.scfFrameworkId ?? null,
+        framework_code: strm.frameworkCode ?? null,
+        framework_name: strm.frameworkName ?? null,
       };
     });
   },
