@@ -14,19 +14,11 @@
   ScfThreat,
   ScfVersion,
 } from "../types";
-
-/**
- * Campos denormalizados via join com scf_frameworks, devolvidos por
- * lookupStrmByControlCode. Não usa Pick<ScfStrmRelationshipResponse, ...> de
- * propósito: lá os dois campos são `string | undefined` (Zod .optional()),
- * mas a convenção desta rota — igual às outras duas rotas STRM — é `null`
- * quando o framework não resolveu, nunca `undefined` por omissão silenciosa.
- * Opcionais aqui porque o repositório em memória não popula join nenhum.
- */
-type ScfStrmFrameworkDenorm = {
-  framework_code?: string | null;
-  framework_name?: string | null;
-};
+// ScfStrmRelationshipResponseSchema tipa framework_code/framework_name como
+// .nullable().optional() — null é o valor real quando o join com
+// scf_frameworks não resolveu (comportamento deliberado, não omissão), então
+// o Pick abaixo já bate com o que a implementação Drizzle devolve (?? null).
+import type { ScfStrmRelationshipResponse } from "@standard/schemas";
 
 export type ScfCrossMappingItem = {
   framework: string;
@@ -112,7 +104,10 @@ export type ScfRepository = {
   lookupStrmByControlCode(
     controlCode: string,
     opts?: { relationshipType?: string; limit?: number },
-  ): Promise<(ScfStrmRelationship & ScfStrmFrameworkDenorm)[]>;
+  ): Promise<
+    (ScfStrmRelationship &
+      Pick<ScfStrmRelationshipResponse, "framework_code" | "framework_name">)[]
+  >;
   searchStrm(
     query: import("@standard/schemas").ScfStrmQuery,
   ): Promise<ScfStrmRelationship[]>;

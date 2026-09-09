@@ -269,8 +269,10 @@ export const ScfStrmRelationshipResponseSchema =
   ScfStrmRelationshipSchema.extend({
     // denormalized fields for convenience
     scf_version_id: UuidSchema.optional(),
-    framework_code: z.string().optional(),
-    framework_name: z.string().optional(),
+    // null = o join com scf_frameworks não resolveu o framework da linha
+    // (comportamento deliberado das três rotas STRM, não omissão acidental).
+    framework_code: z.string().nullable().optional(),
+    framework_name: z.string().nullable().optional(),
     requirement_code: z.string().optional(),
     control_code: z.string().optional(),
     trace_id: z.string().optional(),
