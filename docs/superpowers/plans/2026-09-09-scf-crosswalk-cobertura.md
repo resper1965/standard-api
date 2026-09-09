@@ -61,7 +61,8 @@ ExcelJS, Vitest via `tests/test-kit.ts`, pnpm workspaces.
 | `apps/api-gateway/tests/scf-strm-crosswalk.test.ts` *(novo)* | Regressões contra Postgres real (PGlite) — B1, B7, B8, B3, B10, B11, B6 e o re-import | 2, 3, 4, 5, 6, 8, 9 |
 | `apps/api-gateway/tests/helpers.ts` | `sendRaw`, para ler corpo NDJSON sem parsear | 5 |
 | `apps/api-gateway/tests/run-tests.ts` | Registro do arquivo de teste novo no runner | 2 |
-| `packages/scf-core/src/__tests__/audit-coverage.test.ts` *(novo)* | Toda aba do workbook tem parser próprio | 7, 9 |
+| `packages/scf-core/src/__tests__/audit-scf-coverage.test.ts` *(novo)* | Comparacao FDI x bundle, funcao pura | 7 |
+| `packages/scf-core/src/__tests__/audit-coverage.test.ts` *(novo)* | Toda aba do workbook tem parser proprio | 9 |
 | `packages/scf-core/src/__tests__/scf-domains.test.ts` *(novo)* | Parser da aba de domínios | 9 |
 
 **Corte natural de PR:** tarefas 1–6 são a superfície da API e podem sair num PR;
@@ -162,8 +163,11 @@ const resolveVersionId = async (
 
   // Um rótulo como "2026.1.1". Resolvê-lo aqui é o que impede uma string não
   // validada de chegar a uma coluna uuid e transformar 22P02 em 500.
+  // O campo do tipo de dominio e version_label, NAO version: mapVersion em
+  // packages/schemas/src/db/scf.repository.ts mapeia a coluna `version` do
+  // banco para `version_label`, e ScfVersionSchema declara version_label.
   const versions = await deps.scf.versions.listVersions(organizationId);
-  const match = versions.find((v) => v.version === versionParam);
+  const match = versions.find((v) => v.version_label === versionParam);
   if (match) return match.id;
 
   throw new ApiError(
@@ -1429,8 +1433,8 @@ FDIs contra 183 arquivos STRM.
 
 **Files:**
 - Create: `scripts/audit-scf-coverage.ts`
+- Create: `packages/scf-core/src/__tests__/audit-scf-coverage.test.ts`
 - Modify: `package.json` — script `audit:scf`
-- Modify: o workflow de CI que roda `pnpm test:ci`
 - Create: `docs/measurements/2026-09-09-cobertura-scf.md` (saída da primeira execução)
 
 **Interfaces:**
@@ -1445,33 +1449,42 @@ FDIs contra 183 arquivos STRM.
 
 - [ ] **Step 1: Escrever o teste que falha**
 
-Criar `packages/scf-core/src/__tests__/audit-coverage.test.ts`:
+A comparacao FDI-contra-bundle e a unica logica do script que merece teste
+proprio: o resto e leitura de arquivo e impressao. Extrai-la como funcao pura
+torna o script testavel sem abrir o workbook.
+
+Criar `packages/scf-core/src/__tests__/audit-scf-coverage.test.ts`:
 
 ```ts
 import { describe, expect, it } from "vitest";
-import { classifyTab } from "../importers/xlsx-tab-parser";
+import { compararCobertura } from "../../../../scripts/audit-scf-coverage";
 
-describe("cobertura de abas do workbook 2026.1.1", () => {
-  // Os nomes reais das 10 abas de
-  // assets/Secure Controls Framework (SCF) - 2026.1.1.xlsx, medidos em
-  // 2026-09-09. Uma aba que deixe de ter classificacao propria reprova aqui.
-  const ABAS_COM_PARSER = [
-    "Authoritative Sources",
-    "Evidence Request List 2026.1",
-    "Assessment Objectives 2026.1",
-    "Data Privacy Mgmt Principles",
-    "Threat Catalog",
-    "Risk Catalog",
-    "SCF Domains & Principles",
-    "Compensating Controls 2026.1",
-  ];
-
-  it("nenhuma aba conhecida cai em unknown nem no fallback crosswalk", () => {
-    const semParser = ABAS_COM_PARSER.filter((nome) => {
-      const t = classifyTab(nome, []).type;
-      return t === "unknown" || t === "crosswalk";
+describe("compararCobertura", () => {
+  it("nomeia os FDIs sem arquivo STRM correspondente", () => {
+    const r = compararCobertura({
+      fdis: ["general-iso-27002-2022", "emea-sau-ecc-1-2018"],
+      arquivosBundle: ["scf-strm-general-iso-27002-2022.xlsx"],
     });
-    expect(semParser).toEqual([]);
+    expect(r.semStrm).toEqual(["emea-sau-ecc-1-2018"]);
+    expect(r.semFdi).toEqual([]);
+  });
+
+  it("aplica as correcoes de nome de arquivo do bundle", () => {
+    // scf-dpmp-2025 e um dos tres arquivos cujo nome nao bate com o FDI;
+    // BUNDLE_FILENAME_FDI_CORRECTIONS o mapeia para general-scf-dpmp-2025.
+    const r = compararCobertura({
+      fdis: ["general-scf-dpmp-2025"],
+      arquivosBundle: ["scf-dpmp-2025.xlsx"],
+    });
+    expect(r.semStrm).toEqual([]);
+  });
+
+  it("nomeia arquivo de bundle que nenhum FDI reclama", () => {
+    const r = compararCobertura({
+      fdis: [],
+      arquivosBundle: ["scf-strm-general-iso-27002-2022.xlsx"],
+    });
+    expect(r.semFdi).toEqual(["general-iso-27002-2022"]);
   });
 });
 ```
@@ -1479,12 +1492,10 @@ describe("cobertura de abas do workbook 2026.1.1", () => {
 - [ ] **Step 2: Rodar e confirmar que falha**
 
 ```bash
-npx vitest run packages/scf-core/src/__tests__/audit-coverage.test.ts
+npx vitest run packages/scf-core/src/__tests__/audit-scf-coverage.test.ts
 ```
 
-Esperado: FAIL listando `["SCF Domains & Principles", "Compensating Controls 2026.1"]`.
-A Task 9 é o que faz este teste passar; aqui ele fica registrado como falha
-conhecida e a Task 9 o fecha.
+Esperado: FAIL — o modulo `scripts/audit-scf-coverage` nao existe.
 
 - [ ] **Step 3: Escrever o script de auditoria**
 
@@ -1515,7 +1526,31 @@ import { fdiFromBundleFilename } from "../packages/schemas/src/strm-focal-docume
 const WORKBOOK = "assets/Secure Controls Framework (SCF) - 2026.1.1.xlsx";
 const BUNDLE_DIR = "assets/strm";
 
-const texto = (v: unknown): string =>
+/**
+ * Compara o indice de FDIs do workbook com os arquivos do bundle STRM.
+ *
+ * Funcao pura e exportada para ser testavel sem abrir o workbook -- e a unica
+ * logica do script; o resto e leitura de arquivo e impressao.
+ */
+export const compararCobertura = (entrada: {
+  fdis: string[];
+  arquivosBundle: string[];
+}): { semStrm: string[]; semFdi: string[] } => {
+  const fdis = entrada.fdis.map((f) => f.toLowerCase());
+  const doBundle = entrada.arquivosBundle
+    .map((f) => fdiFromBundleFilename(f)?.toLowerCase())
+    .filter((f): f is string => Boolean(f));
+
+  const conjuntoBundle = new Set(doBundle);
+  const conjuntoFdis = new Set(fdis);
+
+  return {
+    semStrm: fdis.filter((f) => !conjuntoBundle.has(f)),
+    semFdi: doBundle.filter((b) => !conjuntoFdis.has(b)),
+  };
+};
+
+const texto = (v: unknown): string =
   v == null
     ? ""
     : String((v as any).text ?? (v as any).result ?? v)
@@ -1625,12 +1660,12 @@ Redirecionar o relatório para `docs/measurements/2026-09-09-cobertura-scf.md` e
 acrescentar um cabeçalho de duas linhas dizendo quando foi medido e contra qual
 edição.
 
-- [ ] **Step 7: Ligar ao CI**
+A fiacao ao CI NAO acontece aqui: enquanto as duas abas descartadas nao tiverem
+parser, `pnpm audit:scf` sai com codigo 1 de proposito, e ligar isso ao CI agora
+deixaria a branch vermelha ate a Task 9. A Task 9 liga, como ultimo passo, depois
+de classificar as abas.
 
-Acrescentar `pnpm audit:scf` ao encadeamento de `test:ci` no `package.json`, entre
-`pnpm check:migrations` e `pnpm check:openapi`.
-
-- [ ] **Step 8: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
 git add -A
@@ -1827,8 +1862,9 @@ da spec.
 - Create: `packages/scf-core/src/importers/scf-domains.ts`
 - Modify: `packages/scf-core/src/importers/xlsx-importer.ts`
 - Modify: `packages/schemas/src/db/scf.repository.ts` — upsert de `scfFrameworks`
-- Test: `packages/scf-core/src/__tests__/audit-coverage.test.ts` (da Task 7)
-- Test: `packages/scf-core/src/__tests__/scf-domains.test.ts` (novo)
+- Create: `packages/scf-core/src/__tests__/audit-coverage.test.ts`
+- Create: `packages/scf-core/src/__tests__/scf-domains.test.ts`
+- Modify: `package.json` — `pnpm audit:scf` entra no encadeamento `test:ci`
 
 **Interfaces:**
 - Produces: `classifyTab` ganha os tipos `domains` e `compensating_controls`.
@@ -2030,13 +2066,54 @@ Em `packages/scf-core/src/importers/xlsx-tab-parser.ts`:
   }
 ```
 
-- [ ] **Step 6: Rodar o teste de cobertura de abas da Task 7**
+- [ ] **Step 6: Escrever o teste de cobertura de abas e ve-lo passar**
+
+Criar `packages/scf-core/src/__tests__/audit-coverage.test.ts`:
+
+```ts
+import { describe, expect, it } from "vitest";
+import { classifyTab } from "../importers/xlsx-tab-parser";
+
+describe("cobertura de abas do workbook 2026.1.1", () => {
+  // Os nomes reais das abas de
+  // assets/Secure Controls Framework (SCF) - 2026.1.1.xlsx, medidos em
+  // 2026-09-09. Uma aba que deixe de ter classificacao propria reprova aqui.
+  const ABAS_COM_PARSER = [
+    "Authoritative Sources",
+    "Evidence Request List 2026.1",
+    "Assessment Objectives 2026.1",
+    "Data Privacy Mgmt Principles",
+    "Threat Catalog",
+    "Risk Catalog",
+    "SCF Domains & Principles",
+    "Compensating Controls 2026.1",
+  ];
+
+  it("nenhuma aba conhecida cai em unknown nem no fallback crosswalk", () => {
+    const semParser = ABAS_COM_PARSER.filter((nome) => {
+      const t = classifyTab(nome, []).type;
+      return t === "unknown" || t === "crosswalk";
+    });
+    expect(semParser).toEqual([]);
+  });
+});
+```
+
+Escrever este teste ANTES do Step 5 e ve-lo falhar listando
+`["SCF Domains & Principles", "Compensating Controls 2026.1"]`; o Step 5 e o
+que o fecha. Se o Step 5 ja foi aplicado, desfazer, ver o vermelho, refazer.
 
 ```bash
 npx vitest run packages/scf-core/src/__tests__/audit-coverage.test.ts
 ```
 
-Esperado: PASS — era o teste deixado vermelho de propósito na Task 7.
+Esperado apos o Step 5: PASS.
+
+- [ ] **Step 6b: Ligar a auditoria ao CI**
+
+Agora que as abas tem parser, `pnpm audit:scf` sai com codigo 0 e pode ser porta
+de CI. Acrescentar `pnpm audit:scf` ao encadeamento de `test:ci` no
+`package.json`, entre `pnpm check:migrations` e `pnpm check:openapi`.
 
 - [ ] **Step 7: Ligar o parser de domínios ao importador**
 
