@@ -25449,13 +25449,33 @@ paths:
                         - framework_name
                         - status
                         - is_synthetic
+                  pagination:
+                    type: object
+                    properties:
+                      has_more:
+                        type: boolean
+                      next_cursor:
+                        type: string
+                        nullable: true
+                      limit:
+                        type: number
+                      offset:
+                        type: number
+                      total:
+                        type: number
+                    required:
+                      - has_more
                   trace_id:
                     type: string
                     example: abc-123-def
+                  count:
+                    type: number
                 required:
                   - data
+                  - pagination
                   - trace_id
-                description: Returns the complete framework list in one response and takes no pagination parameters. `limit` and `offset` are accepted by the URL but ignored — said here because a client sent three offsets and got the same rows three times.
+                  - count
+                description: '`limit` (default 250, max 500) and `offset` slice the in-memory catalogue; `pagination.total` is the unsliced framework count. Omitting `limit` keeps returning the full catalogue for existing clients.'
         '400':
           description: Validation error.
         '401':
@@ -27500,6 +27520,22 @@ paths:
                         - id
                         - relationship_type
                         - source
+                  pagination:
+                    type: object
+                    properties:
+                      has_more:
+                        type: boolean
+                      next_cursor:
+                        type: string
+                        nullable: true
+                      limit:
+                        type: number
+                      offset:
+                        type: number
+                      total:
+                        type: number
+                    required:
+                      - has_more
                   trace_id:
                     type: string
                     example: abc-123-def
@@ -27507,6 +27543,7 @@ paths:
                     type: number
                 required:
                   - data
+                  - pagination
                   - trace_id
                   - count
         '400':
@@ -27599,6 +27636,22 @@ paths:
                         - id
                         - relationship_type
                         - source
+                  pagination:
+                    type: object
+                    properties:
+                      has_more:
+                        type: boolean
+                      next_cursor:
+                        type: string
+                        nullable: true
+                      limit:
+                        type: number
+                      offset:
+                        type: number
+                      total:
+                        type: number
+                    required:
+                      - has_more
                   trace_id:
                     type: string
                     example: abc-123-def
@@ -27608,6 +27661,7 @@ paths:
                     type: number
                 required:
                   - data
+                  - pagination
                   - trace_id
                   - fde_code
                   - count
@@ -27709,6 +27763,22 @@ paths:
                         - id
                         - relationship_type
                         - source
+                  pagination:
+                    type: object
+                    properties:
+                      has_more:
+                        type: boolean
+                      next_cursor:
+                        type: string
+                        nullable: true
+                      limit:
+                        type: number
+                      offset:
+                        type: number
+                      total:
+                        type: number
+                    required:
+                      - has_more
                   trace_id:
                     type: string
                     example: abc-123-def
@@ -27718,6 +27788,7 @@ paths:
                     type: number
                 required:
                   - data
+                  - pagination
                   - trace_id
                   - control_code
                   - count

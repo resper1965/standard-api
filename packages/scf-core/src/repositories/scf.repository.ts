@@ -93,8 +93,8 @@ export type ScfRepository = {
   /** Lookup STRM relationships by FDE code (e.g. "AC-1", "A.5.1"). */
   lookupStrmByFdeCode(
     fdeCode: string,
-    opts?: { relationshipType?: string; limit?: number },
-  ): Promise<ScfStrmRelationship[]>;
+    opts?: { relationshipType?: string; limit?: number; offset?: number },
+  ): Promise<{ rows: ScfStrmRelationship[]; total: number }>;
   /**
    * Lookup STRM relationships by SCF control code (e.g. "GOV-001").
    * O retorno carrega framework_code/framework_name (join denormalizado com
@@ -103,14 +103,15 @@ export type ScfRepository = {
    */
   lookupStrmByControlCode(
     controlCode: string,
-    opts?: { relationshipType?: string; limit?: number },
-  ): Promise<
-    (ScfStrmRelationship &
-      Pick<ScfStrmRelationshipResponse, "framework_code" | "framework_name">)[]
-  >;
+    opts?: { relationshipType?: string; limit?: number; offset?: number },
+  ): Promise<{
+    rows: (ScfStrmRelationship &
+      Pick<ScfStrmRelationshipResponse, "framework_code" | "framework_name">)[];
+    total: number;
+  }>;
   searchStrm(
     query: import("@standard/schemas").ScfStrmQuery,
-  ): Promise<ScfStrmRelationship[]>;
+  ): Promise<{ rows: ScfStrmRelationship[]; total: number }>;
   createImportRun(run: ScfImportRun): Promise<ScfImportRun>;
   saveImportRun(run: ScfImportRun): Promise<void>;
   listImportRuns(): Promise<ScfImportRun[]>;
@@ -376,7 +377,11 @@ export const createInMemoryScfRepository = (
         results = results.filter(
           (r) => r.relationship_type === opts.relationshipType,
         );
-      return results.slice(0, opts?.limit ?? 100);
+      const offset = opts?.offset ?? 0;
+      return {
+        rows: results.slice(offset, offset + (opts?.limit ?? 100)),
+        total: results.length,
+      };
     },
     lookupStrmByControlCode: async (controlCode, opts) => {
       const code = controlCode.trim().toLowerCase();
@@ -387,7 +392,11 @@ export const createInMemoryScfRepository = (
         results = results.filter(
           (r) => r.relationship_type === opts.relationshipType,
         );
-      return results.slice(0, opts?.limit ?? 100);
+      const offset = opts?.offset ?? 0;
+      return {
+        rows: results.slice(offset, offset + (opts?.limit ?? 100)),
+        total: results.length,
+      };
     },
     searchStrm: async (query) => {
       let results = [...strmRelationships.values()];
@@ -408,10 +417,11 @@ export const createInMemoryScfRepository = (
       }
       // Note: Full join-based mock (framework_id, source_framework_id) is simplified here.
       // A proper in-memory implementation would need to cross-reference mappings and requirements.
-      return results.slice(
-        query.offset ?? 0,
-        (query.offset ?? 0) + (query.limit ?? 100),
-      );
+      const offset = query.offset ?? 0;
+      return {
+        rows: results.slice(offset, offset + (query.limit ?? 100)),
+        total: results.length,
+      };
     },
     createImportRun: async (run) => {
       importRuns.set(run.id, run);

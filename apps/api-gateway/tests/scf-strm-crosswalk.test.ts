@@ -121,3 +121,63 @@ test("B7: rota por controle devolve framework_code em toda linha", async () => {
     "scf-strm-general-iso-27002-2022.xlsx",
   );
 });
+
+test("B8: offset avanca o conjunto e total permanece estavel", async () => {
+  const { send, db } = await createDrizzleTestClient();
+  await seedCrosswalk(db, 30);
+  const headers = { "x-standard-actor-id": ids.actorId };
+
+  const page1 = await send(
+    "/api/v1/scf/strm/control/GOV-01?limit=10&offset=0",
+    "GET",
+    undefined,
+    headers,
+  );
+  const page2 = await send(
+    "/api/v1/scf/strm/control/GOV-01?limit=10&offset=10",
+    "GET",
+    undefined,
+    headers,
+  );
+
+  expect(page1.body.pagination.total).toBe(30);
+  expect(page2.body.pagination.total).toBe(30);
+  expect(page1.body.data.length).toBe(10);
+  expect(page2.body.data.length).toBe(10);
+  expect(page1.body.pagination.has_more).toBe(true);
+
+  const ids1 = page1.body.data.map((r: any) => r.strm_id).sort().join(",");
+  const ids2 = page2.body.data.map((r: any) => r.strm_id).sort().join(",");
+  expect(ids1 === ids2).toBe(false);
+});
+
+test("B8: ultima pagina marca has_more false", async () => {
+  const { send, db } = await createDrizzleTestClient();
+  await seedCrosswalk(db, 30);
+
+  const result = await send(
+    "/api/v1/scf/strm/control/GOV-01?limit=10&offset=20",
+    "GET",
+    undefined,
+    { "x-standard-actor-id": ids.actorId },
+  );
+
+  expect(result.body.pagination.has_more).toBe(false);
+  expect(result.body.data.length).toBe(10);
+});
+
+test("B3: limit acima do teto devolve 400 nomeando campo e limite", async () => {
+  const { send, db } = await createDrizzleTestClient();
+  await seedCrosswalk(db, 3);
+
+  const result = await send(
+    `/api/v1/scf/strm?scf_version_id=${VERSION_ID}&limit=1000`,
+    "GET",
+    undefined,
+    { "x-standard-actor-id": ids.actorId },
+  );
+
+  expect(result.response.status).toBe(400);
+  expect(result.body.error.message).toContain("limit");
+  expect(result.body.error.message).toContain("500");
+});

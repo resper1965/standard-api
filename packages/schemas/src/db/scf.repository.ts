@@ -10,6 +10,7 @@ import {
   isNotNull,
   inArray,
   gte,
+  count,
 } from "drizzle-orm";
 import type { PgDatabase } from "drizzle-orm/pg-core";
 import { getSparseSelect } from "./utils.js";
@@ -592,6 +593,31 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
   },
 
   lookupStrmByFdeCode: async (fdeCode, opts) => {
+    const conditions = [
+      ilike(scfStrmRelationships.fdeCode, fdeCode.trim()),
+      ...(opts?.relationshipType
+        ? [
+            eq(
+              scfStrmRelationships.relationshipType,
+              opts.relationshipType as
+                | "equal"
+                | "subset"
+                | "intersects"
+                | "superset"
+                | "no_relation",
+            ),
+          ]
+        : []),
+    ];
+
+    // A contagem usa exatamente o mesmo where da consulta de dados. Um total
+    // derivado de outro filtro e pior que nenhum total.
+    const totalRows = await db
+      .select({ value: count() })
+      .from(scfStrmRelationships)
+      .where(and(...conditions));
+    const total = totalRows[0]!.value;
+
     const rows = await db
       .select({
         id: scfStrmRelationships.id,
@@ -622,61 +648,70 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
         scfFrameworks,
         eq(scfFrameworks.id, scfStrmRelationships.scfFrameworkId),
       )
-      .where(
-        and(
-          ilike(scfStrmRelationships.fdeCode, fdeCode.trim()),
-          ...(opts?.relationshipType
-            ? [
-                eq(
-                  scfStrmRelationships.relationshipType,
-                  opts.relationshipType as
-                    | "equal"
-                    | "subset"
-                    | "intersects"
-                    | "superset"
-                    | "no_relation",
-                ),
-              ]
-            : []),
-        ),
-      )
-      .limit(opts?.limit ?? 100);
+      .where(and(...conditions))
+      .orderBy(asc(scfStrmRelationships.fdeCode), asc(scfStrmRelationships.id))
+      .limit(opts?.limit ?? 100)
+      .offset(opts?.offset ?? 0);
 
-    return rows.map((row) => ({
-      id: row.id,
-      scf_mapping_id: row.scfMappingId ?? undefined,
-      scf_control_id: row.scfControlId ?? undefined,
-      fde_code: row.fdeCode ?? undefined,
-      fde_name: row.fdeName ?? undefined,
-      relationship_type: row.relationshipType,
-      // strengthScore replaces legacy relationshipStrength
-      relationship_strength: row.strengthScore?.toString() ?? undefined,
-      rationale: row.rationale ?? undefined,
-      source: row.source,
-      organization_id: row.organizationId ?? undefined,
-      focal_document: row.focalDocument ?? null,
-      scf_framework_id: row.scfFrameworkId ?? null,
-      framework_code: row.frameworkCode ?? null,
-      framework_name: row.frameworkName ?? null,
-      // extras â€” will be picked up by the response shape
-      _control_code: row.controlCode ?? undefined,
-      _control_title: row.controlTitle ?? undefined,
-    })) as ScfStrmRelationship[];
+    return {
+      rows: rows.map((row) => ({
+        id: row.id,
+        scf_mapping_id: row.scfMappingId ?? undefined,
+        scf_control_id: row.scfControlId ?? undefined,
+        fde_code: row.fdeCode ?? undefined,
+        fde_name: row.fdeName ?? undefined,
+        relationship_type: row.relationshipType,
+        // strengthScore replaces legacy relationshipStrength
+        relationship_strength: row.strengthScore?.toString() ?? undefined,
+        rationale: row.rationale ?? undefined,
+        source: row.source,
+        organization_id: row.organizationId ?? undefined,
+        focal_document: row.focalDocument ?? null,
+        scf_framework_id: row.scfFrameworkId ?? null,
+        framework_code: row.frameworkCode ?? null,
+        framework_name: row.frameworkName ?? null,
+        // extras â€” will be picked up by the response shape
+        _control_code: row.controlCode ?? undefined,
+        _control_title: row.controlTitle ?? undefined,
+      })) as ScfStrmRelationship[],
+      total: Number(total),
+    };
   },
 
   lookupStrmByControlCode: async (controlCode, opts) => {
     // First resolve control id from code
     const control = await db
-      .select({
-        id: scfControls.id,
-        code: scfControls.controlCode,
-        title: scfControls.title,
-      })
+      .select({ id: scfControls.id })
       .from(scfControls)
       .where(ilike(scfControls.controlCode, controlCode.trim()))
       .limit(1);
 
-    if (!control.length) return [];
+    if (!control.length) return { rows: [], total: 0 };
+
+    const conditions = [
+      eq(scfStrmRelationships.scfControlId, control[0]!.id),
+      ...(opts?.relationshipType
+        ? [
+            eq(
+              scfStrmRelationships.relationshipType,
+              opts.relationshipType as
+                | "equal"
+                | "subset"
+                | "intersects"
+                | "superset"
+                | "no_relation",
+            ),
+          ]
+        : []),
+    ];
+
+    // A contagem usa exatamente o mesmo where da consulta de dados. Um total
+    // derivado de outro filtro e pior que nenhum total.
+    const totalRows = await db
+      .select({ value: count() })
+      .from(scfStrmRelationships)
+      .where(and(...conditions));
+    const total = totalRows[0]!.value;
 
     const rows = await db
       .select({
@@ -701,43 +736,31 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
         scfFrameworks,
         eq(scfFrameworks.id, scfStrmRelationships.scfFrameworkId),
       )
-      .where(
-        and(
-          eq(scfStrmRelationships.scfControlId, control[0]!.id),
-          ...(opts?.relationshipType
-            ? [
-                eq(
-                  scfStrmRelationships.relationshipType,
-                  opts.relationshipType as
-                    | "equal"
-                    | "subset"
-                    | "intersects"
-                    | "superset"
-                    | "no_relation",
-                ),
-              ]
-            : []),
-        ),
-      )
-      .limit(opts?.limit ?? 100);
+      .where(and(...conditions))
+      .orderBy(asc(scfStrmRelationships.fdeCode), asc(scfStrmRelationships.id))
+      .limit(opts?.limit ?? 100)
+      .offset(opts?.offset ?? 0);
 
-    return rows.map((row) => ({
-      id: row.id,
-      scf_mapping_id: row.scfMappingId ?? undefined,
-      scf_control_id: row.scfControlId ?? undefined,
-      fde_code: row.fdeCode ?? undefined,
-      fde_name: row.fdeName ?? undefined,
-      relationship_type: row.relationshipType,
-      // strengthScore replaces legacy relationshipStrength
-      relationship_strength: row.strengthScore?.toString() ?? undefined,
-      rationale: row.rationale ?? undefined,
-      source: row.source,
-      organization_id: row.organizationId ?? undefined,
-      focal_document: row.focalDocument ?? null,
-      scf_framework_id: row.scfFrameworkId ?? null,
-      framework_code: row.frameworkCode ?? null,
-      framework_name: row.frameworkName ?? null,
-    }));
+    return {
+      rows: rows.map((row) => ({
+        id: row.id,
+        scf_mapping_id: row.scfMappingId ?? undefined,
+        scf_control_id: row.scfControlId ?? undefined,
+        fde_code: row.fdeCode ?? undefined,
+        fde_name: row.fdeName ?? undefined,
+        relationship_type: row.relationshipType,
+        // strengthScore replaces legacy relationshipStrength
+        relationship_strength: row.strengthScore?.toString() ?? undefined,
+        rationale: row.rationale ?? undefined,
+        source: row.source,
+        organization_id: row.organizationId ?? undefined,
+        focal_document: row.focalDocument ?? null,
+        scf_framework_id: row.scfFrameworkId ?? null,
+        framework_code: row.frameworkCode ?? null,
+        framework_name: row.frameworkName ?? null,
+      })),
+      total: Number(total),
+    };
   },
 
   searchStrm: async (query) => {
@@ -765,30 +788,6 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
       );
     }
 
-    let dbQuery = db
-      .select({
-        id: scfStrmRelationships.id,
-        scfMappingId: scfStrmRelationships.scfMappingId,
-        scfControlId: scfStrmRelationships.scfControlId,
-        fdeCode: scfStrmRelationships.fdeCode,
-        fdeName: scfStrmRelationships.fdeName,
-        relationshipType: scfStrmRelationships.relationshipType,
-        strengthScore: scfStrmRelationships.strengthScore,
-        rationale: scfStrmRelationships.rationale,
-        source: scfStrmRelationships.source,
-        organizationId: scfStrmRelationships.organizationId,
-        focalDocument: scfStrmRelationships.focalDocument,
-        scfFrameworkId: scfStrmRelationships.scfFrameworkId,
-        frameworkCode: scfFrameworks.frameworkId,
-        frameworkName: scfFrameworks.name,
-      })
-      .from(scfStrmRelationships)
-      .$dynamic()
-      .leftJoin(
-        scfFrameworks,
-        eq(scfFrameworks.id, scfStrmRelationships.scfFrameworkId),
-      );
-
     // A versão vive no controle, não na linha STRM e não no mapping. Alcançá-la
     // por scf_mappings descartava toda linha com scf_mapping_id nulo — que é a
     // maior parte do bundle oficial, e é por isso que esta rota devolvia 64
@@ -797,73 +796,116 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
     // innerJoin e deliberado: uma linha sem controle resolvido não pode ser
     // atribuída a uma versão. A auditoria de cobertura conta essas linhas.
     if (query.scf_version_id) {
-      dbQuery = dbQuery.innerJoin(
-        scfControls,
-        eq(scfControls.id, scfStrmRelationships.scfControlId),
-      );
       conditions.push(eq(scfControls.scfVersionId, query.scf_version_id));
     }
 
-    // scf_mappings só entra quando o filtro pedido depende do requisito.
-    if (query.framework_id || query.source_framework_id) {
-      dbQuery = dbQuery
-        .leftJoin(
-          scfMappings,
-          eq(scfMappings.id, scfStrmRelationships.scfMappingId),
-        )
-        .leftJoin(
-          scfFrameworkRequirements,
-          eq(
-            scfFrameworkRequirements.id,
-            scfMappings.scfFrameworkRequirementId,
-          ),
-        );
-
-      if (query.framework_id) {
-        conditions.push(
-          eq(scfFrameworkRequirements.scfFrameworkId, query.framework_id),
-        );
-      }
-      if (query.source_framework_id) {
-        conditions.push(
-          eq(
-            scfFrameworkRequirements.scfFrameworkId,
-            query.source_framework_id,
-          ),
-        );
-      }
+    if (query.framework_id) {
+      conditions.push(
+        eq(scfFrameworkRequirements.scfFrameworkId, query.framework_id),
+      );
+    }
+    if (query.source_framework_id) {
+      conditions.push(
+        eq(
+          scfFrameworkRequirements.scfFrameworkId,
+          query.source_framework_id,
+        ),
+      );
     }
 
-    if (conditions.length > 0) {
-      dbQuery = dbQuery.where(and(...conditions));
-    }
+    // Os joins condicionais são idênticos para a contagem e para os dados —
+    // extraídos aqui para que a contagem não derive de um where diferente.
+    const applyJoins = (base: any) => {
+      let joined = base.leftJoin(
+        scfFrameworks,
+        eq(scfFrameworks.id, scfStrmRelationships.scfFrameworkId),
+      );
+      if (query.scf_version_id) {
+        joined = joined.innerJoin(
+          scfControls,
+          eq(scfControls.id, scfStrmRelationships.scfControlId),
+        );
+      }
+      // scf_mappings só entra quando o filtro pedido depende do requisito.
+      if (query.framework_id || query.source_framework_id) {
+        joined = joined
+          .leftJoin(
+            scfMappings,
+            eq(scfMappings.id, scfStrmRelationships.scfMappingId),
+          )
+          .leftJoin(
+            scfFrameworkRequirements,
+            eq(
+              scfFrameworkRequirements.id,
+              scfMappings.scfFrameworkRequirementId,
+            ),
+          );
+      }
+      return joined;
+    };
 
-    const rows = await dbQuery
+    const where = conditions.length > 0 ? and(...conditions) : undefined;
+
+    // A contagem usa exatamente o mesmo where (e os mesmos joins) da consulta
+    // de dados. Um total derivado de outro filtro é pior que nenhum total.
+    const countQuery = applyJoins(
+      db.select({ value: count() }).from(scfStrmRelationships).$dynamic(),
+    );
+    const totalRows = await (where ? countQuery.where(where) : countQuery);
+    const total = totalRows[0]!.value;
+
+    const dataQuery = applyJoins(
+      db
+        .select({
+          id: scfStrmRelationships.id,
+          scfMappingId: scfStrmRelationships.scfMappingId,
+          scfControlId: scfStrmRelationships.scfControlId,
+          fdeCode: scfStrmRelationships.fdeCode,
+          fdeName: scfStrmRelationships.fdeName,
+          relationshipType: scfStrmRelationships.relationshipType,
+          strengthScore: scfStrmRelationships.strengthScore,
+          rationale: scfStrmRelationships.rationale,
+          source: scfStrmRelationships.source,
+          organizationId: scfStrmRelationships.organizationId,
+          focalDocument: scfStrmRelationships.focalDocument,
+          scfFrameworkId: scfStrmRelationships.scfFrameworkId,
+          frameworkCode: scfFrameworks.frameworkId,
+          frameworkName: scfFrameworks.name,
+        })
+        .from(scfStrmRelationships)
+        .$dynamic(),
+    );
+
+    const rows = await (where ? dataQuery.where(where) : dataQuery)
+      .orderBy(asc(scfStrmRelationships.fdeCode), asc(scfStrmRelationships.id))
       .limit(query.limit ?? 100)
       .offset(query.offset ?? 0);
 
-    return rows.map((row) => {
-      const strm =
-        "id" in row && "scfMappingId" in row
-          ? row
-          : (row as any).scf_strm_relationships;
-      return {
-        id: strm.id,
-        scf_mapping_id: strm.scfMappingId ?? undefined,
-        scf_control_id: strm.scfControlId ?? undefined,
-        fde_code: strm.fdeCode ?? undefined,
-        fde_name: strm.fdeName ?? undefined,
-        relationship_type: strm.relationshipType,
-        relationship_strength: strm.strengthScore?.toString() ?? undefined,
-        rationale: strm.rationale ?? undefined,
-        source: strm.source,
-        organization_id: strm.organizationId ?? undefined,
-        focal_document: strm.focalDocument ?? null,
-        scf_framework_id: strm.scfFrameworkId ?? null,
-        framework_code: strm.frameworkCode ?? null,
-        framework_name: strm.frameworkName ?? null,
-      };
-    });
+    return {
+      rows: rows.map((row: any) => {
+        const strm =
+          "id" in row && "scfMappingId" in row
+            ? row
+            : (row as any).scf_strm_relationships;
+        return {
+          id: strm.id,
+          scf_mapping_id: strm.scfMappingId ?? undefined,
+          scf_control_id: strm.scfControlId ?? undefined,
+          fde_code: strm.fdeCode ?? undefined,
+          fde_name: strm.fdeName ?? undefined,
+          relationship_type: strm.relationshipType,
+          relationship_strength: strm.strengthScore?.toString() ?? undefined,
+          rationale: strm.rationale ?? undefined,
+          source: strm.source,
+          organization_id: strm.organizationId ?? undefined,
+          focal_document: strm.focalDocument ?? null,
+          scf_framework_id: strm.scfFrameworkId ?? null,
+          framework_code: strm.frameworkCode ?? null,
+          framework_name: strm.frameworkName ?? null,
+        };
+      }),
+      total: Number(total),
+    };
   },
 
   createImportRun: async (run) => {

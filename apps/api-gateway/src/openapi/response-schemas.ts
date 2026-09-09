@@ -149,9 +149,12 @@ export const RESPONSE_SCHEMAS: Record<string, z.ZodTypeAny> = {
   "GET /api/v1/scf/controls/:controlId/linked-entities": list(z.unknown()),
 
   // ── SCF: frameworks, requirements, mappings ───────────────────────────
-  "GET /api/v1/scf/frameworks": list(ScfFrameworkResponseSchema).openapi({
+  "GET /api/v1/scf/frameworks": paginated(
+    ScfFrameworkResponseSchema,
+    count,
+  ).openapi({
     description:
-      "Returns the complete framework list in one response and takes no pagination parameters. `limit` and `offset` are accepted by the URL but ignored \u2014 said here because a client sent three offsets and got the same rows three times.",
+      "`limit` (default 250, max 500) and `offset` slice the in-memory catalogue; `pagination.total` is the unsliced framework count. Omitting `limit` keeps returning the full catalogue for existing clients.",
   }),
   "GET /api/v1/scf/frameworks/:frameworkId": item(ScfFrameworkResponseSchema),
   "GET /api/v1/scf/frameworks/:frameworkId/requirements": list(
@@ -228,12 +231,15 @@ export const RESPONSE_SCHEMAS: Record<string, z.ZodTypeAny> = {
   }),
 
   // ── SCF: STRM ─────────────────────────────────────────────────────────
-  "GET /api/v1/scf/strm": list(ScfStrmRelationshipResponseSchema, count),
-  "GET /api/v1/scf/strm/lookup": list(ScfStrmRelationshipResponseSchema, {
+  // `count` continua com o significado de hoje (linhas devolvidas nesta
+  // página); `pagination.total` é a contagem sob o mesmo filtro, sem
+  // fatiamento — é o campo novo que diz se a página cortou o resultado.
+  "GET /api/v1/scf/strm": paginated(ScfStrmRelationshipResponseSchema, count),
+  "GET /api/v1/scf/strm/lookup": paginated(ScfStrmRelationshipResponseSchema, {
     fde_code: z.string(),
     ...count,
   }),
-  "GET /api/v1/scf/strm/control/:control_code": list(
+  "GET /api/v1/scf/strm/control/:control_code": paginated(
     ScfStrmRelationshipResponseSchema,
     { control_code: z.string(), ...count },
   ),

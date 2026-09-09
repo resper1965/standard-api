@@ -34644,16 +34644,45 @@
                         ]
                       }
                     },
+                    "pagination": {
+                      "type": "object",
+                      "properties": {
+                        "has_more": {
+                          "type": "boolean"
+                        },
+                        "next_cursor": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "limit": {
+                          "type": "number"
+                        },
+                        "offset": {
+                          "type": "number"
+                        },
+                        "total": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "has_more"
+                      ]
+                    },
                     "trace_id": {
                       "type": "string",
                       "example": "abc-123-def"
+                    },
+                    "count": {
+                      "type": "number"
                     }
                   },
                   "required": [
                     "data",
-                    "trace_id"
+                    "pagination",
+                    "trace_id",
+                    "count"
                   ],
-                  "description": "Returns the complete framework list in one response and takes no pagination parameters. `limit` and `offset` are accepted by the URL but ignored — said here because a client sent three offsets and got the same rows three times."
+                  "description": "`limit` (default 250, max 500) and `offset` slice the in-memory catalogue; `pagination.total` is the unsliced framework count. Omitting `limit` keeps returning the full catalogue for existing clients."
                 }
               }
             }
@@ -37502,6 +37531,30 @@
                         ]
                       }
                     },
+                    "pagination": {
+                      "type": "object",
+                      "properties": {
+                        "has_more": {
+                          "type": "boolean"
+                        },
+                        "next_cursor": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "limit": {
+                          "type": "number"
+                        },
+                        "offset": {
+                          "type": "number"
+                        },
+                        "total": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "has_more"
+                      ]
+                    },
                     "trace_id": {
                       "type": "string",
                       "example": "abc-123-def"
@@ -37512,6 +37565,7 @@
                   },
                   "required": [
                     "data",
+                    "pagination",
                     "trace_id",
                     "count"
                   ]
@@ -37640,6 +37694,30 @@
                         ]
                       }
                     },
+                    "pagination": {
+                      "type": "object",
+                      "properties": {
+                        "has_more": {
+                          "type": "boolean"
+                        },
+                        "next_cursor": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "limit": {
+                          "type": "number"
+                        },
+                        "offset": {
+                          "type": "number"
+                        },
+                        "total": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "has_more"
+                      ]
+                    },
                     "trace_id": {
                       "type": "string",
                       "example": "abc-123-def"
@@ -37653,6 +37731,7 @@
                   },
                   "required": [
                     "data",
+                    "pagination",
                     "trace_id",
                     "fde_code",
                     "count"
@@ -37794,6 +37873,30 @@
                         ]
                       }
                     },
+                    "pagination": {
+                      "type": "object",
+                      "properties": {
+                        "has_more": {
+                          "type": "boolean"
+                        },
+                        "next_cursor": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "limit": {
+                          "type": "number"
+                        },
+                        "offset": {
+                          "type": "number"
+                        },
+                        "total": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "has_more"
+                      ]
+                    },
                     "trace_id": {
                       "type": "string",
                       "example": "abc-123-def"
@@ -37807,6 +37910,7 @@
                   },
                   "required": [
                     "data",
+                    "pagination",
                     "trace_id",
                     "control_code",
                     "count"

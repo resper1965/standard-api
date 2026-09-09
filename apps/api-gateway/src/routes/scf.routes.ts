@@ -668,10 +668,27 @@ export const scfRoutes: RouteDefinition[] = [
     path: "/api/v1/scf/frameworks",
     protected: true,
     permissions: ["scf:read"],
-    handler: async ({ deps, traceId }) => {
+    handler: async ({ deps, request, traceId }) => {
+      const url = new URL(request.url);
+      const limitRaw = url.searchParams.get("limit");
+      const limit = limitRaw
+        ? Math.min(parseInt(limitRaw, 10) || 250, 500)
+        : 250;
+      const offsetRaw = url.searchParams.get("offset");
+      const offset = offsetRaw ? Math.max(parseInt(offsetRaw, 10) || 0, 0) : 0;
+
       const frameworks = await deps.scf.frameworks.listFrameworks();
+      const page = frameworks.slice(offset, offset + limit);
+
       return json({
-        data: frameworks.map(frameworkResponse),
+        data: page.map(frameworkResponse),
+        count: page.length,
+        pagination: {
+          limit,
+          offset,
+          total: frameworks.length,
+          has_more: offset + page.length < frameworks.length,
+        },
         trace_id: traceId,
       });
     },
@@ -1457,13 +1474,35 @@ export const scfRoutes: RouteDefinition[] = [
       };
 
       const { ScfStrmQuerySchema } = await import("@standard/schemas");
-      const query = ScfStrmQuerySchema.parse(rawQuery);
+      let query;
+      try {
+        query = ScfStrmQuerySchema.parse(rawQuery);
+      } catch (err) {
+        // O middleware de erro devolve uma mensagem genérica para ZodError
+        // ("Request validation failed."). Aqui relançamos nomeando o campo e
+        // o limite aceito, para quem excede o teto saber para onde olhar.
+        if (err instanceof z.ZodError) {
+          throw new ApiError(
+            "VALIDATION_ERROR",
+            err.issues[0]?.message ?? "Request validation failed.",
+            400,
+          );
+        }
+        throw err;
+      }
 
-      const rows = await deps.scf.repository.searchStrm(query);
+      const { rows, total } = await deps.scf.repository.searchStrm(query);
+      const offset = query.offset ?? 0;
 
       return json({
         data: rows,
         count: rows.length,
+        pagination: {
+          limit: query.limit,
+          offset,
+          total,
+          has_more: offset + rows.length < total,
+        },
         trace_id: traceId,
       });
     },
@@ -1494,6 +1533,8 @@ export const scfRoutes: RouteDefinition[] = [
       const limit = limitRaw
         ? Math.min(parseInt(limitRaw, 10) || 100, 500)
         : 100;
+      const offsetRaw = url.searchParams.get("offset");
+      const offset = offsetRaw ? Math.max(parseInt(offsetRaw, 10) || 0, 0) : 0;
 
       if (!fdeCode) {
         throw new ApiError(
@@ -1503,10 +1544,14 @@ export const scfRoutes: RouteDefinition[] = [
         );
       }
 
-      const rows = await deps.scf.repository.lookupStrmByFdeCode(fdeCode, {
-        limit,
-        ...(relationshipType ? { relationshipType } : {}),
-      });
+      const { rows, total } = await deps.scf.repository.lookupStrmByFdeCode(
+        fdeCode,
+        {
+          limit,
+          offset,
+          ...(relationshipType ? { relationshipType } : {}),
+        },
+      );
 
       const data = rows.map((r: any) => ({
         strm_id: r.id,
@@ -1529,6 +1574,12 @@ export const scfRoutes: RouteDefinition[] = [
         fde_code: fdeCode,
         count: data.length,
         data,
+        pagination: {
+          limit,
+          offset,
+          total,
+          has_more: offset + data.length < total,
+        },
         trace_id: traceId,
       });
     },
@@ -1561,16 +1612,19 @@ export const scfRoutes: RouteDefinition[] = [
       const limit = limitRaw
         ? Math.min(parseInt(limitRaw, 10) || 100, 500)
         : 100;
+      const offsetRaw = url.searchParams.get("offset");
+      const offset = offsetRaw ? Math.max(parseInt(offsetRaw, 10) || 0, 0) : 0;
 
-      const rows = await deps.scf.repository.lookupStrmByControlCode(
+      const { rows, total } = await deps.scf.repository.lookupStrmByControlCode(
         controlCode,
         {
           limit,
+          offset,
           ...(relationshipType ? { relationshipType } : {}),
         },
       );
 
-      if (!rows.length) {
+      if (!total) {
         const version =
           await deps.scf.versions.getLatestVersion(organizationId);
         const versionId = version?.id ?? "";
@@ -1604,6 +1658,12 @@ export const scfRoutes: RouteDefinition[] = [
         control_code: controlCode,
         count: data.length,
         data,
+        pagination: {
+          limit,
+          offset,
+          total,
+          has_more: offset + data.length < total,
+        },
         trace_id: traceId,
       });
     },
