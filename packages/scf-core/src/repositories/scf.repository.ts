@@ -15,6 +15,19 @@
   ScfVersion,
 } from "../types";
 
+/**
+ * Campos denormalizados via join com scf_frameworks, devolvidos por
+ * lookupStrmByControlCode. Não usa Pick<ScfStrmRelationshipResponse, ...> de
+ * propósito: lá os dois campos são `string | undefined` (Zod .optional()),
+ * mas a convenção desta rota — igual às outras duas rotas STRM — é `null`
+ * quando o framework não resolveu, nunca `undefined` por omissão silenciosa.
+ * Opcionais aqui porque o repositório em memória não popula join nenhum.
+ */
+type ScfStrmFrameworkDenorm = {
+  framework_code?: string | null;
+  framework_name?: string | null;
+};
+
 export type ScfCrossMappingItem = {
   framework: string;
   control_id: string;
@@ -90,11 +103,16 @@ export type ScfRepository = {
     fdeCode: string,
     opts?: { relationshipType?: string; limit?: number },
   ): Promise<ScfStrmRelationship[]>;
-  /** Lookup STRM relationships by SCF control code (e.g. "GOV-001"). */
+  /**
+   * Lookup STRM relationships by SCF control code (e.g. "GOV-001").
+   * O retorno carrega framework_code/framework_name (join denormalizado com
+   * scf_frameworks) além dos campos da linha crua — ambos opcionais, então
+   * o repositório em memória não precisa populá-los.
+   */
   lookupStrmByControlCode(
     controlCode: string,
     opts?: { relationshipType?: string; limit?: number },
-  ): Promise<ScfStrmRelationship[]>;
+  ): Promise<(ScfStrmRelationship & ScfStrmFrameworkDenorm)[]>;
   searchStrm(
     query: import("@standard/schemas").ScfStrmQuery,
   ): Promise<ScfStrmRelationship[]>;

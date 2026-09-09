@@ -1586,7 +1586,7 @@ export const scfRoutes: RouteDefinition[] = [
         }
       }
 
-      const data = rows.map((r: any) => ({
+      const data = rows.map((r) => ({
         strm_id: r.id,
         fde_code: r.fde_code,
         fde_name: r.fde_name,
