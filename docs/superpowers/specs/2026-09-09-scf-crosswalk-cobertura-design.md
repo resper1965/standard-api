@@ -184,6 +184,20 @@ precisar dela; ninguém precisa hoje.
 permanece intocado: nenhum operador STRM é inferido, defaultado ou "estimado
 conservadoramente" em qualquer ponto desta entrega.
 
+**4.1.4 — Alvo de conflito do upsert de frameworks.** O upsert em massa de
+`scf_frameworks` (`packages/schemas/src/db/scf.repository.ts`) usa
+`target: scfFrameworks.id`, mas o id é um uuid regenerado a cada import por
+`wide-crosswalk.ts`. O conflito nunca ocorre no id: ocorre no índice único
+`scf_frameworks_version_framework_uidx`, e um re-import na mesma versão aborta
+com 23505 em vez de atualizar.
+
+O alvo passa a ser `(scfVersionId, frameworkId)` — a chave natural que o próprio
+índice declara. É a mesma família do defeito que esta branch corrigiu para
+`scf_mappings`.
+
+Encontrado ao responder §7.1, não relatado pelo consumidor: um re-import de
+catálogo não é caminho que o consumidor exercite.
+
 ### 4.2 Superfície da API
 
 **4.2.1 — Filtro de versão sem descarte (B1, B10).** `searchStrm` troca o
@@ -297,6 +311,7 @@ TDD, teste antes do código. Um teste por achado, nomeado pelo achado:
 | `limit` acima do teto devolve 400 nomeando campo e limite | B3 |
 | aba não classificada reprova `pnpm audit:scf` | §4.3 |
 | a aba de domínios popula `scf_domains.description` | §4.1.2 |
+| re-import do mesmo catálogo atualiza o framework em vez de abortar com 23505 | §4.1.4 |
 
 As fixtures XLSX sintéticas de `packages/scf-core/src/fixtures` são a entrada dos
 testes de importador. Nenhum dado real de cliente entra em fixture.
@@ -314,7 +329,9 @@ testes de importador. Nenhum dado real de cliente entra em fixture.
 5. **4.2.6** — alias do Anexo A. Depende de 4.2.2 para poder declarar
    `framework_code` na resposta.
 6. **4.3** — auditoria e contadores em `/scf/frameworks`.
-7. **4.1** — abas de domínios e de controles compensatórios.
+7. **4.1** — abas de domínios e de controles compensatórios, e o alvo de
+   conflito do upsert de frameworks (4.1.4), que a auditoria do passo anterior
+   passa a exercitar.
 
 ---
 
@@ -333,23 +350,103 @@ testes de importador. Nenhum dado real de cliente entra em fixture.
 
 ---
 
-## 7. Questões abertas — decisão do contratante, não do implementador
+## 7. Questões abertas — decisão do contratante
 
-1. **`framework_code` é chave pública estável entre versões de SCF?** A resposta
-   à Q13 do consumidor estabeleceu o campo como parte de chave primária, e o
-   valor mudou de frase para slug sem entrada no `CHANGELOG` (B9). A resposta
-   decide se um consumidor deve chavear por `framework_code` ou por
-   `framework_id`.
-2. **O FDI `amaericas-can-osfi-self-assessment` será corrigido?** (B5) É erro da
-   origem. Corrigir é quebra de chave para quem persistiu o valor; não corrigir o
-   torna permanente. Precisa de resposta em qualquer direção, com ou sem alias do
-   código antigo.
-3. **Uma mudança de forma em campo declarado chave passa a ser tratada como
-   quebra de contrato**, com entrada no `CHANGELOG` e período de convivência?
-4. **Onde vive a projeção por framework?** A API oferece
-   `/assessments/{id}/projection/{frameworkId}` e `/intelligence/compliance-score`
-   e ao mesmo tempo serve o crosswalk cru. A política que decide o que cada tipo
-   de relação contribui é onde mora o julgamento de conformidade. A posição
-   precisa ser explícita porque muda o que cada consumidor constrói.
-5. **Publicar quantas linhas da edição 2026.1 têm `0.500` genuíno** (B4), para
-   que o campo deixe de ser indistinguível de um default histórico.
+Cada uma traz a recomendação do implementador e o que a sustenta. São
+recomendações, não decisões: nenhuma está implementada por este spec.
+
+### 7.1 `framework_code` é chave pública estável entre versões de SCF?
+
+**Recomendado: sim, e declarar `(scf_version_id, framework_code)` como a chave
+pública, com `framework_id` documentado como opaco e válido apenas dentro de uma
+versão.**
+
+Três razões independentes:
+
+- `scf_frameworks` já declara `uniqueIndex(scf_version_id, framework_id)` — o
+  esquema afirma que a chave natural é o código;
+- o uuid é gerado por `crypto.randomUUID()` a cada import em `wide-crosswalk.ts`.
+  Recomendar que o consumidor chaveie por ele seria oferecer a menos estável das
+  duas chaves;
+- `framework_code` é o FDI publicado pela SCF. É identidade da origem, e muda
+  quando a origem muda — que é a semântica desejável numa chave de catálogo.
+
+A resposta ao consumidor deve dizer o que o B9 foi de fato: a frase
+`"AICPA TSC 2017:2022 (used for SOC 2)"` nunca foi o FDI, era o nome do documento
+ocupando o campo do código. A mudança para slug foi correção, não redesenho.
+
+### 7.2 O FDI `amaericas-can-osfi-self-assessment` será corrigido?
+
+**Recomendado: não corrigir.** O valor é o identificador publicado pela SCF e é
+também o nome do arquivo no bundle STRM. Corrigi-lo produz um valor que não
+existe em nenhum artefato da origem e quebra o cruzamento com o material da
+própria SCF, para consertar uma estética.
+
+Publicar como está, documentar como valor de origem, e reportar à SCF. Se a
+origem corrigir, espelhar com alias do código antigo e entrada no `CHANGELOG`.
+Isso reclassifica o achado de "erro" para "identificador".
+
+### 7.3 Mudança de forma em campo-chave é quebra de contrato?
+
+**Recomendado: sim, sobre uma lista curta e explícita.** Uma promessa de
+estabilidade sobre a resposta inteira não sobrevive. Declarar como chaves
+públicas apenas `framework_code`, `control_code`, `fde_code`, `focal_document` e
+o número de versão SCF; essas recebem entrada no `CHANGELOG` e uma versão menor
+em que o valor antigo ainda resolve. O restante da resposta evolui livre, e isso
+fica dito.
+
+Para não ser aspiracional: uma fixture golden com um registro de cada chave e um
+teste que reprova se a forma mudar.
+
+### 7.4 Onde vive a projeção por framework?
+
+**Recomendado: nos dois lados, com a política explícita e escolhida pelo
+consumidor.** O que não pode viver escondido não é o cálculo — é a política que
+decide quanto `equal`, `subset`, `intersects` e `null` contribuem.
+
+Manter os endpoints de projeção e tornar a política um parâmetro nomeado e
+versionado, ecoado na resposta:
+
+```json
+{
+  "policy": {
+    "name": "strict",
+    "version": "1",
+    "weights": { "equal": 1.0, "subset": 1.0, "intersects": 0, "null": 0 }
+  },
+  "coverage": { "requirements_total": 93, "satisfied": 61, "needs_review": 18 }
+}
+```
+
+Um consumidor que aceita o default está escolhendo o default e pode mostrar a
+política a um auditor. `null` nunca contribui: significa "a origem não declara",
+e 67 frameworks estão estruturalmente nesse estado (§3.2).
+
+É a posição da ADR que removeu o índice de conformidade fabricado, aplicada um
+nível acima.
+
+### 7.5 Quantas linhas têm `0.500` genuíno?
+
+**Recomendado: publicar a medição e a regra. Todos os `0.500` presentes são
+genuínos.** `parseStrength` devolve `null` para qualquer valor que não seja
+número finito em 0–10, então um `0.500` presente significa que a origem declarou
+5 de 10. A distinção que o consumidor pede já existe estruturalmente; falta
+afirmá-la.
+
+Medido nos 183 arquivos do bundle em 2026-09-09 — 63.446 linhas, 866 (1,37%) sem
+valor numérico:
+
+| `strength_score` | linhas | % |
+|---|---|---|
+| 0.500 | 28.722 | 45,27% |
+| 1.000 | 13.861 | 21,85% |
+| 0.000 | 9.183 | 14,47% |
+| 0.300 | 6.122 | 9,65% |
+| 0.800 | 4.685 | 7,38% |
+| demais | 7 | 0,01% |
+
+A SCF usa uma escala de cinco pontos (0/3/5/8/10) cujo grau médio é 5. Os 45% são
+a forma da escala, não um default residual.
+
+Regra a publicar: `strength_score = strength_raw / 10`, `null` quando a origem
+não traz número.
