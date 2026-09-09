@@ -1,3 +1,4 @@
+import type { RouteConfig } from "@asteasolutions/zod-to-openapi";
 import {
   z,
   // SCF
@@ -400,13 +401,21 @@ export function responseSchemaFor(
 }
 
 /**
+ * The exact type zod-to-openapi's `request.query` accepts (a `ZodObject`, not
+ * an arbitrary Zod type). The library keeps that type — `RouteParameter` —
+ * internal, so it is recovered here by indexing the public `RouteConfig`
+ * type instead of importing a name the package does not export.
+ */
+type QueryParameter = NonNullable<RouteConfig["request"]>["query"];
+
+/**
  * Documents query parameters for synthesized routes, mirroring
  * `RESPONSE_SCHEMAS` above: keyed by "METHOD path" with the route's raw
  * (colon-style) path. A route missing here keeps `query?: never` in the
  * generated contract even when the handler reads a query string, so add an
  * entry whenever a synthesized route requires one.
  */
-export const QUERY_SCHEMAS: Record<string, z.ZodTypeAny> = {
+export const QUERY_SCHEMAS: Record<string, QueryParameter> = {
   "GET /api/v1/scf/controls/by-code/:controlCode": z.object({
     version: z.string().openapi({
       description:
@@ -419,6 +428,6 @@ export const QUERY_SCHEMAS: Record<string, z.ZodTypeAny> = {
 export function querySchemaFor(
   method: string,
   path: string,
-): z.ZodTypeAny | undefined {
+): QueryParameter {
   return QUERY_SCHEMAS[`${method.toUpperCase()} ${path}`];
 }

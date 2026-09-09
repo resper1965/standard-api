@@ -143,7 +143,7 @@ export function synthesizeOperation(
     : DEFAULT_RESPONSES[200];
 
   const query = querySchemaFor(route.method, route.path);
-  const request: RouteConfig["request"] = {
+  const request: NonNullable<RouteConfig["request"]> = {
     ...(params.length > 0 ? { params: paramsSchema(params) } : {}),
     ...(query ? { query } : {}),
   };
