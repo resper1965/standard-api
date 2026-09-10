@@ -14,6 +14,8 @@ const VERSION_ID = "30000000-0000-4000-8000-000000000001";
 const DOMAIN_ID = "30000000-0000-4000-8000-000000000002";
 const CONTROL_ID = "30000000-0000-4000-8000-000000000003";
 const FRAMEWORK_ID = "30000000-0000-4000-8000-000000000004";
+// Versao publicada mais recente que NAO contem GOV-01 (ver o teste B8 de 404 falso).
+const NEWER_VERSION_ID = "30000000-0000-4000-8000-000000000005";
 
 /**
  * Semeia uma versão com um controle, um framework e N linhas STRM sem mapping.
@@ -180,4 +182,45 @@ test("B3: limit acima do teto devolve 400 nomeando campo e limite", async () => 
   expect(result.response.status).toBe(400);
   expect(result.body.error.message).toContain("limit");
   expect(result.body.error.message).toContain("500");
+});
+
+test("B8: offset alem do total nao gera 404 falso para controle existente", async () => {
+  const { send, db } = await createDrizzleTestClient();
+  await seedCrosswalk(db, 5);
+
+  // A guarda de 404 consulta getLatestVersion, que prefere a versao publicada
+  // mais recente. lookupStrmByControlCode resolve o controle por codigo sem
+  // filtro de versao, entao ele acha as 5 linhas de GOV-01 mesmo quando a
+  // versao mais recente nao contem esse controle. E esse descasamento que a
+  // guarda antiga (!rows.length) transformava em 404 falso para uma pagina
+  // vazia por offset. Sem esta versao publicada sem GOV-01, as duas guardas
+  // devolvem 200 e o teste nao distingue implementacao nenhuma.
+  await db
+    .insert(schema.scfVersions)
+    .values({
+      id: NEWER_VERSION_ID,
+      version: "test-crosswalk-2.0",
+      publishedAt: new Date("2099-01-01T00:00:00Z"),
+    })
+    .onConflictDoNothing();
+
+  let result;
+  try {
+    result = await send(
+      "/api/v1/scf/strm/control/GOV-01?limit=10&offset=100",
+      "GET",
+      undefined,
+      { "x-standard-actor-id": ids.actorId },
+    );
+  } finally {
+    // O PGlite e compartilhado pelo arquivo: a versao publicada nao pode
+    // sobreviver ao teste, ou passa a ser a "mais recente" para os demais.
+    await db
+      .delete(schema.scfVersions)
+      .where(eq(schema.scfVersions.id, NEWER_VERSION_ID));
+  }
+
+  expect(result.response.status).toBe(200);
+  expect(result.body.data.length).toBe(0);
+  expect(result.body.pagination.total).toBe(5);
 });
