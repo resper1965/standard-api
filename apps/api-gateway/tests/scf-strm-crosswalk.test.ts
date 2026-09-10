@@ -216,6 +216,75 @@ test("B10: /scf/strm transmite o crosswalk inteiro em NDJSON", async () => {
   expect(primeira._error).toBeUndefined();
 });
 
+const ANEXO_A_ALIAS = "iso27001_annex_a_alias";
+
+test("B11: A.5.1 casa 5.1 na ISO 27002 e declara o alias", async () => {
+  const { send, db } = await createDrizzleTestClient();
+  await seedCrosswalk(db, 3); // gera fde_code 5.1, 5.2, 5.3
+
+  const result = await send(
+    "/api/v1/scf/strm/lookup?fde_code=A.5.1",
+    "GET",
+    undefined,
+    { "x-standard-actor-id": ids.actorId },
+  );
+
+  expect(result.response.status).toBe(200);
+  expect(result.body.data.length).toBe(1);
+  expect(result.body.fde_code).toBe("A.5.1");
+  expect(result.body.matched_fde_code).toBe("5.1");
+  expect(result.body.matched_via).toBe(ANEXO_A_ALIAS);
+  expect(result.body.data[0].framework_code).toBe("general-iso-27002-2022");
+});
+
+test("B11: casamento exato nao declara alias", async () => {
+  const { send, db } = await createDrizzleTestClient();
+  await seedCrosswalk(db, 3);
+
+  const result = await send(
+    "/api/v1/scf/strm/lookup?fde_code=5.1",
+    "GET",
+    undefined,
+    { "x-standard-actor-id": ids.actorId },
+  );
+
+  expect(result.body.data.length).toBe(1);
+  expect(result.body.matched_via).toBeUndefined();
+});
+
+test("B11: alias nao alcanca 5.1 de outro focal document", async () => {
+  const { send, db } = await createDrizzleTestClient();
+  await seedCrosswalk(db, 3);
+
+  // Um segundo framework publicando o mesmo codigo "5.1".
+  const OUTRO_FW = "30000000-0000-4000-8000-000000000005";
+  await db.insert(schema.scfFrameworks).values({
+    id: OUTRO_FW,
+    scfVersionId: VERSION_ID,
+    frameworkId: "general-nist-csf-2-0",
+    name: "NIST CSF 2.0",
+  });
+  await db.insert(schema.scfStrmRelationships).values({
+    scfControlId: CONTROL_ID,
+    scfFrameworkId: OUTRO_FW,
+    focalDocument: "scf-strm-general-nist-csf-2-0.xlsx",
+    fdeCode: "5.1",
+    fdeName: "Outro 5.1",
+    relationshipType: "intersects" as const,
+    source: "test_bundle",
+  });
+
+  const result = await send(
+    "/api/v1/scf/strm/lookup?fde_code=A.5.1",
+    "GET",
+    undefined,
+    { "x-standard-actor-id": ids.actorId },
+  );
+
+  expect(result.body.data.length).toBe(1);
+  expect(result.body.data[0].framework_code).toBe("general-iso-27002-2022");
+});
+
 test("B8: offset alem do total nao gera 404 falso para controle existente", async () => {
   const { send, db } = await createDrizzleTestClient();
   await seedCrosswalk(db, 5);

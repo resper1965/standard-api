@@ -608,13 +608,23 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
             ),
           ]
         : []),
+      ...(opts?.frameworkCode
+        ? [eq(scfFrameworks.frameworkId, opts.frameworkCode)]
+        : []),
     ];
 
     // A contagem usa exatamente o mesmo where da consulta de dados. Um total
-    // derivado de outro filtro e pior que nenhum total.
+    // derivado de outro filtro e pior que nenhum total. Quando frameworkCode
+    // filtra por scf_frameworks.framework_id, a contagem precisa do mesmo
+    // join que a consulta de dados, ou a condicao referencia uma tabela
+    // ausente do FROM.
     const totalRows = await db
       .select({ value: count() })
       .from(scfStrmRelationships)
+      .leftJoin(
+        scfFrameworks,
+        eq(scfFrameworks.id, scfStrmRelationships.scfFrameworkId),
+      )
       .where(and(...conditions));
     const total = totalRows[0]!.value;
 

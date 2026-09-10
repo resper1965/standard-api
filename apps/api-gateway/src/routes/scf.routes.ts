@@ -1606,7 +1606,22 @@ export const scfRoutes: RouteDefinition[] = [
         );
       }
 
-      const { rows, total } = await deps.scf.repository.lookupStrmByFdeCode(
+      /**
+       * O Anexo A da ISO 27001:2022 é, por definição, o conjunto de controles da
+       * ISO 27002:2022 — os temas 5/6/7/8. A SCF publica esses códigos sem o
+       * prefixo "A.", sob o focal document general-iso-27002-2022, e uma
+       * Declaração de Aplicabilidade é indexada por "A.5.1".
+       *
+       * A restrição ao framework é o ponto: sem ela, "A.5.1" casaria o código
+       * "5.1" de qualquer um dos 250 focal documents.
+       */
+      const ANNEX_A_FRAMEWORK_CODE = "general-iso-27002-2022";
+      const ANNEX_A_PATTERN = /^A\.(\d.*)$/i;
+
+      let matchedFdeCode = fdeCode;
+      let matchedVia: string | undefined;
+
+      let { rows, total } = await deps.scf.repository.lookupStrmByFdeCode(
         fdeCode,
         {
           limit,
@@ -1614,6 +1629,28 @@ export const scfRoutes: RouteDefinition[] = [
           ...(relationshipType ? { relationshipType } : {}),
         },
       );
+
+      if (rows.length === 0) {
+        const annexMatch = ANNEX_A_PATTERN.exec(fdeCode.trim());
+        if (annexMatch) {
+          const semPrefixo = annexMatch[1]!;
+          const aliased = await deps.scf.repository.lookupStrmByFdeCode(
+            semPrefixo,
+            {
+              limit,
+              offset,
+              frameworkCode: ANNEX_A_FRAMEWORK_CODE,
+              ...(relationshipType ? { relationshipType } : {}),
+            },
+          );
+          if (aliased.rows.length > 0) {
+            rows = aliased.rows;
+            total = aliased.total;
+            matchedFdeCode = semPrefixo;
+            matchedVia = "iso27001_annex_a_alias";
+          }
+        }
+      }
 
       const data = rows.map((r: any) => ({
         strm_id: r.id,
@@ -1634,6 +1671,9 @@ export const scfRoutes: RouteDefinition[] = [
 
       return json({
         fde_code: fdeCode,
+        ...(matchedVia
+          ? { matched_fde_code: matchedFdeCode, matched_via: matchedVia }
+          : {}),
         count: data.length,
         data,
         pagination: {

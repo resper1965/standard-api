@@ -93,7 +93,13 @@ export type ScfRepository = {
   /** Lookup STRM relationships by FDE code (e.g. "AC-1", "A.5.1"). */
   lookupStrmByFdeCode(
     fdeCode: string,
-    opts?: { relationshipType?: string; limit?: number; offset?: number },
+    opts?: {
+      relationshipType?: string;
+      limit?: number;
+      offset?: number;
+      /** Restringe a busca a um framework por scf_frameworks.framework_id. */
+      frameworkCode?: string;
+    },
   ): Promise<{ rows: ScfStrmRelationship[]; total: number }>;
   /**
    * Lookup STRM relationships by SCF control code (e.g. "GOV-001").
@@ -376,6 +382,13 @@ export const createInMemoryScfRepository = (
       if (opts?.relationshipType)
         results = results.filter(
           (r) => r.relationship_type === opts.relationshipType,
+        );
+      // O repositorio em memoria nao carrega framework_code (denormalizado
+      // via join no Drizzle); a semente de teste que o popula precisa
+      // acrescenta-lo ao objeto, daí o cast.
+      if (opts?.frameworkCode)
+        results = results.filter(
+          (r) => (r as any).framework_code === opts.frameworkCode,
         );
       const offset = opts?.offset ?? 0;
       return {

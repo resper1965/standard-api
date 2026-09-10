@@ -246,7 +246,12 @@ export const RESPONSE_SCHEMAS: Record<string, z.ZodTypeAny> = {
   }),
   "GET /api/v1/scf/strm/lookup": paginated(ScfStrmRelationshipResponseSchema, {
     fde_code: z.string(),
+    matched_fde_code: z.string().optional(),
+    matched_via: z.string().optional(),
     ...count,
+  }).openapi({
+    description:
+      "O Anexo A da ISO 27001:2022 é publicado pela SCF como `general-iso-27002-2022`, com os códigos sem o prefixo `A.` (`A.5.1` → `5.1`, `A.8.34` → `8.34`). Um `fde_code` com o prefixo é resolvido contra esse focal document e a resposta declara `matched_fde_code` e `matched_via`.",
   }),
   "GET /api/v1/scf/strm/control/:control_code": paginated(
     ScfStrmRelationshipResponseSchema,

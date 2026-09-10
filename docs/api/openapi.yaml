@@ -27658,6 +27658,10 @@ paths:
                     example: abc-123-def
                   fde_code:
                     type: string
+                  matched_fde_code:
+                    type: string
+                  matched_via:
+                    type: string
                   count:
                     type: number
                 required:
@@ -27666,6 +27670,7 @@ paths:
                   - trace_id
                   - fde_code
                   - count
+                description: O Anexo A da ISO 27001:2022 é publicado pela SCF como `general-iso-27002-2022`, com os códigos sem o prefixo `A.` (`A.5.1` → `5.1`, `A.8.34` → `8.34`). Um `fde_code` com o prefixo é resolvido contra esse focal document e a resposta declara `matched_fde_code` e `matched_via`.
         '400':
           description: Validation error.
         '401':
