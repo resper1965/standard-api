@@ -46,6 +46,7 @@
     "db:seed:strm:dry-run": "pnpm --filter @standard/schemas db:seed:strm:dry-run",
     "db:studio": "pnpm --filter @standard/schemas exec drizzle-kit studio --config drizzle.config.ts",
     "check:openapi": "tsx scripts/generate-openapi.ts --check",
+    "audit:scf": "tsx scripts/audit-scf-coverage.ts",
     "coverage": "vitest run --coverage"
   },
   "lint-staged": {
