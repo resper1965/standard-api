@@ -285,6 +285,74 @@ test("B11: alias nao alcanca 5.1 de outro focal document", async () => {
   expect(result.body.data[0].framework_code).toBe("general-iso-27002-2022");
 });
 
+test("B11: pagina vazia por offset nao dispara o alias quando o exato existe", async () => {
+  const { send, db } = await createDrizzleTestClient();
+  await seedCrosswalk(db, 3); // 27002 ja tem uma linha "5.1" (i=0)
+
+  // Duas linhas extras "5.1" no mesmo framework 27002: sem elas o alias
+  // tambem devolveria pagina vazia no offset usado abaixo, e o teste nao
+  // distinguiria a guarda antiga da nova.
+  // focal_document varia entre as duas: (scf_control_id, fde_code,
+  // focal_document) e chave unica na tabela, e as duas precisam do mesmo
+  // fde_code "5.1" sob o mesmo controle.
+  await db.insert(schema.scfStrmRelationships).values([
+    {
+      scfControlId: CONTROL_ID,
+      scfFrameworkId: FRAMEWORK_ID,
+      focalDocument: "scf-strm-general-iso-27002-2022-dup1.xlsx",
+      fdeCode: "5.1",
+      fdeName: "Duplicata 5.1 #1",
+      relationshipType: "subset" as const,
+      source: "test_bundle",
+    },
+    {
+      scfControlId: CONTROL_ID,
+      scfFrameworkId: FRAMEWORK_ID,
+      focalDocument: "scf-strm-general-iso-27002-2022-dup2.xlsx",
+      fdeCode: "5.1",
+      fdeName: "Duplicata 5.1 #2",
+      relationshipType: "subset" as const,
+      source: "test_bundle",
+    },
+  ]);
+
+  // Um framework diferente publicando o codigo LITERAL "A.5.1" -- o match
+  // exato que a rota deve preservar mesmo quando a pagina pedida vem vazia
+  // por offset.
+  const LITERAL_FW = "30000000-0000-4000-8000-000000000006";
+  await db.insert(schema.scfFrameworks).values({
+    id: LITERAL_FW,
+    scfVersionId: VERSION_ID,
+    frameworkId: "general-outro-framework-literal",
+    name: "Outro framework com codigo literal A.5.1",
+  });
+  await db.insert(schema.scfStrmRelationships).values({
+    scfControlId: CONTROL_ID,
+    scfFrameworkId: LITERAL_FW,
+    focalDocument: "scf-strm-general-outro-framework-literal.xlsx",
+    fdeCode: "A.5.1",
+    fdeName: "Codigo literal com prefixo A.",
+    relationshipType: "equal" as const,
+    source: "test_bundle",
+  });
+
+  // total do match exato ("A.5.1") e 1; offset=1 pede uma pagina alem dele.
+  // Se a guarda comparar rows.length em vez de total, isso cai no alias, que
+  // tem total=3 para "5.1" em 27002 e devolveria pagina nao vazia no mesmo
+  // offset -- substituindo em silencio o match exato por outro framework.
+  const result = await send(
+    "/api/v1/scf/strm/lookup?fde_code=A.5.1&offset=1",
+    "GET",
+    undefined,
+    { "x-standard-actor-id": ids.actorId },
+  );
+
+  expect(result.response.status).toBe(200);
+  expect(result.body.data.length).toBe(0);
+  expect(result.body.pagination.total).toBe(1);
+  expect(result.body.matched_via).toBeUndefined();
+});
+
 test("B8: offset alem do total nao gera 404 falso para controle existente", async () => {
   const { send, db } = await createDrizzleTestClient();
   await seedCrosswalk(db, 5);

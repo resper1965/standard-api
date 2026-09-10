@@ -1630,7 +1630,11 @@ export const scfRoutes: RouteDefinition[] = [
         },
       );
 
-      if (rows.length === 0) {
+      // total, nao rows.length: uma pagina vazia por offset alem do total
+      // nao significa ausencia do dado — o mesmo defeito que a guarda de 404
+      // de lookupStrmByControlCode corrigiu (Task 4) e que a condicao de
+      // parada do streaming de /scf/strm evita (Task 5, linha ~1520).
+      if (total === 0) {
         const annexMatch = ANNEX_A_PATTERN.exec(fdeCode.trim());
         if (annexMatch) {
           const semPrefixo = annexMatch[1]!;
