@@ -29,7 +29,7 @@
     "test:evaluations": "tsx evals/run-evals.ts",
     "test:regression": "tsx evals/regression/run-regression.ts",
     "test:synthetic-e2e": "tsx tests/e2e-synthetic/run-tests.ts",
-    "test:ci": "pnpm lint && pnpm check:migrations && pnpm check:openapi && pnpm typecheck && pnpm test:unit && pnpm test:contracts && pnpm test:security && pnpm test:regression && pnpm test:evaluations && pnpm test:synthetic-e2e && pnpm build",
+    "test:ci": "pnpm lint && pnpm check:migrations && pnpm audit:scf && pnpm check:openapi && pnpm typecheck && pnpm test:unit && pnpm test:contracts && pnpm test:security && pnpm test:regression && pnpm test:evaluations && pnpm test:synthetic-e2e && pnpm build",
     "db:generate": "pnpm --filter @standard/schemas db:generate",
     "db:migrate": "pnpm --filter @standard/schemas db:migrate",
     "dev:api": "pnpm --filter @standard/api-gateway dev",

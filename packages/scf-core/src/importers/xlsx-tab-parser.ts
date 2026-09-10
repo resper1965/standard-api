@@ -27,6 +27,8 @@ export type TabClassification =
   | { type: "dpmp"; sheetName: string }
   | { type: "cdpas"; sheetName: string }
   | { type: "mad"; sheetName: string }
+  | { type: "compensating_controls"; sheetName: string }
+  | { type: "domains"; sheetName: string }
   | { type: "unknown"; sheetName: string };
 
 // â”€â”€â”€â”€ Header Normalization â”€â”€â”€â”€
@@ -105,10 +107,11 @@ const METADATA_TAB_NAMES = [
   "copyright",
   "license",
   "legend",
-  // SCF 2026.1 specific non-control tabs
-  "scf domains",
-  "compensating controls",
-  "data privacy",
+  // SCF 2026.1 specific non-control tabs. "scf domains", "compensating
+  // controls" e "data privacy" NAO entram aqui: cada uma tem parser proprio
+  // (domains, compensating_controls, dpmp) e e detectada por nome antes
+  // desta checagem -- ver o bloco logo abaixo. "lists" e a unica destas
+  // quatro que e de fato inerte.
   "lists",
 ];
 
@@ -201,6 +204,28 @@ export const classifyTab = (
     return { type: "metadata", sheetName };
   }
 
+  // Detectado por nome, antes de qualquer checagem de cabecalho: estas tres
+  // abas carregam coluna de codigo de controle (Compensating Controls e DPMP
+  // tem "SCF Control #"/"SCF #") e a de dominios tem "SCF Domain" +
+  // "SCF Identifier" -- exatamente os pares que os checks abaixo usam para
+  // reconhecer a aba de controles. Deixadas para depois, cairiam classificadas
+  // como "controls" (domains, compensating controls) ou nem seriam
+  // alcancadas por terem coluna de id sem coluna de corpo reconhecida
+  // (dpmp), indo parar no fallback "crosswalk".
+  if (nameLower.startsWith("compensating controls")) {
+    return { type: "compensating_controls", sheetName };
+  }
+  if (nameLower.startsWith("scf domains")) {
+    return { type: "domains", sheetName };
+  }
+  if (
+    nameLower === "dpmp" ||
+    nameLower.startsWith("data privacy management") ||
+    nameLower.startsWith("data privacy mgmt")
+  ) {
+    return { type: "dpmp", sheetName };
+  }
+
   // Check for a control identifier column (uses includes for flexibility)
   const hasControlIdColumn = CONTROLS_TAB_INDICATORS.some((indicator) =>
     normalizedHeaders.some((h) => h === indicator || h.includes(indicator)),
@@ -236,11 +261,6 @@ export const classifyTab = (
   // If it has control IDs but no body columns â†’ it's a crosswalk
   if (hasControlIdColumn) {
     return { type: "crosswalk", sheetName, frameworkHint: sheetName.trim() };
-  }
-
-  // Check for DPMP (Data Privacy Management Principles) tab
-  if (nameLower === "dpmp" || nameLower.startsWith("data privacy management")) {
-    return { type: "dpmp" as const, sheetName };
   }
 
   // MA&D / MADSS tab detection (before generic crosswalk fallback)
