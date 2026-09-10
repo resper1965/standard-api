@@ -186,7 +186,12 @@ test("B3: limit acima do teto devolve 400 nomeando campo e limite", async () => 
 
 test("B10: /scf/strm transmite o crosswalk inteiro em NDJSON", async () => {
   const { sendRaw, db } = await createDrizzleTestClient();
-  await seedCrosswalk(db, 120);
+  // 600 > batchSize (500) de propósito: com 120 linhas a primeira chamada a
+  // searchStrm já devolveria tudo e o laço quebraria na primeira volta, sem
+  // nunca fazer uma segunda chamada com offset > 0 — o teste passaria mesmo
+  // se a condição de parada comparasse rows.length com batchSize em vez de
+  // com total, que é exatamente o defeito que esta rota existe para evitar.
+  await seedCrosswalk(db, 600);
 
   const result = await sendRaw(
     `/api/v1/scf/strm?scf_version_id=${VERSION_ID}`,
@@ -201,9 +206,10 @@ test("B10: /scf/strm transmite o crosswalk inteiro em NDJSON", async () => {
   expect(result.response.headers.get("Content-Type")).toContain(
     "application/x-ndjson",
   );
+  expect(result.response.headers.get("X-Standard-Stream")).toBe("strm");
 
   const linhas = result.text.trim().split("\n").filter(Boolean);
-  expect(linhas.length).toBe(120);
+  expect(linhas.length).toBe(600);
 
   const primeira = JSON.parse(linhas[0]);
   expect(primeira.framework_code).toBe("general-iso-27002-2022");
