@@ -202,7 +202,17 @@ const controlResponse = (
   return result;
 };
 
-const frameworkResponse = (framework: ScfFramework) => ({
+// getFramework (rota de item unico) devolve ScfFramework puro; listFrameworks
+// (rota de listagem) devolve a cobertura STRM alem disso (Task 8). Os campos
+// extras sao opcionais aqui para que os dois chamadores usem a mesma funcao
+// sem inventar zero/null quando a cobertura nunca foi calculada.
+const frameworkResponse = (
+  framework: ScfFramework & {
+    strm_source?: string | null;
+    requirements_count?: number;
+    mappings_count?: number;
+  },
+) => ({
   framework_id: framework.id,
   framework_code: framework.framework_code,
   framework_name: framework.framework_name,
@@ -214,6 +224,15 @@ const frameworkResponse = (framework: ScfFramework) => ({
   ...(framework.category ? { category: framework.category } : {}),
   status: framework.status,
   is_synthetic: framework.is_synthetic,
+  ...(framework.strm_source !== undefined
+    ? { strm_source: framework.strm_source }
+    : {}),
+  ...(framework.requirements_count !== undefined
+    ? { requirements_count: framework.requirements_count }
+    : {}),
+  ...(framework.mappings_count !== undefined
+    ? { mappings_count: framework.mappings_count }
+    : {}),
 });
 
 const requirementResponse = (requirement: ScfFrameworkRequirement) => ({

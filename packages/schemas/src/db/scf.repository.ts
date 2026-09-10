@@ -383,11 +383,70 @@ export const createDrizzleScfRepository = (db: Db): ScfRepository => ({
 
   // â”€â”€â”€ Frameworks â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   listFrameworks: async () => {
+    // strm_source vem de um unico leftJoin+groupBy: um framework sem linha
+    // STRM some no join e o max() do agregado fica null (ADR-001 -- a SCF
+    // nao publica STRM para esse framework, isso nao e rota quebrada).
     const rows = await db
-      .select()
+      .select({
+        framework: scfFrameworks,
+        strmSource: sql<string | null>`max(${scfStrmRelationships.source})`,
+      })
       .from(scfFrameworks)
+      .leftJoin(
+        scfStrmRelationships,
+        eq(scfStrmRelationships.scfFrameworkId, scfFrameworks.id),
+      )
+      .groupBy(scfFrameworks.id)
       .orderBy(asc(scfFrameworks.frameworkId));
-    return rows.map(mapFramework);
+
+    // requirements_count e mappings_count vem de duas consultas agregadas
+    // separadas, unidas em memoria -- e nao de um unico groupBy com varios
+    // leftJoin. Juntar scf_framework_requirements e scf_mappings na mesma
+    // consulta produziria o produto cartesiano das duas tabelas e infla as
+    // contagens (um framework com 100 requisitos e 380 mapeamentos passaria
+    // a reportar 38.000).
+    const reqCounts = await db
+      .select({
+        frameworkId: scfFrameworkRequirements.scfFrameworkId,
+        total: count(scfFrameworkRequirements.id),
+      })
+      .from(scfFrameworkRequirements)
+      .groupBy(scfFrameworkRequirements.scfFrameworkId);
+
+    // scf_mappings nao guarda scf_framework_id diretamente -- o framework do
+    // mapeamento vem do requisito que ele mapeia. O join aqui e 1:1 (cada
+    // mapeamento referencia exatamente um requisito via FK), entao nao fana
+    // linhas e a contagem permanece correta.
+    const mapCounts = await db
+      .select({
+        frameworkId: scfFrameworkRequirements.scfFrameworkId,
+        total: count(scfMappings.id),
+      })
+      .from(scfMappings)
+      .innerJoin(
+        scfFrameworkRequirements,
+        eq(scfMappings.scfFrameworkRequirementId, scfFrameworkRequirements.id),
+      )
+      .groupBy(scfFrameworkRequirements.scfFrameworkId);
+
+    const porFramework = (
+      linhas: Array<{ frameworkId: string | null; total: number }>,
+    ) =>
+      new Map(
+        linhas
+          .filter((l) => l.frameworkId != null)
+          .map((l) => [l.frameworkId!, Number(l.total)]),
+      );
+
+    const reqPorFw = porFramework(reqCounts);
+    const mapPorFw = porFramework(mapCounts);
+
+    return rows.map((r) => ({
+      ...mapFramework(r.framework),
+      strm_source: r.strmSource ?? null,
+      requirements_count: reqPorFw.get(r.framework.id) ?? 0,
+      mappings_count: mapPorFw.get(r.framework.id) ?? 0,
+    }));
   },
 
   getFramework: async (id) => {

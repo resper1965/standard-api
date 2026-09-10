@@ -393,3 +393,103 @@ test("B8: offset alem do total nao gera 404 falso para controle existente", asyn
   expect(result.body.data.length).toBe(0);
   expect(result.body.pagination.total).toBe(5);
 });
+
+test("B6: frameworks declaram STRM publicado e contagens sem inflar por produto cartesiano", async () => {
+  const { send, db } = await createDrizzleTestClient();
+  await seedCrosswalk(db, 4);
+
+  // Um framework de coluna de crosswalk, sem nenhuma linha STRM -- e o caso
+  // dos 67 que a SCF publica sem arquivo de bundle no lado do consumidor
+  // (ADR-001: nenhum operador STRM inferido ou defaultado).
+  const NO_STRM_FRAMEWORK_ID = "30000000-0000-4000-8000-00000000000a";
+  await db
+    .insert(schema.scfFrameworks)
+    .values({
+      id: NO_STRM_FRAMEWORK_ID,
+      scfVersionId: VERSION_ID,
+      frameworkId: "emea-sau-ecc-1-2018",
+      name: "Saudi Arabia ECC-1:2018",
+    })
+    .onConflictDoNothing();
+
+  // Segundo controle -- o indice unico e (requisito, controle), entao mapear
+  // o mesmo requisito duas vezes exige um segundo controle.
+  const CONTROL_ID_2 = "30000000-0000-4000-8000-000000000007";
+  await db
+    .insert(schema.scfControls)
+    .values({
+      id: CONTROL_ID_2,
+      scfVersionId: VERSION_ID,
+      scfDomainId: DOMAIN_ID,
+      controlCode: "GOV-02",
+      title: "Segundo controle",
+    })
+    .onConflictDoNothing();
+
+  // 2 requisitos e 3 mapeamentos para o framework com STRM. Um unico groupBy
+  // com tres leftJoin (frameworks x requirements x mappings) contaria o
+  // produto cartesiano -- 2 requisitos x 3 mapeamentos = 6 -- bem diferente
+  // dos numeros corretos (2 e 3). Numeros distintos e maiores que 1 de
+  // proposito: um teste 1x1 bateria por coincidencia com a contagem inflada
+  // e nao provaria nada.
+  const REQ_1 = "30000000-0000-4000-8000-000000000008";
+  const REQ_2 = "30000000-0000-4000-8000-000000000009";
+  await db
+    .insert(schema.scfFrameworkRequirements)
+    .values([
+      {
+        id: REQ_1,
+        scfVersionId: VERSION_ID,
+        scfFrameworkId: FRAMEWORK_ID,
+        requirementCode: "REQ-1",
+        title: "Requisito 1",
+      },
+      {
+        id: REQ_2,
+        scfVersionId: VERSION_ID,
+        scfFrameworkId: FRAMEWORK_ID,
+        requirementCode: "REQ-2",
+        title: "Requisito 2",
+      },
+    ])
+    .onConflictDoNothing();
+  await db
+    .insert(schema.scfMappings)
+    .values([
+      {
+        scfVersionId: VERSION_ID,
+        scfFrameworkRequirementId: REQ_1,
+        scfControlId: CONTROL_ID,
+        relationshipType: "subset" as const,
+      },
+      {
+        scfVersionId: VERSION_ID,
+        scfFrameworkRequirementId: REQ_1,
+        scfControlId: CONTROL_ID_2,
+        relationshipType: "subset" as const,
+      },
+      {
+        scfVersionId: VERSION_ID,
+        scfFrameworkRequirementId: REQ_2,
+        scfControlId: CONTROL_ID,
+        relationshipType: "subset" as const,
+      },
+    ])
+    .onConflictDoNothing();
+
+  const result = await send("/api/v1/scf/frameworks", "GET", undefined, {
+    "x-standard-actor-id": ids.actorId,
+  });
+
+  const comStrm = result.body.data.find(
+    (f: any) => f.framework_code === "general-iso-27002-2022",
+  );
+  const semStrm = result.body.data.find(
+    (f: any) => f.framework_code === "emea-sau-ecc-1-2018",
+  );
+
+  expect(comStrm.strm_source).toBe("test_bundle");
+  expect(comStrm.requirements_count).toBe(2);
+  expect(comStrm.mappings_count).toBe(3);
+  expect(semStrm.strm_source).toBe(null);
+});

@@ -12024,6 +12024,17 @@ components:
             - archived
         is_synthetic:
           type: boolean
+        strm_source:
+          type: string
+          nullable: true
+        requirements_count:
+          type: number
+          minimum: -9007199254740991
+          maximum: 9007199254740991
+        mappings_count:
+          type: number
+          minimum: -9007199254740991
+          maximum: 9007199254740991
         trace_id:
           type: string
       required:
@@ -25441,6 +25452,13 @@ paths:
                             - archived
                         is_synthetic:
                           type: boolean
+                        strm_source:
+                          type: string
+                          nullable: true
+                        requirements_count:
+                          type: integer
+                        mappings_count:
+                          type: integer
                         trace_id:
                           type: string
                       required:
@@ -25531,6 +25549,13 @@ paths:
                       - archived
                   is_synthetic:
                     type: boolean
+                  strm_source:
+                    type: string
+                    nullable: true
+                  requirements_count:
+                    type: integer
+                  mappings_count:
+                    type: integer
                   trace_id:
                     type: string
                     example: abc-123-def

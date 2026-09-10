@@ -35,6 +35,18 @@ export type ScfControlCrossMapping = {
   mappings: ScfCrossMappingItem[];
 };
 
+/**
+ * Framework enriquecido com a cobertura STRM do catalogo (Task 8). strm_source
+ * e o `source` das linhas STRM do framework, ou null quando nao ha nenhuma --
+ * o caso estrutural dos frameworks que a SCF publica sem arquivo de bundle
+ * (ADR-001: nenhum operador inferido, nenhuma linha inventada).
+ */
+export type ScfFrameworkWithCoverage = ScfFramework & {
+  strm_source: string | null;
+  requirements_count: number;
+  mappings_count: number;
+};
+
 export type ScfRepository = {
   getControlCrossMappings(
     versionId: string,
@@ -57,7 +69,7 @@ export type ScfRepository = {
     versionId: string,
     controlCode: string,
   ): Promise<ScfControl | null>;
-  listFrameworks(): Promise<ScfFramework[]>;
+  listFrameworks(): Promise<ScfFrameworkWithCoverage[]>;
   getFramework(id: string): Promise<ScfFramework | null>;
   listRequirements(frameworkId: string): Promise<ScfFrameworkRequirement[]>;
   /** Returns only requirements classified as MCR (Minimum Compliance Requirements)
@@ -268,9 +280,23 @@ export const createInMemoryScfRepository = (
           item.control_code.toLowerCase() === controlCode.toLowerCase(),
       ) ?? null,
     listFrameworks: async () =>
-      [...frameworks.values()].sort((a, b) =>
-        a.framework_code.localeCompare(b.framework_code),
-      ),
+      [...frameworks.values()]
+        .sort((a, b) => a.framework_code.localeCompare(b.framework_code))
+        .map((fw) => {
+          const strmRows = [...strmRelationships.values()].filter(
+            (r) => r.scf_framework_id === fw.id,
+          );
+          return {
+            ...fw,
+            strm_source: strmRows[0]?.source ?? null,
+            requirements_count: [...requirements.values()].filter(
+              (r) => r.scf_framework_id === fw.id,
+            ).length,
+            mappings_count: [...mappings.values()].filter(
+              (m) => m.scf_framework_id === fw.id,
+            ).length,
+          };
+        }),
     getFramework: async (id) => frameworks.get(id) ?? null,
     listRequirements: async (frameworkId) =>
       [...requirements.values()]

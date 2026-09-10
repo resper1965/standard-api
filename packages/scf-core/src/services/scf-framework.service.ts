@@ -1,10 +1,13 @@
-﻿import type { ScfRepository } from "../repositories/scf.repository";
+﻿import type {
+  ScfRepository,
+  ScfFrameworkWithCoverage,
+} from "../repositories/scf.repository";
 import type { ScfFramework, ScfFrameworkRequirement } from "../types";
 
 export class ScfFrameworkService {
   constructor(private readonly repository: ScfRepository) {}
 
-  listFrameworks(): Promise<ScfFramework[]> {
+  listFrameworks(): Promise<ScfFrameworkWithCoverage[]> {
     return this.repository.listFrameworks();
   }
 

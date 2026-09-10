@@ -132,6 +132,13 @@ export const ScfFrameworkResponseSchema = z.object({
   category: z.string().optional(),
   status: ScfRecordStatusSchema,
   is_synthetic: z.boolean(),
+  // Cobertura STRM do framework (Task 8) -- presentes apenas em GET
+  // /scf/frameworks, que os computa; ausentes no GET de um framework isolado.
+  // null em strm_source diz "a SCF nao publica STRM para este framework"
+  // (ADR-001), distinguindo-o de uma rota quebrada.
+  strm_source: z.string().nullable().optional(),
+  requirements_count: z.number().int().optional(),
+  mappings_count: z.number().int().optional(),
   trace_id: z.string().optional(),
 });
 
