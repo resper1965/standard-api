@@ -37568,7 +37568,8 @@
                     "pagination",
                     "trace_id",
                     "count"
-                  ]
+                  ],
+                  "description": "Envelope paginado por padrão. Com `Accept: application/x-ndjson`, devolve o crosswalk inteiro como stream — uma linha JSON por relação, sem paginação nem total."
                 }
               }
             }

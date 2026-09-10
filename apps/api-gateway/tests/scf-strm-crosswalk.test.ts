@@ -184,6 +184,32 @@ test("B3: limit acima do teto devolve 400 nomeando campo e limite", async () => 
   expect(result.body.error.message).toContain("500");
 });
 
+test("B10: /scf/strm transmite o crosswalk inteiro em NDJSON", async () => {
+  const { sendRaw, db } = await createDrizzleTestClient();
+  await seedCrosswalk(db, 120);
+
+  const result = await sendRaw(
+    `/api/v1/scf/strm?scf_version_id=${VERSION_ID}`,
+    "GET",
+    {
+      "x-standard-actor-id": ids.actorId,
+      Accept: "application/x-ndjson",
+    },
+  );
+
+  expect(result.response.status).toBe(200);
+  expect(result.response.headers.get("Content-Type")).toContain(
+    "application/x-ndjson",
+  );
+
+  const linhas = result.text.trim().split("\n").filter(Boolean);
+  expect(linhas.length).toBe(120);
+
+  const primeira = JSON.parse(linhas[0]);
+  expect(primeira.framework_code).toBe("general-iso-27002-2022");
+  expect(primeira._error).toBeUndefined();
+});
+
 test("B8: offset alem do total nao gera 404 falso para controle existente", async () => {
   const { send, db } = await createDrizzleTestClient();
   await seedCrosswalk(db, 5);

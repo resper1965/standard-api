@@ -1491,6 +1491,68 @@ export const scfRoutes: RouteDefinition[] = [
         throw err;
       }
 
+      const acceptHeader = request.headers.get("Accept") ?? "";
+      if (acceptHeader.includes("application/x-ndjson")) {
+        const { readable, writable } = new TransformStream<
+          Uint8Array,
+          Uint8Array
+        >();
+        const writer = writable.getWriter();
+        const encoder = new TextEncoder();
+        const batchSize = 500;
+
+        // Transmite em segundo plano — não aguardar, a resposta volta já.
+        (async () => {
+          try {
+            let offset = 0;
+            for (;;) {
+              const { rows, total } = await deps.scf.repository.searchStrm({
+                ...query,
+                limit: batchSize,
+                offset,
+              });
+              for (const row of rows) {
+                await writer.write(
+                  encoder.encode(JSON.stringify(row) + "\n"),
+                );
+              }
+              offset += rows.length;
+              if (rows.length === 0 || offset >= total) break;
+            }
+          } catch (err: any) {
+            try {
+              await writer.write(
+                encoder.encode(
+                  JSON.stringify({
+                    _error: true,
+                    message: err?.message ?? "Stream error",
+                    trace_id: traceId,
+                  }) + "\n",
+                ),
+              );
+            } catch {
+              // writer pode já estar fechado — ignorar
+            }
+          } finally {
+            try {
+              await writer.close();
+            } catch {
+              // já fechado — ignorar
+            }
+          }
+        })();
+
+        return new Response(readable, {
+          status: 200,
+          headers: {
+            "Content-Type": "application/x-ndjson",
+            "Transfer-Encoding": "chunked",
+            "X-Standard-Stream": "strm",
+            "X-Standard-Trace-Id": traceId ?? "",
+          },
+        });
+      }
+
       const { rows, total } = await deps.scf.repository.searchStrm(query);
       const offset = query.offset ?? 0;
 

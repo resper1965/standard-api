@@ -428,5 +428,14 @@ export const createDrizzleTestClient = async () => {
     return { response, body: wrapError(resBody) };
   };
 
-  return { send, db };
+  const sendRaw = async (
+    path: string,
+    method = "GET",
+    headers: Record<string, string> = {},
+  ) => {
+    const response = await app.fetch(jsonRequest(path, method, undefined, headers));
+    return { response, text: await response.text() };
+  };
+
+  return { send, sendRaw, db };
 };

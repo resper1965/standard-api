@@ -234,7 +234,16 @@ export const RESPONSE_SCHEMAS: Record<string, z.ZodTypeAny> = {
   // `count` continua com o significado de hoje (linhas devolvidas nesta
   // página); `pagination.total` é a contagem sob o mesmo filtro, sem
   // fatiamento — é o campo novo que diz se a página cortou o resultado.
-  "GET /api/v1/scf/strm": paginated(ScfStrmRelationshipResponseSchema, count),
+  // Accept: application/x-ndjson -> a stream, not JSON: uma linha por
+  // relação, sem envelope de paginação nenhum. É a forma que evita a
+  // caminhada controle a controle que gerava centenas de requisições.
+  "GET /api/v1/scf/strm": paginated(
+    ScfStrmRelationshipResponseSchema,
+    count,
+  ).openapi({
+    description:
+      "Envelope paginado por padrão. Com `Accept: application/x-ndjson`, devolve o crosswalk inteiro como stream — uma linha JSON por relação, sem paginação nem total.",
+  }),
   "GET /api/v1/scf/strm/lookup": paginated(ScfStrmRelationshipResponseSchema, {
     fde_code: z.string(),
     ...count,
