@@ -817,22 +817,6 @@ importers:
         specifier: latest
         version: 4.103.0(@cloudflare/workers-types@4.20260611.1)
 
-  workers/smoke-tester:
-    dependencies:
-      '@sentry/cloudflare':
-        specifier: ^10.56.0
-        version: 10.57.0(@cloudflare/workers-types@4.20260611.1)
-    devDependencies:
-      '@cloudflare/workers-types':
-        specifier: ^4.20260430.1
-        version: 4.20260611.1
-      typescript:
-        specifier: latest
-        version: 6.0.3
-      wrangler:
-        specifier: latest
-        version: 4.103.0(@cloudflare/workers-types@4.20260611.1)
-
   workers/workflows:
     dependencies:
       '@neondatabase/serverless':
